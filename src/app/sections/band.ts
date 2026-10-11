@@ -9,7 +9,7 @@ import { BandService } from '../data/band.service';
     <section id="band" class="section">
       <h2>Die Band</h2>
       <p class="lead">
-        Blickfeld Nord – das sind vier Freund:innen aus dem Norden, die seit 2021 zusammen Musik machen.
+        Blickfeld Nord – das sind drei Freunde aus dem Norden, die seit 2021 zusammen Musik machen.
         Zwischen flirrenden Gitarren, treibenden Drums und deutschen Texten erzählen wir von Fernweh,
         Heimkommen und dem Wind, der einem ins Gesicht bläst.
       </p>
