@@ -7,11 +7,10 @@ import { Hero } from './sections/hero';
 import { Band } from './sections/band';
 import { Music } from './sections/music';
 import { Tour } from './sections/tour';
-import { Contact } from './sections/contact';
 
 @Component({
   selector: 'app-root',
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, Hero, Band, Music, Tour, Contact],
+  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, Hero, Band, Music, Tour],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -20,7 +19,6 @@ export class App {
     { id: 'band', label: 'Band' },
     { id: 'musik', label: 'Musik' },
     { id: 'tour', label: 'Tour' },
-    { id: 'kontakt', label: 'Kontakt' },
   ];
   protected readonly year = new Date().getFullYear();
 
