@@ -10,8 +10,9 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Die Band** – Mitglieder mit Rolle und Kurzbio
 - **Musik** – Diskografie mit Tracklisten
 - **Tour** – Tourdaten mit Filter „Tickets verfügbar“
+- **Galerie** – Fotos mit Vollbildansicht (Bilder in `public/galerie/`)
 
-Alle Inhalte (Mitglieder, Releases, Tourdaten) stehen zentral in
+Alle Inhalte (Mitglieder, Releases, Tourdaten, Fotos) stehen zentral in
 `src/app/data/band.service.ts` und sind aktuell Platzhalter – einfach dort anpassen.
 
 ## Entwicklung

@@ -16,6 +16,7 @@ export class App {
     { id: 'band', label: 'Band' },
     { id: 'musik', label: 'Musik' },
     { id: 'tour', label: 'Tour' },
+    { id: 'galerie', label: 'Galerie' },
   ];
   protected readonly year = new Date().getFullYear();
 
