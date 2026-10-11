@@ -14,7 +14,6 @@ import { MatMenuModule } from '@angular/material/menu';
 export class App {
   protected readonly nav = [
     { id: 'band', label: 'Band' },
-    { id: 'musik', label: 'Musik' },
     { id: 'tour', label: 'Konzerte' },
     { id: 'galerie', label: 'Galerie' },
   ];

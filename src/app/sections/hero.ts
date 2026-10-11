@@ -1,10 +1,12 @@
-import { Component, output } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { BandService } from '../data/band.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-hero',
-  imports: [MatButtonModule, MatIconModule],
+  imports: [DatePipe, MatButtonModule, MatIconModule],
   template: `
     <section class="hero" id="home">
       <h1 class="visually-hidden">Blickfeld Nord</h1>
@@ -13,13 +15,15 @@ import { MatIconModule } from '@angular/material/icon';
         <img src="hero.webp" alt="Logo von Blickfeld Nord mit Kompass über einem nebligen See bei Sonnenuntergang" />
       </picture>
       <div class="hero-content">
-        <p class="claim">Neues Album <strong>„Gegenwind“</strong> – jetzt überall erhältlich</p>
+        @if (nextShow; as s) {
+          <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}</strong> · {{ s.venue }} {{ s.city }}</p>
+        }
         <div class="actions">
-          <button mat-flat-button (click)="navigate.emit('musik')">
-            <mat-icon>play_arrow</mat-icon> Jetzt reinhören
-          </button>
-          <button mat-stroked-button (click)="navigate.emit('tour')">
+          <button mat-flat-button (click)="navigate.emit('tour')">
             <mat-icon>explore</mat-icon> Konzerte
+          </button>
+          <button mat-stroked-button (click)="navigate.emit('band')">
+            <mat-icon>groups</mat-icon> Die Band
           </button>
         </div>
       </div>
@@ -56,4 +60,9 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class Hero {
   readonly navigate = output<string>();
+
+  // Erster Termin ab heute; vergangene Konzerte werden nicht angekündigt
+  protected readonly nextShow = inject(BandService)
+    .shows.filter((s) => s.date >= new Date().toISOString().slice(0, 10))
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
 }
