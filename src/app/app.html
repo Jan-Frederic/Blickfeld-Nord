@@ -19,10 +19,7 @@
 </mat-toolbar>
 
 <main>
-  <app-hero (navigate)="scrollTo($event)" />
-  <app-band />
-  <app-music />
-  <app-tour />
+  <router-outlet />
 </main>
 
 <footer>
@@ -32,5 +29,9 @@
     <a mat-icon-button href="https://www.youtube.com/" target="_blank" rel="noopener" aria-label="YouTube"><mat-icon>smart_display</mat-icon></a>
     <a mat-icon-button href="mailto:info@blickfeld-nord.de" aria-label="E-Mail"><mat-icon>mail</mat-icon></a>
   </div>
+  <nav class="legal-links">
+    <a routerLink="/impressum">Impressum</a>
+    <a routerLink="/datenschutz">Datenschutz</a>
+  </nav>
   <p>© {{ year }} Blickfeld Nord · Alle Rechte vorbehalten</p>
 </footer>

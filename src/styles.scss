@@ -82,3 +82,12 @@ body::after {
   border-color: var(--bn-line) !important;
   backdrop-filter: blur(4px);
 }
+
+// Rechtstexte (Impressum, Datenschutz)
+.legal { max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); }
+.legal h3 {
+  font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em;
+  font-size: .9rem; color: var(--bn-ink); margin: 32px 0 8px;
+}
+.legal p, .legal ul { margin: 0 0 12px; }
+.legal a { color: var(--bn-sunset); }

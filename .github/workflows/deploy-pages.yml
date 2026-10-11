@@ -35,7 +35,10 @@ jobs:
         run: npx ng build --base-href /
 
       - name: SPA fallback for Angular routing
-        run: cp dist/blickfeld-nord/browser/index.html dist/blickfeld-nord/browser/404.html
+        run: |
+          cd dist/blickfeld-nord/browser
+          cp index.html 404.html
+          for route in impressum datenschutz; do mkdir -p "$route" && cp index.html "$route/index.html"; done
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

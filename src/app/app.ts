@@ -1,16 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { Hero } from './sections/hero';
-import { Band } from './sections/band';
-import { Music } from './sections/music';
-import { Tour } from './sections/tour';
 
 @Component({
   selector: 'app-root',
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, Hero, Band, Music, Tour],
+  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterOutlet, RouterLink],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -22,7 +19,13 @@ export class App {
   ];
   protected readonly year = new Date().getFullYear();
 
-  protected scrollTo(id: string): void {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  private readonly router = inject(Router);
+
+  // Von Impressum/Datenschutz aus erst zur Startseite wechseln, dann zum Abschnitt scrollen
+  protected async scrollTo(id: string): Promise<void> {
+    if (this.router.url.split(/[?#]/)[0] !== '/') {
+      await this.router.navigateByUrl('/');
+    }
+    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
   }
 }
