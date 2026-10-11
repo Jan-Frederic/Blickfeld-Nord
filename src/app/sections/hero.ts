@@ -7,43 +7,51 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [MatButtonModule, MatIconModule],
   template: `
     <section class="hero" id="home">
-      <div class="waves" aria-hidden="true"></div>
+      <h1 class="visually-hidden">Blickfeld Nord</h1>
+      <picture>
+        <source media="(max-width: 1200px)" srcset="hero-1200.webp" />
+        <img src="hero.webp" alt="Logo von Blickfeld Nord mit Kompass über einem nebligen See bei Sonnenuntergang" />
+      </picture>
       <div class="hero-content">
-        <p class="eyebrow">Indie-Rock von der Küste</p>
-        <h1>Blickfeld Nord</h1>
-        <p class="claim">Neues Album <strong>„Gegenwind“</strong> – jetzt überall erhältlich.</p>
+        <p class="claim">Neues Album <strong>„Gegenwind“</strong> – jetzt überall erhältlich</p>
         <div class="actions">
           <button mat-flat-button (click)="navigate.emit('musik')">
             <mat-icon>play_arrow</mat-icon> Jetzt reinhören
           </button>
           <button mat-stroked-button (click)="navigate.emit('tour')">
-            <mat-icon>event</mat-icon> Tourdaten
+            <mat-icon>explore</mat-icon> Tourdaten
           </button>
         </div>
       </div>
     </section>
   `,
   styles: `
-    .hero {
-      position: relative; min-height: 88vh; display: grid; place-items: center; text-align: center;
-      overflow: hidden; padding: 96px 16px 64px;
-      background:
-        radial-gradient(ellipse at 50% 120%, rgba(58,124,165,.55), transparent 60%),
-        radial-gradient(ellipse at 80% -10%, rgba(95,165,138,.35), transparent 55%),
-        linear-gradient(180deg, #071521 0%, #0b2233 100%);
+    .hero { position: relative; padding-top: 64px; }
+    @media (max-width: 599px) { .hero { padding-top: 56px; } }
+    img {
+      display: block; width: 100%; height: auto; max-height: calc(100svh - 64px);
+      object-fit: cover; object-position: center 30%;
     }
-    .waves {
-      position: absolute; inset: auto 0 0 0; height: 160px; opacity: .35;
-      background: repeating-radial-gradient(ellipse at 50% 140%, transparent 0 18px, rgba(255,255,255,.18) 19px 20px);
+    .hero-content {
+      position: absolute; inset: auto 0 0 0; padding: 0 16px clamp(24px, 6vw, 72px);
+      text-align: center;
     }
-    .hero-content { position: relative; max-width: 760px; }
-    .eyebrow { letter-spacing: .3em; text-transform: uppercase; font-size: .85rem; opacity: .75; margin: 0; }
-    h1 {
-      font-family: 'Bebas Neue', sans-serif; font-weight: 400; margin: 8px 0 12px;
-      font-size: clamp(3.5rem, 13vw, 8.5rem); line-height: .95; letter-spacing: .04em;
+    .claim {
+      font-family: 'Montserrat', sans-serif; font-weight: 300; text-transform: uppercase;
+      letter-spacing: .28em; font-size: clamp(.75rem, 1.6vw, 1rem);
+      margin: 0 0 20px; text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
     }
-    .claim { font-size: 1.2rem; opacity: .9; margin: 0 0 32px; }
+    .claim strong { font-weight: 400; color: var(--bn-sunset); }
     .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .actions button { letter-spacing: .12em; text-transform: uppercase; }
+    [mat-stroked-button] { background: rgba(20, 22, 25, .45); backdrop-filter: blur(4px); }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    /* Auf schmalen Screens bleibt das Logo vollständig sichtbar, der Inhalt folgt darunter */
+    @media (max-width: 720px) {
+      .hero-content { position: static; padding: 24px 16px 8px; }
+    }
   `,
 })
 export class Hero {

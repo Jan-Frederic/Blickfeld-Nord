@@ -1,5 +1,7 @@
 <mat-toolbar class="topbar">
-  <button class="logo" (click)="scrollTo('home')">Blickfeld Nord</button>
+  <button class="logo" (click)="scrollTo('home')" aria-label="Blickfeld Nord – nach oben">
+    <span class="logo-main">Blickfeld</span><span class="logo-sub">Nord</span>
+  </button>
   <span class="spacer"></span>
   <nav class="desktop-nav">
     @for (n of nav; track n.id) {

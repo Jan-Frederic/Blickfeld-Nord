@@ -1,12 +1,20 @@
 .topbar {
   position: fixed; top: 0; z-index: 10;
-  background: rgba(7, 21, 33, .72); backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  background: rgba(20, 22, 25, .78); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--bn-line);
 }
 .logo {
-  all: unset; cursor: pointer;
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: .08em;
+  all: unset; cursor: pointer; display: flex; align-items: baseline; gap: 12px;
+  text-transform: uppercase;
 }
+.logo-main {
+  font-family: var(--bn-display); font-size: 1.15rem; letter-spacing: .12em;
+  -webkit-mask-image: var(--bn-grunge); mask-image: var(--bn-grunge);
+}
+.logo-sub {
+  font-family: var(--bn-wide); font-weight: 300; font-size: .8rem; letter-spacing: .5em; color: var(--bn-fog);
+}
+.desktop-nav button { font-family: var(--bn-wide); letter-spacing: .18em; text-transform: uppercase; font-size: .78rem; }
 .spacer { flex: 1; }
 .mobile-nav { display: none; }
 @media (max-width: 640px) {
@@ -14,7 +22,8 @@
   .mobile-nav { display: inline-flex; }
 }
 footer {
-  text-align: center; padding: 48px 16px; opacity: .8;
-  border-top: 1px solid var(--mat-sys-outline-variant);
+  text-align: center; padding: 48px 16px; color: var(--bn-fog);
+  border-top: 1px solid var(--bn-line);
+  font-family: var(--bn-wide); font-weight: 300; letter-spacing: .2em; text-transform: uppercase; font-size: .72rem;
 }
 .social { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }

@@ -12,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatCheckboxModule],
   template: `
     <section id="kontakt" class="section">
+      <p class="kicker">Schreibt uns</p>
       <h2>Kontakt & Booking</h2>
       <p class="lead">Ihr wollt uns buchen, habt eine Presseanfrage oder wollt einfach Hallo sagen? Schreibt uns!</p>
       <form [formGroup]="form" (ngSubmit)="send()">

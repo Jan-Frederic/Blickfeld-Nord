@@ -37,7 +37,7 @@ export class BandService {
 
   readonly releases: Release[] = [
     {
-      title: 'Gegenwind', type: 'Album', year: 2026, cover: 'linear-gradient(135deg, #0f2d40, #3a7ca5)',
+      title: 'Gegenwind', type: 'Album', year: 2026, cover: 'linear-gradient(180deg, #1c1f23 0%, #2c3034 55%, #b9774a 100%)',
       tracks: [
         { title: 'Gegenwind', duration: '3:52' },
         { title: 'Leuchtturm', duration: '4:15' },
@@ -48,7 +48,7 @@ export class BandService {
       ],
     },
     {
-      title: 'Horizont', type: 'EP', year: 2024, cover: 'linear-gradient(135deg, #2b1f3d, #a5617a)',
+      title: 'Horizont', type: 'EP', year: 2024, cover: 'linear-gradient(180deg, #23272b 0%, #3d4248 60%, #6f7a84 100%)',
       tracks: [
         { title: 'Horizont', duration: '3:44' },
         { title: 'Kompass', duration: '3:29' },
@@ -57,7 +57,7 @@ export class BandService {
       ],
     },
     {
-      title: 'Erste Welle', type: 'Single', year: 2023, cover: 'linear-gradient(135deg, #12332b, #5fa58a)',
+      title: 'Erste Welle', type: 'Single', year: 2023, cover: 'linear-gradient(180deg, #121417 0%, #1f2a2c 60%, #4c5d5c 100%)',
       tracks: [
         { title: 'Erste Welle', duration: '3:31' },
         { title: 'Erste Welle (Akustik)', duration: '3:55' },

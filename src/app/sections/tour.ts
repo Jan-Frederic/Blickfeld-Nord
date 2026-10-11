@@ -15,7 +15,10 @@ type Filter = 'alle' | 'verfuegbar';
   template: `
     <section id="tour" class="section">
       <div class="head">
-        <h2>Gegenwind-Tour 2026</h2>
+        <div>
+          <p class="kicker">Live</p>
+          <h2>Gegenwind-Tour 2026</h2>
+        </div>
         <mat-button-toggle-group [value]="filter()" (change)="filter.set($event.value)" hideSingleSelectionIndicator>
           <mat-button-toggle value="alle">Alle Shows</mat-button-toggle>
           <mat-button-toggle value="verfuegbar">Tickets verfügbar</mat-button-toggle>

@@ -1,15 +1,43 @@
 @use '@angular/material' as mat;
 
+// Grunddesign nach dem Bandlogo: Anthrazit-Nachthimmel, nebliges Grau,
+// gebrochenes Weiß für Schrift und ein warmer Sonnenuntergangs-Akzent.
+:root {
+  --bn-night: #141619;
+  --bn-night-2: #1b1e22;
+  --bn-fog: #8d939b;
+  --bn-ink: #ece9e4;
+  --bn-sunset: #e8a46a;
+  --bn-line: rgba(236, 233, 228, .14);
+  --bn-display: 'Michroma', 'Eurostile', sans-serif;
+  --bn-wide: 'Montserrat', sans-serif;
+  // Verwitterte Druck-Textur wie im Logo, als Maske für Überschriften
+  --bn-grunge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='7'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='1 1 1 1 1 1 1 0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --bn-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.55'/%3E%3C/svg%3E");
+}
+
 html {
   color-scheme: dark;
   @include mat.theme((
     color: (
       theme-type: dark,
-      primary: mat.$cyan-palette,
-      tertiary: mat.$azure-palette,
+      primary: mat.$orange-palette,
+      tertiary: mat.$blue-palette,
     ),
-    typography: (plain-family: 'Inter, Roboto, sans-serif', brand-family: 'Bebas Neue, sans-serif'),
+    typography: (plain-family: 'Inter, Roboto, sans-serif', brand-family: 'Michroma, sans-serif'),
     density: 0,
+  ));
+  @include mat.theme-overrides((
+    surface: #141619,
+    surface-container-lowest: #101215,
+    surface-container-low: #181a1e,
+    surface-container: #1d2024,
+    surface-container-high: #24272c,
+    surface-container-highest: #2b2f34,
+    on-surface: #ece9e4,
+    outline-variant: rgba(236, 233, 228, .16),
+    primary: #e8a46a,
+    on-primary: #2a1708,
   ));
 }
 
@@ -18,16 +46,39 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   font-family: Inter, Roboto, 'Helvetica Neue', sans-serif;
-  background: #071521;
-  color: var(--mat-sys-on-surface);
+  color: var(--bn-ink);
+  background:
+    radial-gradient(ellipse 80% 40% at 85% 100%, rgba(232, 164, 106, .10), transparent 70%),
+    linear-gradient(180deg, #1c1f23 0%, var(--bn-night) 40%, #101215 100%) fixed;
+}
+// Feines Filmkorn über der ganzen Seite
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100;
+  background: var(--bn-grain); opacity: .07; mix-blend-mode: overlay;
 }
 
 .section {
-  max-width: 1120px; margin: 0 auto; padding: 88px 16px 48px;
+  max-width: 1120px; margin: 0 auto; padding: 96px 16px 48px;
   scroll-margin-top: 48px;
 }
+// Überschriften im Stil von „BLICKFELD“: breite Versalien mit Abnutzungstextur
 .section h2 {
-  font-family: 'Bebas Neue', sans-serif; font-weight: 400;
-  font-size: clamp(2.4rem, 6vw, 3.4rem); letter-spacing: .05em; margin: 0 0 16px;
+  font-family: var(--bn-display); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(1.6rem, 4.5vw, 2.6rem); letter-spacing: .08em; line-height: 1.15;
+  margin: 0 0 20px;
+  -webkit-mask-image: var(--bn-grunge); mask-image: var(--bn-grunge);
 }
-.lead { font-size: 1.1rem; line-height: 1.6; max-width: 760px; opacity: .88; margin: 0 0 32px; }
+// Unterzeile im Stil von „—— N O R D ——“
+.kicker {
+  display: flex; align-items: center; gap: 16px; margin: 0 0 8px;
+  font-family: var(--bn-wide); font-weight: 300; text-transform: uppercase;
+  letter-spacing: .5em; font-size: .78rem; color: var(--bn-fog);
+}
+.kicker::before { content: ''; width: 48px; height: 1px; background: currentColor; }
+.lead { font-size: 1.05rem; line-height: 1.7; max-width: 760px; color: rgba(236, 233, 228, .82); margin: 0 0 32px; }
+
+.mat-mdc-card-outlined {
+  background: rgba(27, 30, 34, .72) !important;
+  border-color: var(--bn-line) !important;
+  backdrop-filter: blur(4px);
+}
