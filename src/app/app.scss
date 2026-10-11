@@ -1,0 +1,20 @@
+.topbar {
+  position: fixed; top: 0; z-index: 10;
+  background: rgba(7, 21, 33, .72); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+.logo {
+  all: unset; cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: .08em;
+}
+.spacer { flex: 1; }
+.mobile-nav { display: none; }
+@media (max-width: 640px) {
+  .desktop-nav { display: none; }
+  .mobile-nav { display: inline-flex; }
+}
+footer {
+  text-align: center; padding: 48px 16px; opacity: .8;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+.social { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }

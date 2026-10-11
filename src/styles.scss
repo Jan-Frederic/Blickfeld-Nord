@@ -1,0 +1,33 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: dark;
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$cyan-palette,
+      tertiary: mat.$azure-palette,
+    ),
+    typography: (plain-family: 'Inter, Roboto, sans-serif', brand-family: 'Bebas Neue, sans-serif'),
+    density: 0,
+  ));
+}
+
+html, body { height: 100%; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: Inter, Roboto, 'Helvetica Neue', sans-serif;
+  background: #071521;
+  color: var(--mat-sys-on-surface);
+}
+
+.section {
+  max-width: 1120px; margin: 0 auto; padding: 88px 16px 48px;
+  scroll-margin-top: 48px;
+}
+.section h2 {
+  font-family: 'Bebas Neue', sans-serif; font-weight: 400;
+  font-size: clamp(2.4rem, 6vw, 3.4rem); letter-spacing: .05em; margin: 0 0 16px;
+}
+.lead { font-size: 1.1rem; line-height: 1.6; max-width: 760px; opacity: .88; margin: 0 0 32px; }

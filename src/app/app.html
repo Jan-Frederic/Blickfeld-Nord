@@ -1,0 +1,35 @@
+<mat-toolbar class="topbar">
+  <button class="logo" (click)="scrollTo('home')">Blickfeld Nord</button>
+  <span class="spacer"></span>
+  <nav class="desktop-nav">
+    @for (n of nav; track n.id) {
+      <button mat-button (click)="scrollTo(n.id)">{{ n.label }}</button>
+    }
+  </nav>
+  <button mat-icon-button class="mobile-nav" [matMenuTriggerFor]="menu" aria-label="Menü öffnen">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    @for (n of nav; track n.id) {
+      <button mat-menu-item (click)="scrollTo(n.id)">{{ n.label }}</button>
+    }
+  </mat-menu>
+</mat-toolbar>
+
+<main>
+  <app-hero (navigate)="scrollTo($event)" />
+  <app-band />
+  <app-music />
+  <app-tour />
+  <app-contact />
+</main>
+
+<footer>
+  <div class="social">
+    <a mat-icon-button href="https://www.instagram.com/" target="_blank" rel="noopener" aria-label="Instagram"><mat-icon>photo_camera</mat-icon></a>
+    <a mat-icon-button href="https://open.spotify.com/" target="_blank" rel="noopener" aria-label="Spotify"><mat-icon>headphones</mat-icon></a>
+    <a mat-icon-button href="https://www.youtube.com/" target="_blank" rel="noopener" aria-label="YouTube"><mat-icon>smart_display</mat-icon></a>
+    <a mat-icon-button href="mailto:info@blickfeld-nord.de" aria-label="E-Mail"><mat-icon>mail</mat-icon></a>
+  </div>
+  <p>© {{ year }} Blickfeld Nord · Alle Rechte vorbehalten</p>
+</footer>
