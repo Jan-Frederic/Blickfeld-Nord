@@ -1,38 +1,26 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { BandService, Show } from '../data/band.service';
-
-type Filter = 'alle' | 'verfuegbar';
+import { BandService } from '../data/band.service';
 
 @Component({
   selector: 'app-tour',
-  imports: [DatePipe, MatTableModule, MatButtonModule, MatButtonToggleModule, MatIconModule],
+  imports: [DatePipe, MatTableModule, MatButtonModule, MatIconModule],
   template: `
     <section id="tour" class="section">
-      <div class="head">
-        <div>
-          <p class="kicker">Live</p>
-          <h2>Gegenwind-Tour 2026</h2>
-        </div>
-        <mat-button-toggle-group [value]="filter()" (change)="filter.set($event.value)" hideSingleSelectionIndicator>
-          <mat-button-toggle value="alle">Alle Shows</mat-button-toggle>
-          <mat-button-toggle value="verfuegbar">Tickets verfügbar</mat-button-toggle>
-        </mat-button-toggle-group>
-      </div>
+      <p class="kicker">Live</p>
+      <h2>Tour und Konzerte</h2>
 
       <div class="table-wrap">
-        <table mat-table [dataSource]="shows()">
+        <table mat-table [dataSource]="band.shows">
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
-            <td mat-cell *matCellDef="let s" class="date">{{ s.date | date: 'EEE, dd.MM.' : '' : 'de' }}</td>
+            <td mat-cell *matCellDef="let s" class="date">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}</td>
           </ng-container>
           <ng-container matColumnDef="city">
-            <th mat-header-cell *matHeaderCellDef>Stadt</th>
+            <th mat-header-cell *matHeaderCellDef>Ort</th>
             <td mat-cell *matCellDef="let s"><strong>{{ s.city }}</strong><span class="venue-inline">{{ s.venue }}</span></td>
           </ng-container>
           <ng-container matColumnDef="venue">
@@ -42,13 +30,9 @@ type Filter = 'alle' | 'verfuegbar';
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let s" class="action">
-              @if (s.status === 'Ausverkauft') {
-                <span class="sold">Ausverkauft</span>
-              } @else {
-                <button mat-flat-button (click)="buy(s)">
-                  {{ s.status === 'Wenige Tickets' ? 'Letzte Tickets' : 'Tickets' }}
-                </button>
-              }
+              <a mat-stroked-button [href]="s.mapsUrl" target="_blank" rel="noopener" [attr.aria-label]="'Anfahrt nach ' + s.city + ' in Google Maps'">
+                <mat-icon>place</mat-icon><span class="label">Anfahrt</span>
+              </a>
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
@@ -58,8 +42,6 @@ type Filter = 'alle' | 'verfuegbar';
     </section>
   `,
   styles: `
-    .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-    .head h2 { margin: 0; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
     table { width: 100%; background: transparent; }
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -69,21 +51,13 @@ type Filter = 'alle' | 'verfuegbar';
       .venue { display: none; }
       .venue-inline { display: block; }
       th, td { padding: 0 8px !important; }
+      .action a { min-width: 0; padding: 0 12px; }
+      .action .label { display: none; }
+      .action mat-icon { margin: 0; }
     }
-    .sold { opacity: .6; text-transform: uppercase; letter-spacing: .1em; font-size: .8rem; }
   `,
 })
 export class Tour {
-  private readonly band = inject(BandService);
-  private readonly snackBar = inject(MatSnackBar);
-
+  protected readonly band = inject(BandService);
   protected readonly columns = ['date', 'city', 'venue', 'action'];
-  protected readonly filter = signal<Filter>('alle');
-  protected readonly shows = computed(() =>
-    this.filter() === 'alle' ? this.band.shows : this.band.shows.filter((s) => s.status !== 'Ausverkauft'),
-  );
-
-  protected buy(s: Show): void {
-    this.snackBar.open(`Ticketshop für ${s.city} (${s.venue}) öffnet bald.`, 'OK', { duration: 3000 });
-  }
 }

@@ -19,7 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
             <mat-icon>play_arrow</mat-icon> Jetzt reinhören
           </button>
           <button mat-stroked-button (click)="navigate.emit('tour')">
-            <mat-icon>explore</mat-icon> Tourdaten
+            <mat-icon>explore</mat-icon> Konzerte
           </button>
         </div>
       </div>

@@ -31,7 +31,7 @@ export interface Show {
   date: string;
   city: string;
   venue: string;
-  status: 'Tickets' | 'Wenige Tickets' | 'Ausverkauft';
+  mapsUrl: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -83,12 +83,6 @@ export class BandService {
   ];
 
   readonly shows: Show[] = [
-    { date: '2026-10-24', city: 'Hamburg', venue: 'Molotow', status: 'Wenige Tickets' },
-    { date: '2026-10-31', city: 'Kiel', venue: 'Die Pumpe', status: 'Tickets' },
-    { date: '2026-11-07', city: 'Flensburg', venue: 'Volksbad', status: 'Tickets' },
-    { date: '2026-11-14', city: 'Bremen', venue: 'Tower', status: 'Ausverkauft' },
-    { date: '2026-11-21', city: 'Lübeck', venue: 'Treibsand', status: 'Tickets' },
-    { date: '2026-12-05', city: 'Berlin', venue: 'Badehaus', status: 'Wenige Tickets' },
-    { date: '2026-12-12', city: 'Rostock', venue: 'Peter-Weiss-Haus', status: 'Tickets' },
+    { date: '2026-12-04', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW' },
   ];
 }
