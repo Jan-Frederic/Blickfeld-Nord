@@ -74,12 +74,12 @@ export class BandService {
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
   readonly photos: Photo[] = [
+    { src: 'galerie/band-1.webp', thumb: 'galerie/band-1-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug', caption: 'Blickfeld Nord' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
     { src: 'galerie/platzhalter-1.webp', thumb: 'galerie/platzhalter-1-thumb.webp', alt: 'Platzhalter – Foto folgt' },
     { src: 'galerie/platzhalter-2.webp', thumb: 'galerie/platzhalter-2-thumb.webp', alt: 'Platzhalter – Foto folgt' },
     { src: 'galerie/platzhalter-3.webp', thumb: 'galerie/platzhalter-3-thumb.webp', alt: 'Platzhalter – Foto folgt' },
     { src: 'galerie/platzhalter-4.webp', thumb: 'galerie/platzhalter-4-thumb.webp', alt: 'Platzhalter – Foto folgt' },
-    { src: 'galerie/platzhalter-5.webp', thumb: 'galerie/platzhalter-5-thumb.webp', alt: 'Platzhalter – Foto folgt' },
   ];
 
   readonly shows: Show[] = [
