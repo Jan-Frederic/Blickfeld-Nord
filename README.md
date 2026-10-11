@@ -2,7 +2,7 @@
 
 Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Material.
 
-**Live:** https://jan-frederic.github.io/Blickfeld-Nord/
+**Live:** https://blickfeld-nord.de
 
 ## Inhalte
 
@@ -27,3 +27,10 @@ npx ng serve        # http://localhost:4200
 Jeder Push auf `main` baut die Seite und deployt sie über GitHub Actions
 (`.github/workflows/deploy-pages.yml`) nach GitHub Pages.
 Einmalig nötig: *Settings → Pages → Source: GitHub Actions*.
+
+### Eigene Domain
+
+Die Seite läuft unter `blickfeld-nord.de` (Base-Href `/`).
+In *Settings → Pages → Custom domain* ist `blickfeld-nord.de` eingetragen;
+bei GoDaddy zeigen vier A-Records (`@` → `185.199.108–111.153`) und ein
+CNAME (`www` → `jan-frederic.github.io`) auf GitHub Pages.
