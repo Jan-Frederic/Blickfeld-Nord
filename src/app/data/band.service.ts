@@ -30,9 +30,9 @@ export interface Show {
 @Injectable({ providedIn: 'root' })
 export class BandService {
   readonly members: Member[] = [
-    { name: 'Matthias Wigger', role: 'Gesang & Gitarre', initials: 'MW', bio: 'Schreibt die meisten Texte – am liebsten nachts mit Blick aufs Wasser.' },
-    { name: 'David Bröker', role: 'Gitarre & Bass', initials: 'DB', bio: 'Zuständig für Hall, Delay und alles, was nach Weite klingt.' },
-    { name: 'Jan-Frederic Overbeck', role: 'Schlagzeug', initials: 'JO', bio: 'Treibt jeden Song nach vorne und hält die Band zusammen.' },
+    { name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Schreibt die meisten Texte – am liebsten nachts mit Blick aufs Wasser.' },
+    { name: 'Matthias Wigger', role: 'Schlagzeug & Gesang', initials: 'MW', bio: 'Treibt jeden Song nach vorne und hält die Band zusammen.' },
+    { name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Das ruhige Fundament der Band – auf und neben der Bühne.' },
   ];
 
   readonly releases: Release[] = [
