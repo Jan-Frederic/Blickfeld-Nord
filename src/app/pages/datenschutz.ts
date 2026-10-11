@@ -75,10 +75,10 @@ import { Component } from '@angular/core';
         wird keine Verbindung zu Servern von Google oder anderen Drittanbietern hergestellt.
       </p>
 
-      <h3>6. Link zu Threads</h3>
+      <h3>6. Link zu Instagram</h3>
       <p>
-        Auf dieser Website befindet sich ein Link zu unserem Profil auf Threads (Meta Platforms Ireland Limited).
-        Es handelt sich um eine einfache Verlinkung – Inhalte von Threads sind nicht eingebettet. Erst wenn Sie
+        Auf dieser Website befindet sich ein Link zu unserem Profil auf Instagram (Meta Platforms Ireland Limited).
+        Es handelt sich um eine einfache Verlinkung – Inhalte von Instagram sind nicht eingebettet. Erst wenn Sie
         den Link anklicken, werden Sie auf die Seite des Anbieters weitergeleitet; ab dann gelten dessen
         Datenschutzbestimmungen.
       </p>
