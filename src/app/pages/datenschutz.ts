@@ -75,11 +75,11 @@ import { Component } from '@angular/core';
         wird keine Verbindung zu Servern von Google oder anderen Drittanbietern hergestellt.
       </p>
 
-      <h3>6. Links zu sozialen Netzwerken und Musikplattformen</h3>
+      <h3>6. Link zu Threads</h3>
       <p>
-        Auf dieser Website befinden sich Links zu externen Plattformen (Threads, Spotify, YouTube). Es handelt sich
-        um einfache Verlinkungen – Inhalte dieser Anbieter sind nicht eingebettet. Erst wenn Sie einen Link
-        anklicken, werden Sie auf die Seite des jeweiligen Anbieters weitergeleitet; ab dann gelten dessen
+        Auf dieser Website befindet sich ein Link zu unserem Profil auf Threads (Meta Platforms Ireland Limited).
+        Es handelt sich um eine einfache Verlinkung – Inhalte von Threads sind nicht eingebettet. Erst wenn Sie
+        den Link anklicken, werden Sie auf die Seite des Anbieters weitergeleitet; ab dann gelten dessen
         Datenschutzbestimmungen.
       </p>
 
