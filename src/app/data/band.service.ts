@@ -24,9 +24,9 @@ export interface Show {
 @Injectable({ providedIn: 'root' })
 export class BandService {
   readonly members: Member[] = [
-    { name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Schreibt die meisten Texte – am liebsten nachts mit Blick aufs Wasser.' },
-    { name: 'Matthias Wigger', role: 'Schlagzeug & Gesang', initials: 'MW', bio: 'Treibt jeden Song nach vorne und hält die Band zusammen.' },
-    { name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Das ruhige Fundament der Band – auf und neben der Bühne.' },
+    { name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2021 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.' },
+    { name: 'Matthias Wigger', role: 'Schlagzeug & Gesang', initials: 'MW', bio: 'Der Puls der Band seit 2021: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.' },
+    { name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.' },
   ];
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen

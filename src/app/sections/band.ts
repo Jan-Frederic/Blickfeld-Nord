@@ -10,9 +10,12 @@ import { BandService } from '../data/band.service';
       <p class="kicker">Wer wir sind</p>
       <h2>Die Band</h2>
       <p class="lead">
-        Blickfeld Nord – das sind drei Freunde aus dem Norden, die seit 2021 zusammen Musik machen.
-        Zwischen flirrenden Gitarren, treibenden Drums und deutschen Texten erzählen wir von Fernweh,
-        Heimkommen und dem Wind, der einem ins Gesicht bläst.
+        Was 2021 als Kombo von David und Matthias begann, ist heute ein echtes Power-Trio: Seit Oktober 2025
+        macht Fred am Bass die Runde komplett. Seitdem heißt es: drei Stimmen, ein Ziel – Party.
+      </p>
+      <p class="lead">
+        Wir spielen Musik, die ins Bein geht und zum Mitsingen einlädt. Egal ob Weihnachtsmarkt, Stadtfest
+        oder private Feier – wenn Blickfeld Nord auf der Bühne steht, bleibt keiner lange sitzen.
       </p>
       <div class="grid">
         @for (m of band.members; track m.name) {
@@ -29,7 +32,8 @@ import { BandService } from '../data/band.service';
     </section>
   `,
   styles: `
-    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .lead:has(+ .lead) { margin-bottom: 12px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     .avatar {
       display: grid; place-items: center; font-family: var(--bn-display); font-size: .8rem; letter-spacing: .06em;
       background: transparent; color: var(--bn-ink); border: 1px solid var(--bn-fog);
