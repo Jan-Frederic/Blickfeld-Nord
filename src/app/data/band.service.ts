@@ -64,6 +64,8 @@ export class BandService {
 
   readonly shows: Show[] = [
     { date: '2026-12-04', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW' },
+    { date: '2027-04-03', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW' },
     { date: '2027-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
+    { date: '2027-05-02', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
   ];
 }

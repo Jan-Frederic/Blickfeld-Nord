@@ -14,7 +14,7 @@ import { BandService } from '../data/band.service';
       <h2>Tour und Konzerte</h2>
 
       <div class="table-wrap">
-        <table mat-table [dataSource]="band.shows">
+        <table mat-table [dataSource]="shows">
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
             <td mat-cell *matCellDef="let s" class="date">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}</td>
@@ -58,6 +58,6 @@ import { BandService } from '../data/band.service';
   `,
 })
 export class Tour {
-  protected readonly band = inject(BandService);
+  protected readonly shows = [...inject(BandService).shows].sort((a, b) => a.date.localeCompare(b.date));
   protected readonly columns = ['date', 'city', 'venue', 'action'];
 }
