@@ -31,6 +31,12 @@ import { BandService } from '../data/band.service';
                   <path d="M18 10h1.2a2.3 2.3 0 0 1 0 4.6H17.6" />
                   <path d="M2.5 21.5h17" />
                 </svg>
+              } @else if (f.icon === 'instagram') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
+                  <circle cx="12" cy="12" r="4.3" />
+                  <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
+                </svg>
               } @else {
                 <mat-icon>link</mat-icon>
               }
@@ -73,7 +79,11 @@ import { BandService } from '../data/band.service';
 export class Freunde {
   protected readonly band = inject(BandService);
 
+  // Anzeige-Adresse: bei Instagram der @-Name, sonst die Domain
   protected host(url: string): string {
-    return new URL(url).hostname.replace(/^www\./, '');
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '');
+    const handle = u.pathname.split('/').filter(Boolean)[0];
+    return host === 'instagram.com' && handle ? '@' + handle : host;
   }
 }

@@ -17,7 +17,7 @@ export interface Friend {
   description: string;
   url: string;
   // eigenes Symbol (Trommel, Kaffeetasse), sonst ein allgemeines Link-Symbol
-  icon?: 'drum' | 'cafe';
+  icon?: 'drum' | 'cafe' | 'instagram';
 }
 
 export interface Photo {
@@ -73,6 +73,12 @@ export class BandService {
       description: 'Dein Café in Dingden für guten Kaffee, Kuchen, Frühstück, Live-Musik, Workshops und besondere Abende.',
       url: 'https://cafelotti.de/',
       icon: 'cafe',
+    },
+    {
+      name: 'markusdproduktion',
+      description: 'Produktion für Kunst und Kultur.',
+      url: 'https://www.instagram.com/markusdproduktion/',
+      icon: 'instagram',
     },
   ];
 
