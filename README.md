@@ -7,7 +7,7 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 ## Inhalte
 
 - **Hero** mit Logo-Motiv und dem nächsten Konzerttermin
-- **Die Band** – Mitglieder mit Rolle und Kurzbio
+- **Die Band** – Mitglieder mit Rolle und Kurzbio, jeweils mit eigener Unterseite (`/band/<name>`)
 - **Tour und Konzerte** – Termine mit Anfahrts-Link zu Google Maps
 - **Galerie** – Fotos mit Vollbildansicht
 - **Impressum** (`/impressum`) und **Datenschutzerklärung** (`/datenschutz`)
@@ -15,6 +15,9 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 Alle Inhalte (Mitglieder, Konzerttermine, Fotos) stehen zentral in
 `src/app/data/band.service.ts`.
 Die Rechtstexte liegen in `src/app/pages/`.
+
+Kommt ein neues Bandmitglied (oder eine neue Unterseite) dazu, den Pfad auch in
+`.github/workflows/deploy-pages.yml` ergänzen, damit Direktaufrufe funktionieren.
 
 ### Fotos hinzufügen
 

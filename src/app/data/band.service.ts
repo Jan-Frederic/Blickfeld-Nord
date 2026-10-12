@@ -1,10 +1,15 @@
 import { Injectable } from '@angular/core';
 
 export interface Member {
+  slug: string;
   name: string;
   role: string;
   bio: string;
   initials: string;
+  // Ausführliche Bio für die Unterseite /band/<slug>
+  tagline?: string;
+  story?: string[];
+  link?: { label: string; url: string };
 }
 
 export interface Photo {
@@ -24,9 +29,27 @@ export interface Show {
 @Injectable({ providedIn: 'root' })
 export class BandService {
   readonly members: Member[] = [
-    { name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2021 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.' },
-    { name: 'Matthias Wigger', role: 'Schlagzeug & Gesang', initials: 'MW', bio: 'Der Puls der Band seit 2021: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.' },
-    { name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.' },
+    { slug: 'david-broeker', name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2021 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.' },
+    {
+      slug: 'matthias-wigger',
+      name: 'Matthias Wigger',
+      role: 'Schlagzeug & Gesang',
+      initials: 'MW',
+      bio: 'Der Puls der Band seit 2021: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.',
+      tagline: 'Schlagzeuger aus Leidenschaft',
+      story: [
+        'Ich heiße Matthias Wigger und spiele seit meinem fünften Lebensjahr mit großer Leidenschaft Schlagzeug und Percussion. Bereits im Alter von sechs Jahren sammelte ich erste Live- und Bühnenerfahrungen in der damaligen Band Sunrise. Schon damals wurde mir klar, dass mich besonders das Zusammenspiel im Ensemble sowie das Auftreten vor Publikum am Schlagzeug fasziniert.',
+        'Über einen Zeitraum von neun Jahren erhielt ich fundierten Unterricht an der Bocholt Rheder Musikschule, wo ich mir solide technische Grundlagen, ein ausgeprägtes rhythmisches Verständnis sowie musikalisches Gehör erarbeiten konnte. Mit 14 Jahren wurde ich Mitglied des Percussion Ensembles Bocholt, in dem ich intensive Erfahrungen mit Polyrhythmik, Dynamik und unterschiedlichsten perkussiven Klangfarben sammelte.',
+        'Auch das Musizieren im Dingdener Chor Pro-Campesinos hat meine Spielweise und mein musikalisches Verständnis nachhaltig geprägt. Das aufmerksame Zuhören, das Anpassen an einen Chor und das sensible Begleiten mit dem Schlagzeug waren für mich eine besonders lehrreiche und wertvolle Erfahrung, die mich bis heute begleitet. Inzwischen unterstütze ich den Chor zudem regelmäßig an der Bassgitarre, wodurch ich mein musikalisches Zusammenspiel weiter vertiefen konnte.',
+        'Ergänzender Unterricht an den Musikschulen Ringenberg, Wesel und Rhede eröffnete mir weitere pädagogische und stilistische Perspektiven im modernen Schlagzeugunterricht. Besonders prägend war meine Ausbildung an der Schlagzeugschule Frank Bruns, bei der ich mein Spiel in den Bereichen Groove, Timing, Technik, Stilistik und musikalischer Ausdruck kontinuierlich weiterentwickeln konnte.',
+        'Neben meiner Unterrichtstätigkeit war und bin ich als Schlagzeuger in verschiedenen Bands und Stilrichtungen aktiv. Dazu zählen Sunrise (Kirchenband), Break Nemesis (Pop-Band der 1990er Jahre), Bedazzled (Progressive Metal der 2000er), Arriving Somewhere (British Pop, 2000–2010), Joda (Grunge, 2020er) sowie aktuell Blickfeld Nord, eine Band mit einem vielseitigen Repertoire aus Pop, Rock, Schlager, Dance und Disco.',
+        'Hauptberuflich arbeite ich als Vorgesetzter der Werkzeugvoreinstellung bei der Flender GmbH und trage Verantwortung für Organisation, Abläufe und Mitarbeitende. Die tägliche Arbeit mit Menschen, das Anleiten von Teams sowie das Begleiten individueller Entwicklungen bereiten mir große Freude. Durch meine Ausbildung zum Ausbilder (AdA) konnte ich vielfältige didaktische Lehrmethoden erlernen, die ich im Rahmen meines Industriemeisters und meiner beruflichen Erfahrung weiter vertiefen konnte.',
+        'Besonders wichtig sind mir ein handlungsorientierter Unterricht, das Stärken unterschiedlicher Kompetenzen sowie das Erkennen und gezielte Fördern persönlicher Potenziale.',
+        'Seit über zehn Jahren gebe ich meine vielfältigen musikalischen und pädagogischen Erfahrungen mit großer Begeisterung – zunächst als Hobby und inzwischen gewerblich – an meine Schülerinnen und Schüler weiter.',
+      ],
+      link: { label: 'Zur Drum School Matthias Wigger', url: 'https://www.drumschool-wigger.de/' },
+    },
+    { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.' },
   ];
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
