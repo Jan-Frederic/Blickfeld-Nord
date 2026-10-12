@@ -37,6 +37,13 @@ import { BandService } from '../data/band.service';
                   <circle cx="12" cy="12" r="4.3" />
                   <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
                 </svg>
+              } @else if (f.icon === 'choir') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 17.5V5.5l11-2.5v12" />
+                  <path d="M9 9l11-2.5" />
+                  <ellipse cx="6.2" cy="17.8" rx="2.8" ry="2.2" fill="currentColor" stroke="none" />
+                  <ellipse cx="17.2" cy="15.3" rx="2.8" ry="2.2" fill="currentColor" stroke="none" />
+                </svg>
               } @else {
                 <mat-icon>link</mat-icon>
               }

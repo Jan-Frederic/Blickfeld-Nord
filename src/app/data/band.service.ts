@@ -16,8 +16,8 @@ export interface Friend {
   name: string;
   description: string;
   url: string;
-  // eigenes Symbol (Trommel, Kaffeetasse), sonst ein allgemeines Link-Symbol
-  icon?: 'drum' | 'cafe' | 'instagram';
+  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten), sonst ein allgemeines Link-Symbol
+  icon?: 'drum' | 'cafe' | 'instagram' | 'choir';
 }
 
 export interface Photo {
@@ -79,6 +79,12 @@ export class BandService {
       description: 'Produktion für Kunst und Kultur.',
       url: 'https://www.instagram.com/markusdproduktion/',
       icon: 'instagram',
+    },
+    {
+      name: 'Pro Campesinos 1977 e.V.',
+      description: 'Der Chor aus Dingden, der seit mehr als 40 Jahren notleidenden Menschen in der Dritten Welt mit musikalischen Veranstaltungen und Spendengeldern hilft.',
+      url: 'https://www.pro-campesinos.de/',
+      icon: 'choir',
     },
   ];
 
