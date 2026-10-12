@@ -10,9 +10,10 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Die Band** – Mitglieder mit Rolle und Kurzbio, jeweils mit eigener Unterseite (`/band/<name>`)
 - **Tour und Konzerte** – Termine mit Anfahrts-Link zu Google Maps
 - **Galerie** – Fotos mit Vollbildansicht
+- **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten
 - **Impressum** (`/impressum`) und **Datenschutzerklärung** (`/datenschutz`)
 
-Alle Inhalte (Mitglieder, Konzerttermine, Fotos) stehen zentral in
+Alle Inhalte (Mitglieder, Konzerttermine, Fotos, befreundete Seiten) stehen zentral in
 `src/app/data/band.service.ts`.
 Die Rechtstexte liegen in `src/app/pages/`.
 

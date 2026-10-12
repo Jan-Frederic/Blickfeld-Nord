@@ -38,7 +38,7 @@ jobs:
         run: |
           cd dist/blickfeld-nord/browser
           cp index.html 404.html
-          for route in impressum datenschutz band/david-broeker band/matthias-wigger band/jan-frederic-overbeck; do mkdir -p "$route" && cp index.html "$route/index.html"; done
+          for route in freunde impressum datenschutz band/david-broeker band/matthias-wigger band/jan-frederic-overbeck; do mkdir -p "$route" && cp index.html "$route/index.html"; done
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

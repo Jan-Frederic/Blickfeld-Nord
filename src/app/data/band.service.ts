@@ -12,6 +12,14 @@ export interface Member {
   link?: { label: string; url: string };
 }
 
+export interface Friend {
+  name: string;
+  description: string;
+  url: string;
+  // 'drum' zeigt das Trommel-Symbol, sonst ein allgemeines Link-Symbol
+  icon?: 'drum';
+}
+
 export interface Photo {
   src: string;
   thumb: string;
@@ -50,6 +58,16 @@ export class BandService {
       link: { label: 'Zur Drum School Matthias Wigger', url: 'https://www.drumschool-wigger.de/' },
     },
     { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.' },
+  ];
+
+  // Befreundete Seiten für /freunde
+  readonly friends: Friend[] = [
+    {
+      name: 'Drum School Matthias Wigger',
+      description: 'Schlagzeugunterricht in Hamminkeln – von unserem Drummer Matthias, für Einsteiger und Fortgeschrittene.',
+      url: 'https://www.drumschool-wigger.de/',
+      icon: 'drum',
+    },
   ];
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
