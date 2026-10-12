@@ -29,13 +29,13 @@ export interface Show {
 @Injectable({ providedIn: 'root' })
 export class BandService {
   readonly members: Member[] = [
-    { slug: 'david-broeker', name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2021 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.' },
+    { slug: 'david-broeker', name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2020 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.' },
     {
       slug: 'matthias-wigger',
       name: 'Matthias Wigger',
       role: 'Schlagzeug & Gesang',
       initials: 'MW',
-      bio: 'Der Puls der Band seit 2021: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.',
+      bio: 'Der Puls der Band seit 2020: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.',
       tagline: 'Schlagzeuger aus Leidenschaft',
       story: [
         'Ich heiße Matthias Wigger und spiele seit meinem fünften Lebensjahr mit großer Leidenschaft Schlagzeug und Percussion. Bereits im Alter von sechs Jahren sammelte ich erste Live- und Bühnenerfahrungen in der damaligen Band Sunrise. Schon damals wurde mir klar, dass mich besonders das Zusammenspiel im Ensemble sowie das Auftreten vor Publikum am Schlagzeug fasziniert.',
