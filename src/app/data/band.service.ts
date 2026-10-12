@@ -16,8 +16,8 @@ export interface Friend {
   name: string;
   description: string;
   url: string;
-  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug), sonst ein allgemeines Link-Symbol
-  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub';
+  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme), sonst ein allgemeines Link-Symbol
+  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire';
 }
 
 export interface Photo {
@@ -91,6 +91,12 @@ export class BandService {
       description: 'Gasthof & Kneipe – beides unter einem Dach, wo gutes Essen & lockeres Trinken seit fast 150 Jahren so nah beieinander liegen.',
       url: 'https://www.gasthof-kuepper.de/',
       icon: 'pub',
+    },
+    {
+      name: 'Freiwillige Feuerwehr Hamminkeln – Löscheinheit Dingden',
+      description: 'Ehrenamtlich im Einsatz für Dingden und Umgebung – rund um die Uhr, wenn es darauf ankommt.',
+      url: 'https://www.feuerwehr-dingden.de/l%C3%B6scheinheit-dingden/',
+      icon: 'fire',
     },
   ];
 

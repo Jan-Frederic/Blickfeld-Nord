@@ -51,6 +51,11 @@ import { BandService } from '../data/band.service';
                   <path d="M16.5 10h1.8a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-1.8" />
                   <path d="M8.8 11v6.5M12.7 11v6.5" stroke-width="1.5" />
                 </svg>
+              } @else if (f.icon === 'fire') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2.5c.6 3.2 3 4.9 4.6 7.2a7 7 0 1 1-11.8.6c.9 1.5 2.1 2.3 3.3 2.4-.8-3.8 1.2-7.4 3.9-10.2z" />
+                  <path d="M12 21.5a3.2 3.2 0 0 1-3.2-3.2c0-2.1 1.6-3 3.2-5.3 1.6 2.3 3.2 3.2 3.2 5.3a3.2 3.2 0 0 1-3.2 3.2z" stroke-width="1.5" />
+                </svg>
               } @else {
                 <mat-icon>link</mat-icon>
               }
