@@ -78,8 +78,8 @@ import { Component } from '@angular/core';
       <h3>6. Externe Links</h3>
       <p>
         Auf dieser Website befinden sich Links zu unserem Profil auf Instagram (Meta Platforms Ireland Limited) sowie
-        zu Google Maps (Google Ireland Limited) für die Anfahrt zu unseren Konzerten und zur Website der Drum School
-        Matthias Wigger. Es handelt sich um einfache
+        zu Google Maps (Google Ireland Limited) für die Anfahrt zu unseren Konzerten sowie zu befreundeten Websites
+        (siehe „Freunde &amp; Partner“). Es handelt sich um einfache
         Verlinkungen – Inhalte dieser Anbieter sind nicht eingebettet. Erst wenn Sie einen Link anklicken, werden
         Sie auf die Seite des jeweiligen Anbieters weitergeleitet; ab dann gelten dessen Datenschutzbestimmungen.
       </p>

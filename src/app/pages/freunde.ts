@@ -24,6 +24,13 @@ import { BandService } from '../data/band.service';
                   <path d="M3.5 13.5v5.2c0 1.4 3.8 2.6 8.5 2.6s8.5-1.2 8.5-2.6v-5.2" />
                   <path d="M7.5 15.8v5M12 16v5.3M16.5 15.8v5" stroke-width="1.3" />
                 </svg>
+              } @else if (f.icon === 'cafe') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 2.5c-.8 1 .8 2-.1 3M11.5 2.5c-.8 1 .8 2-.1 3M15 2.5c-.8 1 .8 2-.1 3" stroke-width="1.5" />
+                  <path d="M4 8.5h14v5.5a5.5 5.5 0 0 1-5.5 5.5h-3A5.5 5.5 0 0 1 4 14z" />
+                  <path d="M18 10h1.2a2.3 2.3 0 0 1 0 4.6H17.6" />
+                  <path d="M2.5 21.5h17" />
+                </svg>
               } @else {
                 <mat-icon>link</mat-icon>
               }

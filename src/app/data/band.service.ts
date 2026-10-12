@@ -16,8 +16,8 @@ export interface Friend {
   name: string;
   description: string;
   url: string;
-  // 'drum' zeigt das Trommel-Symbol, sonst ein allgemeines Link-Symbol
-  icon?: 'drum';
+  // eigenes Symbol (Trommel, Kaffeetasse), sonst ein allgemeines Link-Symbol
+  icon?: 'drum' | 'cafe';
 }
 
 export interface Photo {
@@ -67,6 +67,12 @@ export class BandService {
       description: 'Schlagzeugunterricht in Hamminkeln – von unserem Drummer Matthias, für Einsteiger und Fortgeschrittene.',
       url: 'https://www.drumschool-wigger.de/',
       icon: 'drum',
+    },
+    {
+      name: 'Café Lotti',
+      description: 'Dein Café in Dingden für guten Kaffee, Kuchen, Frühstück, Live-Musik, Workshops und besondere Abende.',
+      url: 'https://cafelotti.de/',
+      icon: 'cafe',
     },
   ];
 
