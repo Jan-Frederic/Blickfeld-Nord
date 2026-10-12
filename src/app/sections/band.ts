@@ -12,7 +12,7 @@ import { BandService } from '../data/band.service';
       <p class="kicker">Wer wir sind</p>
       <h2>Die Band</h2>
       <p class="lead">
-        Was 2020 als Kombo von David und Matthias begann, ist heute ein echtes Power-Trio: Seit Oktober 2025
+        Was 2019 als Kombo von David und Matthias begann, ist heute ein echtes Power-Trio: Seit Oktober 2025
         macht Fred am Bass die Runde komplett. Seitdem heißt es: drei Stimmen, ein Ziel – Party.
       </p>
       <p class="lead">
