@@ -44,6 +44,13 @@ import { BandService } from '../data/band.service';
                   <ellipse cx="6.2" cy="17.8" rx="2.8" ry="2.2" fill="currentColor" stroke="none" />
                   <ellipse cx="17.2" cy="15.3" rx="2.8" ry="2.2" fill="currentColor" stroke="none" />
                 </svg>
+              } @else if (f.icon === 'pub') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 7.5c-.9-2.6 1.6-4.6 3.7-3.4 1-1.8 4-1.8 5 0 2.1-1.2 4.6.8 3.6 3.4" />
+                  <path d="M5 7.5h11.5v11.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
+                  <path d="M16.5 10h1.8a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-1.8" />
+                  <path d="M8.8 11v6.5M12.7 11v6.5" stroke-width="1.5" />
+                </svg>
               } @else {
                 <mat-icon>link</mat-icon>
               }

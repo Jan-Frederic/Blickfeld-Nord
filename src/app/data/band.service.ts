@@ -16,8 +16,8 @@ export interface Friend {
   name: string;
   description: string;
   url: string;
-  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten), sonst ein allgemeines Link-Symbol
-  icon?: 'drum' | 'cafe' | 'instagram' | 'choir';
+  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug), sonst ein allgemeines Link-Symbol
+  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub';
 }
 
 export interface Photo {
@@ -85,6 +85,12 @@ export class BandService {
       description: 'Der Chor aus Dingden, der seit mehr als 40 Jahren notleidenden Menschen in der Dritten Welt mit musikalischen Veranstaltungen und Spendengeldern hilft.',
       url: 'https://www.pro-campesinos.de/',
       icon: 'choir',
+    },
+    {
+      name: 'Gasthof Küpper',
+      description: 'Gasthof & Kneipe – beides unter einem Dach, wo gutes Essen & lockeres Trinken seit fast 150 Jahren so nah beieinander liegen.',
+      url: 'https://www.gasthof-kuepper.de/',
+      icon: 'pub',
     },
   ];
 
