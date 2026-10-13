@@ -29,13 +29,23 @@ export interface Photo {
 
 export interface Show {
   date: string;
-  city: string;
   venue: string;
-  mapsUrl: string;
+  city?: string;
+  mapsUrl?: string;
+  // Private Termine erscheinen nur auf der Backstage-Seite, nicht öffentlich
+  private?: boolean;
+  // Ist der Auftritt fest zugesagt und alles geklärt?
+  confirmed: boolean;
+  comment?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class BandService {
+  // Öffentliche Termine, chronologisch
+  get publicShows(): Show[] {
+    return this.shows.filter((s) => !s.private).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
   readonly members: Member[] = [
     { slug: 'david-broeker', name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2019 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.' },
     {
@@ -116,10 +126,12 @@ export class BandService {
     { src: 'galerie/platzhalter-3.webp', thumb: 'galerie/platzhalter-3-thumb.webp', alt: 'Platzhalter – Foto folgt' },
   ];
 
+  // Alle Auftritte; öffentliche ohne private: true erscheinen unter „Tour und Konzerte“
   readonly shows: Show[] = [
-    { date: '2026-12-04', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW' },
-    { date: '2027-04-03', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW' },
-    { date: '2027-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
-    { date: '2027-05-02', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
+    { date: '2026-12-04', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true },
+    { date: '2027-04-03', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true },
+    { date: '2027-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
+    { date: '2027-05-02', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
+    { date: '2027-05-07', venue: 'Scheperswiese', private: true, confirmed: false },
   ];
 }

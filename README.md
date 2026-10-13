@@ -11,11 +11,18 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Tour und Konzerte** – Termine mit Anfahrts-Link zu Google Maps
 - **Galerie** – Fotos mit Vollbildansicht
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten
+- **Backstage** (`/backstage`, versteckt) – alle Auftritte inkl. privater Termine mit Status und Kommentar.
+  Easter Egg: fünfmal schnell auf das Logo oben links klicken.
 - **Impressum** (`/impressum`) und **Datenschutzerklärung** (`/datenschutz`)
 
 Alle Inhalte (Mitglieder, Konzerttermine, Fotos, befreundete Seiten) stehen zentral in
 `src/app/data/band.service.ts`.
 Die Rechtstexte liegen in `src/app/pages/`.
+
+Auftritte (`shows`): `private: true` blendet einen Termin öffentlich aus, `confirmed` steht für
+„geklärt“, `comment` ist eine Notiz für die Backstage-Seite; `city` und `mapsUrl` sind optional.
+**Achtung:** Auch private Termine und Kommentare stehen im öffentlichen Repo und im
+ausgelieferten JavaScript – nichts Vertrauliches eintragen.
 
 Kommt ein neues Bandmitglied (oder eine neue Unterseite) dazu, den Pfad auch in
 `.github/workflows/deploy-pages.yml` ergänzen, damit Direktaufrufe funktionieren.

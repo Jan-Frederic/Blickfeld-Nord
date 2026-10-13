@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
       </picture>
       <div class="hero-content">
         @if (nextShow; as s) {
-          <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}</strong> · {{ s.venue }} {{ s.city }}</p>
+          <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}</strong> · {{ s.venue }} {{ s.city ?? '' }}</p>
         }
         <div class="actions">
           <button mat-flat-button (click)="navigate.emit('tour')">
@@ -62,7 +62,7 @@ export class Hero {
   readonly navigate = output<string>();
 
   // Erster Termin ab heute; vergangene Konzerte werden nicht angekündigt
-  protected readonly nextShow = inject(BandService)
-    .shows.filter((s) => s.date >= new Date().toISOString().slice(0, 10))
-    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  protected readonly nextShow = inject(BandService).publicShows.filter(
+    (s) => s.date >= new Date().toISOString().slice(0, 10),
+  )[0];
 }

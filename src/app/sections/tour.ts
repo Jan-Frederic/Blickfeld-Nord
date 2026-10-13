@@ -21,7 +21,7 @@ import { BandService } from '../data/band.service';
           </ng-container>
           <ng-container matColumnDef="city">
             <th mat-header-cell *matHeaderCellDef>Ort</th>
-            <td mat-cell *matCellDef="let s"><strong>{{ s.city }}</strong><span class="venue-inline">{{ s.venue }}</span></td>
+            <td mat-cell *matCellDef="let s"><strong>{{ s.city ?? '–' }}</strong><span class="venue-inline">{{ s.venue }}</span></td>
           </ng-container>
           <ng-container matColumnDef="venue">
             <th mat-header-cell *matHeaderCellDef class="venue">Location</th>
@@ -30,9 +30,11 @@ import { BandService } from '../data/band.service';
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let s" class="action">
-              <a mat-stroked-button [href]="s.mapsUrl" target="_blank" rel="noopener" [attr.aria-label]="'Anfahrt nach ' + s.city + ' in Google Maps'">
-                <mat-icon>place</mat-icon><span class="label">Anfahrt</span>
-              </a>
+              @if (s.mapsUrl) {
+                <a mat-stroked-button [href]="s.mapsUrl" target="_blank" rel="noopener" [attr.aria-label]="'Anfahrt zu ' + s.venue + ' in Google Maps'">
+                  <mat-icon>place</mat-icon><span class="label">Anfahrt</span>
+                </a>
+              }
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
@@ -58,6 +60,6 @@ import { BandService } from '../data/band.service';
   `,
 })
 export class Tour {
-  protected readonly shows = [...inject(BandService).shows].sort((a, b) => a.date.localeCompare(b.date));
+  protected readonly shows = inject(BandService).publicShows;
   protected readonly columns = ['date', 'city', 'venue', 'action'];
 }

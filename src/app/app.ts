@@ -21,6 +21,24 @@ export class App {
 
   private readonly router = inject(Router);
 
+  private logoClicks: number[] = [];
+  private eggCooldownUntil = 0;
+
+  // Easter Egg: fünf Klicks aufs Logo innerhalb von 2 Sekunden öffnen die Backstage-Seite
+  protected onLogoClick(): void {
+    const now = Date.now();
+    // Überzählige Klicks direkt nach dem Auslösen ignorieren, sonst geht es gleich zurück zur Startseite
+    if (now < this.eggCooldownUntil) return;
+    this.logoClicks = [...this.logoClicks.filter((t) => now - t < 2000), now];
+    if (this.logoClicks.length >= 5) {
+      this.logoClicks = [];
+      this.eggCooldownUntil = now + 1000;
+      this.router.navigateByUrl('/backstage');
+      return;
+    }
+    this.scrollTo('home');
+  }
+
   // Von Impressum/Datenschutz aus erst zur Startseite wechseln, dann zum Abschnitt scrollen
   protected async scrollTo(id: string): Promise<void> {
     if (this.router.url.split(/[?#]/)[0] !== '/') {
