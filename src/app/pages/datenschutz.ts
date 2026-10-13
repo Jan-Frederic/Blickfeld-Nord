@@ -77,7 +77,8 @@ import { Component } from '@angular/core';
 
       <h3>6. Externe Links</h3>
       <p>
-        Auf dieser Website befinden sich Links zu unserem Profil auf Instagram (Meta Platforms Ireland Limited) sowie
+        Auf dieser Website befinden sich Links zu unseren Profilen auf Instagram und Facebook (beide Meta Platforms
+        Ireland Limited) sowie
         zu Google Maps (Google Ireland Limited) für die Anfahrt zu unseren Konzerten sowie zu befreundeten Websites
         (siehe „Freunde &amp; Partner“). Es handelt sich um einfache
         Verlinkungen – Inhalte dieser Anbieter sind nicht eingebettet. Erst wenn Sie einen Link anklicken, werden
