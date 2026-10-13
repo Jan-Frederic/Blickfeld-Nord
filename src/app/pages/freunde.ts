@@ -65,6 +65,12 @@ import { BandService } from '../data/band.service';
                   <circle cx="19.2" cy="9.5" r="2.2" stroke-width="1.6" />
                   <path d="M22.5 19v-.8a3.4 3.4 0 0 0-4-3.4" stroke-width="1.6" />
                 </svg>
+              } @else if (f.icon === 'football') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9.5" />
+                  <path d="M12 8.2l3.6 2.6-1.4 4.2H9.8l-1.4-4.2z" fill="currentColor" />
+                  <path d="M12 8.2V2.6M15.6 10.8l5.3-1.7M14.2 15l3.3 4.6M9.8 15l-3.3 4.6M8.4 10.8 3.1 9.1" stroke-width="1.6" />
+                </svg>
               } @else {
                 <mat-icon>link</mat-icon>
               }

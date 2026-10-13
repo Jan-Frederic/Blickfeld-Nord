@@ -16,8 +16,8 @@ export interface Friend {
   name: string;
   description: string;
   url: string;
-  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme, Gruppe), sonst ein allgemeines Link-Symbol
-  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community';
+  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme, Gruppe, Fußball), sonst ein allgemeines Link-Symbol
+  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community' | 'football';
 }
 
 export interface Photo {
@@ -115,6 +115,12 @@ export class BandService {
       description: 'Wo Gemeinschaft läuft und der Kaffee niemals kalt wird!',
       url: 'https://www.bokeltsen-blagen.de/',
       icon: 'community',
+    },
+    {
+      name: 'F.C. Grün Weiß Lankern 1975 e.V.',
+      description: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Grün-weißer Herzensverein unseres Gitarristen.',
+      url: 'https://lankern.de/',
+      icon: 'football',
     },
   ];
 
