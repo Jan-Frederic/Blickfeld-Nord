@@ -41,9 +41,9 @@ export interface Show {
 
 @Injectable({ providedIn: 'root' })
 export class BandService {
-  // Öffentliche Termine, chronologisch
+  // Öffentlich gelistet wird nur, was öffentlich UND geklärt ist – chronologisch
   get publicShows(): Show[] {
-    return this.shows.filter((s) => !s.private).sort((a, b) => a.date.localeCompare(b.date));
+    return this.shows.filter((s) => !s.private && s.confirmed).sort((a, b) => a.date.localeCompare(b.date));
   }
 
   readonly members: Member[] = [
@@ -126,7 +126,7 @@ export class BandService {
     { src: 'galerie/platzhalter-3.webp', thumb: 'galerie/platzhalter-3-thumb.webp', alt: 'Platzhalter – Foto folgt' },
   ];
 
-  // Alle Auftritte; öffentliche ohne private: true erscheinen unter „Tour und Konzerte“
+  // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
   readonly shows: Show[] = [
     { date: '2026-12-04', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true },
     { date: '2027-04-03', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true },

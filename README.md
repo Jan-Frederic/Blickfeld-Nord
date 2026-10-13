@@ -19,8 +19,8 @@ Alle Inhalte (Mitglieder, Konzerttermine, Fotos, befreundete Seiten) stehen zent
 `src/app/data/band.service.ts`.
 Die Rechtstexte liegen in `src/app/pages/`.
 
-Auftritte (`shows`): `private: true` blendet einen Termin öffentlich aus, `confirmed` steht für
-„geklärt“, `comment` ist eine Notiz für die Backstage-Seite; `city` und `mapsUrl` sind optional.
+Auftritte (`shows`): Öffentlich gelistet wird ein Termin nur, wenn er nicht privat **und**
+geklärt (`confirmed: true`) ist; `private: true` blendet ihn aus, `comment` ist eine Notiz für die Backstage-Seite; `city` und `mapsUrl` sind optional.
 **Achtung:** Auch private Termine und Kommentare stehen im öffentlichen Repo und im
 ausgelieferten JavaScript – nichts Vertrauliches eintragen.
 
