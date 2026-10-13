@@ -18,6 +18,7 @@ import { BandService } from '../data/band.service';
 
       <div class="summary">
         <span><strong>{{ shows.length }}</strong> Auftritte</span>
+        <span><strong>{{ confirmed }}</strong> geklärt</span>
         <span><strong>{{ open }}</strong> offen</span>
         <span><strong>{{ privateCount }}</strong> privat</span>
       </div>
@@ -87,7 +88,8 @@ export class Backstage implements OnDestroy {
   protected readonly shows = [...inject(BandService).shows].sort((a, b) => a.date.localeCompare(b.date));
   protected readonly columns = ['date', 'venue', 'type', 'status', 'comment'];
   protected readonly today = new Date().toISOString().slice(0, 10);
-  protected readonly open = this.shows.filter((s) => !s.confirmed).length;
+  protected readonly confirmed = this.shows.filter((s) => s.confirmed).length;
+  protected readonly open = this.shows.length - this.confirmed;
   protected readonly privateCount = this.shows.filter((s) => s.private).length;
 
   constructor() {
