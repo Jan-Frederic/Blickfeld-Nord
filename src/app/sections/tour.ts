@@ -17,7 +17,7 @@ import { BandService } from '../data/band.service';
         <table mat-table [dataSource]="shows">
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
-            <td mat-cell *matCellDef="let s" class="date">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}</td>
+            <td mat-cell *matCellDef="let s" class="date">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</td>
           </ng-container>
           <ng-container matColumnDef="city">
             <th mat-header-cell *matHeaderCellDef>Ort</th>
