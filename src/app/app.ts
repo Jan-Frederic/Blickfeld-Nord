@@ -15,6 +15,7 @@ export class App {
   protected readonly nav = [
     { id: 'band', label: 'Band' },
     { id: 'tour', label: 'Konzerte' },
+    { id: 'booking', label: 'Booking' },
     { id: 'galerie', label: 'Galerie' },
   ];
   protected readonly year = new Date().getFullYear();

@@ -9,6 +9,7 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Hero** mit Logo-Motiv und dem nächsten Konzerttermin
 - **Die Band** – Mitglieder mit Rolle und Kurzbio, jeweils mit eigener Unterseite (`/band/<name>`)
 - **Tour und Konzerte** – Termine mit Anfahrts-Link zu Google Maps und Kalender-Export (.ics, einzeln oder alle)
+- **Booking** – Infos für Veranstalter (Anlässe, Spielzeit, Technik), Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
 - **Galerie** – Fotos mit Vollbildansicht
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte)
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten
