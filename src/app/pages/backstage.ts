@@ -3,13 +3,15 @@ import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { downloadIcs } from '../data/calendar';
 import { BandService } from '../data/band.service';
 
 // Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
 // fünfmal schnell auf das Logo oben links klicken.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, MatTableModule, MatIconModule],
+  imports: [DatePipe, MatTableModule, MatIconModule, MatButtonModule],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -21,6 +23,9 @@ import { BandService } from '../data/band.service';
         <span><strong>{{ confirmed }}</strong> geklärt</span>
         <span><strong>{{ open }}</strong> offen</span>
         <span><strong>{{ privateCount }}</strong> privat</span>
+        <button mat-stroked-button class="export" (click)="exportAll()">
+          <mat-icon>event</mat-icon> Alle Termine als Kalender
+        </button>
       </div>
 
       <div class="table-wrap">
@@ -66,6 +71,8 @@ import { BandService } from '../data/band.service';
       display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 20px;
       font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; color: var(--bn-fog);
     }
+    .summary { align-items: center; }
+    .export { margin-left: auto; text-transform: none; letter-spacing: normal; }
     .summary strong { color: var(--bn-ink); font-size: 1rem; margin-right: 4px; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
     table { width: 100%; min-width: 720px; background: transparent; }
@@ -95,6 +102,11 @@ export class Backstage implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
+
+  // Bandkalender inkl. privater Termine, Status und Kommentaren
+  protected exportAll(): void {
+    downloadIcs(this.shows, 'blickfeld-nord-backstage.ics', 'Blickfeld Nord – Backstage', true);
   }
 
   ngOnDestroy(): void {
