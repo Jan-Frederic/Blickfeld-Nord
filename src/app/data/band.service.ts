@@ -47,6 +47,8 @@ export interface Show {
   date: string;
   // optional: letzter Tag bei mehrtägigen Terminen
   endDate?: string;
+  // optional: Beginn als 'HH:MM' (Ortszeit); ohne Uhrzeit ganztägig
+  time?: string;
   venue: string;
   city?: string;
   mapsUrl?: string;
@@ -174,10 +176,10 @@ export class BandService {
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
   readonly shows: Show[] = [
-    { date: '2026-12-04', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true },
-    { date: '2027-04-03', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true },
-    { date: '2027-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
-    { date: '2027-05-02', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
+    { date: '2026-12-04', time: '18:00', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true },
+    { date: '2027-04-03', time: '18:00', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true },
+    { date: '2027-04-30', time: '18:00', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
+    { date: '2027-05-02', time: '10:00', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2027-05-07', venue: 'Scheperswiese', private: true, confirmed: false },
     { date: '2027-06-12', venue: 'Ronny S.', private: true, confirmed: true },
     { date: '2027-08-29', city: 'Rhede', venue: 'Kirmes Rhede', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: false },

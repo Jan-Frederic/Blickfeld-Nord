@@ -26,8 +26,8 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
             <td mat-cell *matCellDef="let s" class="date">
-              <span class="long">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</span>
-              <span class="short">{{ s.date | date: 'dd.MM.yy' }}@if (s.endDate) {<br />– {{ s.endDate | date: 'dd.MM.yy' }}}</span>
+              <span class="long">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</span>
+              <span class="short">{{ s.date | date: 'dd.MM.yy' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'dd.MM.yy' }}}</span>
             </td>
           </ng-container>
           <ng-container matColumnDef="city">
@@ -67,6 +67,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
     .action > * + * { margin-left: 8px; }
     .venue-inline { display: none; font-size: .85rem; opacity: .75; }
     .short { display: none; }
+    .time { display: block; font-size: .82rem; color: var(--bn-sunset); }
     @media (max-width: 640px) {
       .venue { display: none; }
       .venue-inline { display: block; }

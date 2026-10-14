@@ -32,7 +32,7 @@ import { BandService } from '../data/band.service';
         <table mat-table [dataSource]="shows">
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
-            <td mat-cell *matCellDef="let s" class="date" [class.past]="(s.endDate ?? s.date) < today">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</td>
+            <td mat-cell *matCellDef="let s" class="date" [class.past]="(s.endDate ?? s.date) < today">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</td>
           </ng-container>
           <ng-container matColumnDef="venue">
             <th mat-header-cell *matHeaderCellDef>Auftritt</th>
@@ -78,6 +78,7 @@ import { BandService } from '../data/band.service';
     table { width: 100%; min-width: 720px; background: transparent; }
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
     .past { opacity: .45; }
+    .time { display: block; font-size: .82rem; color: var(--bn-sunset); }
     .sub { display: block; font-size: .85rem; opacity: .7; }
     .tag {
       display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .75rem;

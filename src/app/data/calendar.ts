@@ -1,9 +1,40 @@
 import { Show } from './band.service';
 
 // Erzeugt Kalenderdateien (iCalendar/.ics) direkt im Browser – ohne externen Dienst.
-// Auftritte haben keine Uhrzeit, daher als ganztägige Termine.
+// Mit Uhrzeit: Termin in Ortszeit (Europe/Berlin) mit angenommener Dauer; ohne Uhrzeit: ganztägig.
+
+// Auftritte haben kein festes Ende – im Kalender wird diese Dauer angenommen
+const DEFAULT_DURATION_HOURS = 3;
+
+// Zeitzonen-Definition für Europe/Berlin (MEZ/MESZ), damit auch Outlook die Uhrzeit korrekt liest
+const VTIMEZONE = [
+  'BEGIN:VTIMEZONE',
+  'TZID:Europe/Berlin',
+  'BEGIN:DAYLIGHT',
+  'TZOFFSETFROM:+0100',
+  'TZOFFSETTO:+0200',
+  'TZNAME:CEST',
+  'DTSTART:19700329T020000',
+  'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU',
+  'END:DAYLIGHT',
+  'BEGIN:STANDARD',
+  'TZOFFSETFROM:+0200',
+  'TZOFFSETTO:+0100',
+  'TZNAME:CET',
+  'DTSTART:19701025T030000',
+  'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+  'END:STANDARD',
+  'END:VTIMEZONE',
+];
 
 const compact = (date: string) => date.replaceAll('-', '');
+
+// Lokale Zeitangabe (ohne Zeitzonenumrechnung) um Stunden verschieben → 'YYYYMMDDTHHMMSS'
+function localDateTime(date: string, time: string, plusHours = 0): string {
+  const d = new Date(`${date}T${time}:00Z`);
+  d.setUTCHours(d.getUTCHours() + plusHours);
+  return d.toISOString().slice(0, 19).replace(/[-:]/g, '');
+}
 
 function nextDay(date: string): string {
   const d = new Date(date + 'T00:00:00Z');
@@ -53,8 +84,12 @@ function event(s: Show, stamp: string, withNotes: boolean): string[] {
     'BEGIN:VEVENT',
     `UID:${s.date}-${slug(s.venue)}@blickfeld-nord.de`,
     `DTSTAMP:${stamp}`,
-    `DTSTART;VALUE=DATE:${compact(s.date)}`,
-    `DTEND;VALUE=DATE:${compact(nextDay(s.endDate ?? s.date))}`,
+    ...(s.time
+      ? [
+          `DTSTART;TZID=Europe/Berlin:${localDateTime(s.date, s.time)}`,
+          `DTEND;TZID=Europe/Berlin:${localDateTime(s.endDate ?? s.date, s.time, DEFAULT_DURATION_HOURS)}`,
+        ]
+      : [`DTSTART;VALUE=DATE:${compact(s.date)}`, `DTEND;VALUE=DATE:${compact(nextDay(s.endDate ?? s.date))}`]),
     `SUMMARY:${esc('Blickfeld Nord: ' + s.venue)}`,
     `LOCATION:${esc(location)}`,
     `DESCRIPTION:${esc(description.join('\n'))}`,
@@ -75,6 +110,7 @@ export function buildIcs(shows: Show[], calendarName: string, withNotes = false)
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${esc(calendarName)}`,
     'X-WR-TIMEZONE:Europe/Berlin',
+    ...(shows.some((s) => s.time) ? VTIMEZONE : []),
     ...shows.flatMap((s) => event(s, stamp, withNotes)),
     'END:VCALENDAR',
   ];

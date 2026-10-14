@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
       </picture>
       <div class="hero-content">
         @if (nextShow; as s) {
-          <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}</strong> · {{ s.venue }} {{ s.city ?? '' }}</p>
+          <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}@if (s.time) {, {{ s.time }} Uhr}</strong> · {{ s.venue }} {{ s.city ?? '' }}</p>
         }
         <div class="actions">
           <button mat-flat-button (click)="navigate.emit('tour')">
