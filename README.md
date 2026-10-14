@@ -12,6 +12,7 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Booking** – Infos für Veranstalter (Anlässe, Spielzeit, Technik), Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
 - **Galerie** – Fotos mit Vollbildansicht
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte)
+- **Pressekit** (`/presse`) – Pressetext, Logos, Fotos, PDF und ZIP zum Download
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten
 - **Backstage** (`/backstage`, versteckt) – alle Auftritte inkl. privater Termine mit Status und Kommentar, exportierbar als Bandkalender.
   Easter Egg: fünfmal schnell auf das Logo oben links klicken.
@@ -34,6 +35,19 @@ Kommt ein neues Bandmitglied (oder eine neue Unterseite) dazu, den Pfad auch in
 Bilder liegen in `public/galerie/` – jeweils als großes Bild (max. 2000 px) und als
 verkleinerte Vorschau (`…-thumb.webp`, ca. 900 px). Danach in `band.service.ts` unter
 `photos` eintragen. Vor dem Hochladen Metadaten (z. B. GPS-Ort) entfernen.
+
+### Pressekit neu bauen
+
+Die Dateien in `public/presse/` (PDF, ZIP, Logos, Fotos, Pressetext) erzeugt
+`scripts/build-pressekit.py` aus `public/hero.webp` und `scripts/presse-quellen/`.
+Texte stehen oben im Skript. Neu bauen (nach `npm ci`):
+
+```bash
+pip install pillow reportlab fonttools
+python3 scripts/build-pressekit.py
+```
+
+Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
 
 ## Entwicklung
 

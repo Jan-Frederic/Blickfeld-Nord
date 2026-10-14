@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
@@ -20,7 +21,7 @@ Viele Grüße
 
 @Component({
   selector: 'app-booking',
-  imports: [MatIconModule],
+  imports: [RouterLink, MatIconModule],
   template: `
     <section id="booking" class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -91,6 +92,7 @@ Viele Grüße
             </a>
           </div>
           <p class="mail">oder direkt an <a [href]="mailto">{{ mail }}</a></p>
+          <p class="mail">Logos, Fotos und Infos für eure Ankündigung: <a routerLink="/presse">Pressekit</a></p>
         </div>
       </div>
     </section>

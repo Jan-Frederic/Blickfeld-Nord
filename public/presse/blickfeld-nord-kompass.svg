@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<rect width="64" height="64" rx="14" fill="#15171c"/>
+<circle cx="32" cy="32" r="25" fill="none" stroke="#e4e1db" stroke-width="2.4"/>
+<line x1="32.00" y1="7.00" x2="32.00" y2="11.00" stroke="#e4e1db" stroke-width="1.6"/>
+<line x1="36.34" y1="7.38" x2="36.06" y2="8.96" stroke="#e4e1db" stroke-width="1"/>
+<line x1="40.55" y1="8.51" x2="40.00" y2="10.01" stroke="#e4e1db" stroke-width="1"/>
+<line x1="44.50" y1="10.35" x2="43.20" y2="12.60" stroke="#e4e1db" stroke-width="1"/>
+<line x1="48.07" y1="12.85" x2="47.04" y2="14.07" stroke="#e4e1db" stroke-width="1"/>
+<line x1="51.15" y1="15.93" x2="49.93" y2="16.96" stroke="#e4e1db" stroke-width="1"/>
+<line x1="53.65" y1="19.50" x2="51.40" y2="20.80" stroke="#e4e1db" stroke-width="1"/>
+<line x1="55.49" y1="23.45" x2="53.99" y2="24.00" stroke="#e4e1db" stroke-width="1"/>
+<line x1="56.62" y1="27.66" x2="55.04" y2="27.94" stroke="#e4e1db" stroke-width="1"/>
+<line x1="57.00" y1="32.00" x2="53.00" y2="32.00" stroke="#e4e1db" stroke-width="1.6"/>
+<line x1="56.62" y1="36.34" x2="55.04" y2="36.06" stroke="#e4e1db" stroke-width="1"/>
+<line x1="55.49" y1="40.55" x2="53.99" y2="40.00" stroke="#e4e1db" stroke-width="1"/>
+<line x1="53.65" y1="44.50" x2="51.40" y2="43.20" stroke="#e4e1db" stroke-width="1"/>
+<line x1="51.15" y1="48.07" x2="49.93" y2="47.04" stroke="#e4e1db" stroke-width="1"/>
+<line x1="48.07" y1="51.15" x2="47.04" y2="49.93" stroke="#e4e1db" stroke-width="1"/>
+<line x1="44.50" y1="53.65" x2="43.20" y2="51.40" stroke="#e4e1db" stroke-width="1"/>
+<line x1="40.55" y1="55.49" x2="40.00" y2="53.99" stroke="#e4e1db" stroke-width="1"/>
+<line x1="36.34" y1="56.62" x2="36.06" y2="55.04" stroke="#e4e1db" stroke-width="1"/>
+<line x1="32.00" y1="57.00" x2="32.00" y2="53.00" stroke="#e4e1db" stroke-width="1.6"/>
+<line x1="27.66" y1="56.62" x2="27.94" y2="55.04" stroke="#e4e1db" stroke-width="1"/>
+<line x1="23.45" y1="55.49" x2="24.00" y2="53.99" stroke="#e4e1db" stroke-width="1"/>
+<line x1="19.50" y1="53.65" x2="20.80" y2="51.40" stroke="#e4e1db" stroke-width="1"/>
+<line x1="15.93" y1="51.15" x2="16.96" y2="49.93" stroke="#e4e1db" stroke-width="1"/>
+<line x1="12.85" y1="48.07" x2="14.07" y2="47.04" stroke="#e4e1db" stroke-width="1"/>
+<line x1="10.35" y1="44.50" x2="12.60" y2="43.20" stroke="#e4e1db" stroke-width="1"/>
+<line x1="8.51" y1="40.55" x2="10.01" y2="40.00" stroke="#e4e1db" stroke-width="1"/>
+<line x1="7.38" y1="36.34" x2="8.96" y2="36.06" stroke="#e4e1db" stroke-width="1"/>
+<line x1="7.00" y1="32.00" x2="11.00" y2="32.00" stroke="#e4e1db" stroke-width="1.6"/>
+<line x1="7.38" y1="27.66" x2="8.96" y2="27.94" stroke="#e4e1db" stroke-width="1"/>
+<line x1="8.51" y1="23.45" x2="10.01" y2="24.00" stroke="#e4e1db" stroke-width="1"/>
+<line x1="10.35" y1="19.50" x2="12.60" y2="20.80" stroke="#e4e1db" stroke-width="1"/>
+<line x1="12.85" y1="15.93" x2="14.07" y2="16.96" stroke="#e4e1db" stroke-width="1"/>
+<line x1="15.93" y1="12.85" x2="16.96" y2="14.07" stroke="#e4e1db" stroke-width="1"/>
+<line x1="19.50" y1="10.35" x2="20.80" y2="12.60" stroke="#e4e1db" stroke-width="1"/>
+<line x1="23.45" y1="8.51" x2="24.00" y2="10.01" stroke="#e4e1db" stroke-width="1"/>
+<line x1="27.66" y1="7.38" x2="27.94" y2="8.96" stroke="#e4e1db" stroke-width="1"/>
+<polygon points="36.01,32.92 46.05,19.08 47.72,14.54 43.38,16.68 30.66,28.10" fill="#efece6"/>
+<polygon points="30.66,35.90 43.38,47.32 47.72,49.46 46.05,44.92 36.01,31.08" fill="#efece6"/>
+<polygon points="32,7.5 37,32 27,32" fill="#ffffff"/>
+<polygon points="27,32 37,32 32,56.5" fill="#e4e1db" fill-opacity="0.55"/>
+<circle cx="32" cy="32" r="4.2" fill="#15171c" stroke="#ffffff" stroke-width="2"/>
+</svg>
