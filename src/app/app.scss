@@ -28,6 +28,6 @@ footer {
 }
 .social { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
 .brand-icon { width: 22px; height: 22px; display: block; }
-.legal-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 8px; }
+.legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 24px; margin-bottom: 8px; }
 .legal-links a { color: var(--bn-ink); text-decoration: none; }
 .legal-links a:hover { color: var(--bn-sunset); }

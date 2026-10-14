@@ -20,6 +20,22 @@ export interface Friend {
   icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community' | 'football';
 }
 
+export interface HistoryLink {
+  type: 'instagram' | 'web' | 'place';
+  label: string;
+  url: string;
+}
+
+export interface HistoryEntry {
+  date: string;
+  title: string;
+  text: string[];
+  images?: { src: string; alt: string }[];
+  links?: HistoryLink[];
+  // markiert erfundene Beispiel-Einträge sichtbar auf der Seite
+  example?: boolean;
+}
+
 export interface Photo {
   src: string;
   thumb: string;
@@ -70,6 +86,28 @@ export class BandService {
       link: { label: 'Zur Drum School Matthias Wigger', url: 'https://www.drumschool-wigger.de/' },
     },
     { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.' },
+  ];
+
+  // Historie (/historie), neueste Einträge zuerst
+  readonly history: HistoryEntry[] = [
+    {
+      date: '2026-09-20',
+      title: 'Sommerausklang im Café Lotti',
+      text: [
+        'Was für ein Abend! Zum Sommerausklang haben wir im Café Lotti in Dingden gespielt – draußen im Garten, mit Lichterketten, Kuchen und einem Publikum, das ab dem zweiten Song mitgesungen hat.',
+        'Danke an das ganze Lotti-Team für die Gastfreundschaft. Wir kommen wieder – spätestens zum Tanz in den Mai!',
+      ],
+      images: [
+        { src: 'galerie/band-2.webp', alt: 'Die Band gut gelaunt vor Backsteinwand und Equipment' },
+        { src: 'galerie/band-1.webp', alt: 'Die drei Musiker knien lachend zwischen Mikrofonständern' },
+      ],
+      links: [
+        { type: 'instagram', label: 'Beitrag auf Instagram', url: 'https://www.instagram.com/blickfeldnord/' },
+        { type: 'web', label: 'cafelotti.de', url: 'https://cafelotti.de/' },
+        { type: 'place', label: 'Dingden, Hamminkeln', url: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
+      ],
+      example: true,
+    },
   ];
 
   // Befreundete Seiten für /freunde

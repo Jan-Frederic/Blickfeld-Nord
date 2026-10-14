@@ -7,6 +7,7 @@
     @for (n of nav; track n.id) {
       <button mat-button (click)="scrollTo(n.id)">{{ n.label }}</button>
     }
+    <a mat-button routerLink="/historie">Historie</a>
     <a mat-button routerLink="/freunde">Freunde</a>
   </nav>
   <button mat-icon-button class="mobile-nav" [matMenuTriggerFor]="menu" aria-label="Menü öffnen">
@@ -16,6 +17,7 @@
     @for (n of nav; track n.id) {
       <button mat-menu-item (click)="scrollTo(n.id)">{{ n.label }}</button>
     }
+    <a mat-menu-item routerLink="/historie">Historie</a>
     <a mat-menu-item routerLink="/freunde">Freunde</a>
   </mat-menu>
 </mat-toolbar>
@@ -43,6 +45,7 @@
     <a mat-icon-button href="mailto:Matthiaswigger@me.com" aria-label="E-Mail an Matthias Wigger"><mat-icon>mail</mat-icon></a>
   </div>
   <nav class="legal-links">
+    <a routerLink="/historie">Historie</a>
     <a routerLink="/freunde">Freunde</a>
     <a routerLink="/impressum">Impressum</a>
     <a routerLink="/datenschutz">Datenschutz</a>
