@@ -10,7 +10,7 @@ wir möchten euch gerne buchen:
 
 Datum:
 Ort / Location:
-Anlass (Fest, Firmenfeier, Kneipe …):
+Anlass (Fest, private Feier, Kneipe …):
 Ungefähre Gästezahl:
 Gewünschte Spielzeit (3–4 Stunden):
 Ansprechpartner & Telefon:
@@ -26,7 +26,7 @@ Viele Grüße
       <p class="kicker">Für Veranstalter</p>
       <h2>Booking</h2>
       <p class="lead">
-        Ihr plant ein Fest, eine Firmenfeier oder einen Abend in eurer Kneipe und sucht eine Band, die für Stimmung
+        Ihr plant ein Fest, eine private Feier oder einen Abend in eurer Kneipe und sucht eine Band, die für Stimmung
         sorgt? Dann seid ihr bei uns richtig – wir bringen alles mit, ihr bringt die Gäste.
       </p>
 
@@ -34,7 +34,7 @@ Viele Grüße
         <li>
           <mat-icon>celebration</mat-icon>
           <span class="label">Anlässe</span>
-          <span class="value">Feste, Firmenfeiern und Kneipen</span>
+          <span class="value">Feste, private Feiern und Kneipen</span>
         </li>
         <li>
           <mat-icon>schedule</mat-icon>
