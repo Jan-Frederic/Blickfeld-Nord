@@ -5,7 +5,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs } from '../data/calendar';
-import { BandService } from '../data/band.service';
+import { BandService, Show } from '../data/band.service';
+import { sharePoster } from '../data/poster';
 
 // Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
 // fünfmal schnell auf das Logo oben links klicken.
@@ -60,6 +61,16 @@ import { BandService } from '../data/band.service';
             <th mat-header-cell *matHeaderCellDef>Kommentar</th>
             <td mat-cell *matCellDef="let s" class="comment">{{ s.comment || '–' }}</td>
           </ng-container>
+          <ng-container matColumnDef="poster">
+            <th mat-header-cell *matHeaderCellDef>Plakat</th>
+            <td mat-cell *matCellDef="let s">
+              @if (!s.private && (s.endDate ?? s.date) >= today) {
+                <button mat-stroked-button (click)="poster(s)" [attr.aria-label]="'Plakat für ' + s.venue + ' erstellen'">
+                  <mat-icon>image</mat-icon> Plakat
+                </button>
+              }
+            </td>
+          </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
           <tr mat-row *matRowDef="let row; columns: columns"></tr>
         </table>
@@ -75,7 +86,7 @@ import { BandService } from '../data/band.service';
     .export { margin-left: auto; text-transform: none; letter-spacing: normal; }
     .summary strong { color: var(--bn-ink); font-size: 1rem; margin-right: 4px; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
-    table { width: 100%; min-width: 720px; background: transparent; }
+    table { width: 100%; min-width: 860px; background: transparent; }
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
     .past { opacity: .45; }
     .time { display: block; font-size: .82rem; color: var(--bn-sunset); }
@@ -94,7 +105,7 @@ import { BandService } from '../data/band.service';
 export class Backstage implements OnDestroy {
   private readonly meta = inject(Meta);
   protected readonly shows = [...inject(BandService).shows].sort((a, b) => a.date.localeCompare(b.date));
-  protected readonly columns = ['date', 'venue', 'type', 'status', 'comment'];
+  protected readonly columns = ['date', 'venue', 'type', 'status', 'comment', 'poster'];
   protected readonly today = new Date().toISOString().slice(0, 10);
   protected readonly confirmed = this.shows.filter((s) => s.confirmed).length;
   protected readonly open = this.shows.length - this.confirmed;
@@ -103,6 +114,11 @@ export class Backstage implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
+
+  // Instagram-Plakat (1080 × 1350) im Logo-Design für öffentliche Termine
+  protected poster(s: Show): void {
+    sharePoster(s).catch((err) => console.error(err));
   }
 
   // Bandkalender inkl. privater Termine, Status und Kommentaren
