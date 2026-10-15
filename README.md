@@ -51,6 +51,9 @@ python3 scripts/build-pressekit.py
 
 Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
 
+Die QR-Code-Karte (`blickfeld-nord-qr-karte.pdf`: A4-Schild für Bühne/Theke plus vier A6-Karten zum
+Ausschneiden) erzeugt `python3 scripts/build-qr-karte.py` (zusätzlich `pip install segno`).
+
 Das freigestellte Kompass-Logo (SVG, hell/dunkel) erzeugt `scripts/kompass-logo.py`; die transparenten PNGs
 (2048 px) wurden daraus gerendert und liegen in `scripts/presse-quellen/`.
 

@@ -36,6 +36,9 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
         <a class="btn" href="presse/blickfeld-nord-pressekit.zip" download>
           <mat-icon>folder_zip</mat-icon> Alles als ZIP herunterladen
         </a>
+        <a class="btn" href="presse/blickfeld-nord-qr-karte.pdf" download>
+          <mat-icon>qr_code_2</mat-icon> QR-Code-Karte zum Ausdrucken
+        </a>
       </div>
 
       <h3>Pressetext</h3>
