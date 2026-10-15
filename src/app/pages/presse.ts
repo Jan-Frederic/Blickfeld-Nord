@@ -39,6 +39,9 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
         <a class="btn" href="presse/blickfeld-nord-qr-karte.pdf" download>
           <mat-icon>qr_code_2</mat-icon> QR-Code-Karte zum Ausdrucken
         </a>
+        <a class="btn" href="presse/blickfeld-nord-technik-rider.pdf" download>
+          <mat-icon>description</mat-icon> Technik-Rider (PDF)
+        </a>
       </div>
 
       <h3>Pressetext</h3>

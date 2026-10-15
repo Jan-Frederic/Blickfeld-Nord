@@ -9,7 +9,7 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Hero** mit Logo-Motiv und dem nächsten Konzerttermin
 - **Die Band** – Mitglieder mit Rolle und Kurzbio, jeweils mit eigener Unterseite (`/band/<name>`)
 - **Tour und Konzerte** – Termine mit Anfahrts-Link zu Google Maps und Kalender-Export (.ics, einzeln oder alle)
-- **Booking** – Infos für Veranstalter (Anlässe, Spielzeit, Technik), Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
+- **Booking** – Infos für Veranstalter (Anlässe, Spielzeit, Technik), häufige Fragen (FAQ), Technik-Rider als PDF, Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
 - **Galerie** – Fotos mit Vollbildansicht
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte);
   Instagram-Reels per `reel: '<id>'` als Zwei-Klick-Einbettung (lädt erst nach Klick, siehe Datenschutzerklärung)
@@ -52,6 +52,10 @@ python3 scripts/build-pressekit.py
 ```
 
 Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
+
+Den Technik-Rider (`blickfeld-nord-technik-rider.pdf`: Platz, Strom, Zeitplan, Anfahrt, Vorlauf) erzeugt
+`python3 scripts/build-rider.py`. Dieselben Angaben stehen als FAQ im Booking-Bereich
+(`src/app/sections/booking.ts`) – bei Änderungen beides anpassen.
 
 Die QR-Code-Karte (`blickfeld-nord-qr-karte.pdf`: A4-Schild für Bühne/Theke plus vier A6-Karten zum
 Ausschneiden) erzeugt `python3 scripts/build-qr-karte.py` (zusätzlich `pip install segno`).

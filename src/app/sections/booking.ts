@@ -19,6 +19,16 @@ Ansprechpartner & Telefon:
 Viele Grüße
 `;
 
+// Häufige Fragen von Veranstaltern (Angaben auch im Technik-Rider: scripts/build-rider.py)
+const FAQ: { q: string; a: string }[] = [
+  { q: 'Wie weit fahrt ihr?', a: 'Wir spielen im Umkreis von bis zu 50 km rund um Hamminkeln.' },
+  { q: 'Wie viel Platz braucht ihr?', a: 'Eine Fläche von etwa 4 × 3 Metern.' },
+  { q: 'Wie viel Strom braucht ihr?', a: 'Zwei Steckdosen in der Nähe der Spielfläche. PA und Licht bringen wir selbst mit.' },
+  { q: 'Wie früh sollte man buchen?', a: 'Am besten mindestens 4 Wochen im Voraus – je früher, desto besser die Chancen auf euren Wunschtermin.' },
+  { q: 'Wie lange dauern Auf- und Abbau?', a: 'Für den Aufbau brauchen wir rund 3 Stunden, für den Abbau etwa 1 Stunde. Plant bitte ein, dass wir entsprechend früher vor Ort sind.' },
+  { q: 'Wie läuft der Abend ab?', a: 'Wir spielen 3 bis 4 Stunden in Sets à 1 Stunde. Pausen legen wir nach Absprache oder spontan ein – ganz wie es zur Stimmung passt.' },
+];
+
 @Component({
   selector: 'app-booking',
   imports: [RouterLink, MatIconModule],
@@ -95,6 +105,21 @@ Viele Grüße
           <p class="mail">Logos, Fotos und Infos für eure Ankündigung: <a routerLink="/presse">Pressekit</a></p>
         </div>
       </div>
+
+      <div class="faq">
+        <div class="faq-head">
+          <h3>Häufige Fragen</h3>
+          <a class="btn" href="presse/blickfeld-nord-technik-rider.pdf" download>
+            <mat-icon>description</mat-icon> Technik-Rider (PDF)
+          </a>
+        </div>
+        @for (f of faq; track f.q) {
+          <details>
+            <summary>{{ f.q }}</summary>
+            <p>{{ f.a }}</p>
+          </details>
+        }
+      </div>
     </section>
   `,
   styles: `
@@ -129,11 +154,28 @@ Viele Grüße
     .btn.primary { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
     .btn.primary:hover { background: #f0b884; color: #2a1708; }
     .btn svg, .btn mat-icon { width: 20px; height: 20px; font-size: 20px; flex: none; }
+    .faq { margin-top: 32px; }
+    .faq-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .faq-head h3 { margin: 0; }
+    details { border-top: 1px solid var(--bn-line); }
+    details:last-child { border-bottom: 1px solid var(--bn-line); }
+    summary {
+      cursor: pointer; list-style: none; padding: 16px 32px 16px 0; position: relative; font-weight: 500;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '+'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      color: var(--bn-sunset); font-size: 1.4rem; font-weight: 300; transition: transform .2s;
+    }
+    details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+    summary:hover { color: var(--bn-sunset); }
+    details p { margin: 0 0 16px; line-height: 1.65; color: rgba(236, 233, 228, .84); }
     .mail { margin: 14px 0 0 !important; font-size: .9rem; }
     .mail a { color: var(--bn-sunset); }
   `,
 })
 export class Booking {
+  protected readonly faq = FAQ;
   protected readonly mail = BOOKING_MAIL;
   protected readonly mailto =
     `mailto:${BOOKING_MAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(MAIL_BODY)}`;
