@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input } from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import { PageMetaService } from '../page-meta';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -102,10 +102,14 @@ export class MemberPage {
   protected readonly others = computed(() => this.band.members.filter((m) => m.slug !== this.slug()));
 
   constructor() {
-    const title = inject(Title);
+    const pageMeta = inject(PageMetaService);
     effect(() => {
       const m = this.member();
-      title.setTitle(m ? `${m.name} – Blickfeld Nord` : 'Blickfeld Nord');
+      pageMeta.set({
+        title: m ? `${m.name} – Blickfeld Nord` : 'Blickfeld Nord',
+        description: m ? `${m.name} – ${m.role} bei Blickfeld Nord. ${m.bio}` : undefined,
+        path: `band/${this.slug()}`,
+      });
     });
   }
 }

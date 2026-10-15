@@ -51,8 +51,8 @@ jobs:
         run: |
           cd dist/blickfeld-nord/browser
           # Öffentliche Seiten sind vorgerendert (eigene index.html je Route).
-          # Nur Backstage und unbekannte Pfade nutzen die clientseitige Shell.
-          cp index.csr.html 404.html
+          # Unbekannte Pfade bekommen die vorgerenderte Fehlerseite, Backstage die clientseitige Shell.
+          cp 404/index.html 404.html
           mkdir -p backstage && cp index.csr.html backstage/index.html
 
       - name: Upload Pages artifact
