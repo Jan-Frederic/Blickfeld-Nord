@@ -51,6 +51,9 @@ python3 scripts/build-pressekit.py
 
 Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
 
+Das freigestellte Kompass-Logo (SVG, hell/dunkel) erzeugt `scripts/kompass-logo.py`; die transparenten PNGs
+(2048 px) wurden daraus gerendert und liegen in `scripts/presse-quellen/`.
+
 ### Suchmaschinen (Google)
 
 Beim Deploy ergänzt `scripts/seo.mjs` den Build um strukturierte Daten (schema.org) für die Band und alle

@@ -8,6 +8,7 @@ interface Asset {
   file: string;
   preview: string;
   dark?: boolean;
+  light?: boolean;
   // Vorschau komplett zeigen statt beschneiden
   contain?: boolean;
 }
@@ -57,7 +58,7 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
       <div class="assets">
         @for (a of assets; track a.file) {
           <a class="asset" [href]="'presse/' + a.file" download>
-            <span class="preview" [class.dark]="a.dark" [class.contain]="a.contain"><img [src]="a.preview" [alt]="a.title" loading="lazy" /></span>
+            <span class="preview" [class.dark]="a.dark" [class.light]="a.light" [class.contain]="a.contain"><img [src]="a.preview" [alt]="a.title" loading="lazy" /></span>
             <span class="meta">
               <span class="title">{{ a.title }}</span>
               <span class="info">{{ a.info }}</span>
@@ -107,6 +108,8 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
     .preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .preview.dark { background: #15171c; display: grid; place-items: center; }
     .preview.dark img { width: 62%; height: auto; object-fit: contain; }
+    .preview.light { background: #f4f1ec; display: grid; place-items: center; }
+    .preview.light img { width: 62%; height: auto; object-fit: contain; }
     .preview.contain { background: #15171c; display: grid; place-items: center; }
     .preview.contain img { width: 100%; height: auto; object-fit: contain; }
     .meta { display: flex; flex-direction: column; gap: 2px; padding: 12px 44px 14px 14px; }
@@ -130,6 +133,10 @@ export class Presse {
     { title: 'Logo-Motiv', info: 'JPG · 2000 × 1125 px', file: 'blickfeld-nord-logo-motiv.jpg', preview: 'galerie/logo-thumb.webp', contain: true },
     { title: 'Kompass-Symbol', info: 'PNG · 2048 × 2048 px', file: 'blickfeld-nord-kompass.png', preview: 'icon-512.png', dark: true },
     { title: 'Kompass-Symbol', info: 'SVG · Vektor, beliebig skalierbar', file: 'blickfeld-nord-kompass.svg', preview: 'favicon.svg', dark: true },
+    { title: 'Kompass-Logo freigestellt, hell', info: 'PNG transparent · 2048 × 2048 px · für dunkle Untergründe', file: 'blickfeld-nord-kompass-logo-hell.png', preview: 'presse/blickfeld-nord-kompass-logo-hell.svg', dark: true },
+    { title: 'Kompass-Logo freigestellt, hell', info: 'SVG · Vektor · für dunkle Untergründe', file: 'blickfeld-nord-kompass-logo-hell.svg', preview: 'presse/blickfeld-nord-kompass-logo-hell.svg', dark: true },
+    { title: 'Kompass-Logo freigestellt, dunkel', info: 'PNG transparent · 2048 × 2048 px · für helle Untergründe', file: 'blickfeld-nord-kompass-logo-dunkel.png', preview: 'presse/blickfeld-nord-kompass-logo-dunkel.svg', light: true },
+    { title: 'Kompass-Logo freigestellt, dunkel', info: 'SVG · Vektor · für helle Untergründe', file: 'blickfeld-nord-kompass-logo-dunkel.svg', preview: 'presse/blickfeld-nord-kompass-logo-dunkel.svg', light: true },
   ];
 
   protected async copy(): Promise<void> {

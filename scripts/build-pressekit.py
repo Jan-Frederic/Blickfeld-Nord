@@ -6,6 +6,7 @@ Benötigt: pillow, reportlab, fonttools  (pip install pillow reportlab fonttools
 Texte für PDF und Pressetext stehen unten in TEXT – bei Änderungen dort anpassen und neu bauen.
 """
 import os
+import shutil
 import tempfile
 import zipfile
 from datetime import date
@@ -72,6 +73,10 @@ FILES = {
     'logo': 'blickfeld-nord-logo-motiv.jpg',
     'kompass_png': 'blickfeld-nord-kompass.png',
     'kompass_svg': 'blickfeld-nord-kompass.svg',
+    'logo_hell_png': 'blickfeld-nord-kompass-logo-hell.png',
+    'logo_hell_svg': 'blickfeld-nord-kompass-logo-hell.svg',
+    'logo_dunkel_png': 'blickfeld-nord-kompass-logo-dunkel.png',
+    'logo_dunkel_svg': 'blickfeld-nord-kompass-logo-dunkel.svg',
     'foto1': 'blickfeld-nord-bandfoto-1.jpg',
     'foto2': 'blickfeld-nord-bandfoto-2.jpg',
     'text': 'blickfeld-nord-pressetext.txt',
@@ -100,6 +105,10 @@ def build_images():
     Image.open(os.path.join(SRC, 'kompass-2048.png')).save(os.path.join(OUT, FILES['kompass_png']), optimize=True)
     with open(os.path.join(SRC, 'kompass-detail.svg')) as f_in, open(os.path.join(OUT, FILES['kompass_svg']), 'w') as f_out:
         f_out.write(f_in.read())
+    # Freigestelltes Kompass-Logo (transparent), erzeugt mit scripts/kompass-logo.py
+    for variant in ('hell', 'dunkel'):
+        for ext in ('png', 'svg'):
+            shutil.copyfile(os.path.join(SRC, f'kompass-logo-{variant}.{ext}'), os.path.join(OUT, FILES[f'logo_{variant}_{ext}']))
     # Bandfotos ohne Metadaten
     for key, src in [('foto1', 'bandfoto-1-original.jpg'), ('foto2', 'bandfoto-2-original.jpg')]:
         im = ImageOps.exif_transpose(Image.open(os.path.join(SRC, src))).convert('RGB')
@@ -306,7 +315,8 @@ def build_pdf(tmp):
 
 def build_zip():
     with zipfile.ZipFile(os.path.join(OUT, FILES['zip']), 'w', zipfile.ZIP_DEFLATED) as z:
-        for key in ['pdf', 'text', 'logo', 'kompass_png', 'kompass_svg', 'foto1', 'foto2']:
+        for key in ['pdf', 'text', 'logo', 'kompass_png', 'kompass_svg', 'logo_hell_png', 'logo_hell_svg',
+                    'logo_dunkel_png', 'logo_dunkel_svg', 'foto1', 'foto2']:
             z.write(os.path.join(OUT, FILES[key]), 'blickfeld-nord-pressekit/' + FILES[key])
 
 
