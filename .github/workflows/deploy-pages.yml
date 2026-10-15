@@ -31,10 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Icon font subset
         run: |
           pip install --quiet fonttools brotli
-          python3 scripts/subset-icons.py
+          python scripts/subset-icons.py
 
       - name: Build
         run: npx ng build --base-href /
