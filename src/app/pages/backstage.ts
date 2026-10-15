@@ -64,7 +64,7 @@ import { sharePoster } from '../data/poster';
           <ng-container matColumnDef="poster">
             <th mat-header-cell *matHeaderCellDef>Plakat</th>
             <td mat-cell *matCellDef="let s">
-              @if (!s.private && (s.endDate ?? s.date) >= today) {
+              @if (!s.private && s.confirmed && (s.endDate ?? s.date) >= today) {
                 <button mat-stroked-button (click)="poster(s)" [attr.aria-label]="'Plakat für ' + s.venue + ' erstellen'">
                   <mat-icon>image</mat-icon> Plakat
                 </button>
@@ -116,7 +116,7 @@ export class Backstage implements OnDestroy {
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
   }
 
-  // Instagram-Plakat (1080 × 1350) im Logo-Design für öffentliche Termine
+  // Instagram-Plakat (1080 × 1350) im Logo-Design – nur für kommende öffentliche UND geklärte Termine
   protected poster(s: Show): void {
     sharePoster(s).catch((err) => console.error(err));
   }

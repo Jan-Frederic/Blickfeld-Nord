@@ -17,7 +17,7 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten
 - **Backstage** (`/backstage`, versteckt) – alle Auftritte inkl. privater Termine mit Status und Kommentar, exportierbar als Bandkalender.
   Easter Egg: fünfmal schnell auf das Logo oben links klicken.
-  Für jeden kommenden öffentlichen Termin erzeugt der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design
+  Für jeden kommenden öffentlichen und geklärten Termin erzeugt der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design
   (`src/app/data/poster.ts`) – am Handy direkt zum Teilen, am Rechner als Download.
 - **Impressum** (`/impressum`) und **Datenschutzerklärung** (`/datenschutz`)
 
