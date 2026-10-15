@@ -145,6 +145,25 @@ export class BandService {
       ],
       links: [{ type: 'web', label: 'bokeltsen-blagen.de', url: 'https://www.bokeltsen-blagen.de/' }],
     },
+    {
+      date: '2025-10-02',
+      title: 'Der Anfang als Trio – im Café Lotti',
+      text: [
+        'Jede Geschichte hat einen Anfang – unsere als Trio beginnt am 2. Oktober 2025 im Café Lotti. Mit Fred am Bass wurde aus dem Duo eine Dreier-Kombo, und wo ginge so ein erster Abend besser als bei unserer Home-Base?',
+        'Rotes Licht auf der Backsteinwand, eine Feuerschale in der Mitte, Decken auf den Knien und ein Publikum, das sich vom frischen Oktoberabend nicht im Geringsten abschrecken ließ. Gitarre, Schlagzeug und zum ersten Mal Bass – es hat sich vom ersten Song an richtig angefühlt.',
+        'Danke an alle, die an diesem Abend dabei waren und uns mit so viel Wärme empfangen haben – nicht nur wegen des Feuers. Hier hat alles angefangen.',
+      ],
+      images: [
+        {
+          src: 'historie/2025-10-02-cafe-lotti.webp',
+          alt: 'Blickfeld Nord zum ersten Mal als Trio im Café Lotti: Gitarre, Schlagzeug und Bass unter rotem Licht, davor Gäste mit Decken um eine Feuerschale',
+        },
+      ],
+      links: [
+        { type: 'web', label: 'cafelotti.de', url: 'https://cafelotti.de/' },
+        { type: 'place', label: 'Café Lotti, Dingden', url: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
+      ],
+    },
   ];
 
   // Befreundete Seiten für /freunde
@@ -202,6 +221,8 @@ export class BandService {
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
   readonly photos: Photo[] = [
     { src: 'historie/2026-04-30-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-thumb.webp', alt: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass', caption: 'Live im Café Lotti, 30.04.2026' },
+    { src: 'historie/2026-01-16-bokeltsen-blagen.webp', thumb: 'galerie/live-bokeltsen-blagen-thumb.webp', alt: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen – Akustikgitarre, Schlagzeug und Bass', caption: 'Bei den Bokeltsen Blagen, 16.01.2026' },
+    { src: 'historie/2025-10-02-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-2025-thumb.webp', alt: 'Erster Auftritt als Trio im Café Lotti unter rotem Licht, Gäste um eine Feuerschale', caption: 'Erster Auftritt als Trio, Café Lotti, 02.10.2025' },
     { src: 'galerie/band-2.webp', thumb: 'galerie/band-2-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord lachen gut gelaunt vor Backsteinwand, Gitarren und Schlagzeug', caption: 'Blickfeld Nord' },
     { src: 'galerie/band-1.webp', thumb: 'galerie/band-1-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug', caption: 'Blickfeld Nord' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
