@@ -84,6 +84,14 @@ Datenschutzerklärung angepasst werden.
 
 Jeder Push auf `main` baut die Seite und deployt sie über GitHub Actions
 (`.github/workflows/deploy-pages.yml`) nach GitHub Pages.
+
+Vor dem Deploy läuft eine automatische Prüfung – schlägt sie fehl, bleibt die alte Version online und GitHub
+meldet den Fehler per E-Mail:
+
+- **Tests** (`npx ng test --watch=false`, `src/app/data/band.service.spec.ts`): Datumsangaben, Uhrzeiten,
+  Links, Bild- und Alternativtexte in `band.service.ts`
+- **Linkcheck** (`npm run check:links` nach dem Build): alle internen Links, Bilder und Downloads müssen
+  existieren; externe Links werden geprüft und nur als Warnung gemeldet
 Einmalig nötig: *Settings → Pages → Source: GitHub Actions*.
 
 ### Eigene Domain

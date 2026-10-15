@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Tests (Inhalte in band.service.ts)
+        run: npx ng test --watch=false
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -54,6 +57,9 @@ jobs:
           # Unbekannte Pfade bekommen die vorgerenderte Fehlerseite, Backstage die clientseitige Shell.
           cp 404/index.html 404.html
           mkdir -p backstage && cp index.csr.html backstage/index.html
+
+      - name: Linkcheck (interne Links und Bilder; externe Links nur als Warnung)
+        run: node scripts/check-links.mjs --extern
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
