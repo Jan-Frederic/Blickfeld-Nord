@@ -93,22 +93,24 @@ export class BandService {
   // Historie (/historie), neueste Einträge zuerst
   readonly history: HistoryEntry[] = [
     {
-      date: '2026-09-20',
-      title: 'Sommerausklang im Café Lotti',
+      date: '2026-04-30',
+      title: 'Heimspiel im Café Lotti – mit Pro Campesinos',
       text: [
-        'Was für ein Abend! Zum Sommerausklang haben wir im Café Lotti in Dingden gespielt – draußen im Garten, mit Lichterketten, Kuchen und einem Publikum, das ab dem zweiten Song mitgesungen hat.',
-        'Danke an das ganze Lotti-Team für die Gastfreundschaft. Wir kommen wieder – spätestens zum Tanz in den Mai!',
+        'Es gibt Auftritte – und es gibt Heimspiele. Am 30. April waren wir bei unserer Home-Base, dem Café Lotti in Dingden, und diesmal nicht allein: Gemeinsam mit dem Dingdener Chor Pro Campesinos haben wir den Abend gestaltet.',
+        'Draußen vor der Backsteinmauer, unter lila Scheinwerfern, trafen Gitarre, Bass und Schlagzeug auf einen ganzen Chor voller Stimmen. Für Matthias war es gleich ein doppeltes Heimspiel – er unterstützt Pro Campesinos sonst selbst regelmäßig am Bass.',
+        'Danke an das Lotti-Team für die Gastfreundschaft, an Pro Campesinos für das gemeinsame Musizieren und an alle, die mit uns gesungen, getanzt und gefeiert haben. Bis zum nächsten Mal!',
       ],
       images: [
-        { src: 'galerie/band-2.webp', alt: 'Die Band gut gelaunt vor Backsteinwand und Equipment' },
-        { src: 'galerie/band-1.webp', alt: 'Die drei Musiker knien lachend zwischen Mikrofonständern' },
+        {
+          src: 'historie/2026-04-30-cafe-lotti.webp',
+          alt: 'Blickfeld Nord live im Café Lotti: David mit Akustikgitarre, Matthias am Schlagzeug und Fred am Bass unter lila Scheinwerfern',
+        },
       ],
       links: [
-        { type: 'instagram', label: 'Beitrag auf Instagram', url: 'https://www.instagram.com/blickfeldnord/' },
         { type: 'web', label: 'cafelotti.de', url: 'https://cafelotti.de/' },
-        { type: 'place', label: 'Dingden, Hamminkeln', url: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
+        { type: 'web', label: 'pro-campesinos.de', url: 'https://www.pro-campesinos.de/' },
+        { type: 'place', label: 'Café Lotti, Dingden', url: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
       ],
-      example: true,
     },
   ];
 
