@@ -81,14 +81,34 @@ import { Component } from '@angular/core';
         Ireland Limited), zu unserer Repertoire-Playlist auf Spotify (Spotify AB) sowie
         zu Google Maps (Google Ireland Limited) für die Anfahrt zu unseren Konzerten sowie zu befreundeten Websites
         (siehe „Freunde &amp; Partner“). Es handelt sich um einfache
-        Verlinkungen – Inhalte dieser Anbieter sind nicht eingebettet. Erst wenn Sie einen Link anklicken, werden
+        Verlinkungen. Erst wenn Sie einen Link anklicken, werden
         Sie auf die Seite des jeweiligen Anbieters weitergeleitet; ab dann gelten dessen Datenschutzbestimmungen.
       </p>
 
-      <h3>7. Cookies</h3>
-      <p>Diese Website verwendet keine Cookies und keine Analyse- oder Tracking-Werkzeuge.</p>
+      <h3>7. Eingebettete Instagram-Videos (Zwei-Klick-Lösung)</h3>
+      <p>
+        Auf der Seite „Historie“ können Videos (Reels) von Instagram eingebunden sein. Anbieter ist die Meta Platforms
+        Ireland Limited, Merrion Road, Dublin 4, D04 X2K5, Irland. Zum Schutz Ihrer Daten wird dabei zunächst nur ein
+        Platzhalter angezeigt – es wird keine Verbindung zu Instagram hergestellt. Erst wenn Sie auf „Reel laden“
+        klicken, wird das Video von den Servern von Meta geladen. Dabei werden insbesondere Ihre IP-Adresse, Angaben
+        zu Browser und Gerät sowie die aufgerufene Seite an Meta übermittelt; Meta kann zudem Cookies setzen und,
+        falls Sie bei Instagram angemeldet sind, den Aufruf Ihrem Konto zuordnen. Eine Übermittlung in die USA ist
+        möglich; Meta ist nach dem EU-US Data Privacy Framework zertifiziert.
+      </p>
+      <p>
+        Rechtsgrundlage ist Ihre Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Die
+        Einwilligung gilt nur für den jeweiligen Seitenaufruf; nach dem Neuladen der Seite wird wieder der Platzhalter
+        angezeigt. Alternativ können Sie das Video direkt auf Instagram ansehen. Weitere Informationen:
+        <a href="https://privacycenter.instagram.com/policy" target="_blank" rel="noopener">Datenschutzrichtlinie von Instagram</a>.
+      </p>
 
-      <h3>8. Ihre Rechte</h3>
+      <h3>8. Cookies</h3>
+      <p>
+        Diese Website selbst verwendet keine Cookies und keine Analyse- oder Tracking-Werkzeuge. Cookies von Instagram
+        können nur gesetzt werden, wenn Sie ein Video aktiv laden (siehe Abschnitt 7).
+      </p>
+
+      <h3>9. Ihre Rechte</h3>
       <p>Sie haben jederzeit das Recht:</p>
       <ul>
         <li>Auskunft über Ihre gespeicherten Daten zu erhalten</li>
@@ -100,14 +120,14 @@ import { Component } from '@angular/core';
       </ul>
       <p>Bitte wenden Sie sich hierzu an die oben genannte verantwortliche Stelle.</p>
 
-      <h3>9. Beschwerderecht bei der Aufsichtsbehörde</h3>
+      <h3>10. Beschwerderecht bei der Aufsichtsbehörde</h3>
       <p>
         Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Zuständig ist die
         Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen (LDI NRW),
         Kavalleriestraße 2–4, 40213 Düsseldorf.
       </p>
 
-      <h3>10. Aktualität und Änderung dieser Datenschutzerklärung</h3>
+      <h3>11. Aktualität und Änderung dieser Datenschutzerklärung</h3>
       <p>
         Diese Datenschutzerklärung ist aktuell gültig und hat den Stand Oktober 2026. Durch Weiterentwicklung der
         Website oder gesetzliche Änderungen kann eine Anpassung erforderlich werden.

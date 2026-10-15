@@ -32,6 +32,8 @@ export interface HistoryEntry {
   text: string[];
   images?: { src: string; alt: string }[];
   links?: HistoryLink[];
+  // Instagram-Reel-Kennung aus der URL (instagram.com/reel/<id>/), wird per Zwei-Klick-Lösung eingebettet
+  reel?: string;
   // markiert erfundene Beispiel-Einträge sichtbar auf der Seite
   example?: boolean;
 }
@@ -92,6 +94,21 @@ export class BandService {
 
   // Historie (/historie), neueste Einträge zuerst
   readonly history: HistoryEntry[] = [
+    {
+      date: '2026-08-22',
+      title: 'Legendärer Abend im Gasthof Küpper – mit Joker Mark',
+      text: [
+        'Manche Abende sind gut, manche werden legendär. Der 22. August im Gasthof Küpper gehört eindeutig zur zweiten Sorte: Kneipe in Feierlaune, Gäste mit Textsicherheit und ein Abend, der eigentlich gar nicht aufhören wollte.',
+        'Dabei hatte das Schicksal vorher noch versucht, uns aus dem Takt zu bringen: Matthias hat sich das Sprunggelenk gebrochen und wurde frisch verschraubt. Wir haben dabei gelernt: Ein Schlagzeug braucht Schrauben – ein Schlagzeuger eigentlich nicht. Statt Fußmaschine hieß es für ihn also erst einmal: Fuß hoch.',
+        'Zum Glück gibt es Freunde wie Mark. Unser Musiker-Kollege ist ohne zu zögern eingesprungen und hat gespielt, als wäre er schon immer dabei gewesen. Danke, Mark – du hast was gut bei uns! Und Matthias: Gute Besserung, die Sticks warten schon.',
+        'Danke an das Küpper-Team und an alle, die mitgefeiert haben. Einen kleinen Eindruck gibt es im Reel.',
+      ],
+      reel: 'DcWl7qDO7gp',
+      links: [
+        { type: 'instagram', label: 'Reel auf Instagram', url: 'https://www.instagram.com/reel/DcWl7qDO7gp/' },
+        { type: 'web', label: 'gasthof-kuepper.de', url: 'https://www.gasthof-kuepper.de/' },
+      ],
+    },
     {
       date: '2026-04-30',
       title: 'Heimspiel im Café Lotti – mit Pro Campesinos',

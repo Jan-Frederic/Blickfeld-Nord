@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { InstagramReel } from './instagram-reel';
 
 @Component({
   selector: 'app-historie',
-  imports: [DatePipe, MatIconModule],
+  imports: [DatePipe, MatIconModule, InstagramReel],
   template: `
     <section class="section historie">
       <p class="kicker">Rückblick</p>
@@ -34,6 +35,10 @@ import { BandService } from '../data/band.service';
                     </a>
                   }
                 </div>
+              }
+
+              @if (e.reel) {
+                <app-instagram-reel [id]="e.reel" />
               }
 
               @if (e.links?.length) {
