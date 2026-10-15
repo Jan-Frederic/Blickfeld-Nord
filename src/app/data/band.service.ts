@@ -129,6 +129,22 @@ export class BandService {
         { type: 'place', label: 'Café Lotti, Dingden', url: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW' },
       ],
     },
+    {
+      date: '2026-01-16',
+      title: 'Gemütlicher Abend mit den Bokeltsen Blagen',
+      text: [
+        'Mitte Januar, draußen kalt und dunkel – drinnen warm, gemütlich und voller netter Leute: Am 16. Januar durften wir den Abend des Lauftreffs Bokeltsen Blagen musikalisch untermalen.',
+        'Akustikgitarre, Bass, Schlagzeug und zwischendurch ein Shaker – genau die richtige Mischung, damit sich die Gespräche nicht übertönt, sondern begleitet fühlen. Wer sonst Kilometer sammelt, darf zwischendurch auch mal einfach sitzen bleiben und zuhören.',
+        'Danke an die Bokeltsen Blagen für die Einladung und den schönen Abend. Wir laufen zwar nicht mit – aber für die Musik sind wir jederzeit wieder am Start!',
+      ],
+      images: [
+        {
+          src: 'historie/2026-01-16-bokeltsen-blagen.webp',
+          alt: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen: David mit Akustikgitarre, Matthias am Schlagzeug mit Shaker und Fred am Bass, im Hintergrund feiernde Gäste',
+        },
+      ],
+      links: [{ type: 'web', label: 'bokeltsen-blagen.de', url: 'https://www.bokeltsen-blagen.de/' }],
+    },
   ];
 
   // Befreundete Seiten für /freunde
