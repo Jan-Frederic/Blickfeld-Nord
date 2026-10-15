@@ -49,6 +49,13 @@ python3 scripts/build-pressekit.py
 
 Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
 
+### Suchmaschinen (Google)
+
+Beim Deploy ergänzt `scripts/seo.mjs` den Build um strukturierte Daten (schema.org) für die Band und alle
+öffentlichen, geklärten Konzerte sowie um `sitemap.xml` und `robots.txt`. Die Termine kommen automatisch aus
+`band.service.ts` – private oder offene Termine erscheinen dort nie. Neue Unterseiten bei Bedarf in der
+Sitemap-Liste im Skript ergänzen. Auswertung: Google Search Console (Domain `blickfeld-nord.de`).
+
 ## Entwicklung
 
 ```bash

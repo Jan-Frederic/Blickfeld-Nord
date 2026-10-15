@@ -34,6 +34,9 @@ jobs:
       - name: Build
         run: npx ng build --base-href /
 
+      - name: Structured data, sitemap and robots.txt
+        run: node scripts/seo.mjs
+
       - name: SPA fallback for Angular routing
         run: |
           cd dist/blickfeld-nord/browser
