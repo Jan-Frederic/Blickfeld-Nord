@@ -97,7 +97,7 @@ export class BandService {
       title: 'Heimspiel im Café Lotti – mit Pro Campesinos',
       text: [
         'Es gibt Auftritte – und es gibt Heimspiele. Am 30. April waren wir bei unserer Home-Base, dem Café Lotti in Dingden, und diesmal nicht allein: Gemeinsam mit dem Dingdener Chor Pro Campesinos haben wir den Abend gestaltet.',
-        'Draußen vor der Backsteinmauer, unter lila Scheinwerfern, trafen Gitarre, Bass und Schlagzeug auf einen ganzen Chor voller Stimmen. Für Matthias war es gleich ein doppeltes Heimspiel – er unterstützt Pro Campesinos sonst selbst regelmäßig am Bass.',
+        'Draußen vor der Backsteinmauer, unter lila Scheinwerfern, trafen Gitarre, Bass und Schlagzeug auf einen ganzen Chor voller Stimmen. Für Matthias und Fred war es sogar ein doppeltes Heimspiel – beide unterstützen Pro Campesinos sonst selbst am Bass.',
         'Danke an das Lotti-Team für die Gastfreundschaft, an Pro Campesinos für das gemeinsame Musizieren und an alle, die mit uns gesungen, getanzt und gefeiert haben. Bis zum nächsten Mal!',
       ],
       images: [
