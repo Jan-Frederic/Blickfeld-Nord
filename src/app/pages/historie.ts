@@ -1,5 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { scrollToSection } from '../scroll';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { InstagramReel } from './instagram-reel';
@@ -15,7 +17,7 @@ import { InstagramReel } from './instagram-reel';
 
       <ol class="timeline">
         @for (e of entries; track e.date + e.title) {
-          <li class="entry">
+          <li class="entry" [id]="'e-' + e.date">
             <span class="dot" aria-hidden="true"></span>
             <time [attr.datetime]="e.date">{{ e.date | date: 'd. MMMM yyyy' : '' : 'de' }}</time>
             <article>
@@ -77,7 +79,7 @@ import { InstagramReel } from './instagram-reel';
     .timeline::before {
       content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: var(--bn-line);
     }
-    .entry { position: relative; padding-bottom: 48px; }
+    .entry { position: relative; padding-bottom: 48px; scroll-margin-top: 90px; }
     .dot {
       position: absolute; left: -28px; top: 4px; width: 13px; height: 13px; border-radius: 50%;
       background: var(--bn-night); border: 2px solid var(--bn-sunset);
@@ -116,6 +118,14 @@ import { InstagramReel } from './instagram-reel';
     @media (max-width: 520px) { article { padding: 18px; } .timeline { padding-left: 22px; } .dot { left: -22px; } }
   `,
 })
-export class Historie {
+export class Historie implements OnInit {
   protected readonly entries = [...inject(BandService).history].sort((a, b) => b.date.localeCompare(a.date));
+  private readonly route = inject(ActivatedRoute);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  ngOnInit(): void {
+    // „Rückblick“-Links aus der Konzertliste (/historie#e-JJJJ-MM-TT) springen zum passenden Eintrag
+    const fragment = this.route.snapshot.fragment;
+    if (this.isBrowser && fragment) scrollToSection(fragment);
+  }
 }

@@ -20,7 +20,8 @@ import { scrollToSection } from '../scroll';
       <app-band />
     }
     @defer (on immediate; hydrate on viewport) {
-      <app-tour />
+      <!-- im Browser neu berechnet: welche Termine schon vorbei sind, hängt vom Besuchstag ab, nicht vom Build-Tag -->
+      <app-tour ngSkipHydration />
     }
     @defer (on immediate; hydrate on viewport) {
       <app-booking />

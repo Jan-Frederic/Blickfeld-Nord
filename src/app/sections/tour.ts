@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +9,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
 
 @Component({
   selector: 'app-tour',
-  imports: [DatePipe, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [DatePipe, RouterLink, MatTableModule, MatButtonModule, MatIconModule],
   template: `
     <section id="tour" class="section">
       <p class="kicker">Live</p>
@@ -55,6 +56,23 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           <tr mat-row *matRowDef="let row; columns: columns"></tr>
         </table>
       </div>
+
+      @if (past.length) {
+        <details class="past">
+          <summary>Vergangene Auftritte ({{ past.length }})</summary>
+          <ul>
+            @for (s of past; track s.date + s.venue) {
+              <li>
+                <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
+                <span class="where">{{ s.venue }}@if (s.city) {<span class="city">, {{ s.city }}</span>}</span>
+                @if (historyDates.has(s.date)) {
+                  <a routerLink="/historie" [fragment]="'e-' + s.date" class="recap">Rückblick <mat-icon>arrow_forward</mat-icon></a>
+                }
+              </li>
+            }
+          </ul>
+        </details>
+      }
     </section>
   `,
   styles: `
@@ -67,6 +85,20 @@ import { downloadIcs, icsFileName } from '../data/calendar';
     .action > * + * { margin-left: 8px; }
     .venue-inline { display: none; font-size: .85rem; opacity: .75; }
     .short { display: none; }
+    .past { margin-top: 20px; border: 1px solid var(--bn-line); border-radius: 12px; padding: 0 18px; }
+    .past summary {
+      cursor: pointer; padding: 14px 0; font-family: var(--bn-wide); text-transform: uppercase;
+      letter-spacing: .16em; font-size: .78rem; color: var(--bn-fog);
+    }
+    .past summary:hover { color: var(--bn-sunset); }
+    .past ul { list-style: none; margin: 0; padding: 0 0 12px; }
+    .past li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--bn-line); }
+    .past time { font-variant-numeric: tabular-nums; color: var(--bn-sunset); min-width: 6.5em; }
+    .past .where { flex: 1; }
+    .past .city { opacity: .7; }
+    .past .recap { display: inline-flex; align-items: center; gap: 4px; color: var(--bn-ink); font-size: .88rem; text-decoration: none; }
+    .past .recap:hover { color: var(--bn-sunset); }
+    .past .recap mat-icon { font-size: 16px; width: 16px; height: 16px; }
     .time { display: block; font-size: .82rem; color: var(--bn-sunset); }
     @media (max-width: 640px) {
       .venue { display: none; }
@@ -82,7 +114,13 @@ import { downloadIcs, icsFileName } from '../data/calendar';
   `,
 })
 export class Tour {
-  protected readonly shows = inject(BandService).publicShows;
+  private readonly band = inject(BandService);
+  // Termine bis einschließlich heute (bei mehrtägigen bis zum letzten Tag) gelten als kommend
+  private readonly today = localToday();
+  protected readonly shows = this.band.publicShows.filter((s) => (s.endDate ?? s.date) >= this.today);
+  // Gespielte öffentliche Gigs wandern automatisch in den Rückblick, neueste zuerst
+  protected readonly past = this.band.publicShows.filter((s) => (s.endDate ?? s.date) < this.today).reverse();
+  protected readonly historyDates = new Set(this.band.history.map((h) => h.date));
   protected readonly columns = ['date', 'city', 'venue', 'action'];
 
   protected add(s: Show): void {
@@ -92,4 +130,9 @@ export class Tour {
   protected addAll(): void {
     downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', 'Blickfeld Nord – Konzerte');
   }
+}
+
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
