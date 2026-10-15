@@ -27,8 +27,9 @@ geklärt (`confirmed: true`) ist; `private: true` blendet ihn aus, `comment` ist
 **Achtung:** Auch private Termine und Kommentare stehen im öffentlichen Repo und im
 ausgelieferten JavaScript – nichts Vertrauliches eintragen.
 
-Kommt ein neues Bandmitglied (oder eine neue Unterseite) dazu, den Pfad auch in
-`.github/workflows/deploy-pages.yml` ergänzen, damit Direktaufrufe funktionieren.
+Alle öffentlichen Seiten werden beim Build **vorgerendert** (fertiges HTML je Route, `outputMode: static`,
+Routen in `src/app/app.routes.server.ts`); Seiten für neue Bandmitglieder entstehen automatisch.
+Backstage bleibt rein clientseitig. Eine neue Unterseite zusätzlich in die Sitemap-Liste in `scripts/seo.mjs` aufnehmen.
 
 ### Fotos hinzufügen
 
@@ -55,6 +56,14 @@ Beim Deploy ergänzt `scripts/seo.mjs` den Build um strukturierte Daten (schema.
 öffentlichen, geklärten Konzerte sowie um `sitemap.xml` und `robots.txt`. Die Termine kommen automatisch aus
 `band.service.ts` – private oder offene Termine erscheinen dort nie. Neue Unterseiten bei Bedarf in der
 Sitemap-Liste im Skript ergänzen. Auswertung: Google Search Console (Domain `blickfeld-nord.de`).
+
+### Performance (Core Web Vitals)
+
+- Vorgerenderte Seiten, Startbild mit `fetchpriority="high"`, festen Maßen und Varianten (800/1200/2000 px)
+- Unterseiten werden erst beim Aufruf geladen; Abschnitte der Startseite werden erst beim Hinscrollen aktiviert
+  (`@defer` mit inkrementeller Hydration)
+- Icon-Schrift auf die genutzten Symbole reduziert: `scripts/subset-icons.py` (läuft beim Deploy; neue
+  `<mat-icon>`-Namen werden automatisch gefunden) → `public/fonts/material-icons-subset.woff2`
 
 ## Entwicklung
 

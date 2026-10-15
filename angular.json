@@ -36,9 +36,11 @@
               "@fontsource/michroma/latin-400.css",
               "@fontsource/montserrat/latin-300.css",
               "@fontsource/montserrat/latin-400.css",
-              "material-icons/iconfont/filled.css",
+              "src/icons.css",
               "src/styles.scss"
-            ]
+            ],
+            "server": "src/main.server.ts",
+            "outputMode": "static"
           },
           "configurations": {
             "production": {

@@ -43,8 +43,10 @@ html {
 
 html, body { height: 100%; }
 html { scroll-behavior: smooth; }
+html { background-color: var(--bn-night); }
 body {
   margin: 0;
+  background-color: var(--bn-night);
   font-family: Inter, Roboto, 'Helvetica Neue', sans-serif;
   color: var(--bn-ink);
   background:
@@ -91,3 +93,9 @@ body::after {
 }
 .legal p, .legal ul { margin: 0 0 12px; }
 .legal a { color: var(--bn-sunset); }
+
+// Nur für Screenreader sichtbar
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}

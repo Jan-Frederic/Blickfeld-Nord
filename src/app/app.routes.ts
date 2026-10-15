@@ -1,21 +1,15 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home';
-import { Impressum } from './pages/impressum';
-import { Datenschutz } from './pages/datenschutz';
-import { MemberPage } from './pages/member';
-import { Freunde } from './pages/freunde';
-import { Backstage } from './pages/backstage';
-import { Historie } from './pages/historie';
-import { Presse } from './pages/presse';
 
+// Startseite direkt im Hauptpaket, alle Unterseiten werden erst beim Aufruf geladen (kleineres Start-JavaScript)
 export const routes: Routes = [
   { path: '', component: Home, title: 'Blickfeld Nord – Offizielle Bandpage' },
-  { path: 'band/:slug', component: MemberPage },
-  { path: 'historie', component: Historie, title: 'Historie – Blickfeld Nord' },
-  { path: 'presse', component: Presse, title: 'Pressekit – Blickfeld Nord' },
-  { path: 'freunde', component: Freunde, title: 'Freunde & Partner – Blickfeld Nord' },
-  { path: 'backstage', component: Backstage, title: 'Backstage – Blickfeld Nord' },
-  { path: 'impressum', component: Impressum, title: 'Impressum – Blickfeld Nord' },
-  { path: 'datenschutz', component: Datenschutz, title: 'Datenschutzerklärung – Blickfeld Nord' },
+  { path: 'band/:slug', loadComponent: () => import('./pages/member').then((m) => m.MemberPage) },
+  { path: 'historie', loadComponent: () => import('./pages/historie').then((m) => m.Historie), title: 'Historie – Blickfeld Nord' },
+  { path: 'presse', loadComponent: () => import('./pages/presse').then((m) => m.Presse), title: 'Pressekit – Blickfeld Nord' },
+  { path: 'freunde', loadComponent: () => import('./pages/freunde').then((m) => m.Freunde), title: 'Freunde & Partner – Blickfeld Nord' },
+  { path: 'backstage', loadComponent: () => import('./pages/backstage').then((m) => m.Backstage), title: 'Backstage – Blickfeld Nord' },
+  { path: 'impressum', loadComponent: () => import('./pages/impressum').then((m) => m.Impressum), title: 'Impressum – Blickfeld Nord' },
+  { path: 'datenschutz', loadComponent: () => import('./pages/datenschutz').then((m) => m.Datenschutz), title: 'Datenschutzerklärung – Blickfeld Nord' },
   { path: '**', redirectTo: '' },
 ];

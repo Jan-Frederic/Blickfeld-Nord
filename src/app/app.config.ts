@@ -4,6 +4,7 @@ import localeDe from '@angular/common/locales/de';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideClientHydration, withEventReplay, withIncrementalHydration } from '@angular/platform-browser';
 
 registerLocaleData(localeDe);
 
@@ -16,5 +17,6 @@ export const appConfig: ApplicationConfig = {
       withComponentInputBinding(),
     ),
     { provide: LOCALE_ID, useValue: 'de' },
+    provideClientHydration(withEventReplay(), withIncrementalHydration()),
   ],
 };

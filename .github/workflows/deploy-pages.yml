@@ -31,17 +31,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Icon font subset
+        run: |
+          pip install --quiet fonttools brotli
+          python3 scripts/subset-icons.py
+
       - name: Build
         run: npx ng build --base-href /
 
       - name: Structured data, sitemap and robots.txt
         run: node scripts/seo.mjs
 
-      - name: SPA fallback for Angular routing
+      - name: SPA fallback for client-only routes
         run: |
           cd dist/blickfeld-nord/browser
-          cp index.html 404.html
-          for route in historie presse freunde backstage impressum datenschutz band/david-broeker band/matthias-wigger band/jan-frederic-overbeck; do mkdir -p "$route" && cp index.html "$route/index.html"; done
+          # Öffentliche Seiten sind vorgerendert (eigene index.html je Route).
+          # Nur Backstage und unbekannte Pfade nutzen die clientseitige Shell.
+          cp index.csr.html 404.html
+          mkdir -p backstage && cp index.csr.html backstage/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

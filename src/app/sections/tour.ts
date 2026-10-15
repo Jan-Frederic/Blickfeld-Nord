@@ -39,7 +39,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
             <td mat-cell *matCellDef="let s" class="venue">{{ s.venue }}</td>
           </ng-container>
           <ng-container matColumnDef="action">
-            <th mat-header-cell *matHeaderCellDef></th>
+            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Aktionen</span></th>
             <td mat-cell *matCellDef="let s" class="action">
               <button mat-stroked-button (click)="add(s)" [attr.aria-label]="'Termin ' + s.venue + ' in den Kalender eintragen'">
                 <mat-icon>event</mat-icon><span class="label">Kalender</span>

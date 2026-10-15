@@ -4,6 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { scrollToSection } from './scroll';
 
 @Component({
   selector: 'app-root',
@@ -45,6 +46,6 @@ export class App {
     if (this.router.url.split(/[?#]/)[0] !== '/') {
       await this.router.navigateByUrl('/');
     }
-    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
+    scrollToSection(id);
   }
 }

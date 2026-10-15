@@ -21,7 +21,7 @@ import { BandService } from '../data/band.service';
       </p>
       <div class="grid">
         @for (m of band.members; track m.slug) {
-          <a class="card-link" [routerLink]="['/band', m.slug]" [attr.aria-label]="'Mehr über ' + m.name">
+          <a class="card-link" [routerLink]="['/band', m.slug]">
           <mat-card appearance="outlined">
             <mat-card-header>
               <div mat-card-avatar class="avatar">{{ m.initials }}</div>
