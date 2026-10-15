@@ -95,6 +95,21 @@ export class BandService {
   // Historie (/historie), neueste Einträge zuerst
   readonly history: HistoryEntry[] = [
     {
+      date: '2026-09-05',
+      title: 'Nachbarschaftsfest bei Matthias',
+      text: [
+        'Die kürzeste Anreise des Jahres hatte eindeutig Matthias: Am 5. September haben wir auf dem Nachbarschaftsfest in seiner Straße gespielt – Heimspiel im wahrsten Sinne des Wortes, quasi mit Blick auf die eigene Haustür.',
+        'Ein Pavillon, lila Licht, ein bisschen Nebel und jede Menge gut gelaunter Nachbarn: Mehr braucht es nicht für einen richtig schönen Abend. Zwischen Grill, Getränken und Gesprächen über den Gartenzaun hinweg wurde mitgesungen, getanzt und gefeiert.',
+        'Danke an Matthias’ Nachbarschaft für die Einladung und die tolle Stimmung. Wer solche Nachbarn hat, braucht eigentlich keine Konzerthalle mehr!',
+      ],
+      images: [
+        {
+          src: 'historie/2026-09-05-nachbarschaftsfest.webp',
+          alt: 'Blickfeld Nord beim Nachbarschaftsfest im Pavillon unter lila Licht: David mit Akustikgitarre, Matthias am Schlagzeug und Fred am Bass',
+        },
+      ],
+    },
+    {
       date: '2026-08-22',
       title: 'Legendärer Abend im Gasthof Küpper – mit Joker Mark',
       text: [
@@ -221,6 +236,7 @@ export class BandService {
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
   readonly photos: Photo[] = [
     { src: 'historie/2026-04-30-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-thumb.webp', alt: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass', caption: 'Live im Café Lotti, 30.04.2026' },
+    { src: 'historie/2026-09-05-nachbarschaftsfest.webp', thumb: 'galerie/live-nachbarschaftsfest-thumb.webp', alt: 'Blickfeld Nord beim Nachbarschaftsfest im Pavillon unter lila Licht – Akustikgitarre, Schlagzeug und Bass', caption: 'Nachbarschaftsfest, 05.09.2026' },
     { src: 'historie/2026-01-16-bokeltsen-blagen.webp', thumb: 'galerie/live-bokeltsen-blagen-thumb.webp', alt: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen – Akustikgitarre, Schlagzeug und Bass', caption: 'Bei den Bokeltsen Blagen, 16.01.2026' },
     { src: 'historie/2025-10-02-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-2025-thumb.webp', alt: 'Erster Auftritt als Trio im Café Lotti unter rotem Licht, Gäste um eine Feuerschale', caption: 'Erster Auftritt als Trio, Café Lotti, 02.10.2025' },
     { src: 'galerie/band-2.webp', thumb: 'galerie/band-2-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord lachen gut gelaunt vor Backsteinwand, Gitarren und Schlagzeug', caption: 'Blickfeld Nord' },
