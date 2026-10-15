@@ -168,12 +168,12 @@ export class BandService {
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
   readonly photos: Photo[] = [
-    { src: 'galerie/band-1.webp', thumb: 'galerie/band-1-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug', caption: 'Blickfeld Nord' },
+    { src: 'historie/2026-04-30-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-thumb.webp', alt: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass', caption: 'Live im Café Lotti, 30.04.2026' },
     { src: 'galerie/band-2.webp', thumb: 'galerie/band-2-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord lachen gut gelaunt vor Backsteinwand, Gitarren und Schlagzeug', caption: 'Blickfeld Nord' },
+    { src: 'galerie/band-1.webp', thumb: 'galerie/band-1-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug', caption: 'Blickfeld Nord' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
     { src: 'galerie/platzhalter-1.webp', thumb: 'galerie/platzhalter-1-thumb.webp', alt: 'Platzhalter – Foto folgt' },
     { src: 'galerie/platzhalter-2.webp', thumb: 'galerie/platzhalter-2-thumb.webp', alt: 'Platzhalter – Foto folgt' },
-    { src: 'galerie/platzhalter-3.webp', thumb: 'galerie/platzhalter-3-thumb.webp', alt: 'Platzhalter – Foto folgt' },
   ];
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
