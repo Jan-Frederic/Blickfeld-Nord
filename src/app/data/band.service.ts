@@ -135,7 +135,7 @@ export class BandService {
       text: [
         'Mitte Januar, draußen kalt und dunkel – drinnen warm, gemütlich und voller netter Leute: Am 16. Januar durften wir den Abend des Lauftreffs Bokeltsen Blagen musikalisch untermalen.',
         'Akustikgitarre, Bass, Schlagzeug und zwischendurch ein Shaker – genau die richtige Mischung, damit sich die Gespräche nicht übertönt, sondern begleitet fühlen. Wer sonst Kilometer sammelt, darf zwischendurch auch mal einfach sitzen bleiben und zuhören.',
-        'Danke an die Bokeltsen Blagen für die Einladung und den schönen Abend. Wir laufen zwar nicht mit – aber für die Musik sind wir jederzeit wieder am Start!',
+        'Danke an die Bokeltsen Blagen für die Einladung und den schönen Abend. Wir laufen zwar nicht mit – na gut, bis auf David, der sich tatsächlich schon mal frühmorgens mit dem Lauftreff auf die Strecke macht. Für die Musik sind wir aber alle drei jederzeit wieder am Start!',
       ],
       images: [
         {
