@@ -117,7 +117,7 @@ const events = publicShows
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@graph': [{ '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Blickfeld Nord', alternateName: ['Blickfeld Nord Band', 'blickfeld-nord.de'], url: `${SITE}/`, inLanguage: 'de-DE', publisher: { '@id': BAND_ID } }, band, ...events],
+  '@graph': [{ '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Blickfeld Nord', alternateName: 'Blickfeld Nord Band', url: `${SITE}/`, inLanguage: 'de-DE', publisher: { '@id': BAND_ID } }, band, ...events],
 };
 
 // In index.html einfügen (ersetzt einen evtl. vorhandenen Block, damit mehrfaches Ausführen nichts verdoppelt)
