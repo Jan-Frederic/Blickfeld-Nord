@@ -75,13 +75,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
       }
 
       <!-- Location: Freunde der Band verlinken auf ihre Karte unter /freunde (die dort kurz aufleuchtet) -->
-      <ng-template #venue let-s>
-        @if (friendLinks.get(s.venue); as id) {
-          <a class="friend" routerLink="/freunde" [fragment]="id" title="Zu unseren Freunden">{{ s.venue }}</a>
-        } @else {
-          {{ s.venue }}
-        }
-      </ng-template>
+      <ng-template #venue let-s>@for (p of venueParts.get(s.venue); track $index) {@if (p.friend) {<a class="friend" routerLink="/freunde" [fragment]="p.id" title="Zu unseren Freunden">{{ p.text }}</a>} @else {{{ p.text }}}}</ng-template>
     </section>
   `,
   styles: `
@@ -132,12 +126,12 @@ export class Tour {
   // Gespielte öffentliche Gigs wandern automatisch in den Rückblick, neueste zuerst
   protected readonly past = this.band.publicShows.filter((s) => (s.endDate ?? s.date) < this.today).reverse();
   protected readonly historyDates = new Set(this.band.history.map((h) => h.date));
-  // Location → Anker des passenden Freundes auf /freunde
-  protected readonly friendLinks = new Map(
-    this.band.publicShows.flatMap((s) => {
-      const f = this.band.friendForVenue(s.venue);
-      return f ? [[s.venue, friendId(f)] as const] : [];
-    }),
+  // Location → Textstücke, Freunde mit Anker auf /freunde
+  protected readonly venueParts = new Map(
+    this.band.publicShows.map((s) => [
+      s.venue,
+      this.band.venueParts(s.venue).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
+    ]),
   );
   protected readonly columns = ['date', 'city', 'venue', 'action'];
 

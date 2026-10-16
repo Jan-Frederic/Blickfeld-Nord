@@ -83,5 +83,11 @@ describe('Freunde', () => {
   it('erkennt Locations von Freunden', () => {
     expect(band.friendForVenue('Café Lotti – Tanz in den Mai')?.name).toBe('Café Lotti');
     expect(band.friendForVenue('Weihnachtsmarkt')).toBeUndefined();
+    const parts = band.venueParts('Café Lotti mit Pro Campesinos');
+    expect(parts.map((p) => [p.text, p.friend?.name ?? null])).toEqual([
+      ['Café Lotti', 'Café Lotti'],
+      [' mit ', null],
+      ['Pro Campesinos', 'Pro Campesinos 1977 e.V.'],
+    ]);
   });
 });

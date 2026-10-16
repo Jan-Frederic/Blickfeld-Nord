@@ -83,11 +83,37 @@ export class BandService {
     return this.shows.filter((s) => !s.private && s.confirmed).sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  // Ist die Location eines Auftritts einer unserer Freunde? (Name des Freundes steckt im Location-Namen,
-  // z. B. „Café Lotti – Tanz in den Mai“ → Café Lotti)
+  // Zerlegt einen Location-Namen in Textstücke und verlinkt darin genannte Freunde, z. B.
+  // „Café Lotti mit Pro Campesinos“ → [Café Lotti → Freund] [ mit ] [Pro Campesinos → Freund].
+  // Erkannt wird der volle Name oder die Kurzform ohne Gründungsjahr/„e.V.“ („Pro Campesinos 1977 e.V.“ → „Pro Campesinos“).
+  venueParts(venue: string): { text: string; friend?: Friend }[] {
+    const lower = venue.toLowerCase();
+    const hits: { start: number; end: number; friend: Friend }[] = [];
+    for (const friend of this.friends) {
+      const short = friend.name.replace(/\s+\d{4}\b.*$|\s+e\.\s?V\.?$/i, '');
+      for (const key of [friend.name, short]) {
+        const start = lower.indexOf(key.toLowerCase());
+        if (start >= 0) {
+          hits.push({ start, end: start + key.length, friend });
+          break;
+        }
+      }
+    }
+    hits.sort((a, b) => a.start - b.start);
+    const parts: { text: string; friend?: Friend }[] = [];
+    let pos = 0;
+    for (const h of hits) {
+      if (h.start < pos) continue; // überlappende Treffer ignorieren
+      if (h.start > pos) parts.push({ text: venue.slice(pos, h.start) });
+      parts.push({ text: venue.slice(h.start, h.end), friend: h.friend });
+      pos = h.end;
+    }
+    if (pos < venue.length) parts.push({ text: venue.slice(pos) });
+    return parts;
+  }
+
   friendForVenue(venue: string): Friend | undefined {
-    const v = venue.toLowerCase();
-    return this.friends.find((f) => v.includes(f.name.toLowerCase()));
+    return this.venueParts(venue).find((p) => p.friend)?.friend;
   }
 
   readonly members: Member[] = [
