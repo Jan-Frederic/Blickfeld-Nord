@@ -54,7 +54,9 @@ function endDateTime(date, time) {
 }
 
 const today = new Date().toISOString().slice(0, 10);
-const image = `${SITE}/og-image.jpg`;
+// Vorschaubilder in drei Formaten (1:1, 4:3, 16:9) – Google wählt je nach Platz das passende
+// (quadratische Varianten erzeugt scripts/share-images.py)
+const images = [`${SITE}/share-1x1.jpg`, `${SITE}/share-4x3.jpg`, `${SITE}/og-image.jpg`];
 
 const band = {
   '@type': 'MusicGroup',
@@ -62,7 +64,7 @@ const band = {
   name: 'Blickfeld Nord',
   url: `${SITE}/`,
   logo: `${SITE}/presse/blickfeld-nord-kompass.png`,
-  image,
+  image: images,
   description: 'Partyband mit drei Stimmen und jeder Menge Stimmung – Pop, Rock, Schlager, Dance und Disco für Feste, private Feiern und Kneipen.',
   genre: ['Pop', 'Rock', 'Schlager', 'Dance', 'Disco'],
   foundingDate: '2019',
@@ -95,7 +97,7 @@ const events = publicShows
         addressCountry: 'DE',
       },
     },
-    image: [image],
+    image: images,
     performer: { '@id': BAND_ID },
     // Veranstalter: falls nicht eingetragen, die Band als Ansprechpartner
     organizer: s.organizer ? { '@type': 'Organization', name: s.organizer } : { '@id': BAND_ID },

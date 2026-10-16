@@ -69,7 +69,8 @@ Das freigestellte Kompass-Logo (SVG, hell/dunkel) erzeugt `scripts/kompass-logo.
 Beim Deploy ergänzt `scripts/seo.mjs` den Build um strukturierte Daten (schema.org) für die Band und alle
 öffentlichen, geklärten Konzerte sowie um `sitemap.xml` und `robots.txt`. Die Termine kommen automatisch aus
 `band.service.ts` – private oder offene Termine erscheinen dort nie. Neue Unterseiten bei Bedarf in der
-Sitemap-Liste im Skript ergänzen. Auswertung: Google Search Console (Domain `blickfeld-nord.de`).
+Sitemap-Liste im Skript ergänzen. Als Vorschaubilder nennt es `share-1x1.jpg`, `share-4x3.jpg` (erzeugt von
+`python3 scripts/share-images.py` aus `public/hero.webp`) und `og-image.jpg`. Auswertung: Google Search Console (Domain `blickfeld-nord.de`).
 
 ### Besucherstatistik
 
