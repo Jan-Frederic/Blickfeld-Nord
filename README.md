@@ -70,6 +70,13 @@ Beim Deploy ergänzt `scripts/seo.mjs` den Build um strukturierte Daten (schema.
 `band.service.ts` – private oder offene Termine erscheinen dort nie. Neue Unterseiten bei Bedarf in der
 Sitemap-Liste im Skript ergänzen. Auswertung: Google Search Console (Domain `blickfeld-nord.de`).
 
+### Besucherstatistik
+
+Reichweitenmessung mit GoatCounter (ohne Cookies, keine IP-Speicherung): Auswertung unter
+https://blickfeld-nord.goatcounter.com. Das Skript steht in `src/index.html`; da die Seite Unterseiten ohne Neuladen
+wechselt, zählt `src/app/analytics.ts` jeden Seitenwechsel selbst (Backstage wird nicht gezählt).
+In der Datenschutzerklärung beschrieben (Abschnitt 8).
+
 ### Performance (Core Web Vitals)
 
 - Vorgerenderte Seiten, Startbild mit `fetchpriority="high"`, festen Maßen und Varianten (800/1200/2000 px)

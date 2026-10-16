@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { scrollToSection } from './scroll';
+import { trackPageViews } from './analytics';
 
 @Component({
   selector: 'app-root',
@@ -22,6 +23,10 @@ export class App {
   protected readonly year = new Date().getFullYear();
 
   private readonly router = inject(Router);
+
+  constructor() {
+    trackPageViews();
+  }
 
   private logoClicks: number[] = [];
   private eggCooldownUntil = 0;

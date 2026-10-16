@@ -71,8 +71,8 @@ import { Component } from '@angular/core';
 
       <h3>5. Schriftarten</h3>
       <p>
-        Die auf dieser Website verwendeten Schriftarten und Icons sind lokal eingebunden. Beim Aufruf der Seite
-        wird keine Verbindung zu Servern von Google oder anderen Drittanbietern hergestellt.
+        Die auf dieser Website verwendeten Schriftarten und Icons sind lokal eingebunden. Für Schriftarten
+        und Icons wird keine Verbindung zu Servern von Google oder anderen Drittanbietern hergestellt.
       </p>
 
       <h3>6. Externe Links</h3>
@@ -102,13 +102,30 @@ import { Component } from '@angular/core';
         <a href="https://privacycenter.instagram.com/policy" target="_blank" rel="noopener">Datenschutzrichtlinie von Instagram</a>.
       </p>
 
-      <h3>8. Cookies</h3>
+      <h3>8. Reichweitenmessung mit GoatCounter</h3>
       <p>
-        Diese Website selbst verwendet keine Cookies und keine Analyse- oder Tracking-Werkzeuge. Cookies von Instagram
-        können nur gesetzt werden, wenn Sie ein Video aktiv laden (siehe Abschnitt 7).
+        Um zu erfahren, wie oft unsere Seiten aufgerufen werden, nutzen wir den Statistikdienst GoatCounter
+        (goatcounter.com). Dabei werden beim Seitenaufruf die aufgerufene Seite, die verweisende Seite (Referrer),
+        Browser und Betriebssystem, die Bildschirmgröße sowie das aus der IP-Adresse abgeleitete Land übermittelt.
+        GoatCounter setzt keine Cookies, speichert nichts auf Ihrem Gerät und speichert Ihre IP-Adresse nicht; zur
+        Erkennung eines Besuchs wird lediglich ein verschlüsselter Wert (Hash) aus IP-Adresse und Browserkennung für
+        höchstens 8 Stunden im Arbeitsspeicher gehalten. Wir sehen ausschließlich zusammengefasste Zahlen, eine
+        Zuordnung zu einzelnen Personen ist uns nicht möglich.
+      </p>
+      <p>
+        Rechtsgrundlage ist unser berechtigtes Interesse an einer datensparsamen Auswertung der Nutzung unserer Website
+        (Art. 6 Abs. 1 lit. f DSGVO). Sie können der Erfassung widersprechen, indem Sie JavaScript oder das Skript
+        von gc.zgo.at in Ihrem Browser blockieren (z. B. mit einem Werbeblocker). Weitere Informationen:
+        <a href="https://www.goatcounter.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von GoatCounter</a>.
       </p>
 
-      <h3>9. Ihre Rechte</h3>
+      <h3>9. Cookies</h3>
+      <p>
+        Diese Website verwendet keine Cookies – auch die Reichweitenmessung (Abschnitt 8) kommt ohne aus. Cookies von
+        Instagram können nur gesetzt werden, wenn Sie ein Video aktiv laden (siehe Abschnitt 7).
+      </p>
+
+      <h3>10. Ihre Rechte</h3>
       <p>Sie haben jederzeit das Recht:</p>
       <ul>
         <li>Auskunft über Ihre gespeicherten Daten zu erhalten</li>
@@ -120,14 +137,14 @@ import { Component } from '@angular/core';
       </ul>
       <p>Bitte wenden Sie sich hierzu an die oben genannte verantwortliche Stelle.</p>
 
-      <h3>10. Beschwerderecht bei der Aufsichtsbehörde</h3>
+      <h3>11. Beschwerderecht bei der Aufsichtsbehörde</h3>
       <p>
         Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Zuständig ist die
         Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen (LDI NRW),
         Kavalleriestraße 2–4, 40213 Düsseldorf.
       </p>
 
-      <h3>11. Aktualität und Änderung dieser Datenschutzerklärung</h3>
+      <h3>12. Aktualität und Änderung dieser Datenschutzerklärung</h3>
       <p>
         Diese Datenschutzerklärung ist aktuell gültig und hat den Stand Oktober 2026. Durch Weiterentwicklung der
         Website oder gesetzliche Änderungen kann eine Anpassung erforderlich werden.
