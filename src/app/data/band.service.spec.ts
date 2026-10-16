@@ -1,4 +1,4 @@
-import { BandService } from './band.service';
+import { BandService, friendId } from './band.service';
 
 // Prüft die zentral gepflegten Inhalte auf typische Tippfehler, bevor sie live gehen
 const band = new BandService();
@@ -72,5 +72,16 @@ describe('Galerie', () => {
 describe('Freunde', () => {
   it('haben https-Links', () => {
     for (const f of band.friends) expect(f.url).toMatch(/^https:\/\//);
+  });
+
+  it('haben eindeutige Anker für die Verlinkung aus der Konzertliste', () => {
+    const ids = band.friends.map(friendId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^[a-z0-9-]+$/);
+  });
+
+  it('erkennt Locations von Freunden', () => {
+    expect(band.friendForVenue('Café Lotti – Tanz in den Mai')?.name).toBe('Café Lotti');
+    expect(band.friendForVenue('Weihnachtsmarkt')).toBeUndefined();
   });
 });

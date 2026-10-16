@@ -1,6 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { BandService } from '../data/band.service';
+import { BandService, friendId } from '../data/band.service';
+import { scrollToSection } from '../scroll';
 
 @Component({
   selector: 'app-freunde',
@@ -13,7 +16,7 @@ import { BandService } from '../data/band.service';
 
       <div class="grid">
         @for (f of band.friends; track f.url) {
-          <a class="card" [href]="f.url" target="_blank" rel="noopener">
+          <a class="card" [id]="id(f)" [class.flash]="flash() === id(f)" [href]="f.url" target="_blank" rel="noopener">
             <span class="icon" aria-hidden="true">
               @if (f.icon === 'drum') {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -92,6 +95,14 @@ import { BandService } from '../data/band.service';
       border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72);
       color: var(--bn-ink); text-decoration: none; transition: border-color .2s, transform .2s;
     }
+    .card { scroll-margin-top: 120px; }
+    /* Kurzes Aufleuchten, wenn man über eine Location in der Konzertliste hierher kommt */
+    .card.flash { animation: flash 1.4s ease-in-out 1; }
+    @keyframes flash {
+      0%, 100% { border-color: var(--bn-line); box-shadow: none; }
+      35%, 55% { border-color: var(--bn-sunset); box-shadow: 0 0 0 3px rgba(232, 164, 106, .35), 0 0 36px rgba(232, 164, 106, .45); background: rgba(232, 164, 106, .12); }
+    }
+    @media (prefers-reduced-motion: reduce) { .card.flash { animation-duration: .01s; border-color: var(--bn-sunset); } }
     .card:hover, .card:focus-visible { border-color: var(--bn-sunset); transform: translateY(-2px); }
     .card:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; }
     .icon {
@@ -110,8 +121,21 @@ import { BandService } from '../data/band.service';
     @media (max-width: 400px) { .grid { grid-template-columns: 1fr; } .card { padding: 18px; gap: 14px; } }
   `,
 })
-export class Freunde {
+export class Freunde implements OnInit {
   protected readonly band = inject(BandService);
+  protected readonly id = friendId;
+  protected readonly flash = signal<string | null>(null);
+  private readonly route = inject(ActivatedRoute);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  ngOnInit(): void {
+    // /freunde#cafe-lotti: hinscrollen und die Karte einmal aufleuchten lassen
+    const fragment = this.route.snapshot.fragment;
+    if (!this.isBrowser || !fragment) return;
+    scrollToSection(fragment);
+    setTimeout(() => this.flash.set(fragment), 600);
+    setTimeout(() => this.flash.set(null), 2200);
+  }
 
   // Anzeige-Adresse: bei Instagram der @-Name, sonst die Domain
   protected host(url: string): string {

@@ -14,7 +14,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte);
   Instagram-Reels per `reel: '<id>'` als Zwei-Klick-Einbettung (lädt erst nach Klick, siehe Datenschutzerklärung)
 - **Pressekit** (`/presse`) – Pressetext, Logos, Fotos, PDF und ZIP zum Download
-- **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten
+- **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten. Steckt der Name eines Freundes im Location-Namen
+  eines Auftritts, verlinkt die Konzertliste automatisch auf dessen Karte (`/freunde#cafe-lotti`), die dort kurz aufleuchtet
 - **Backstage** (`/backstage`, versteckt) – alle Auftritte inkl. privater Termine mit Status und Kommentar, exportierbar als Bandkalender.
   Easter Egg: fünfmal schnell auf das Logo oben links klicken.
   Für jeden kommenden öffentlichen und geklärten Termin erzeugt der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design

@@ -1,15 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { BandService, Show } from '../data/band.service';
+import { BandService, Show, friendId } from '../data/band.service';
 import { downloadIcs, icsFileName } from '../data/calendar';
 
 @Component({
   selector: 'app-tour',
-  imports: [DatePipe, RouterLink, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [DatePipe, NgTemplateOutlet, RouterLink, MatTableModule, MatButtonModule, MatIconModule],
   template: `
     <section id="tour" class="section">
       <p class="kicker">Live</p>
@@ -33,11 +33,11 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           </ng-container>
           <ng-container matColumnDef="city">
             <th mat-header-cell *matHeaderCellDef>Ort</th>
-            <td mat-cell *matCellDef="let s"><strong>{{ s.city ?? '–' }}</strong><span class="venue-inline">{{ s.venue }}</span></td>
+            <td mat-cell *matCellDef="let s"><strong>{{ s.city ?? '–' }}</strong><span class="venue-inline"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /></span></td>
           </ng-container>
           <ng-container matColumnDef="venue">
             <th mat-header-cell *matHeaderCellDef class="venue">Location</th>
-            <td mat-cell *matCellDef="let s" class="venue">{{ s.venue }}</td>
+            <td mat-cell *matCellDef="let s" class="venue"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /></td>
           </ng-container>
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef><span class="sr-only">Aktionen</span></th>
@@ -64,7 +64,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
             @for (s of past; track s.date + s.venue) {
               <li>
                 <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
-                <span class="where">{{ s.venue }}@if (s.city) {<span class="city">, {{ s.city }}</span>}</span>
+                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}</span>
                 @if (historyDates.has(s.date)) {
                   <a routerLink="/historie" [fragment]="'e-' + s.date" class="recap">Rückblick <mat-icon>arrow_forward</mat-icon></a>
                 }
@@ -73,6 +73,15 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           </ul>
         </details>
       }
+
+      <!-- Location: Freunde der Band verlinken auf ihre Karte unter /freunde (die dort kurz aufleuchtet) -->
+      <ng-template #venue let-s>
+        @if (friendLinks.get(s.venue); as id) {
+          <a class="friend" routerLink="/freunde" [fragment]="id" title="Zu unseren Freunden">{{ s.venue }}</a>
+        } @else {
+          {{ s.venue }}
+        }
+      </ng-template>
     </section>
   `,
   styles: `
@@ -85,6 +94,8 @@ import { downloadIcs, icsFileName } from '../data/calendar';
     .action > * + * { margin-left: 8px; }
     .venue-inline { display: none; font-size: .85rem; opacity: .75; }
     .short { display: none; }
+    .friend { color: inherit; text-decoration: underline; text-decoration-color: var(--bn-sunset); text-underline-offset: 3px; }
+    .friend:hover { color: var(--bn-sunset); }
     .past { margin-top: 20px; border: 1px solid var(--bn-line); border-radius: 12px; padding: 0 18px; }
     .past summary {
       cursor: pointer; padding: 14px 0; font-family: var(--bn-wide); text-transform: uppercase;
@@ -121,6 +132,13 @@ export class Tour {
   // Gespielte öffentliche Gigs wandern automatisch in den Rückblick, neueste zuerst
   protected readonly past = this.band.publicShows.filter((s) => (s.endDate ?? s.date) < this.today).reverse();
   protected readonly historyDates = new Set(this.band.history.map((h) => h.date));
+  // Location → Anker des passenden Freundes auf /freunde
+  protected readonly friendLinks = new Map(
+    this.band.publicShows.flatMap((s) => {
+      const f = this.band.friendForVenue(s.venue);
+      return f ? [[s.venue, friendId(f)] as const] : [];
+    }),
+  );
   protected readonly columns = ['date', 'city', 'venue', 'action'];
 
   protected add(s: Show): void {

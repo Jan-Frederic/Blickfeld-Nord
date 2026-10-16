@@ -12,6 +12,18 @@ export interface Member {
   link?: { label: string; url: string };
 }
 
+// Anker-ID eines Freundes auf /freunde, z. B. „Café Lotti“ → „cafe-lotti“
+export function friendId(f: Friend): string {
+  return f.name
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export interface Friend {
   name: string;
   description: string;
@@ -69,6 +81,13 @@ export class BandService {
   // Öffentlich gelistet wird nur, was öffentlich UND geklärt ist – chronologisch
   get publicShows(): Show[] {
     return this.shows.filter((s) => !s.private && s.confirmed).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // Ist die Location eines Auftritts einer unserer Freunde? (Name des Freundes steckt im Location-Namen,
+  // z. B. „Café Lotti – Tanz in den Mai“ → Café Lotti)
+  friendForVenue(venue: string): Friend | undefined {
+    const v = venue.toLowerCase();
+    return this.friends.find((f) => v.includes(f.name.toLowerCase()));
   }
 
   readonly members: Member[] = [
