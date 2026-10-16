@@ -29,6 +29,7 @@ describe('Auftritte', () => {
     }
     if (s.time) expect(s.time).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/);
     if (s.mapsUrl) expect(s.mapsUrl).toMatch(/^https:\/\//);
+    if (s.price !== undefined) expect(s.price).toBeGreaterThanOrEqual(0);
     expect(s.venue.trim()).not.toBe('');
   });
 

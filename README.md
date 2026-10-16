@@ -26,7 +26,7 @@ Alle Inhalte (Mitglieder, Konzerttermine, Fotos, Historie, befreundete Seiten) s
 Die Rechtstexte liegen in `src/app/pages/`.
 
 Auftritte (`shows`): Öffentlich gelistet wird ein Termin nur, wenn er nicht privat **und**
-geklärt (`confirmed: true`) ist; `private: true` blendet ihn aus, `comment` ist eine Notiz für die Backstage-Seite; `city`, `mapsUrl`, `time` (Beginn `'HH:MM'`, im Kalender mit 3 h Dauer) und `endDate` (mehrtägige Termine) sind optional.
+geklärt (`confirmed: true`) ist; `private: true` blendet ihn aus, `comment` ist eine Notiz für die Backstage-Seite; `city`, `mapsUrl`, `time` (Beginn `'HH:MM'`, im Kalender mit 3 h Dauer) und `endDate` (mehrtägige Termine) sind optional; `price` (Eintritt in €, `0` = frei) und `organizer` (Veranstalter) erscheinen nur in den strukturierten Daten für Google.
 **Achtung:** Auch private Termine und Kommentare stehen im öffentlichen Repo und im
 ausgelieferten JavaScript – nichts Vertrauliches eintragen.
 

@@ -59,6 +59,9 @@ export interface Show {
   // Ist der Auftritt fest zugesagt und alles geklärt?
   confirmed: boolean;
   comment?: string;
+  // optional für Google (strukturierte Daten): Eintritt in Euro (0 = Eintritt frei) und Veranstalter
+  price?: number;
+  organizer?: string;
 }
 
 @Injectable({ providedIn: 'root' })

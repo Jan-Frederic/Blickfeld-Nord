@@ -41,6 +41,18 @@ function berlinDateTime(date, time) {
   return `${date}T${time}:00${sign}${String(Math.abs(hours)).padStart(2, '0')}:00`;
 }
 
+// Auftritte haben kein festes Ende – wie beim Kalender-Export wird diese Dauer angenommen
+const DURATION_HOURS = 3;
+
+function endDateTime(date, time) {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCMinutes(h * 60 + m + DURATION_HOURS * 60);
+  const day = d.toISOString().slice(0, 10);
+  const hhmm = d.toISOString().slice(11, 16);
+  return berlinDateTime(day, hhmm);
+}
+
 const today = new Date().toISOString().slice(0, 10);
 const image = `${SITE}/og-image.jpg`;
 
@@ -69,7 +81,7 @@ const events = publicShows
     name: `Blickfeld Nord – ${s.venue}`,
     description: `Blickfeld Nord live${s.city ? ' in ' + s.city : ''}: Partymusik zum Mitsingen und Tanzen.`,
     startDate: s.time ? berlinDateTime(s.date, s.time) : s.date,
-    ...(s.endDate ? { endDate: s.endDate } : {}),
+    endDate: s.time && !s.endDate ? endDateTime(s.date, s.time) : (s.endDate ?? s.date),
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: {
@@ -85,6 +97,21 @@ const events = publicShows
     },
     image: [image],
     performer: { '@id': BAND_ID },
+    // Veranstalter: falls nicht eingetragen, die Band als Ansprechpartner
+    organizer: s.organizer ? { '@type': 'Organization', name: s.organizer } : { '@id': BAND_ID },
+    // Eintritt nur angeben, wenn er bekannt ist (0 = Eintritt frei)
+    ...(s.price !== undefined
+      ? {
+          offers: {
+            '@type': 'Offer',
+            price: s.price,
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/InStock',
+            url: `${SITE}/#tour`,
+          },
+          isAccessibleForFree: s.price === 0,
+        }
+      : {}),
     url: `${SITE}/#tour`,
   }));
 
