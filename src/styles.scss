@@ -68,6 +68,8 @@ body::after {
   font-family: var(--bn-display); font-weight: 400; text-transform: uppercase;
   font-size: clamp(1.6rem, 4.5vw, 2.6rem); letter-spacing: .08em; line-height: 1.15;
   margin: 0 0 20px;
+  // lange Wörter auf schmalen Bildschirmen trennen statt über den Rand laufen zu lassen
+  overflow-wrap: break-word; hyphens: auto;
   -webkit-mask-image: var(--bn-grunge); mask-image: var(--bn-grunge);
 }
 // Unterzeile im Stil von „—— N O R D ——“

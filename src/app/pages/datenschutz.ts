@@ -5,7 +5,7 @@ import { Component } from '@angular/core';
   template: `
     <article class="section legal">
       <p class="kicker">Rechtliches</p>
-      <h2>Datenschutzerklärung</h2>
+      <h2>Datenschutz</h2>
 
       <h3>1. Allgemeine Hinweise</h3>
       <p>
