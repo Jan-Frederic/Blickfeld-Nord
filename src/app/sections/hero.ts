@@ -1,6 +1,6 @@
-import { Component, inject, output } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { BandService } from '../data/band.service';
+import { Component, DestroyRef, PLATFORM_ID, computed, inject, output, signal } from '@angular/core';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
+import { BandService, Show } from '../data/band.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -10,6 +10,18 @@ import { MatIconModule } from '@angular/material/icon';
   template: `
     @if (nextShow; as s) {
       <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}@if (s.time) {, {{ s.time }} Uhr}</strong> · {{ s.venue }} {{ s.city ?? '' }}</p>
+      <!-- Countdown: Platz ist immer reserviert (kein Layout-Sprung), Zahlen erscheinen erst im Browser -->
+      <div class="countdown" aria-live="off">
+        @if (left(); as l) {
+          @if (l.live) {
+            <span class="live">Jetzt live!</span>
+          } @else {
+            <span class="unit"><b>{{ l.days }}</b><small>{{ l.days === 1 ? 'Tag' : 'Tage' }}</small></span>
+            <span class="unit"><b>{{ l.hours }}</b><small>Std</small></span>
+            <span class="unit"><b>{{ l.minutes }}</b><small>Min</small></span>
+          }
+        }
+      </div>
     }
   `,
   styles: `
@@ -17,16 +29,61 @@ import { MatIconModule } from '@angular/material/icon';
     .claim {
       font-family: 'Montserrat', sans-serif; font-weight: 300; text-transform: uppercase;
       letter-spacing: .28em; font-size: clamp(.75rem, 1.6vw, 1rem);
-      margin: 0 0 20px; text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
+      margin: 0 0 12px; text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
     }
     .claim strong { font-weight: 400; color: var(--bn-sunset); }
+    .countdown { display: flex; justify-content: center; gap: 10px; height: 58px; margin-bottom: 20px; }
+    .unit {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 64px;
+      border: 1px solid rgba(236, 233, 228, .25); border-radius: 10px; background: rgba(20, 22, 25, .55);
+      backdrop-filter: blur(4px);
+    }
+    .unit b { font-family: var(--bn-display); font-weight: 400; font-size: 1.25rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .unit small { font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .16em; font-size: .6rem; color: var(--bn-fog); }
+    .live {
+      align-self: center; padding: 8px 18px; border-radius: 999px; background: var(--bn-sunset); color: #2a1708;
+      font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .2em; font-weight: 600; font-size: .8rem;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(232, 164, 106, .25); } }
+    @media (prefers-reduced-motion: reduce) { .live { animation: none; } }
   `,
 })
 export class NextShow {
-  // Erster Termin ab heute; vergangene Konzerte werden nicht angekündigt
-  protected readonly nextShow = inject(BandService).publicShows.filter(
-    (s) => s.date >= new Date().toISOString().slice(0, 10),
-  )[0];
+  // Auftritte haben kein festes Ende – so lange gilt ein Konzert nach Beginn als „live“
+  private static readonly LIVE_HOURS = 3;
+
+  private readonly now = signal(Date.now());
+
+  // Nächster öffentlicher Termin, der noch nicht vorbei ist (Beginn + 3 h bzw. Tagesende ohne Uhrzeit)
+  protected readonly nextShow = inject(BandService).publicShows.find((s) => this.end(s) > Date.now());
+
+  protected readonly left = computed(() => {
+    const s = this.nextShow;
+    if (!s || !this.browser) return null;
+    const diff = this.start(s) - this.now();
+    if (diff <= 0) return { live: true, days: 0, hours: 0, minutes: 0 };
+    const minutes = Math.floor(diff / 60000);
+    return { live: false, days: Math.floor(minutes / 1440), hours: Math.floor((minutes % 1440) / 60), minutes: minutes % 60 };
+  });
+
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  constructor() {
+    if (!this.browser) return;
+    const timer = setInterval(() => this.now.set(Date.now()), 30_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+  }
+
+  // Ortszeit des Besuchers – die Band spielt in NRW, Besucher sind praktisch immer in derselben Zeitzone
+  private start(s: Show): number {
+    return new Date(`${s.date}T${s.time ?? '00:00'}:00`).getTime();
+  }
+
+  private end(s: Show): number {
+    if (s.time && !s.endDate) return this.start(s) + NextShow.LIVE_HOURS * 3_600_000;
+    return new Date(`${s.endDate ?? s.date}T23:59:59`).getTime();
+  }
 }
 
 @Component({
