@@ -109,6 +109,8 @@ const events = publicShows
             price: s.price,
             priceCurrency: 'EUR',
             availability: 'https://schema.org/InStock',
+            // Eintritt ist ab Veröffentlichung „erhältlich“ – als Stichtag dient der Build-Tag (liegt nie in der Zukunft)
+            validFrom: berlinDateTime(today, '00:00'),
             url: `${SITE}/#tour`,
           },
           isAccessibleForFree: s.price === 0,
