@@ -31,7 +31,7 @@ import { BandService } from '../data/band.service';
         <div class="story" [class.with-photo]="m.photo">
           @if (m.photo) {
             <figure class="portrait">
-              <img [src]="m.photo.src" width="1200" height="1320" [alt]="m.photo.alt" />
+              <img [src]="m.photo.src" width="800" height="1000" [alt]="m.photo.alt" />
             </figure>
           }
           @if (m.story?.length) {
@@ -85,7 +85,7 @@ import { BandService } from '../data/band.service';
       float: right; width: min(42%, 320px); margin: 4px 0 20px 28px;
       border-radius: 12px; overflow: hidden; border: 1px solid var(--bn-line);
     }
-    .portrait img { display: block; width: 100%; height: auto; }
+    .portrait img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: center top; }
     .story.with-photo::after { content: ''; display: block; clear: both; }
     .tagline { margin: 0; color: var(--bn-sunset); font-family: var(--bn-wide); font-weight: 300; letter-spacing: .12em; }
     .story p { line-height: 1.8; color: rgba(236, 233, 228, .86); margin: 0 0 18px; }
