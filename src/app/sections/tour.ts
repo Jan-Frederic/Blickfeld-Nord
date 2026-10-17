@@ -64,7 +64,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
             @for (s of past; track s.date + s.venue) {
               <li>
                 <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
-                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}</span>
+                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}@if (s.private) {<span class="private">privat</span>}</span>
                 @if (historyDates.has(s.date)) {
                   <a routerLink="/historie" [fragment]="'e-' + s.date" class="recap">Rückblick <mat-icon>arrow_forward</mat-icon></a>
                 }
@@ -101,6 +101,10 @@ import { downloadIcs, icsFileName } from '../data/calendar';
     .past time { font-variant-numeric: tabular-nums; color: var(--bn-sunset); min-width: 6.5em; }
     .past .where { flex: 1; }
     .past .city { opacity: .7; }
+    .past .private {
+      margin-left: 10px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--bn-line);
+      font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--bn-fog); vertical-align: 2px;
+    }
     .past .recap { display: inline-flex; align-items: center; gap: 4px; color: var(--bn-ink); font-size: .88rem; text-decoration: none; }
     .past .recap:hover { color: var(--bn-sunset); }
     .past .recap mat-icon { font-size: 16px; width: 16px; height: 16px; }
@@ -124,11 +128,14 @@ export class Tour {
   private readonly today = localToday();
   protected readonly shows = this.band.publicShows.filter((s) => (s.endDate ?? s.date) >= this.today);
   // Gespielte öffentliche Gigs wandern automatisch in den Rückblick, neueste zuerst
-  protected readonly past = this.band.publicShows.filter((s) => (s.endDate ?? s.date) < this.today).reverse();
+  // Rückblick zeigt alle geklärten Auftritte – auch private (gekennzeichnet)
+  protected readonly past = this.band.shows
+    .filter((s) => s.confirmed && (s.endDate ?? s.date) < this.today)
+    .sort((a, b) => b.date.localeCompare(a.date));
   protected readonly historyDates = new Set(this.band.history.map((h) => h.date));
   // Location → Textstücke, Freunde mit Anker auf /freunde
   protected readonly venueParts = new Map(
-    this.band.publicShows.map((s) => [
+    this.band.shows.filter((s) => s.confirmed).map((s) => [
       s.venue,
       this.band.venueParts(s.venue).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
     ]),
