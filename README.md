@@ -124,8 +124,16 @@ Einmalig nötig: *Settings → Pages → Source: GitHub Actions*.
 Die durchsuchbare Songliste auf `/booking` kommt aus `src/app/data/repertoire.json`. Der Workflow
 **Repertoire aktualisieren** (`.github/workflows/repertoire.yml`, montags und per „Run workflow“) holt die Playlist
 über die Spotify-Web-API (`scripts/sync-repertoire.mjs`), speichert Änderungen und stößt einen Deploy an.
-Einmalig nötig: eine App auf developer.spotify.com und die Repository-Secrets `SPOTIFY_CLIENT_ID` und
-`SPOTIFY_CLIENT_SECRET`. Solange die Liste leer ist, blendet die Seite den Bereich aus.
+Einmalig nötig: eine App auf developer.spotify.com und die Repository-Secrets `SPOTIFY_CLIENT_ID`,
+`SPOTIFY_CLIENT_SECRET` und `SPOTIFY_REFRESH_TOKEN`. Seit der API-Umstellung 2026 gibt Spotify Playlist-Inhalte
+nur mit Benutzer-Login heraus. Das Refresh-Token entsteht so:
+
+1. In der Spotify-App unter *Settings → Redirect URIs* `http://127.0.0.1:8888/callback` eintragen und speichern.
+2. Lokal `SPOTIFY_CLIENT_ID=… SPOTIFY_CLIENT_SECRET=… node scripts/spotify-login.mjs` ausführen, den angezeigten
+   Link öffnen und mit dem Spotify-Konto anmelden, dem die Playlist gehört.
+3. Das im Terminal ausgegebene Token als Secret `SPOTIFY_REFRESH_TOKEN` speichern.
+
+Solange die Liste leer ist, blendet die Seite den Bereich aus.
 
 ### Ladezeit-Wächter und Updates
 

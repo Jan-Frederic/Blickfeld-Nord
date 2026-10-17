@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Holt die Repertoire-Playlist über die offizielle Spotify-Web-API und schreibt src/app/data/repertoire.json.
 // Läuft im GitHub-Workflow „Repertoire aktualisieren“ (.github/workflows/repertoire.yml).
-// Benötigt die Umgebungsvariablen SPOTIFY_CLIENT_ID und SPOTIFY_CLIENT_SECRET (Spotify-App, „Client Credentials“).
-// Lokal: SPOTIFY_CLIENT_ID=… SPOTIFY_CLIENT_SECRET=… node scripts/sync-repertoire.mjs
+// Benötigt SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET und SPOTIFY_REFRESH_TOKEN. Seit der API-Umstellung 2026
+// liefert Spotify Playlist-Inhalte nur noch mit Benutzer-Login – das Refresh-Token einmalig mit
+// `node scripts/spotify-login.mjs` erzeugen (siehe README).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,9 +11,12 @@ import { fileURLToPath } from 'node:url';
 const PLAYLIST_ID = '6O7apXN53rSGaWGhP8S8TW';
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'app', 'data', 'repertoire.json');
 
-const { SPOTIFY_CLIENT_ID: id, SPOTIFY_CLIENT_SECRET: secret } = process.env;
-if (!id || !secret) {
-  console.error('SPOTIFY_CLIENT_ID und SPOTIFY_CLIENT_SECRET fehlen (GitHub: Settings → Secrets and variables → Actions).');
+const { SPOTIFY_CLIENT_ID: id, SPOTIFY_CLIENT_SECRET: secret, SPOTIFY_REFRESH_TOKEN: refresh } = process.env;
+if (!id || !secret || !refresh) {
+  console.error(
+    'SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET oder SPOTIFY_REFRESH_TOKEN fehlen (GitHub: Settings → Secrets and variables → Actions).\n' +
+      'Das Refresh-Token einmalig mit „node scripts/spotify-login.mjs“ erzeugen.',
+  );
   process.exit(1);
 }
 
@@ -24,22 +28,24 @@ async function json(res, what) {
   return res.json();
 }
 
-const token = (
-  await json(
-    await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Basic ' + Buffer.from(`${id}:${secret}`).toString('base64'),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'grant_type=client_credentials',
-    }),
-    'Anmeldung bei Spotify',
-  )
-).access_token;
+const auth = await json(
+  await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Basic ' + Buffer.from(`${id}:${secret}`).toString('base64'),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh }),
+  }),
+  'Anmeldung bei Spotify',
+);
+const token = auth.access_token;
+if (auth.refresh_token && auth.refresh_token !== refresh) {
+  console.warn('Hinweis: Spotify hat ein neues Refresh-Token ausgegeben – das alte bleibt in der Regel gültig.');
+}
 
 const tracks = [];
-// Seit der API-Umstellung im Februar/März 2026 heißt der Endpunkt …/items (früher …/tracks, liefert jetzt 403)
+// Seit der API-Umstellung im Februar/März 2026 heißt der Endpunkt …/items (früher …/tracks)
 // und jeder Eintrag steckt unter „item“ statt „track“ – beides wird unterstützt.
 let url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/items?limit=50&market=DE`;
 while (url) {
