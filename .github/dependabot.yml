@@ -1,0 +1,25 @@
+# Dependabot schlägt Updates als Pull Request vor; die Prüfung (.github/workflows/ci.yml) läuft automatisch.
+# Sicherheits-Updates kommen zusätzlich sofort, sobald sie unter Settings → Code security aktiviert sind.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      # Angular-Pakete immer gemeinsam aktualisieren, sonst passen die Versionen nicht zusammen
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*', 'typescript', 'zone.js']
+      fonts:
+        patterns: ['@fontsource/*', 'material-icons']
+      werkzeuge:
+        patterns: ['esbuild', 'vitest', 'jsdom', 'prettier', '@types/*']
+    ignore:
+      # große Versionssprünge (z. B. Angular 22) lieber bewusst von Hand
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

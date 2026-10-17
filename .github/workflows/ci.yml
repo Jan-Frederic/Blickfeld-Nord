@@ -1,0 +1,46 @@
+# Prüft Pull Requests (z. B. von Dependabot), bevor sie auf main landen: Tests, Build und Linkcheck.
+name: Prüfung
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Tests (Inhalte in band.service.ts)
+        run: npx ng test --watch=false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Icon font subset
+        run: |
+          pip install --quiet fonttools brotli
+          python scripts/subset-icons.py
+
+      - name: Build
+        run: npx ng build --base-href /
+
+      - name: Structured data, sitemap and robots.txt
+        run: node scripts/seo.mjs
+
+      - name: Linkcheck
+        run: |
+          cd dist/blickfeld-nord/browser && cp 404/index.html 404.html && cd -
+          node scripts/check-links.mjs
