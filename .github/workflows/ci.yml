@@ -25,7 +25,7 @@ jobs:
       - name: Tests (Inhalte in band.service.ts)
         run: npx ng test --watch=false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
