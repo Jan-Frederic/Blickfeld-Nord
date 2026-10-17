@@ -32,6 +32,8 @@ export interface Friend {
   name: string;
   description: string;
   url: string;
+  // weitere Namen, unter denen der Freund in Auftritten erkannt und verlinkt wird
+  aliases?: string[];
   // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme, Gruppe, Fußball), sonst ein allgemeines Link-Symbol
   icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community' | 'football';
 }
@@ -99,7 +101,7 @@ export class BandService {
     const hits: { start: number; end: number; friend: Friend }[] = [];
     for (const friend of this.friends) {
       const short = friend.name.replace(/\s+\d{4}\b.*$|\s+e\.\s?V\.?$/i, '');
-      for (const key of [friend.name, short]) {
+      for (const key of [friend.name, short, ...(friend.aliases ?? [])]) {
         const start = lower.indexOf(key.toLowerCase());
         if (start >= 0) {
           hits.push({ start, end: start + key.length, friend });
@@ -336,6 +338,7 @@ export class BandService {
       name: 'Freiwillige Feuerwehr Hamminkeln – Löscheinheit Dingden',
       description: 'Ehrenamtlich im Einsatz für Dingden und Umgebung – rund um die Uhr, wenn es darauf ankommt.',
       url: 'https://www.feuerwehr-dingden.de/l%C3%B6scheinheit-dingden/',
+      aliases: ['Löscheinheit Dingden'],
       icon: 'fire',
     },
     {
@@ -375,7 +378,7 @@ export class BandService {
     { date: '2026-01-16', city: 'Rhede', venue: 'Bokeltsen Blagen (Lauftreff)', private: true, confirmed: true },
     { date: '2026-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti mit Pro Campesinos', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2026-08-22', city: 'Hamminkeln-Dingden', venue: 'Gasthof Küpper', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20K%C3%BCpper%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
-    { date: '2026-08-29', venue: 'Hausparty bei Freunden von der Feuerwehr', private: true, confirmed: true },
+    { date: '2026-08-29', city: 'Hamminkeln-Dingden', venue: 'Hausparty bei Freunden von der Löscheinheit Dingden', private: true, confirmed: true },
     { date: '2026-09-05', city: 'Hamminkeln-Dingden', venue: 'Nachbarschaftsfest', private: true, confirmed: true },
     { date: '2026-09-25', city: 'Hamminkeln-Ringenberg', venue: 'Gasthof Buschmann', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW', private: true, confirmed: true },
     { date: '2026-12-04', time: '18:00', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true, price: 0 },

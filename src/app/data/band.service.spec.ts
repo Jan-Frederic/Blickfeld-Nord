@@ -83,6 +83,7 @@ describe('Freunde', () => {
   it('erkennt Locations von Freunden', () => {
     expect(band.friendForVenue('Café Lotti – Tanz in den Mai')?.name).toBe('Café Lotti');
     expect(band.friendForVenue('Weihnachtsmarkt')).toBeUndefined();
+    expect(band.friendForVenue('Hausparty bei Freunden von der Löscheinheit Dingden')?.name).toContain('Feuerwehr');
     const parts = band.venueParts('Café Lotti mit Pro Campesinos');
     expect(parts.map((p) => [p.text, p.friend?.name ?? null])).toEqual([
       ['Café Lotti', 'Café Lotti'],
