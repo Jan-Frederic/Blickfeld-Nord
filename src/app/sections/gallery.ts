@@ -12,7 +12,7 @@ import { BandService } from '../data/band.service';
       <h2>Galerie</h2>
       <div class="grid">
         @for (p of band.photos; track p.src; let i = $index) {
-          <button class="tile" [class.wide]="i % 5 === 0" (click)="open(i)" [attr.aria-label]="'Bild vergrößern: ' + p.alt">
+          <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="'Bild vergrößern: ' + p.alt">
             <img [src]="p.thumb" [alt]="p.alt" loading="lazy" />
           </button>
         }

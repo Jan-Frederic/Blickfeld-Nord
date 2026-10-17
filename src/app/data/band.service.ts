@@ -61,6 +61,8 @@ export interface Photo {
   caption?: string;
   // Bildnachweis, z. B. „markusdproduktion“
   credit?: string;
+  // Hochformat: wird in der Galerie nie als breite Kachel gezeigt
+  tall?: boolean;
 }
 
 export interface Show {
@@ -353,15 +355,16 @@ export class BandService {
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
   readonly photos: Photo[] = [
     { src: 'historie/2026-09-25-gasthof-buschmann.webp', thumb: 'galerie/live-gasthof-buschmann-thumb.webp', alt: 'Blickfeld Nord im Saal des Gasthof Buschmann unter lila Licht und Nebel', caption: 'Gasthof Buschmann, 25.09.2026', credit: 'markusdproduktion' },
-    { src: 'historie/2026-04-30-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-thumb.webp', alt: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass', caption: 'Live im Café Lotti, 30.04.2026' },
     { src: 'historie/2026-09-05-nachbarschaftsfest.webp', thumb: 'galerie/live-nachbarschaftsfest-thumb.webp', alt: 'Blickfeld Nord beim Nachbarschaftsfest im Pavillon unter lila Licht – Akustikgitarre, Schlagzeug und Bass', caption: 'Nachbarschaftsfest, 05.09.2026' },
+    { src: 'historie/2026-08-29-hausparty-feuerwehr.webp', thumb: 'galerie/live-hausparty-feuerwehr-thumb.webp', tall: true, alt: 'Aufgebaute Bühne vor einer Backsteinwand: Schlagzeug, E-Gitarre, Bass und Akustikgitarre unter roten Scheinwerfern', caption: 'Hausparty bei Freunden von der Feuerwehr, 29.08.2026' },
+    { src: 'historie/2026-04-30-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-thumb.webp', alt: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass', caption: 'Live im Café Lotti, 30.04.2026' },
     { src: 'historie/2026-01-16-bokeltsen-blagen.webp', thumb: 'galerie/live-bokeltsen-blagen-thumb.webp', alt: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen – Akustikgitarre, Schlagzeug und Bass', caption: 'Bei den Bokeltsen Blagen, 16.01.2026' },
     { src: 'historie/2025-10-02-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-2025-thumb.webp', alt: 'Erster Auftritt als Trio im Café Lotti unter rotem Licht, Gäste um eine Feuerschale', caption: 'Erster Auftritt als Trio, Café Lotti, 02.10.2025' },
     { src: 'galerie/band-2.webp', thumb: 'galerie/band-2-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord lachen gut gelaunt vor Backsteinwand, Gitarren und Schlagzeug', caption: 'Blickfeld Nord' },
     { src: 'galerie/band-1.webp', thumb: 'galerie/band-1-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug', caption: 'Blickfeld Nord' },
-    { src: 'band/david-broeker.webp', thumb: 'galerie/portrait-david-broeker-thumb.webp', alt: 'David Bröker singt und spielt Akustikgitarre, im karierten Hemd vor einer Backsteinmauer', caption: 'David Bröker – Gesang & Gitarre' },
-    { src: 'band/matthias-wigger.webp', thumb: 'galerie/portrait-matthias-wigger-thumb.webp', alt: 'Matthias Wigger lacht hinter seinem Schlagzeug, vor einer Backsteinmauer mit Bühnenlicht', caption: 'Matthias Wigger – Schlagzeug & Gesang' },
-    { src: 'band/jan-frederic-overbeck.webp', thumb: 'galerie/portrait-jan-frederic-overbeck-thumb.webp', alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer', caption: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang' },
+    { src: 'band/david-broeker.webp', thumb: 'galerie/portrait-david-broeker-thumb.webp', tall: true, alt: 'David Bröker singt und spielt Akustikgitarre, im karierten Hemd vor einer Backsteinmauer', caption: 'David Bröker – Gesang & Gitarre' },
+    { src: 'band/matthias-wigger.webp', thumb: 'galerie/portrait-matthias-wigger-thumb.webp', tall: true, alt: 'Matthias Wigger lacht hinter seinem Schlagzeug, vor einer Backsteinmauer mit Bühnenlicht', caption: 'Matthias Wigger – Schlagzeug & Gesang' },
+    { src: 'band/jan-frederic-overbeck.webp', thumb: 'galerie/portrait-jan-frederic-overbeck-thumb.webp', tall: true, alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer', caption: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
   ];
 
