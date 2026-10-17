@@ -182,3 +182,46 @@ export async function sharePoster(s: Show): Promise<void> {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+// Hashtag aus einem Namen: „Café Lotti – Tanz in den Mai“ → „cafelottitanzindenmai“ (nur Buchstaben/Ziffern)
+function hashtag(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/** Fertiger Instagram-Text zum Plakat: Datum, Uhrzeit, Ort, Eintritt und Hashtags */
+export function postText(s: Show): string {
+  const { weekday, day } = formatDate(s.date);
+  const end = s.endDate ? formatDate(s.endDate) : null;
+  const when = end ? `${weekday}, ${day} bis ${end.weekday}, ${end.day}` : `${weekday}, ${day}`;
+  // Ortsteile einzeln als Hashtag, z. B. „Hamminkeln-Dingden“ → #hamminkeln #dingden
+  const places = (s.city ?? '').split(/[-\s/]+/).filter(Boolean).map(hashtag);
+  const tags = [
+    'blickfeldnord',
+    hashtag(s.venue.split(' – ')[0]),
+    ...places,
+    'livemusik',
+    'liveband',
+    'partyband',
+    'coverband',
+    'mitsingen',
+  ];
+  const lines = [
+    `🎶 Blickfeld Nord live! 🎶`,
+    '',
+    `📅 ${when}${s.time ? ` · ${s.time} Uhr` : ''}`,
+    `📍 ${s.venue}${s.city ? `, ${s.city}` : ''}`,
+    ...(s.price === 0 ? ['🎟️ Eintritt frei'] : s.price ? [`🎟️ Eintritt ${s.price} €`] : []),
+    '',
+    'Kommt vorbei, singt mit und feiert mit uns – wir freuen uns auf euch! 🍻',
+    '',
+    'Alle Termine: blickfeld-nord.de',
+    '',
+    [...new Set(tags.filter(Boolean))].map((t) => '#' + t).join(' '),
+  ];
+  return lines.join('\n');
+}

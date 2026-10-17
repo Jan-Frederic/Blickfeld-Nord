@@ -23,6 +23,9 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   Easter Egg: fünfmal schnell auf das Logo oben links klicken.
   Für jeden kommenden öffentlichen und geklärten Termin erzeugt der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design
   (`src/app/data/poster.ts`) – am Handy direkt zum Teilen, am Rechner als Download.
+  Daneben kopiert **Text kopieren** einen fertigen Instagram-Post (Datum, Uhrzeit, Ort, Eintritt, Hashtags).
+  Darunter eine **Packliste** zum Abhaken vor jedem Gig (eigene Punkte möglich; gespeichert nur im Browser des
+  jeweiligen Geräts, `src/app/pages/packliste.ts`).
 - **Impressum** (`/impressum`) und **Datenschutzerklärung** (`/datenschutz`)
 
 Alle Inhalte (Mitglieder, Konzerttermine, Fotos, Historie, befreundete Seiten) stehen zentral in

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
 import { MatTableModule } from '@angular/material/table';
@@ -6,13 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs } from '../data/calendar';
 import { BandService, Show } from '../data/band.service';
-import { sharePoster } from '../data/poster';
+import { postText, sharePoster } from '../data/poster';
+import { Packliste } from './packliste';
 
 // Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
 // fünfmal schnell auf das Logo oben links klicken.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, MatTableModule, MatIconModule, MatButtonModule],
+  imports: [DatePipe, MatTableModule, MatIconModule, MatButtonModule, Packliste],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -65,9 +66,15 @@ import { sharePoster } from '../data/poster';
             <th mat-header-cell *matHeaderCellDef>Plakat</th>
             <td mat-cell *matCellDef="let s">
               @if (!s.private && s.confirmed && (s.endDate ?? s.date) >= today) {
-                <button mat-stroked-button (click)="poster(s)" [attr.aria-label]="'Plakat für ' + s.venue + ' erstellen'">
-                  <mat-icon>image</mat-icon> Plakat
-                </button>
+                <div class="poster-actions">
+                  <button mat-stroked-button (click)="poster(s)" [attr.aria-label]="'Plakat für ' + s.venue + ' erstellen'">
+                    <mat-icon>image</mat-icon> Plakat
+                  </button>
+                  <button mat-stroked-button (click)="copyText(s)" [attr.aria-label]="'Instagram-Text für ' + s.venue + ' kopieren'">
+                    <mat-icon>{{ copied() === s.date + s.venue ? 'check' : 'content_copy' }}</mat-icon>
+                    {{ copied() === s.date + s.venue ? 'Kopiert!' : 'Text kopieren' }}
+                  </button>
+                </div>
               }
             </td>
           </ng-container>
@@ -75,6 +82,8 @@ import { sharePoster } from '../data/poster';
           <tr mat-row *matRowDef="let row; columns: columns"></tr>
         </table>
       </div>
+
+      <app-packliste />
     </section>
   `,
   styles: `
@@ -86,7 +95,7 @@ import { sharePoster } from '../data/poster';
     .export { margin-left: auto; text-transform: none; letter-spacing: normal; }
     .summary strong { color: var(--bn-ink); font-size: 1rem; margin-right: 4px; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
-    table { width: 100%; min-width: 860px; background: transparent; }
+    table { width: 100%; min-width: 1000px; background: transparent; }
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
     .past { opacity: .45; }
     .time { display: block; font-size: .82rem; color: var(--bn-sunset); }
@@ -99,6 +108,7 @@ import { sharePoster } from '../data/poster';
     .status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: #e0b25a; }
     .status.ok { color: #7fc29b; }
     .status mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .poster-actions { display: flex; gap: 8px; white-space: nowrap; }
     .comment { max-width: 320px; white-space: pre-line; color: rgba(236, 233, 228, .82); }
   `,
 })
@@ -119,6 +129,19 @@ export class Backstage implements OnDestroy {
   // Instagram-Plakat (1080 × 1350) im Logo-Design – nur für kommende öffentliche UND geklärte Termine
   protected poster(s: Show): void {
     sharePoster(s).catch((err) => console.error(err));
+  }
+
+  // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage
+  protected readonly copied = signal<string | null>(null);
+  protected async copyText(s: Show): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(postText(s));
+      this.copied.set(s.date + s.venue);
+      setTimeout(() => this.copied.set(null), 2000);
+    } catch {
+      // Fallback, falls die Zwischenablage gesperrt ist: Text zum manuellen Kopieren anzeigen
+      window.prompt('Text kopieren:', postText(s));
+    }
   }
 
   // Bandkalender inkl. privater Termine, Status und Kommentaren
