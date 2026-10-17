@@ -312,8 +312,6 @@ export class BandService {
     { src: 'band/matthias-wigger.webp', thumb: 'galerie/portrait-matthias-wigger-thumb.webp', alt: 'Matthias Wigger lacht hinter seinem Schlagzeug, vor einer Backsteinmauer mit Bühnenlicht', caption: 'Matthias Wigger – Schlagzeug & Gesang' },
     { src: 'band/jan-frederic-overbeck.webp', thumb: 'galerie/portrait-jan-frederic-overbeck-thumb.webp', alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer', caption: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
-    { src: 'galerie/platzhalter-1.webp', thumb: 'galerie/platzhalter-1-thumb.webp', alt: 'Platzhalter – Foto folgt' },
-    { src: 'galerie/platzhalter-2.webp', thumb: 'galerie/platzhalter-2-thumb.webp', alt: 'Platzhalter – Foto folgt' },
   ];
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
