@@ -39,12 +39,13 @@ const token = (
 ).access_token;
 
 const tracks = [];
-let url =
-  `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?limit=100&market=DE` +
-  '&fields=next,items(track(name,artists(name),album(release_date),external_urls(spotify),type))';
+// Seit der API-Umstellung im Februar/März 2026 heißt der Endpunkt …/items (früher …/tracks, liefert jetzt 403)
+// und jeder Eintrag steckt unter „item“ statt „track“ – beides wird unterstützt.
+let url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/items?limit=50&market=DE`;
 while (url) {
   const page = await json(await fetch(url, { headers: { Authorization: `Bearer ${token}` } }), 'Playlist laden');
-  for (const { track } of page.items) {
+  for (const entry of page.items) {
+    const track = entry.item ?? entry.track;
     if (!track || track.type !== 'track') continue; // Podcasts/gelöschte Titel überspringen
     tracks.push({
       title: track.name,
