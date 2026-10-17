@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Availability } from './availability';
+import { Repertoire } from './repertoire';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
 const BOOKING_MAIL = 'Matthiaswigger@me.com';
@@ -32,7 +33,7 @@ const FAQ: { q: string; a: string }[] = [
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, MatIconModule, Availability],
+  imports: [RouterLink, MatIconModule, Availability, Repertoire],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -106,6 +107,8 @@ const FAQ: { q: string; a: string }[] = [
           <p class="mail">Logos, Fotos und Infos für eure Ankündigung: <a routerLink="/presse">Pressekit</a></p>
         </div>
       </div>
+
+      <app-repertoire />
 
       <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
       <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>

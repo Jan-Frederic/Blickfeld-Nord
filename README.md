@@ -119,6 +119,14 @@ meldet den Fehler per E-Mail:
   existieren; externe Links werden geprüft und nur als Warnung gemeldet
 Einmalig nötig: *Settings → Pages → Source: GitHub Actions*.
 
+### Repertoire aus Spotify
+
+Die durchsuchbare Songliste auf `/booking` kommt aus `src/app/data/repertoire.json`. Der Workflow
+**Repertoire aktualisieren** (`.github/workflows/repertoire.yml`, montags und per „Run workflow“) holt die Playlist
+über die Spotify-Web-API (`scripts/sync-repertoire.mjs`), speichert Änderungen und stößt einen Deploy an.
+Einmalig nötig: eine App auf developer.spotify.com und die Repository-Secrets `SPOTIFY_CLIENT_ID` und
+`SPOTIFY_CLIENT_SECRET`. Solange die Liste leer ist, blendet die Seite den Bereich aus.
+
 ### Ladezeit-Wächter und Updates
 
 - **Lighthouse:** Nach jedem Deploy prüft der Job `lighthouse` die Live-Seite (Start, Booking, Historie; Handy-Profil).

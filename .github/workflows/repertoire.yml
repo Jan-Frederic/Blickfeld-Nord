@@ -1,0 +1,43 @@
+# Holt die Repertoire-Playlist von Spotify, speichert sie in src/app/data/repertoire.json und
+# stößt bei Änderungen einen neuen Deploy an. Läuft montags früh und per Knopfdruck (Actions → Run workflow).
+name: Repertoire aktualisieren
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Playlist von Spotify laden
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        run: node scripts/sync-repertoire.mjs
+
+      - name: Änderungen speichern und neu deployen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet; then
+            echo "Keine Änderungen."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Repertoire aus Spotify aktualisiert"
+          git push
+          # Pushes mit dem Workflow-Token starten keinen Deploy von selbst – daher ausdrücklich anstoßen
+          gh workflow run deploy-pages.yml --ref main

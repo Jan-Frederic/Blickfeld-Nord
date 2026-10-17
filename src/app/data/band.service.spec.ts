@@ -1,4 +1,5 @@
 import { BandService, friendId } from './band.service';
+import repertoire from './repertoire.json';
 
 // Prüft die zentral gepflegten Inhalte auf typische Tippfehler, bevor sie live gehen
 const band = new BandService();
@@ -90,5 +91,15 @@ describe('Freunde', () => {
       [' mit ', null],
       ['Pro Campesinos', 'Pro Campesinos 1977 e.V.'],
     ]);
+  });
+});
+
+describe('Repertoire (aus Spotify)', () => {
+  it('hat gültige Einträge', () => {
+    for (const t of repertoire.tracks as { title: string; artist: string; year?: number }[]) {
+      expect(t.title.trim()).not.toBe('');
+      expect(t.artist.trim()).not.toBe('');
+      if (t.year !== undefined) expect(t.year).toBeGreaterThan(1900);
+    }
   });
 });
