@@ -24,7 +24,11 @@ import { BandService } from '../data/band.service';
           <a class="card-link" [routerLink]="['/band', m.slug]">
           <mat-card appearance="outlined">
             <mat-card-header>
-              <div mat-card-avatar class="avatar">{{ m.initials }}</div>
+              @if (m.photo) {
+                <img mat-card-avatar class="avatar photo" [src]="m.photo.avatar" width="40" height="40" alt="" />
+              } @else {
+                <div mat-card-avatar class="avatar">{{ m.initials }}</div>
+              }
               <mat-card-title>{{ m.name }}</mat-card-title>
               <mat-card-subtitle>{{ m.role }}</mat-card-subtitle>
             </mat-card-header>
@@ -45,6 +49,7 @@ import { BandService } from '../data/band.service';
       display: grid; place-items: center; font-family: var(--bn-display); font-size: .8rem; letter-spacing: .06em;
       background: transparent; color: var(--bn-ink); border: 1px solid var(--bn-fog);
     }
+    .avatar.photo { object-fit: cover; border-color: var(--bn-sunset); }
     .card-link { display: block; color: inherit; text-decoration: none; border-radius: 12px; }
     .card-link mat-card { height: 100%; transition: border-color .2s, transform .2s; }
     .card-link:hover mat-card, .card-link:focus-visible mat-card { border-color: var(--bn-sunset) !important; transform: translateY(-2px); }
