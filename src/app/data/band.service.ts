@@ -169,9 +169,9 @@ export class BandService {
       date: '2026-09-25',
       title: 'Geburtstagsfeier im Gasthof Buschmann – die ganze Familie macht mit',
       text: [
-        'Am 25. September durften wir im Gasthof Buschmann in Hamminkeln-Ringenberg den Geburtstag von Britta K. feiern – in einem Haus, das seit 1868 als Gaststätte und Hotel in Familienbesitz geführt wird. Mehr Tradition als Kulisse geht kaum.',
+        'Am 25. September durften wir im Gasthof Buschmann in Hamminkeln-Ringenberg auf einer Geburtstagsfeier spielen – in einem Haus, das seit 1868 als Gaststätte und Hotel in Familienbesitz geführt wird. Mehr Tradition als Kulisse geht kaum.',
         'Es wurde ein wunderschöner Abend mit ausgelassener Stimmung. Und das Beste: Die ganze Familie hat mitmusiziert. Aus einem Konzert wurde so ganz schnell eine große gemeinsame Session, bei der niemand nur zuhören wollte.',
-        'Sogar Markus von markusdproduktion, der den Abend eigentlich mit der Kamera festgehalten hat, griff zwischendurch zur Trompete – das Foto stammt ebenfalls von ihm. Danke an Britta und ihre Familie für die Einladung, an das Team vom Gasthof Buschmann und an Markus für Bilder und Bläser!',
+        'Sogar Markus von markusdproduktion, der den Abend eigentlich mit der Kamera festgehalten hat, griff zwischendurch zur Trompete – das Foto stammt ebenfalls von ihm. Danke an das Geburtstagskind und die ganze Familie für die Einladung, an das Team vom Gasthof Buschmann und an Markus für Foto und Trompete!',
       ],
       images: [
         {
