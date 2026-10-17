@@ -46,7 +46,7 @@ export interface HistoryEntry {
   date: string;
   title: string;
   text: string[];
-  images?: { src: string; alt: string; credit?: string }[];
+  images?: { src: string; alt: string; credit?: string; portrait?: boolean }[];
   links?: HistoryLink[];
   // Instagram-Reel-Kennung aus der URL (instagram.com/reel/<id>/), wird per Zwei-Klick-Lösung eingebettet
   reel?: string;
@@ -202,6 +202,25 @@ export class BandService {
       ],
     },
     {
+      date: '2026-08-29',
+      title: 'Hausparty bei unseren Freunden von der Feuerwehr',
+      text: [
+        'Wenn die Feuerwehr feiert, brennt höchstens die Stimmung: Am 29. August waren wir bei unseren Freunden von der Löscheinheit Dingden zu einer Hausparty eingeladen – Instrumente vor der Backsteinwand, Licht an und los.',
+        'Gefeiert wurde bis tief in die Nacht. Und als die Verstärker irgendwann still waren, ging es draußen einfach weiter: Rund ums Lagerfeuer wurde unplugged weitergesungen – die schönste Zugabe des Abends.',
+        'Danke an unsere Freunde von der Feuerwehr für die Einladung und die tolle Gastfreundschaft. Löschen müsst ihr bei uns nur den Durst!',
+      ],
+      images: [
+        {
+          src: 'historie/2026-08-29-hausparty-feuerwehr.webp',
+          alt: 'Aufgebaute Bühne vor einer Backsteinwand: Schlagzeug, E-Gitarre, Bass und Akustikgitarre unter roten Scheinwerfern',
+          portrait: true,
+        },
+      ],
+      links: [
+        { type: 'web', label: 'Löscheinheit Dingden', url: 'https://www.feuerwehr-dingden.de/l%C3%B6scheinheit-dingden/' },
+      ],
+    },
+    {
       date: '2026-08-22',
       title: 'Legendärer Abend im Gasthof Küpper – mit Joker Mark',
       text: [
@@ -353,6 +372,7 @@ export class BandService {
     { date: '2026-01-16', venue: 'Bokeltsen Blagen (Lauftreff)', private: true, confirmed: true },
     { date: '2026-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti mit Pro Campesinos', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2026-08-22', venue: 'Gasthof Küpper', confirmed: true },
+    { date: '2026-08-29', venue: 'Hausparty bei Freunden von der Feuerwehr', private: true, confirmed: true },
     { date: '2026-09-05', venue: 'Nachbarschaftsfest', private: true, confirmed: true },
     { date: '2026-09-25', city: 'Hamminkeln-Ringenberg', venue: 'Gasthof Buschmann', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2026-12-04', time: '18:00', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true, price: 0 },

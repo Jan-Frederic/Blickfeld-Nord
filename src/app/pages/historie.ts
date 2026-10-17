@@ -32,7 +32,7 @@ import { InstagramReel } from './instagram-reel';
               @if (e.images?.length) {
                 <div class="images" [class.single]="e.images!.length === 1">
                   @for (img of e.images; track img.src) {
-                    <a [href]="img.src" target="_blank" rel="noopener" [attr.aria-label]="'Bild öffnen: ' + img.alt">
+                    <a [href]="img.src" target="_blank" rel="noopener" [class.portrait]="img.portrait" [attr.aria-label]="'Bild öffnen: ' + img.alt">
                       <img [src]="img.src" [alt]="img.alt" loading="lazy" />
                     </a>
                   }
@@ -107,6 +107,7 @@ import { InstagramReel } from './instagram-reel';
     .images.single { grid-template-columns: 1fr; }
     .images a { display: block; border-radius: 8px; overflow: hidden; border: 1px solid var(--bn-line); aspect-ratio: 4 / 3; }
     .images.single a { aspect-ratio: 16 / 9; }
+    .images.single a.portrait { aspect-ratio: 3 / 4; max-width: 420px; }
     .images img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
     .images a:hover img { transform: scale(1.03); }
     .credit { margin: -8px 0 12px !important; font-size: .78rem; color: var(--bn-fog) !important; }
