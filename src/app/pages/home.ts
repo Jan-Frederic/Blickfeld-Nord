@@ -5,7 +5,7 @@ import { Hero } from '../sections/hero';
 import { Band } from '../sections/band';
 import { Tour } from '../sections/tour';
 import { Gallery } from '../sections/gallery';
-import { Booking } from '../sections/booking';
+import { BookingTeaser } from '../sections/booking-teaser';
 import { scrollToSection } from '../scroll';
 
 // Abschnitte unterhalb des Startbilds sind vorgerendert (sichtbar und für Google lesbar),
@@ -13,7 +13,7 @@ import { scrollToSection } from '../scroll';
 // Bei Navigation innerhalb der Seite werden sie sofort geladen.
 @Component({
   selector: 'app-home',
-  imports: [Hero, Band, Tour, Booking, Gallery],
+  imports: [Hero, Band, Tour, BookingTeaser, Gallery],
   template: `
     <app-hero (navigate)="scrollTo($event)" />
     @defer (on immediate; hydrate on viewport) {
@@ -24,7 +24,7 @@ import { scrollToSection } from '../scroll';
       <app-tour ngSkipHydration />
     }
     @defer (on immediate; hydrate on viewport) {
-      <app-booking />
+      <app-booking-teaser />
     }
     @defer (on immediate; hydrate on viewport) {
       <app-gallery />

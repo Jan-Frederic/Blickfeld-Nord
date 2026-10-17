@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Availability } from './availability';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
 const BOOKING_MAIL = 'Matthiaswigger@me.com';
@@ -31,9 +32,9 @@ const FAQ: { q: string; a: string }[] = [
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, Availability],
   template: `
-    <section id="booking" class="section">
+    <section class="section">
       <p class="kicker">Für Veranstalter</p>
       <h2>Booking</h2>
       <p class="lead">
@@ -106,6 +107,9 @@ const FAQ: { q: string; a: string }[] = [
         </div>
       </div>
 
+      <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
+      <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>
+
       <div class="faq">
         <div class="faq-head">
           <h3>Häufige Fragen</h3>
@@ -154,6 +158,7 @@ const FAQ: { q: string; a: string }[] = [
     .btn.primary { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
     .btn.primary:hover { background: #f0b884; color: #2a1708; }
     .btn svg, .btn mat-icon { width: 20px; height: 20px; font-size: 20px; flex: none; }
+    .anchor { scroll-margin-top: 72px; }
     .faq { margin-top: 32px; }
     .faq-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .faq-head h3 { margin: 0; }
@@ -175,6 +180,13 @@ const FAQ: { q: string; a: string }[] = [
   `,
 })
 export class Booking {
+  // Klick auf einen freien Tag im Kalender: E-Mail-Vorlage mit vorausgefülltem Datum
+  protected request(isoDate: string): void {
+    const [y, m, d] = isoDate.split('-');
+    const body = MAIL_BODY.replace('Datum:', `Datum: ${d}.${m}.${y}`);
+    window.location.href = `mailto:${BOOKING_MAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(body)}`;
+  }
+
   protected readonly faq = FAQ;
   protected readonly mail = BOOKING_MAIL;
   protected readonly mailto =

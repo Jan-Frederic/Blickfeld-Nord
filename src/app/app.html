@@ -5,7 +5,11 @@
   <span class="spacer"></span>
   <nav class="desktop-nav">
     @for (n of nav; track n.id) {
-      <button mat-button (click)="scrollTo(n.id)">{{ n.label }}</button>
+      @if (n.link) {
+        <a mat-button [routerLink]="n.link">{{ n.label }}</a>
+      } @else {
+        <button mat-button (click)="scrollTo(n.id!)">{{ n.label }}</button>
+      }
     }
     <a mat-button routerLink="/historie">Historie</a>
     <a mat-button routerLink="/freunde">Freunde</a>
@@ -15,7 +19,11 @@
   </button>
   <mat-menu #menu="matMenu">
     @for (n of nav; track n.id) {
-      <button mat-menu-item (click)="scrollTo(n.id)">{{ n.label }}</button>
+      @if (n.link) {
+        <a mat-menu-item [routerLink]="n.link">{{ n.label }}</a>
+      } @else {
+        <button mat-menu-item (click)="scrollTo(n.id!)">{{ n.label }}</button>
+      }
     }
     <a mat-menu-item routerLink="/historie">Historie</a>
     <a mat-menu-item routerLink="/freunde">Freunde</a>
@@ -45,6 +53,7 @@
     <a mat-icon-button href="mailto:Matthiaswigger@me.com" aria-label="E-Mail an Matthias Wigger"><mat-icon>mail</mat-icon></a>
   </div>
   <nav class="legal-links">
+    <a routerLink="/booking">Booking</a>
     <a routerLink="/historie">Historie</a>
     <a routerLink="/freunde">Freunde</a>
     <a routerLink="/presse">Presse</a>

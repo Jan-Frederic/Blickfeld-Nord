@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,10 +15,10 @@ import { trackPageViews } from './analytics';
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly nav = [
+  protected readonly nav: { id?: string; link?: string; label: string }[] = [
     { id: 'band', label: 'Band' },
     { id: 'tour', label: 'Konzerte' },
-    { id: 'booking', label: 'Booking' },
+    { link: '/booking', label: 'Booking' },
     { id: 'galerie', label: 'Galerie' },
   ];
   protected readonly year = new Date().getFullYear();
@@ -26,6 +27,8 @@ export class App {
 
   constructor() {
     trackPageViews();
+    // Sprungmarken (z. B. /booking#verfuegbarkeit) nicht unter der fest stehenden Kopfzeile verstecken
+    inject(ViewportScroller).setOffset([0, 80]);
   }
 
   private logoClicks: number[] = [];
