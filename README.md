@@ -116,6 +116,15 @@ meldet den Fehler per E-Mail:
   existieren; externe Links werden geprüft und nur als Warnung gemeldet
 Einmalig nötig: *Settings → Pages → Source: GitHub Actions*.
 
+### Ladezeit-Wächter und Updates
+
+- **Lighthouse:** Nach jedem Deploy prüft der Job `lighthouse` die Live-Seite (Start, Booking, Historie; Handy-Profil).
+  Grenzwerte in `lighthouserc.json`: Leistung ≥ 75, Barrierefreiheit und SEO ≥ 95. Ein Fehlschlag stoppt nichts,
+  meldet sich aber per E-Mail; die Berichte liegen im jeweiligen Actions-Lauf unter „Artifacts“.
+- **Dependabot** (`.github/dependabot.yml`) schlägt monatlich Updates als Pull Request vor (Angular-Pakete gebündelt,
+  keine großen Versionssprünge). Jeder Pull Request wird von `.github/workflows/ci.yml` geprüft (Tests, Build,
+  Linkcheck) – grün = gefahrlos mergen.
+
 ### Eigene Domain
 
 Die Seite läuft unter `blickfeld-nord.de` (Base-Href `/`).

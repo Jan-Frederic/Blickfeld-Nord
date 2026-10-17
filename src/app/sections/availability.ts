@@ -47,9 +47,9 @@ function iso(y: number, m: number, d: number): string {
         </span>
       </p>
 
-      <div class="grid" role="grid" [attr.aria-label]="'Verfügbarkeit ' + title()">
+      <div class="grid" [attr.aria-label]="'Verfügbarkeit ' + title()" role="group">
         @for (w of weekdays; track w) {
-          <span class="wd" role="columnheader">{{ w }}</span>
+          <span class="wd" aria-hidden="true">{{ w }}</span>
         }
         @for (blank of blanks(); track $index) {
           <span class="blank" aria-hidden="true"></span>
@@ -60,8 +60,8 @@ function iso(y: number, m: number, d: number): string {
               {{ d.day }}
             </button>
           } @else {
-            <span [class]="'day ' + d.state" [attr.aria-label]="label(d) + ': ' + stateLabel[d.state]" role="gridcell">
-              {{ d.day }}
+            <span [class]="'day ' + d.state">
+              <span aria-hidden="true">{{ d.day }}</span><span class="sr-only">{{ label(d) }}: {{ stateLabel[d.state] }}</span>
             </span>
           }
         }
@@ -106,7 +106,7 @@ function iso(y: number, m: number, d: number): string {
     .day.free:hover, .day.free:focus-visible { border-color: var(--bn-sunset); color: var(--bn-sunset); background: rgba(232, 164, 106, .08); }
     .day.booked { background: rgba(232, 164, 106, .85); color: #2a1708; font-weight: 600; }
     .day.option { border: 1px dashed var(--bn-sunset); color: var(--bn-sunset); }
-    .day.past { color: rgba(236, 233, 228, .25); }
+    .day.past { color: rgba(236, 233, 228, .55); }
     .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0; margin: 16px 0 0; font-size: .82rem; color: var(--bn-fog); }
     .legend li { display: flex; align-items: center; gap: 8px; }
     .dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }

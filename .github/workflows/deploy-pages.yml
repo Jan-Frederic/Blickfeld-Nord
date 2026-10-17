@@ -76,3 +76,32 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Ladezeit-Wächter: prüft die Live-Seite nach jedem Deploy mit Lighthouse (Handy-Profil, je 3 Durchläufe).
+  # Schlägt fehl (rotes X + E-Mail), wenn Leistung < 75, Barrierefreiheit oder SEO < 95 – die Seite bleibt trotzdem online.
+  # Berichte zum Nachlesen: Actions → Lauf → Artifacts → lighthouse-berichte
+  lighthouse:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Kurz warten, bis die neue Version ausgeliefert wird
+        run: sleep 60
+
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.14.0 autorun --config=./lighthouserc.json
+
+      - name: Berichte speichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-berichte
+          path: lighthouse-berichte
+          retention-days: 30
