@@ -46,7 +46,7 @@ export interface HistoryEntry {
   date: string;
   title: string;
   text: string[];
-  images?: { src: string; alt: string }[];
+  images?: { src: string; alt: string; credit?: string }[];
   links?: HistoryLink[];
   // Instagram-Reel-Kennung aus der URL (instagram.com/reel/<id>/), wird per Zwei-Klick-Lösung eingebettet
   reel?: string;
@@ -59,6 +59,8 @@ export interface Photo {
   thumb: string;
   alt: string;
   caption?: string;
+  // Bildnachweis, z. B. „markusdproduktion“
+  credit?: string;
 }
 
 export interface Show {
@@ -163,6 +165,27 @@ export class BandService {
 
   // Historie (/historie), neueste Einträge zuerst
   readonly history: HistoryEntry[] = [
+    {
+      date: '2026-09-25',
+      title: 'Geburtstagsfeier im Gasthof Buschmann – die ganze Familie macht mit',
+      text: [
+        'Am 25. September durften wir im Gasthof Buschmann in Hamminkeln-Ringenberg den Geburtstag von Britta K. feiern – in einem Haus, das seit 1868 als Gaststätte und Hotel in Familienbesitz geführt wird. Mehr Tradition als Kulisse geht kaum.',
+        'Es wurde ein wunderschöner Abend mit ausgelassener Stimmung. Und das Beste: Die ganze Familie hat mitmusiziert. Aus einem Konzert wurde so ganz schnell eine große gemeinsame Session, bei der niemand nur zuhören wollte.',
+        'Sogar Markus von markusdproduktion, der den Abend eigentlich mit der Kamera festgehalten hat, griff zwischendurch zur Trompete – das Foto stammt ebenfalls von ihm. Danke an Britta und ihre Familie für die Einladung, an das Team vom Gasthof Buschmann und an Markus für Bilder und Bläser!',
+      ],
+      images: [
+        {
+          src: 'historie/2026-09-25-gasthof-buschmann.webp',
+          alt: 'Blickfeld Nord im Saal des Gasthof Buschmann unter lila Licht und Nebel: David mit Akustikgitarre, Matthias am Schlagzeug und Fred am Bass',
+          credit: 'markusdproduktion',
+        },
+      ],
+      links: [
+        { type: 'web', label: 'gasthof-buschmann.de', url: 'https://gasthof-buschmann.de/' },
+        { type: 'instagram', label: '@markusdproduktion', url: 'https://www.instagram.com/markusdproduktion/' },
+        { type: 'place', label: 'Gasthof Buschmann, Ringenberg', url: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW' },
+      ],
+    },
     {
       date: '2026-09-05',
       title: 'Nachbarschaftsfest bei Matthias',
@@ -283,6 +306,12 @@ export class BandService {
       icon: 'pub',
     },
     {
+      name: 'Gasthof Buschmann',
+      description: 'Seit 1868 Gaststätte und Hotel in Familienbesitz – am Ortsrand des idyllischen Hamminkeln-Ringenberg.',
+      url: 'https://gasthof-buschmann.de/',
+      icon: 'pub',
+    },
+    {
       name: 'Freiwillige Feuerwehr Hamminkeln – Löscheinheit Dingden',
       description: 'Ehrenamtlich im Einsatz für Dingden und Umgebung – rund um die Uhr, wenn es darauf ankommt.',
       url: 'https://www.feuerwehr-dingden.de/l%C3%B6scheinheit-dingden/',
@@ -304,6 +333,7 @@ export class BandService {
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
   readonly photos: Photo[] = [
+    { src: 'historie/2026-09-25-gasthof-buschmann.webp', thumb: 'galerie/live-gasthof-buschmann-thumb.webp', alt: 'Blickfeld Nord im Saal des Gasthof Buschmann unter lila Licht und Nebel', caption: 'Gasthof Buschmann, 25.09.2026', credit: 'markusdproduktion' },
     { src: 'historie/2026-04-30-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-thumb.webp', alt: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass', caption: 'Live im Café Lotti, 30.04.2026' },
     { src: 'historie/2026-09-05-nachbarschaftsfest.webp', thumb: 'galerie/live-nachbarschaftsfest-thumb.webp', alt: 'Blickfeld Nord beim Nachbarschaftsfest im Pavillon unter lila Licht – Akustikgitarre, Schlagzeug und Bass', caption: 'Nachbarschaftsfest, 05.09.2026' },
     { src: 'historie/2026-01-16-bokeltsen-blagen.webp', thumb: 'galerie/live-bokeltsen-blagen-thumb.webp', alt: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen – Akustikgitarre, Schlagzeug und Bass', caption: 'Bei den Bokeltsen Blagen, 16.01.2026' },
@@ -324,6 +354,7 @@ export class BandService {
     { date: '2026-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti mit Pro Campesinos', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2026-08-22', venue: 'Gasthof Küpper', confirmed: true },
     { date: '2026-09-05', venue: 'Nachbarschaftsfest', private: true, confirmed: true },
+    { date: '2026-09-25', city: 'Hamminkeln-Ringenberg', venue: 'Gasthof Buschmann', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2026-12-04', time: '18:00', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-03', time: '18:00', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-30', time: '18:00', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true, price: 0 },

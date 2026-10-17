@@ -37,6 +37,9 @@ import { InstagramReel } from './instagram-reel';
                     </a>
                   }
                 </div>
+                @for (img of e.images; track img.src) {
+                  @if (img.credit) { <p class="credit">Foto: {{ img.credit }}</p> }
+                }
               }
 
               @if (e.reel) {
@@ -106,6 +109,7 @@ import { InstagramReel } from './instagram-reel';
     .images.single a { aspect-ratio: 16 / 9; }
     .images img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
     .images a:hover img { transform: scale(1.03); }
+    .credit { margin: -8px 0 12px !important; font-size: .78rem; color: var(--bn-fog) !important; }
     .links { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
     .links a {
       display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px;

@@ -24,7 +24,7 @@ import { BandService } from '../data/band.service';
         <figure (click)="$event.stopPropagation()">
           <img [src]="p.src" [alt]="p.alt" />
           <figcaption>
-            <span>{{ p.caption ?? '' }}</span>
+            <span>{{ p.caption ?? '' }}@if (p.credit) {<span class="credit"> · Foto: {{ p.credit }}</span>}</span>
             <span class="count">{{ index()! + 1 }} / {{ band.photos.length }}</span>
           </figcaption>
         </figure>
@@ -59,6 +59,7 @@ import { BandService } from '../data/band.service';
     }
     figure { margin: 0; max-width: min(1400px, 100%); }
     figure img { display: block; max-width: 100%; max-height: calc(100svh - 160px); margin: 0 auto; border-radius: 6px; }
+    .credit { opacity: .7; }
     figcaption {
       display: flex; justify-content: space-between; gap: 16px; margin-top: 12px;
       font-family: var(--bn-wide); font-weight: 300; text-transform: uppercase; letter-spacing: .2em; font-size: .75rem;
