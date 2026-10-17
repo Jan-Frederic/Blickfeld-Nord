@@ -6,6 +6,8 @@ export interface Member {
   role: string;
   bio: string;
   initials: string;
+  // Spitzname, unter dem das Mitglied auch bekannt ist (für Suchmaschinen), z. B. „Fred“
+  nickname?: string;
   // Ausführliche Bio für die Unterseite /band/<slug>
   tagline?: string;
   story?: string[];
@@ -150,7 +152,7 @@ export class BandService {
       },
       link: { label: 'Zur Drum School Matthias Wigger', url: 'https://www.drumschool-wigger.de/' },
     },
-    { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.',
+    { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', nickname: 'Fred', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.',
       photo: {
         src: 'band/jan-frederic-overbeck.webp',
         avatar: 'band/jan-frederic-overbeck-avatar.webp',

@@ -54,6 +54,26 @@ function endDateTime(date, time) {
 }
 
 const today = new Date().toISOString().slice(0, 10);
+
+// Bandmitglieder als eigene Personen – mit Vor-/Nachname getrennt und Spitzname, damit Suchmaschinen
+// (und KI-Antworten) die Namen exakt so übernehmen, wie sie hier stehen
+const personId = (m) => `${SITE}/band/${m.slug}#person`;
+function person(m) {
+  const split = m.name.lastIndexOf(' ');
+  return {
+    '@type': 'Person',
+    '@id': personId(m),
+    name: m.name,
+    givenName: m.name.slice(0, split),
+    familyName: m.name.slice(split + 1),
+    ...(m.nickname ? { alternateName: m.nickname } : {}),
+    jobTitle: m.role,
+    description: m.bio,
+    url: `${SITE}/band/${m.slug}`,
+    ...(m.photo ? { image: `${SITE}/${m.photo.src}` } : {}),
+    memberOf: { '@id': BAND_ID },
+  };
+}
 // Vorschaubilder in drei Formaten (1:1, 4:3, 16:9) – Google wählt je nach Platz das passende
 // (quadratische Varianten erzeugt scripts/share-images.py)
 const images = [`${SITE}/share-1x1.jpg`, `${SITE}/share-4x3.jpg`, `${SITE}/og-image.jpg`];
@@ -71,7 +91,7 @@ const band = {
   member: members.map((m) => ({
     '@type': 'OrganizationRole',
     roleName: m.role,
-    member: { '@type': 'Person', name: m.name, url: `${SITE}/band/${m.slug}` },
+    member: { '@id': personId(m) },
   })),
   sameAs: ['https://www.instagram.com/blickfeldnord/', 'https://www.facebook.com/share/1BBobZWfjG/'],
 };
@@ -121,7 +141,7 @@ const events = publicShows
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@graph': [{ '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Blickfeld Nord', alternateName: 'Blickfeld Nord Band', url: `${SITE}/`, inLanguage: 'de-DE', publisher: { '@id': BAND_ID } }, band, ...events],
+  '@graph': [...members.map(person), { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Blickfeld Nord', alternateName: 'Blickfeld Nord Band', url: `${SITE}/`, inLanguage: 'de-DE', publisher: { '@id': BAND_ID } }, band, ...events],
 };
 
 // In index.html einfügen (ersetzt einen evtl. vorhandenen Block, damit mehrfaches Ausführen nichts verdoppelt)
@@ -131,6 +151,22 @@ const script = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringi
 let html = readFileSync(indexPath, 'utf8').replace(marker, '');
 html = html.replace('</head>', `${script}</head>`);
 writeFileSync(indexPath, html);
+
+// Unterseiten der Bandmitglieder: Profilseite mit der jeweiligen Person
+for (const m of members) {
+  const path = join(DIST, 'band', m.slug, 'index.html');
+  const ld = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'ProfilePage', '@id': `${SITE}/band/${m.slug}`, url: `${SITE}/band/${m.slug}`, name: `${m.name} – Blickfeld Nord`, mainEntity: { '@id': personId(m) } },
+      person(m),
+      { '@type': 'MusicGroup', '@id': BAND_ID, name: 'Blickfeld Nord', url: `${SITE}/` },
+    ],
+  };
+  const tag = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n`;
+  const page = readFileSync(path, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`);
+  writeFileSync(path, page);
+}
 
 // Sitemap (Backstage bewusst nicht enthalten)
 const pages = ['/', '/historie', '/presse', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
