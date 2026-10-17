@@ -10,6 +10,8 @@ export interface Member {
   tagline?: string;
   story?: string[];
   link?: { label: string; url: string };
+  // Foto für die Unterseite: großes Bild plus quadratischer Ausschnitt (Gesicht) fürs runde Profilbild
+  photo?: { src: string; avatar: string; alt: string };
 }
 
 // Anker-ID eines Freundes auf /freunde, z. B. „Café Lotti“ → „cafe-lotti“
@@ -135,6 +137,11 @@ export class BandService {
         'Besonders wichtig sind mir ein handlungsorientierter Unterricht, das Stärken unterschiedlicher Kompetenzen sowie das Erkennen und gezielte Fördern persönlicher Potenziale.',
         'Seit über zehn Jahren gebe ich meine vielfältigen musikalischen und pädagogischen Erfahrungen mit großer Begeisterung – zunächst als Hobby und inzwischen gewerblich – an meine Schülerinnen und Schüler weiter.',
       ],
+      photo: {
+        src: 'band/matthias-wigger.webp',
+        avatar: 'band/matthias-wigger-avatar.webp',
+        alt: 'Matthias Wigger lacht hinter seinem Schlagzeug, vor einer Backsteinmauer mit Bühnenlicht',
+      },
       link: { label: 'Zur Drum School Matthias Wigger', url: 'https://www.drumschool-wigger.de/' },
     },
     { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.' },

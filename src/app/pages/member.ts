@@ -14,7 +14,11 @@ import { BandService } from '../data/band.service';
 
       @if (member(); as m) {
         <header>
-          <div class="avatar" aria-hidden="true">{{ m.initials }}</div>
+          @if (m.photo) {
+            <img class="avatar photo" [src]="m.photo.avatar" width="88" height="88" alt="" aria-hidden="true" />
+          } @else {
+            <div class="avatar" aria-hidden="true">{{ m.initials }}</div>
+          }
           <div>
             <p class="kicker">{{ m.role }}</p>
             <h2>{{ m.name }}</h2>
@@ -24,7 +28,12 @@ import { BandService } from '../data/band.service';
           </div>
         </header>
 
-        <div class="story">
+        <div class="story" [class.with-photo]="m.photo">
+          @if (m.photo) {
+            <figure class="portrait">
+              <img [src]="m.photo.src" width="1200" height="1320" [alt]="m.photo.alt" />
+            </figure>
+          }
           @if (m.story?.length) {
             @for (p of m.story; track $index) {
               <p>{{ p }}</p>
@@ -71,6 +80,13 @@ import { BandService } from '../data/band.service';
       font-family: var(--bn-display); font-size: 1.4rem; letter-spacing: .06em;
       border: 1px solid var(--bn-fog); color: var(--bn-ink);
     }
+    .avatar.photo { object-fit: cover; padding: 0; border-color: var(--bn-sunset); }
+    .portrait {
+      float: right; width: min(42%, 320px); margin: 4px 0 20px 28px;
+      border-radius: 12px; overflow: hidden; border: 1px solid var(--bn-line);
+    }
+    .portrait img { display: block; width: 100%; height: auto; }
+    .story.with-photo::after { content: ''; display: block; clear: both; }
     .tagline { margin: 0; color: var(--bn-sunset); font-family: var(--bn-wide); font-weight: 300; letter-spacing: .12em; }
     .story p { line-height: 1.8; color: rgba(236, 233, 228, .86); margin: 0 0 18px; }
     .story p:first-child { font-size: 1.12rem; color: var(--bn-ink); }
@@ -91,6 +107,7 @@ import { BandService } from '../data/band.service';
     @media (max-width: 520px) {
       header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .avatar { width: 64px; height: 64px; font-size: 1rem; }
+      .portrait { float: none; width: 100%; margin: 0 0 20px; }
     }
   `,
 })
