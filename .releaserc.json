@@ -27,6 +27,13 @@
         }
       }
     ],
-    ["@semantic-release/github", { "successComment": false, "failComment": false, "releasedLabels": false }]
+    [
+      "@semantic-release/github",
+      {
+        "successCommentCondition": "<% return false; %>",
+        "failCommentCondition": "<% return false; %>",
+        "releasedLabels": false
+      }
+    ]
   ]
 }
