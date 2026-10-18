@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { PageLinks } from '../sections/page-links';
 
 // Dateien werden von scripts/build-pressekit.py nach public/presse/ erzeugt
 interface Asset {
@@ -20,7 +20,7 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
 
 @Component({
   selector: 'app-presse',
-  imports: [RouterLink, MatIconModule],
+  imports: [MatIconModule, PageLinks],
   template: `
     <section class="section presse">
       <p class="kicker">Für Presse &amp; Veranstalter</p>
@@ -29,6 +29,8 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
         Alles, was ihr für eine Ankündigung oder einen Bericht über Blickfeld Nord braucht: Infos, Pressetext, Logos und
         Fotos in voller Auflösung.
       </p>
+
+      <app-page-links current="presse" />
 
       <div class="main-downloads">
         <a class="btn primary" href="presse/blickfeld-nord-pressekit.pdf" download>
@@ -39,9 +41,6 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
         </a>
         <a class="btn" href="presse/blickfeld-nord-qr-karte.pdf" download>
           <mat-icon>qr_code_2</mat-icon> QR-Code-Karte zum Ausdrucken
-        </a>
-        <a class="btn" routerLink="/technik">
-          <mat-icon>speaker</mat-icon> Technik &amp; Rider
         </a>
       </div>
 

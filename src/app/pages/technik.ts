@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { PageLinks } from '../sections/page-links';
 
-// Technik-Seite für Veranstalter – nur im Footer verlinkt (wie das Pressekit) und aus den Booking-FAQ.
+// Technik-Seite für Veranstalter – im Footer, in den Booking-FAQ und über die Link-Leiste von Booking/Pressekit verlinkt.
 // Angaben bitte gleich halten mit dem Technik-Rider (scripts/build-rider.py) und den FAQ (src/app/sections/booking.ts).
 @Component({
   selector: 'app-technik',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, PageLinks],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -16,12 +17,11 @@ import { MatIconModule } from '@angular/material/icon';
         Von euch brauchen wir nur ein bisschen Platz und Strom – hier sind alle Details auf einen Blick.
       </p>
 
-      <div class="downloads">
+      <app-page-links current="technik">
         <a class="btn primary" href="presse/blickfeld-nord-technik-rider.pdf" download>
           <mat-icon>description</mat-icon> Technik-Rider (PDF)
         </a>
-        <a class="btn" routerLink="/booking"><mat-icon>celebration</mat-icon> Zum Booking</a>
-      </div>
+      </app-page-links>
 
       <h3>Was wir mitbringen</h3>
       <div class="cards">
@@ -92,7 +92,6 @@ import { MatIconModule } from '@angular/material/icon';
       font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase;
       letter-spacing: .08em; margin: 40px 0 16px;
     }
-    .downloads { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px;
       border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none; font-weight: 500;

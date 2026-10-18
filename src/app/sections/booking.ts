@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Availability } from './availability';
+import { PageLinks } from './page-links';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
 const BOOKING_MAIL = 'Matthiaswigger@me.com';
@@ -37,7 +38,7 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, MatIconModule, Availability],
+  imports: [RouterLink, MatIconModule, Availability, PageLinks],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -46,6 +47,7 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
         Ihr plant ein Fest, eine private Feier oder einen Abend in eurer Kneipe und sucht eine Band, die für Stimmung
         sorgt? Dann seid ihr bei uns richtig – wir bringen alles mit, ihr bringt die Gäste.
       </p>
+      <app-page-links current="booking" />
 
       <ul class="facts">
         <li>
@@ -69,9 +71,6 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
           <span class="value">Eigene PA und Licht bringen wir mit</span>
         </li>
       </ul>
-      <div class="tech-link">
-        <a class="btn" routerLink="/technik"><mat-icon>speaker</mat-icon> Alles zur Technik</a>
-      </div>
 
       <div class="blocks">
         <div class="block">
@@ -114,7 +113,6 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
             </a>
           </div>
           <p class="mail">oder direkt an <a [href]="mailto">{{ mail }}</a></p>
-          <p class="mail">Logos, Fotos und Infos für eure Ankündigung: <a routerLink="/presse">Pressekit</a></p>
         </div>
       </div>
 
@@ -188,7 +186,6 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
     details p { margin: 0 0 16px; line-height: 1.65; color: rgba(236, 233, 228, .84); }
     .faq-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; color: var(--bn-sunset); white-space: nowrap; }
     .faq-link mat-icon { font-size: 16px; width: 16px; height: 16px; }
-    .tech-link { margin: -16px 0 32px; }
     .mail { margin: 14px 0 0 !important; font-size: .9rem; }
     .mail a { color: var(--bn-sunset); }
   `,
