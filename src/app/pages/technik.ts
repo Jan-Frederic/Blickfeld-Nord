@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { PageLinks } from '../sections/page-links';
+import { TechnikAufbau } from '../sections/technik-aufbau';
 
 // Technik-Seite für Veranstalter – im Footer, in den Booking-FAQ und über die Link-Leiste von Booking/Pressekit verlinkt.
 // Angaben bitte gleich halten mit dem Technik-Rider (scripts/build-rider.py) und den FAQ (src/app/sections/booking.ts).
 @Component({
   selector: 'app-technik',
-  imports: [RouterLink, MatIconModule, PageLinks],
+  imports: [RouterLink, MatIconModule, PageLinks, TechnikAufbau],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -79,6 +80,9 @@ import { PageLinks } from '../sections/page-links';
         <li><span class="time">3 bis 4 Std.</span><span>Spielzeit in Sets à 1 Stunde – Pausen nach Absprache oder spontan</span></li>
         <li><span class="time">ca. 1 Std.</span><span>Abbau nach dem letzten Song</span></li>
       </ol>
+
+      <h3 id="aufbau">Technischer Aufbau</h3>
+      <app-technik-aufbau />
 
       <p class="note">
         <mat-icon>info</mat-icon>

@@ -1,5 +1,6 @@
 import { BandService, friendId } from './band.service';
 import repertoire from './repertoire.json';
+import technik from './technik.json';
 
 // Prüft die zentral gepflegten Inhalte auf typische Tippfehler, bevor sie live gehen
 const band = new BandService();
@@ -113,6 +114,30 @@ describe('Repertoire (aus Spotify)', () => {
       expect(t.title.trim()).not.toBe('');
       expect(t.artist.trim()).not.toBe('');
       if (t.year !== undefined) expect(t.year).toBeGreaterThan(1900);
+    }
+  });
+});
+
+describe('Technischer Aufbau (technik.json)', () => {
+  const ids = technik.aufbau.map((i) => i.id);
+
+  it('hat eindeutige Elemente und Kanäle', () => {
+    expect(new Set(ids).size).toBe(ids.length);
+    const ch = technik.kanaele.map((k) => k.kanal);
+    expect(new Set(ch).size).toBe(ch.length);
+  });
+
+  it('verweist nur auf vorhandene Monitore und Steckdosen', () => {
+    for (const m of technik.monitore) expect(ids).toContain(m.id);
+    for (const s of technik.strom) expect(ids).toContain(s.id);
+  });
+
+  it('platziert alles auf oder neben der Bühne', () => {
+    for (const i of technik.aufbau) {
+      expect(i.x).toBeGreaterThanOrEqual(-0.5);
+      expect(i.x).toBeLessThanOrEqual(technik.buehne.breite + 0.5);
+      expect(i.y).toBeGreaterThanOrEqual(0);
+      expect(i.y).toBeLessThanOrEqual(technik.buehne.tiefe);
     }
   });
 });

@@ -1,0 +1,47 @@
+{
+  "status": "Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.",
+  "stand": "2026-10-18",
+  "buehne": { "breite": 4, "tiefe": 3 },
+  "aufbau": [
+    { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2 },
+    { "id": "matthias", "typ": "person", "label": "Matthias", "rolle": "Schlagzeug & Gesang", "x": 2, "y": 1.05 },
+    { "id": "david", "typ": "person", "label": "David", "rolle": "Gesang & Gitarre", "x": 1, "y": 2.1 },
+    { "id": "fred", "typ": "person", "label": "Fred", "rolle": "Bass & Gesang", "x": 3, "y": 2.1 },
+    { "id": "bassamp", "typ": "amp", "label": "Bassverstärker", "x": 3.45, "y": 1.35, "b": 0.6, "t": 0.4 },
+    { "id": "mixer", "typ": "mixer", "label": "Mischpult", "x": 0.55, "y": 1.3, "b": 0.7, "t": 0.5 },
+    { "id": "mon1", "typ": "monitor", "label": "Monitor 1", "x": 1, "y": 2.72 },
+    { "id": "mon2", "typ": "monitor", "label": "Monitor 2", "x": 3, "y": 2.72 },
+    { "id": "mon3", "typ": "monitor", "label": "Monitor 3", "x": 2.95, "y": 0.6, "drehung": 270 },
+    { "id": "pa-l", "typ": "pa", "label": "PA links (Top + Sub)", "x": -0.35, "y": 2.6 },
+    { "id": "pa-r", "typ": "pa", "label": "PA rechts (Top + Sub)", "x": 4.35, "y": 2.6 },
+    { "id": "licht-l", "typ": "licht", "label": "Licht links", "x": 0.25, "y": 0.25 },
+    { "id": "licht-r", "typ": "licht", "label": "Licht rechts", "x": 3.75, "y": 0.25 },
+    { "id": "strom-1", "typ": "strom", "label": "Steckdose 1", "x": 0.6, "y": 0 },
+    { "id": "strom-2", "typ": "strom", "label": "Steckdose 2", "x": 3.4, "y": 0 }
+  ],
+  "kanaele": [
+    { "kanal": 1, "quelle": "Bassdrum", "art": "Mikro", "geraet": null, "stativ": "kurz", "phantom": false },
+    { "kanal": 2, "quelle": "Snare", "art": "Mikro", "geraet": null, "stativ": "Klemme", "phantom": false },
+    { "kanal": 3, "quelle": "Overhead", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": true },
+    { "kanal": 4, "quelle": "E-Bass", "art": "DI", "geraet": null, "stativ": null, "phantom": false },
+    { "kanal": 5, "quelle": "Akustikgitarre", "art": "DI", "geraet": null, "stativ": null, "phantom": false },
+    { "kanal": 6, "quelle": "Gesang David", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": false },
+    { "kanal": 7, "quelle": "Gesang Fred", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": false },
+    { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false }
+  ],
+  "monitore": [
+    { "id": "mon1", "fuer": "David", "mix": null },
+    { "id": "mon2", "fuer": "Fred", "mix": null },
+    { "id": "mon3", "fuer": "Matthias", "mix": null }
+  ],
+  "geraete": {
+    "mischpult": null,
+    "pa": null,
+    "monitore": null,
+    "licht": null
+  },
+  "strom": [
+    { "id": "strom-1", "verbraucher": ["PA links und rechts", "Mischpult"] },
+    { "id": "strom-2", "verbraucher": ["Licht", "Bassverstärker", "Monitore", "Nebelmaschine"] }
+  ]
+}

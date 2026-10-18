@@ -15,6 +15,9 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   einen freien Tag öffnet die E-Mail-Vorlage mit Datum), häufige Fragen (FAQ), Technik-Rider als PDF, Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
 - **Technik** (`/technik`, nur im Footer und in den Booking-FAQ verlinkt) – was wir mitbringen (PA, Licht, Instrumente),
   was wir brauchen (Platz, Strom), Zeitplan und Technik-Rider als PDF
+  Darunter der **technische Aufbau** aus `src/app/data/technik.json`: Bühnenplan (Draufsicht, Positionen in Metern),
+  Kanalliste, Signalfluss, Monitore und Strom – dieselbe Datei erzeugt Seite 2 des Technik-Riders
+  (`python3 scripts/build-rider.py`). `null` bedeutet „noch offen“.
 - **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
   durchsuchbare Songliste aus der Spotify-Playlist
 - **Galerie** (`/galerie`) – Fotos mit Vollbildansicht
