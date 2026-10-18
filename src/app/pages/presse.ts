@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 
 // Dateien werden von scripts/build-pressekit.py nach public/presse/ erzeugt
@@ -19,7 +20,7 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
 
 @Component({
   selector: 'app-presse',
-  imports: [MatIconModule],
+  imports: [RouterLink, MatIconModule],
   template: `
     <section class="section presse">
       <p class="kicker">Für Presse &amp; Veranstalter</p>
@@ -39,8 +40,8 @@ Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ei
         <a class="btn" href="presse/blickfeld-nord-qr-karte.pdf" download>
           <mat-icon>qr_code_2</mat-icon> QR-Code-Karte zum Ausdrucken
         </a>
-        <a class="btn" href="presse/blickfeld-nord-technik-rider.pdf" download>
-          <mat-icon>description</mat-icon> Technik-Rider (PDF)
+        <a class="btn" routerLink="/technik">
+          <mat-icon>speaker</mat-icon> Technik &amp; Rider
         </a>
       </div>
 
