@@ -21,6 +21,12 @@ import { Component } from '@angular/core';
         E-Mail: <a href="mailto:Matthiaswigger@me.com">Matthiaswigger&#64;me.com</a>
       </p>
 
+      <h3>Steuerangaben</h3>
+      <p>
+        Steuernummer: 130/5026/2980<br />
+        Wirtschafts-Identifikationsnummer gemäß § 139c AO: DE400195544
+      </p>
+
       <h3>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h3>
       <p>
         Matthias Wigger<br />
