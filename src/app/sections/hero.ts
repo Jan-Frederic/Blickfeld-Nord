@@ -100,7 +100,7 @@ export class NextShow {
         width="2000"
         height="1125"
         fetchpriority="high"
-        alt="Logo von Blickfeld Nord mit Kompass über einem nebligen See bei Sonnenuntergang"
+        alt="Logo von Blickfeld Nord: Kompass mit Schriftzug vor einer abendlichen Seelandschaft"
       />
       <div class="hero-content">
         <!-- im Browser neu berechnet: das beim Build vorgerenderte Datum kann inzwischen veraltet sein -->
