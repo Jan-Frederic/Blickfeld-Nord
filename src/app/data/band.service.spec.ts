@@ -22,6 +22,12 @@ describe('Bandmitglieder', () => {
 });
 
 describe('Auftritte', () => {
+  it('haben eindeutige Backstage-IDs', () => {
+    const ids = band.shows.map((s) => band.showId(s));
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const s of band.shows) expect(band.showById(band.showId(s))).toBe(s);
+  });
+
   it.each(band.shows.map((s) => [`${s.date} ${s.venue}`, s] as const))('%s ist gültig', (_, s) => {
     expect(isDate(s.date)).toBe(true);
     if (s.endDate) {

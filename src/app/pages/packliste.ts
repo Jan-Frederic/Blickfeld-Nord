@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 interface Group {
@@ -19,7 +19,8 @@ const GROUPS: Group[] = [
   { title: 'Sonstiges', items: ['Setlist / Noten', 'Bühnenteppich', 'Taschenlampe', 'QR-Code-Karte für die Theke'] },
 ];
 
-const STORAGE_KEY = 'bn-packliste';
+// Pro Auftritt eine eigene Liste: bn-packliste-<Auftritts-ID>
+const STORAGE_PREFIX = 'bn-packliste-';
 
 interface Stored {
   checked: string[];
@@ -27,9 +28,9 @@ interface Stored {
 }
 
 // Speicherung nur im Browser dieses Geräts (localStorage) – geht beim Löschen der Browserdaten verloren
-function load(): Stored {
+function load(key: string): Stored {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (raw) {
       const data = JSON.parse(raw) as Partial<Stored>;
       return { checked: data.checked ?? [], custom: data.custom ?? [] };
@@ -47,7 +48,7 @@ function load(): Stored {
     <section class="packliste" aria-labelledby="packliste-title">
       <div class="head">
         <div>
-          <p class="kicker">Vor jedem Auftritt</p>
+          <p class="kicker">Für diesen Auftritt</p>
           <h3 id="packliste-title">Packliste</h3>
         </div>
         <div class="progress" [class.done]="done() === total()">
@@ -55,7 +56,7 @@ function load(): Stored {
           <span class="bar"><span [style.width.%]="total() ? (done() / total()) * 100 : 0"></span></span>
         </div>
         <button type="button" class="reset" (click)="reset()" [disabled]="done() === 0">
-          <mat-icon>restart_alt</mat-icon> Für den nächsten Gig zurücksetzen
+          <mat-icon>restart_alt</mat-icon> Zurücksetzen
         </button>
       </div>
 
@@ -85,7 +86,7 @@ function load(): Stored {
           </fieldset>
         }
       </div>
-      <p class="hint">Die Häkchen werden nur in diesem Browser auf diesem Gerät gespeichert.</p>
+      <p class="hint">Die Häkchen werden pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>
     </section>
   `,
   styles: `
@@ -128,7 +129,15 @@ function load(): Stored {
   `,
 })
 export class Packliste {
-  private readonly state = signal<Stored>(load());
+  /** Auftritts-ID – jeder Auftritt hat seine eigenen Häkchen und eigenen Punkte */
+  readonly show = input.required<string>();
+  private readonly key = computed(() => STORAGE_PREFIX + this.show());
+  private readonly state = signal<Stored>({ checked: [], custom: [] });
+
+  constructor() {
+    // beim Wechsel zu einem anderen Auftritt dessen gespeicherte Liste laden
+    effect(() => this.state.set(load(this.key())));
+  }
 
   protected readonly groups = computed(() => [
     ...GROUPS.map((g) => ({ ...g, custom: false })),
@@ -170,7 +179,7 @@ export class Packliste {
   private update(fn: (s: Stored) => Stored): void {
     this.state.update(fn);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state()));
+      localStorage.setItem(this.key(), JSON.stringify(this.state()));
     } catch {
       // Speichern nicht möglich – die Liste funktioniert trotzdem bis zum Neuladen
     }

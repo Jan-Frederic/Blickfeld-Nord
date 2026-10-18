@@ -93,6 +93,18 @@ export class BandService {
     return this.shows.filter((s) => !s.private && s.confirmed).sort((a, b) => a.date.localeCompare(b.date));
   }
 
+  // Kurz-ID eines Auftritts für die Backstage-Unterseite /backstage/<id>: das Datum, bei mehreren
+  // Auftritten am selben Tag mit laufender Nummer („2026-08-29-2“). Bewusst ohne Ort – auch private Termine.
+  showId(show: Show): string {
+    const sameDay = this.shows.filter((s) => s.date === show.date);
+    const n = sameDay.indexOf(show);
+    return n > 0 ? `${show.date}-${n + 1}` : show.date;
+  }
+
+  showById(id: string): Show | undefined {
+    return this.shows.find((s) => this.showId(s) === id);
+  }
+
   // Zerlegt einen Location-Namen in Textstücke und verlinkt darin genannte Freunde, z. B.
   // „Café Lotti mit Pro Campesinos“ → [Café Lotti → Freund] [ mit ] [Pro Campesinos → Freund].
   // Erkannt wird der volle Name oder die Kurzform ohne Gründungsjahr/„e.V.“ („Pro Campesinos 1977 e.V.“ → „Pro Campesinos“).

@@ -22,12 +22,15 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten. Steckt der Name eines Freundes im Location-Namen
   eines Auftritts, verlinkt die Konzertliste automatisch auf dessen Karte (`/freunde#cafe-lotti`), die dort kurz aufleuchtet
 - **Backstage** (`/backstage`, versteckt) – alle Auftritte inkl. privater Termine mit Status und Kommentar, exportierbar als Bandkalender.
-  Easter Egg: fünfmal schnell auf das Logo oben links klicken.
-  Für jeden kommenden öffentlichen und geklärten Termin erzeugt der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design
+  Easter Egg: fünfmal schnell auf das Logo oben links klicken. Jede Zeile der Tabelle öffnet die **Unterseite des Auftritts**
+  (`/backstage/<datum>`, bei zwei Terminen am selben Tag `<datum>-2`; `src/app/pages/backstage-show.ts`) mit allen Daten,
+  Kalendereintrag und Vor/Zurück zum nächsten Termin.
+  Für kommende öffentliche und geklärte Termine erzeugt dort der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design
   (`src/app/data/poster.ts`) – am Handy direkt zum Teilen, am Rechner als Download.
   Daneben kopiert **Text kopieren** einen fertigen Instagram-Post (Datum, Uhrzeit, Ort, Eintritt, Hashtags).
-  Darunter eine **Packliste** zum Abhaken vor jedem Gig (eigene Punkte möglich; gespeichert nur im Browser des
-  jeweiligen Geräts, `src/app/pages/packliste.ts`).
+  Darunter eine **Packliste pro Auftritt** zum Abhaken (eigene Punkte möglich; gespeichert nur im Browser des
+  jeweiligen Geräts, `src/app/pages/packliste.ts`). Direktaufrufe von Unterseiten leitet die Fehlerseite
+  (`404.html`, Deploy-Schritt „SPA fallback“) zur Backstage-Shell weiter.
 - **Impressum** (`/impressum`) und **Datenschutzerklärung** (`/datenschutz`)
 
 Alle Inhalte (Mitglieder, Konzerttermine, Fotos, Historie, befreundete Seiten) stehen zentral in
