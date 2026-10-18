@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Availability } from './availability';
-import { Repertoire } from './repertoire';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
 const BOOKING_MAIL = 'Matthiaswigger@me.com';
@@ -33,7 +32,7 @@ const FAQ: { q: string; a: string }[] = [
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, MatIconModule, Availability, Repertoire],
+  imports: [RouterLink, MatIconModule, Availability],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -69,14 +68,17 @@ const FAQ: { q: string; a: string }[] = [
       <div class="blocks">
         <div class="block">
           <h3>Repertoire</h3>
-          <p>Was wir spielen, hört ihr am besten selbst: Unsere Songliste gibt's als Playlist auf Spotify.</p>
-          <a class="btn primary" href="https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW" target="_blank" rel="noopener">
+          <p>Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen. Stöbert in unserer Songliste oder hört direkt rein.</p>
+          <div class="contacts">
+          <a class="btn primary" routerLink="/repertoire"><mat-icon>queue_music</mat-icon> Zum Repertoire</a>
+          <a class="btn" href="https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <circle cx="12" cy="12" r="9.5" />
               <path d="M7 9.3c3.6-1 7.4-.7 10.4.9M7.6 12.6c2.9-.8 5.9-.5 8.4.8M8.2 15.7c2.2-.6 4.4-.4 6.3.6" />
             </svg>
-            Repertoire auf Spotify
+            Playlist auf Spotify
           </a>
+          </div>
         </div>
 
         <div class="block">
@@ -107,8 +109,6 @@ const FAQ: { q: string; a: string }[] = [
           <p class="mail">Logos, Fotos und Infos für eure Ankündigung: <a routerLink="/presse">Pressekit</a></p>
         </div>
       </div>
-
-      <app-repertoire />
 
       <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
       <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>

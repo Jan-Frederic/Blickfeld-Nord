@@ -4,7 +4,7 @@
   </button>
   <span class="spacer"></span>
   <nav class="desktop-nav">
-    @for (n of nav; track n.id) {
+    @for (n of nav; track n.label) {
       @if (n.link) {
         <a mat-button [routerLink]="n.link">{{ n.label }}</a>
       } @else {
@@ -18,7 +18,7 @@
     <mat-icon>menu</mat-icon>
   </button>
   <mat-menu #menu="matMenu">
-    @for (n of nav; track n.id) {
+    @for (n of nav; track n.label) {
       @if (n.link) {
         <a mat-menu-item [routerLink]="n.link">{{ n.label }}</a>
       } @else {
@@ -54,6 +54,7 @@
   </div>
   <nav class="legal-links">
     <a routerLink="/booking">Booking</a>
+    <a routerLink="/repertoire">Repertoire</a>
     <a routerLink="/historie">Historie</a>
     <a routerLink="/freunde">Freunde</a>
     <a routerLink="/presse">Presse</a>

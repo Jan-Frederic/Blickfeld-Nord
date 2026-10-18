@@ -19,6 +19,7 @@ export class App {
     { id: 'band', label: 'Band' },
     { id: 'tour', label: 'Konzerte' },
     { link: '/booking', label: 'Booking' },
+    { link: '/repertoire', label: 'Repertoire' },
     { id: 'galerie', label: 'Galerie' },
   ];
   protected readonly year = new Date().getFullYear();

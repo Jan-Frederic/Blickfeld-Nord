@@ -13,6 +13,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Booking** (`/booking`, auf der Startseite nur ein Teaser) – Infos für Veranstalter (Anlässe, Spielzeit, Technik),
   Verfügbarkeitskalender (belegte Tage aus `shows`: geklärt = belegt, offen = reserviert – ohne Details; Klick auf
   einen freien Tag öffnet die E-Mail-Vorlage mit Datum), häufige Fragen (FAQ), Technik-Rider als PDF, Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
+- **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
+  durchsuchbare Songliste aus der Spotify-Playlist
 - **Galerie** – Fotos mit Vollbildansicht
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte);
   Instagram-Reels per `reel: '<id>'` als Zwei-Klick-Einbettung (lädt erst nach Klick, siehe Datenschutzerklärung)
@@ -121,7 +123,7 @@ Einmalig nötig: *Settings → Pages → Source: GitHub Actions*.
 
 ### Repertoire aus Spotify
 
-Die durchsuchbare Songliste auf `/booking` kommt aus `src/app/data/repertoire.json`. Der Workflow
+Die durchsuchbare Songliste auf `/repertoire` kommt aus `src/app/data/repertoire.json`. Der Workflow
 **Repertoire aktualisieren** (`.github/workflows/repertoire.yml`, montags und per „Run workflow“) holt die Playlist
 über die Spotify-Web-API (`scripts/sync-repertoire.mjs`), speichert Änderungen und stößt einen Deploy an.
 Einmalig nötig: eine App auf developer.spotify.com und die Repository-Secrets `SPOTIFY_CLIENT_ID`,
