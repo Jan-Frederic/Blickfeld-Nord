@@ -23,7 +23,6 @@ import { BandService } from '../data/band.service';
             <span class="more">Ganzen Rückblick lesen <mat-icon>arrow_forward</mat-icon></span>
           </span>
         </a>
-        <a class="all" routerLink="/historie">Alle Erinnerungen in der Historie</a>
       </section>
     }
   `,
@@ -46,8 +45,6 @@ import { BandService } from '../data/band.service';
       font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; color: var(--bn-sunset);
     }
     .more mat-icon { font-size: 16px; width: 16px; height: 16px; }
-    .all { display: inline-block; margin-top: 14px; font-size: .9rem; color: var(--bn-fog); }
-    .all:hover { color: var(--bn-sunset); }
     @media (max-width: 720px) {
       .card { grid-template-columns: 1fr; }
       .media { min-height: 0; aspect-ratio: 16 / 10; }
