@@ -4,11 +4,18 @@ import { MatIconModule } from '@angular/material/icon';
 
 type Page = 'booking' | 'presse' | 'technik';
 
-const PAGES: { id: Page; link: string; label: string; icon: string }[] = [
-  { id: 'booking', link: '/booking', label: 'Booking', icon: 'celebration' },
-  { id: 'presse', link: '/presse', label: 'Pressekit', icon: 'folder_zip' },
-  { id: 'technik', link: '/technik', label: 'Technik', icon: 'speaker' },
-];
+const PAGES: Record<Page, { link: string; label: string; icon: string }> = {
+  booking: { link: '/booking', label: 'Booking', icon: 'celebration' },
+  presse: { link: '/presse', label: 'Pressekit', icon: 'folder_zip' },
+  technik: { link: '/technik', label: 'Technik', icon: 'speaker' },
+};
+
+// Reihenfolge der Buttons je Seite
+const ORDER: Record<Page, Page[]> = {
+  booking: ['presse', 'technik'],
+  presse: ['technik', 'booking'],
+  technik: ['booking', 'presse'],
+};
 
 // Querverweise zwischen den Seiten für Veranstalter – jeweils direkt unter dem Einleitungstext.
 // Zeigt die beiden anderen Seiten; Downloads stehen auf den Seiten selbst eine Reihe tiefer.
@@ -17,7 +24,7 @@ const PAGES: { id: Page; link: string; label: string; icon: string }[] = [
   imports: [RouterLink, MatIconModule],
   template: `
     <nav class="page-links" aria-label="Weitere Infos für Veranstalter">
-      @for (p of others(); track p.id) {
+      @for (p of others(); track p.link) {
         <a class="btn" [routerLink]="p.link"><mat-icon>{{ p.icon }}</mat-icon> {{ p.label }}</a>
       }
     </nav>
@@ -36,5 +43,5 @@ const PAGES: { id: Page; link: string; label: string; icon: string }[] = [
 export class PageLinks {
   /** Die Seite, auf der die Leiste steht – sie selbst wird nicht verlinkt */
   readonly current = input.required<Page>();
-  protected readonly others = computed(() => PAGES.filter((p) => p.id !== this.current()));
+  protected readonly others = computed(() => ORDER[this.current()].map((id) => PAGES[id]));
 }
