@@ -10,6 +10,7 @@ import { BandService } from '../data/band.service';
     <section id="galerie" class="section">
       <p class="kicker">Momente</p>
       <h2>Galerie</h2>
+      <p class="lead">Eindrücke von unseren Auftritten und von uns als Band – zum Vergrößern einfach antippen.</p>
       <div class="grid">
         @for (p of band.photos; track p.src; let i = $index) {
           <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="'Bild vergrößern: ' + p.alt">

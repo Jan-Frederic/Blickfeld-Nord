@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { Hero } from '../sections/hero';
 import { Band } from '../sections/band';
 import { Tour } from '../sections/tour';
-import { Gallery } from '../sections/gallery';
 import { BookingTeaser } from '../sections/booking-teaser';
 import { LastLive } from '../sections/last-live';
 import { scrollToSection } from '../scroll';
@@ -14,7 +13,7 @@ import { scrollToSection } from '../scroll';
 // Bei Navigation innerhalb der Seite werden sie sofort geladen.
 @Component({
   selector: 'app-home',
-  imports: [Hero, Band, Tour, LastLive, BookingTeaser, Gallery],
+  imports: [Hero, Band, Tour, LastLive, BookingTeaser],
   template: `
     <app-hero (navigate)="scrollTo($event)" />
     @defer (on immediate; hydrate on viewport) {
@@ -29,9 +28,6 @@ import { scrollToSection } from '../scroll';
     }
     @defer (on immediate; hydrate on viewport) {
       <app-booking-teaser />
-    }
-    @defer (on immediate; hydrate on viewport) {
-      <app-gallery />
     }
   `,
 })

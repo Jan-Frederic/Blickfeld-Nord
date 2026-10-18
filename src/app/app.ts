@@ -21,7 +21,7 @@ export class App {
     { id: 'tour', label: 'Konzerte' },
     { link: '/booking', label: 'Booking' },
     { link: '/repertoire', label: 'Repertoire' },
-    { id: 'galerie', label: 'Galerie' },
+    { link: '/galerie', label: 'Galerie' },
   ];
   protected readonly year = new Date().getFullYear();
   // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)

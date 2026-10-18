@@ -17,7 +17,7 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   was wir brauchen (Platz, Strom), Zeitplan und Technik-Rider als PDF
 - **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
   durchsuchbare Songliste aus der Spotify-Playlist
-- **Galerie** – Fotos mit Vollbildansicht
+- **Galerie** (`/galerie`) – Fotos mit Vollbildansicht
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte);
   Instagram-Reels per `reel: '<id>'` als Zwei-Klick-Einbettung (lädt erst nach Klick, siehe Datenschutzerklärung)
 - **Pressekit** (`/presse`) – Pressetext, Logos, Fotos, PDF und ZIP zum Download
