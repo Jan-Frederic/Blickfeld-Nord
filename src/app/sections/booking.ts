@@ -72,22 +72,25 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
         </li>
       </ul>
 
-      <div class="blocks">
-        <div class="block">
-          <h3>Repertoire</h3>
-          <p>Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen. Stöbert in unserer Songliste oder hört direkt rein.</p>
-          <div class="contacts">
-          <a class="btn primary" routerLink="/repertoire"><mat-icon>queue_music</mat-icon> Zum Repertoire</a>
-          <a class="btn" href="https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <circle cx="12" cy="12" r="9.5" />
-              <path d="M7 9.3c3.6-1 7.4-.7 10.4.9M7.6 12.6c2.9-.8 5.9-.5 8.4.8M8.2 15.7c2.2-.6 4.4-.4 6.3.6" />
-            </svg>
-            Playlist auf Spotify
-          </a>
-          </div>
+      <div class="faq">
+        <div class="faq-head">
+          <h3>Häufige Fragen</h3>
         </div>
+        @for (f of faq; track f.q) {
+          <details>
+            <summary>{{ f.q }}</summary>
+            <p>
+              {{ f.a }}
+              @if (f.link) { <a class="faq-link" [routerLink]="f.link.to">{{ f.link.label }} <mat-icon>arrow_forward</mat-icon></a> }
+            </p>
+          </details>
+        }
+      </div>
 
+      <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
+      <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>
+
+      <div class="blocks">
         <div class="block">
           <h3>Anfragen</h3>
           <p>Schreibt uns, wie es euch am liebsten ist – wir melden uns schnellstmöglich zurück.</p>
@@ -114,24 +117,21 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
           </div>
           <p class="mail">oder direkt an <a [href]="mailto">{{ mail }}</a></p>
         </div>
-      </div>
 
-      <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
-      <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>
-
-      <div class="faq">
-        <div class="faq-head">
-          <h3>Häufige Fragen</h3>
+        <div class="block">
+          <h3>Repertoire</h3>
+          <p>Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen. Stöbert in unserer Songliste oder hört direkt rein.</p>
+          <div class="contacts">
+          <a class="btn primary" routerLink="/repertoire"><mat-icon>queue_music</mat-icon> Zum Repertoire</a>
+          <a class="btn" href="https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="9.5" />
+              <path d="M7 9.3c3.6-1 7.4-.7 10.4.9M7.6 12.6c2.9-.8 5.9-.5 8.4.8M8.2 15.7c2.2-.6 4.4-.4 6.3.6" />
+            </svg>
+            Playlist auf Spotify
+          </a>
+          </div>
         </div>
-        @for (f of faq; track f.q) {
-          <details>
-            <summary>{{ f.q }}</summary>
-            <p>
-              {{ f.a }}
-              @if (f.link) { <a class="faq-link" [routerLink]="f.link.to">{{ f.link.label }} <mat-icon>arrow_forward</mat-icon></a> }
-            </p>
-          </details>
-        }
       </div>
     </section>
   `,
@@ -150,7 +150,7 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
       font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .16em; font-size: .7rem; color: var(--bn-fog);
     }
     .value { line-height: 1.5; }
-    .blocks { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .blocks { margin-top: 32px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     .block { padding: 24px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
     h3 {
       font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase;
@@ -168,7 +168,7 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
     .btn.primary:hover { background: #f0b884; color: #2a1708; }
     .btn svg, .btn mat-icon { width: 20px; height: 20px; font-size: 20px; flex: none; }
     .anchor { scroll-margin-top: 72px; }
-    .faq { margin-top: 32px; }
+    .faq { margin-top: 0; }
     .faq-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .faq-head h3 { margin: 0; }
     details { border-top: 1px solid var(--bn-line); }
