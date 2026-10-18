@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [DatePipe],
   template: `
     @if (nextShow; as s) {
-      <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}@if (s.time) {, {{ s.time }} Uhr}</strong> · {{ s.venue }} {{ s.city ?? '' }}</p>
+      <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}@if (s.time) {, {{ s.time }} Uhr}</strong> · {{ s.venue }} {{ s.city ?? '' }}@if (s.price === 0) { · Eintritt frei}</p>
       <!-- Countdown: Platz ist immer reserviert (kein Layout-Sprung), Zahlen erscheinen erst im Browser -->
       <div class="countdown" aria-live="off">
         @if (left(); as l) {

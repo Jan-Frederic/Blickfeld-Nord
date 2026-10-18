@@ -78,6 +78,9 @@ export interface Show {
   mapsUrl?: string;
   // Private Termine erscheinen nur auf der Backstage-Seite, nicht öffentlich
   private?: boolean;
+  // Name privater Auftritte in öffentlichen Listen (Rückblick) – ohne Angabe neutral „Private Feier“.
+  // Locations von Freunden dürfen genannt werden und werden verlinkt, z. B. „Geburtstag im Gasthof Buschmann“.
+  publicName?: string;
   // Ist der Auftritt fest zugesagt und alles geklärt?
   confirmed: boolean;
   comment?: string;
@@ -103,6 +106,11 @@ export class BandService {
 
   showById(id: string): Show | undefined {
     return this.shows.find((s) => this.showId(s) === id);
+  }
+
+  // Öffentlich angezeigter Name: bei privaten Auftritten nie der interne Name (oft Personen), sondern publicName
+  publicVenue(show: Show): string {
+    return show.private ? (show.publicName ?? 'Private Feier') : show.venue;
   }
 
   // Zerlegt einen Location-Namen in Textstücke und verlinkt darin genannte Freunde, z. B.
@@ -387,12 +395,12 @@ export class BandService {
   readonly shows: Show[] = [
     // bereits gespielt – erscheinen automatisch unter „Vergangene Auftritte“ (geklärte, auch private)
     { date: '2025-10-02', city: 'Hamminkeln-Dingden', venue: 'Café Lotti', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
-    { date: '2026-01-16', city: 'Rhede', venue: 'Bokeltsen Blagen (Lauftreff)', private: true, confirmed: true },
+    { date: '2026-01-16', city: 'Rhede', venue: 'Bokeltsen Blagen (Lauftreff)', publicName: 'Bokeltsen Blagen (Lauftreff)', private: true, confirmed: true },
     { date: '2026-04-30', city: 'Hamminkeln-Dingden', venue: 'Café Lotti mit Pro Campesinos', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
     { date: '2026-08-22', city: 'Hamminkeln-Dingden', venue: 'Gasthof Küpper', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20K%C3%BCpper%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true },
-    { date: '2026-08-29', city: 'Hamminkeln-Dingden', venue: 'Hausparty bei Freunden von der Löscheinheit Dingden', private: true, confirmed: true },
-    { date: '2026-09-05', city: 'Hamminkeln-Dingden', venue: 'Nachbarschaftsfest', private: true, confirmed: true },
-    { date: '2026-09-25', city: 'Hamminkeln-Ringenberg', venue: 'Gasthof Buschmann', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW', private: true, confirmed: true },
+    { date: '2026-08-29', city: 'Hamminkeln-Dingden', venue: 'Hausparty bei Freunden von der Löscheinheit Dingden', publicName: 'Hausparty bei Freunden von der Löscheinheit Dingden', private: true, confirmed: true },
+    { date: '2026-09-05', city: 'Hamminkeln-Dingden', venue: 'Nachbarschaftsfest', publicName: 'Nachbarschaftsfest', private: true, confirmed: true },
+    { date: '2026-09-25', city: 'Hamminkeln-Ringenberg', venue: 'Gasthof Buschmann', publicName: 'Geburtstag im Gasthof Buschmann', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW', private: true, confirmed: true },
     { date: '2026-12-04', time: '18:00', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-03', time: '18:00', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-30', time: '18:00', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true, price: 0 },
@@ -400,7 +408,7 @@ export class BandService {
     { date: '2027-05-07', venue: 'Scheperswiese', private: true, confirmed: false },
     { date: '2027-06-12', venue: 'Ronny S.', private: true, confirmed: true },
     { date: '2027-08-29', city: 'Rhede', venue: 'Kirmes Rhede', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: false },
-    { date: '2027-09-03', endDate: '2027-09-05', venue: 'Bandwochenende', private: true, confirmed: false },
+    { date: '2027-09-03', endDate: '2027-09-05', venue: 'Bandwochenende', publicName: 'Bandwochenende', private: true, confirmed: false },
     { date: '2028-06-24', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
     { date: '2028-07-01', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
     { date: '2028-07-08', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },

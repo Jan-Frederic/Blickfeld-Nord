@@ -33,11 +33,11 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           </ng-container>
           <ng-container matColumnDef="city">
             <th mat-header-cell *matHeaderCellDef>Ort</th>
-            <td mat-cell *matCellDef="let s"><strong>{{ s.city ?? '–' }}</strong><span class="venue-inline"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /></span></td>
+            <td mat-cell *matCellDef="let s"><strong>{{ s.city ?? '–' }}</strong><span class="venue-inline"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /><ng-container *ngTemplateOutlet="entry; context: { $implicit: s }" /></span></td>
           </ng-container>
           <ng-container matColumnDef="venue">
             <th mat-header-cell *matHeaderCellDef class="venue">Location</th>
-            <td mat-cell *matCellDef="let s" class="venue"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /></td>
+            <td mat-cell *matCellDef="let s" class="venue"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /><ng-container *ngTemplateOutlet="entry; context: { $implicit: s }" /></td>
           </ng-container>
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef><span class="sr-only">Aktionen</span></th>
@@ -64,7 +64,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
             @for (s of past; track s.date + s.venue) {
               <li>
                 <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
-                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}@if (s.private) {<span class="private">privat</span>}</span>
+                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}@if (s.private && s.publicName) {<span class="private">privat</span>}</span>
                 @if (historyDates.has(s.date)) {
                   <a routerLink="/historie" [fragment]="'e-' + s.date" class="recap">Rückblick <mat-icon>arrow_forward</mat-icon></a>
                 }
@@ -74,8 +74,11 @@ import { downloadIcs, icsFileName } from '../data/calendar';
         </details>
       }
 
+      <!-- Eintritt: „frei“ bei price 0, sonst Betrag; ohne Angabe nichts -->
+      <ng-template #entry let-s>@if (s.price === 0) {<span class="entry">Eintritt frei</span>} @else if (s.price) {<span class="entry">Eintritt {{ s.price }} €</span>}</ng-template>
+
       <!-- Location: Freunde der Band verlinken auf ihre Karte unter /freunde (die dort kurz aufleuchtet) -->
-      <ng-template #venue let-s>@for (p of venueParts.get(s.venue); track $index) {@if (p.friend) {<a class="friend" routerLink="/freunde" [fragment]="p.id" title="Zu unseren Freunden">{{ p.text }}</a>} @else {{{ p.text }}}}</ng-template>
+      <ng-template #venue let-s>@for (p of venueParts.get(band.publicVenue(s)); track $index) {@if (p.friend) {<a class="friend" routerLink="/freunde" [fragment]="p.id" title="Zu unseren Freunden">{{ p.text }}</a>} @else {{{ p.text }}}}</ng-template>
     </section>
   `,
   styles: `
@@ -88,6 +91,10 @@ import { downloadIcs, icsFileName } from '../data/calendar';
     .action > * + * { margin-left: 8px; }
     .venue-inline { display: none; font-size: .85rem; opacity: .75; }
     .short { display: none; }
+    .entry {
+      display: inline-block; margin-left: 10px; padding: 1px 9px; border-radius: 999px; border: 1px solid rgba(127, 194, 155, .5);
+      font-size: .72rem; letter-spacing: .06em; color: #7fc29b; white-space: nowrap; vertical-align: 1px;
+    }
     .friend { color: inherit; text-decoration: underline; text-decoration-color: var(--bn-sunset); text-underline-offset: 3px; }
     .friend:hover { color: var(--bn-sunset); }
     .past { margin-top: 20px; border: 1px solid var(--bn-line); border-radius: 12px; padding: 0 18px; }
@@ -123,7 +130,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
   `,
 })
 export class Tour {
-  private readonly band = inject(BandService);
+  protected readonly band = inject(BandService);
   // Termine bis einschließlich heute (bei mehrtägigen bis zum letzten Tag) gelten als kommend
   private readonly today = localToday();
   protected readonly shows = this.band.publicShows.filter((s) => (s.endDate ?? s.date) >= this.today);
@@ -133,11 +140,11 @@ export class Tour {
     .filter((s) => s.confirmed && (s.endDate ?? s.date) < this.today)
     .sort((a, b) => b.date.localeCompare(a.date));
   protected readonly historyDates = new Set(this.band.history.map((h) => h.date));
-  // Location → Textstücke, Freunde mit Anker auf /freunde
+  // Öffentlicher Location-Name → Textstücke, Freunde mit Anker auf /freunde (private Namen bleiben intern)
   protected readonly venueParts = new Map(
     this.band.shows.filter((s) => s.confirmed).map((s) => [
-      s.venue,
-      this.band.venueParts(s.venue).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
+      this.band.publicVenue(s),
+      this.band.venueParts(this.band.publicVenue(s)).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
     ]),
   );
   protected readonly columns = ['date', 'city', 'venue', 'action'];

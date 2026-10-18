@@ -22,6 +22,13 @@ describe('Bandmitglieder', () => {
 });
 
 describe('Auftritte', () => {
+  it('zeigen private Namen nie öffentlich', () => {
+    for (const s of band.shows.filter((x) => x.private)) {
+      expect(band.publicVenue(s)).toBe(s.publicName ?? 'Private Feier');
+    }
+    expect(band.publicVenue({ date: '2030-01-01', venue: 'Max M.', private: true, confirmed: true })).toBe('Private Feier');
+  });
+
   it('haben eindeutige Backstage-IDs', () => {
     const ids = band.shows.map((s) => band.showId(s));
     expect(new Set(ids).size).toBe(ids.length);
