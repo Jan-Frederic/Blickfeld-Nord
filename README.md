@@ -13,6 +13,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 - **Booking** (`/booking`, auf der Startseite nur ein Teaser) – Infos für Veranstalter (Anlässe, Spielzeit, Technik),
   Verfügbarkeitskalender (belegte Tage aus `shows`: geklärt = belegt, offen = reserviert – ohne Details; Klick auf
   einen freien Tag öffnet die E-Mail-Vorlage mit Datum), häufige Fragen (FAQ), Technik-Rider als PDF, Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
+- **Technik** (`/technik`, nur im Footer und in den Booking-FAQ verlinkt) – was wir mitbringen (PA, Licht, Instrumente),
+  was wir brauchen (Platz, Strom), Zeitplan und Technik-Rider als PDF
 - **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
   durchsuchbare Songliste aus der Spotify-Playlist
 - **Galerie** – Fotos mit Vollbildansicht

@@ -3,7 +3,7 @@
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-rider.py
 Benötigt: pillow, reportlab, fonttools
-Angaben stehen unten in RIDER – bei Änderungen auch die FAQ in src/app/sections/booking.ts anpassen.
+Angaben stehen unten in RIDER – bei Änderungen auch die FAQ in src/app/sections/booking.ts und die Technik-Seite src/app/pages/technik.ts anpassen.
 """
 import importlib.util
 import os

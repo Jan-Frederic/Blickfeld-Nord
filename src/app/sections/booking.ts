@@ -20,8 +20,13 @@ Ansprechpartner & Telefon:
 Viele Grüße
 `;
 
-// Häufige Fragen von Veranstaltern (Angaben auch im Technik-Rider: scripts/build-rider.py)
-const FAQ: { q: string; a: string }[] = [
+// Häufige Fragen von Veranstaltern (Angaben auch im Technik-Rider: scripts/build-rider.py und auf /technik)
+const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
+  {
+    q: 'Welche Technik bringt ihr mit?',
+    a: 'PA, Licht und Instrumente bringen wir komplett selbst mit – ihr müsst euch um nichts kümmern. Was genau dazugehört, was wir vor Ort brauchen und den Technik-Rider zum Download findet ihr auf unserer Technik-Seite.',
+    link: { label: 'Zur Technik-Seite', to: '/technik' },
+  },
   { q: 'Wie weit fahrt ihr?', a: 'Wir spielen im Umkreis von bis zu 50 km rund um Hamminkeln.' },
   { q: 'Wie viel Platz braucht ihr?', a: 'Eine Fläche von etwa 4 × 3 Metern.' },
   { q: 'Wie viel Strom braucht ihr?', a: 'Zwei Steckdosen in der Nähe der Spielfläche. PA und Licht bringen wir selbst mit.' },
@@ -64,6 +69,9 @@ const FAQ: { q: string; a: string }[] = [
           <span class="value">Eigene PA und Licht bringen wir mit</span>
         </li>
       </ul>
+      <div class="tech-link">
+        <a class="btn" routerLink="/technik"><mat-icon>speaker</mat-icon> Alles zur Technik</a>
+      </div>
 
       <div class="blocks">
         <div class="block">
@@ -116,14 +124,14 @@ const FAQ: { q: string; a: string }[] = [
       <div class="faq">
         <div class="faq-head">
           <h3>Häufige Fragen</h3>
-          <a class="btn" href="presse/blickfeld-nord-technik-rider.pdf" download>
-            <mat-icon>description</mat-icon> Technik-Rider (PDF)
-          </a>
         </div>
         @for (f of faq; track f.q) {
           <details>
             <summary>{{ f.q }}</summary>
-            <p>{{ f.a }}</p>
+            <p>
+              {{ f.a }}
+              @if (f.link) { <a class="faq-link" [routerLink]="f.link.to">{{ f.link.label }} <mat-icon>arrow_forward</mat-icon></a> }
+            </p>
           </details>
         }
       </div>
@@ -178,6 +186,9 @@ const FAQ: { q: string; a: string }[] = [
     details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
     summary:hover { color: var(--bn-sunset); }
     details p { margin: 0 0 16px; line-height: 1.65; color: rgba(236, 233, 228, .84); }
+    .faq-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; color: var(--bn-sunset); white-space: nowrap; }
+    .faq-link mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .tech-link { margin: -16px 0 32px; }
     .mail { margin: 14px 0 0 !important; font-size: .9rem; }
     .mail a { color: var(--bn-sunset); }
   `,
