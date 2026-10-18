@@ -4,7 +4,7 @@ import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
 export const SITE_URL = 'https://blickfeld-nord.de';
 export const DEFAULT_DESCRIPTION =
-  'Blickfeld Nord – Partyband mit drei Stimmen und jeder Menge Stimmung. Live-Musik für Feste, Märkte und Events.';
+  'Blickfeld Nord – Partyband mit drei Stimmen und jeder Menge Stimmung. Live-Musik für Feste, private Feiern und Kneipen rund um Hamminkeln.';
 
 export interface PageMeta {
   title: string;
