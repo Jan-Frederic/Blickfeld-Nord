@@ -31,3 +31,6 @@ footer {
 .legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 24px; margin-bottom: 8px; }
 .legal-links a { color: var(--bn-ink); text-decoration: none; }
 .legal-links a:hover { color: var(--bn-sunset); }
+.version { margin: 6px 0 0; font-size: .64rem; }
+.version a { color: var(--bn-fog); text-decoration: none; }
+.version a:hover { color: var(--bn-sunset); }

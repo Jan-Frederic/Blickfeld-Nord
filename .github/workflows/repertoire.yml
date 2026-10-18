@@ -38,7 +38,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Repertoire aus Spotify aktualisiert"
+          git commit -am "content(repertoire): Repertoire aus Spotify aktualisiert"
           git push
           # Pushes mit dem Workflow-Token starten keinen Deploy von selbst – daher ausdrücklich anstoßen
           gh workflow run deploy-pages.yml --ref main

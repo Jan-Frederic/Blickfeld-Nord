@@ -16,11 +16,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Neue Version per semantic-release: wertet die Conventional Commits seit dem letzten Tag aus
+  # (feat → 1.x.0, fix/perf/content → 1.0.x, „!“/BREAKING CHANGE → x.0.0), legt Tag und
+  # GitHub-Release mit Release Notes an. Ohne relevante Commits passiert nichts. Konfiguration: .releaserc.json
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
   build:
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # komplette Historie inkl. Tags – für die Versionsnummer im Footer
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -43,6 +76,9 @@ jobs:
         run: |
           pip install --quiet fonttools brotli
           python scripts/subset-icons.py
+
+      - name: Version (letzter Release-Tag) für den Footer
+        run: node scripts/write-version.mjs
 
       - name: Build
         run: npx ng build --base-href /

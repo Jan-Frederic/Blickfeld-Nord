@@ -142,6 +142,25 @@ nur mit Benutzer-Login heraus. Das Refresh-Token entsteht so:
 
 Solange die Liste leer ist, blendet die Seite den Bereich aus.
 
+### Versionen und Commit-Nachrichten
+
+Commits folgen **Conventional Commits** (`typ(bereich): Beschreibung`, Beschreibung gern auf Deutsch).
+Bei jedem Deploy wertet **semantic-release** (`.releaserc.json`, Job `release` in `deploy-pages.yml`) die Commits
+seit dem letzten Tag aus, legt Tag und GitHub-Release mit Release Notes an – die Version steht klein im Footer
+(`scripts/write-version.mjs` → `src/app/data/version.json`, verlinkt auf die Release Notes).
+
+| Typ | Wofür | Version |
+|---|---|---|
+| `feat` | neue Funktion, neue Seite | 1.**x**.0 |
+| `fix` | Fehlerbehebung | 1.0.**x** |
+| `perf` | schneller | 1.0.**x** |
+| `content` | neue Inhalte: Auftritte, Historie, Fotos, Repertoire | 1.0.**x** |
+| `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | alles andere | keine neue Version |
+
+Ein `!` nach dem Typ (`feat!: …`) oder `BREAKING CHANGE:` im Text erhöht die Hauptversion.
+Beispiele: `feat(backstage): Unterseite pro Auftritt`, `content(historie): Auftritt im Gasthof Küpper`.
+PR-Titel prüft die CI mit commitlint (`commitlint.config.mjs`), Dependabot schreibt `chore(deps)` bzw. `ci(deps)`.
+
 ### Ladezeit-Wächter und Updates
 
 - **Lighthouse:** Nach jedem Deploy prüft der Job `lighthouse` die Live-Seite (Start, Booking, Historie; Handy-Profil).

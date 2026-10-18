@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
+import release from './data/version.json';
 
 @Component({
   selector: 'app-root',
@@ -23,6 +24,9 @@ export class App {
     { id: 'galerie', label: 'Galerie' },
   ];
   protected readonly year = new Date().getFullYear();
+  // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)
+  protected readonly version = release.version;
+  protected readonly releaseUrl = `https://github.com/Jan-Frederic/Blickfeld-Nord/releases/tag/v${release.version}`;
 
   private readonly router = inject(Router);
 

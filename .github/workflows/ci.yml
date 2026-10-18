@@ -9,6 +9,26 @@ permissions:
   contents: read
 
 jobs:
+  # PR-Titel muss Conventional Commits folgen – er wird beim Squash-Merge zur Commit-Nachricht
+  # und bestimmt damit die nächste Version (semantic-release)
+  pr-titel:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: PR-Titel prüfen
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: echo "$TITLE" | npx commitlint
+
   check:
     runs-on: ubuntu-latest
     steps:

@@ -63,4 +63,7 @@
     <a routerLink="/datenschutz">Datenschutz</a>
   </nav>
   <p>© {{ year }} Blickfeld Nord · Alle Rechte vorbehalten</p>
+  @if (version) {
+    <p class="version"><a [href]="releaseUrl" target="_blank" rel="noopener" title="Was ist neu?">Version {{ version }}</a></p>
+  }
 </footer>

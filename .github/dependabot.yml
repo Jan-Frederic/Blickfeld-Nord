@@ -6,6 +6,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Conventional Commits: Updates erzeugen keine neue Version
+    commit-message:
+      prefix: chore
+      include: scope
     open-pull-requests-limit: 5
     groups:
       # Angular-Pakete immer gemeinsam aktualisieren, sonst passen die Versionen nicht zusammen
@@ -23,3 +27,5 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    commit-message:
+      prefix: ci
