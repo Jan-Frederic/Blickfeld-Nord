@@ -1,13 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-<rect width="64" height="64" rx="14" fill="#15171c"/>
-<circle cx="32" cy="32" r="25" fill="none" stroke="#e4e1db" stroke-width="3"/>
-<line x1="32.00" y1="7.00" x2="32.00" y2="11.50" stroke="#e4e1db" stroke-width="2.4"/>
-<line x1="57.00" y1="32.00" x2="52.50" y2="32.00" stroke="#e4e1db" stroke-width="2.4"/>
-<line x1="32.00" y1="57.00" x2="32.00" y2="52.50" stroke="#e4e1db" stroke-width="2.4"/>
-<line x1="7.00" y1="32.00" x2="11.50" y2="32.00" stroke="#e4e1db" stroke-width="2.4"/>
-<polygon points="36.01,32.92 46.05,19.08 47.72,14.54 43.38,16.68 30.66,28.10" fill="#efece6"/>
-<polygon points="30.66,35.90 43.38,47.32 47.72,49.46 46.05,44.92 36.01,31.08" fill="#efece6"/>
-<polygon points="32,7.5 37,32 27,32" fill="#ffffff"/>
-<polygon points="27,32 37,32 32,56.5" fill="#e4e1db" fill-opacity="0.55"/>
-<circle cx="32" cy="32" r="4.2" fill="#15171c" stroke="#ffffff" stroke-width="2"/>
+<rect width="64" height="64" fill="#15171c"/>
+<circle cx="32" cy="32" r="24" fill="none" stroke="#efece6" stroke-width="3"/>
+<polygon points="34.97,32.85 45.93,21.89 46.85,17.15 42.11,18.07 31.15,29.03" fill="#efece6"/>
+<polygon points="31.15,34.97 42.11,45.93 46.85,46.85 45.93,42.11 34.97,31.15" fill="#efece6"/>
+<polygon points="27.60,32.00 36.40,32.00 32.00,54.00" fill="#9a9790"/>
+<polygon points="32.00,10.00 36.40,32.00 27.60,32.00" fill="#e8a46a"/>
+<circle cx="32" cy="32" r="3.6" fill="#15171c" stroke="#ffffff" stroke-width="2"/>
 </svg>
