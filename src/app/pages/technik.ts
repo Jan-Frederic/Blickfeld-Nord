@@ -17,11 +17,13 @@ import { PageLinks } from '../sections/page-links';
         Von euch brauchen wir nur ein bisschen Platz und Strom – hier sind alle Details auf einen Blick.
       </p>
 
-      <app-page-links current="technik">
+      <app-page-links current="technik" />
+
+      <div class="downloads">
         <a class="btn primary" href="presse/blickfeld-nord-technik-rider.pdf" download>
           <mat-icon>description</mat-icon> Technik-Rider (PDF)
         </a>
-      </app-page-links>
+      </div>
 
       <h3>Was wir mitbringen</h3>
       <div class="cards">
@@ -92,6 +94,7 @@ import { PageLinks } from '../sections/page-links';
       font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase;
       letter-spacing: .08em; margin: 40px 0 16px;
     }
+    .downloads { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px;
       border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none; font-weight: 500;

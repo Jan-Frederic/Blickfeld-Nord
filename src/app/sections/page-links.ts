@@ -11,14 +11,12 @@ const PAGES: { id: Page; link: string; label: string; icon: string }[] = [
 ];
 
 // Querverweise zwischen den Seiten für Veranstalter – jeweils direkt unter dem Einleitungstext.
-// Zeigt die beiden anderen Seiten; eigene Buttons (z. B. Downloads) kommen als Inhalt davor
-// und behalten die Styles der jeweiligen Seite.
+// Zeigt die beiden anderen Seiten; Downloads stehen auf den Seiten selbst eine Reihe tiefer.
 @Component({
   selector: 'app-page-links',
   imports: [RouterLink, MatIconModule],
   template: `
     <nav class="page-links" aria-label="Weitere Infos für Veranstalter">
-      <ng-content />
       @for (p of others(); track p.id) {
         <a class="btn" [routerLink]="p.link"><mat-icon>{{ p.icon }}</mat-icon> {{ p.label }}</a>
       }
