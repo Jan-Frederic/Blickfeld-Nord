@@ -1,7 +1,9 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Anfrage } from '../sections/anfrage';
+import { Availability } from '../sections/availability';
+import { scrollToSection } from '../scroll';
 
 // Fremdsprachige Kurzfassungen der Booking-Seite (/booking/en, /booking/nl) – z. B. für Veranstalter aus den
 // Niederlanden. Die Sprache kommt aus der Route (data: { lang }). Angaben gleich halten mit
@@ -67,14 +69,14 @@ const TEXT = {
 
 // Sprachumschalter: jeweils die anderen Fassungen
 const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
-  { lang: 'de', link: '/booking', label: 'Deutsche Version mit Kalender und FAQ' },
+  { lang: 'de', link: '/booking', label: 'Deutsche Version mit FAQ' },
   { lang: 'en', link: '/booking/en', label: 'English version' },
   { lang: 'nl', link: '/booking/nl', label: 'Nederlandse versie' },
 ];
 
 @Component({
   selector: 'app-booking-intl',
-  imports: [RouterLink, MatIconModule, Anfrage],
+  imports: [RouterLink, MatIconModule, Anfrage, Availability],
   template: `
     <section class="section" [attr.lang]="lang()">
       <p class="kicker">{{ t().kicker }}</p>
@@ -101,7 +103,9 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
 
       <h3>{{ t().contact }}</h3>
       <p class="text">{{ t().contactText }}</p>
-      <app-anfrage [lang]="lang()" />
+      <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
+      <app-availability ngSkipHydration [lang]="lang()" (pick)="request($event)" />
+      <div id="anfrage" class="anchor"><app-anfrage [lang]="lang()" /></div>
       <p class="text other">{{ t().otherWays }}</p>
       <div class="contacts">
         <a class="btn" [href]="mailto()"><mat-icon>mail</mat-icon> {{ t().mailButton }}</a>
@@ -135,6 +139,7 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
     .text { max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); margin: 0 0 16px; }
     .text a, .mail a { color: var(--bn-sunset); }
     .text.other { margin-top: 28px; }
+    .anchor { display: block; margin-top: 24px; scroll-margin-top: 72px; }
     .contacts { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px;
@@ -151,6 +156,13 @@ export class BookingIntl {
   /** Sprache aus der Route (data: { lang }) */
   readonly lang = input<Lang>('en');
   protected readonly t = computed(() => TEXT[this.lang()]);
+  private readonly anfrage = viewChild.required(Anfrage);
+
+  // Klick auf einen freien Tag im Kalender: Datum in die Anfrage übernehmen und dorthin scrollen
+  protected request(isoDate: string): void {
+    this.anfrage().setDate(isoDate);
+    scrollToSection('anfrage');
+  }
   protected readonly others = computed(() => SWITCH.filter((s) => s.lang !== this.lang()));
   protected readonly mail = MAIL;
   protected readonly mailto = computed(

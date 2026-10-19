@@ -1,4 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 
@@ -10,8 +10,35 @@ interface Day {
   state: DayState;
 }
 
-const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const T = {
+  de: {
+    title: 'Verfügbarkeit', prev: 'Vorheriger Monat', next: 'Nächster Monat',
+    months: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+    weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+    note: 'Unser Kalender wird noch nicht vollständig gepflegt – wir bemühen uns, ihn immer aktuell zu halten. Ein freier Tag ist also noch keine Zusage: Fragt euren Wunschtermin am besten kurz bei uns an.',
+    pickFree: 'frei – Termin anfragen', states: { free: 'frei', booked: 'belegt', option: 'reserviert', past: 'vergangen' },
+    legend: ['frei – zum Anfragen antippen', 'reserviert / angefragt', 'belegt'],
+    label: (d: number, m: string, y: number) => `${d}. ${m} ${y}`,
+  },
+  en: {
+    title: 'Availability', prev: 'Previous month', next: 'Next month',
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+    note: 'Our calendar is not yet fully maintained – we do our best to keep it up to date. A free day is not a confirmation yet, so please just send us a quick request for your preferred date.',
+    pickFree: 'free – request this date', states: { free: 'free', booked: 'booked', option: 'reserved', past: 'past' },
+    legend: ['free – tap to request', 'reserved / requested', 'booked'],
+    label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
+  },
+  nl: {
+    title: 'Beschikbaarheid', prev: 'Vorige maand', next: 'Volgende maand',
+    months: ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'],
+    weekdays: ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'],
+    note: 'Onze agenda is nog niet volledig bijgewerkt – we doen ons best om hem actueel te houden. Een vrije dag is dus nog geen toezegging: vraag jullie gewenste datum het beste even bij ons aan.',
+    pickFree: 'vrij – datum aanvragen', states: { free: 'vrij', booked: 'geboekt', option: 'gereserveerd', past: 'voorbij' },
+    legend: ['vrij – tik om aan te vragen', 'gereserveerd / aangevraagd', 'geboekt'],
+    label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
+  },
+} satisfies Record<string, { states: Record<DayState, string> } & Record<string, unknown>>;
 // So weit lässt sich in die Zukunft blättern
 const MONTHS_AHEAD = 18;
 
@@ -27,13 +54,13 @@ function iso(y: number, m: number, d: number): string {
   template: `
     <div class="availability">
       <div class="head">
-        <h3>Verfügbarkeit</h3>
+        <h3>{{ t().title }}</h3>
         <div class="nav">
-          <button type="button" (click)="step(-1)" [disabled]="offset() === 0" aria-label="Vorheriger Monat">
+          <button type="button" (click)="step(-1)" [disabled]="offset() === 0" [attr.aria-label]="t().prev">
             <mat-icon>chevron_left</mat-icon>
           </button>
           <span class="month" aria-live="polite">{{ title() }}</span>
-          <button type="button" (click)="step(1)" [disabled]="offset() === maxOffset" aria-label="Nächster Monat">
+          <button type="button" (click)="step(1)" [disabled]="offset() === maxOffset" [attr.aria-label]="t().next">
             <mat-icon>chevron_right</mat-icon>
           </button>
         </div>
@@ -41,14 +68,11 @@ function iso(y: number, m: number, d: number): string {
 
       <p class="note">
         <mat-icon>info</mat-icon>
-        <span>
-          Unser Kalender wird noch nicht vollständig gepflegt – wir bemühen uns, ihn immer aktuell zu halten.
-          Ein freier Tag ist also noch keine Zusage: Fragt euren Wunschtermin am besten kurz bei uns an.
-        </span>
+        <span>{{ t().note }}</span>
       </p>
 
-      <div class="grid" [attr.aria-label]="'Verfügbarkeit ' + title()" role="group">
-        @for (w of weekdays; track w) {
+      <div class="grid" [attr.aria-label]="t().title + ' ' + title()" role="group">
+        @for (w of t().weekdays; track w) {
           <span class="wd" aria-hidden="true">{{ w }}</span>
         }
         @for (blank of blanks(); track $index) {
@@ -56,21 +80,21 @@ function iso(y: number, m: number, d: number): string {
         }
         @for (d of days(); track d.iso) {
           @if (d.state === 'free') {
-            <button type="button" class="day free" (click)="pick.emit(d.iso)" [attr.aria-label]="label(d) + ': frei – Termin anfragen'">
+            <button type="button" class="day free" (click)="pick.emit(d.iso)" [attr.aria-label]="label(d) + ': ' + t().pickFree">
               {{ d.day }}
             </button>
           } @else {
             <span [class]="'day ' + d.state">
-              <span aria-hidden="true">{{ d.day }}</span><span class="sr-only">{{ label(d) }}: {{ stateLabel[d.state] }}</span>
+              <span aria-hidden="true">{{ d.day }}</span><span class="sr-only">{{ label(d) }}: {{ t().states[d.state] }}</span>
             </span>
           }
         }
       </div>
 
       <ul class="legend">
-        <li><span class="dot free"></span> frei – zum Anfragen antippen</li>
-        <li><span class="dot option"></span> reserviert / angefragt</li>
-        <li><span class="dot booked"></span> belegt</li>
+        <li><span class="dot free"></span> {{ t().legend[0] }}</li>
+        <li><span class="dot option"></span> {{ t().legend[1] }}</li>
+        <li><span class="dot booked"></span> {{ t().legend[2] }}</li>
       </ul>
     </div>
   `,
@@ -120,9 +144,11 @@ export class Availability {
   /** ISO-Datum eines freien Tages, der angefragt werden soll */
   readonly pick = output<string>();
 
-  protected readonly weekdays = WEEKDAYS;
+  /** Sprache der Seite */
+  readonly lang = input<'de' | 'en' | 'nl'>('de');
+  protected readonly t = computed(() => T[this.lang()]);
+
   protected readonly maxOffset = MONTHS_AHEAD;
-  protected readonly stateLabel: Record<DayState, string> = { free: 'frei', booked: 'belegt', option: 'reserviert', past: 'vergangen' };
   protected readonly offset = signal(0);
 
   private readonly now = new Date();
@@ -148,7 +174,7 @@ export class Availability {
     return { y: d.getFullYear(), m: d.getMonth() };
   });
 
-  protected readonly title = computed(() => `${MONTHS[this.month().m]} ${this.month().y}`);
+  protected readonly title = computed(() => `${this.t().months[this.month().m]} ${this.month().y}`);
 
   // Leere Felder vor dem 1. (Woche beginnt montags)
   protected readonly blanks = computed(() => {
@@ -172,6 +198,6 @@ export class Availability {
 
   protected label(d: Day): string {
     const { y, m } = this.month();
-    return `${d.day}. ${MONTHS[m]} ${y}`;
+    return this.t().label(d.day, this.t().months[m], y);
   }
 }
