@@ -1,11 +1,12 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 
 @Component({
   selector: 'app-gallery',
-  imports: [MatButtonModule, MatIconModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule],
   template: `
     <section id="galerie" class="section">
       <p class="kicker">Momente</p>
@@ -15,6 +16,7 @@ import { BandService } from '../data/band.service';
         @for (p of band.photos; track p.src; let i = $index) {
           <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="'Bild vergrößern: ' + p.alt">
             <img [src]="p.thumb" [alt]="p.alt" loading="lazy" />
+            @if (entries.has(p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
           </button>
         }
       </div>
@@ -26,7 +28,12 @@ import { BandService } from '../data/band.service';
           <img [src]="p.src" [alt]="p.alt" />
           <figcaption>
             <span>{{ p.caption ?? '' }}@if (p.credit) {<span class="credit"> · Foto: {{ p.credit }}</span>}</span>
-            <span class="count">{{ index()! + 1 }} / {{ band.photos.length }}</span>
+            <span class="right">
+              @if (entries.get(p.src); as date) {
+                <a class="entry" routerLink="/historie" [fragment]="'e-' + date" (click)="close()">Zum Auftritt <mat-icon>arrow_forward</mat-icon></a>
+              }
+              <span class="count">{{ index()! + 1 }} / {{ band.photos.length }}</span>
+            </span>
           </figcaption>
         </figure>
         <button mat-icon-button class="nav prev" (click)="step(-1, $event)" aria-label="Vorheriges Bild"><mat-icon>chevron_left</mat-icon></button>
@@ -61,6 +68,15 @@ import { BandService } from '../data/band.service';
     figure { margin: 0; max-width: min(1400px, 100%); }
     figure img { display: block; max-width: 100%; max-height: calc(100svh - 160px); margin: 0 auto; border-radius: 6px; }
     .credit { opacity: .7; }
+    .badge {
+      position: absolute; right: 8px; bottom: 8px; display: grid; place-items: center; width: 30px; height: 30px;
+      border-radius: 50%; background: rgba(20, 22, 25, .75); color: var(--bn-sunset);
+    }
+    .badge mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .right { display: inline-flex; align-items: center; gap: 18px; flex: none; }
+    .entry { display: inline-flex; align-items: center; gap: 4px; color: var(--bn-sunset); text-decoration: none; }
+    .entry:hover { color: var(--bn-ink); }
+    .entry mat-icon { font-size: 16px; width: 16px; height: 16px; }
     figcaption {
       display: flex; justify-content: space-between; gap: 16px; margin-top: 12px;
       font-family: var(--bn-wide); font-weight: 300; text-transform: uppercase; letter-spacing: .2em; font-size: .75rem;
@@ -76,6 +92,10 @@ import { BandService } from '../data/band.service';
 export class Gallery {
   protected readonly band = inject(BandService);
   protected readonly index = signal<number | null>(null);
+  // Fotos, die auch in einem Historie-Eintrag stecken (gleiche Bilddatei) → Datum des Auftritts
+  protected readonly entries = new Map(
+    this.band.history.flatMap((h) => (h.images ?? []).map((img) => [img.src, h.date] as const)),
+  );
   protected readonly current = computed(() => {
     const i = this.index();
     return i === null ? null : this.band.photos[i];
