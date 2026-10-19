@@ -1,5 +1,6 @@
 import { Component, DestroyRef, PLATFORM_ID, computed, inject, output, signal } from '@angular/core';
 import { DatePipe, isPlatformBrowser } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { BandService, Show } from '../data/band.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -88,7 +89,7 @@ export class NextShow {
 
 @Component({
   selector: 'app-hero',
-  imports: [NextShow, MatButtonModule, MatIconModule],
+  imports: [NextShow, RouterLink, MatButtonModule, MatIconModule],
   template: `
     <section class="hero" id="home">
       <h1 class="visually-hidden">Blickfeld Nord</h1>
@@ -113,6 +114,13 @@ export class NextShow {
             <mat-icon>groups</mat-icon> Die Band
           </button>
         </div>
+        <!-- Kurzfassungen fürs Booking aus den Niederlanden und für internationale Gäste -->
+        <p class="langs">
+          <mat-icon>translate</mat-icon>
+          <a routerLink="/booking/en" lang="en" hreflang="en">Booking in English</a>
+          <span aria-hidden="true">·</span>
+          <a routerLink="/booking/nl" lang="nl" hreflang="nl">Boeken in het Nederlands</a>
+        </p>
       </div>
     </section>
   `,
@@ -129,6 +137,13 @@ export class NextShow {
     }
     .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .actions button { letter-spacing: .12em; text-transform: uppercase; }
+    .langs {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 16px 0 0;
+      font-size: .85rem; color: var(--bn-fog); text-shadow: 0 1px 8px rgba(0, 0, 0, .8);
+    }
+    .langs mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .langs a { color: var(--bn-ink); text-decoration: none; }
+    .langs a:hover { color: var(--bn-sunset); }
     [mat-stroked-button] { background: rgba(20, 22, 25, .45); backdrop-filter: blur(4px); }
     .visually-hidden {
       position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
