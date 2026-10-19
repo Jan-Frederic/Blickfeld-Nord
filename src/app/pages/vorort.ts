@@ -1,5 +1,6 @@
-import { Component, computed, effect, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { BandService } from '../data/band.service';
 
 // Checkliste „Vor Ort“ je Auftritt (Backstage): Ansprechpartner, Ankunft, Parkplatz, Strom usw.
 // Gespeichert nur im Browser dieses Geräts (localStorage, je Auftritt) – private Kontaktdaten landen so nie im öffentlichen Repo.
@@ -53,6 +54,28 @@ function load(key: string): Record<string, string | undefined> {
           </label>
         }
       </div>
+      <div class="trip">
+        <h4><mat-icon>directions_car</mat-icon> Anfahrt</h4>
+        <div class="trip-row">
+          <label>Start
+            <input [value]="values()['start'] ?? defaultStart" (input)="set('start', $event)" placeholder="z. B. Proberaum, Hamminkeln" maxlength="120" />
+          </label>
+          <label>Fahrzeit (Min.)
+            <input type="number" min="0" max="600" [value]="values()['fahrzeit'] ?? ''" (input)="set('fahrzeit', $event)" placeholder="laut Route" />
+          </label>
+          <label>Puffer (Min.)
+            <input type="number" min="0" max="240" [value]="values()['puffer'] ?? '15'" (input)="set('puffer', $event)" />
+          </label>
+          <a class="route" [href]="route()" target="_blank" rel="noopener"><mat-icon>map</mat-icon> Route starten</a>
+        </div>
+        <p class="departure" [class.ok]="departure()">
+          @if (departure(); as d) {
+            <mat-icon>alarm</mat-icon> Abfahrt spätestens <strong>{{ d }} Uhr</strong> (Ankunft {{ arrival() }} Uhr − Fahrzeit − Puffer)
+          } @else {
+            Ankunftszeit (z. B. „15:00“) und Fahrzeit eintragen – dann steht hier die Abfahrtszeit.
+          }
+        </p>
+      </div>
       <p class="hint">Wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert – nicht auf der Website.</p>
     </section>
   `,
@@ -80,6 +103,20 @@ function load(key: string): Record<string, string | undefined> {
       color: var(--bn-ink); font: 400 .95rem/1.4 Inter, sans-serif; resize: vertical;
     }
     input:focus, textarea:focus { outline: none; border-color: var(--bn-sunset); }
+    .trip { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--bn-line); }
+    h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; }
+    h4 mat-icon, .route mat-icon, .departure mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
+    .trip-row { display: grid; gap: 12px 16px; grid-template-columns: 2fr 1fr 1fr auto; align-items: end; }
+    .trip-row label { gap: 6px; font-size: .8rem; color: var(--bn-fog); }
+    .route {
+      display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; white-space: nowrap;
+      border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none;
+    }
+    .route:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .departure { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: .9rem; color: var(--bn-fog); }
+    .departure.ok { color: var(--bn-ink); }
+    .departure strong { color: var(--bn-sunset); }
+    @media (max-width: 700px) { .trip-row { grid-template-columns: 1fr 1fr; } .trip-row label:first-child { grid-column: 1 / -1; } }
     .hint { margin: 16px 0 0; font-size: .8rem; color: var(--bn-fog); }
     @media (max-width: 520px) { .vorort { padding: 16px; } }
   `,
@@ -91,6 +128,28 @@ export class VorOrt {
   private readonly key = computed(() => STORAGE_PREFIX + this.show());
   protected readonly values = signal<Record<string, string | undefined>>({});
   protected readonly filled = computed(() => FIELDS.filter((f) => this.values()[f.key]?.trim()).length);
+
+  // Anfahrt: Route von Start zum Auftrittsort, Abfahrt = Ankunft − Fahrzeit − Puffer
+  private readonly band = inject(BandService);
+  protected readonly defaultStart = 'Hamminkeln';
+  protected readonly route = computed(() => {
+    const s = this.band.showById(this.show());
+    const destination = s ? [s.venue, s.city].filter(Boolean).join(', ') : '';
+    const origin = this.values()['start']?.trim() || this.defaultStart;
+    return `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+  });
+  protected readonly arrival = computed(() => {
+    const m = /(\d{1,2})[:.](\d{2})/.exec(this.values()['ankunft'] ?? '');
+    return m && +m[1] < 24 && +m[2] < 60 ? `${m[1].padStart(2, '0')}:${m[2]}` : null;
+  });
+  protected readonly departure = computed(() => {
+    const a = this.arrival();
+    const drive = Number(this.values()['fahrzeit']);
+    if (!a || !drive) return null;
+    const total = +a.slice(0, 2) * 60 + +a.slice(3) - drive - Number(this.values()['puffer'] ?? 15);
+    const t = ((total % 1440) + 1440) % 1440;
+    return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  });
 
   constructor() {
     // beim Wechsel zu einem anderen Auftritt dessen Angaben laden

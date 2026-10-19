@@ -195,7 +195,8 @@ export class BackstageShow implements OnDestroy {
         return fallback;
       }
     };
-    const vorort = Object.values(read<Record<string, string>>('bn-vorort-', {})).filter((v) => v?.trim()).length;
+    const saved = read<Record<string, string | undefined>>('bn-vorort-', {});
+    const vorort = FIELDS.filter((f) => saved[f.key]?.trim()).length;
     const songs = read<{ title?: string }[]>('bn-setlist-', []).filter((e) => e.title).length;
     const packed = read<{ checked?: string[] }>('bn-packliste-', {}).checked?.length ?? 0;
     return {
