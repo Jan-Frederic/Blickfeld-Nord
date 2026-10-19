@@ -8,6 +8,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
 import { postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
+import { enableOffline } from './offline';
 import { FIELDS } from './vorort';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -227,6 +228,8 @@ export class BackstageShow implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    // ab jetzt auf diesem Gerät auch offline nutzbar
+    enableOffline();
   }
 
   protected poster(): void {

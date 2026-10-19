@@ -7,13 +7,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { downloadIcs } from '../data/calendar';
 import { SetlistStats } from './setlist-stats';
 import { AboButton } from '../sections/abo-button';
+import { BackstageSync } from './backstage-sync';
+import { enableOffline, offlineReady } from './offline';
 import { BandService, Show } from '../data/band.service';
 
 // Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
 // fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, MatTableModule, MatIconModule, SetlistStats, AboButton],
+  imports: [DatePipe, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -103,6 +105,16 @@ import { BandService, Show } from '../data/band.service';
       </div>
       }
 
+      <div class="exchange">
+        <h3>Mit der Band abgleichen</h3>
+        <p>Setlists, Packlisten und Vor-Ort-Angaben werden nur auf diesem Gerät gespeichert. Schickt sie als Datei
+          (z. B. in die WhatsApp-Gruppe) und importiert sie auf den anderen Handys – dann haben alle denselben Stand.</p>
+        <app-backstage-sync />
+        @if (offline()) {
+          <p class="offline"><mat-icon>offline_pin</mat-icon> Backstage ist auf diesem Gerät auch ohne Netz verfügbar.</p>
+        }
+      </div>
+
       <app-setlist-stats />
     </section>
   `,
@@ -114,6 +126,11 @@ import { BandService, Show } from '../data/band.service';
     .summary { align-items: center; }
     .export { margin-left: auto; text-transform: none; letter-spacing: normal; }
     .summary strong { color: var(--bn-ink); font-size: 1rem; margin-right: 4px; }
+    .exchange { margin-top: 40px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
+    .exchange h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+    .exchange p { margin: 0 0 14px; max-width: 720px; font-size: .9rem; line-height: 1.6; color: var(--bn-fog); }
+    .exchange .offline { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; color: #7fc29b; }
+    .offline mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .filters button {
       display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
@@ -154,6 +171,7 @@ export class Backstage implements OnDestroy {
   private readonly router = inject(Router);
   private readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
+  protected readonly offline = offlineReady;
   protected readonly columns = ['date', 'venue', 'type', 'status', 'comment', 'open'];
   protected readonly today = new Date().toISOString().slice(0, 10);
   protected readonly rehearsals = [...this.band.rehearsals].sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''));
@@ -180,6 +198,8 @@ export class Backstage implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    // ab jetzt auf diesem Gerät auch offline nutzbar
+    enableOffline();
     // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id>[/<teil>] über die Fehlerseite
     // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter.
     const query = inject(ActivatedRoute).snapshot.queryParamMap;

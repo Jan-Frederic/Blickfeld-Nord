@@ -97,6 +97,9 @@ jobs:
           # zur Backstage-Shell weiter (/backstage/?auftritt=<id>[&teil=<teil>]), die dann zur Unterseite navigiert.
           sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2]+(p[3]?"\\x26teil="+p[3]:""))</script>#' 404.html
 
+      - name: Service Worker für den Offline-Backstage
+        run: node scripts/build-sw.mjs
+
       - name: Linkcheck (interne Links und Bilder; externe Links nur als Warnung)
         run: node scripts/check-links.mjs --extern
 
