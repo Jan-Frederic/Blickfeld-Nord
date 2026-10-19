@@ -417,6 +417,15 @@ export class BandService {
     { date: '2027-01-15', time: '18:00' },
     { date: '2027-02-12', time: '18:00' },
     { date: '2027-03-12', time: '18:00' },
+    { date: '2027-04-09', time: '18:00' },
+    { date: '2027-06-04', time: '18:00' },
+    { date: '2027-07-02', time: '18:00' },
+    { date: '2027-07-30', time: '18:00' },
+    { date: '2027-08-27', time: '18:00' },
+    { date: '2027-09-24', time: '18:00' },
+    { date: '2027-10-22', time: '18:00' },
+    { date: '2027-11-19', time: '18:00' },
+    { date: '2027-12-17', time: '18:00' },
   ];
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
