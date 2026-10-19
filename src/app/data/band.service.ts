@@ -442,7 +442,7 @@ export class BandService {
     { date: '2027-04-03', time: '18:00', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-30', time: '18:00', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-05-02', time: '10:00', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true, price: 0 },
-    { date: '2027-05-07', venue: 'Scheperswiese', private: true, confirmed: false },
+    { date: '2027-05-07', venue: 'Scheperswiese', private: true, confirmed: true },
     { date: '2027-06-12', venue: 'Ronny S.', private: true, confirmed: true },
     { date: '2027-08-29', city: 'Rhede', venue: 'Kirmes Rhede', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: false },
     { date: '2027-09-03', endDate: '2027-09-05', venue: 'Bandwochenende', publicName: 'Bandwochenende', private: true, confirmed: false },
