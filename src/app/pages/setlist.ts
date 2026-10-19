@@ -34,6 +34,7 @@ function load(key: string): Entry[] {
         <div class="tools">
           <button type="button" (click)="addPause()" [disabled]="!entries().length"><mat-icon>coffee</mat-icon> Pause einfügen</button>
           <button type="button" class="primary" (click)="print()" [disabled]="!songCount()"><mat-icon>print</mat-icon> Drucken / PDF</button>
+          <button type="button" (click)="share()" [disabled]="!songCount()"><mat-icon>{{ copied() ? 'check' : 'send' }}</mat-icon> {{ copied() ? 'Kopiert!' : 'An die Band' }}</button>
           <button type="button" (click)="clear()" [disabled]="!entries().length"><mat-icon>delete_sweep</mat-icon> Leeren</button>
         </div>
       </div>
@@ -191,6 +192,27 @@ export class Setlist {
 
   protected clear(): void {
     if (confirm('Setlist für diesen Auftritt wirklich leeren?')) this.update(() => []);
+  }
+
+  // Setlist als Text (Sets, nummerierte Songs mit Interpret) – Teilen-Menü, sonst Zwischenablage
+  protected readonly copied = signal(false);
+  protected async share(): Promise<void> {
+    let n = 0;
+    const text = [
+      `Setlist – ${this.title()}`,
+      ...this.sets().map((set, i) => [``, `SET ${i + 1}`, ...set.map((t) => `${++n}. ${t.title} – ${t.artist}`)].join('\n')),
+    ].join('\n');
+    if (navigator.share) {
+      navigator.share({ title: `Setlist – ${this.title()}`, text }).catch(() => undefined);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    } catch {
+      window.prompt('Setlist kopieren:', text);
+    }
   }
 
   // Druckansicht in neuem Fenster: groß, schwarz auf weiß, ein Set pro Spalte – „Als PDF speichern“ im Druckdialog
