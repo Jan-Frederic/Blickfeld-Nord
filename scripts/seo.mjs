@@ -190,7 +190,7 @@ for (const s of publicShows) {
 // Kalender-Abo: alle öffentlichen Konzerte; Kalender-Apps fragen regelmäßig nach neuen Terminen
 const ics = buildIcs(publicShows, 'Blickfeld Nord – Konzerte').replace(
   'X-WR-TIMEZONE:Europe/Berlin',
-  'X-WR-TIMEZONE:Europe/Berlin\r\nX-WR-CALDESC:Alle öffentlichen Konzerte von Blickfeld Nord – https://blickfeld-nord.de\r\nREFRESH-INTERVAL;VALUE=DURATION:PT12H\r\nX-PUBLISHED-TTL:PT12H',
+  'X-WR-TIMEZONE:Europe/Berlin\r\nX-WR-CALDESC:Alle öffentlichen Konzerte von Blickfeld Nord\r\nREFRESH-INTERVAL;VALUE=DURATION:PT12H\r\nX-PUBLISHED-TTL:PT12H',
 );
 writeFileSync(join(DIST, 'konzerte.ics'), ics);
 

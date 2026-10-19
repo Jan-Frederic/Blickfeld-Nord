@@ -1,12 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show, friendId } from '../data/band.service';
-import { downloadIcs, icsFileName } from '../data/calendar';
-import { shareShow } from '../data/share';
+import { downloadIcs } from '../data/calendar';
 
 @Component({
   selector: 'app-tour',
@@ -17,12 +16,14 @@ import { shareShow } from '../data/share';
       <div class="head">
         <h2>Tour und Konzerte</h2>
         <div class="cal">
-          <a mat-flat-button [href]="feed.webcal" title="Neue Termine erscheinen automatisch in eurem Kalender">
+          <!-- Android kennt kein webcal:// – dort direkt das Abo in Google Kalender -->
+          <a mat-flat-button [href]="android ? feed.google : feed.webcal" [attr.target]="android ? '_blank' : null" rel="noopener"
+             title="Neue Termine erscheinen automatisch in eurem Kalender">
             <mat-icon>event_repeat</mat-icon> Kalender abonnieren
           </a>
           <span class="alt">
-            <a [href]="feed.google" target="_blank" rel="noopener">Google Kalender</a>
-            @if (shows.length) { · <button type="button" (click)="addAll()">einmalig herunterladen</button> }
+            @if (!android) { <a [href]="feed.google" target="_blank" rel="noopener">Google Kalender</a> · }
+            <button type="button" (click)="addAll()">einmalig herunterladen</button>
           </span>
         </div>
       </div>
@@ -32,7 +33,7 @@ import { shareShow } from '../data/share';
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
             <td mat-cell *matCellDef="let s" class="date">
-              <a class="details" [routerLink]="['/konzerte', band.showId(s)]" [attr.aria-label]="'Details zum Konzert ' + s.venue">
+              <a class="details" [routerLink]="['/konzerte', band.showId(s)]" [attr.aria-label]="(s.date | date: 'd. MMMM yyyy' : '' : 'de') + ', ' + s.venue + ' – Details zum Konzert'">
               <span class="long">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</span>
               <span class="short">{{ s.date | date: 'dd.MM.yy' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'dd.MM.yy' }}}</span>
               </a>
@@ -46,25 +47,13 @@ import { shareShow } from '../data/share';
             <th mat-header-cell *matHeaderCellDef class="venue">Location</th>
             <td mat-cell *matCellDef="let s" class="venue"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /><ng-container *ngTemplateOutlet="entry; context: { $implicit: s }" /></td>
           </ng-container>
-          <ng-container matColumnDef="action">
-            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Aktionen</span></th>
-            <td mat-cell *matCellDef="let s" class="action">
-              <button mat-stroked-button (click)="add(s)" [attr.aria-label]="'Erinnere mich an ' + s.venue + ' – Kalendereintrag mit Erinnerung am Vortag'"
-                      title="Kalendereintrag mit Erinnerung am Vortag">
-                <mat-icon>notifications_active</mat-icon><span class="label">Erinnere mich</span>
-              </button>
-              <button mat-stroked-button (click)="share(s)" [attr.aria-label]="'Termin ' + s.venue + ' teilen'" title="Termin teilen, z. B. per WhatsApp">
-                <mat-icon>share</mat-icon><span class="label">Teilen</span>
-              </button>
-              @if (s.mapsUrl) {
-                <a mat-stroked-button [href]="s.mapsUrl" target="_blank" rel="noopener" [attr.aria-label]="'Anfahrt zu ' + s.venue + ' in Google Maps'">
-                  <mat-icon>place</mat-icon><span class="label">Anfahrt</span>
-                </a>
-              }
-            </td>
+          <ng-container matColumnDef="open">
+            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Details</span></th>
+            <td mat-cell *matCellDef="let s" class="open"><span class="label">Details</span><mat-icon>chevron_right</mat-icon></td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+          <!-- ganze Zeile führt zur Konzertseite; per Tastatur über den Link im Datum -->
+          <tr mat-row *matRowDef="let row; columns: columns" class="link" (click)="open(row, $event)"></tr>
         </table>
       </div>
 
@@ -102,14 +91,19 @@ import { shareShow } from '../data/share';
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
     .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
     .head h2 { margin: 0; }
-    .action { text-align: right; white-space: nowrap; }
     .details { color: inherit; text-decoration: none; }
-    .details:hover { color: var(--bn-sunset); }
+    .details:hover, .details:focus-visible { color: var(--bn-sunset); }
     .cal { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .alt { font-size: .8rem; color: var(--bn-fog); }
     .alt a, .alt button { color: inherit; font: inherit; padding: 0; border: 0; background: none; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
     .alt a:hover, .alt button:hover { color: var(--bn-sunset); }
-    .action > * + * { margin-left: 8px; }
+    @media (max-width: 640px) { .cal { align-items: flex-start; } }
+    tr.link { cursor: pointer; transition: background .15s; }
+    tr.link:hover { background: rgba(232, 164, 106, .07); }
+    tr.link:hover .open { color: var(--bn-sunset); }
+    .open { text-align: right; white-space: nowrap; color: var(--bn-fog); }
+    .open .label { font-size: .85rem; vertical-align: middle; }
+    .open mat-icon { vertical-align: middle; }
     .venue-inline { display: none; font-size: .85rem; opacity: .75; }
     .short { display: none; }
     .entry {
@@ -143,10 +137,7 @@ import { shareShow } from '../data/share';
       th, td { padding: 0 8px !important; }
       .long { display: none; }
       .short { display: inline; }
-      .action a, .action button { min-width: 0; padding: 0 10px; }
-      .action > * + * { margin-left: 4px; }
-      .action .label { display: none; }
-      .action mat-icon { margin: 0; }
+      .open .label { display: none; }
     }
   `,
 })
@@ -168,20 +159,19 @@ export class Tour {
       this.band.venueParts(this.band.publicVenue(s)).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
     ]),
   );
-  protected readonly columns = ['date', 'city', 'venue', 'action'];
+  protected readonly columns = ['date', 'city', 'venue', 'open'];
+  private readonly router = inject(Router);
+  protected readonly android = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
   // Kalender-Abo: konzerte.ics wird beim Build erzeugt (scripts/seo.mjs) – neue Termine kommen automatisch an
   protected readonly feed = {
     webcal: 'webcal://blickfeld-nord.de/konzerte.ics',
     google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent('webcal://blickfeld-nord.de/konzerte.ics')}`,
   };
 
-  protected add(s: Show): void {
-    // einzelnes Konzert mit Erinnerung am Vortag
-    downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true);
-  }
-
-  protected share(s: Show): void {
-    shareShow(s, this.band.showId(s), this.band.publicVenue(s));
+  // Klick irgendwo in die Zeile öffnet die Konzertseite – Links in der Zeile (Datum, Freunde) behalten ihr Ziel
+  protected open(s: Show, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('a')) return;
+    this.router.navigate(['/konzerte', this.band.showId(s)]);
   }
 
   protected addAll(): void {
