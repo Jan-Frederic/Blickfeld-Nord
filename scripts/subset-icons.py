@@ -17,22 +17,27 @@ SRC_FONT = os.path.join(ROOT, 'node_modules', 'material-icons', 'iconfont', 'mat
 OUT_FONT = os.path.join(ROOT, 'public', 'fonts', 'material-icons-subset.woff2')
 
 ICON_TAG = re.compile(r'<mat-icon[^>]*>(.*?)</mat-icon>', re.S)
+# Icon-Namen in Datenlisten, z. B. { icon: 'build', label: … } – angezeigt per <mat-icon>{{ f.icon }}</mat-icon>
+ICON_FIELD = re.compile(r"\bicon:\s*'([a-z][a-z0-9_]*)'")
 NAME = re.compile(r"[a-z][a-z0-9_]*")
 
 
 def used_icons():
-    names = set()
+    """Namen aus <mat-icon> (müssen existieren) und aus Datenlisten (optional – dort stehen auch eigene SVG-Symbole)."""
+    names, optional = set(), set()
     for base, _, files in os.walk(os.path.join(ROOT, 'src')):
         for f in files:
             if f.endswith(('.ts', '.html')):
                 with open(os.path.join(base, f), encoding='utf-8') as fh:
-                    for content in ICON_TAG.findall(fh.read()):
+                    text = fh.read()
+                    optional.update(ICON_FIELD.findall(text))
+                    for content in ICON_TAG.findall(text):
                         content = content.strip()
                         if '{{' in content:  # z. B. {{ ok ? 'check' : 'schedule' }}
                             names.update(re.findall(r"'([a-z][a-z0-9_]*)'", content))
                         elif NAME.fullmatch(content):
                             names.add(content)
-    return sorted(names)
+    return sorted(names), sorted(optional - names)
 
 
 def ligature_glyphs(font, names):
@@ -51,9 +56,9 @@ def ligature_glyphs(font, names):
 
 
 def main():
-    names = used_icons()
+    names, optional = used_icons()
     font = TTFont(SRC_FONT)
-    found = ligature_glyphs(font, names)
+    found = ligature_glyphs(font, names + optional)
     missing = sorted(set(names) - set(found))
     if missing:
         sys.exit(f'Unbekannte Icon-Namen: {", ".join(missing)}')
@@ -78,7 +83,7 @@ def main():
     sub.subset(font)
     os.makedirs(os.path.dirname(OUT_FONT), exist_ok=True)
     font.save(OUT_FONT)
-    print(f'{len(names)} Icons → {OUT_FONT} ({os.path.getsize(OUT_FONT) / 1024:.1f} KB): {", ".join(names)}')
+    print(f'{len(found)} Icons → {OUT_FONT} ({os.path.getsize(OUT_FONT) / 1024:.1f} KB): {", ".join(sorted(found))}')
 
 
 if __name__ == '__main__':
