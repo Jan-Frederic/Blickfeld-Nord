@@ -12,6 +12,9 @@ import { enableOffline, offlineReady } from './offline';
 import { BandService, Rehearsal, Show } from '../data/band.service';
 
 type FilterKey = 'kommend' | 'proben' | 'vergangen';
+type SortCol = 'date' | 'venue' | 'type' | 'status' | 'comment';
+// unsortiert / aufsteigend / absteigend
+const SORT_ICONS = [{ icon: 'unfold_more' }, { icon: 'arrow_upward' }, { icon: 'arrow_downward' }];
 interface Row {
   show?: Show;
   probe?: Rehearsal;
@@ -51,7 +54,7 @@ function loadFilters(): Set<FilterKey> {
         <app-abo-button class="export" path="backstage/kalender.ics" (download)="exportAll()" />
       </div>
 
-      <!-- Filter lassen sich frei kombinieren; Kommendes steht oben (chronologisch), Vergangenes darunter (neueste zuerst) -->
+      <!-- Filter lassen sich frei kombinieren; sortiert wird standardmäßig nach Datum, per Klick auf die Spaltenköpfe auch anders -->
       <div class="filters" role="group" aria-label="Termine filtern">
         @for (f of filters; track f.key) {
           <button type="button" [class.on]="active().has(f.key)" [attr.aria-pressed]="active().has(f.key)" (click)="toggle(f.key)">
@@ -71,7 +74,9 @@ function loadFilters(): Set<FilterKey> {
       <div class="table-wrap">
         <table mat-table [dataSource]="rows()">
           <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef>Datum</th>
+            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('date')">
+              <button type="button" class="sort" (click)="sortBy('date')">Datum<mat-icon>{{ sortIcons().date }}</mat-icon></button>
+            </th>
             <td mat-cell *matCellDef="let r" class="date" [class.past]="r.past">
               {{ r.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}
               @if (r.time) {<span class="time">{{ r.time }} Uhr</span>}
@@ -79,7 +84,9 @@ function loadFilters(): Set<FilterKey> {
             </td>
           </ng-container>
           <ng-container matColumnDef="venue">
-            <th mat-header-cell *matHeaderCellDef>Termin</th>
+            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('venue')">
+              <button type="button" class="sort" (click)="sortBy('venue')">Termin<mat-icon>{{ sortIcons().venue }}</mat-icon></button>
+            </th>
             <td mat-cell *matCellDef="let r">
               @if (r.show; as s) {
                 <!-- Link für Tastatur und Screenreader; die ganze Zeile ist zusätzlich klickbar -->
@@ -92,7 +99,9 @@ function loadFilters(): Set<FilterKey> {
             </td>
           </ng-container>
           <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef>Art</th>
+            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('type')">
+              <button type="button" class="sort" (click)="sortBy('type')">Art<mat-icon>{{ sortIcons().type }}</mat-icon></button>
+            </th>
             <td mat-cell *matCellDef="let r">
               @if (r.show; as s) {
                 <span class="tag" [class.private]="s.private">{{ s.private ? 'Privat' : 'Öffentlich' }}</span>
@@ -102,7 +111,9 @@ function loadFilters(): Set<FilterKey> {
             </td>
           </ng-container>
           <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('status')">
+              <button type="button" class="sort" (click)="sortBy('status')">Status<mat-icon>{{ sortIcons().status }}</mat-icon></button>
+            </th>
             <td mat-cell *matCellDef="let r">
               @if (r.show; as s) {
                 <span class="status" [class.ok]="s.confirmed">
@@ -113,7 +124,9 @@ function loadFilters(): Set<FilterKey> {
             </td>
           </ng-container>
           <ng-container matColumnDef="comment">
-            <th mat-header-cell *matHeaderCellDef>Kommentar</th>
+            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('comment')">
+              <button type="button" class="sort" (click)="sortBy('comment')">Kommentar<mat-icon>{{ sortIcons().comment }}</mat-icon></button>
+            </th>
             <td mat-cell *matCellDef="let r" class="comment">{{ (r.show ? r.show.comment : r.probe.note) || '–' }}</td>
           </ng-container>
           <ng-container matColumnDef="open">
@@ -162,6 +175,13 @@ function loadFilters(): Set<FilterKey> {
     .filters mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .count { font-size: .78rem; opacity: .75; font-variant-numeric: tabular-nums; }
     .empty { padding: 20px; border: 1px dashed var(--bn-line); border-radius: 12px; color: var(--bn-fog); }
+    .sort {
+      display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; cursor: pointer;
+      color: inherit; font: inherit; font-weight: 500;
+    }
+    .sort mat-icon { font-size: 16px; width: 16px; height: 16px; opacity: .5; }
+    th[aria-sort] .sort mat-icon { opacity: 1; color: var(--bn-sunset); }
+    .sort:hover mat-icon { opacity: 1; }
     .tag.probe { border-color: #7fa8c9; color: #9cc0dd; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
     table { width: 100%; min-width: 820px; background: transparent; }
@@ -220,15 +240,42 @@ export class Backstage implements OnDestroy {
   protected readonly counts = Object.fromEntries(
     this.filters.map((f) => [f.key, this.allRows.filter((r) => this.matches(r, f.key)).length]),
   ) as Record<FilterKey, number>;
-  // Kommendes zuerst (chronologisch), danach Vergangenes (neueste zuerst)
+  // Sortierung: Standard zeitlich aufsteigend; Klick auf einen Spaltenkopf sortiert danach, erneuter Klick dreht um
+  protected readonly sort = signal<{ col: SortCol; dir: 1 | -1 }>({ col: 'date', dir: 1 });
+  private readonly sortValue: Record<SortCol, (r: Row) => string> = {
+    date: (r) => r.date + (r.time ?? ''),
+    venue: (r) => (r.show ? r.show.venue : 'Probe ' + (r.probe!.place ?? '')).toLocaleLowerCase('de'),
+    type: (r) => (r.probe ? 'Probe' : r.show!.private ? 'Privat' : 'Öffentlich'),
+    status: (r) => (r.probe ? '' : r.show!.confirmed ? 'Geklärt' : 'Offen'),
+    comment: (r) => ((r.show ? r.show.comment : r.probe!.note) ?? '').toLocaleLowerCase('de'),
+  };
   protected readonly rows = computed(() => {
-    const picked = this.allRows.filter((r) => [...this.active()].some((f) => this.matches(r, f)));
-    const key = (r: Row) => r.date + (r.time ?? '');
-    return [
-      ...picked.filter((r) => !r.past).sort((a, b) => key(a).localeCompare(key(b))),
-      ...picked.filter((r) => r.past).sort((a, b) => key(b).localeCompare(key(a))),
-    ];
+    const { col, dir } = this.sort();
+    const value = this.sortValue[col];
+    const time = this.sortValue.date;
+    return this.allRows
+      .filter((r) => [...this.active()].some((f) => this.matches(r, f)))
+      // gleiche Werte (z. B. „Geklärt“) bleiben untereinander zeitlich sortiert
+      .sort((a, b) => dir * value(a).localeCompare(value(b), 'de') || time(a).localeCompare(time(b)));
   });
+
+  protected sortBy(col: SortCol): void {
+    const cur = this.sort();
+    this.sort.set({ col, dir: cur.col === col ? (-cur.dir as 1 | -1) : 1 });
+  }
+
+  // Pfeil je Spalte (als Feld statt Funktionsaufruf, damit scripts/subset-icons.py die Spaltennamen nicht für Icons hält)
+  protected readonly sortIcons = computed(() => {
+    const { col, dir } = this.sort();
+    const icons = {} as Record<SortCol, string>;
+    for (const c of Object.keys(this.sortValue) as SortCol[]) icons[c] = SORT_ICONS[c !== col ? 0 : dir === 1 ? 1 : 2].icon;
+    return icons;
+  });
+
+  protected ariaSort(col: SortCol): string | null {
+    const cur = this.sort();
+    return cur.col !== col ? null : cur.dir === 1 ? 'ascending' : 'descending';
+  }
 
   protected toggle(f: FilterKey): void {
     const next = new Set(this.active());
