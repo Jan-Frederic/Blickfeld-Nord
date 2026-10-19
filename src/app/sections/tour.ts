@@ -46,6 +46,9 @@ import { downloadIcs, icsFileName } from '../data/calendar';
                       title="Kalendereintrag mit Erinnerung am Vortag">
                 <mat-icon>notifications_active</mat-icon><span class="label">Erinnere mich</span>
               </button>
+              <button mat-stroked-button (click)="share(s)" [attr.aria-label]="'Termin ' + s.venue + ' teilen'" title="Termin teilen, z. B. per WhatsApp">
+                <mat-icon>share</mat-icon><span class="label">Teilen</span>
+              </button>
               @if (s.mapsUrl) {
                 <a mat-stroked-button [href]="s.mapsUrl" target="_blank" rel="noopener" [attr.aria-label]="'Anfahrt zu ' + s.venue + ' in Google Maps'">
                   <mat-icon>place</mat-icon><span class="label">Anfahrt</span>
@@ -155,10 +158,27 @@ export class Tour {
     downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true);
   }
 
+  // Termin mit Datum, Ort und Link verschicken: Teilen-Menü des Geräts, sonst WhatsApp
+  protected share(s: Show): void {
+    const day = (d: string) => `${WEEKDAYS[new Date(`${d}T12:00:00`).getDay()]}, ${d.split('-').reverse().join('.')}`;
+    const when = `${day(s.date)}${s.endDate ? ` – ${day(s.endDate)}` : ''}${s.time ? ` ab ${s.time} Uhr` : ''}`;
+    const where = [this.band.publicVenue(s), s.city].filter(Boolean).join(', ');
+    const entry = s.price === 0 ? ' · Eintritt frei' : s.price ? ` · Eintritt ${s.price} €` : '';
+    const text = `Blickfeld Nord live: ${when} – ${where}${entry}`;
+    const url = 'https://blickfeld-nord.de/#tour';
+    if (navigator.share) {
+      navigator.share({ title: 'Blickfeld Nord live', text, url }).catch(() => undefined);
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`, '_blank', 'noopener');
+    }
+  }
+
   protected addAll(): void {
     downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', 'Blickfeld Nord – Konzerte');
   }
 }
+
+const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 function localToday(): string {
   const d = new Date();
