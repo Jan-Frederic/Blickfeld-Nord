@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Repertoire } from '../sections/repertoire';
+import { Songwunsch } from '../sections/songwunsch';
 
 // Eigene Unterseite /repertoire: wie wir live spielen + durchsuchbare Songliste aus der Spotify-Playlist
 @Component({
   selector: 'app-repertoire-page',
-  imports: [RouterLink, MatIconModule, Repertoire],
+  imports: [RouterLink, MatIconModule, Repertoire, Songwunsch],
   template: `
     <section class="section">
       <p class="kicker">Was wir spielen</p>
@@ -53,8 +54,10 @@ import { Repertoire } from '../sections/repertoire';
 
       <app-repertoire />
 
+      <app-songwunsch />
+
       <div class="cta">
-        <p>Euer Lieblingssong fehlt? Sprecht uns an – viele Wünsche erfüllen wir gern, manche sogar spontan am Abend.</p>
+        <p>Viele Wünsche erfüllen wir gern, manche sogar spontan am Abend.</p>
         <div class="buttons">
           <a class="btn primary" routerLink="/booking"><mat-icon>event_available</mat-icon> Booking & Anfrage</a>
           <a class="btn" href="https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW" target="_blank" rel="noopener">
