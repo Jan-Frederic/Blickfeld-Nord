@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Anfrage } from '../sections/anfrage';
 import { Availability } from '../sections/availability';
 import { Faq } from '../sections/faq';
+import { Angebot } from '../sections/angebot';
 import { scrollToSection } from '../scroll';
 
 // Fremdsprachige Kurzfassungen der Booking-Seite (/booking/en, /booking/nl) – z. B. für Veranstalter aus den
@@ -77,7 +78,7 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
 
 @Component({
   selector: 'app-booking-intl',
-  imports: [RouterLink, MatIconModule, Anfrage, Availability, Faq],
+  imports: [RouterLink, MatIconModule, Anfrage, Availability, Faq, Angebot],
   template: `
     <section class="section" [attr.lang]="lang()">
       <p class="kicker">{{ t().kicker }}</p>
@@ -103,6 +104,8 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
       <p class="text">{{ t().musicText }} <a routerLink="/repertoire">{{ t().songList }}</a> {{ t().songListNote }}</p>
 
       <app-faq class="faq" [lang]="lang()" />
+
+      <app-angebot [lang]="lang()" />
 
       <h3>{{ t().contact }}</h3>
       <p class="text">{{ t().contactText }}</p>
