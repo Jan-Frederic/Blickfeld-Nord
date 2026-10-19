@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Anfrage } from '../sections/anfrage';
 
 // Fremdsprachige Kurzfassungen der Booking-Seite (/booking/en, /booking/nl) – z. B. für Veranstalter aus den
 // Niederlanden. Die Sprache kommt aus der Route (data: { lang }). Angaben gleich halten mit
@@ -28,6 +29,7 @@ const TEXT = {
     songListNote: '(in German, but the song titles speak for themselves).',
     contact: 'Get in touch',
     contactText: 'Send us your date and location – we will get back to you as soon as possible.',
+    otherWays: 'Prefer to write directly? That works too:',
     mailButton: 'Booking request by e-mail',
     instagram: 'Message on Instagram',
     rider: 'Tech rider (PDF, German)',
@@ -53,6 +55,7 @@ const TEXT = {
     songListNote: '(in het Duits, maar de titels spreken voor zich).',
     contact: 'Contact',
     contactText: 'Stuur ons jullie datum en locatie – we nemen zo snel mogelijk contact met jullie op.',
+    otherWays: 'Liever direct schrijven? Dat kan ook:',
     mailButton: 'Boekingsaanvraag per e-mail',
     instagram: 'Bericht via Instagram',
     rider: 'Techniek-rider (pdf, Duits)',
@@ -71,7 +74,7 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
 
 @Component({
   selector: 'app-booking-intl',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, Anfrage],
   template: `
     <section class="section" [attr.lang]="lang()">
       <p class="kicker">{{ t().kicker }}</p>
@@ -98,8 +101,10 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
 
       <h3>{{ t().contact }}</h3>
       <p class="text">{{ t().contactText }}</p>
+      <app-anfrage [lang]="lang()" />
+      <p class="text other">{{ t().otherWays }}</p>
       <div class="contacts">
-        <a class="btn primary" [href]="mailto()"><mat-icon>mail</mat-icon> {{ t().mailButton }}</a>
+        <a class="btn" [href]="mailto()"><mat-icon>mail</mat-icon> {{ t().mailButton }}</a>
         <a class="btn" href="https://ig.me/m/blickfeldnord" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
@@ -129,6 +134,7 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
     h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .08em; margin: 36px 0 10px; }
     .text { max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); margin: 0 0 16px; }
     .text a, .mail a { color: var(--bn-sunset); }
+    .text.other { margin-top: 28px; }
     .contacts { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px;
