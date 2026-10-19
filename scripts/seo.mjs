@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Ergänzt den fertigen Build um Suchmaschinen-Infos:
 //  - strukturierte Daten (schema.org JSON-LD) für die Band und alle öffentlichen, geklärten Konzerte
-//  - sitemap.xml und robots.txt
+//  - häufige Fragen (FAQPage) auf den Booking-Seiten in allen drei Sprachen
+//  - sitemap.xml (mit Sprachfassungen) und robots.txt
 // Aufruf nach `ng build`, vor dem Kopieren der index.html in die Unterseiten-Ordner:  node scripts/seo.mjs
 import { build } from 'esbuild';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -27,7 +28,7 @@ await build({
   tsconfig: join(ROOT, 'tsconfig.json'),
   logLevel: 'warning',
 });
-const { members, publicShows } = await import(pathToFileURL(bundle).href);
+const { members, publicShows, FAQ } = await import(pathToFileURL(bundle).href);
 rmSync(tmp, { recursive: true, force: true });
 
 // Ortszeit Europe/Berlin → ISO 8601 mit korrektem Offset (Winter +01:00, Sommer +02:00)
@@ -168,11 +169,39 @@ for (const m of members) {
   writeFileSync(path, page);
 }
 
+// Booking-Seiten: häufige Fragen als FAQPage – je Sprachfassung in deren Sprache
+const BOOKING = { de: 'booking', en: 'booking/en', nl: 'booking/nl' };
+for (const [lang, path] of Object.entries(BOOKING)) {
+  const file = join(DIST, path, 'index.html');
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${SITE}/${path}#faq`,
+    url: `${SITE}/${path}`,
+    inLanguage: lang,
+    about: { '@type': 'MusicGroup', '@id': BAND_ID, name: 'Blickfeld Nord', url: `${SITE}/` },
+    mainEntity: FAQ[lang].items.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.link ? `${f.a} ${SITE}${f.link.to}` : f.a },
+    })),
+  };
+  const tag = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n`;
+  const page = readFileSync(file, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`);
+  writeFileSync(file, page);
+}
+
 // Sitemap (Backstage bewusst nicht enthalten)
 const pages = ['/', '/booking', '/booking/en', '/booking/nl', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
+// Sprachfassungen der Booking-Seite gegenseitig verknüpfen (wie die hreflang-Links im Seitenkopf)
+const bookingPaths = Object.values(BOOKING).map((p) => `/${p}`);
+const alternates = (p) =>
+  bookingPaths.includes(p)
+    ? [...Object.entries(BOOKING), ['x-default', BOOKING.de]].map(([l, b]) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE}/${b}"/>`).join('') + '\n  '
+    : '';
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${pages.map((p) => `  <url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod></url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${pages.map((p) => `  <url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod>${alternates(p)}</url>`).join('\n')}
 </urlset>
 `;
 writeFileSync(join(DIST, 'sitemap.xml'), sitemap);

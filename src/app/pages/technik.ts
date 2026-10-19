@@ -5,7 +5,7 @@ import { PageLinks } from '../sections/page-links';
 import { TechnikAufbau } from '../sections/technik-aufbau';
 
 // Technik-Seite für Veranstalter – im Footer, in den Booking-FAQ und über die Link-Leiste von Booking/Pressekit verlinkt.
-// Angaben bitte gleich halten mit dem Technik-Rider (scripts/build-rider.py) und den FAQ (src/app/sections/faq.ts, alle drei Sprachen).
+// Angaben bitte gleich halten mit dem Technik-Rider (scripts/build-rider.py) und den FAQ (src/app/data/faq.ts, alle drei Sprachen).
 @Component({
   selector: 'app-technik',
   imports: [RouterLink, MatIconModule, PageLinks, TechnikAufbau],

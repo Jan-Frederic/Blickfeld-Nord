@@ -7,3 +7,4 @@ export const publicShows = band.publicShows;
 export const history = band.history;
 export const photos = band.photos;
 export const friends = band.friends;
+export { FAQ } from '../../src/app/data/faq';

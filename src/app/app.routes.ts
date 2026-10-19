@@ -1,13 +1,14 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home';
+import { BOOKING_ALTERNATES } from './page-meta';
 
 // Startseite direkt im Hauptpaket, alle Unterseiten werden erst beim Aufruf geladen (kleineres Start-JavaScript)
 export const routes: Routes = [
   { path: '', component: Home, title: 'Blickfeld Nord – Offizielle Bandpage' },
   { path: 'band/:slug', loadComponent: () => import('./pages/member').then((m) => m.MemberPage) },
-  { path: 'booking', loadComponent: () => import('./pages/booking').then((m) => m.BookingPage), title: 'Booking – Blickfeld Nord', data: { description: 'Blickfeld Nord buchen: Partyband für Feste, private Feiern und Kneipen – Verfügbarkeit, Technik, Spielzeit, häufige Fragen und Kontakt.' } },
-  { path: 'booking/en', loadComponent: () => import('./pages/booking-intl').then((m) => m.BookingIntl), title: 'Booking (English) – Blickfeld Nord', data: { lang: 'en', description: 'Book Blickfeld Nord: three-piece party and cover band from Hamminkeln near the Dutch border – festivals, private parties and pubs, own PA and lights.' } },
-  { path: 'booking/nl', loadComponent: () => import('./pages/booking-intl').then((m) => m.BookingIntl), title: 'Booking (Nederlands) – Blickfeld Nord', data: { lang: 'nl', description: 'Boek Blickfeld Nord: driekoppige party- en coverband uit Hamminkeln, vlak bij de Nederlandse grens – feesten, privéfeesten en cafés, met eigen geluid en licht.' } },
+  { path: 'booking', loadComponent: () => import('./pages/booking').then((m) => m.BookingPage), title: 'Booking – Blickfeld Nord', data: { alternates: BOOKING_ALTERNATES, description: 'Blickfeld Nord buchen: Partyband für Feste, private Feiern und Kneipen – Verfügbarkeit, Technik, Spielzeit, häufige Fragen und Kontakt.' } },
+  { path: 'booking/en', loadComponent: () => import('./pages/booking-intl').then((m) => m.BookingIntl), title: 'Booking (English) – Blickfeld Nord', data: { lang: 'en', alternates: BOOKING_ALTERNATES, description: 'Book Blickfeld Nord: three-piece party and cover band from Hamminkeln near the Dutch border – festivals, private parties and pubs, own PA and lights.' } },
+  { path: 'booking/nl', loadComponent: () => import('./pages/booking-intl').then((m) => m.BookingIntl), title: 'Booking (Nederlands) – Blickfeld Nord', data: { lang: 'nl', alternates: BOOKING_ALTERNATES, description: 'Boek Blickfeld Nord: driekoppige party- en coverband uit Hamminkeln, vlak bij de Nederlandse grens – feesten, privéfeesten en cafés, met eigen geluid en licht.' } },
   { path: 'repertoire', loadComponent: () => import('./pages/repertoire').then((m) => m.RepertoirePage), title: 'Repertoire – Blickfeld Nord', data: { description: 'Das Repertoire von Blickfeld Nord: durchsuchbare Songliste aus Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen.' } },
   { path: 'galerie', loadComponent: () => import('./pages/galerie').then((m) => m.GaleriePage), title: 'Galerie – Blickfeld Nord', data: { description: 'Fotos von Blickfeld Nord: Live-Momente von unseren Auftritten und Porträts der Band.' } },
   { path: 'historie', loadComponent: () => import('./pages/historie').then((m) => m.Historie), title: 'Historie – Blickfeld Nord', data: { description: 'Unsere Geschichte in Momenten: Auftritte, Orte und Begegnungen von Blickfeld Nord – mit Fotos und Videos.' } },
