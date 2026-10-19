@@ -2,30 +2,20 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show, friendId } from '../data/band.service';
 import { downloadIcs } from '../data/calendar';
+import { AboButton } from './abo-button';
 
 @Component({
   selector: 'app-tour',
-  imports: [DatePipe, NgTemplateOutlet, RouterLink, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [DatePipe, NgTemplateOutlet, RouterLink, MatTableModule, MatIconModule, AboButton],
   template: `
     <section id="tour" class="section">
       <p class="kicker">Live</p>
       <div class="head">
         <h2>Tour und Konzerte</h2>
-        <div class="cal">
-          <!-- Android kennt kein webcal:// – dort direkt das Abo in Google Kalender -->
-          <a mat-flat-button [href]="android ? feed.google : feed.webcal" [attr.target]="android ? '_blank' : null" rel="noopener"
-             title="Neue Termine erscheinen automatisch in eurem Kalender">
-            <mat-icon>event_repeat</mat-icon> Kalender abonnieren
-          </a>
-          <span class="alt">
-            @if (!android) { <a [href]="feed.google" target="_blank" rel="noopener">Google Kalender</a> · }
-            <button type="button" (click)="addAll()">einmalig herunterladen</button>
-          </span>
-        </div>
+        <app-abo-button path="konzerte.ics" (download)="addAll()" />
       </div>
 
       <div class="table-wrap">
@@ -93,11 +83,6 @@ import { downloadIcs } from '../data/calendar';
     .head h2 { margin: 0; }
     .details { color: inherit; text-decoration: none; }
     .details:hover, .details:focus-visible { color: var(--bn-sunset); }
-    .cal { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-    .alt { font-size: .8rem; color: var(--bn-fog); }
-    .alt a, .alt button { color: inherit; font: inherit; padding: 0; border: 0; background: none; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-    .alt a:hover, .alt button:hover { color: var(--bn-sunset); }
-    @media (max-width: 640px) { .cal { align-items: flex-start; } }
     tr.link { cursor: pointer; transition: background .15s; }
     tr.link:hover { background: rgba(232, 164, 106, .07); }
     tr.link:hover .open { color: var(--bn-sunset); }
@@ -161,12 +146,6 @@ export class Tour {
   );
   protected readonly columns = ['date', 'city', 'venue', 'open'];
   private readonly router = inject(Router);
-  protected readonly android = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
-  // Kalender-Abo: konzerte.ics wird beim Build erzeugt (scripts/seo.mjs) – neue Termine kommen automatisch an
-  protected readonly feed = {
-    webcal: 'webcal://blickfeld-nord.de/konzerte.ics',
-    google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent('webcal://blickfeld-nord.de/konzerte.ics')}`,
-  };
 
   // Klick irgendwo in die Zeile öffnet die Konzertseite – Links in der Zeile (Datum, Freunde) behalten ihr Ziel
   protected open(s: Show, event: MouseEvent): void {

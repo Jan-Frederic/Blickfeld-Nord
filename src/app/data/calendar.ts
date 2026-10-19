@@ -1,4 +1,4 @@
-import { Show } from './band.service';
+import { Rehearsal, Show } from './band.service';
 
 // Erzeugt Kalenderdateien (iCalendar/.ics) direkt im Browser – ohne externen Dienst.
 // Mit Uhrzeit: Termin in Ortszeit (Europe/Berlin) mit angenommener Dauer; ohne Uhrzeit: ganztägig.
@@ -104,7 +104,34 @@ function event(s: Show, stamp: string, withNotes: boolean, reminder: boolean): s
   ];
 }
 
-export function buildIcs(shows: Show[], calendarName: string, withNotes = false, reminder = false): string {
+function rehearsalEvent(r: Rehearsal, stamp: string): string[] {
+  return [
+    'BEGIN:VEVENT',
+    `UID:probe-${r.date}${r.time ? '-' + r.time.replace(':', '') : ''}@blickfeld-nord.de`,
+    `DTSTAMP:${stamp}`,
+    ...(r.time
+      ? [
+          `DTSTART;TZID=Europe/Berlin:${localDateTime(r.date, r.time)}`,
+          `DTEND;TZID=Europe/Berlin:${r.endTime ? localDateTime(r.date, r.endTime) : localDateTime(r.date, r.time, DEFAULT_DURATION_HOURS)}`,
+        ]
+      : [`DTSTART;VALUE=DATE:${compact(r.date)}`, `DTEND;VALUE=DATE:${compact(nextDay(r.date))}`]),
+    `SUMMARY:${esc('Probe Blickfeld Nord')}`,
+    ...(r.place ? [`LOCATION:${esc(r.place)}`] : []),
+    ...(r.note ? [`DESCRIPTION:${esc(r.note)}`] : []),
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+  ];
+}
+
+export interface IcsExtras {
+  /** Probetermine (nur Backstage-Kalender) */
+  rehearsals?: Rehearsal[];
+  /** zusätzliche Kalender-Kopfzeilen, z. B. für Abos: 'REFRESH-INTERVAL;VALUE=DURATION:PT12H' */
+  header?: string[];
+}
+
+export function buildIcs(shows: Show[], calendarName: string, withNotes = false, reminder = false, extras: IcsExtras = {}): string {
+  const rehearsals = extras.rehearsals ?? [];
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const lines = [
     'BEGIN:VCALENDAR',
@@ -114,15 +141,17 @@ export function buildIcs(shows: Show[], calendarName: string, withNotes = false,
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${esc(calendarName)}`,
     'X-WR-TIMEZONE:Europe/Berlin',
-    ...(shows.some((s) => s.time) ? VTIMEZONE : []),
+    ...(extras.header ?? []),
+    ...(shows.some((s) => s.time) || rehearsals.some((r) => r.time) ? VTIMEZONE : []),
     ...shows.flatMap((s) => event(s, stamp, withNotes, reminder)),
+    ...rehearsals.flatMap((r) => rehearsalEvent(r, stamp)),
     'END:VCALENDAR',
   ];
   return lines.map(fold).join('\r\n') + '\r\n';
 }
 
-export function downloadIcs(shows: Show[], fileName: string, calendarName: string, withNotes = false, reminder = false): void {
-  const blob = new Blob([buildIcs(shows, calendarName, withNotes, reminder)], { type: 'text/calendar;charset=utf-8' });
+export function downloadIcs(shows: Show[], fileName: string, calendarName: string, withNotes = false, reminder = false, extras: IcsExtras = {}): void {
+  const blob = new Blob([buildIcs(shows, calendarName, withNotes, reminder, extras)], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

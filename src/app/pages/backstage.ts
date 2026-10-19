@@ -1,37 +1,66 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs } from '../data/calendar';
 import { SetlistStats } from './setlist-stats';
+import { AboButton } from '../sections/abo-button';
 import { BandService, Show } from '../data/band.service';
 
 // Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
 // fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, MatTableModule, MatIconModule, MatButtonModule, SetlistStats],
+  imports: [DatePipe, MatTableModule, MatIconModule, SetlistStats, AboButton],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
-      <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen. Für Details, Plakat und Packliste einfach einen Auftritt antippen.</p>
+      <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen, dazu die Probetermine. Für Details, Plakat, Setlist und Packliste einfach einen Auftritt antippen.</p>
 
       <div class="summary">
         <span><strong>{{ shows.length }}</strong> Auftritte</span>
         <span><strong>{{ confirmed }}</strong> geklärt</span>
         <span><strong>{{ open }}</strong> offen</span>
         <span><strong>{{ privateCount }}</strong> privat</span>
-        <button mat-stroked-button class="export" (click)="exportAll()">
-          <mat-icon>event</mat-icon> Alle Termine als Kalender
-        </button>
+        <app-abo-button class="export" path="backstage/kalender.ics" (download)="exportAll()" />
       </div>
 
+      <div class="filters" role="group" aria-label="Termine filtern">
+        @for (f of filters; track f.key) {
+          <button type="button" [class.on]="filter() === f.key" [attr.aria-pressed]="filter() === f.key" (click)="filter.set(f.key)">
+            <mat-icon>{{ f.icon }}</mat-icon> {{ f.label }} <span class="count">{{ counts()[f.key] }}</span>
+          </button>
+        }
+      </div>
+
+      @if (filter() === 'proben') {
+        @if (rehearsals.length) {
+          <div class="table-wrap">
+            <table class="proben">
+              <thead><tr><th>Datum</th><th>Zeit</th><th>Ort</th><th>Notiz</th></tr></thead>
+              <tbody>
+                @for (r of rehearsals; track r.date + r.time) {
+                  <tr [class.past]="r.date < today">
+                    <td class="date">{{ r.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}</td>
+                    <td>{{ r.time ? r.time + (r.endTime ? '–' + r.endTime : '') + ' Uhr' : '–' }}</td>
+                    <td>{{ r.place || '–' }}</td>
+                    <td class="comment">{{ r.note || '–' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="empty">Noch keine Probetermine eingetragen (src/app/data/band.service.ts → rehearsals).</p>
+        }
+      } @else if (!visible().length) {
+        <p class="empty">{{ filter() === 'kommend' ? 'Keine ausstehenden Auftritte.' : 'Noch keine vergangenen Auftritte.' }}</p>
+      } @else {
       <div class="table-wrap">
-        <table mat-table [dataSource]="shows">
+        <table mat-table [dataSource]="visible()">
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
             <td mat-cell *matCellDef="let s" class="date" [class.past]="(s.endDate ?? s.date) < today">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</td>
@@ -72,6 +101,7 @@ import { BandService, Show } from '../data/band.service';
               (click)="openShow(row)" (keydown.enter)="openShow(row)"></tr>
         </table>
       </div>
+      }
 
       <app-setlist-stats />
     </section>
@@ -84,6 +114,19 @@ import { BandService, Show } from '../data/band.service';
     .summary { align-items: center; }
     .export { margin-left: auto; text-transform: none; letter-spacing: normal; }
     .summary strong { color: var(--bn-ink); font-size: 1rem; margin-right: 4px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filters button {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .9rem;
+    }
+    .filters button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .filters button.on { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
+    .filters mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .count { font-size: .78rem; opacity: .75; font-variant-numeric: tabular-nums; }
+    .empty { padding: 20px; border: 1px dashed var(--bn-line); border-radius: 12px; color: var(--bn-fog); }
+    .proben { border-collapse: collapse; }
+    .proben th, .proben td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--bn-line); }
+    .proben th { font-weight: 500; font-size: .85rem; color: var(--bn-fog); }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
     table { width: 100%; min-width: 820px; background: transparent; }
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -113,6 +156,23 @@ export class Backstage implements OnDestroy {
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
   protected readonly columns = ['date', 'venue', 'type', 'status', 'comment', 'open'];
   protected readonly today = new Date().toISOString().slice(0, 10);
+  protected readonly rehearsals = [...this.band.rehearsals].sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''));
+
+  // Filter über der Tabelle: ausstehende Auftritte (Standard), Probetermine, vergangene Auftritte (neueste zuerst)
+  protected readonly filters = [
+    { key: 'kommend', label: 'Ausstehende Auftritte', icon: 'upcoming' },
+    { key: 'proben', label: 'Probetermine', icon: 'music_note' },
+    { key: 'vergangen', label: 'Vergangene Auftritte', icon: 'history' },
+  ] as const;
+  protected readonly filter = signal<'kommend' | 'proben' | 'vergangen'>('kommend');
+  private readonly upcoming = this.shows.filter((s) => (s.endDate ?? s.date) >= this.today);
+  private readonly pastShows = this.shows.filter((s) => (s.endDate ?? s.date) < this.today).reverse();
+  protected readonly counts = computed(() => ({
+    kommend: this.upcoming.length,
+    proben: this.rehearsals.filter((r) => r.date >= this.today).length,
+    vergangen: this.pastShows.length,
+  }));
+  protected readonly visible = computed(() => (this.filter() === 'vergangen' ? this.pastShows : this.upcoming));
   protected readonly confirmed = this.shows.filter((s) => s.confirmed).length;
   protected readonly open = this.shows.length - this.confirmed;
   protected readonly privateCount = this.shows.filter((s) => s.private).length;
@@ -134,7 +194,7 @@ export class Backstage implements OnDestroy {
 
   // Bandkalender inkl. privater Termine, Status und Kommentaren
   protected exportAll(): void {
-    downloadIcs(this.shows, 'blickfeld-nord-backstage.ics', 'Blickfeld Nord – Backstage', true);
+    downloadIcs(this.shows, 'blickfeld-nord-backstage.ics', 'Blickfeld Nord – Backstage', true, false, { rehearsals: this.rehearsals });
   }
 
   ngOnDestroy(): void {

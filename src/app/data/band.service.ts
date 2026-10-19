@@ -89,6 +89,19 @@ export interface Show {
   organizer?: string;
 }
 
+// Probetermin (nur Backstage und Backstage-Kalender, nie öffentlich)
+export interface Rehearsal {
+  date: string;
+  // optional: 'HH:MM' – ohne Uhrzeit ganztägig
+  time?: string;
+  // optional: Ende 'HH:MM' (Standard: 3 Stunden nach Beginn)
+  endTime?: string;
+  // optional: Ort, z. B. Proberaum
+  place?: string;
+  // optional: Notiz, z. B. „neue Songs: …“
+  note?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BandService {
   // Öffentlich gelistet wird nur, was öffentlich UND geklärt ist – chronologisch
@@ -394,6 +407,10 @@ export class BandService {
     { src: 'band/jan-frederic-overbeck.webp', thumb: 'galerie/portrait-jan-frederic-overbeck-thumb.webp', tall: true, alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer', caption: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
   ];
+
+  // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
+  // Beispiel: { date: '2026-11-05', time: '19:30', endTime: '22:00', place: 'Proberaum', note: 'Weihnachtsmarkt-Set' }
+  readonly rehearsals: Rehearsal[] = [];
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
   readonly shows: Show[] = [

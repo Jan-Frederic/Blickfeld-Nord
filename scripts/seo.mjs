@@ -2,12 +2,12 @@
 // Ergänzt den fertigen Build um Suchmaschinen-Infos:
 //  - strukturierte Daten (schema.org JSON-LD) für die Band und alle öffentlichen, geklärten Konzerte
 //  - je öffentlichem Konzert eine Seite /konzerte/<id> mit eigenem MusicEvent
-//  - Kalender-Abo konzerte.ics mit allen öffentlichen Konzerten
+//  - Kalender-Abos: konzerte.ics (öffentliche Konzerte) und backstage/kalender.ics (alle Auftritte + Proben)
 //  - häufige Fragen (FAQPage) auf den Booking-Seiten in allen drei Sprachen
 //  - sitemap.xml (mit Sprachfassungen) und robots.txt
 // Aufruf nach `ng build`, vor dem Kopieren der index.html in die Unterseiten-Ordner:  node scripts/seo.mjs
 import { build } from 'esbuild';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -30,7 +30,7 @@ await build({
   tsconfig: join(ROOT, 'tsconfig.json'),
   logLevel: 'warning',
 });
-const { members, publicShows, FAQ, buildIcs, showId } = await import(pathToFileURL(bundle).href);
+const { members, publicShows, allShows, rehearsals, FAQ, buildIcs, showId } = await import(pathToFileURL(bundle).href);
 rmSync(tmp, { recursive: true, force: true });
 
 // Ortszeit Europe/Berlin → ISO 8601 mit korrektem Offset (Winter +01:00, Sommer +02:00)
@@ -187,12 +187,18 @@ for (const s of publicShows) {
   writeFileSync(file, readFileSync(file, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`));
 }
 
-// Kalender-Abo: alle öffentlichen Konzerte; Kalender-Apps fragen regelmäßig nach neuen Terminen
-const ics = buildIcs(publicShows, 'Blickfeld Nord – Konzerte').replace(
-  'X-WR-TIMEZONE:Europe/Berlin',
-  'X-WR-TIMEZONE:Europe/Berlin\r\nX-WR-CALDESC:Alle öffentlichen Konzerte von Blickfeld Nord\r\nREFRESH-INTERVAL;VALUE=DURATION:PT12H\r\nX-PUBLISHED-TTL:PT12H',
-);
+// Kalender-Abos: kommen regelmäßig neu – Kalender-Apps fragen alle 12 Stunden nach
+const subscription = (desc) => [`X-WR-CALDESC:${desc}`, 'REFRESH-INTERVAL;VALUE=DURATION:PT12H', 'X-PUBLISHED-TTL:PT12H'];
+// öffentlich: alle öffentlichen, geklärten Konzerte
+const ics = buildIcs(publicShows, 'Blickfeld Nord – Konzerte', false, false, { header: subscription('Alle öffentlichen Konzerte von Blickfeld Nord') });
 writeFileSync(join(DIST, 'konzerte.ics'), ics);
+// Backstage: alle Auftritte (auch private, mit Status und Kommentar) und Probetermine – dieselben Angaben,
+// die ohnehin im Backstage-Bereich stehen; Suchmaschinen sind per robots.txt ausgesperrt
+mkdirSync(join(DIST, 'backstage'), { recursive: true });
+writeFileSync(
+  join(DIST, 'backstage', 'kalender.ics'),
+  buildIcs(allShows, 'Blickfeld Nord – Backstage', true, false, { rehearsals, header: subscription('Auftritte und Proben – nur für die Band') }),
+);
 
 // Booking-Seiten: häufige Fragen als FAQPage – je Sprachfassung in deren Sprache
 const BOOKING = { de: 'booking', en: 'booking/en', nl: 'booking/nl' };
@@ -230,6 +236,6 @@ ${pages.map((p) => `  <url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod>${al
 </urlset>
 `;
 writeFileSync(join(DIST, 'sitemap.xml'), sitemap);
-writeFileSync(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
+writeFileSync(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /backstage/\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
 console.log(`SEO: ${events.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length} Seiten in der Sitemap.`);
