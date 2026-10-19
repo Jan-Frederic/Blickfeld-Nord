@@ -19,6 +19,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   Kanalliste, Signalfluss, Monitore und Strom – dieselbe Datei erzeugt Seite 2 des Technik-Riders
   (`python3 scripts/build-rider.py`). `null` bedeutet „noch offen“. Jedes Gerät mit `hw` ist im Bühnenplan und in der
   Geräteliste anklickbar und öffnet einen Dialog mit Beschreibung und technischen Daten (Abschnitt `hardware`).
+- **Booking auf Englisch und Niederländisch** (`/booking/en`, `/booking/nl`) – Kurzfassung für Veranstalter aus
+  der Grenzregion; Texte pro Sprache in `src/app/pages/booking-intl.ts`
 - **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
   durchsuchbare Songliste aus der Spotify-Playlist
 - **Neu auf Instagram** (Startseite) – ausgewählte Beiträge als Zwei-Klick-Lösung; Links in `instagramPosts`

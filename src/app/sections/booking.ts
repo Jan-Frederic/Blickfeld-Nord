@@ -50,7 +50,10 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
         sorgt? Dann seid ihr bei uns richtig – wir bringen alles mit, ihr bringt die Gäste.
       </p>
       <app-page-links current="booking" />
-      <p class="lang"><a routerLink="/booking/en" lang="en" hreflang="en"><mat-icon>translate</mat-icon> English version</a></p>
+      <p class="lang">
+        <a routerLink="/booking/en" lang="en" hreflang="en"><mat-icon>translate</mat-icon> English version</a>
+        <a routerLink="/booking/nl" lang="nl" hreflang="nl"><mat-icon>translate</mat-icon> Nederlandse versie</a>
+      </p>
 
       <ul class="facts">
         <li>
@@ -174,7 +177,7 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
     .btn svg, .btn mat-icon { width: 20px; height: 20px; font-size: 20px; flex: none; }
     .anchor { scroll-margin-top: 72px; }
     .faq { margin-top: 0; }
-    .lang { margin: -20px 0 24px; }
+    .lang { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: -20px 0 24px; }
     .lang a { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-fog); font-size: .9rem; text-decoration: none; }
     .lang a:hover { color: var(--bn-sunset); }
     .lang mat-icon { font-size: 18px; width: 18px; height: 18px; }
