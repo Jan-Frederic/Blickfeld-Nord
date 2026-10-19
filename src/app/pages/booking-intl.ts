@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Anfrage } from '../sections/anfrage';
 import { Availability } from '../sections/availability';
+import { Faq } from '../sections/faq';
 import { scrollToSection } from '../scroll';
 
 // Fremdsprachige Kurzfassungen der Booking-Seite (/booking/en, /booking/nl) – z. B. für Veranstalter aus den
@@ -69,14 +70,14 @@ const TEXT = {
 
 // Sprachumschalter: jeweils die anderen Fassungen
 const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
-  { lang: 'de', link: '/booking', label: 'Deutsche Version mit FAQ' },
+  { lang: 'de', link: '/booking', label: 'Deutsche Version' },
   { lang: 'en', link: '/booking/en', label: 'English version' },
   { lang: 'nl', link: '/booking/nl', label: 'Nederlandse versie' },
 ];
 
 @Component({
   selector: 'app-booking-intl',
-  imports: [RouterLink, MatIconModule, Anfrage, Availability],
+  imports: [RouterLink, MatIconModule, Anfrage, Availability, Faq],
   template: `
     <section class="section" [attr.lang]="lang()">
       <p class="kicker">{{ t().kicker }}</p>
@@ -100,6 +101,8 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
 
       <h3>{{ t().music }}</h3>
       <p class="text">{{ t().musicText }} <a routerLink="/repertoire">{{ t().songList }}</a> {{ t().songListNote }}</p>
+
+      <app-faq class="faq" [lang]="lang()" />
 
       <h3>{{ t().contact }}</h3>
       <p class="text">{{ t().contactText }}</p>
@@ -139,6 +142,7 @@ const SWITCH: { lang: Lang | 'de'; link: string; label: string }[] = [
     .text { max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); margin: 0 0 16px; }
     .text a, .mail a { color: var(--bn-sunset); }
     .text.other { margin-top: 28px; }
+    .faq { margin: 32px 0; }
     .anchor { display: block; margin-top: 24px; scroll-margin-top: 72px; }
     .contacts { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn {

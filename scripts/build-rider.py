@@ -3,7 +3,7 @@
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-rider.py
 Benötigt: pillow, reportlab, fonttools
-Angaben stehen unten in RIDER – bei Änderungen auch die FAQ in src/app/sections/booking.ts und die Technik-Seite src/app/pages/technik.ts anpassen.
+Angaben stehen unten in RIDER – bei Änderungen auch die FAQ in src/app/sections/faq.ts (DE/EN/NL) und die Technik-Seite src/app/pages/technik.ts anpassen.
 Seite 2 (Bühnenplan, Kanalliste, Monitore, Strom) kommt aus src/app/data/technik.json – derselben Datei wie auf /technik.
 """
 import importlib.util
