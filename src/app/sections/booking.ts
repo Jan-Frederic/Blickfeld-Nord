@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Availability } from './availability';
 import { PageLinks } from './page-links';
+import { Anfrage } from './anfrage';
+import { scrollToSection } from '../scroll';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
 const BOOKING_MAIL = 'Matthiaswigger@me.com';
@@ -38,7 +40,7 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, MatIconModule, Availability, PageLinks],
+  imports: [RouterLink, MatIconModule, Availability, PageLinks, Anfrage],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -91,13 +93,15 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
       <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
       <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>
 
+      <div id="anfrage" class="anchor"><app-anfrage /></div>
+
       <div class="blocks">
         <div class="block">
           <h3>Anfragen</h3>
           <p>Schreibt uns, wie es euch am liebsten ist – wir melden uns schnellstmöglich zurück.</p>
           <div class="contacts">
-            <a class="btn primary" [href]="mailto">
-              <mat-icon>mail</mat-icon> Anfrage per E-Mail
+            <a class="btn primary" routerLink="/booking" fragment="anfrage" (click)="toForm($event)">
+              <mat-icon>edit_note</mat-icon> Angebot anfragen
             </a>
             <a class="btn" href="https://ig.me/m/blickfeldnord" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,11 +200,17 @@ const FAQ: { q: string; a: string; link?: { label: string; to: string } }[] = [
   `,
 })
 export class Booking {
-  // Klick auf einen freien Tag im Kalender: E-Mail-Vorlage mit vorausgefülltem Datum
+  private readonly anfrage = viewChild.required(Anfrage);
+
+  // Klick auf einen freien Tag im Kalender: Datum in die Anfrage übernehmen und dorthin scrollen
   protected request(isoDate: string): void {
-    const [y, m, d] = isoDate.split('-');
-    const body = MAIL_BODY.replace('Datum:', `Datum: ${d}.${m}.${y}`);
-    window.location.href = `mailto:${BOOKING_MAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(body)}`;
+    this.anfrage().setDate(isoDate);
+    scrollToSection('anfrage');
+  }
+
+  protected toForm(event: Event): void {
+    event.preventDefault();
+    scrollToSection('anfrage');
   }
 
   protected readonly faq = FAQ;
