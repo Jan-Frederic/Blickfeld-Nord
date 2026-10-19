@@ -162,6 +162,14 @@ const py = (m: number) => PAD_TOP + m * M;
 
     <div class="two">
       <div>
+        <h4>Geräte</h4>
+        <ul class="list">
+          @for (g of geraeteListe; track g.label) {
+            <li><b>{{ g.label }}:</b> <span [class.open]="!g.wert">{{ g.wert ?? 'offen' }}</span></li>
+          }
+        </ul>
+      </div>
+      <div>
         <h4>Monitore</h4>
         <ul class="list">
           @for (m of monitore; track m.id) {
@@ -248,6 +256,13 @@ export class TechnikAufbau {
   protected readonly monitore = data.monitore;
   protected readonly strom = data.strom;
   protected readonly geraete = data.geraete as { mischpult: string | null; pa: string | null; monitore: string | null; licht: string | null };
+
+  protected readonly geraeteListe = [
+    { label: 'Mischpult', wert: this.geraete.mischpult },
+    { label: 'PA', wert: this.geraete.pa },
+    { label: 'Monitore', wert: this.geraete.monitore },
+    { label: 'Licht', wert: this.geraete.licht },
+  ];
 
   protected readonly W = W;
   protected readonly D = D;

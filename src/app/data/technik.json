@@ -1,6 +1,6 @@
 {
   "status": "Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.",
-  "stand": "2026-10-18",
+  "stand": "2026-10-19",
   "buehne": { "breite": 4, "tiefe": 3 },
   "aufbau": [
     { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2 },
@@ -35,7 +35,7 @@
     { "id": "mon3", "fuer": "Matthias", "mix": null }
   ],
   "geraete": {
-    "mischpult": null,
+    "mischpult": "PreSonus StudioLive 16.4.2 (digital)",
     "pa": null,
     "monitore": null,
     "licht": null

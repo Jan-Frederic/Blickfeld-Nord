@@ -160,7 +160,12 @@ def page_two(c, w, h):
     c.setFont('Inter', 8)
     c.setFillColor(pk.TEXT_MID)
     c.drawString(m, h - 36 * mm, TECHNIK['status'])
-    y = stage_plot(c, m, h - 52 * mm, w - 2 * m)
+    g = TECHNIK['geraete']
+    c.setFont('Inter-SemiBold', 8.5)
+    c.setFillColor(pk.TEXT_DARK)
+    c.drawString(m, h - 41.5 * mm, '   ·   '.join(
+        f'{k}: {g[key] or "offen"}' for k, key in [('Mischpult', 'mischpult'), ('PA', 'pa'), ('Monitore', 'monitore'), ('Licht', 'licht')]))
+    y = stage_plot(c, m, h - 60 * mm, w - 2 * m)
     rows = [[k['kanal'], k['quelle'], k['art'], k['geraet'], k['stativ'] or '–', 'ja' if k['phantom'] else '–'] for k in TECHNIK['kanaele']]
     y = table(c, m, y, ['Kanal', 'Quelle', 'Art', 'Gerät', 'Stativ', '48 V'], rows, [16 * mm, 45 * mm, 20 * mm, 45 * mm, 25 * mm, 15 * mm])
     y -= 6 * mm
