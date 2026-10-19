@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/technik.json';
+import { Hardware, HardwareDialog } from './hardware-dialog';
 
 // Technischer Aufbau aus src/app/data/technik.json: Bühnenplan (Draufsicht), Kanalliste, Monitore,
 // Signalfluss und Stromverteilung. Dieselbe Datei nutzt der Technik-Rider (scripts/build-rider.py).
-// Werte mit null gelten als „noch offen“.
+// Werte mit null gelten als „noch offen“. Geräte mit „hw“ sind anklickbar und öffnen einen Dialog mit
+// Beschreibung und technischen Daten (Abschnitt „hardware“ der JSON-Datei).
 
 interface Item {
   id: string;
@@ -16,7 +18,11 @@ interface Item {
   b?: number;
   t?: number;
   drehung?: number;
+  hw?: string;
 }
+
+
+const HARDWARE = data.hardware as Record<string, Hardware>;
 
 const M = 140; // Pixel pro Meter
 const PAD_X = 100;
@@ -29,13 +35,13 @@ const py = (m: number) => PAD_TOP + m * M;
 
 @Component({
   selector: 'app-technik-aufbau',
-  imports: [MatIconModule],
+  imports: [MatIconModule, HardwareDialog],
   template: `
     <p class="draft"><mat-icon>edit_note</mat-icon><span>{{ status }}</span></p>
 
     <h4>Bühnenplan</h4>
     <figure class="plot">
-      <svg [attr.viewBox]="viewBox" role="img" aria-labelledby="plot-title plot-desc">
+      <svg [attr.viewBox]="viewBox" role="group" aria-labelledby="plot-title plot-desc">
         <title id="plot-title">Bühnenplan von Blickfeld Nord, Draufsicht</title>
         <desc id="plot-desc">{{ description }}</desc>
 
@@ -51,6 +57,9 @@ const py = (m: number) => PAD_TOP + m * M;
         <text class="audience" [attr.x]="px(W / 2)" [attr.y]="py(D) + 50" text-anchor="middle">▼  PUBLIKUM  ▼</text>
 
         @for (it of items; track it.id) {
+          <g [class.hit]="it.hw" [attr.role]="it.hw ? 'button' : null" [attr.tabindex]="it.hw ? 0 : null"
+             [attr.aria-label]="it.hw ? it.label + ' – technische Details anzeigen' : null"
+             (click)="it.hw && open(it.hw)" (keydown.enter)="it.hw && open(it.hw)" (keydown.space)="it.hw && open(it.hw, $event)">
           @switch (it.typ) {
             @case ('drums') {
               <rect class="riser" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="10" />
@@ -104,6 +113,7 @@ const py = (m: number) => PAD_TOP + m * M;
               <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 20" text-anchor="middle">{{ it.label }}</text>
             }
           }
+          </g>
         }
       </svg>
       <figcaption>
@@ -112,7 +122,7 @@ const py = (m: number) => PAD_TOP + m * M;
         <span><i class="key pa"></i> PA</span>
         <span><i class="key light"></i> Licht</span>
         <span><i class="key power"></i> Steckdose</span>
-        <span>Ansicht von oben, Publikum unten · 1 Kästchen = 1 m</span>
+        <span>Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte antippen für Details</span>
       </figcaption>
     </figure>
 
@@ -148,7 +158,9 @@ const py = (m: number) => PAD_TOP + m * M;
       <mat-icon class="arrow">arrow_forward</mat-icon>
       <div class="col center">
         <span class="col-title">Mischpult</span>
-        <span class="chip strong" [class.open]="!geraete.mischpult">{{ geraete.mischpult ?? 'Modell offen' }}</span>
+        <button type="button" class="chip strong" [class.open]="!hardware['mischpult'].modell" (click)="open('mischpult')">
+          {{ hardware['mischpult'].modell ?? 'Modell offen' }}
+        </button>
       </div>
       <mat-icon class="arrow">arrow_forward</mat-icon>
       <div class="col">
@@ -164,8 +176,13 @@ const py = (m: number) => PAD_TOP + m * M;
       <div>
         <h4>Geräte</h4>
         <ul class="list">
-          @for (g of geraeteListe; track g.label) {
-            <li><b>{{ g.label }}:</b> <span [class.open]="!g.wert">{{ g.wert ?? 'offen' }}</span></li>
+          @for (g of geraeteListe; track g.key) {
+            <li>
+              <button type="button" class="hw-link" (click)="open(g.key)">
+                <b>{{ g.hw.kategorie }}:</b> <span [class.open]="!g.hw.modell">{{ g.hw.modell ?? 'Modell folgt' }}</span>
+                <mat-icon>info</mat-icon>
+              </button>
+            </li>
           }
         </ul>
       </div>
@@ -187,6 +204,8 @@ const py = (m: number) => PAD_TOP + m * M;
       </div>
     </div>
     <p class="stand">Stand {{ stand }}</p>
+
+    <app-hardware-dialog />
   `,
   styles: `
     :host { display: block; }
@@ -203,29 +222,26 @@ const py = (m: number) => PAD_TOP + m * M;
     .dim, .audience { fill: var(--bn-fog); font-size: 13px; letter-spacing: .16em; }
     .audience { fill: var(--bn-sunset); }
     .riser { fill: rgba(236, 233, 228, .04); stroke: rgba(236, 233, 228, .25); stroke-dasharray: 5 4; }
-    .drum { fill: #22262b; stroke: var(--bn-ink); stroke-width: 1.5; }
+    .drum, .box, .pa, .wedge { fill: #22262b; stroke: var(--bn-ink); stroke-width: 1.5; }
+    .wedge { fill: #2c3238; }
     .cymbal { fill: rgba(232, 164, 106, .12); stroke: var(--bn-sunset); stroke-width: 1.2; }
     .person { fill: var(--bn-sunset); }
     .initial { fill: #2a1708; font-size: 17px; font-weight: 700; }
     .label { fill: var(--bn-ink); font-size: 14px; font-weight: 600; }
     .small { fill: var(--bn-fog); font-size: 12px; }
     .tiny { fill: var(--bn-fog); font-size: 11px; }
-    .box { fill: #22262b; stroke: var(--bn-ink); stroke-width: 1.5; }
     .fader { stroke: var(--bn-sunset); stroke-width: 2; }
-    .wedge { fill: #2c3238; stroke: var(--bn-ink); stroke-width: 1.5; }
-    .pa { fill: #22262b; stroke: var(--bn-ink); stroke-width: 1.5; }
     .cone { fill: none; stroke: var(--bn-fog); stroke-width: 1.5; }
     .light { fill: rgba(255, 220, 150, .15); stroke: #f5d48f; stroke-width: 1.5; }
-    .light-core { fill: #f5d48f; }
+    .light-core, .key.light { fill: #f5d48f; background: #f5d48f; }
     .power { fill: #22262b; stroke: #7fc29b; stroke-width: 1.5; }
     .power-sym { font-size: 14px; fill: #7fc29b; }
     figcaption { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 12px; font-size: .8rem; color: var(--bn-fog); }
     figcaption span { display: inline-flex; align-items: center; gap: 6px; }
     .key { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
     .key.person { background: var(--bn-sunset); border-radius: 50%; }
-    .key.wedge { background: #2c3238; border: 1px solid var(--bn-ink); }
-    .key.pa { background: #22262b; border: 1px solid var(--bn-ink); }
-    .key.light { background: #f5d48f; border-radius: 50%; }
+    .key.wedge, .key.pa { background: #22262b; border: 1px solid var(--bn-ink); }
+    .key.light { border-radius: 50%; }
     .key.power { border: 1px solid #7fc29b; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--bn-line); }
     table { width: 100%; border-collapse: collapse; font-size: .92rem; }
@@ -244,6 +260,17 @@ const py = (m: number) => PAD_TOP + m * M;
     .arrow { color: var(--bn-sunset); }
     .two { display: grid; gap: 0 32px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .list { margin: 0; padding-left: 18px; line-height: 1.8; }
+    .hit { cursor: pointer; outline: none; }
+    .hit:hover > *, .hit:focus-visible > * { stroke: var(--bn-sunset); }
+    .hit:hover text, .hit:focus-visible text { fill: var(--bn-sunset); stroke: none; }
+    button.chip { font: inherit; color: inherit; background: transparent; cursor: pointer; }
+    button.chip:hover { color: var(--bn-sunset); }
+    .hw-link {
+      display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit;
+      font: inherit; text-align: left; cursor: pointer;
+    }
+    .hw-link mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--bn-fog); }
+    .hw-link:hover, .hw-link:hover mat-icon { color: var(--bn-sunset); }
     .stand { margin: 20px 0 0; font-size: .78rem; color: var(--bn-fog); }
     @media (max-width: 700px) { .flow { flex-direction: column; align-items: stretch; } .arrow { transform: rotate(90deg); align-self: center; } }
   `,
@@ -255,14 +282,9 @@ export class TechnikAufbau {
   protected readonly kanaele = data.kanaele;
   protected readonly monitore = data.monitore;
   protected readonly strom = data.strom;
-  protected readonly geraete = data.geraete as { mischpult: string | null; pa: string | null; monitore: string | null; licht: string | null };
+  protected readonly hardware = HARDWARE;
 
-  protected readonly geraeteListe = [
-    { label: 'Mischpult', wert: this.geraete.mischpult },
-    { label: 'PA', wert: this.geraete.pa },
-    { label: 'Monitore', wert: this.geraete.monitore },
-    { label: 'Licht', wert: this.geraete.licht },
-  ];
+  protected readonly geraeteListe = Object.entries(HARDWARE).map(([key, hw]) => ({ key, hw }));
 
   protected readonly W = W;
   protected readonly D = D;
@@ -274,6 +296,14 @@ export class TechnikAufbau {
   protected readonly viewBox = `0 0 ${2 * PAD_X + W * M} ${PAD_TOP + D * M + 70}`;
   protected readonly description =
     `Spielfläche ${W} × ${D} m. ` + this.items.map((i) => `${i.label}${i.rolle ? ` (${i.rolle})` : ''}`).join(', ') + '.';
+
+  private readonly dialog = viewChild.required(HardwareDialog);
+
+  protected open(key: string, event?: Event): void {
+    event?.preventDefault();
+    const hw = HARDWARE[key];
+    if (hw) this.dialog().show(hw, this.items.filter((i) => i.hw === key).map((i) => i.label));
+  }
 
   protected label(id: string): string {
     return this.items.find((i) => i.id === id)?.label ?? id;

@@ -17,7 +17,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   was wir brauchen (Platz, Strom), Zeitplan und Technik-Rider als PDF
   Darunter der **technische Aufbau** aus `src/app/data/technik.json`: Bühnenplan (Draufsicht, Positionen in Metern),
   Kanalliste, Signalfluss, Monitore und Strom – dieselbe Datei erzeugt Seite 2 des Technik-Riders
-  (`python3 scripts/build-rider.py`). `null` bedeutet „noch offen“.
+  (`python3 scripts/build-rider.py`). `null` bedeutet „noch offen“. Jedes Gerät mit `hw` ist im Bühnenplan und in der
+  Geräteliste anklickbar und öffnet einen Dialog mit Beschreibung und technischen Daten (Abschnitt `hardware`).
 - **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
   durchsuchbare Songliste aus der Spotify-Playlist
 - **Galerie** (`/galerie`) – Fotos mit Vollbildansicht

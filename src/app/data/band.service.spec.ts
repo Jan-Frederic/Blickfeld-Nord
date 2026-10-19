@@ -127,6 +127,13 @@ describe('Technischer Aufbau (technik.json)', () => {
     expect(new Set(ch).size).toBe(ch.length);
   });
 
+  it('verweist nur auf beschriebene Geräte', () => {
+    for (const i of technik.aufbau as { hw?: string }[]) {
+      if (i.hw) expect(Object.keys(technik.hardware)).toContain(i.hw);
+    }
+    for (const h of Object.values(technik.hardware)) expect(h.beschreibung.trim()).not.toBe('');
+  });
+
   it('verweist nur auf vorhandene Monitore und Steckdosen', () => {
     for (const m of technik.monitore) expect(ids).toContain(m.id);
     for (const s of technik.strom) expect(ids).toContain(s.id);
