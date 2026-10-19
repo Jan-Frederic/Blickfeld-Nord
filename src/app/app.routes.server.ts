@@ -7,6 +7,7 @@ import { BandService } from './data/band.service';
 export const serverRoutes: ServerRoute[] = [
   { path: 'backstage', renderMode: RenderMode.Client },
   { path: 'backstage/:id', renderMode: RenderMode.Client },
+  { path: 'backstage/:id/:teil', renderMode: RenderMode.Client },
   {
     path: 'band/:slug',
     renderMode: RenderMode.Prerender,

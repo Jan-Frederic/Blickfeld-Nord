@@ -120,10 +120,12 @@ export class Backstage implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
-    // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id> über die Fehlerseite
-    // nach /backstage/?auftritt=<id> um – von hier geht es zur eigentlichen Unterseite weiter.
-    const id = inject(ActivatedRoute).snapshot.queryParamMap.get('auftritt');
-    if (id) this.router.navigate(['/backstage', id], { replaceUrl: true });
+    // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id>[/<teil>] über die Fehlerseite
+    // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter.
+    const query = inject(ActivatedRoute).snapshot.queryParamMap;
+    const id = query.get('auftritt');
+    const teil = query.get('teil');
+    if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true });
   }
 
   protected openShow(s: Show): void {

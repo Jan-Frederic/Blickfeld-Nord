@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 const STORAGE_PREFIX = 'bn-vorort-';
 
-const FIELDS: { key: string; label: string; icon: string; placeholder: string; wide?: boolean }[] = [
+export const FIELDS: { key: string; label: string; icon: string; placeholder: string; wide?: boolean }[] = [
   { key: 'kontakt', label: 'Ansprechpartner', icon: 'person', placeholder: 'Name vor Ort' },
   { key: 'telefon', label: 'Telefon', icon: 'call', placeholder: 'Nummer für den Abend' },
   { key: 'ankunft', label: 'Ankunft / Aufbau ab', icon: 'schedule', placeholder: 'z. B. 15:00 Uhr' },

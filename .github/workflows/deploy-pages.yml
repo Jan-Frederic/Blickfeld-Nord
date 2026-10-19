@@ -93,9 +93,9 @@ jobs:
           # Unbekannte Pfade bekommen die vorgerenderte Fehlerseite, Backstage die clientseitige Shell.
           cp 404/index.html 404.html
           mkdir -p backstage && cp index.csr.html backstage/index.html
-          # Backstage-Unterseiten (/backstage/<id>) haben keine eigene Datei: Die Fehlerseite leitet sie
-          # zur Backstage-Shell weiter (/backstage/?auftritt=<id>), die dann zur Unterseite navigiert.
-          sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2])</script>#' 404.html
+          # Backstage-Unterseiten (/backstage/<id>[/<teil>]) haben keine eigene Datei: Die Fehlerseite leitet sie
+          # zur Backstage-Shell weiter (/backstage/?auftritt=<id>[&teil=<teil>]), die dann zur Unterseite navigiert.
+          sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2]+(p[3]?"\\x26teil="+p[3]:""))</script>#' 404.html
 
       - name: Linkcheck (interne Links und Bilder; externe Links nur als Warnung)
         run: node scripts/check-links.mjs --extern

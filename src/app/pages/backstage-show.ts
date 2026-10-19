@@ -7,17 +7,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
 import { postText, sharePoster } from '../data/poster';
-import { Packliste } from './packliste';
-import { Setlist } from './setlist';
-import { VorOrt } from './vorort';
+import { TOOLS } from './backstage-tool';
+import { FIELDS } from './vorort';
 
 const DAY = 24 * 60 * 60 * 1000;
 
 // Backstage-Unterseite pro Auftritt (/backstage/<id>): alle Daten auf einen Blick,
-// Plakat + Instagram-Text (nur öffentlich, geklärt und kommend), Vor-Ort-Checkliste, Setlist und Packliste für genau diesen Auftritt.
+// Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Packliste, Setlist, VorOrt],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage"><mat-icon>arrow_back</mat-icon> Alle Auftritte</a>
@@ -86,11 +85,15 @@ const DAY = 24 * 60 * 60 * 1000;
           }
         </div>
 
-        <app-vorort [show]="id()" />
-
-        <app-setlist [show]="id()" [title]="s.venue + ' · ' + (s.date | date: 'dd.MM.yyyy' : '' : 'de')" />
-
-        <app-packliste [show]="id()" />
+        <nav class="tools" aria-label="Für diesen Auftritt">
+          @for (t of tools; track t.path) {
+            <a [routerLink]="['/backstage', id(), t.path]">
+              <mat-icon>{{ t.icon }}</mat-icon>
+              <span><strong>{{ t.label }}</strong><small>{{ status()[t.path] }}</small></span>
+              <mat-icon class="go">chevron_right</mat-icon>
+            </a>
+          }
+        </nav>
 
         <nav class="pager" aria-label="Weitere Auftritte">
           @if (prev(); as p) {
@@ -149,6 +152,16 @@ const DAY = 24 * 60 * 60 * 1000;
     .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
     .hint { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .85rem; color: var(--bn-fog); }
     .hint mat-icon { font-size: 18px; width: 18px; height: 18px; flex: none; }
+    .tools { display: grid; gap: 12px; margin-top: 32px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .tools a {
+      display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: 12px; text-decoration: none;
+      border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); color: var(--bn-ink);
+    }
+    .tools a:hover { border-color: var(--bn-sunset); }
+    .tools a > mat-icon:first-child { color: var(--bn-sunset); }
+    .tools span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .tools strong { font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .12em; font-size: .85rem; }
+    .tools small, .tools .go { color: var(--bn-fog); }
     .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; }
     .pager a {
       display: flex; align-items: center; gap: 8px; max-width: 48%; padding: 10px 14px; border-radius: 10px;
@@ -170,6 +183,26 @@ export class BackstageShow implements OnDestroy {
   private readonly today = new Date().toISOString().slice(0, 10);
 
   protected readonly show = computed(() => this.band.showById(this.id()));
+  protected readonly tools = TOOLS;
+
+  // Kurzstatus der Unterseiten aus dem Browser-Speicher (Vor Ort, Setlist, Packliste)
+  protected readonly status = computed<Record<string, string>>(() => {
+    const read = <T>(key: string, fallback: T): T => {
+      try {
+        return (JSON.parse(localStorage.getItem(key + this.id()) ?? 'null') as T) ?? fallback;
+      } catch {
+        return fallback;
+      }
+    };
+    const vorort = Object.values(read<Record<string, string>>('bn-vorort-', {})).filter((v) => v?.trim()).length;
+    const songs = read<{ title?: string }[]>('bn-setlist-', []).filter((e) => e.title).length;
+    const packed = read<{ checked?: string[] }>('bn-packliste-', {}).checked?.length ?? 0;
+    return {
+      vorort: vorort ? `${vorort} von ${FIELDS.length} Punkten geklärt` : 'Ansprechpartner, Ankunft, Strom …',
+      setlist: songs ? `${songs} ${songs === 1 ? 'Song' : 'Songs'}` : 'noch leer',
+      packliste: packed ? `${packed} eingepackt` : 'noch nichts abgehakt',
+    };
+  });
   private readonly index = computed(() => this.sorted.indexOf(this.show()!));
   protected readonly prev = computed(() => (this.index() > 0 ? this.sorted[this.index() - 1] : undefined));
   protected readonly next = computed(() => (this.index() >= 0 ? this.sorted[this.index() + 1] : undefined));
