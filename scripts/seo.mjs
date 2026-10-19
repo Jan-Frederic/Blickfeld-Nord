@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Ergänzt den fertigen Build um Suchmaschinen-Infos:
 //  - strukturierte Daten (schema.org JSON-LD) für die Band und alle öffentlichen, geklärten Konzerte
+//  - je öffentlichem Konzert eine Seite /konzerte/<id> mit eigenem MusicEvent
+//  - Kalender-Abo konzerte.ics mit allen öffentlichen Konzerten
 //  - häufige Fragen (FAQPage) auf den Booking-Seiten in allen drei Sprachen
 //  - sitemap.xml (mit Sprachfassungen) und robots.txt
 // Aufruf nach `ng build`, vor dem Kopieren der index.html in die Unterseiten-Ordner:  node scripts/seo.mjs
@@ -28,7 +30,7 @@ await build({
   tsconfig: join(ROOT, 'tsconfig.json'),
   logLevel: 'warning',
 });
-const { members, publicShows, FAQ } = await import(pathToFileURL(bundle).href);
+const { members, publicShows, FAQ, buildIcs, showId } = await import(pathToFileURL(bundle).href);
 rmSync(tmp, { recursive: true, force: true });
 
 // Ortszeit Europe/Berlin → ISO 8601 mit korrektem Offset (Winter +01:00, Sommer +02:00)
@@ -97,9 +99,8 @@ const band = {
   sameAs: ['https://www.instagram.com/blickfeldnord/', 'https://www.facebook.com/share/1BBobZWfjG/'],
 };
 
-const events = publicShows
-  .filter((s) => (s.endDate ?? s.date) >= today)
-  .map((s) => ({
+const concertUrl = (s) => `${SITE}/konzerte/${showId(s)}`;
+const musicEvent = (s) => ({
     '@type': 'MusicEvent',
     name: `Blickfeld Nord – ${s.venue}`,
     description: `Blickfeld Nord live${s.city ? ' in ' + s.city : ''}: Partymusik zum Mitsingen und Tanzen.`,
@@ -132,13 +133,14 @@ const events = publicShows
             availability: 'https://schema.org/InStock',
             // Eintritt ist ab Veröffentlichung „erhältlich“ – als Stichtag dient der Build-Tag (liegt nie in der Zukunft)
             validFrom: berlinDateTime(today, '00:00'),
-            url: `${SITE}/#tour`,
+            url: concertUrl(s),
           },
           isAccessibleForFree: s.price === 0,
         }
       : {}),
-    url: `${SITE}/#tour`,
-  }));
+    url: concertUrl(s),
+  });
+const events = publicShows.filter((s) => (s.endDate ?? s.date) >= today).map(musicEvent);
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -169,6 +171,29 @@ for (const m of members) {
   writeFileSync(path, page);
 }
 
+// Konzertseiten: das jeweilige Konzert als MusicEvent (vergangene ohne Angebot – Eintritt ist dann nicht mehr erhältlich)
+for (const s of publicShows) {
+  const file = join(DIST, 'konzerte', showId(s), 'index.html');
+  const past = (s.endDate ?? s.date) < today;
+  const { offers, ...event } = musicEvent(s);
+  const ld = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { ...(past ? event : { ...event, ...(offers ? { offers } : {}) }), '@id': `${concertUrl(s)}#event` },
+      { ...band, member: undefined },
+    ],
+  };
+  const tag = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n`;
+  writeFileSync(file, readFileSync(file, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`));
+}
+
+// Kalender-Abo: alle öffentlichen Konzerte; Kalender-Apps fragen regelmäßig nach neuen Terminen
+const ics = buildIcs(publicShows, 'Blickfeld Nord – Konzerte').replace(
+  'X-WR-TIMEZONE:Europe/Berlin',
+  'X-WR-TIMEZONE:Europe/Berlin\r\nX-WR-CALDESC:Alle öffentlichen Konzerte von Blickfeld Nord – https://blickfeld-nord.de\r\nREFRESH-INTERVAL;VALUE=DURATION:PT12H\r\nX-PUBLISHED-TTL:PT12H',
+);
+writeFileSync(join(DIST, 'konzerte.ics'), ics);
+
 // Booking-Seiten: häufige Fragen als FAQPage – je Sprachfassung in deren Sprache
 const BOOKING = { de: 'booking', en: 'booking/en', nl: 'booking/nl' };
 for (const [lang, path] of Object.entries(BOOKING)) {
@@ -192,7 +217,7 @@ for (const [lang, path] of Object.entries(BOOKING)) {
 }
 
 // Sitemap (Backstage bewusst nicht enthalten)
-const pages = ['/', '/booking', '/booking/en', '/booking/nl', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
+const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/booking/en', '/booking/nl', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
 // Sprachfassungen der Booking-Seite gegenseitig verknüpfen (wie die hreflang-Links im Seitenkopf)
 const bookingPaths = Object.values(BOOKING).map((p) => `/${p}`);
 const alternates = (p) =>
@@ -207,4 +232,4 @@ ${pages.map((p) => `  <url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod>${al
 writeFileSync(join(DIST, 'sitemap.xml'), sitemap);
 writeFileSync(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
-console.log(`SEO: ${events.length} Konzert(e) als strukturierte Daten, ${pages.length} Seiten in der Sitemap.`);
+console.log(`SEO: ${events.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length} Seiten in der Sitemap.`);

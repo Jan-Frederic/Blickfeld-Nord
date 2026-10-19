@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show, friendId } from '../data/band.service';
 import { downloadIcs, icsFileName } from '../data/calendar';
+import { shareShow } from '../data/share';
 
 @Component({
   selector: 'app-tour',
@@ -15,11 +16,15 @@ import { downloadIcs, icsFileName } from '../data/calendar';
       <p class="kicker">Live</p>
       <div class="head">
         <h2>Tour und Konzerte</h2>
-        @if (shows.length) {
-          <button mat-stroked-button (click)="addAll()">
-            <mat-icon>event</mat-icon> Alle Termine in den Kalender
-          </button>
-        }
+        <div class="cal">
+          <a mat-flat-button [href]="feed.webcal" title="Neue Termine erscheinen automatisch in eurem Kalender">
+            <mat-icon>event_repeat</mat-icon> Kalender abonnieren
+          </a>
+          <span class="alt">
+            <a [href]="feed.google" target="_blank" rel="noopener">Google Kalender</a>
+            @if (shows.length) { · <button type="button" (click)="addAll()">einmalig herunterladen</button> }
+          </span>
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -27,8 +32,10 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Datum</th>
             <td mat-cell *matCellDef="let s" class="date">
+              <a class="details" [routerLink]="['/konzerte', band.showId(s)]" [attr.aria-label]="'Details zum Konzert ' + s.venue">
               <span class="long">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</span>
               <span class="short">{{ s.date | date: 'dd.MM.yy' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'dd.MM.yy' }}}</span>
+              </a>
             </td>
           </ng-container>
           <ng-container matColumnDef="city">
@@ -67,7 +74,11 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           <ul>
             @for (s of past; track s.date + s.venue) {
               <li>
-                <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
+                @if (s.private) {
+                  <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
+                } @else {
+                  <a class="details" [routerLink]="['/konzerte', band.showId(s)]"><time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time></a>
+                }
                 <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}@if (s.private && s.publicName) {<span class="private">privat</span>}</span>
                 @if (historyDates.has(s.date)) {
                   <a routerLink="/historie" [fragment]="'e-' + s.date" class="recap">Rückblick <mat-icon>arrow_forward</mat-icon></a>
@@ -92,6 +103,12 @@ import { downloadIcs, icsFileName } from '../data/calendar';
     .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
     .head h2 { margin: 0; }
     .action { text-align: right; white-space: nowrap; }
+    .details { color: inherit; text-decoration: none; }
+    .details:hover { color: var(--bn-sunset); }
+    .cal { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .alt { font-size: .8rem; color: var(--bn-fog); }
+    .alt a, .alt button { color: inherit; font: inherit; padding: 0; border: 0; background: none; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .alt a:hover, .alt button:hover { color: var(--bn-sunset); }
     .action > * + * { margin-left: 8px; }
     .venue-inline { display: none; font-size: .85rem; opacity: .75; }
     .short { display: none; }
@@ -152,33 +169,25 @@ export class Tour {
     ]),
   );
   protected readonly columns = ['date', 'city', 'venue', 'action'];
+  // Kalender-Abo: konzerte.ics wird beim Build erzeugt (scripts/seo.mjs) – neue Termine kommen automatisch an
+  protected readonly feed = {
+    webcal: 'webcal://blickfeld-nord.de/konzerte.ics',
+    google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent('webcal://blickfeld-nord.de/konzerte.ics')}`,
+  };
 
   protected add(s: Show): void {
     // einzelnes Konzert mit Erinnerung am Vortag
     downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true);
   }
 
-  // Termin mit Datum, Ort und Link verschicken: Teilen-Menü des Geräts, sonst WhatsApp
   protected share(s: Show): void {
-    const day = (d: string) => `${WEEKDAYS[new Date(`${d}T12:00:00`).getDay()]}, ${d.split('-').reverse().join('.')}`;
-    const when = `${day(s.date)}${s.endDate ? ` – ${day(s.endDate)}` : ''}${s.time ? ` ab ${s.time} Uhr` : ''}`;
-    const where = [this.band.publicVenue(s), s.city].filter(Boolean).join(', ');
-    const entry = s.price === 0 ? ' · Eintritt frei' : s.price ? ` · Eintritt ${s.price} €` : '';
-    const text = `Blickfeld Nord live: ${when} – ${where}${entry}`;
-    const url = 'https://blickfeld-nord.de/#tour';
-    if (navigator.share) {
-      navigator.share({ title: 'Blickfeld Nord live', text, url }).catch(() => undefined);
-    } else {
-      window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`, '_blank', 'noopener');
-    }
+    shareShow(s, this.band.showId(s), this.band.publicVenue(s));
   }
 
   protected addAll(): void {
     downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', 'Blickfeld Nord – Konzerte');
   }
 }
-
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 function localToday(): string {
   const d = new Date();

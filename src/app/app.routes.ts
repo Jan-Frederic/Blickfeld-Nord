@@ -5,6 +5,7 @@ import { BOOKING_ALTERNATES } from './page-meta';
 // Startseite direkt im Hauptpaket, alle Unterseiten werden erst beim Aufruf geladen (kleineres Start-JavaScript)
 export const routes: Routes = [
   { path: '', component: Home, title: 'Blickfeld Nord – Offizielle Bandpage' },
+  { path: 'konzerte/:id', loadComponent: () => import('./pages/konzert').then((m) => m.KonzertPage) },
   { path: 'band/:slug', loadComponent: () => import('./pages/member').then((m) => m.MemberPage) },
   { path: 'booking', loadComponent: () => import('./pages/booking').then((m) => m.BookingPage), title: 'Booking – Blickfeld Nord', data: { alternates: BOOKING_ALTERNATES, description: 'Blickfeld Nord buchen: Partyband für Feste, private Feiern und Kneipen – Verfügbarkeit, Technik, Spielzeit, häufige Fragen und Kontakt.' } },
   { path: 'booking/en', loadComponent: () => import('./pages/booking-intl').then((m) => m.BookingIntl), title: 'Booking (English) – Blickfeld Nord', data: { lang: 'en', alternates: BOOKING_ALTERNATES, description: 'Book Blickfeld Nord: three-piece party and cover band from Hamminkeln near the Dutch border – festivals, private parties and pubs, own PA and lights.' } },

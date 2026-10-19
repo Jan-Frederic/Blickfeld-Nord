@@ -39,7 +39,8 @@ for (const file of htmlFiles(DIST)) {
   for (const [, , value] of html.matchAll(/\s(href|src)="([^"]*)"/g)) urls.push(value);
   for (const [, value] of html.matchAll(/\ssrcset="([^"]*)"/g)) urls.push(...value.split(',').map((s) => s.trim().split(/\s+/)[0]));
   for (const raw of urls) {
-    const url = raw.replace(/&amp;/g, '&');
+    // Kalender-Abo (webcal://) zeigt auf eine Datei der eigenen Seite
+    const url = raw.replace(/&amp;/g, '&').replace(/^webcal:\/\/blickfeld-nord\.de/, SITE);
     if (!url || url.startsWith('#') || /^(mailto|tel|data|javascript):/.test(url)) continue;
     if (url.startsWith(SITE)) {
       if (!exists(url.slice(SITE.length))) errors.push(`${page}: ${url} fehlt`);
