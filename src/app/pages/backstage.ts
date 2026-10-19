@@ -6,13 +6,14 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs } from '../data/calendar';
+import { SetlistStats } from './setlist-stats';
 import { BandService, Show } from '../data/band.service';
 
 // Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
 // fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, MatTableModule, MatIconModule, MatButtonModule],
+  imports: [DatePipe, MatTableModule, MatIconModule, MatButtonModule, SetlistStats],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -71,6 +72,8 @@ import { BandService, Show } from '../data/band.service';
               (click)="openShow(row)" (keydown.enter)="openShow(row)"></tr>
         </table>
       </div>
+
+      <app-setlist-stats />
     </section>
   `,
   styles: `

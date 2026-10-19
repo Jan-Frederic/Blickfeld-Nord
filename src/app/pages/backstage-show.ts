@@ -9,14 +9,15 @@ import { BandService } from '../data/band.service';
 import { postText, sharePoster } from '../data/poster';
 import { Packliste } from './packliste';
 import { Setlist } from './setlist';
+import { VorOrt } from './vorort';
 
 const DAY = 24 * 60 * 60 * 1000;
 
 // Backstage-Unterseite pro Auftritt (/backstage/<id>): alle Daten auf einen Blick,
-// Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und die Packliste für genau diesen Auftritt.
+// Plakat + Instagram-Text (nur öffentlich, geklärt und kommend), Vor-Ort-Checkliste, Setlist und Packliste für genau diesen Auftritt.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Packliste, Setlist],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Packliste, Setlist, VorOrt],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage"><mat-icon>arrow_back</mat-icon> Alle Auftritte</a>
@@ -84,6 +85,8 @@ const DAY = 24 * 60 * 60 * 1000;
             </p>
           }
         </div>
+
+        <app-vorort [show]="id()" />
 
         <app-setlist [show]="id()" [title]="s.venue + ' · ' + (s.date | date: 'dd.MM.yyyy' : '' : 'de')" />
 
