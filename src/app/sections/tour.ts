@@ -42,8 +42,9 @@ import { downloadIcs, icsFileName } from '../data/calendar';
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef><span class="sr-only">Aktionen</span></th>
             <td mat-cell *matCellDef="let s" class="action">
-              <button mat-stroked-button (click)="add(s)" [attr.aria-label]="'Termin ' + s.venue + ' in den Kalender eintragen'">
-                <mat-icon>event</mat-icon><span class="label">Kalender</span>
+              <button mat-stroked-button (click)="add(s)" [attr.aria-label]="'Erinnere mich an ' + s.venue + ' – Kalendereintrag mit Erinnerung am Vortag'"
+                      title="Kalendereintrag mit Erinnerung am Vortag">
+                <mat-icon>notifications_active</mat-icon><span class="label">Erinnere mich</span>
               </button>
               @if (s.mapsUrl) {
                 <a mat-stroked-button [href]="s.mapsUrl" target="_blank" rel="noopener" [attr.aria-label]="'Anfahrt zu ' + s.venue + ' in Google Maps'">
@@ -150,7 +151,8 @@ export class Tour {
   protected readonly columns = ['date', 'city', 'venue', 'action'];
 
   protected add(s: Show): void {
-    downloadIcs([s], icsFileName(s), 'Blickfeld Nord');
+    // einzelnes Konzert mit Erinnerung am Vortag
+    downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true);
   }
 
   protected addAll(): void {

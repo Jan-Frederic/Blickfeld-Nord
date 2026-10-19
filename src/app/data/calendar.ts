@@ -72,7 +72,7 @@ function slug(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function event(s: Show, stamp: string, withNotes: boolean): string[] {
+function event(s: Show, stamp: string, withNotes: boolean, reminder: boolean): string[] {
   const location = [s.venue, s.city].filter(Boolean).join(', ');
   const description = [
     s.private ? 'Privater Termin' : 'Blickfeld Nord live – https://blickfeld-nord.de',
@@ -96,11 +96,15 @@ function event(s: Show, stamp: string, withNotes: boolean): string[] {
     'URL:https://blickfeld-nord.de/',
     `STATUS:${s.confirmed ? 'CONFIRMED' : 'TENTATIVE'}`,
     'TRANSP:TRANSPARENT',
+    // „Erinnere mich“: Hinweis am Vortag – 24 h vor Beginn, bei ganztägigen Terminen am Vortag um 12 Uhr
+    ...(reminder
+      ? ['BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc('Morgen: Blickfeld Nord live – ' + location)}`, `TRIGGER:${s.time ? '-P1D' : '-PT12H'}`, 'END:VALARM']
+      : []),
     'END:VEVENT',
   ];
 }
 
-export function buildIcs(shows: Show[], calendarName: string, withNotes = false): string {
+export function buildIcs(shows: Show[], calendarName: string, withNotes = false, reminder = false): string {
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const lines = [
     'BEGIN:VCALENDAR',
@@ -111,14 +115,14 @@ export function buildIcs(shows: Show[], calendarName: string, withNotes = false)
     `X-WR-CALNAME:${esc(calendarName)}`,
     'X-WR-TIMEZONE:Europe/Berlin',
     ...(shows.some((s) => s.time) ? VTIMEZONE : []),
-    ...shows.flatMap((s) => event(s, stamp, withNotes)),
+    ...shows.flatMap((s) => event(s, stamp, withNotes, reminder)),
     'END:VCALENDAR',
   ];
   return lines.map(fold).join('\r\n') + '\r\n';
 }
 
-export function downloadIcs(shows: Show[], fileName: string, calendarName: string, withNotes = false): void {
-  const blob = new Blob([buildIcs(shows, calendarName, withNotes)], { type: 'text/calendar;charset=utf-8' });
+export function downloadIcs(shows: Show[], fileName: string, calendarName: string, withNotes = false, reminder = false): void {
+  const blob = new Blob([buildIcs(shows, calendarName, withNotes, reminder)], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
