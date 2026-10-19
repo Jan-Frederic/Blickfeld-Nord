@@ -85,12 +85,13 @@ import { Component } from '@angular/core';
         Sie auf die Seite des jeweiligen Anbieters weitergeleitet; ab dann gelten dessen Datenschutzbestimmungen.
       </p>
 
-      <h3>7. Eingebettete Instagram-Videos (Zwei-Klick-Lösung)</h3>
+      <h3>7. Eingebettete Instagram-Inhalte (Zwei-Klick-Lösung)</h3>
       <p>
-        Auf der Seite „Historie“ können Videos (Reels) von Instagram eingebunden sein. Anbieter ist die Meta Platforms
+        Auf der Seite „Historie“ können Videos (Reels) und auf der Startseite Beiträge von Instagram eingebunden sein.
+        Anbieter ist die Meta Platforms
         Ireland Limited, Merrion Road, Dublin 4, D04 X2K5, Irland. Zum Schutz Ihrer Daten wird dabei zunächst nur ein
         Platzhalter angezeigt – es wird keine Verbindung zu Instagram hergestellt. Erst wenn Sie auf „Reel laden“
-        klicken, wird das Video von den Servern von Meta geladen. Dabei werden insbesondere Ihre IP-Adresse, Angaben
+        bzw. „Posts laden“ klicken, wird der Inhalt von den Servern von Meta geladen. Dabei werden insbesondere Ihre IP-Adresse, Angaben
         zu Browser und Gerät sowie die aufgerufene Seite an Meta übermittelt; Meta kann zudem Cookies setzen und,
         falls Sie bei Instagram angemeldet sind, den Aufruf Ihrem Konto zuordnen. Eine Übermittlung in die USA ist
         möglich; Meta ist nach dem EU-US Data Privacy Framework zertifiziert.
@@ -122,7 +123,7 @@ import { Component } from '@angular/core';
       <h3>9. Cookies</h3>
       <p>
         Diese Website verwendet keine Cookies – auch die Reichweitenmessung (Abschnitt 8) kommt ohne aus. Cookies von
-        Instagram können nur gesetzt werden, wenn Sie ein Video aktiv laden (siehe Abschnitt 7).
+        Instagram können nur gesetzt werden, wenn Sie Inhalte von Instagram aktiv laden (siehe Abschnitt 7).
       </p>
 
       <h3>10. Ihre Rechte</h3>

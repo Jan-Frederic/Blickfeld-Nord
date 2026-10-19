@@ -188,6 +188,10 @@ export class BandService {
   ];
 
   // Historie (/historie), neueste Einträge zuerst
+  // Instagram-Beiträge für „Neu auf Instagram“ auf der Startseite: Links einfach aus Instagram kopieren
+  // („Link kopieren“), neueste zuerst, z. B. 'https://www.instagram.com/p/ABC123xyz/'. Leer = nur „Folgt uns“-Hinweis.
+  readonly instagramPosts: string[] = [];
+
   readonly history: HistoryEntry[] = [
     {
       date: '2026-09-25',

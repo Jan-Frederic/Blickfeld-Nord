@@ -21,6 +21,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   Geräteliste anklickbar und öffnet einen Dialog mit Beschreibung und technischen Daten (Abschnitt `hardware`).
 - **Repertoire** (`/repertoire`) – wie wir live spielen (Fill-Ins, Jam-Sessions, spontane Aktionen) und die
   durchsuchbare Songliste aus der Spotify-Playlist
+- **Neu auf Instagram** (Startseite) – ausgewählte Beiträge als Zwei-Klick-Lösung; Links in `instagramPosts`
+  (`band.service.ts`) eintragen, ohne Einträge nur ein „Folgt uns“-Hinweis
 - **Galerie** (`/galerie`) – Fotos mit Vollbildansicht
 - **Historie** (`/historie`) – Chronik/Blog mit Datum, Text, Bildern sowie Links (Instagram, Webseiten, Orte);
   Instagram-Reels per `reel: '<id>'` als Zwei-Klick-Einbettung (lädt erst nach Klick, siehe Datenschutzerklärung)

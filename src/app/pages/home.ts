@@ -6,6 +6,7 @@ import { Band } from '../sections/band';
 import { Tour } from '../sections/tour';
 import { BookingTeaser } from '../sections/booking-teaser';
 import { LastLive } from '../sections/last-live';
+import { InstagramFeed } from '../sections/instagram-feed';
 import { scrollToSection } from '../scroll';
 
 // Abschnitte unterhalb des Startbilds sind vorgerendert (sichtbar und für Google lesbar),
@@ -13,7 +14,7 @@ import { scrollToSection } from '../scroll';
 // Bei Navigation innerhalb der Seite werden sie sofort geladen.
 @Component({
   selector: 'app-home',
-  imports: [Hero, Band, Tour, LastLive, BookingTeaser],
+  imports: [Hero, Band, Tour, LastLive, InstagramFeed, BookingTeaser],
   template: `
     <app-hero (navigate)="scrollTo($event)" />
     @defer (on immediate; hydrate on viewport) {
@@ -25,6 +26,9 @@ import { scrollToSection } from '../scroll';
     }
     @defer (on immediate; hydrate on viewport) {
       <app-last-live />
+    }
+    @defer (on immediate; hydrate on viewport) {
+      <app-instagram-feed />
     }
     @defer (on immediate; hydrate on viewport) {
       <app-booking-teaser />
