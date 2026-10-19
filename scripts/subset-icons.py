@@ -5,6 +5,7 @@ Findet alle Icon-Namen in den Templates unter src/ (<mat-icon>name</mat-icon> so
 behält nur deren Ligaturen und schreibt public/fonts/material-icons-subset.woff2.
 Läuft beim Deploy vor dem Build; lokal: pip install fonttools brotli && python3 scripts/subset-icons.py
 """
+import hashlib
 import os
 import re
 import sys
@@ -83,7 +84,23 @@ def main():
     sub.subset(font)
     os.makedirs(os.path.dirname(OUT_FONT), exist_ok=True)
     font.save(OUT_FONT)
+    bust_cache()
     print(f'{len(found)} Icons → {OUT_FONT} ({os.path.getsize(OUT_FONT) / 1024:.1f} KB): {", ".join(sorted(found))}')
+
+
+def bust_cache():
+    """Verweise auf die Schrift mit ?v=<Inhalts-Hash> versehen: Ändert sich die Icon-Auswahl, laden Browser die neue
+    Schrift statt einer alten aus dem Cache (sonst fehlen neue Icons, bis der Cache abläuft)."""
+    with open(OUT_FONT, 'rb') as fh:
+        version = hashlib.sha256(fh.read()).hexdigest()[:10]
+    for rel in ('src/index.html', 'src/icons.css'):
+        path = os.path.join(ROOT, rel)
+        with open(path, encoding='utf-8') as fh:
+            text = fh.read()
+        new = re.sub(r'(fonts/material-icons-subset\.woff2)(\?v=[0-9a-f]+)?', rf'\1?v={version}', text)
+        if new != text:
+            with open(path, 'w', encoding='utf-8') as fh:
+                fh.write(new)
 
 
 if __name__ == '__main__':
