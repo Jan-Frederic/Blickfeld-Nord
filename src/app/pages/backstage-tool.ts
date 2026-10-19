@@ -7,6 +7,8 @@ import { BandService } from '../data/band.service';
 import { Packliste } from './packliste';
 import { Setlist } from './setlist';
 import { VorOrt } from './vorort';
+import { enableOffline } from './offline';
+import { BackstageSync } from './backstage-sync';
 
 // Backstage-Unterseiten je Auftritt: /backstage/<id>/vorort, /setlist und /packliste
 export const TOOLS = [
@@ -17,7 +19,7 @@ export const TOOLS = [
 
 @Component({
   selector: 'app-backstage-tool',
-  imports: [DatePipe, RouterLink, MatIconModule, Packliste, Setlist, VorOrt],
+  imports: [DatePipe, RouterLink, MatIconModule, Packliste, Setlist, VorOrt, BackstageSync],
   template: `
     <section class="section">
       @if (show(); as s) {
@@ -42,6 +44,7 @@ export const TOOLS = [
             <p class="lead">Zurück zum <a [routerLink]="['/backstage', id()]">Auftritt</a>.</p>
           }
         }
+        <div class="share"><app-backstage-sync [show]="id()" /></div>
       } @else {
         <h2>Auftritt nicht gefunden</h2>
         <p class="lead">Diesen Termin gibt es nicht (mehr). Zurück zur <a routerLink="/backstage">Übersicht</a>.</p>
@@ -59,6 +62,7 @@ export const TOOLS = [
     }
     .tabs a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .tabs a.active { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
+    .share { margin-top: 20px; }
     .tabs mat-icon { font-size: 18px; width: 18px; height: 18px; }
     /* die Bereiche bringen ihren eigenen Abstand nach oben mit – hier etwas weniger */
     app-vorort, app-setlist, app-packliste { display: block; margin-top: -16px; }
@@ -76,6 +80,8 @@ export class BackstageTool implements OnDestroy {
 
   constructor() {
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    // ab jetzt auf diesem Gerät auch offline nutzbar
+    enableOffline();
   }
 
   ngOnDestroy(): void {
