@@ -1,9 +1,10 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 // „Kalender abonnieren“ für eine beim Build erzeugte .ics-Datei (scripts/seo.mjs).
 // Android kennt kein webcal:// – dort öffnet der Button direkt das Abo in Google Kalender.
+// Das neue Outlook für Windows verstümmelt webcal://-Links – dafür gibt es „Adresse kopieren“ (https).
 @Component({
   selector: 'app-abo-button',
   imports: [MatButtonModule, MatIconModule],
@@ -14,6 +15,8 @@ import { MatIconModule } from '@angular/material/icon';
     </a>
     <span class="alt">
       @if (!android) { <a [href]="google()" target="_blank" rel="noopener">Google Kalender</a> · }
+      <!-- für Outlook & Co.: „Aus dem Internet abonnieren“ braucht die https-Adresse -->
+      <button type="button" (click)="copy()" title="Adresse zum Einfügen in Outlook oder andere Kalender-Apps">{{ copied() ? 'Adresse kopiert ✓' : 'Adresse kopieren' }}</button> ·
       <button type="button" (click)="download.emit()">einmalig herunterladen</button>
     </span>
   `,
@@ -33,5 +36,17 @@ export class AboButton {
 
   protected readonly android = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
   protected readonly webcal = computed(() => `webcal://blickfeld-nord.de/${this.path()}`);
+  protected readonly https = computed(() => `https://blickfeld-nord.de/${this.path()}`);
+  protected readonly copied = signal(false);
   protected readonly google = computed(() => `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(this.webcal())}`);
+
+  protected async copy(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.https());
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2500);
+    } catch {
+      window.prompt('Kalender-Adresse kopieren:', this.https());
+    }
+  }
 }
