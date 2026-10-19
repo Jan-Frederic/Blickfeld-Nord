@@ -1,7 +1,7 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { downloadIcs } from '../data/calendar';
@@ -15,7 +15,7 @@ import { BandService, Show } from '../data/band.service';
 // fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync],
+  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -70,7 +70,8 @@ import { BandService, Show } from '../data/band.service';
           <ng-container matColumnDef="venue">
             <th mat-header-cell *matHeaderCellDef>Auftritt</th>
             <td mat-cell *matCellDef="let s">
-              <strong>{{ s.venue }}</strong>
+              <!-- Link für Tastatur und Screenreader; die ganze Zeile ist zusätzlich klickbar -->
+              <a class="row-link" [routerLink]="['/backstage', band.showId(s)]"><strong>{{ s.venue }}</strong></a>
               @if (s.city) { <span class="sub">{{ s.city }}</span> }
             </td>
           </ng-container>
@@ -98,9 +99,7 @@ import { BandService, Show } from '../data/band.service';
             <td mat-cell *matCellDef="let s" class="open"><mat-icon>chevron_right</mat-icon></td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns" class="link" tabindex="0" role="link"
-              [attr.aria-label]="row.venue + ', ' + (row.date | date: 'd. MMMM yyyy' : '' : 'de') + ' – Details öffnen'"
-              (click)="openShow(row)" (keydown.enter)="openShow(row)"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns" class="link" (click)="openShow(row, $event)"></tr>
         </table>
       </div>
       }
@@ -159,8 +158,9 @@ import { BandService, Show } from '../data/band.service';
     .status.ok { color: #7fc29b; }
     .status mat-icon { font-size: 18px; width: 18px; height: 18px; }
     tr.link { cursor: pointer; transition: background .15s; }
-    tr.link:hover, tr.link:focus-visible { background: rgba(232, 164, 106, .07); outline: none; }
-    tr.link:focus-visible { box-shadow: inset 3px 0 0 var(--bn-sunset); }
+    tr.link:hover, tr.link:focus-within { background: rgba(232, 164, 106, .07); }
+    .row-link { color: inherit; text-decoration: none; }
+    .row-link:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; border-radius: 2px; }
     .open { width: 32px; color: var(--bn-fog); }
     tr.link:hover .open { color: var(--bn-sunset); }
     .comment { max-width: 320px; white-space: pre-line; color: rgba(236, 233, 228, .82); }
@@ -169,7 +169,7 @@ import { BandService, Show } from '../data/band.service';
 export class Backstage implements OnDestroy {
   private readonly meta = inject(Meta);
   private readonly router = inject(Router);
-  private readonly band = inject(BandService);
+  protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
   protected readonly offline = offlineReady;
   protected readonly columns = ['date', 'venue', 'type', 'status', 'comment', 'open'];
@@ -208,7 +208,8 @@ export class Backstage implements OnDestroy {
     if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true });
   }
 
-  protected openShow(s: Show): void {
+  protected openShow(s: Show, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('a')) return;
     this.router.navigate(['/backstage', this.band.showId(s)]);
   }
 

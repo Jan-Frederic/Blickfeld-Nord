@@ -87,7 +87,8 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     .list li { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; padding: 10px 4px; border-bottom: 1px solid var(--bn-line); }
     .title { font-weight: 500; }
     .artist { color: var(--bn-fog); font-size: .92rem; flex: 1; }
-    .year { opacity: .8; }
+    /* fog ohne Abdunkeln – sonst zu wenig Kontrast (WCAG AA) */
+    .year { opacity: 1; }
     .list a { color: var(--bn-fog); display: inline-flex; }
     .list a:hover { color: var(--bn-sunset); }
     .list a mat-icon { font-size: 16px; width: 16px; height: 16px; }

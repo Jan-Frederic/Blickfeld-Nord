@@ -97,6 +97,11 @@ jobs:
           # zur Backstage-Shell weiter (/backstage/?auftritt=<id>[&teil=<teil>]), die dann zur Unterseite navigiert.
           sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2]+(p[3]?"\\x26teil="+p[3]:""))</script>#' 404.html
 
+      - name: Barrierefreiheit (WCAG 2.1 AA, axe-core) – schwere Verstöße stoppen den Deploy
+        run: |
+          npx playwright install --with-deps chromium
+          node scripts/a11y.mjs
+
       - name: Service Worker für den Offline-Backstage
         run: node scripts/build-sw.mjs
 
