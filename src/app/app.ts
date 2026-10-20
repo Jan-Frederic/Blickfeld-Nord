@@ -9,7 +9,8 @@ import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
 import { enableOffline, install, installable, iosHint, setupPwa, updateReady } from './pwa';
-import { I18n, LANGS, LANG_NAMES, LocPipe, localize, tr } from './i18n';
+import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
+import { SprachHinweis } from './sections/sprach-hinweis';
 
 const TEXT = tr(
   {
@@ -73,7 +74,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterOutlet, RouterLink, LocPipe],
+  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterOutlet, RouterLink, LocPipe, SprachHinweis],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -94,6 +95,10 @@ export class App {
   protected readonly languages = computed(() =>
     LANGS.map((lang) => ({ lang, name: LANG_NAMES[lang], link: localize(this.i18n.path(), lang), current: lang === this.i18n.lang() })),
   );
+  // ausdrücklich gewählte Sprache merken – dann kein Sprachvorschlag mehr
+  protected remember(lang: Lang): void {
+    rememberLanguage(lang);
+  }
   protected readonly showLanguages = computed(() => !this.i18n.path().startsWith('/backstage'));
   protected readonly year = new Date().getFullYear();
   // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)

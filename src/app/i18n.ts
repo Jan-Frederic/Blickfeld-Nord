@@ -105,3 +105,32 @@ export class LDatePipe implements PipeTransform {
     return value == null || value === '' ? '' : this.i18n.date(value, format);
   }
 }
+
+// Gewählte Sprache merken (Umschalter oder Sprachhinweis) – dann schlägt die Seite keine andere Sprache mehr vor
+const CHOICE_KEY = 'bn-sprache';
+
+export function rememberLanguage(lang: Lang): void {
+  try {
+    localStorage.setItem(CHOICE_KEY, lang);
+  } catch {
+    // privater Modus o. Ä. – dann erscheint der Hinweis eben erneut
+  }
+}
+
+export function rememberedLanguage(): Lang | null {
+  try {
+    const v = localStorage.getItem(CHOICE_KEY);
+    return v === 'de' || v === 'en' || v === 'nl' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** bevorzugte Sprache laut Browser-Einstellung (erste unterstützte), sonst null */
+export function browserLanguage(languages: readonly string[]): Lang | null {
+  for (const l of languages) {
+    const base = l.toLowerCase().split('-')[0];
+    if (base === 'de' || base === 'en' || base === 'nl') return base;
+  }
+  return null;
+}

@@ -190,6 +190,8 @@ flowchart LR
 | Wörterbücher in den Komponenten | Feste Texte der Oberfläche. Englisch und Niederländisch müssen exakt die Form der deutschen Fassung haben, sonst bricht der Build ab. |
 | `src/app/data/uebersetzungen.ts` + `src/app/content.ts` | Inhalte aus `band.service.ts` und `technik.json` (Bios, Historie, Bildtexte, Freunde, Technik). Schlüssel ist der deutsche Text: Ändert er sich, erscheint wieder das Original mit Hinweis, bis neu übersetzt ist. |
 | `geprueft: { en, nl }` | Markiert gegengelesene Übersetzungen. Ungeprüfte Inhalte tragen auf der Seite den Hinweis „noch nicht gegengelesen“. Den Stand zeigt der Backstage. |
+| Gegenlesen im Backstage | `/backstage/uebersetzungen`: Original und Übersetzung nebeneinander, Korrektur und Freigabe im Browser. `src/app/data/uebersetzungen-patch.ts` setzt die Entscheidungen in den aktuellen Quelltext von GitHub ein (nur die betroffenen Einträge) – oder sie gehen als Nachricht an die Band. |
+| Sprachhinweis | `src/app/sections/sprach-hinweis.ts`: Bevorzugt der Browser eine andere unserer Sprachen, erscheint einmalig ein Hinweis in dieser Sprache (keine automatische Umleitung). Eine gewählte Sprache merkt sich das Gerät (`bn-sprache`). |
 | Rechtstexte | Impressum und Datenschutz liegen übersetzt vor, mit dem Hinweis, dass nur die deutsche Fassung verbindlich ist. |
 | SEO | `scripts/seo.mjs` schreibt strukturierte Daten je Sprache und eine Sitemap mit allen drei Fassungen samt `hreflang`. |
 
@@ -364,6 +366,8 @@ flowchart TB
 | `bn-packliste-<id>` | abgehakte und eigene Packlisten-Punkte |
 | `bn-vorort-<id>` | Vor-Ort-Angaben und Anfahrt |
 | `bn-backstage-filter` | gewählte Filter der Tabelle |
+| `bn-uebersetzung-pruefung` | noch nicht übernommene Entscheidungen beim Gegenlesen |
+| `bn-sprache` | ausdrücklich gewählte Sprache (dann kein Sprachhinweis mehr) |
 | `bn-chunk-reload` | Schutz gegen Neulade-Schleifen nach einem Deploy |
 
 ```mermaid

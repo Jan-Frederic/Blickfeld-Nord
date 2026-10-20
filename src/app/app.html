@@ -18,7 +18,7 @@
     <nav class="languages" [attr.aria-label]="t().language">
       @for (l of languages(); track l.lang) {
         <a
-          [routerLink]="l.link"
+          [routerLink]="l.link" (click)="remember(l.lang)"
           [attr.lang]="l.lang"
           [attr.hreflang]="l.lang"
           [attr.aria-label]="l.name"
@@ -44,7 +44,7 @@
     @if (showLanguages()) {
       @for (l of languages(); track l.lang) {
         @if (!l.current) {
-          <a mat-menu-item [routerLink]="l.link" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><mat-icon>translate</mat-icon> {{ l.name }}</a>
+          <a mat-menu-item [routerLink]="l.link" (click)="remember(l.lang)" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><mat-icon>translate</mat-icon> {{ l.name }}</a>
         }
       }
     }
@@ -54,6 +54,9 @@
 <main>
   <router-outlet />
 </main>
+
+<!-- Vorschlag einer anderen Sprache laut Browser-Einstellung (nur einmal) -->
+<app-sprach-hinweis />
 
 <footer>
   <div class="social">
@@ -88,7 +91,7 @@
     <nav class="footer-languages" [attr.aria-label]="t().language">
       <mat-icon>translate</mat-icon>
       @for (l of languages(); track l.lang) {
-        <a [routerLink]="l.link" [attr.lang]="l.lang" [attr.hreflang]="l.lang" [attr.aria-current]="l.current ? 'true' : null" [class.current]="l.current">{{ l.name }}</a>
+        <a [routerLink]="l.link" (click)="remember(l.lang)" [attr.lang]="l.lang" [attr.hreflang]="l.lang" [attr.aria-current]="l.current ? 'true' : null" [class.current]="l.current">{{ l.name }}</a>
       }
     </nav>
   }

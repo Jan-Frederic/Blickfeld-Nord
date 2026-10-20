@@ -30,7 +30,7 @@ async function until(check, message) {
 }
 
 async function page(options = {}) {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, ...options });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, locale: 'de-DE', ...options });
   await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
   const p = await context.newPage();
   p.setDefaultTimeout(10_000);
@@ -123,6 +123,21 @@ test('Sprachen: Umschalter wechselt auf dieselbe Seite in Englisch, alte Adresse
   return p;
 });
 
+test('Sprachhinweis: niederländischer Browser bekommt die niederländische Seite vorgeschlagen', async () => {
+  const p = await page({ locale: 'nl-NL' });
+  await p.go('/technik/');
+  const hint = p.locator('app-sprach-hinweis aside');
+  await until(async () => (await hint.count()) === 1, 'kein Sprachhinweis für niederländischen Browser');
+  expect((await hint.getAttribute('lang')) === 'nl', 'Hinweis nicht auf Niederländisch');
+  await hint.locator('a').click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/nl/technik', 'Hinweis führt nicht zu /nl/technik');
+  await until(async () => (await hint.count()) === 0, 'Hinweis bleibt nach der Wahl stehen');
+  await p.go('/');
+  await p.waitForTimeout(500);
+  expect((await hint.count()) === 0, 'Hinweis erscheint nach der Wahl erneut');
+  return p;
+});
+
 test('Repertoire: Suche findet Songs', async () => {
   const p = await page();
   await p.go('/repertoire/');
@@ -144,6 +159,21 @@ test('Handy: Menü öffnet sich, Seite verschiebt sich nicht seitlich', async ()
 });
 
 // ---- Backstage ---------------------------------------------------------------------------------------
+
+test('Backstage: Übersetzung als passend markieren', async () => {
+  const p = await page();
+  await p.go('/backstage/uebersetzungen/');
+  const first = p.locator('app-uebersetzungen-pruefen .list > li').first();
+  await first.waitFor();
+  const before = await p.locator('app-uebersetzungen-pruefen .progress').innerText();
+  await first.locator('textarea').fill('Vocals and guitar');
+  await first.locator('button.pass').click();
+  await until(async () => (await p.locator('app-uebersetzungen-pruefen .progress').innerText()) !== before, 'Zähler ändert sich nicht');
+  await until(async () => (await p.locator('app-uebersetzungen-pruefen .apply strong').innerText()) === '1', 'Entscheidung wird nicht gezählt');
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => (await p.locator('app-uebersetzungen-pruefen .apply strong').innerText()) === '1', 'Entscheidung nach Neuladen weg');
+  return p;
+});
 
 test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   const p = await page();

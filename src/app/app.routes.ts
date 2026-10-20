@@ -140,6 +140,7 @@ export const routes: Routes = [
   { path: 'booking/en', redirectTo: '/en/booking' },
   { path: 'booking/nl', redirectTo: '/nl/booking' },
   // Backstage: nur für die Band, nur auf Deutsch
+  { path: 'backstage/uebersetzungen', loadComponent: () => import('./pages/uebersetzungen-pruefen').then((m) => m.UebersetzungenPruefen), title: 'Übersetzungen prüfen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/:id/:teil', loadComponent: () => import('./pages/backstage-tool').then((m) => m.BackstageTool), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/:id', loadComponent: () => import('./pages/backstage-show').then((m) => m.BackstageShow), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage', loadComponent: () => import('./pages/backstage').then((m) => m.Backstage), title: 'Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
