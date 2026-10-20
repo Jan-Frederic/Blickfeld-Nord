@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home';
 import { Lang, tr } from './i18n';
+import { loadUebersetzungen } from './content';
 
 // Titel und Beschreibung je Sprache (Suchmaschinen und Link-Vorschau); PageTitleStrategy wählt die passende Fassung
 const meta = (title: Record<Lang, string>, description?: Record<Lang, string>, robots?: string) => ({ title, description, robots });
@@ -134,8 +135,8 @@ const notFound = () => ({
 // Startseite direkt im Hauptpaket, alle Unterseiten werden erst beim Aufruf geladen (kleineres Start-JavaScript)
 export const routes: Routes = [
   ...publicPages(),
-  { path: 'en', children: [...publicPages(), { path: '404', ...notFound() }, { path: '**', ...notFound() }] },
-  { path: 'nl', children: [...publicPages(), { path: '404', ...notFound() }, { path: '**', ...notFound() }] },
+  { path: 'en', canMatch: [loadUebersetzungen], children: [...publicPages(), { path: '404', ...notFound() }, { path: '**', ...notFound() }] },
+  { path: 'nl', canMatch: [loadUebersetzungen], children: [...publicPages(), { path: '404', ...notFound() }, { path: '**', ...notFound() }] },
   // frühere Adressen der fremdsprachigen Booking-Seiten
   { path: 'booking/en', redirectTo: '/en/booking' },
   { path: 'booking/nl', redirectTo: '/nl/booking' },

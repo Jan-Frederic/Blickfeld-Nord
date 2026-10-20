@@ -1,13 +1,25 @@
 import { Injectable, inject } from '@angular/core';
 import { I18n, Lang } from './i18n';
-import { UEBERSETZUNGEN } from './data/uebersetzungen';
+import type { Uebersetzung } from './data/uebersetzungen';
 
 // Übersetzte Inhalte aus band.service.ts und technik.json (Bios, Historie, Bildtexte, Freunde, Geräte …).
 // Nachschlagen über den deutschen Originaltext: Ändert sich das Original, gilt die alte Übersetzung nicht mehr
 // und die Seite zeigt wieder den deutschen Text – mit Hinweis, bis jemand neu übersetzt.
 export type Uebersetzungsstand = 'original' | 'geprueft' | 'ungeprueft' | 'fehlt';
 
-const BY_GERMAN = new Map(UEBERSETZUNGEN.map((u) => [u.de, u]));
+// Die Tabelle (~45 KB) wird nur für englische und niederländische Seiten geladen – deutsche Seiten brauchen sie nicht.
+// Die Routen /en und /nl warten darauf (canMatch in app.routes.ts), bevor sie die Seite aufbauen – beim Vorrendern
+// wie im Browser. So erscheint nie kurz der deutsche Text.
+let BY_GERMAN = new Map<string, Uebersetzung>();
+let loading: Promise<boolean> | undefined;
+
+export function loadUebersetzungen(): Promise<boolean> {
+  loading ??= import('./data/uebersetzungen').then((m) => {
+    BY_GERMAN = new Map(m.UEBERSETZUNGEN.map((u) => [u.de, u]));
+    return true;
+  });
+  return loading;
+}
 
 @Injectable({ providedIn: 'root' })
 export class Content {

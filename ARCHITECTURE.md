@@ -188,7 +188,7 @@ flowchart LR
 |---|---|
 | `src/app/i18n.ts` | Sprache aus der Adresse (`I18n.lang`), `tr(de, en, nl)` für typisierte Wörterbücher, Pipes `loc` (Links) und `ldate` (Datumsformate je Sprache) |
 | Wörterbücher in den Komponenten | Feste Texte der Oberfläche. Englisch und Niederländisch müssen exakt die Form der deutschen Fassung haben, sonst bricht der Build ab. |
-| `src/app/data/uebersetzungen.ts` + `src/app/content.ts` | Inhalte aus `band.service.ts` und `technik.json` (Bios, Historie, Bildtexte, Freunde, Technik). Schlüssel ist der deutsche Text: Ändert er sich, erscheint wieder das Original mit Hinweis, bis neu übersetzt ist. |
+| `src/app/data/uebersetzungen.ts` + `src/app/content.ts` | Inhalte aus `band.service.ts` und `technik.json` (Bios, Historie, Bildtexte, Freunde, Technik). Schlüssel ist der deutsche Text: Ändert er sich, erscheint wieder das Original mit Hinweis, bis neu übersetzt ist. Die Tabelle lädt nur für `/en` und `/nl` (`canMatch` wartet darauf), deutsche Seiten bleiben schlank. |
 | `geprueft: { en, nl }` | Markiert gegengelesene Übersetzungen. Ungeprüfte Inhalte tragen auf der Seite den Hinweis „noch nicht gegengelesen“. Den Stand zeigt der Backstage. |
 | Gegenlesen im Backstage | `/backstage/uebersetzungen`: Original und Übersetzung nebeneinander, Korrektur und Freigabe im Browser. `src/app/data/uebersetzungen-patch.ts` setzt die Entscheidungen in den aktuellen Quelltext von GitHub ein (nur die betroffenen Einträge) – oder sie gehen als Nachricht an die Band. |
 | Sprachhinweis | `src/app/sections/sprach-hinweis.ts`: Bevorzugt der Browser eine andere unserer Sprachen, erscheint einmalig ein Hinweis in dieser Sprache (keine automatische Umleitung). Eine gewählte Sprache merkt sich das Gerät (`bn-sprache`). |
