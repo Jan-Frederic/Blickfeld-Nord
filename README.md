@@ -106,6 +106,9 @@ Reichweitenmessung mit GoatCounter (ohne Cookies, keine IP-Speicherung): Auswert
 https://blickfeld-nord.goatcounter.com. Das Skript steht in `src/index.html`; da die Seite Unterseiten ohne Neuladen
 wechselt, zählt `src/app/analytics.ts` jeden Seitenwechsel selbst (Backstage wird nicht gezählt).
 In der Datenschutzerklärung beschrieben (Abschnitt 8).
+Im Backstage zeigt `src/app/pages/backstage-besucher.ts` die Aufrufe (7 Tage, 30 Tage, 12 Monate, gesamt) und die
+beliebtesten Seiten. Dafür muss in GoatCounter unter Settings „Allow adding visitor counts on your website“
+aktiviert sein (öffentlicher Zähler, nur Summen); sonst erscheint dort ein Hinweis.
 
 ### Performance (Core Web Vitals)
 

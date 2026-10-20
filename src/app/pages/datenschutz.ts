@@ -118,7 +118,8 @@ import { Component } from '@angular/core';
         GoatCounter setzt keine Cookies, speichert nichts auf Ihrem Gerät und speichert Ihre IP-Adresse nicht; zur
         Erkennung eines Besuchs wird lediglich ein verschlüsselter Wert (Hash) aus IP-Adresse und Browserkennung für
         höchstens 8 Stunden im Arbeitsspeicher gehalten. Wir sehen ausschließlich zusammengefasste Zahlen, eine
-        Zuordnung zu einzelnen Personen ist uns nicht möglich.
+        Zuordnung zu einzelnen Personen ist uns nicht möglich. Diese Summen (Anzahl der Aufrufe je Seite und
+        insgesamt) sind über GoatCounter auch öffentlich abrufbar; sie enthalten keine Angaben zu einzelnen Besuchern.
       </p>
       <p>
         Rechtsgrundlage ist unser berechtigtes Interesse an einer datensparsamen Auswertung der Nutzung unserer Website

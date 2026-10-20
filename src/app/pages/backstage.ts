@@ -8,6 +8,7 @@ import { downloadIcs } from '../data/calendar';
 import { SetlistStats } from './setlist-stats';
 import { BackstageStats } from './backstage-stats';
 import { TerminFormular } from './termin-formular';
+import { BackstageBesucher } from './backstage-besucher';
 import { AboButton } from '../sections/abo-button';
 import { BackstageSync } from './backstage-sync';
 import { offlineReady } from '../pwa';
@@ -41,7 +42,7 @@ function loadFilters(): Set<FilterKey> {
 // fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync, BackstageStats, TerminFormular],
+  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync, BackstageStats, TerminFormular, BackstageBesucher],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -141,6 +142,8 @@ function loadFilters(): Set<FilterKey> {
         </table>
       </div>
       }
+
+      <app-backstage-besucher />
 
       <app-termin-formular />
 
