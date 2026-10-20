@@ -34,8 +34,8 @@ export interface Friend {
   url: string;
   // weitere Namen, unter denen der Freund in Auftritten erkannt und verlinkt wird
   aliases?: string[];
-  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme, Gruppe, Fußball), sonst ein allgemeines Link-Symbol
-  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community' | 'football';
+  // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme, Gruppe, Fußball, Plattenspieler), sonst ein allgemeines Link-Symbol
+  icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community' | 'football' | 'dj';
 }
 
 export interface HistoryLink {
@@ -389,6 +389,13 @@ export class BandService {
       description: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Grün-weißer Herzensverein unseres Gitarristen.',
       url: 'https://lankern.de/',
       icon: 'football',
+    },
+    {
+      name: 'DJ Hendrik Pols alias Dr. Beat',
+      description: 'DJ – auch bekannt als Dr. Beat. Was er auflegt und wo er als Nächstes spielt, gibt es auf Instagram.',
+      url: 'https://www.instagram.com/dj_hendrik.pols/',
+      aliases: ['Dr. Beat', 'DJ Hendrik Pols', 'Hendrik Pols'],
+      icon: 'dj',
     },
   ];
 
