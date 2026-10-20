@@ -1,24 +1,14 @@
 import { Component, computed, effect, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
 // den Sets einfügen und als großformatige Bühnen-Setlist drucken bzw. als PDF speichern.
 // Gespeichert nur im Browser dieses Geräts (localStorage, je Auftritt).
 
-type Entry = { title: string; artist: string } | { pause: true };
-
-const STORAGE_PREFIX = 'bn-setlist-';
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
-
-function load(key: string): Entry[] {
-  try {
-    return JSON.parse(localStorage.getItem(key) ?? '[]') as Entry[];
-  } catch {
-    return [];
-  }
-}
 
 @Component({
   selector: 'app-setlist',
@@ -30,7 +20,10 @@ function load(key: string): Entry[] {
           <p class="kicker">Für diesen Auftritt</p>
           <h3 id="setlist-title">Setlist</h3>
         </div>
-        <span class="count">{{ songCount() }} Songs · {{ sets().length }} {{ sets().length === 1 ? 'Set' : 'Sets' }}</span>
+        <span class="count">
+          {{ songCount() }} Songs · {{ sets().length }} {{ sets().length === 1 ? 'Set' : 'Sets' }}
+          @if (total().seconds) { · <strong>{{ time(total().seconds) }}</strong>@if (total().missing) { <span title="Songs ohne Längenangabe von Spotify"> + {{ total().missing }} ohne Länge</span>} }
+        </span>
         <div class="tools">
           <button type="button" (click)="addPause()" [disabled]="!entries().length"><mat-icon>coffee</mat-icon> Pause einfügen</button>
           <button type="button" class="primary" (click)="print()" [disabled]="!songCount()"><mat-icon>print</mat-icon> Drucken / PDF</button>
@@ -63,10 +56,11 @@ function load(key: string): Entry[] {
           @for (e of entries(); track $index; let i = $index, first = $first, last = $last) {
             <li [class.pause]="isPause(e)">
               @if (isPause(e)) {
-                <span class="pause-label"><mat-icon>coffee</mat-icon> Pause</span>
+                <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
                 <span class="t">{{ $any(e).title }}</span><span class="a">{{ $any(e).artist }}</span>
+                @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
                 <button type="button" (click)="move(i, -1)" [disabled]="first" aria-label="Nach oben"><mat-icon>arrow_upward</mat-icon></button>
@@ -76,6 +70,9 @@ function load(key: string): Entry[] {
             </li>
           } @empty {
             <li class="empty">Noch leer – links Songs antippen, um sie hinzuzufügen.</li>
+          }
+          @if (sets().length > 1 && lastSet(); as l) {
+            <li class="set-end"><span class="set-time">Letztes Set {{ time(l.seconds) }}</span></li>
           }
         </ol>
       </div>
@@ -88,6 +85,11 @@ function load(key: string): Entry[] {
     .head .kicker { margin-bottom: 4px; }
     h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
     .count { font-size: .85rem; color: var(--bn-fog); }
+    .count strong { color: var(--bn-sunset); font-weight: 600; }
+    .dur { margin-left: auto; font-size: .78rem; color: var(--bn-fog); font-variant-numeric: tabular-nums; }
+    .set-time { font-size: .78rem; color: var(--bn-sunset); text-transform: none; letter-spacing: normal; }
+    .set-end { justify-content: flex-end; border: 0 !important; }
+    .dur + .row-tools { margin-left: 8px; }
     .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
     .tools button {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
@@ -136,23 +138,31 @@ export class Setlist {
 
   protected readonly query = signal('');
   protected readonly entries = signal<Entry[]>([]);
-  private readonly key = computed(() => STORAGE_PREFIX + this.show());
+  private readonly key = computed(() => SETLIST_PREFIX + this.show());
 
   constructor() {
-    effect(() => this.entries.set(load(this.key())));
+    effect(() => this.entries.set(loadSetlist(this.show())));
   }
 
   protected readonly songCount = computed(() => this.entries().filter((e) => !this.isPause(e)).length);
 
-  // Sets = Abschnitte zwischen den Pausen (leere werden nicht gezählt)
-  protected readonly sets = computed(() => {
-    const sets: { title: string; artist: string }[][] = [[]];
-    for (const e of this.entries()) {
-      if (this.isPause(e)) sets.push([]);
-      else sets[sets.length - 1].push(e as { title: string; artist: string });
-    }
-    return sets.filter((s) => s.length);
+  protected readonly sets = computed(() => setsOf(this.entries()));
+
+  // Spieldauer laut Spotify: gesamt, je Set (an der Pause danach) und fürs letzte Set
+  protected readonly total = computed(() => setLength(this.sets().flat()));
+  protected readonly lastSet = computed(() => {
+    const sets = this.sets();
+    return sets.length ? setLength(sets[sets.length - 1]) : null;
   });
+  protected setBefore(index: number): { seconds: number } | null {
+    const before = setsOf(this.entries().slice(0, index)).at(-1);
+    return before ? setLength(before) : null;
+  }
+  protected length(s: { title: string; artist: string }): string | null {
+    const d = durationOf(s);
+    return d ? songTime(d) : null;
+  }
+  protected readonly time = setTime;
 
   // Songs, die noch nicht auf der Setlist stehen, gefiltert nach Suche
   protected readonly available = computed(() => {
@@ -162,7 +172,7 @@ export class Setlist {
   });
 
   protected isPause(e: Entry): boolean {
-    return 'pause' in e;
+    return isPause(e);
   }
 
   // Laufende Nummer innerhalb der ganzen Setlist (Pausen zählen nicht mit)
@@ -200,7 +210,10 @@ export class Setlist {
     let n = 0;
     const text = [
       `Setlist – ${this.title()}`,
-      ...this.sets().map((set, i) => [``, `SET ${i + 1}`, ...set.map((t) => `${++n}. ${t.title} – ${t.artist}`)].join('\n')),
+      ...this.sets().map((set, i) => {
+        const sec = setLength(set).seconds;
+        return [``, `SET ${i + 1}${sec ? ` (${setTime(sec)})` : ''}`, ...set.map((t) => `${++n}. ${t.title} – ${t.artist}`)].join('\n');
+      }),
     ].join('\n');
     if (navigator.share) {
       navigator.share({ title: `Setlist – ${this.title()}`, text }).catch(() => undefined);
@@ -221,7 +234,7 @@ export class Setlist {
     if (!win) return;
     let n = 0;
     const sets = this.sets()
-      .map((set, i) => `<section><h2>Set ${i + 1}</h2><ol>${set.map((t) => `<li value="${++n}">${esc(t.title)}</li>`).join('')}</ol></section>`)
+      .map((set, i) => `<section><h2>Set ${i + 1}${setLength(set).seconds ? ` <small>${setTime(setLength(set).seconds)}</small>` : ''}</h2><ol>${set.map((t) => `<li value="${++n}">${esc(t.title)}</li>`).join('')}</ol></section>`)
       .join('');
     win.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Setlist – ${esc(this.title())}</title>
 <style>
@@ -233,6 +246,7 @@ export class Setlist {
   main { columns: ${Math.min(this.sets().length, 2)}; column-gap: 12mm; }
   section { break-inside: avoid; margin-bottom: 10mm; }
   h2 { font-size: 13pt; text-transform: uppercase; letter-spacing: .2em; margin: 0 0 4mm; }
+  h2 small { font-size: 10pt; letter-spacing: .05em; text-transform: none; font-weight: normal; }
   ol { margin: 0; padding-left: 12mm; }
   li { font-size: 22pt; font-weight: bold; line-height: 1.35; }
   li::marker { font-size: 14pt; font-weight: normal; }

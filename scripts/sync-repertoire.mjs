@@ -57,6 +57,8 @@ while (url) {
       title: track.name,
       artist: track.artists.map((a) => a.name).join(', '),
       year: Number(track.album?.release_date?.slice(0, 4)) || undefined,
+      // Länge in Sekunden – für die Spieldauer der Sets in der Backstage-Setlist
+      duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : undefined,
       url: track.external_urls?.spotify,
     });
   }
