@@ -1,32 +1,35 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RADIUS_KM, findOrt, suggest } from '../data/entfernung';
+import { Ortsverzeichnis, RADIUS_KM } from '../data/entfernung';
 
 // Entfernungs-Check im Booking: Ort eingeben → Luftlinie von Hamminkeln und ob er im 50-km-Umkreis liegt (DE/EN/NL)
 const T = {
   de: {
-    title: 'Liegt euer Ort in unserem Umkreis?', label: 'Ort', placeholder: 'z. B. Bocholt oder Winterswijk',
+    plz: 'PLZ',
+    title: 'Liegt euer Ort in unserem Umkreis?', label: 'Ort oder Postleitzahl', placeholder: 'Ort oder PLZ, z. B. Bocholt oder 46399',
     inside: (o: string, k: number) => `${o} liegt etwa ${k} km Luftlinie von Hamminkeln entfernt – das passt.`,
     home: (o: string) => `${o} – das ist quasi bei uns um die Ecke.`,
     outside: (o: string, k: number) => `${o} liegt etwa ${k} km Luftlinie entfernt, also außerhalb unseres Umkreises von ${RADIUS_KM} km. Fragt gern trotzdem an – vielleicht passt es ja.`,
-    unknown: 'Diesen Ort kennen wir nicht – wählt einen Vorschlag aus der Liste oder fragt einfach an.',
-    note: 'Luftlinie; die Fahrstrecke ist meist etwas länger. Ortsdaten: GeoNames (CC BY 4.0).',
+    unknown: 'Diesen Ort kennen wir nicht – probiert es mit der Postleitzahl oder fragt einfach an.',
+    note: 'Luftlinie; die Fahrstrecke ist meist etwas länger. Ortsdaten: GeoNames (CC BY 4.0), Ortsteile genähert.',
   },
   en: {
-    title: 'Is your venue within our area?', label: 'Town', placeholder: 'e.g. Bocholt or Winterswijk',
+    plz: 'Postcode',
+    title: 'Is your venue within our area?', label: 'Town or postcode', placeholder: 'Town or postcode, e.g. Winterswijk or 7101',
     inside: (o: string, k: number) => `${o} is about ${k} km from Hamminkeln as the crow flies – that works.`,
     home: (o: string) => `${o} – that's practically on our doorstep.`,
     outside: (o: string, k: number) => `${o} is about ${k} km away as the crow flies, outside our ${RADIUS_KM} km radius. Feel free to ask anyway – it might still work.`,
-    unknown: "We don't know this town – pick a suggestion from the list or just send us a request.",
-    note: 'Straight-line distance; the driving route is usually a bit longer. Place data: GeoNames (CC BY 4.0).',
+    unknown: "We don't know this town – try the postcode or just send us a request.",
+    note: 'Straight-line distance; the driving route is usually a bit longer. Place data: GeoNames (CC BY 4.0), districts approximated.',
   },
   nl: {
-    title: 'Ligt jullie plaats binnen ons gebied?', label: 'Plaats', placeholder: 'bijv. Bocholt of Winterswijk',
+    plz: 'Postcode',
+    title: 'Ligt jullie plaats binnen ons gebied?', label: 'Plaats of postcode', placeholder: 'Plaats of postcode, bijv. Winterswijk of 7101',
     inside: (o: string, k: number) => `${o} ligt hemelsbreed ongeveer ${k} km van Hamminkeln – dat past.`,
     home: (o: string) => `${o} – dat is bij ons om de hoek.`,
     outside: (o: string, k: number) => `${o} ligt hemelsbreed ongeveer ${k} km weg, buiten onze straal van ${RADIUS_KM} km. Vraag het gerust toch – misschien past het.`,
-    unknown: 'Deze plaats kennen we niet – kies een suggestie uit de lijst of vraag het gewoon aan.',
-    note: 'Hemelsbrede afstand; de rijroute is meestal iets langer. Plaatsgegevens: GeoNames (CC BY 4.0).',
+    unknown: 'Deze plaats kennen we niet – probeer de postcode of vraag het gewoon aan.',
+    note: 'Hemelsbrede afstand; de rijroute is meestal iets langer. Plaatsgegevens: GeoNames (CC BY 4.0), dorpskernen benaderd.',
   },
 };
 
@@ -38,7 +41,7 @@ const T = {
       <h3><mat-icon>near_me</mat-icon> {{ t().title }}</h3>
       <label>
         <span class="sr-only">{{ t().label }}</span>
-        <input [value]="query()" (input)="query.set($any($event.target).value)" [placeholder]="t().placeholder"
+        <input [value]="query()" (focus)="load()" (input)="query.set($any($event.target).value); load()" [placeholder]="t().placeholder"
                [attr.list]="listId" autocomplete="off" maxlength="60" [attr.aria-label]="t().label" />
         <datalist [id]="listId">
           @for (o of suggestions(); track o.name + o.country) { <option [value]="o.name">{{ o.country }} · {{ o.km }} km</option> }
@@ -77,15 +80,25 @@ export class Entfernung {
   protected readonly t = computed(() => T[this.lang()]);
   protected readonly listId = 'orte-vorschlaege';
   protected readonly query = signal('');
-  protected readonly suggestions = computed(() => suggest(this.query()));
+  // Ortsverzeichnis wird erst beim ersten Antippen des Felds geladen (~30 KB)
+  private readonly verzeichnis = signal<Ortsverzeichnis | null>(null);
+  protected load(): void {
+    if (!this.verzeichnis()) Ortsverzeichnis.load().then((v) => this.verzeichnis.set(v)).catch(() => undefined);
+  }
+  protected readonly suggestions = computed(() => this.verzeichnis()?.suggest(this.query()) ?? []);
   protected readonly result = computed(() => {
     const q = this.query().trim();
-    if (q.length < 3) return null;
-    const o = findOrt(q);
-    // während des Tippens noch nicht „unbekannt“ melden, solange es passende Vorschläge gibt
-    if (!o) return this.suggestions().length ? null : { ok: false, text: this.t().unknown };
+    const v = this.verzeichnis();
+    if (q.length < 3 || !v) return null;
+    const o = v.find(q);
+    const digits = /^\d+/.test(q);
+    // Postleitzahl: 4 Ziffern (NL) nur bei Treffer, sonst auf die 5. Ziffer (DE) warten
+    if (!o && digits && q.replace(/\D/g, '').length < 5) return null;
+    // Ortsname: während des Tippens noch nicht „unbekannt“ melden, solange es passende Vorschläge gibt
+    if (!o) return !digits && this.suggestions().length ? null : { ok: false, text: this.t().unknown };
     const t = this.t();
-    if (o.km <= 5) return { ok: true, text: t.home(o.name) };
-    return o.km <= RADIUS_KM ? { ok: true, text: t.inside(o.name, o.km) } : { ok: false, text: t.outside(o.name, o.km) };
+    const name = o.plz ? `${t.plz} ${o.plz}` : o.name;
+    if (o.km <= 5) return { ok: true, text: t.home(name) };
+    return o.km <= RADIUS_KM ? { ok: true, text: t.inside(name, o.km) } : { ok: false, text: t.outside(name, o.km) };
   });
 }

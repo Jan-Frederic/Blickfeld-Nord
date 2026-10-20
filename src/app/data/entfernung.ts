@@ -1,17 +1,20 @@
-import data from './orte.json';
-
-// Entfernung eines Orts von Hamminkeln (Luftlinie) – für den Entfernungs-Check im Booking.
-// Ortsdaten: GeoNames (CC BY 4.0), Orte ab 1.000 Einwohnern in DE/NL bis 90 km (src/app/data/orte.json).
+// Entfernung eines Orts oder einer Postleitzahl von Hamminkeln (Luftlinie) – für den Entfernungs-Check im Booking.
+// Daten: public/data/orte.json (GeoNames, CC BY 4.0: Orte und Postleitzahlen in DE/NL bis 90 km, dazu Ortsteile
+// rund um Hamminkeln als Näherungswerte). Wird erst beim ersten Tippen geladen.
 export const HOME = { name: 'Hamminkeln', lat: 51.733, lon: 6.59 };
 export const RADIUS_KM = 50;
-
-// Ortsteile von Hamminkeln (zu klein für die Ortsliste)
-const ORTSTEILE = ['Dingden', 'Brünen', 'Ringenberg', 'Loikum', 'Mehrhoog', 'Mehr', 'Wertherbruch'];
 
 export interface Ort {
   name: string;
   country: 'DE' | 'NL';
   km: number;
+  /** Treffer über die Postleitzahl */
+  plz?: string;
+}
+
+interface Daten {
+  orte: [string, 'DE' | 'NL', number, number][];
+  plz: Record<string, [number, number]>;
 }
 
 export const norm = (s: string) =>
@@ -22,34 +25,49 @@ function km(lat: number, lon: number): number {
   const dLat = (lat - HOME.lat) * rad;
   const dLon = (lon - HOME.lon) * rad;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(HOME.lat * rad) * Math.cos(lat * rad) * Math.sin(dLon / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(a));
+  return Math.round(2 * 6371 * Math.asin(Math.sqrt(a)));
 }
 
-const ORTE: (Ort & { key: string })[] = [
-  ...(data.orte as [string, 'DE' | 'NL', number, number][]).map(([name, country, lat, lon]) => ({ name, country, km: Math.round(km(lat, lon)), key: norm(name) })),
-  ...ORTSTEILE.filter((n) => !data.orte.some((o) => o[0] === n)).map((name) => ({ name, country: 'DE' as const, km: 0, key: norm(name) })),
-];
+export class Ortsverzeichnis {
+  private constructor(
+    private readonly orte: (Ort & { key: string })[],
+    private readonly plz: Record<string, [number, number]>,
+  ) {}
 
-// genauer Treffer (auch „Hamminkeln-Dingden“, „Rhede (Westf.)“ o. Ä.)
-export function findOrt(input: string): Ort | null {
-  const q = norm(input);
-  if (q.length < 2) return null;
-  const exact = ORTE.find((o) => o.key === q);
-  if (exact) return exact;
-  // zusammengesetzte Eingaben: letzter bekannter Teil zählt („Hamminkeln Dingden“ → Dingden)
-  const parts = q.split(' ').reverse();
-  for (const p of parts) {
-    const hit = ORTE.find((o) => o.key === p);
-    if (hit) return hit;
+  private static loading?: Promise<Ortsverzeichnis>;
+  static load(): Promise<Ortsverzeichnis> {
+    return (this.loading ??= fetch('data/orte.json')
+      .then((r) => r.json() as Promise<Daten>)
+      .then((d) => new Ortsverzeichnis(d.orte.map(([name, country, lat, lon]) => ({ name, country, km: km(lat, lon), key: norm(name) })), d.plz)));
   }
-  return null;
-}
 
-// Vorschläge beim Tippen: Anfang des Namens zuerst, dann enthaltene
-export function suggest(input: string, limit = 8): Ort[] {
-  const q = norm(input);
-  if (q.length < 2) return [];
-  const starts = ORTE.filter((o) => o.key.startsWith(q));
-  const contains = ORTE.filter((o) => !o.key.startsWith(q) && o.key.includes(q));
-  return [...starts.sort((a, b) => a.km - b.km), ...contains.sort((a, b) => a.km - b.km)].slice(0, limit);
+  // Postleitzahl (DE fünfstellig, NL vierstellig, auch „7091 AB“) oder Ortsname – auch „Hamminkeln-Dingden“, „Rhede (Westf.)“
+  find(input: string): Ort | null {
+    const code = /^\s*(\d{4,5})(\s*[a-z]{2})?\s*$/i.exec(input);
+    if (code) {
+      const plz = code[1];
+      const key = (plz.length === 5 ? 'DE' : 'NL') + plz;
+      const hit = this.plz[key];
+      return hit ? { name: plz, plz, country: plz.length === 5 ? 'DE' : 'NL', km: km(hit[0], hit[1]) } : null;
+    }
+    const q = norm(input);
+    if (q.length < 2) return null;
+    const exact = this.orte.find((o) => o.key === q);
+    if (exact) return exact;
+    // zusammengesetzte Eingaben: letzter bekannter Teil zählt („Hamminkeln Dingden“ → Dingden)
+    for (const part of q.split(' ').reverse()) {
+      const hit = this.orte.find((o) => o.key === part);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  // Vorschläge beim Tippen: Namensanfang zuerst (nächstgelegene oben), dann enthaltene
+  suggest(input: string, limit = 8): Ort[] {
+    const q = norm(input);
+    if (q.length < 2 || /^\d/.test(q)) return [];
+    const starts = this.orte.filter((o) => o.key.startsWith(q)).sort((a, b) => a.km - b.km);
+    const contains = this.orte.filter((o) => !o.key.startsWith(q) && o.key.includes(q)).sort((a, b) => a.km - b.km);
+    return [...starts, ...contains].slice(0, limit);
+  }
 }

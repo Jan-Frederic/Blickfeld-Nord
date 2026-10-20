@@ -72,6 +72,8 @@ test('Konzertseite: vergangenes Konzert zeigt Rückblick', async () => {
 test('Booking: freier Tag im Kalender → Anfrage-Assistent in 3 Schritten', async () => {
   const p = await page();
   await p.go('/booking/');
+  await p.locator('app-entfernung input').fill('Haldern');
+  await until(async () => (await p.locator('app-entfernung .result').count()) && (await p.locator('app-entfernung .result').innerText()).includes('das passt'), 'Entfernungs-Check kennt den Ortsteil Haldern nicht');
   const free = p.locator('app-availability button.day.free').first();
   await free.click();
   await until(async () => /^\d{4}-\d{2}-\d{2}$/.test(await p.locator('app-anfrage input[type=date]').inputValue()), 'Datum wurde nicht übernommen');
@@ -100,6 +102,8 @@ test('Booking NL: Entfernungs-Check und niederländische Anfrage', async () => {
   await p.go('/booking/nl/');
   await p.locator('app-entfernung input').fill('Winterswijk');
   await until(async () => (await p.locator('app-entfernung .result').count()) && (await p.locator('app-entfernung .result').innerText()).includes('dat past'), 'Entfernungs-Check meldet Winterswijk nicht als passend');
+  await p.locator('app-entfernung input').fill('7091');
+  await until(async () => (await p.locator('app-entfernung .result').innerText()).includes('Postcode 7091'), 'Entfernungs-Check erkennt die Postcode 7091 nicht');
   expect((await p.locator('app-anfrage h3').innerText()).toLowerCase().includes('offerte'), 'Anfrage nicht auf Niederländisch');
   expect((await p.locator('app-faq h3').innerText()).toLowerCase().includes('veelgestelde'), 'FAQ nicht auf Niederländisch');
   return p;
