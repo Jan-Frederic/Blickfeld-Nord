@@ -1,10 +1,80 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { I18n, tr } from '../i18n';
 
 // Songwunsch-Formular: Die Seite ist statisch (kein Server) – „Wunsch senden“ öffnet daher eine fertig
 // ausgefüllte E-Mail im Mailprogramm. Ist der Song schon im Repertoire, gibt es direkt einen Hinweis.
 const MAIL = 'Matthiaswigger@me.com';
+
+const TEXT = tr(
+  {
+    title: 'Songwunsch',
+    intro: 'Euer Lieblingssong fehlt? Schlagt ihn uns vor – wir schauen, ob er zu uns passt.',
+    song: 'Song *',
+    artist: 'Interpret',
+    name: 'Euer Name',
+    occasion: 'Anlass oder Termin',
+    occasionPlaceholder: 'z. B. Hochzeit am 12.06.',
+    message: 'Nachricht',
+    known: (title: string, artist: string) => `„${title}“ von ${artist} spielen wir schon – sprecht uns am Abend einfach an!`,
+    send: 'Wunsch senden',
+    hint: 'Öffnet euer E-Mail-Programm mit dem fertigen Text.',
+    mail: {
+      hello: 'Hallo Blickfeld Nord,',
+      wish: 'ich hätte einen Songwunsch:',
+      song: 'Song',
+      artist: 'Interpret',
+      occasion: 'Anlass/Termin',
+      regards: 'Viele Grüße',
+      subject: 'Songwunsch',
+    },
+  },
+  {
+    title: 'Song request',
+    intro: "Your favourite song is missing? Suggest it to us – we'll see if it suits us.",
+    song: 'Song *',
+    artist: 'Artist',
+    name: 'Your name',
+    occasion: 'Occasion or date',
+    occasionPlaceholder: 'e.g. wedding on 12 June',
+    message: 'Message',
+    known: (title: string, artist: string) => `We already play “${title}” by ${artist} – just come and ask us on the night!`,
+    send: 'Send request',
+    hint: 'Opens your e-mail program with the text ready to go.',
+    mail: {
+      hello: 'Hello Blickfeld Nord,',
+      wish: "I'd like to request a song:",
+      song: 'Song',
+      artist: 'Artist',
+      occasion: 'Occasion/date',
+      regards: 'Best regards',
+      subject: 'Song request',
+    },
+  },
+  {
+    title: 'Verzoeknummer',
+    intro: 'Mist je favoriete nummer? Stel het ons voor – we kijken of het bij ons past.',
+    song: 'Nummer *',
+    artist: 'Artiest',
+    name: 'Je naam',
+    occasion: 'Gelegenheid of datum',
+    occasionPlaceholder: 'bijv. bruiloft op 12 juni',
+    message: 'Bericht',
+    known: (title: string, artist: string) => `„${title}” van ${artist} spelen we al – spreek ons op de avond gewoon aan!`,
+    send: 'Verzoek versturen',
+    hint: 'Opent je e-mailprogramma met de kant-en-klare tekst.',
+    mail: {
+      hello: 'Hallo Blickfeld Nord,',
+      wish: 'ik heb een verzoeknummer:',
+      song: 'Nummer',
+      artist: 'Artiest',
+      occasion: 'Gelegenheid/datum',
+      regards: 'Met vriendelijke groet',
+      subject: 'Verzoeknummer',
+    },
+  },
+);
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 
@@ -16,43 +86,43 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
       <div class="head">
         <mat-icon>lyrics</mat-icon>
         <div>
-          <h3>Songwunsch</h3>
-          <p>Euer Lieblingssong fehlt? Schlagt ihn uns vor – wir schauen, ob er zu uns passt.</p>
+          <h3>{{ t().title }}</h3>
+          <p>{{ t().intro }}</p>
         </div>
       </div>
 
       <div class="fields">
         <label>
-          <span>Song *</span>
+          <span>{{ t().song }}</span>
           <input name="song" required maxlength="80" autocomplete="off" [value]="song()" (input)="song.set(value($event))" />
         </label>
         <label>
-          <span>Interpret</span>
+          <span>{{ t().artist }}</span>
           <input name="artist" maxlength="80" autocomplete="off" [value]="artist()" (input)="artist.set(value($event))" />
         </label>
         <label>
-          <span>Euer Name</span>
+          <span>{{ t().name }}</span>
           <input name="name" maxlength="60" autocomplete="name" [value]="name()" (input)="name.set(value($event))" />
         </label>
         <label>
-          <span>Anlass oder Termin</span>
-          <input name="occasion" maxlength="80" placeholder="z. B. Hochzeit am 12.06." [value]="occasion()" (input)="occasion.set(value($event))" />
+          <span>{{ t().occasion }}</span>
+          <input name="occasion" maxlength="80" [placeholder]="t().occasionPlaceholder" [value]="occasion()" (input)="occasion.set(value($event))" />
         </label>
         <label class="wide">
-          <span>Nachricht</span>
+          <span>{{ t().message }}</span>
           <textarea name="message" rows="3" maxlength="500" [value]="message()" (input)="message.set(value($event))"></textarea>
         </label>
       </div>
 
-      @if (known(); as t) {
+      @if (known(); as k) {
         <p class="known" aria-live="polite">
-          <mat-icon>check_circle</mat-icon> „{{ t.title }}“ von {{ t.artist }} spielen wir schon – sprecht uns am Abend einfach an!
+          <mat-icon>check_circle</mat-icon> {{ t().known(k.title, k.artist) }}
         </p>
       }
 
       <div class="actions">
-        <button type="submit" class="btn primary" [disabled]="!song().trim()"><mat-icon>send</mat-icon> Wunsch senden</button>
-        <span class="hint">Öffnet euer E-Mail-Programm mit dem fertigen Text.</span>
+        <button type="submit" class="btn primary" [disabled]="!song().trim()"><mat-icon>send</mat-icon> {{ t().send }}</button>
+        <span class="hint">{{ t().hint }}</span>
       </div>
     </form>
   `,
@@ -86,6 +156,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
   `,
 })
 export class Songwunsch {
+  protected readonly t = inject(I18n).t(TEXT);
   protected readonly song = signal('');
   protected readonly artist = signal('');
   protected readonly name = signal('');
@@ -106,20 +177,21 @@ export class Songwunsch {
     e.preventDefault();
     const song = this.song().trim();
     if (!song) return;
+    const m = this.t().mail;
     const lines = [
-      'Hallo Blickfeld Nord,',
+      m.hello,
       '',
-      'ich hätte einen Songwunsch:',
+      m.wish,
       '',
-      `Song: ${song}`,
-      ...(this.artist().trim() ? [`Interpret: ${this.artist().trim()}`] : []),
-      ...(this.occasion().trim() ? [`Anlass/Termin: ${this.occasion().trim()}`] : []),
+      `${m.song}: ${song}`,
+      ...(this.artist().trim() ? [`${m.artist}: ${this.artist().trim()}`] : []),
+      ...(this.occasion().trim() ? [`${m.occasion}: ${this.occasion().trim()}`] : []),
       ...(this.message().trim() ? ['', this.message().trim()] : []),
       '',
-      'Viele Grüße',
+      m.regards,
       this.name().trim(),
     ];
-    const subject = `Songwunsch: ${song}${this.artist().trim() ? ` – ${this.artist().trim()}` : ''}`;
+    const subject = `${m.subject}: ${song}${this.artist().trim() ? ` – ${this.artist().trim()}` : ''}`;
     window.location.href = `mailto:${MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
   }
 }

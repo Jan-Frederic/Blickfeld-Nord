@@ -1,6 +1,7 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { I18n, tr } from '../i18n';
 
 // Live-Wunschbox (/wunsch): Gäste scannen am Abend den QR-Code auf der Bühne, suchen einen Song aus unserem
 // Repertoire aus und schicken den Wunsch – per Instagram-Nachricht (Text wird kopiert) oder per E-Mail.
@@ -11,25 +12,82 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 
 type Track = { title: string; artist: string };
 
+const TEXT = tr(
+  {
+    title: 'Euer Song?',
+    lead: 'Sucht euch einen Song aus unserem Repertoire aus – wir schauen, wann er am besten in den Abend passt.',
+    placeholder: 'Song oder Interpret …',
+    search: 'Song suchen',
+    none: 'Nichts gefunden – ruft uns euren Wunsch einfach zwischen zwei Songs zu!',
+    change: 'ändern',
+    name: 'Euer Name (optional)',
+    note: 'Gruß oder Anlass (optional)',
+    notePlaceholder: 'z. B. für Anna zum 30.!',
+    instagram: 'Per Instagram senden',
+    mail: 'Per E-Mail',
+    ok: 'Wunsch kopiert – in der Instagram-Nachricht einfach einfügen und abschicken. Danke!',
+    hint: 'Bei Instagram wird euer Wunsch kopiert – im Chat dann nur noch einfügen.',
+    request: 'Songwunsch',
+    greeting: 'Gruß',
+    from: 'von',
+  },
+  {
+    title: 'Your song?',
+    lead: "Pick a song from our repertoire – we'll see when it fits into the evening best.",
+    placeholder: 'Song or artist …',
+    search: 'Search songs',
+    none: "Nothing found – just shout your request to us between two songs!",
+    change: 'change',
+    name: 'Your name (optional)',
+    note: 'Greeting or occasion (optional)',
+    notePlaceholder: "e.g. for Anna's 30th!",
+    instagram: 'Send via Instagram',
+    mail: 'By e-mail',
+    ok: 'Request copied – just paste it into the Instagram message and send. Thanks!',
+    hint: "With Instagram, your request is copied – you then just paste it into the chat.",
+    request: 'Song request',
+    greeting: 'Greeting',
+    from: 'from',
+  },
+  {
+    title: 'Jouw nummer?',
+    lead: 'Kies een nummer uit ons repertoire – wij kijken wanneer het het beste in de avond past.',
+    placeholder: 'Nummer of artiest …',
+    search: 'Nummer zoeken',
+    none: 'Niets gevonden – roep je verzoek gewoon tussen twee nummers naar ons!',
+    change: 'wijzigen',
+    name: 'Je naam (optioneel)',
+    note: 'Groet of gelegenheid (optioneel)',
+    notePlaceholder: 'bijv. voor Anna, 30 jaar!',
+    instagram: 'Via Instagram sturen',
+    mail: 'Per e-mail',
+    ok: 'Verzoek gekopieerd – plak het gewoon in het Instagram-bericht en verstuur het. Bedankt!',
+    hint: 'Bij Instagram wordt je verzoek gekopieerd – in de chat hoef je het alleen nog te plakken.',
+    request: 'Verzoeknummer',
+    greeting: 'Groet',
+    from: 'van',
+  },
+);
+
 @Component({
   selector: 'app-wunsch',
   imports: [MatIconModule],
   template: `
     <section class="section wunsch">
       <p class="kicker">Live-Wunschbox</p>
-      <h2>Euer Song?</h2>
+      <h2>{{ t().title }}</h2>
 
       @if (!chosen()) {
-        <p class="lead">Sucht euch einen Song aus unserem Repertoire aus – wir schauen, wann er am besten in den Abend passt.</p>
+        <p class="lead">{{ t().lead }}</p>
         <label class="search">
           <mat-icon aria-hidden="true">search</mat-icon>
-          <input type="search" [value]="query()" (input)="query.set($any($event.target).value)" placeholder="Song oder Interpret …" aria-label="Song suchen" />
+          <input type="search" [value]="query()" (input)="query.set($any($event.target).value)" [placeholder]="t().placeholder" [attr.aria-label]="t().search" />
         </label>
         <ul class="songs">
-          @for (t of list(); track t.title + t.artist) {
-            <li><button type="button" (click)="chosen.set(t)"><strong>{{ t.title }}</strong><span>{{ t.artist }}</span></button></li>
+          @for (s of list(); track s.title + s.artist) {
+            <li><button type="button" (click)="chosen.set(s)"><strong>{{ s.title }}</strong><span>{{ s.artist }}</span></button></li>
           } @empty {
-            <li class="none">Nichts gefunden – ruft uns euren Wunsch einfach zwischen zwei Songs zu!</li>
+            <li class="none">{{ t().none }}</li>
           }
         </ul>
       } @else {
@@ -37,19 +95,19 @@ type Track = { title: string; artist: string };
           <div class="chosen">
             <mat-icon>music_note</mat-icon>
             <div><strong>{{ c.title }}</strong><span>{{ c.artist }}</span></div>
-            <button type="button" class="change" (click)="chosen.set(null); sent.set(false)">ändern</button>
+            <button type="button" class="change" (click)="chosen.set(null); sent.set(false)">{{ t().change }}</button>
           </div>
-          <label class="field">Euer Name (optional)<input [value]="name()" (input)="name.set($any($event.target).value)" maxlength="40" autocomplete="given-name" /></label>
-          <label class="field">Gruß oder Anlass (optional)<input [value]="note()" (input)="note.set($any($event.target).value)" maxlength="100" placeholder="z. B. für Anna zum 30.!" /></label>
+          <label class="field">{{ t().name }}<input [value]="name()" (input)="name.set($any($event.target).value)" maxlength="40" autocomplete="given-name" /></label>
+          <label class="field">{{ t().note }}<input [value]="note()" (input)="note.set($any($event.target).value)" maxlength="100" [placeholder]="t().notePlaceholder" /></label>
 
           <div class="send">
-            <a class="btn primary" [href]="instagram" target="_blank" rel="noopener" (click)="copy()"><mat-icon>chat</mat-icon> Per Instagram senden</a>
-            <a class="btn" [href]="mailto()"><mat-icon>mail</mat-icon> Per E-Mail</a>
+            <a class="btn primary" [href]="instagram" target="_blank" rel="noopener" (click)="copy()"><mat-icon>chat</mat-icon> {{ t().instagram }}</a>
+            <a class="btn" [href]="mailto()"><mat-icon>mail</mat-icon> {{ t().mail }}</a>
           </div>
           @if (sent()) {
-            <p class="ok" role="status"><mat-icon>check_circle</mat-icon> Wunsch kopiert – in der Instagram-Nachricht einfach einfügen und abschicken. Danke!</p>
+            <p class="ok" role="status"><mat-icon>check_circle</mat-icon> {{ t().ok }}</p>
           } @else {
-            <p class="hint">Bei Instagram wird euer Wunsch kopiert – im Chat dann nur noch einfügen.</p>
+            <p class="hint">{{ t().hint }}</p>
           }
         }
       }
@@ -89,6 +147,7 @@ type Track = { title: string; artist: string };
   `,
 })
 export class WunschPage {
+  protected readonly t = inject(I18n).t(TEXT);
   protected readonly query = signal('');
   protected readonly chosen = signal<Track | null>(null);
   protected readonly name = signal('');
@@ -105,17 +164,18 @@ export class WunschPage {
   protected readonly text = computed(() => {
     const c = this.chosen();
     if (!c) return '';
+    const t = this.t();
     return [
-      `Songwunsch: „${c.title}“ (${c.artist})`,
-      this.note().trim() ? `Gruß: ${this.note().trim()}` : '',
-      this.name().trim() ? `von ${this.name().trim()}` : '',
+      `${t.request}: „${c.title}“ (${c.artist})`,
+      this.note().trim() ? `${t.greeting}: ${this.note().trim()}` : '',
+      this.name().trim() ? `${t.from} ${this.name().trim()}` : '',
     ]
       .filter(Boolean)
       .join('\n');
   });
 
   protected readonly mailto = computed(
-    () => `mailto:${MAIL}?subject=${encodeURIComponent('Songwunsch: ' + (this.chosen()?.title ?? ''))}&body=${encodeURIComponent(this.text())}`,
+    () => `mailto:${MAIL}?subject=${encodeURIComponent(this.t().request + ': ' + (this.chosen()?.title ?? ''))}&body=${encodeURIComponent(this.text())}`,
   );
 
   protected copy(): void {

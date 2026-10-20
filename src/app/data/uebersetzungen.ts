@@ -59,6 +59,56 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     en: 'Fred in a flat cap, smiling as he plays his electric bass, in front of a brick wall',
     nl: 'Fred met platte pet speelt glimlachend op zijn elektrische bas, voor een bakstenen muur',
   },
+  {
+    de: 'Schlagzeuger aus Leidenschaft',
+    en: 'Drummer by passion',
+    nl: 'Drummer uit passie',
+  },
+  {
+    de: 'Ich heiße Matthias Wigger und spiele seit meinem fünften Lebensjahr mit großer Leidenschaft Schlagzeug und Percussion. Bereits im Alter von sechs Jahren sammelte ich erste Live- und Bühnenerfahrungen in der damaligen Band Sunrise. Schon damals wurde mir klar, dass mich besonders das Zusammenspiel im Ensemble sowie das Auftreten vor Publikum am Schlagzeug fasziniert.',
+    en: 'My name is Matthias Wigger and I have been playing drums and percussion with great passion since the age of five. At just six years old I gained my first live and stage experience in the band Sunrise. Even back then it became clear to me that what fascinates me most about the drums is playing together in an ensemble and performing in front of an audience.',
+    nl: 'Ik heet Matthias Wigger en speel sinds mijn vijfde met veel passie drums en percussie. Al op zesjarige leeftijd deed ik mijn eerste live- en podiumervaring op in de toenmalige band Sunrise. Toen werd me al duidelijk dat vooral het samenspel in een ensemble en het optreden voor publiek achter het drumstel me fascineert.',
+  },
+  {
+    de: 'Über einen Zeitraum von neun Jahren erhielt ich fundierten Unterricht an der Bocholt Rheder Musikschule, wo ich mir solide technische Grundlagen, ein ausgeprägtes rhythmisches Verständnis sowie musikalisches Gehör erarbeiten konnte. Mit 14 Jahren wurde ich Mitglied des Percussion Ensembles Bocholt, in dem ich intensive Erfahrungen mit Polyrhythmik, Dynamik und unterschiedlichsten perkussiven Klangfarben sammelte.',
+    en: 'Over a period of nine years I received thorough lessons at the Bocholt Rheder Musikschule, where I built a solid technical foundation, a strong sense of rhythm and a musical ear. At 14 I became a member of the Percussion Ensemble Bocholt, where I gained in-depth experience with polyrhythms, dynamics and a wide range of percussive tone colours.',
+    nl: 'Negen jaar lang kreeg ik gedegen les aan de Bocholt Rheder Musikschule, waar ik een solide technische basis, een sterk ritmisch gevoel en een muzikaal gehoor kon opbouwen. Op mijn 14e werd ik lid van het Percussion Ensemble Bocholt, waar ik intensieve ervaring opdeed met polyritmiek, dynamiek en de meest uiteenlopende percussieve klankkleuren.',
+  },
+  {
+    de: 'Auch das Musizieren im Dingdener Chor Pro-Campesinos hat meine Spielweise und mein musikalisches Verständnis nachhaltig geprägt. Das aufmerksame Zuhören, das Anpassen an einen Chor und das sensible Begleiten mit dem Schlagzeug waren für mich eine besonders lehrreiche und wertvolle Erfahrung, die mich bis heute begleitet. Inzwischen unterstütze ich den Chor zudem regelmäßig an der Bassgitarre, wodurch ich mein musikalisches Zusammenspiel weiter vertiefen konnte.',
+    en: 'Making music in the Dingden choir Pro-Campesinos has also had a lasting influence on my playing style and my musical understanding. Listening attentively, adapting to a choir and accompanying it sensitively on the drums were a particularly instructive and valuable experience for me that stays with me to this day. These days I also regularly support the choir on bass guitar, which has allowed me to deepen my ensemble playing even further.',
+    nl: 'Ook het musiceren in het koor Pro-Campesinos uit Dingden heeft mijn speelstijl en mijn muzikale begrip blijvend gevormd. Aandachtig luisteren, me aanpassen aan een koor en het gevoelig begeleiden met de drums waren voor mij een bijzonder leerzame en waardevolle ervaring, die me tot vandaag bijblijft. Inmiddels ondersteun ik het koor bovendien regelmatig op basgitaar, waardoor ik mijn muzikale samenspel verder kon verdiepen.',
+  },
+  {
+    de: 'Ergänzender Unterricht an den Musikschulen Ringenberg, Wesel und Rhede eröffnete mir weitere pädagogische und stilistische Perspektiven im modernen Schlagzeugunterricht. Besonders prägend war meine Ausbildung an der Schlagzeugschule Frank Bruns, bei der ich mein Spiel in den Bereichen Groove, Timing, Technik, Stilistik und musikalischer Ausdruck kontinuierlich weiterentwickeln konnte.',
+    en: 'Additional lessons at the music schools in Ringenberg, Wesel and Rhede opened up further teaching and stylistic perspectives in modern drum tuition for me. My training at the Frank Bruns drum school was particularly formative: there I was able to continuously develop my playing in groove, timing, technique, style and musical expression.',
+    nl: 'Aanvullende lessen aan de muziekscholen in Ringenberg, Wesel en Rhede gaven me nieuwe didactische en stilistische perspectieven op modern drumonderwijs. Bijzonder vormend was mijn opleiding aan de drumschool van Frank Bruns, waar ik mijn spel op het gebied van groove, timing, techniek, stijl en muzikale expressie voortdurend verder kon ontwikkelen.',
+  },
+  {
+    de: 'Neben meiner Unterrichtstätigkeit war und bin ich als Schlagzeuger in verschiedenen Bands und Stilrichtungen aktiv. Dazu zählen Sunrise (Kirchenband), Break Nemesis (Pop-Band der 1990er Jahre), Bedazzled (Progressive Metal der 2000er), Arriving Somewhere (British Pop, 2000–2010), Joda (Grunge, 2020er) sowie aktuell Blickfeld Nord, eine Band mit einem vielseitigen Repertoire aus Pop, Rock, Schlager, Dance und Disco.',
+    en: 'Alongside teaching, I have been and still am active as a drummer in various bands and styles. These include Sunrise (church band), Break Nemesis (1990s pop band), Bedazzled (2000s progressive metal), Arriving Somewhere (British pop, 2000–2010), Joda (grunge, 2020s) and currently Blickfeld Nord, a band with a varied repertoire of pop, rock, German Schlager, dance and disco.',
+    nl: 'Naast het lesgeven was en ben ik als drummer actief in verschillende bands en stijlen. Daartoe behoren Sunrise (kerkband), Break Nemesis (popband uit de jaren 90), Bedazzled (progressive metal uit de jaren 2000), Arriving Somewhere (Britse pop, 2000–2010), Joda (grunge, jaren 2020) en momenteel Blickfeld Nord, een band met een veelzijdig repertoire van pop, rock, schlagers, dance en disco.',
+  },
+  {
+    de: 'Hauptberuflich arbeite ich als Vorgesetzter der Werkzeugvoreinstellung bei der Flender GmbH und trage Verantwortung für Organisation, Abläufe und Mitarbeitende. Die tägliche Arbeit mit Menschen, das Anleiten von Teams sowie das Begleiten individueller Entwicklungen bereiten mir große Freude. Durch meine Ausbildung zum Ausbilder (AdA) konnte ich vielfältige didaktische Lehrmethoden erlernen, die ich im Rahmen meines Industriemeisters und meiner beruflichen Erfahrung weiter vertiefen konnte.',
+    en: 'In my main job I work as the supervisor of tool presetting at Flender GmbH, where I am responsible for organisation, processes and staff. Working with people every day, guiding teams and supporting individual development give me great pleasure. Through my trainer qualification (AdA) I learned a wide range of teaching methods, which I have deepened further through my master craftsman qualification in industry and my professional experience.',
+    nl: 'In mijn hoofdberoep werk ik als leidinggevende van de gereedschapsvoorinstelling bij Flender GmbH en ben ik verantwoordelijk voor organisatie, processen en medewerkers. Het dagelijkse werken met mensen, het begeleiden van teams en het ondersteunen van individuele ontwikkeling geven me veel voldoening. Door mijn opleiding tot instructeur (AdA) heb ik veel verschillende didactische methoden geleerd, die ik tijdens mijn opleiding tot industrieel meester en in mijn beroepservaring verder heb kunnen verdiepen.',
+  },
+  {
+    de: 'Besonders wichtig sind mir ein handlungsorientierter Unterricht, das Stärken unterschiedlicher Kompetenzen sowie das Erkennen und gezielte Fördern persönlicher Potenziale.',
+    en: 'What matters most to me is hands-on teaching, strengthening a range of skills and recognising and specifically nurturing each person’s potential.',
+    nl: 'Bijzonder belangrijk vind ik praktijkgericht lesgeven, het versterken van uiteenlopende vaardigheden en het herkennen en gericht stimuleren van ieders persoonlijke talent.',
+  },
+  {
+    de: 'Seit über zehn Jahren gebe ich meine vielfältigen musikalischen und pädagogischen Erfahrungen mit großer Begeisterung – zunächst als Hobby und inzwischen gewerblich – an meine Schülerinnen und Schüler weiter.',
+    en: 'For more than ten years I have been passing on my wide-ranging musical and teaching experience to my students with great enthusiasm – first as a hobby and now professionally.',
+    nl: 'Al meer dan tien jaar geef ik mijn veelzijdige muzikale en didactische ervaring met veel enthousiasme door aan mijn leerlingen – eerst als hobby en inmiddels beroepsmatig.',
+  },
+  {
+    de: 'Zur Drum School Matthias Wigger',
+    en: 'Visit Drum School Matthias Wigger',
+    nl: 'Naar Drum School Matthias Wigger',
+  },
   // Historie: 2026-09-25 Geburtstagsfeier im Gasthof Buschmann
   {
     de: 'Geburtstagsfeier im Gasthof Buschmann – die ganze Familie macht mit',
