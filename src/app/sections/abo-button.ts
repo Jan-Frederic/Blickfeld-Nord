@@ -9,6 +9,7 @@ const TEXT = tr(
     subscribe: 'Kalender abonnieren',
     copyHint: 'Adresse zum Einfügen in Outlook oder andere Kalender-Apps',
     copied: 'Adresse kopiert ✓',
+    google: 'Google Kalender',
     copy: 'Adresse kopieren',
     download: 'einmalig herunterladen',
     prompt: 'Kalender-Adresse kopieren:',
@@ -18,6 +19,7 @@ const TEXT = tr(
     subscribe: 'Subscribe to calendar',
     copyHint: 'Address to paste into Outlook or other calendar apps',
     copied: 'Address copied ✓',
+    google: 'Google Calendar',
     copy: 'Copy address',
     download: 'download once',
     prompt: 'Copy calendar address:',
@@ -27,6 +29,7 @@ const TEXT = tr(
     subscribe: 'Agenda abonneren',
     copyHint: 'Adres om in Outlook of andere agenda-apps te plakken',
     copied: 'Adres gekopieerd ✓',
+    google: 'Google Agenda',
     copy: 'Adres kopiëren',
     download: 'eenmalig downloaden',
     prompt: 'Agenda-adres kopiëren:',
@@ -45,7 +48,7 @@ const TEXT = tr(
       <mat-icon>event_repeat</mat-icon> {{ t().subscribe }}
     </a>
     <span class="alt">
-      @if (!android) { <a [href]="google()" target="_blank" rel="noopener">Google Kalender</a> · }
+      @if (!android) { <a [href]="google()" target="_blank" rel="noopener">{{ t().google }}</a> · }
       <!-- für Outlook & Co.: „Aus dem Internet abonnieren“ braucht die https-Adresse -->
       <button type="button" (click)="copy()" [title]="t().copyHint">{{ copied() ? t().copied : t().copy }}</button> ·
       <button type="button" (click)="download.emit()">{{ t().download }}</button>

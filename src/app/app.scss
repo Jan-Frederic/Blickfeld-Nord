@@ -24,9 +24,14 @@
 }
 .languages a:hover { color: var(--bn-ink); }
 .languages a.current { color: var(--bn-sunset); }
-@media (max-width: 640px) {
+// Die volle Navigation braucht je nach Sprache bis zu ~1140 px – darunter übernimmt das Menü
+@media (max-width: 1180px) {
   .desktop-nav { display: none; }
   .mobile-nav { display: inline-flex; }
+}
+// auf schmalen Handys passt der Umschalter nicht neben Logo und Menü – dort im Menü und in der Fußzeile
+@media (max-width: 640px) {
+  .languages { display: none; }
 }
 footer {
   text-align: center; padding: 48px 16px; color: var(--bn-fog);
@@ -61,3 +66,8 @@ footer {
 .install-hint { margin: 4px 0 14px; font-size: .85rem; color: var(--bn-fog); text-transform: none; letter-spacing: normal; }
 .version a { color: var(--bn-fog); text-decoration: none; }
 .version a:hover { color: var(--bn-sunset); }
+
+.footer-languages { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 16px; margin-bottom: 8px; }
+.footer-languages a { color: var(--bn-fog); text-decoration: none; }
+.footer-languages a:hover, .footer-languages a.current { color: var(--bn-sunset); }
+.footer-languages mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-fog); }

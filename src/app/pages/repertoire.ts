@@ -1,55 +1,90 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Repertoire } from '../sections/repertoire';
 import { Songwunsch } from '../sections/songwunsch';
+import { I18n, LocPipe, tr } from '../i18n';
+
+const TEXT = tr(
+  {
+    kicker: 'Was wir spielen',
+    lead: 'Von Pop und Rock über Schlager bis Dance und Disco: Unsere Songs laden zum Mitsingen, Tanzen und Feiern ein. Doch die Setlist ist bei uns nur der Anfang – denn live spielen wir nichts einfach nach.',
+    liveTitle: "Live klingt's bei uns anders",
+    liveText: 'Wir schmücken unsere Auftritte musikalisch aus: mit knackigen Fill-Ins, Jam-Sessions, spontanen Aktionen und kreativen Überlegungen. Wir hören aufeinander, schauen ins Publikum und lassen uns vom Abend tragen – so wird aus einem bekannten Song jedes Mal ein kleines bisschen etwas Neues.',
+    cards: [
+      { icon: 'graphic_eq', title: 'Knackige Fill-Ins', text: 'Ein Trommelwirbel hier, ein Basslauf da: Kleine Fills, die Übergänge zünden lassen und jedem Song ordentlich Schwung geben.' },
+      { icon: 'all_inclusive', title: 'Jam-Sessions', text: 'Wenn die Stimmung stimmt, lassen wir es laufen – der Groove wird länger, das Solo größer, und ein Song geht wie von selbst in den nächsten über.' },
+      { icon: 'bolt', title: 'Spontane Aktionen', text: 'Ein Ständchen fürs Geburtstagskind, ein Refrain, den der ganze Saal übernimmt, oder ein Gast, der kurzerhand mit einsteigt: Wir spielen mit dem Moment.' },
+      { icon: 'lightbulb', title: 'Kreative Überlegungen', text: 'Eigene Arrangements, überraschende Wendungen und bekannte Hits im neuen Gewand – mal ruhiger, mal schneller, immer mit unserer Handschrift.' },
+    ],
+    claim: 'Kein Auftritt gleicht dem anderen.',
+    sub: 'Darum lohnt es sich, öfter vorbeizukommen – und darum wird jede Feier mit uns zu eurer ganz eigenen.',
+    cta: 'Viele Wünsche erfüllen wir gern, manche sogar spontan am Abend.',
+    booking: 'Booking & Anfrage',
+    spotify: 'Playlist auf Spotify',
+  },
+  {
+    kicker: 'What we play',
+    lead: 'From pop and rock to German Schlager, dance and disco: our songs get people singing, dancing and celebrating. But for us the setlist is just the beginning – because live, we never simply copy a song.',
+    liveTitle: 'Live, we sound different',
+    liveText: 'We dress up our shows musically: with punchy fills, jam sessions, spontaneous moments and creative ideas. We listen to each other, watch the crowd and let the evening carry us – so a well-known song turns into something a little bit new every time.',
+    cards: [
+      { icon: 'graphic_eq', title: 'Punchy fills', text: 'A drum roll here, a bass run there: little fills that make the transitions spark and give every song a proper lift.' },
+      { icon: 'all_inclusive', title: 'Jam sessions', text: 'When the vibe is right, we let it flow – the groove gets longer, the solo bigger, and one song slides into the next as if by itself.' },
+      { icon: 'bolt', title: 'Spontaneous moments', text: 'A serenade for the birthday boy or girl, a chorus the whole room takes over, or a guest who simply joins in: we play with the moment.' },
+      { icon: 'lightbulb', title: 'Creative ideas', text: 'Our own arrangements, surprising twists and well-known hits in a new guise – sometimes calmer, sometimes faster, always with our own signature.' },
+    ],
+    claim: 'No two shows are the same.',
+    sub: "That's why it's worth coming back more often – and why every party with us becomes truly your own.",
+    cta: "We're happy to fulfil lots of requests, some even spontaneously on the night.",
+    booking: 'Booking & enquiries',
+    spotify: 'Playlist on Spotify',
+  },
+  {
+    kicker: 'Wat we spelen',
+    lead: 'Van pop en rock tot schlagers, dance en disco: onze nummers nodigen uit om mee te zingen, te dansen en te feesten. Maar de setlist is bij ons pas het begin – want live spelen we niets zomaar na.',
+    liveTitle: 'Live klinkt het bij ons anders',
+    liveText: 'We kleden onze optredens muzikaal aan: met pittige fills, jamsessies, spontane acties en creatieve ideeën. We luisteren naar elkaar, kijken naar het publiek en laten ons door de avond meevoeren – zo wordt een bekend nummer elke keer weer een beetje iets nieuws.',
+    cards: [
+      { icon: 'graphic_eq', title: 'Pittige fills', text: 'Een roffel hier, een baslijntje daar: kleine fills die de overgangen laten vonken en elk nummer flink vaart geven.' },
+      { icon: 'all_inclusive', title: 'Jamsessies', text: 'Als de sfeer goed is, laten we het lopen – de groove wordt langer, de solo groter, en het ene nummer gaat als vanzelf over in het volgende.' },
+      { icon: 'bolt', title: 'Spontane acties', text: 'Een serenade voor de jarige, een refrein dat de hele zaal overneemt, of een gast die zomaar meedoet: we spelen met het moment.' },
+      { icon: 'lightbulb', title: 'Creatieve ideeën', text: 'Eigen arrangementen, verrassende wendingen en bekende hits in een nieuw jasje – soms rustiger, soms sneller, altijd met ons eigen handschrift.' },
+    ],
+    claim: 'Geen optreden is hetzelfde.',
+    sub: 'Daarom loont het om vaker langs te komen – en daarom wordt elk feest met ons echt het jouwe.',
+    cta: 'Veel verzoeken vervullen we graag, sommige zelfs spontaan op de avond.',
+    booking: 'Boeken & aanvraag',
+    spotify: 'Playlist op Spotify',
+  },
+);
 
 // Eigene Unterseite /repertoire: wie wir live spielen + durchsuchbare Songliste aus der Spotify-Playlist
 @Component({
   selector: 'app-repertoire-page',
-  imports: [RouterLink, MatIconModule, Repertoire, Songwunsch],
+  imports: [RouterLink, MatIconModule, Repertoire, Songwunsch, LocPipe],
   template: `
     <section class="section">
-      <p class="kicker">Was wir spielen</p>
+      <p class="kicker">{{ t().kicker }}</p>
       <h2>Repertoire</h2>
-      <p class="lead">
-        Von Pop und Rock über Schlager bis Dance und Disco: Unsere Songs laden zum Mitsingen, Tanzen und Feiern ein.
-        Doch die Setlist ist bei uns nur der Anfang – denn live spielen wir nichts einfach nach.
-      </p>
+      <p class="lead">{{ t().lead }}</p>
 
       <div class="live">
-        <h3>Live klingt's bei uns anders</h3>
-        <p>
-          Wir schmücken unsere Auftritte musikalisch aus: mit knackigen Fill-Ins, Jam-Sessions, spontanen Aktionen
-          und kreativen Überlegungen. Wir hören aufeinander, schauen ins Publikum und lassen uns vom Abend tragen –
-          so wird aus einem bekannten Song jedes Mal ein kleines bisschen etwas Neues.
-        </p>
+        <h3>{{ t().liveTitle }}</h3>
+        <p>{{ t().liveText }}</p>
 
         <ul class="cards">
-          <li>
-            <mat-icon>graphic_eq</mat-icon>
-            <h4>Knackige Fill-Ins</h4>
-            <p>Ein Trommelwirbel hier, ein Basslauf da: Kleine Fills, die Übergänge zünden lassen und jedem Song ordentlich Schwung geben.</p>
-          </li>
-          <li>
-            <mat-icon>all_inclusive</mat-icon>
-            <h4>Jam-Sessions</h4>
-            <p>Wenn die Stimmung stimmt, lassen wir es laufen – der Groove wird länger, das Solo größer, und ein Song geht wie von selbst in den nächsten über.</p>
-          </li>
-          <li>
-            <mat-icon>bolt</mat-icon>
-            <h4>Spontane Aktionen</h4>
-            <p>Ein Ständchen fürs Geburtstagskind, ein Refrain, den der ganze Saal übernimmt, oder ein Gast, der kurzerhand mit einsteigt: Wir spielen mit dem Moment.</p>
-          </li>
-          <li>
-            <mat-icon>lightbulb</mat-icon>
-            <h4>Kreative Überlegungen</h4>
-            <p>Eigene Arrangements, überraschende Wendungen und bekannte Hits im neuen Gewand – mal ruhiger, mal schneller, immer mit unserer Handschrift.</p>
-          </li>
+          @for (c of t().cards; track c.icon) {
+            <li>
+              <mat-icon>{{ c.icon }}</mat-icon>
+              <h4>{{ c.title }}</h4>
+              <p>{{ c.text }}</p>
+            </li>
+          }
         </ul>
 
-        <p class="claim">Kein Auftritt gleicht dem anderen.</p>
-        <p class="sub">Darum lohnt es sich, öfter vorbeizukommen – und darum wird jede Feier mit uns zu eurer ganz eigenen.</p>
+        <p class="claim">{{ t().claim }}</p>
+        <p class="sub">{{ t().sub }}</p>
       </div>
 
       <app-repertoire />
@@ -57,15 +92,15 @@ import { Songwunsch } from '../sections/songwunsch';
       <app-songwunsch />
 
       <div class="cta">
-        <p>Viele Wünsche erfüllen wir gern, manche sogar spontan am Abend.</p>
+        <p>{{ t().cta }}</p>
         <div class="buttons">
-          <a class="btn primary" routerLink="/booking"><mat-icon>event_available</mat-icon> Booking & Anfrage</a>
+          <a class="btn primary" [routerLink]="'/booking' | loc"><mat-icon>event_available</mat-icon> {{ t().booking }}</a>
           <a class="btn" href="https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <circle cx="12" cy="12" r="9.5" />
               <path d="M7 9.3c3.6-1 7.4-.7 10.4.9M7.6 12.6c2.9-.8 5.9-.5 8.4.8M8.2 15.7c2.2-.6 4.4-.4 6.3.6" />
             </svg>
-            Playlist auf Spotify
+            {{ t().spotify }}
           </a>
         </div>
       </div>
@@ -100,4 +135,6 @@ import { Songwunsch } from '../sections/songwunsch';
     @media (max-width: 520px) { .live { padding: 18px 16px; } .claim { font-size: 1.1rem; } }
   `,
 })
-export class RepertoirePage {}
+export class RepertoirePage {
+  protected readonly t = inject(I18n).t(TEXT);
+}

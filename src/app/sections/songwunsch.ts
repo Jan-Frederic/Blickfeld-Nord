@@ -130,7 +130,8 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     .wish { margin-top: 32px; padding: 24px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); text-align: left; }
     .head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
     .head mat-icon { color: var(--bn-sunset); margin-top: 2px; }
-    h3 { margin: 0 0 4px; font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .08em; }
+    .head > :not(mat-icon) { min-width: 0; }
+    h3 { margin: 0 0 4px; font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .08em; overflow-wrap: anywhere; hyphens: auto; }
     .head p { margin: 0; color: rgba(236, 233, 228, .82); line-height: 1.55; }
     .fields { display: grid; gap: 12px 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     label { display: flex; flex-direction: column; gap: 6px; }

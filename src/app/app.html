@@ -41,6 +41,13 @@
     }
     <a mat-menu-item [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
     <a mat-menu-item [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
+    @if (showLanguages()) {
+      @for (l of languages(); track l.lang) {
+        @if (!l.current) {
+          <a mat-menu-item [routerLink]="l.link" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><mat-icon>translate</mat-icon> {{ l.name }}</a>
+        }
+      }
+    }
   </mat-menu>
 </mat-toolbar>
 
@@ -77,6 +84,14 @@
     <a [routerLink]="'/impressum' | loc">{{ t().footer.imprint }}</a>
     <a [routerLink]="'/datenschutz' | loc">{{ t().footer.privacy }}</a>
   </nav>
+  @if (showLanguages()) {
+    <nav class="footer-languages" [attr.aria-label]="t().language">
+      <mat-icon>translate</mat-icon>
+      @for (l of languages(); track l.lang) {
+        <a [routerLink]="l.link" [attr.lang]="l.lang" [attr.hreflang]="l.lang" [attr.aria-current]="l.current ? 'true' : null" [class.current]="l.current">{{ l.name }}</a>
+      }
+    </nav>
+  }
   @if (installable()) {
     <button type="button" class="install" (click)="install()"><mat-icon>install_mobile</mat-icon> {{ t().install }}</button>
   } @else if (iosHint()) {

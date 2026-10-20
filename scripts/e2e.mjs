@@ -117,7 +117,7 @@ test('Sprachen: Umschalter wechselt auf dieselbe Seite in Englisch, alte Adresse
   await p.locator('nav.languages a[hreflang=en]').click();
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/en/repertoire', 'Umschalter führt nicht zu /en/repertoire');
   await until(async () => (await p.locator('html').getAttribute('lang')) === 'en', 'Seite nicht auf Englisch (lang-Attribut)');
-  await until(async () => (await p.locator('footer').innerText()).includes('All rights reserved'), 'Fußzeile nicht auf Englisch');
+  await until(async () => (await p.locator('footer').innerText()).toLowerCase().includes('all rights reserved'), 'Fußzeile nicht auf Englisch');
   await p.go('/booking/en/');
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/en/booking', 'alte Adresse /booking/en leitet nicht weiter');
   return p;

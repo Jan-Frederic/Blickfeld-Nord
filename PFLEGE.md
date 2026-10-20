@@ -102,6 +102,35 @@ Neueste Einträge kommen nach oben:
   Die Kennung steht in der Reel-Adresse `instagram.com/reel/ABC123/`.
 - Das erste Foto und der erste Absatz erscheinen automatisch auch auf der Konzertseite des Auftritts vom selben Tag.
 
+## Englisch und Niederländisch
+
+Die Website gibt es auch auf Englisch (`/en/…`) und Niederländisch (`/nl/…`). Für euch ändert sich beim Eintragen
+**nichts**: Ihr schreibt alles wie bisher auf Deutsch.
+
+- **Auftritte und Proben** erscheinen automatisch in allen Sprachen. Location- und Ortsnamen werden nicht übersetzt.
+- **Neue oder geänderte Texte** (Rückblick, Bio, Bildbeschreibung …) stehen auf den englischen und niederländischen
+  Seiten zunächst auf Deutsch, mit dem Hinweis „only available in German“. Die Übersetzungen liegen in
+  [`src/app/data/uebersetzungen.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/uebersetzungen.ts).
+  Jeder Eintrag steht dort neben seinem deutschen Original:
+
+  ```ts
+  {
+    de: 'Weihnachtsmarkt in Rhede',
+    en: 'Christmas market in Rhede',
+    nl: 'Kerstmarkt in Rhede',
+  },
+  ```
+
+  Das Deutsche muss **zeichengenau** mit dem Text in `band.service.ts` übereinstimmen. Am einfachsten kopiert ihr es
+  von dort. Übersetzen kann auch Fred oder Claude.
+- **Gegenlesen:** Übersetzte Texte zeigen den Hinweis „Translated from German – not yet proofread by the band“. Wer eine
+  Sprache gut kann, liest den Eintrag, korrigiert ihn bei Bedarf und ergänzt `geprueft: { en: true }`
+  (bzw. `{ nl: true }` oder `{ en: true, nl: true }`). Dann verschwindet der Hinweis.
+- Wie viel schon gegengelesen ist und welche Texte noch fehlen, zeigt der **Backstage** unter
+  „Übersetzungen der Inhalte“.
+- **Impressum und Datenschutz:** Nach einer Änderung am deutschen Text bitte Bescheid geben, damit die Übersetzungen
+  nachgezogen werden. Verbindlich ist immer die deutsche Fassung.
+
 ## Was die automatischen Prüfungen abfangen
 
 Bevor etwas online geht, prüft GitHub unter anderem:

@@ -14,6 +14,7 @@ type Track = { title: string; artist: string };
 
 const TEXT = tr(
   {
+    kicker: 'Live-Wunschbox',
     title: 'Euer Song?',
     lead: 'Sucht euch einen Song aus unserem Repertoire aus – wir schauen, wann er am besten in den Abend passt.',
     placeholder: 'Song oder Interpret …',
@@ -32,6 +33,7 @@ const TEXT = tr(
     from: 'von',
   },
   {
+    kicker: 'Live request box',
     title: 'Your song?',
     lead: "Pick a song from our repertoire – we'll see when it fits into the evening best.",
     placeholder: 'Song or artist …',
@@ -50,6 +52,7 @@ const TEXT = tr(
     from: 'from',
   },
   {
+    kicker: 'Live-verzoekbox',
     title: 'Jouw nummer?',
     lead: 'Kies een nummer uit ons repertoire – wij kijken wanneer het het beste in de avond past.',
     placeholder: 'Nummer of artiest …',
@@ -74,7 +77,7 @@ const TEXT = tr(
   imports: [MatIconModule],
   template: `
     <section class="section wunsch">
-      <p class="kicker">Live-Wunschbox</p>
+      <p class="kicker">{{ t().kicker }}</p>
       <h2>{{ t().title }}</h2>
 
       @if (!chosen()) {

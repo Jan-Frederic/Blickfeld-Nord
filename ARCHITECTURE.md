@@ -129,7 +129,8 @@ flowchart TB
 | Ordner / Datei | Aufgabe |
 |---|---|
 | `src/app/data/` | Inhalte und reine Logik ohne Oberfläche. Wird auch von Build-Skripten und Tests importiert. |
-| `src/app/sections/` | Wiederverwendbare Abschnitte (Startseite, Booking in drei Sprachen) |
+| `src/app/sections/` | Wiederverwendbare Abschnitte (Startseite, Booking, Technik-Aufbau …) |
+| `src/app/i18n.ts`, `src/app/content.ts` | Mehrsprachigkeit: Sprache aus der Adresse, Wörterbücher, Inhalts-Übersetzungen |
 | `src/app/pages/` | Routen-Komponenten, darunter alle Backstage-Seiten |
 | `public/` | Statische Dateien: Fotos (`galerie/`, `historie/`, `band/`), Pressekit und PDFs (`presse/`), Ortsverzeichnis (`data/orte.json`), Icons, Manifest |
 | `src/fonts/`, `src/fonts.css` | Auf die benutzten Zeichen verkleinerte Textschriften |
@@ -141,8 +142,9 @@ flowchart TB
 ```mermaid
 flowchart LR
   subgraph Prerender["Prerender – fertiges HTML beim Build"]
+    L["je Sprache: / (de), /en/…, /nl/…"]
     H["/"]
-    BK["/booking, /booking/en, /booking/nl"]
+    BK["/booking"]
     M["/band/:slug<br/>je Mitglied"]
     K["/konzerte/:id<br/>je öffentlichem, geklärtem Konzert"]
     O["/repertoire, /galerie, /historie, /presse,<br/>/technik, /freunde, /wunsch, /impressum,<br/>/datenschutz, /404"]
@@ -159,10 +161,40 @@ flowchart LR
 - **Backstage bleibt clientseitig**, damit private Termine nicht als durchsuchbares HTML entstehen. Für Direktaufrufe
   wie `/backstage/2026-12-04/setlist` gibt es keine Datei. Die Fehlerseite `404.html` leitet deshalb zur Backstage-Shell
   weiter (`/backstage/?auftritt=…&teil=…`), die dann zur Unterseite navigiert (Deploy-Schritt „SPA fallback“).
-- **Seiten-Metadaten** (`page-meta.ts`, `PageTitleStrategy`): Titel, Beschreibung, `robots`, Open-Graph-Tags,
-  Sprache und `hreflang`-Alternativen kommen aus `data` der Route.
+- **Seiten-Metadaten** (`page-meta.ts`, `PageTitleStrategy`): Titel und Beschreibung je Sprache kommen aus `data` der
+  Route; `lang`-Attribut, `og:locale`, Canonical und `hreflang`-Verweise ergeben sich aus der Adresse.
+- **Frühere Adressen** `/booking/en` und `/booking/nl` leiten auf `/en/booking` bzw. `/nl/booking` weiter.
 - **Nach einem Deploy** fehlen eventuell alte JavaScript-Pakete. Dann lädt `reloadOnMissingChunk` die Zielseite einmal
   komplett neu, statt hängen zu bleiben.
+
+### Mehrsprachigkeit
+
+Alle öffentlichen Seiten gibt es auf **Deutsch** (`/`), **Englisch** (`/en/…`) und **Niederländisch** (`/nl/…`). Der
+Backstage bleibt deutsch. Die Sprache ergibt sich allein aus der Adresse, deshalb entsteht beim Vorrendern für jede
+Sprache fertiges HTML.
+
+```mermaid
+flowchart LR
+  URL["Adresse<br/>/en/booking"] --> I18N["I18n-Service<br/>lang = en, path = /booking"]
+  I18N --> UI["Oberflächentexte<br/>tr(de, en, nl) in der Komponente"]
+  I18N --> CT["Inhalte (Content)<br/>Nachschlagen per deutschem Original"]
+  CT --> TAB[("uebersetzungen.ts<br/>de · en · nl · geprueft")]
+  CT --> NOTE["Hinweis: „noch nicht gegengelesen“<br/>oder „nur auf Deutsch“"]
+  I18N --> META["Titel, Beschreibung, lang,<br/>hreflang, Canonical"]
+  I18N --> LINKS["| loc → /en/…<br/>| ldate → Datumsformat"]
+```
+
+| Baustein | Aufgabe |
+|---|---|
+| `src/app/i18n.ts` | Sprache aus der Adresse (`I18n.lang`), `tr(de, en, nl)` für typisierte Wörterbücher, Pipes `loc` (Links) und `ldate` (Datumsformate je Sprache) |
+| Wörterbücher in den Komponenten | Feste Texte der Oberfläche. Englisch und Niederländisch müssen exakt die Form der deutschen Fassung haben, sonst bricht der Build ab. |
+| `src/app/data/uebersetzungen.ts` + `src/app/content.ts` | Inhalte aus `band.service.ts` und `technik.json` (Bios, Historie, Bildtexte, Freunde, Technik). Schlüssel ist der deutsche Text: Ändert er sich, erscheint wieder das Original mit Hinweis, bis neu übersetzt ist. |
+| `geprueft: { en, nl }` | Markiert gegengelesene Übersetzungen. Ungeprüfte Inhalte tragen auf der Seite den Hinweis „noch nicht gegengelesen“. Den Stand zeigt der Backstage. |
+| Rechtstexte | Impressum und Datenschutz liegen übersetzt vor, mit dem Hinweis, dass nur die deutsche Fassung verbindlich ist. |
+| SEO | `scripts/seo.mjs` schreibt strukturierte Daten je Sprache und eine Sitemap mit allen drei Fassungen samt `hreflang`. |
+
+Bewusst **eine** Anwendung mit Wörterbüchern statt Angulars `@angular/localize` mit einem Build je Sprache: Fotos,
+PDFs, Service Worker und Prüfungen gibt es so nur einmal, und ein Sprachwechsel braucht kein Neuladen.
 
 ## 6. Datenmodell – eine Quelle für alles
 
@@ -293,7 +325,7 @@ flowchart TB
 
 - Die **Startseite** lädt ihre Abschnitte mit `@defer (on immediate; hydrate on viewport)`. Das HTML ist sofort da,
   JavaScript wird erst beim Hinscrollen aktiv.
-- Das **Booking** gibt es in drei Sprachen. Texte liegen in Wörterbüchern der jeweiligen Komponente (`lang`-Input).
+- Alle öffentlichen Seiten gibt es auf Deutsch, Englisch und Niederländisch (siehe [Mehrsprachigkeit](#mehrsprachigkeit)).
 - **Kalender-Abos:** `konzerte.ics` (öffentlich) und `backstage/kalender.ics` (alle Auftritte und Proben). Der
   Abo-Button nutzt `webcal://`, auf Android den Google-Kalender, dazu „Adresse kopieren“ für Outlook.
 - **Generierte Downloads** in `public/presse/`: Pressekit (PDF/ZIP), Technik-Rider, QR-Karte, Wunschbox-Schild.
@@ -501,6 +533,7 @@ Die ausführliche Anleitung mit Beispielen steht in [PFLEGE.md](PFLEGE.md).
 | Inhalte als TypeScript statt JSON oder CMS | Typprüfung beim Build, eine Datei für alles, Tests direkt auf den Daten | Pflege im GitHub-Editor; das Termin-Formular senkt die Hürde |
 | Prerendering für alles Öffentliche | Gute Ladezeit und SEO ohne laufenden Server | Neue Inhalte brauchen einen Build (passiert automatisch) |
 | Backstage nur clientseitig, ohne Login | Kein Server für Authentifizierung; private Daten nicht als HTML indexieren | Kein echter Zugriffsschutz – nichts Vertrauliches eintragen |
+| Mehrsprachigkeit über Wörterbücher in einer Anwendung (statt `@angular/localize`) | Eine Ausgabe für Fotos, PDFs, Service Worker und Prüfungen; fehlende Übersetzungen fallen beim Build auf | Alle drei Sprachen stecken im JavaScript (wenige KB) |
 | Gerätedaten in `localStorage` plus Export/Import | Funktioniert offline auf dem Gig, ohne Konto | Keine automatische Synchronisierung zwischen Band-Mitgliedern |
 | Generierte Assets (PDFs, Vorschaubilder) teils eingecheckt, teils beim Build | PDFs ändern sich selten; Vorschaubilder sollen der Band keine Arbeit machen | Python-Skripte müssen bei Änderungen an PDFs lokal laufen |
 | Prüfungen als Deploy-Bremse | Pflege durch Nicht-Entwickler ohne Risiko | Ein Fehler hält den Deploy an, bis er behoben ist |

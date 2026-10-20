@@ -1,6 +1,52 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { I18n, LDatePipe, tr } from '../i18n';
+
+const TEXT = tr(
+  {
+    title: 'Unser Repertoire',
+    songs: 'Songs',
+    placeholder: 'Song oder Interpret suchen …',
+    search: 'Repertoire durchsuchen',
+    sort: 'Sortierung',
+    byTitle: 'Titel A–Z',
+    byArtist: 'Interpret A–Z',
+    byYear: 'Neueste zuerst',
+    hits: 'Treffer',
+    listen: ' auf Spotify anhören',
+    none: 'Nichts gefunden – fragt gern trotzdem, viele Wünsche erfüllen wir auch spontan.',
+    updated: 'Automatisch aus unserer Spotify-Playlist, Stand',
+  },
+  {
+    title: 'Our repertoire',
+    songs: 'songs',
+    placeholder: 'Search song or artist …',
+    search: 'Search the repertoire',
+    sort: 'Sort order',
+    byTitle: 'Title A–Z',
+    byArtist: 'Artist A–Z',
+    byYear: 'Newest first',
+    hits: 'results',
+    listen: ' – listen on Spotify',
+    none: 'Nothing found – feel free to ask anyway, we often fulfil requests on the spot.',
+    updated: 'Automatically taken from our Spotify playlist, as of',
+  },
+  {
+    title: 'Ons repertoire',
+    songs: 'nummers',
+    placeholder: 'Zoek nummer of artiest …',
+    search: 'Repertoire doorzoeken',
+    sort: 'Sortering',
+    byTitle: 'Titel A–Z',
+    byArtist: 'Artiest A–Z',
+    byYear: 'Nieuwste eerst',
+    hits: 'resultaten',
+    listen: ' beluisteren op Spotify',
+    none: 'Niets gevonden – vraag het gerust toch, veel verzoeken vervullen we ook spontaan.',
+    updated: 'Automatisch uit onze Spotify-playlist, stand',
+  },
+);
 
 interface Track {
   title: string;
@@ -19,46 +65,46 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 // Durchsuchbares Repertoire – Daten kommen automatisch aus der Spotify-Playlist (scripts/sync-repertoire.mjs)
 @Component({
   selector: 'app-repertoire',
-  imports: [MatIconModule],
+  imports: [MatIconModule, LDatePipe],
   template: `
     @if (total) {
       <div class="repertoire" id="repertoire">
         <div class="head">
-          <h3>Unser Repertoire <span class="count">{{ total }} Songs</span></h3>
+          <h3>{{ t().title }} <span class="count">{{ total }} {{ t().songs }}</span></h3>
           <div class="controls">
             <label class="search">
               <mat-icon aria-hidden="true">search</mat-icon>
-              <input type="search" placeholder="Song oder Interpret suchen …" aria-label="Repertoire durchsuchen"
+              <input type="search" [placeholder]="t().placeholder" [attr.aria-label]="t().search"
                      [value]="query()" (input)="query.set($any($event.target).value)" />
             </label>
-            <select aria-label="Sortierung" [value]="sort()" (change)="sort.set($any($event.target).value)">
-              <option value="title">Titel A–Z</option>
-              <option value="artist">Interpret A–Z</option>
-              <option value="year">Neueste zuerst</option>
+            <select [attr.aria-label]="t().sort" [value]="sort()" (change)="sort.set($any($event.target).value)">
+              <option value="title">{{ t().byTitle }}</option>
+              <option value="artist">{{ t().byArtist }}</option>
+              <option value="year">{{ t().byYear }}</option>
             </select>
           </div>
         </div>
 
         @if (query()) {
-          <p class="hits" aria-live="polite">{{ list().length }} Treffer</p>
+          <p class="hits" aria-live="polite">{{ list().length }} {{ t().hits }}</p>
         }
         <ol class="list">
-          @for (t of list(); track t.title + t.artist) {
+          @for (s of list(); track s.title + s.artist) {
             <li>
-              <span class="title">{{ t.title }}</span>
-              <span class="artist">{{ t.artist }}@if (t.year) {<span class="year"> · {{ t.year }}</span>}</span>
-              @if (t.url) {
-                <a [href]="t.url" target="_blank" rel="noopener" [attr.aria-label]="t.title + ' auf Spotify anhören'">
+              <span class="title">{{ s.title }}</span>
+              <span class="artist">{{ s.artist }}@if (s.year) {<span class="year"> · {{ s.year }}</span>}</span>
+              @if (s.url) {
+                <a [href]="s.url" target="_blank" rel="noopener" [attr.aria-label]="s.title + t().listen">
                   <mat-icon>open_in_new</mat-icon>
                 </a>
               }
             </li>
           } @empty {
-            <li class="none">Nichts gefunden – fragt gern trotzdem, viele Wünsche erfüllen wir auch spontan.</li>
+            <li class="none">{{ t().none }}</li>
           }
         </ol>
         @if (updated) {
-          <p class="updated">Automatisch aus unserer Spotify-Playlist, Stand {{ updated }}</p>
+          <p class="updated">{{ t().updated }} {{ updated | ldate: 'short' }}</p>
         }
       </div>
     }
@@ -99,9 +145,8 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 })
 export class Repertoire {
   protected readonly total = tracks.length;
-  protected readonly updated = data.updated
-    ? new Date(`${data.updated}T12:00:00`).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : null;
+  protected readonly t = inject(I18n).t(TEXT);
+  protected readonly updated = data.updated ? `${data.updated}T12:00:00` : null;
   protected readonly query = signal('');
   protected readonly sort = signal<Sort>('title');
 

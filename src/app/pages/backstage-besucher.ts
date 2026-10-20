@@ -23,8 +23,10 @@ const PAGES = [
   { path: '/presse', label: 'Pressekit' },
   { path: '/freunde', label: 'Freunde' },
   { path: '/wunsch', label: 'Wunschbox' },
-  { path: '/booking/en', label: 'Booking EN' },
-  { path: '/booking/nl', label: 'Booking NL' },
+  { path: '/en', label: 'Startseite EN' },
+  { path: '/nl', label: 'Startseite NL' },
+  { path: '/en/booking', label: 'Booking EN' },
+  { path: '/nl/booking', label: 'Booking NL' },
 ];
 
 type State = 'loading' | 'ok' | 'disabled' | 'offline';
