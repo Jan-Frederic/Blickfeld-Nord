@@ -43,6 +43,9 @@ html {
 
 html, body { height: 100%; }
 html { scroll-behavior: smooth; }
+// Sicherheitsnetz: nichts darf die Seite seitlich verbreitern (z. B. bei vergrößerter Schrift im Handy-Browser).
+// clip statt hidden – erzeugt keinen eigenen Scrollbereich, „sticky“ und Sprungmarken funktionieren weiter.
+html, body { overflow-x: clip; }
 html { background-color: var(--bn-night); }
 body {
   margin: 0;

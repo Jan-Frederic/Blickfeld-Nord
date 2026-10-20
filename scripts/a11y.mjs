@@ -61,16 +61,39 @@ for (const path of pages) {
     console.log(`${bad ? '::error::' : '::warning::'}${path}: [${v.impact}] ${v.id} – ${v.help} (${v.nodes.length}×: ${where})`);
   }
 }
-// Handy-Breite: Seite darf nicht seitlich scrollen
+// Handy-Breite: nichts darf über den rechten Rand ragen – auch nicht bei 15 % größerer Schrift (Textgröße im
+// Handy-Browser) und mit aufgeklappten Listen. Gemessen wird am Element, weil html/body überstehendes ohnehin abschneiden.
 const phone = await browser.newPage({ viewport: { width: 360, height: 780 } });
 await phone.context().route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 for (const path of pages) {
   await phone.goto(BASE + path, { waitUntil: 'networkidle' });
+  await phone.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 600) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 40));
+    }
+  });
   await phone.waitForTimeout(300);
-  const width = await phone.evaluate(() => document.documentElement.scrollWidth);
-  if (width > 360) {
+  const offenders = await phone.evaluate(() => {
+    document.querySelectorAll('details').forEach((d) => (d.open = true));
+    const els = [...document.querySelectorAll('body *')].filter((el) => el.tagName !== 'MAT-ICON');
+    const sizes = els.map((el) => parseFloat(getComputedStyle(el).fontSize));
+    els.forEach((el, i) => (el.style.fontSize = sizes[i] * 1.15 + 'px'));
+    const vw = document.documentElement.clientWidth;
+    const clippedInside = (el) => {
+      for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+        if (['auto', 'hidden', 'scroll', 'clip'].includes(getComputedStyle(a).overflowX)) return true;
+      }
+      return false;
+    };
+    return els
+      .filter((el) => !el.children.length && el.getBoundingClientRect().right > vw + 1 && !clippedInside(el))
+      .slice(0, 3)
+      .map((el) => `${el.tagName.toLowerCase()} „${el.textContent.trim().slice(0, 30)}“ bis ${Math.round(el.getBoundingClientRect().right)} px`);
+  });
+  if (offenders.length) {
     serious++;
-    console.log(`::error::${path}: Seite ist auf dem Handy ${width} px breit statt 360 px (seitliches Scrollen)`);
+    console.log(`::error::${path}: ragt auf dem Handy (360 px, Schrift +15 %) über den Rand: ${offenders.join(' | ')}`);
   }
 }
 

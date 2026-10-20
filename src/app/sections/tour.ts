@@ -105,8 +105,10 @@ import { AboButton } from './abo-button';
     .past summary:hover { color: var(--bn-sunset); }
     .past ul { list-style: none; margin: 0; padding: 0 0 12px; }
     .past li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--bn-line); }
-    .past time { font-variant-numeric: tabular-nums; color: var(--bn-sunset); min-width: 6.5em; }
-    .past .where { flex: 1; }
+    .past time { display: inline-block; font-variant-numeric: tabular-nums; color: var(--bn-sunset); min-width: 6.5em; }
+    .past li > a.details { flex: none; }
+    /* lange Orts- und Location-Namen dürfen umbrechen, statt über den Rand zu ragen */
+    .past .where { flex: 1 1 14em; min-width: 0; overflow-wrap: anywhere; }
     .past .city { opacity: .7; }
     .past .private {
       margin-left: 10px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--bn-line);
