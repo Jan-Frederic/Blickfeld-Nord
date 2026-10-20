@@ -1,316 +1,368 @@
 {
-  "updated": "2026-10-19",
+  "updated": "2026-10-20",
   "tracks": [
     {
       "title": "1/2 Lovesong",
       "artist": "Die Ärzte",
       "year": 1998,
+      "duration": 235,
       "url": "https://open.spotify.com/track/2WuvYQSuDtcCtdIjA87GJc"
     },
     {
       "title": "80 Millionen",
       "artist": "Max Giesinger",
       "year": 2016,
+      "duration": 217,
       "url": "https://open.spotify.com/track/2ladamWCFAfQbgIIdkewAx"
     },
     {
       "title": "Against All Odds",
       "artist": "Jay Smith",
       "year": 2010,
+      "duration": 225,
       "url": "https://open.spotify.com/track/2rRkrxFYDBFnpt2HrFT550"
     },
     {
       "title": "All The Small Things",
       "artist": "blink-182",
       "year": 1999,
+      "duration": 167,
       "url": "https://open.spotify.com/track/2m1hi0nfMR9vdGC8UcrnwU"
     },
     {
       "title": "Angels",
       "artist": "Robbie Williams",
       "year": 1997,
+      "duration": 265,
       "url": "https://open.spotify.com/track/1M2nd8jNUkkwrc1dgBPTJz"
     },
     {
       "title": "Blowin' in the Wind",
       "artist": "Bob Dylan",
       "year": 1963,
+      "duration": 169,
       "url": "https://open.spotify.com/track/18GiV1BaXzPVYpp9rmOg0E"
     },
     {
       "title": "Breakfast At Tiffany's",
       "artist": "Deep Blue Something",
       "year": 1995,
+      "duration": 257,
       "url": "https://open.spotify.com/track/1uzWOoJdADfstQuFtQFTUn"
     },
     {
       "title": "Chasing Cars",
       "artist": "Snow Patrol",
       "year": 2006,
+      "duration": 268,
       "url": "https://open.spotify.com/track/5hnyJvgoWiQUYZttV4wXy6"
     },
     {
       "title": "Drive",
       "artist": "Incubus",
       "year": 1999,
+      "duration": 232,
       "url": "https://open.spotify.com/track/7nnWIPM5hwE3DaUBkvOIpy"
     },
     {
       "title": "Ein Kompliment",
       "artist": "Sportfreunde Stiller",
       "year": 2002,
+      "duration": 198,
       "url": "https://open.spotify.com/track/5QRkWkMabF6HJmQQm2HBVX"
     },
     {
       "title": "Father And Son",
       "artist": "Yusuf / Cat Stevens",
       "year": 1970,
+      "duration": 221,
       "url": "https://open.spotify.com/track/476V2d6iA2tWXgQboKmTtA"
     },
     {
       "title": "Good Riddance (Time of Your Life)",
       "artist": "Green Day",
       "year": 1997,
+      "duration": 153,
       "url": "https://open.spotify.com/track/6ORqU0bHbVCRjXm9AjyHyZ"
     },
     {
       "title": "Hallelujah",
       "artist": "Leonard Cohen",
       "year": 1984,
+      "duration": 280,
       "url": "https://open.spotify.com/track/7yzbimr8WVyAtBX3Eg6UL9"
     },
     {
       "title": "Heaven - MTV Unplugged Version",
       "artist": "Bryan Adams",
       "year": 1997,
+      "duration": 271,
       "url": "https://open.spotify.com/track/5mQSXVIEby1cb3CWHaqSlK"
     },
     {
       "title": "Heimat",
       "artist": "Johannes Oerding",
       "year": 2015,
+      "duration": 181,
       "url": "https://open.spotify.com/track/0XaOIByJAKaD2eZkZxRtKa"
     },
     {
       "title": "Hey Jude",
       "artist": "The Beatles",
       "year": 2006,
+      "duration": 239,
       "url": "https://open.spotify.com/track/1eT2CjXwFXNx6oY5ydvzKU"
     },
     {
       "title": "Ich wollte nie erwachsen sein (Nessajas Lied) - aus \"Tabaluga & Lilli\" - Live",
       "artist": "Peter Maffay",
       "year": 1994,
+      "duration": 291,
       "url": "https://open.spotify.com/track/3ScAPPKK8crBQ7E2yUacjk"
     },
     {
       "title": "If Tomorrow Never Comes",
       "artist": "Ronan Keating",
       "year": 2002,
+      "duration": 215,
       "url": "https://open.spotify.com/track/4VXi4XwE0AoXFolSVKxlEy"
     },
     {
       "title": "Im Wagen vor mir",
       "artist": "Henry Valentino, Uschi",
       "year": 2026,
+      "duration": 210,
       "url": "https://open.spotify.com/track/0BwlW8ag06LKyGe9gn73Hw"
     },
     {
       "title": "In der Weihnachtsbäckerei",
       "artist": "Rolf Zuckowski",
       "year": 1987,
+      "duration": 173,
       "url": "https://open.spotify.com/track/7gcKoI9KokClK9ZUjNFgZa"
     },
     {
       "title": "Indigo Girl",
       "artist": "Watershed",
       "year": 2003,
+      "duration": 181,
       "url": "https://open.spotify.com/track/13lumrL4b1cw4htq7R2uKV"
     },
     {
       "title": "Iris",
       "artist": "The Goo Goo Dolls",
       "year": 1998,
+      "duration": 290,
       "url": "https://open.spotify.com/track/6Qyc6fS4DsZjB2mRW9DsQs"
     },
     {
       "title": "It's My Life - 2003 Acoustic Version",
       "artist": "Bon Jovi",
       "year": 2003,
+      "duration": 221,
       "url": "https://open.spotify.com/track/0tZz5vMnsQqZnue8XyyPJo"
     },
     {
       "title": "Junimond",
       "artist": "Echt",
       "year": 2023,
+      "duration": 303,
       "url": "https://open.spotify.com/track/1vsLBfUhhglIJomHx4fNHp"
     },
     {
       "title": "Kleine Kinder, große Kinder (Das Adventskalenderlied)",
       "artist": "Rolf Zuckowski",
       "year": 1982,
+      "duration": 216,
       "url": "https://open.spotify.com/track/1YRAOWt2YRTd60NFLSaLU2"
     },
     {
       "title": "Knockin' On Heaven's Door",
       "artist": "Bob Dylan",
       "year": 1973,
+      "duration": 150,
       "url": "https://open.spotify.com/track/6HSXNV0b4M4cLJ7ljgVVeh"
     },
     {
       "title": "Kreise",
       "artist": "Johannes Oerding",
       "year": 2017,
+      "duration": 221,
       "url": "https://open.spotify.com/track/3CIeSEA8R2KxY40JSqxL41"
     },
     {
       "title": "Lady In Black",
       "artist": "Uriah Heep",
       "year": 2009,
+      "duration": 331,
       "url": "https://open.spotify.com/track/2U2ByqoO82fnayaPzO4x2d"
     },
     {
       "title": "Lemon Tree",
       "artist": "Fools Garden",
       "year": 1995,
+      "duration": 191,
       "url": "https://open.spotify.com/track/2epbL7s3RFV81K5UhTgZje"
     },
     {
       "title": "Let It Be - Remastered 2009",
       "artist": "The Beatles",
       "year": 1970,
+      "duration": 243,
       "url": "https://open.spotify.com/track/7iN1s7xHE4ifF5povM6A48"
     },
     {
       "title": "MMMBop 2.0",
       "artist": "Busted, Hanson",
       "year": 2023,
+      "duration": 176,
       "url": "https://open.spotify.com/track/7MnqGkKia4STbmgMTEwzLk"
     },
     {
       "title": "Morgen",
       "artist": "Johannes Oerding",
       "year": 2011,
+      "duration": 219,
       "url": "https://open.spotify.com/track/26St51UbrDBgjPJmed6sKc"
     },
     {
       "title": "Nur nach vorne gehen",
       "artist": "Broilers",
       "year": 2024,
+      "duration": 304,
       "url": "https://open.spotify.com/track/4cdGQFHwlw96Xu9d53CYjK"
     },
     {
       "title": "Over My Shoulder",
       "artist": "Mike + The Mechanics",
       "year": 1995,
+      "duration": 217,
       "url": "https://open.spotify.com/track/6DKM07xOL59GExqNgE8LFM"
     },
     {
       "title": "Perfect",
       "artist": "Ed Sheeran",
       "year": 2017,
+      "duration": 263,
       "url": "https://open.spotify.com/track/0tgVpDi06FyKpA1z0VMD4v"
     },
     {
       "title": "Plötzlich perfekt",
       "artist": "Johannes Oerding",
       "year": 2015,
+      "duration": 227,
       "url": "https://open.spotify.com/track/0FfYnBLJw1a6avyeS1fBZz"
     },
     {
       "title": "Radio Orchid",
       "artist": "Fury In The Slaughterhouse",
       "year": 1993,
+      "duration": 278,
       "url": "https://open.spotify.com/track/42MCrJAzCVF2lGxv9m1EKd"
     },
     {
       "title": "Rebecca",
       "artist": "Nickelmann",
       "year": 2022,
+      "duration": 336,
       "url": "https://open.spotify.com/track/1HlBENhB7Tjo7dsLFRFNAu"
     },
     {
       "title": "Save Tonight",
       "artist": "Eagle-Eye Cherry",
       "year": 1998,
+      "duration": 243,
       "url": "https://open.spotify.com/track/0smyCrJiibi2uwCiq5R1vj"
     },
     {
       "title": "Seven Nation Army",
       "artist": "The White Stripes",
       "year": 2003,
+      "duration": 232,
       "url": "https://open.spotify.com/track/3dPQuX8Gs42Y7b454ybpMR"
     },
     {
       "title": "Stand By Me",
       "artist": "Ben E. King",
       "year": 1962,
+      "duration": 180,
       "url": "https://open.spotify.com/track/3SdTKo2uVsxFblQjpScoHy"
     },
     {
       "title": "Summer Of '69",
       "artist": "Bryan Adams",
       "year": 1984,
+      "duration": 216,
       "url": "https://open.spotify.com/track/0GONea6G2XdnHWjNZd6zt3"
     },
     {
       "title": "Take Me Home, Country Roads",
       "artist": "John Denver",
       "year": 1997,
+      "duration": 198,
       "url": "https://open.spotify.com/track/1QbOvACeYanja5pbnJbAmk"
     },
     {
       "title": "Time to Wonder",
       "artist": "Fury In The Slaughterhouse",
       "year": 2017,
+      "duration": 325,
       "url": "https://open.spotify.com/track/380F1BfICubTjK77XhIPOR"
     },
     {
       "title": "Wake Me up When September Ends",
       "artist": "Green Day",
       "year": 2004,
+      "duration": 286,
       "url": "https://open.spotify.com/track/3ZffCQKLFLUvYM59XKLbVm"
     },
     {
       "title": "Weihnacht, was bist du",
       "artist": "Rolf Zuckowski",
       "year": 1982,
+      "duration": 134,
       "url": "https://open.spotify.com/track/5wNqpy9bWHcm0JIgcjaGss"
     },
     {
       "title": "Westerland",
       "artist": "Die Ärzte",
       "year": 1988,
+      "duration": 221,
       "url": "https://open.spotify.com/track/5aWpvFnByyWodgqYlC9kha"
     },
     {
       "title": "When I'm Dead and Gone",
       "artist": "Fury In The Slaughterhouse",
       "year": 2017,
+      "duration": 240,
       "url": "https://open.spotify.com/track/0ja0F5XJrYseWptANAvW46"
     },
     {
       "title": "Wherever You Will Go",
       "artist": "The Calling",
       "year": 2001,
+      "duration": 209,
       "url": "https://open.spotify.com/track/2n6FX3Jcg4b4Leoz0GOqBF"
     },
     {
       "title": "Wonderful Life",
       "artist": "Katie Melua",
       "year": 2018,
+      "duration": 244,
       "url": "https://open.spotify.com/track/1C0bWhNWIF3yBdjNh4GlCT"
     },
     {
       "title": "Wonderwall",
       "artist": "Oasis",
       "year": 1995,
+      "duration": 259,
       "url": "https://open.spotify.com/track/1qPbGZqppFwLwcBC1JQ6Vr"
     },
     {
       "title": "Zu spät",
       "artist": "Die Ärzte",
       "year": 1990,
+      "duration": 165,
       "url": "https://open.spotify.com/track/5FFGr69nqIPiNn9MTaHXKb"
     }
   ]
