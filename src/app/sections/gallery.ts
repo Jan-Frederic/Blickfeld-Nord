@@ -15,7 +15,8 @@ import { BandService } from '../data/band.service';
       <div class="grid">
         @for (p of band.photos; track p.src; let i = $index) {
           <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="'Bild vergrößern: ' + p.alt">
-            <img [src]="p.thumb" [alt]="p.alt" loading="lazy" />
+            <!-- Vorschau in drei Größen (480/720/900 px) – jedes Gerät lädt nur, was es für ein scharfes Bild braucht -->
+            <img [src]="p.thumb" [attr.srcset]="srcset(p.thumb)" [attr.sizes]="i % 5 === 0 && !p.tall ? wideSizes : sizes" [alt]="p.alt" loading="lazy" decoding="async" />
             @if (entries.has(p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
           </button>
         }
@@ -90,6 +91,15 @@ import { BandService } from '../data/band.service';
   `,
 })
 export class Gallery {
+  // Kachelbreite: Handy eine Spalte, Tablet zwei, sonst ca. 280 px (breite Kacheln doppelt).
+  // Auf dem Handy bewusst etwas knapper angegeben, damit dort die 720-px-Fassung reicht – zum Vergrößern
+  // wird ohnehin das Originalfoto geladen.
+  protected readonly sizes = '(max-width: 520px) 62vw, (max-width: 780px) 50vw, 280px';
+  protected readonly wideSizes = '(max-width: 520px) 62vw, 560px';
+  protected srcset(thumb: string): string {
+    return `${thumb.replace('-thumb.webp', '-thumb-480.webp')} 480w, ${thumb.replace('-thumb.webp', '-thumb-720.webp')} 720w, ${thumb} 900w`;
+  }
+
   protected readonly band = inject(BandService);
   protected readonly index = signal<number | null>(null);
   // Fotos, die auch in einem Historie-Eintrag stecken (gleiche Bilddatei) → Datum des Auftritts
