@@ -1,11 +1,12 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { DEFAULT_START, arrivalTime, departureTime, routeUrl } from '../data/trip';
 
 // Checkliste „Vor Ort“ je Auftritt (Backstage): Ansprechpartner, Ankunft, Parkplatz, Strom usw.
 // Gespeichert nur im Browser dieses Geräts (localStorage, je Auftritt) – private Kontaktdaten landen so nie im öffentlichen Repo.
 
-const STORAGE_PREFIX = 'bn-vorort-';
+export const VORORT_PREFIX = 'bn-vorort-';
 
 export const FIELDS: { key: string; label: string; icon: string; placeholder: string; wide?: boolean }[] = [
   { key: 'kontakt', label: 'Ansprechpartner', icon: 'person', placeholder: 'Name vor Ort' },
@@ -19,7 +20,7 @@ export const FIELDS: { key: string; label: string; icon: string; placeholder: st
   { key: 'notizen', label: 'Sonstiges', icon: 'notes', placeholder: 'Ablauf, Reden, Spiele, Lautstärke, Schluss …', wide: true },
 ];
 
-function load(key: string): Record<string, string | undefined> {
+export function loadVorOrt(key: string): Record<string, string | undefined> {
   try {
     return JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, string | undefined>;
   } catch {
@@ -125,35 +126,20 @@ export class VorOrt {
   /** Auftritts-ID – jeder Auftritt hat seine eigenen Angaben */
   readonly show = input.required<string>();
   protected readonly fields = FIELDS;
-  private readonly key = computed(() => STORAGE_PREFIX + this.show());
+  private readonly key = computed(() => VORORT_PREFIX + this.show());
   protected readonly values = signal<Record<string, string | undefined>>({});
   protected readonly filled = computed(() => FIELDS.filter((f) => this.values()[f.key]?.trim()).length);
 
-  // Anfahrt: Route von Start zum Auftrittsort, Abfahrt = Ankunft − Fahrzeit − Puffer
+  // Anfahrt: Route von Start zum Auftrittsort, Abfahrt = Ankunft − Fahrzeit − Puffer (src/app/data/trip.ts)
   private readonly band = inject(BandService);
-  protected readonly defaultStart = 'Hamminkeln';
-  protected readonly route = computed(() => {
-    const s = this.band.showById(this.show());
-    const destination = s ? [s.venue, s.city].filter(Boolean).join(', ') : '';
-    const origin = this.values()['start']?.trim() || this.defaultStart;
-    return `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
-  });
-  protected readonly arrival = computed(() => {
-    const m = /(\d{1,2})[:.](\d{2})/.exec(this.values()['ankunft'] ?? '');
-    return m && +m[1] < 24 && +m[2] < 60 ? `${m[1].padStart(2, '0')}:${m[2]}` : null;
-  });
-  protected readonly departure = computed(() => {
-    const a = this.arrival();
-    const drive = Number(this.values()['fahrzeit']);
-    if (!a || !drive) return null;
-    const total = +a.slice(0, 2) * 60 + +a.slice(3) - drive - Number(this.values()['puffer'] ?? 15);
-    const t = ((total % 1440) + 1440) % 1440;
-    return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-  });
+  protected readonly defaultStart = DEFAULT_START;
+  protected readonly route = computed(() => routeUrl(this.band.showById(this.show()), this.values()));
+  protected readonly arrival = computed(() => arrivalTime(this.values()));
+  protected readonly departure = computed(() => departureTime(this.values()));
 
   constructor() {
     // beim Wechsel zu einem anderen Auftritt dessen Angaben laden
-    effect(() => this.values.set(load(this.key())));
+    effect(() => this.values.set(loadVorOrt(this.key())));
   }
 
   protected set(field: string, event: Event): void {

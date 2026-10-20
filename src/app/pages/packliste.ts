@@ -7,7 +7,7 @@ interface Group {
 }
 
 // Standard-Packliste – eigene Punkte kommen unter „Eigene Punkte“ dazu
-const GROUPS: Group[] = [
+export const GROUPS: Group[] = [
   { title: 'PA', items: ['Lautsprecher (Tops)', 'Subwoofer', 'Mischpult', 'Gesangsmikrofone (3×)', 'Drum-Mikrofone', 'Monitorboxen'] },
   { title: 'Licht', items: ['Scheinwerfer (PAR)', 'Lichtstativ / Lichtbrücke', 'Lichtsteuerung', 'Nebelmaschine + Fluid'] },
   {
@@ -20,7 +20,7 @@ const GROUPS: Group[] = [
 ];
 
 // Pro Auftritt eine eigene Liste: bn-packliste-<Auftritts-ID>
-const STORAGE_PREFIX = 'bn-packliste-';
+export const PACKLISTE_PREFIX = 'bn-packliste-';
 
 interface Stored {
   checked: string[];
@@ -28,7 +28,7 @@ interface Stored {
 }
 
 // Speicherung nur im Browser dieses Geräts (localStorage) – geht beim Löschen der Browserdaten verloren
-function load(key: string): Stored {
+export function loadPackliste(key: string): Stored {
   try {
     const raw = localStorage.getItem(key);
     if (raw) {
@@ -131,12 +131,12 @@ function load(key: string): Stored {
 export class Packliste {
   /** Auftritts-ID – jeder Auftritt hat seine eigenen Häkchen und eigenen Punkte */
   readonly show = input.required<string>();
-  private readonly key = computed(() => STORAGE_PREFIX + this.show());
+  private readonly key = computed(() => PACKLISTE_PREFIX + this.show());
   private readonly state = signal<Stored>({ checked: [], custom: [] });
 
   constructor() {
     // beim Wechsel zu einem anderen Auftritt dessen gespeicherte Liste laden
-    effect(() => this.state.set(load(this.key())));
+    effect(() => this.state.set(loadPackliste(this.key())));
   }
 
   protected readonly groups = computed(() => [

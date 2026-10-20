@@ -8,6 +8,7 @@ import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
 import { postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
+import { printLaufzettel } from './laufzettel';
 import { FIELDS } from './vorort';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -71,6 +72,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
         <div class="actions">
           <button mat-stroked-button (click)="calendar()"><mat-icon>event_available</mat-icon> In den Kalender</button>
+          <button mat-stroked-button (click)="laufzettel()"><mat-icon>assignment</mat-icon> Laufzettel</button>
           @if (posterAllowed()) {
             <button mat-stroked-button (click)="poster()"><mat-icon>image</mat-icon> Plakat</button>
             <button mat-stroked-button (click)="copyText()">
@@ -249,6 +251,11 @@ export class BackstageShow implements OnDestroy {
   }
 
   // Einzeltermin mit Status und Kommentar für den eigenen Kalender
+  // Alles für den Abend auf einem Ausdruck: Zeitplan, Vor Ort, Setlist, Packliste
+  protected laufzettel(): void {
+    printLaufzettel(this.show()!, this.id());
+  }
+
   protected calendar(): void {
     const s = this.show()!;
     downloadIcs([s], icsFileName(s), 'Blickfeld Nord – Backstage', true);
