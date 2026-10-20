@@ -38,6 +38,7 @@ export class Ortsverzeichnis {
     private readonly orte: (Ort & { key: string })[],
     private readonly plz: Record<string, [number, number]>,
     private readonly plzRegion: Record<string, [number, number]>,
+    private readonly coords: Map<string, [number, number]>,
   ) {}
 
   private static loading?: Promise<Ortsverzeichnis>;
@@ -50,6 +51,7 @@ export class Ortsverzeichnis {
             [...d.orte, ...d.fern].map(([name, country, lat, lon]) => ({ name, country: country as Ort['country'], km: km(lat, lon), key: norm(name) })),
             d.plz,
             d.plzRegion,
+            new Map([...d.orte, ...d.fern].map(([name, country, lat, lon]) => [name + '|' + country, [lat, lon] as [number, number]])),
           ),
       ));
   }
@@ -76,6 +78,14 @@ export class Ortsverzeichnis {
       if (hit) return hit;
     }
     return null;
+  }
+
+  // Koordinaten eines Orts (für die Wettervorhersage) – wie find(), aber mit Lage statt Entfernung
+  locate(input: string): { name: string; lat: number; lon: number } | null {
+    const o = this.find(input);
+    if (!o || o.plz) return null;
+    const p = this.coords.get(o.name + '|' + o.country);
+    return p ? { name: o.name, lat: p[0], lon: p[1] } : null;
   }
 
   // Vorschläge beim Tippen: Namensanfang zuerst (nächstgelegene oben), dann enthaltene

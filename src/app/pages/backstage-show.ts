@@ -9,6 +9,7 @@ import { BandService } from '../data/band.service';
 import { PosterFormat, postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
+import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -17,7 +18,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage"><mat-icon>arrow_back</mat-icon> Alle Auftritte</a>
@@ -87,6 +88,8 @@ const DAY = 24 * 60 * 60 * 1000;
             </p>
           }
         </div>
+
+        @if (!past()) { <app-wetter [show]="s" /> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
           @for (t of tools; track t.path) {
