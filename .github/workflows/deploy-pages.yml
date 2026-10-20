@@ -78,6 +78,11 @@ jobs:
           python scripts/subset-icons.py
           python scripts/subset-fonts.py
 
+      - name: Fotos vorbereiten (Vorschaubilder, Größe, GPS-Prüfung)
+        run: |
+          pip install --quiet pillow
+          python scripts/bilder.py
+
       - name: Version (letzter Release-Tag) für den Footer
         run: node scripts/write-version.mjs
 

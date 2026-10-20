@@ -56,7 +56,21 @@ describe('Auftritte', () => {
   });
 });
 
+describe('Proben', () => {
+  it.each(band.rehearsals.map((r) => [r.date, r] as const))('%s ist gültig', (_, r) => {
+    expect(isDate(r.date)).toBe(true);
+    for (const t of [r.time, r.endTime]) if (t) expect(t).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/);
+  });
+});
+
 describe('Historie', () => {
+  it.each(band.history.map((h) => [`${h.date} ${h.title}`, h] as const))('%s ist gültig', (_, h) => {
+    expect(isDate(h.date)).toBe(true);
+    expect(h.title.trim()).not.toBe('');
+    expect(h.text.length).toBeGreaterThan(0);
+    for (const img of h.images ?? []) expect(img.alt.trim()).not.toBe('');
+  });
+
   it.each(band.history.map((e) => [`${e.date} ${e.title}`, e] as const))('%s ist gültig', (_, e) => {
     expect(isDate(e.date)).toBe(true);
     expect(e.title.trim()).not.toBe('');

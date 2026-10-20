@@ -61,9 +61,13 @@ Backstage bleibt rein clientseitig. Eine neue Unterseite zusätzlich in die Site
 
 ### Fotos hinzufügen
 
-Bilder liegen in `public/galerie/` – jeweils als großes Bild (max. 2000 px) und als
-verkleinerte Vorschau (`…-thumb.webp`, ca. 900 px). Danach in `band.service.ts` unter
-`photos` eintragen. Vor dem Hochladen Metadaten (z. B. GPS-Ort) entfernen.
+Schritt für Schritt für die Band: **[PFLEGE.md](PFLEGE.md)** (Auftritte, Proben, Fotos, Rückblicke im GitHub-Editor).
+
+Große Bilder liegen in `public/historie/` bzw. `public/galerie/`, eingetragen in `band.service.ts` unter `photos`.
+Fehlende Vorschaubilder (`…-thumb.webp` max. 900 px plus `-thumb-480`/`-thumb-720`) erzeugt beim Deploy
+`scripts/bilder.py`. Das Skript verkleinert außerdem zu große Fotos auf 2000 px, entfernt Metadaten und bricht ab,
+wenn ein Bild im Repo einen GPS-Standort enthält. Vor dem Hochladen den Standort trotzdem entfernen:
+Das Repo ist öffentlich.
 
 ### Pressekit neu bauen
 

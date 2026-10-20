@@ -54,6 +54,11 @@ jobs:
           pip install --quiet fonttools brotli
           python scripts/subset-icons.py
 
+      - name: Fotos vorbereiten (Vorschaubilder, Größe, GPS-Prüfung)
+        run: |
+          pip install --quiet pillow
+          python scripts/bilder.py
+
       - name: Build
         run: npx ng build --base-href /
 
