@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, afterNextRender, inject } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -8,6 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
+import { enableOffline, install, installable, iosHint, setupPwa } from './pwa';
 
 @Component({
   selector: 'app-root',
@@ -29,11 +30,17 @@ export class App {
   protected readonly releaseUrl = `https://github.com/Jan-Frederic/Blickfeld-Nord/releases/tag/v${release.version}`;
 
   private readonly router = inject(Router);
+  protected readonly installable = installable;
+  protected readonly iosHint = iosHint;
+  protected readonly install = install;
 
   constructor() {
     trackPageViews();
     // Sprungmarken (z. B. /booking#verfuegbarkeit) nicht unter der fest stehenden Kopfzeile verstecken
     inject(ViewportScroller).setOffset([0, 80]);
+    // Progressive Web App: offline nutzbar und installierbar (erst nach dem ersten Rendern, bremst den Seitenaufbau nicht)
+    setupPwa();
+    afterNextRender(() => enableOffline());
   }
 
   private logoClicks: number[] = [];

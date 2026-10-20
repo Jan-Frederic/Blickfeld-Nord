@@ -1,11 +1,24 @@
 {
+  "id": "/",
   "name": "Blickfeld Nord",
   "short_name": "Blickfeld Nord",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ],
+  "description": "Partyband mit drei Stimmen – Konzerte, Booking, Repertoire und Galerie.",
+  "lang": "de",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
   "theme_color": "#141619",
   "background_color": "#141619",
-  "display": "browser"
+  "categories": ["music", "entertainment"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Konzerte", "url": "/#tour", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Booking", "url": "/booking", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Repertoire", "url": "/repertoire", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
 }

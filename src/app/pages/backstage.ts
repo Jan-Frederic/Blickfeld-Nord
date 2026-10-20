@@ -8,7 +8,7 @@ import { downloadIcs } from '../data/calendar';
 import { SetlistStats } from './setlist-stats';
 import { AboButton } from '../sections/abo-button';
 import { BackstageSync } from './backstage-sync';
-import { enableOffline, offlineReady } from './offline';
+import { offlineReady } from '../pwa';
 import { BandService, Rehearsal, Show } from '../data/band.service';
 
 type FilterKey = 'kommend' | 'proben' | 'vergangen';
@@ -296,8 +296,6 @@ export class Backstage implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
-    // ab jetzt auf diesem Gerät auch offline nutzbar
-    enableOffline();
     // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id>[/<teil>] über die Fehlerseite
     // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter.
     const query = inject(ActivatedRoute).snapshot.queryParamMap;

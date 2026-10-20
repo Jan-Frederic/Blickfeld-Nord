@@ -33,7 +33,12 @@
   <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
-  <link rel="preload" href="fonts/material-icons-subset.woff2?v=3893fd65ff" as="font" type="font/woff2" crossorigin>
+  <!-- als App vom Homescreen (iPhone/iPad): Vollbild ohne Browserleiste, kurzer Name unter dem Icon -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Blickfeld Nord">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="preload" href="fonts/material-icons-subset.woff2?v=be454dc0de" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
   <app-root></app-root>

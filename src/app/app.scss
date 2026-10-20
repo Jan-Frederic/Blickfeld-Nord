@@ -32,5 +32,13 @@ footer {
 .legal-links a { color: var(--bn-ink); text-decoration: none; }
 .legal-links a:hover { color: var(--bn-sunset); }
 .version { margin: 6px 0 0; font-size: .64rem; }
+.install {
+  display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 14px; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .85rem;
+  text-transform: none; letter-spacing: normal;
+}
+.install:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+.install mat-icon, .install-hint mat-icon { font-size: 18px; width: 18px; height: 18px; vertical-align: -4px; }
+.install-hint { margin: 4px 0 14px; font-size: .85rem; color: var(--bn-fog); text-transform: none; letter-spacing: normal; }
 .version a { color: var(--bn-fog); text-decoration: none; }
 .version a:hover { color: var(--bn-sunset); }

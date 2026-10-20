@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Erzeugt dist/…/sw.js für den Offline-Backstage: alle Skripte, Styles, Schriften und die Backstage-Shell
-// werden beim ersten Backstage-Besuch gespeichert. Die Version ändert sich mit jedem Build, damit Geräte
-// nach einem Deploy die neuen Dateien holen. Aufruf nach dem SPA-Fallback (backstage/index.html muss existieren).
+// Erzeugt dist/…/sw.js für die Progressive Web App: Startseite, Backstage-Shell, Skripte, Styles, Schriften und
+// Icons werden beim ersten Besuch gespeichert; weitere Seiten und Bilder, sobald sie einmal aufgerufen wurden.
+// Die Version ändert sich mit jedem Build, damit Geräte nach einem Deploy die neuen Dateien holen. Aufruf nach dem SPA-Fallback (backstage/index.html muss existieren).
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -12,11 +12,12 @@ const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
 
 const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.js');
 const fonts = readdirSync(join(DIST, 'fonts')).map((f) => `fonts/${f}`);
-// Seiten: Backstage-Shell und Startseite (Fallback), dazu Icons für den Homescreen
-const files = ['/', '/backstage/index.html', ...top.map((f) => `/${f}`), ...fonts.map((f) => `/${f}`), '/site.webmanifest', '/favicon.svg', '/icon-192.png'];
+const assets = ['/site.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png', '/hero-800.webp', '/kompass-440.webp'];
+// Seiten selbst landen erst beim Aufruf im Speicher (spart Datenvolumen beim ersten Besuch)
+const files = ['/', '/backstage/index.html', ...top.map((f) => `/${f}`), ...fonts.map((f) => `/${f}`), ...assets];
 
 const hash = createHash('sha256');
-for (const f of files) hash.update(f === '/' ? readFileSync(join(DIST, 'index.html')) : readFileSync(join(DIST, f)));
+for (const f of files) hash.update(readFileSync(join(DIST, f.endsWith('/') ? f + 'index.html' : f)));
 const version = hash.digest('hex').slice(0, 12);
 
 // Schriften im Seitenkopf mit ?v=… (Cache-Busting) – genau diese URLs vorhalten
@@ -27,4 +28,4 @@ const sw = readFileSync(join(ROOT, 'scripts', 'sw', 'sw-template.js'), 'utf8')
   .replace('__VERSION__', version)
   .replace('__FILES__', JSON.stringify([...new Set([...files, ...versioned])]));
 writeFileSync(join(DIST, 'sw.js'), sw);
-console.log(`Service Worker ${version}: ${files.length + versioned.length} Dateien für den Offline-Backstage.`);
+console.log(`Service Worker ${version}: ${files.length + versioned.length} Dateien vorab gespeichert, Seiten und Bilder beim Aufruf.`);

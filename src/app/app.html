@@ -63,6 +63,11 @@
     <a routerLink="/impressum">Impressum</a>
     <a routerLink="/datenschutz">Datenschutz</a>
   </nav>
+  @if (installable()) {
+    <button type="button" class="install" (click)="install()"><mat-icon>install_mobile</mat-icon> Als App installieren</button>
+  } @else if (iosHint()) {
+    <p class="install-hint">Als App nutzen: <mat-icon>ios_share</mat-icon> Teilen → „Zum Home-Bildschirm“</p>
+  }
   <p>© {{ year }} Blickfeld Nord · Alle Rechte vorbehalten</p>
   @if (version) {
     <p class="version"><a [href]="releaseUrl" target="_blank" rel="noopener" title="Was ist neu?">Version {{ version }}</a></p>

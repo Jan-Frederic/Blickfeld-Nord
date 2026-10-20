@@ -69,10 +69,17 @@ import { Component } from '@angular/core';
         Beantwortung von Anfragen).
       </p>
 
-      <h3>5. Schriftarten</h3>
+      <h3>5. Schriftarten und Offline-Speicher</h3>
       <p>
         Die auf dieser Website verwendeten Schriftarten und Icons sind lokal eingebunden. Für Schriftarten
         und Icons wird keine Verbindung zu Servern von Google oder anderen Drittanbietern hergestellt.
+      </p>
+      <p>
+        Damit die Website auch ohne Internetverbindung funktioniert und als App auf dem Startbildschirm installiert
+        werden kann, legt Ihr Browser Dateien dieser Website (Seiten, Skripte, Schriften und angesehene Bilder) in
+        seinem eigenen Zwischenspeicher ab (Service Worker). Dabei werden keine personenbezogenen Daten erhoben und
+        nichts an uns oder Dritte übertragen. Sie können diesen Speicher jederzeit über die Einstellungen Ihres Browsers
+        löschen („Website-Daten“).
       </p>
 
       <h3>6. Externe Links</h3>

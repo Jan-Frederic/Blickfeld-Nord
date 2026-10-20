@@ -7,7 +7,6 @@ import { BandService } from '../data/band.service';
 import { Packliste } from './packliste';
 import { Setlist } from './setlist';
 import { VorOrt } from './vorort';
-import { enableOffline } from './offline';
 import { BackstageSync } from './backstage-sync';
 
 // Backstage-Unterseiten je Auftritt: /backstage/<id>/vorort, /setlist und /packliste
@@ -80,8 +79,6 @@ export class BackstageTool implements OnDestroy {
 
   constructor() {
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
-    // ab jetzt auf diesem Gerät auch offline nutzbar
-    enableOffline();
   }
 
   ngOnDestroy(): void {

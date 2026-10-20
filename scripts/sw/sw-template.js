@@ -1,6 +1,6 @@
-// Service Worker für den Backstage-Bereich (wird von scripts/build-sw.mjs mit Version und Dateiliste befüllt).
-// Registriert nur, wenn jemand den Backstage-Bereich öffnet – danach funktionieren Backstage, Setlist,
-// Packliste und Vor-Ort-Angaben auch ohne Netz (z. B. auf dem Gig im Keller).
+// Service Worker der Progressive Web App (wird von scripts/build-sw.mjs mit Version und Dateiliste befüllt).
+// Startseite, Skripte und Schriften werden beim ersten Besuch gespeichert, weitere Seiten beim Aufruf; Seiten kommen
+// immer zuerst aus dem Netz und nur ohne Netz aus dem Speicher – so funktionieren Website und Backstage auch offline (z. B. auf dem Gig).
 const VERSION = '__VERSION__';
 const CACHE = `bn-${VERSION}`;
 const PRECACHE = __FILES__;
@@ -28,14 +28,18 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
+          // umgeleitete Antworten (z. B. /galerie → /galerie/) dürfen später nicht für Seitenaufrufe verwendet werden
+          if (res.ok && !res.redirected) caches.open(CACHE).then((c) => c.put(req, res.clone()));
           return res;
         })
         .catch(async () => {
           const cache = await caches.open(CACHE);
+          const backstage = url.pathname.startsWith('/backstage');
+          const slash = url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
           return (
-            (await cache.match(req, { ignoreSearch: url.pathname.startsWith('/backstage') })) ??
-            (url.pathname.startsWith('/backstage') ? await cache.match('/backstage/index.html') : undefined) ??
+            (await cache.match(req, { ignoreSearch: backstage })) ??
+            (await cache.match(slash)) ??
+            (backstage ? await cache.match('/backstage/index.html') : undefined) ??
             (await cache.match('/'))
           );
         }),
@@ -52,7 +56,7 @@ self.addEventListener('fetch', (event) => {
       if (hit && hashed) return hit;
       try {
         const res = await fetch(req);
-        if (res.ok) cache.put(req, res.clone());
+        if (res.ok && !res.redirected) cache.put(req, res.clone());
         return res;
       } catch (err) {
         if (hit) return hit;
