@@ -1,14 +1,20 @@
-import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de';
-import { provideRouter, TitleStrategy, withComponentInputBinding, withInMemoryScrolling, withNavigationErrorHandler } from '@angular/router';
+import localeEnGb from '@angular/common/locales/en-GB';
+import localeNl from '@angular/common/locales/nl';
+import { Router, provideRouter, TitleStrategy, withComponentInputBinding, withInMemoryScrolling, withNavigationErrorHandler } from '@angular/router';
 import { PageTitleStrategy } from './page-meta';
 import { reloadOnMissingChunk } from './pwa';
+import { I18n } from './i18n';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay, withIncrementalHydration } from '@angular/platform-browser';
 
 registerLocaleData(localeDe);
+// Datums- und Zahlenformate der englischen und niederländischen Seiten
+registerLocaleData(localeEnGb);
+registerLocaleData(localeNl);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,5 +29,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'de' },
     { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideClientHydration(withEventReplay(), withIncrementalHydration()),
+    // Sprache aus der Adresse – muss vor der ersten Navigation zuhören
+    provideAppInitializer(() => inject(I18n).listen(inject(Router))),
   ],
 };

@@ -1,10 +1,14 @@
 import { DOCUMENT, Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
+import { I18n, LANGS, Lang, langOf, localize, stripLang } from './i18n';
 
 export const SITE_URL = 'https://blickfeld-nord.de';
-export const DEFAULT_DESCRIPTION =
-  'Blickfeld Nord – Partyband mit drei Stimmen und jeder Menge Stimmung. Live-Musik für Feste, private Feiern und Kneipen rund um Hamminkeln.';
+export const DEFAULT_DESCRIPTION: Record<Lang, string> = {
+  de: 'Blickfeld Nord – Partyband mit drei Stimmen und jeder Menge Stimmung. Live-Musik für Feste, private Feiern und Kneipen rund um Hamminkeln.',
+  en: 'Blickfeld Nord – party band with three voices and plenty of atmosphere. Live music for festivals, private parties and pubs around Hamminkeln, close to the Dutch border.',
+  nl: 'Blickfeld Nord – partyband met drie stemmen en een hoop sfeer. Livemuziek voor feesten, privéfeesten en cafés rond Hamminkeln, vlak bij de Nederlandse grens.',
+};
 
 export interface PageMeta {
   title: string;
@@ -13,16 +17,11 @@ export interface PageMeta {
   path: string;
   /** z. B. 'noindex' für Seiten, die nicht in Suchmaschinen sollen */
   robots?: string;
-  /** Sprache der Seite (Standard: Deutsch) */
-  lang?: Lang;
-  /** Sprachfassungen derselben Seite (hreflang), z. B. BOOKING_ALTERNATES */
-  alternates?: Record<string, string>;
+  /** nur Deutsch (Backstage) – ohne Verweise auf andere Sprachfassungen */
+  germanOnly?: boolean;
 }
 
-export type Lang = 'de' | 'en' | 'nl';
-
-// Die Booking-Seite gibt es auf Deutsch, Englisch und Niederländisch – Suchmaschinen zeigen so je Sprache die passende Fassung
-export const BOOKING_ALTERNATES: Record<string, string> = { de: 'booking', en: 'booking/en', nl: 'booking/nl', 'x-default': 'booking' };
+export type { Lang };
 
 const LOCALE: Record<Lang, string> = { de: 'de_DE', en: 'en_GB', nl: 'nl_NL' };
 const IMAGE_ALT: Record<Lang, string> = {
@@ -40,9 +39,10 @@ export class PageMetaService {
   private readonly document = inject(DOCUMENT);
 
   set(page: PageMeta): void {
-    const description = page.description ?? DEFAULT_DESCRIPTION;
+    // Sprache ergibt sich aus der Adresse (/en/…, /nl/…)
+    const lang = langOf('/' + page.path);
+    const description = page.description ?? DEFAULT_DESCRIPTION[lang];
     const url = `${SITE_URL}/${page.path}`;
-    const lang = page.lang ?? 'de';
 
     this.title.setTitle(page.title);
     this.meta.updateTag({ name: 'description', content: description });
@@ -65,11 +65,16 @@ export class PageMetaService {
     // hreflang-Verweise auf die anderen Sprachfassungen (vorherige Seite aufräumen)
     this.document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove());
     let after = canonical;
-    for (const [hreflang, path] of Object.entries(page.alternates ?? {})) {
+    // öffentliche Seiten gibt es in allen drei Sprachen – Suchmaschinen zeigen so je Sprache die passende Fassung
+    const base = stripLang('/' + page.path);
+    const alternates: [string, string][] = page.germanOnly
+      ? []
+      : [...LANGS.map((l): [string, string] => [l, localize(base, l)]), ['x-default', base]];
+    for (const [hreflang, path] of alternates) {
       const link = this.document.createElement('link');
       link.setAttribute('rel', 'alternate');
       link.setAttribute('hreflang', hreflang);
-      link.setAttribute('href', `${SITE_URL}/${path}`);
+      link.setAttribute('href', `${SITE_URL}${path === '/' ? '/' : path}`);
       after ? after.after(link) : this.document.head.appendChild(link);
       after = link;
     }
@@ -80,20 +85,23 @@ export class PageMetaService {
 @Injectable({ providedIn: 'root' })
 export class PageTitleStrategy extends TitleStrategy {
   private readonly pageMeta = inject(PageMetaService);
+  private readonly i18n = inject(I18n);
 
   override updateTitle(snapshot: RouterStateSnapshot): void {
-    const title = this.buildTitle(snapshot);
-    // Seiten ohne festen Titel (z. B. Bandmitglieder) setzen ihre Angaben selbst
-    if (!title) return;
     let route = snapshot.root;
     while (route.firstChild) route = route.firstChild;
+    const lang = this.i18n.lang();
+    // öffentliche Seiten: Titel und Beschreibung je Sprache in data; Backstage: fester deutscher Titel
+    const title = (route.data['title'] as Record<Lang, string> | undefined)?.[lang] ?? this.buildTitle(snapshot);
+    // Seiten ohne festen Titel (z. B. Bandmitglieder) setzen ihre Angaben selbst
+    if (!title) return;
+    const path = snapshot.url.split(/[?#]/)[0].replace(/^\//, '');
     this.pageMeta.set({
       title,
-      description: route.data['description'],
+      description: (route.data['description'] as Record<Lang, string> | undefined)?.[lang],
       robots: route.data['robots'],
-      lang: route.data['lang'],
-      alternates: route.data['alternates'],
-      path: snapshot.url.split(/[?#]/)[0].replace(/^\//, ''),
+      germanOnly: path.startsWith('backstage'),
+      path,
     });
   }
 }

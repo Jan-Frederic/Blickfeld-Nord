@@ -17,6 +17,13 @@
 .desktop-nav button, .desktop-nav a { font-family: var(--bn-wide); letter-spacing: .18em; text-transform: uppercase; font-size: .78rem; }
 .spacer { flex: 1; }
 .mobile-nav { display: none; }
+.languages { display: flex; align-items: center; gap: 2px; margin-left: 8px; }
+.languages a {
+  padding: 6px 7px; border-radius: 6px; color: var(--bn-fog); text-decoration: none;
+  font-family: var(--bn-wide); font-size: .7rem; letter-spacing: .12em;
+}
+.languages a:hover { color: var(--bn-ink); }
+.languages a.current { color: var(--bn-sunset); }
 @media (max-width: 640px) {
   .desktop-nav { display: none; }
   .mobile-nav { display: inline-flex; }
