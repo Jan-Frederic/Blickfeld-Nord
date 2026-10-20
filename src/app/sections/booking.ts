@@ -6,6 +6,7 @@ import { PageLinks } from './page-links';
 import { Anfrage } from './anfrage';
 import { Faq } from './faq';
 import { Angebot } from './angebot';
+import { Entfernung } from './entfernung';
 import { scrollToSection } from '../scroll';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
@@ -27,7 +28,7 @@ Viele Grüße
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, MatIconModule, Availability, PageLinks, Anfrage, Faq, Angebot],
+  imports: [RouterLink, MatIconModule, Availability, PageLinks, Anfrage, Faq, Angebot, Entfernung],
   template: `
     <section class="section">
       <p class="kicker">Für Veranstalter</p>
@@ -68,6 +69,8 @@ Viele Grüße
       <app-faq />
 
       <app-angebot />
+
+      <app-entfernung />
 
       <!-- im Browser neu berechnet: welcher Monat und welche Tage vergangen sind, hängt vom Besuchstag ab -->
       <div id="verfuegbarkeit" class="anchor"><app-availability ngSkipHydration (pick)="request($event)" /></div>
