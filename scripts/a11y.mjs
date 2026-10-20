@@ -18,7 +18,7 @@ const { base: BASE, close } = serve(DIST);
 const sitemap = readFileSync(join(DIST, 'sitemap.xml'), 'utf8');
 const pages = [...new Set([...sitemap.matchAll(/<loc>https:\/\/blickfeld-nord\.de([^<]*)<\/loc>/g)].map((m) => m[1] || '/'))];
 const firstShow = pages.find((p) => p.startsWith('/konzerte/'))?.split('/')[2];
-pages.push('/backstage/', ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), '/gibt-es-nicht');
+pages.push('/backstage/', ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), '/wunsch', '/gibt-es-nicht');
 
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });

@@ -3,6 +3,7 @@
 
 Seite 1: Schild (A4) für Bühne und Theke – QR-Codes zu Website und Instagram
 Seite 2: vier Flyer-Karten (A6) zum Ausschneiden
+Außerdem: public/presse/blickfeld-nord-wunschbox.pdf – Schild für die Live-Wunschbox (/wunsch) auf der Bühne
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-qr-karte.py
 Benötigt: reportlab, fonttools, segno  (pip install reportlab fonttools segno)
@@ -25,6 +26,8 @@ OUT = os.path.join(pk.OUT, 'blickfeld-nord-qr-karte.pdf')
 LOGO = os.path.join(pk.SRC, 'kompass-logo-hell.png')
 WEBSITE = ('Website', 'blickfeld-nord.de', 'https://blickfeld-nord.de/')
 INSTAGRAM = ('Instagram', '@blickfeldnord', 'https://www.instagram.com/blickfeldnord/')
+WUNSCH = 'https://blickfeld-nord.de/wunsch'
+OUT_WUNSCH = os.path.join(pk.OUT, 'blickfeld-nord-wunschbox.pdf')
 
 
 def qr(c, url, x, y, size):
@@ -140,6 +143,27 @@ def cards_page(c):
     c.showPage()
 
 
+def wunsch_page(c):
+    """Schild für die Bühne: großer QR-Code zur Live-Wunschbox."""
+    w, h = A4
+    c.setFillColor(pk.NIGHT)
+    c.rect(0, 0, w, h, stroke=0, fill=1)
+    ls = 40 * mm
+    c.drawImage(LOGO, (w - ls) / 2, h - 18 * mm - ls, ls, ls, mask='auto')
+    wordmark(c, w / 2, h - 70 * mm, 18)
+    spaced(c, 'LIVE-WUNSCHBOX', w / 2, h - 88 * mm, 'Montserrat', 14, pk.SUNSET)
+    centered(c, 'Euer Song?', w / 2, h - 106 * mm, 'Inter-SemiBold', 34, pk.INK)
+    size = 112 * mm
+    qr(c, WUNSCH, (w - size) / 2, h - 116 * mm - size, size)
+    centered(c, 'Scannen, Song aussuchen, abschicken.', w / 2, 42 * mm, 'Inter-SemiBold', 15, pk.INK)
+    centered(c, 'Wir spielen ihn, sobald er in den Abend passt.', w / 2, 34 * mm, 'Inter', 12.5, pk.FOG)
+    c.setStrokeColor(pk.SUNSET)
+    c.setLineWidth(0.8)
+    c.line(w / 2 - 20 * mm, 24 * mm, w / 2 + 20 * mm, 24 * mm)
+    centered(c, 'blickfeld-nord.de/wunsch', w / 2, 15 * mm, 'Inter', 11, pk.FOG)
+    c.showPage()
+
+
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         pk.register_fonts(tmp)
@@ -149,7 +173,13 @@ def main():
         sign_page(c)
         cards_page(c)
         c.save()
+        w = canvas.Canvas(OUT_WUNSCH, pagesize=A4)
+        w.setTitle('Blickfeld Nord – Live-Wunschbox')
+        w.setAuthor('Blickfeld Nord')
+        wunsch_page(w)
+        w.save()
     print(f'{os.path.relpath(OUT)}  {os.path.getsize(OUT) / 1024:.0f} KB')
+    print(f'{os.path.relpath(OUT_WUNSCH)}  {os.path.getsize(OUT_WUNSCH) / 1024:.0f} KB')
 
 
 if __name__ == '__main__':

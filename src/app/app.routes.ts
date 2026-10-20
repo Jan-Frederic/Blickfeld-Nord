@@ -5,6 +5,7 @@ import { BOOKING_ALTERNATES } from './page-meta';
 // Startseite direkt im Hauptpaket, alle Unterseiten werden erst beim Aufruf geladen (kleineres Start-JavaScript)
 export const routes: Routes = [
   { path: '', component: Home, title: 'Blickfeld Nord – Offizielle Bandpage' },
+  { path: 'wunsch', loadComponent: () => import('./pages/wunsch').then((m) => m.WunschPage), title: 'Songwunsch – Blickfeld Nord', data: { robots: 'noindex', description: 'Live-Wunschbox: Sucht euch einen Song von Blickfeld Nord aus und schickt uns euren Wunsch.' } },
   { path: 'konzerte/:id', loadComponent: () => import('./pages/konzert').then((m) => m.KonzertPage) },
   { path: 'band/:slug', loadComponent: () => import('./pages/member').then((m) => m.MemberPage) },
   { path: 'booking', loadComponent: () => import('./pages/booking').then((m) => m.BookingPage), title: 'Booking – Blickfeld Nord', data: { alternates: BOOKING_ALTERNATES, description: 'Blickfeld Nord buchen: Partyband für Feste, private Feiern und Kneipen – Verfügbarkeit, Technik, Spielzeit, häufige Fragen und Kontakt.' } },

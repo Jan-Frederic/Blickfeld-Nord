@@ -50,6 +50,9 @@ function loadFilters(): Set<FilterKey> {
       <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
 
       <div class="summary">
+        <a class="wunschbox" href="presse/blickfeld-nord-wunschbox.pdf" target="_blank" rel="noopener" title="Schild mit QR-Code zur Live-Wunschbox (/wunsch) für die Bühne">
+          <mat-icon>qr_code_2</mat-icon> Wunschbox-Schild drucken
+        </a>
         <app-abo-button class="export" path="backstage/kalender.ics" (download)="exportAll()" />
       </div>
 
@@ -152,7 +155,10 @@ function loadFilters(): Set<FilterKey> {
     </section>
   `,
   styles: `
-    .summary { display: flex; justify-content: flex-end; margin: 16px 0 20px; }
+    .summary { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 16px 0 20px; }
+    .wunschbox { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none; font-size: .88rem; }
+    .wunschbox:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .wunschbox mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .exchange { margin-top: 40px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
     .exchange h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .exchange p { margin: 0 0 14px; max-width: 720px; font-size: .9rem; line-height: 1.6; color: var(--bn-fog); }
