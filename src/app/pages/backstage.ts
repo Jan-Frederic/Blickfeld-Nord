@@ -6,6 +6,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { downloadIcs } from '../data/calendar';
 import { SetlistStats } from './setlist-stats';
+import { BackstageStats } from './backstage-stats';
 import { AboButton } from '../sections/abo-button';
 import { BackstageSync } from './backstage-sync';
 import { offlineReady } from '../pwa';
@@ -39,18 +40,16 @@ function loadFilters(): Set<FilterKey> {
 // fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync],
+  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync, BackstageStats],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
       <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen, dazu die Probetermine. Für Details, Plakat, Setlist und Packliste einfach einen Auftritt antippen.</p>
 
+      <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
+
       <div class="summary">
-        <span><strong>{{ shows.length }}</strong> Auftritte</span>
-        <span><strong>{{ confirmed }}</strong> geklärt</span>
-        <span><strong>{{ open }}</strong> offen</span>
-        <span><strong>{{ privateCount }}</strong> privat</span>
         <app-abo-button class="export" path="backstage/kalender.ics" (download)="exportAll()" />
       </div>
 
@@ -153,13 +152,7 @@ function loadFilters(): Set<FilterKey> {
     </section>
   `,
   styles: `
-    .summary {
-      display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 20px;
-      font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; color: var(--bn-fog);
-    }
-    .summary { align-items: center; }
-    .export { margin-left: auto; text-transform: none; letter-spacing: normal; }
-    .summary strong { color: var(--bn-ink); font-size: 1rem; margin-right: 4px; }
+    .summary { display: flex; justify-content: flex-end; margin: 16px 0 20px; }
     .exchange { margin-top: 40px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
     .exchange h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .exchange p { margin: 0 0 14px; max-width: 720px; font-size: .9rem; line-height: 1.6; color: var(--bn-fog); }
@@ -182,7 +175,7 @@ function loadFilters(): Set<FilterKey> {
     .sort mat-icon { font-size: 16px; width: 16px; height: 16px; opacity: .5; }
     th[aria-sort] .sort mat-icon { opacity: 1; color: var(--bn-sunset); }
     .sort:hover mat-icon { opacity: 1; }
-    .tag.probe { border-color: #7fa8c9; color: #9cc0dd; }
+    .tag.probe { border-color: #7fb3e0; color: #7fb3e0; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
     table { width: 100%; min-width: 820px; background: transparent; }
     .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -196,7 +189,7 @@ function loadFilters(): Set<FilterKey> {
     }
     .tag.private { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: #e0b25a; }
-    .status.ok { color: #7fc29b; }
+    .status.ok { color: #5fb88a; }
     .status mat-icon { font-size: 18px; width: 18px; height: 18px; }
     tr.link { cursor: pointer; transition: background .15s; }
     tr.link:hover, tr.link:focus-within { background: rgba(232, 164, 106, .07); }
@@ -289,9 +282,6 @@ export class Backstage implements OnDestroy {
     }
   }
 
-  protected readonly confirmed = this.shows.filter((s) => s.confirmed).length;
-  protected readonly open = this.shows.length - this.confirmed;
-  protected readonly privateCount = this.shows.filter((s) => s.private).length;
 
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
