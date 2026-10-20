@@ -3,25 +3,52 @@ import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { I18n, LocPipe, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from './uebersetzung-hinweis';
+
+const TEXT = tr(
+  {
+    kicker: 'Wer wir sind',
+    title: 'Die Band',
+    lead1:
+      'Was 2019 als Kombo von David und Matthias begann, ist heute ein echtes Power-Trio: Seit Oktober 2025 macht Fred am Bass die Runde komplett. Seitdem heißt es: drei Stimmen, ein Ziel – Party.',
+    lead2:
+      'Wir spielen Musik, die ins Bein geht und zum Mitsingen einlädt. Egal ob Weihnachtsmarkt, Stadtfest oder private Feier – wenn Blickfeld Nord auf der Bühne steht, bleibt keiner lange sitzen.',
+    more: 'Mehr erfahren',
+  },
+  {
+    kicker: 'Who we are',
+    title: 'The band',
+    lead1:
+      'What started in 2019 as a combo of David and Matthias is now a proper power trio: since October 2025, Fred on bass has completed the line-up. Ever since, it has been three voices, one goal – party.',
+    lead2:
+      'We play music that gets your feet moving and makes you want to sing along. Whether it is a Christmas market, a town festival or a private party – when Blickfeld Nord is on stage, nobody stays seated for long.',
+    more: 'Find out more',
+  },
+  {
+    kicker: 'Wie we zijn',
+    title: 'De band',
+    lead1:
+      'Wat in 2019 begon als combo van David en Matthias, is nu een echt powertrio: sinds oktober 2025 maakt Fred op bas het geheel compleet. Sindsdien is het: drie stemmen, één doel – feest.',
+    lead2:
+      'We spelen muziek die in de benen gaat en uitnodigt om mee te zingen. Of het nu een kerstmarkt, een stadsfeest of een privéfeest is – als Blickfeld Nord op het podium staat, blijft niemand lang zitten.',
+    more: 'Meer weten',
+  },
+);
 
 @Component({
   selector: 'app-band',
-  imports: [RouterLink, MatCardModule, MatIconModule],
+  imports: [RouterLink, MatCardModule, MatIconModule, LocPipe, UebersetzungHinweis],
   template: `
     <section id="band" class="section">
-      <p class="kicker">Wer wir sind</p>
-      <h2>Die Band</h2>
-      <p class="lead">
-        Was 2019 als Kombo von David und Matthias begann, ist heute ein echtes Power-Trio: Seit Oktober 2025
-        macht Fred am Bass die Runde komplett. Seitdem heißt es: drei Stimmen, ein Ziel – Party.
-      </p>
-      <p class="lead">
-        Wir spielen Musik, die ins Bein geht und zum Mitsingen einlädt. Egal ob Weihnachtsmarkt, Stadtfest
-        oder private Feier – wenn Blickfeld Nord auf der Bühne steht, bleibt keiner lange sitzen.
-      </p>
+      <p class="kicker">{{ t().kicker }}</p>
+      <h2>{{ t().title }}</h2>
+      <p class="lead">{{ t().lead1 }}</p>
+      <p class="lead">{{ t().lead2 }}</p>
       <div class="grid">
         @for (m of band.members; track m.slug) {
-          <a class="card-link" [routerLink]="['/band', m.slug]">
+          <a class="card-link" [routerLink]="['/band', m.slug] | loc">
           <mat-card appearance="outlined">
             <mat-card-header>
               @if (m.photo) {
@@ -30,16 +57,17 @@ import { BandService } from '../data/band.service';
                 <div mat-card-avatar class="avatar">{{ m.initials }}</div>
               }
               <mat-card-title>{{ m.name }}</mat-card-title>
-              <mat-card-subtitle>{{ m.role }}</mat-card-subtitle>
+              <mat-card-subtitle>{{ content.t(m.role) }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <p>{{ m.bio }}</p>
-              <span class="more">Mehr erfahren <mat-icon>arrow_forward</mat-icon></span>
+              <p [attr.lang]="content.langOf(m.bio)">{{ content.t(m.bio) }}</p>
+              <span class="more">{{ t().more }} <mat-icon>arrow_forward</mat-icon></span>
             </mat-card-content>
           </mat-card>
           </a>
         }
       </div>
+      <app-uebersetzung-hinweis [status]="bioStatus()" />
     </section>
   `,
   styles: `
@@ -67,4 +95,7 @@ import { BandService } from '../data/band.service';
 })
 export class Band {
   protected readonly band = inject(BandService);
+  protected readonly content = inject(Content);
+  protected readonly t = inject(I18n).t(TEXT);
+  protected readonly bioStatus = () => this.content.status(...this.band.members.flatMap((m) => [m.role, m.bio]));
 }

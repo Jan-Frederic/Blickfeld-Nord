@@ -12,3 +12,4 @@ export { buildIcs } from '../../src/app/data/calendar';
 export const showId = (s: Parameters<BandService['showId']>[0]) => band.showId(s);
 export const allShows = band.shows;
 export const rehearsals = band.rehearsals;
+export { UEBERSETZUNGEN } from '../../src/app/data/uebersetzungen';

@@ -1,5 +1,5 @@
 // Häufige Fragen von Veranstaltern auf Deutsch, Englisch und Niederländisch.
-// Erscheinen auf /booking, /booking/en und /booking/nl und als strukturierte Daten (FAQPage) für Suchmaschinen (scripts/seo.mjs).
+// Erscheinen auf /booking, /en/booking und /nl/booking und als strukturierte Daten (FAQPage) für Suchmaschinen (scripts/seo.mjs).
 // Angaben auch im Technik-Rider (scripts/build-rider.py) und auf /technik gleich halten.
 export type FaqItem = { q: string; a: string; link?: { label: string; to: string } };
 
@@ -25,7 +25,7 @@ export const FAQ: Record<'de' | 'en' | 'nl', { title: string; items: FaqItem[] }
     items: [
       {
         q: 'What equipment do you bring?',
-        a: 'We bring our own PA, lights and instruments – you don’t need to take care of anything. What exactly is included, what we need on site and the technical rider for download can be found on our technical page (in German).',
+        a: 'We bring our own PA, lights and instruments – you don’t need to take care of anything. What exactly is included, what we need on site and the technical rider (in German) for download can be found on our technical page.',
         link: { label: 'Technical page', to: '/technik' },
       },
       { q: 'How far do you travel?', a: 'We play within a radius of up to 50 km around Hamminkeln (Germany).' },
@@ -41,7 +41,7 @@ export const FAQ: Record<'de' | 'en' | 'nl', { title: string; items: FaqItem[] }
     items: [
       {
         q: 'Welke techniek nemen jullie mee?',
-        a: 'PA, licht en instrumenten nemen we helemaal zelf mee – jullie hoeven nergens voor te zorgen. Wat er precies bij hoort, wat we ter plaatse nodig hebben en de techniek-rider om te downloaden vinden jullie op onze techniekpagina (in het Duits).',
+        a: 'PA, licht en instrumenten nemen we helemaal zelf mee – jullie hoeven nergens voor te zorgen. Wat er precies bij hoort, wat we ter plaatse nodig hebben en de techniek-rider (in het Duits) om te downloaden vinden jullie op onze techniekpagina.',
         link: { label: 'Naar de techniekpagina', to: '/technik' },
       },
       { q: 'Hoe ver reizen jullie?', a: 'We spelen in een straal van maximaal 50 km rond Hamminkeln (Duitsland).' },

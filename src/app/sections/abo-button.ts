@@ -1,6 +1,37 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { I18n, tr } from '../i18n';
+
+const TEXT = tr(
+  {
+    hint: 'Neue Termine erscheinen automatisch in eurem Kalender',
+    subscribe: 'Kalender abonnieren',
+    copyHint: 'Adresse zum Einfügen in Outlook oder andere Kalender-Apps',
+    copied: 'Adresse kopiert ✓',
+    copy: 'Adresse kopieren',
+    download: 'einmalig herunterladen',
+    prompt: 'Kalender-Adresse kopieren:',
+  },
+  {
+    hint: 'New dates appear in your calendar automatically',
+    subscribe: 'Subscribe to calendar',
+    copyHint: 'Address to paste into Outlook or other calendar apps',
+    copied: 'Address copied ✓',
+    copy: 'Copy address',
+    download: 'download once',
+    prompt: 'Copy calendar address:',
+  },
+  {
+    hint: 'Nieuwe data verschijnen automatisch in je agenda',
+    subscribe: 'Agenda abonneren',
+    copyHint: 'Adres om in Outlook of andere agenda-apps te plakken',
+    copied: 'Adres gekopieerd ✓',
+    copy: 'Adres kopiëren',
+    download: 'eenmalig downloaden',
+    prompt: 'Agenda-adres kopiëren:',
+  },
+);
 
 // „Kalender abonnieren“ für eine beim Build erzeugte .ics-Datei (scripts/seo.mjs).
 // Android kennt kein webcal:// – dort öffnet der Button direkt das Abo in Google Kalender.
@@ -10,14 +41,14 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [MatButtonModule, MatIconModule],
   template: `
     <a mat-flat-button [href]="android ? google() : webcal()" [attr.target]="android ? '_blank' : null" rel="noopener"
-       title="Neue Termine erscheinen automatisch in eurem Kalender">
-      <mat-icon>event_repeat</mat-icon> Kalender abonnieren
+       [title]="t().hint">
+      <mat-icon>event_repeat</mat-icon> {{ t().subscribe }}
     </a>
     <span class="alt">
       @if (!android) { <a [href]="google()" target="_blank" rel="noopener">Google Kalender</a> · }
       <!-- für Outlook & Co.: „Aus dem Internet abonnieren“ braucht die https-Adresse -->
-      <button type="button" (click)="copy()" title="Adresse zum Einfügen in Outlook oder andere Kalender-Apps">{{ copied() ? 'Adresse kopiert ✓' : 'Adresse kopieren' }}</button> ·
-      <button type="button" (click)="download.emit()">einmalig herunterladen</button>
+      <button type="button" (click)="copy()" [title]="t().copyHint">{{ copied() ? t().copied : t().copy }}</button> ·
+      <button type="button" (click)="download.emit()">{{ t().download }}</button>
     </span>
   `,
   styles: `
@@ -38,6 +69,7 @@ export class AboButton {
   protected readonly webcal = computed(() => `webcal://blickfeld-nord.de/${this.path()}`);
   protected readonly https = computed(() => `https://blickfeld-nord.de/${this.path()}`);
   protected readonly copied = signal(false);
+  protected readonly t = inject(I18n).t(TEXT);
   protected readonly google = computed(() => `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(this.webcal())}`);
 
   protected async copy(): Promise<void> {
@@ -46,7 +78,7 @@ export class AboButton {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2500);
     } catch {
-      window.prompt('Kalender-Adresse kopieren:', this.https());
+      window.prompt(this.t().prompt, this.https());
     }
   }
 }

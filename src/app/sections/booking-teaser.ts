@@ -1,23 +1,42 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { I18n, LocPipe, tr } from '../i18n';
 
-// Kurzer Hinweis auf der Startseite – alle Details stehen auf /booking
+const TEXT = tr(
+  {
+    kicker: 'Für Veranstalter',
+    lead: 'Ihr plant ein Fest, eine private Feier oder einen Abend in eurer Kneipe? Wir bringen PA und Licht mit und spielen 3 bis 4 Stunden Partymusik zum Mitsingen und Tanzen.',
+    all: 'Alles zum Booking',
+    dates: 'Freie Termine ansehen',
+  },
+  {
+    kicker: 'For organisers',
+    lead: 'Planning a festival, a private party or a night at your pub? We bring our own PA and lights and play 3 to 4 hours of party music to sing and dance along to.',
+    all: 'All about booking',
+    dates: 'See available dates',
+  },
+  {
+    kicker: 'Voor organisatoren',
+    lead: 'Organiseren jullie een feest, een privéfeest of een avond in jullie café? Wij nemen geluid en licht mee en spelen 3 tot 4 uur partymuziek om mee te zingen en te dansen.',
+    all: 'Alles over boeken',
+    dates: 'Vrije data bekijken',
+  },
+);
+
+// Kurzer Hinweis auf der Startseite – alle Details stehen auf /booking (bzw. /en/booking, /nl/booking)
 @Component({
   selector: 'app-booking-teaser',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, LocPipe, MatIconModule],
   template: `
     <section id="booking" class="section">
-      <p class="kicker">Für Veranstalter</p>
+      <p class="kicker">{{ t().kicker }}</p>
       <h2>Booking</h2>
       <div class="teaser">
-        <p class="lead">
-          Ihr plant ein Fest, eine private Feier oder einen Abend in eurer Kneipe? Wir bringen PA und Licht mit und
-          spielen 3 bis 4 Stunden Partymusik zum Mitsingen und Tanzen.
-        </p>
+        <p class="lead">{{ t().lead }}</p>
         <div class="actions">
-          <a class="btn primary" routerLink="/booking"><mat-icon>celebration</mat-icon> Alles zum Booking</a>
-          <a class="btn" routerLink="/booking" fragment="verfuegbarkeit"><mat-icon>event</mat-icon> Freie Termine ansehen</a>
+          <a class="btn primary" [routerLink]="'/booking' | loc"><mat-icon>celebration</mat-icon> {{ t().all }}</a>
+          <a class="btn" [routerLink]="'/booking' | loc" fragment="verfuegbarkeit"><mat-icon>event</mat-icon> {{ t().dates }}</a>
         </div>
       </div>
     </section>
@@ -40,4 +59,6 @@ import { MatIconModule } from '@angular/material/icon';
     .btn mat-icon { width: 20px; height: 20px; font-size: 20px; }
   `,
 })
-export class BookingTeaser {}
+export class BookingTeaser {
+  protected readonly t = inject(I18n).t(TEXT);
+}

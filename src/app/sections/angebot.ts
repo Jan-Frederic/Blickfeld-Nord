@@ -1,5 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { I18n } from '../i18n';
 
 // „Wovon hängt das Angebot ab?“ – Orientierung zum Preis ohne konkrete Zahlen (die nennen wir nur im persönlichen Angebot)
 const T = {
@@ -64,6 +65,7 @@ const T = {
 })
 export class Angebot {
   /** Sprache der Seite */
-  readonly lang = input<'de' | 'en' | 'nl'>('de');
+  // Sprache aus der Adresse (/, /en/…, /nl/…)
+  protected readonly lang = inject(I18n).lang;
   protected readonly t = computed(() => T[this.lang()]);
 }

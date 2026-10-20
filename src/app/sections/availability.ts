@@ -1,6 +1,7 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { I18n } from '../i18n';
 
 type DayState = 'free' | 'booked' | 'option' | 'past';
 
@@ -145,7 +146,8 @@ export class Availability {
   readonly pick = output<string>();
 
   /** Sprache der Seite */
-  readonly lang = input<'de' | 'en' | 'nl'>('de');
+  // Sprache aus der Adresse (/, /en/…, /nl/…)
+  protected readonly lang = inject(I18n).lang;
   protected readonly t = computed(() => T[this.lang()]);
 
   protected readonly maxOffset = MONTHS_AHEAD;

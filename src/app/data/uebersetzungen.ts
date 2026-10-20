@@ -12,4 +12,772 @@ export interface Uebersetzung {
   geprueft?: { en?: boolean; nl?: boolean };
 }
 
-export const UEBERSETZUNGEN: Uebersetzung[] = [];
+export const UEBERSETZUNGEN: Uebersetzung[] = [
+  // Bandmitglieder
+  {
+    de: 'Gesang & Gitarre',
+    en: 'Vocals & guitar',
+    nl: 'Zang & gitaar',
+  },
+  {
+    de: 'Schlagzeug & Gesang',
+    en: 'Drums & vocals',
+    nl: 'Drums & zang',
+  },
+  {
+    de: 'Bass & Gesang',
+    en: 'Bass & vocals',
+    nl: 'Bas & zang',
+  },
+  {
+    de: 'Seit 2019 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.',
+    en: 'On board since 2019 and up front at the mic: with his voice and guitar, David wins the crowd over from the very first note.',
+    nl: 'Sinds 2019 aan boord en vooraan bij de microfoon: met stem en gitaar pakt David het publiek vanaf de eerste noot.',
+  },
+  {
+    de: 'Der Puls der Band seit 2019: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.',
+    en: 'The pulse of the band since 2019: Matthias keeps the groove going behind the drum kit – and sings along while he’s at it.',
+    nl: 'De hartslag van de band sinds 2019: Matthias zorgt achter het drumstel voor de groove – en zingt daarbij ook nog mee.',
+  },
+  {
+    de: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.',
+    en: 'Fred joined in October 2025 and turned the duo into a trio – with bass, voice and plenty of punch.',
+    nl: 'Fred is er sinds oktober 2025 bij en maakte van het duo een trio – met bas, stem en een flinke dosis power.',
+  },
+  {
+    de: 'David Bröker singt und spielt Akustikgitarre, im karierten Hemd vor einer Backsteinmauer',
+    en: 'David Bröker singing and playing acoustic guitar, in a checked shirt in front of a brick wall',
+    nl: 'David Bröker zingt en speelt akoestische gitaar, in een geruit overhemd voor een bakstenen muur',
+  },
+  {
+    de: 'Matthias Wigger lacht hinter seinem Schlagzeug, vor einer Backsteinmauer mit Bühnenlicht',
+    en: 'Matthias Wigger laughing behind his drum kit, in front of a brick wall with stage lighting',
+    nl: 'Matthias Wigger lacht achter zijn drumstel, voor een bakstenen muur met podiumlicht',
+  },
+  {
+    de: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer',
+    en: 'Fred in a flat cap, smiling as he plays his electric bass, in front of a brick wall',
+    nl: 'Fred met platte pet speelt glimlachend op zijn elektrische bas, voor een bakstenen muur',
+  },
+  // Historie: 2026-09-25 Geburtstagsfeier im Gasthof Buschmann
+  {
+    de: 'Geburtstagsfeier im Gasthof Buschmann – die ganze Familie macht mit',
+    en: 'Birthday party at Gasthof Buschmann – the whole family joins in',
+    nl: 'Verjaardagsfeest in Gasthof Buschmann – de hele familie doet mee',
+  },
+  {
+    de: 'Am 25. September durften wir im Gasthof Buschmann in Hamminkeln-Ringenberg auf einer Geburtstagsfeier spielen – in einem Haus, das seit 1868 als Gaststätte und Hotel in Familienbesitz geführt wird. Mehr Tradition als Kulisse geht kaum.',
+    en: 'On 25 September we got to play at a birthday party at Gasthof Buschmann in Hamminkeln-Ringenberg – a house that has been run as an inn and hotel by the same family since 1868. You can hardly ask for more tradition as a backdrop.',
+    nl: 'Op 25 september mochten we spelen op een verjaardagsfeest in Gasthof Buschmann in Hamminkeln-Ringenberg – een huis dat sinds 1868 als herberg en hotel in familiebezit is. Meer traditie als decor kan haast niet.',
+  },
+  {
+    de: 'Es wurde ein wunderschöner Abend mit ausgelassener Stimmung. Und das Beste: Die ganze Familie hat mitmusiziert. Aus einem Konzert wurde so ganz schnell eine große gemeinsame Session, bei der niemand nur zuhören wollte.',
+    en: 'It turned into a wonderful evening with a lively atmosphere. And the best part: the whole family made music with us. So a concert quickly became one big shared session where nobody wanted to just listen.',
+    nl: 'Het werd een prachtige avond met een uitgelaten sfeer. En het mooiste: de hele familie speelde mee. Zo werd een concert al snel één grote gezamenlijke sessie, waarbij niemand alleen maar wilde luisteren.',
+  },
+  {
+    de: 'Sogar Markus von markusdproduktion, der den Abend eigentlich mit der Kamera festgehalten hat, griff zwischendurch zur Trompete – das Foto stammt ebenfalls von ihm. Danke an das Geburtstagskind und die ganze Familie für die Einladung, an das Team vom Gasthof Buschmann und an Markus für Foto und Trompete!',
+    en: 'Even Markus from markusdproduktion, who was actually there to capture the evening on camera, picked up the trumpet in between – the photo is his as well. Thanks to the birthday girl or boy and the whole family for the invitation, to the team at Gasthof Buschmann and to Markus for the photo and the trumpet!',
+    nl: 'Zelfs Markus van markusdproduktion, die de avond eigenlijk met de camera vastlegde, pakte tussendoor de trompet erbij – de foto is ook van hem. Bedankt aan de jarige en de hele familie voor de uitnodiging, aan het team van Gasthof Buschmann en aan Markus voor foto en trompet!',
+  },
+  {
+    de: 'Blickfeld Nord im Saal des Gasthof Buschmann unter lila Licht und Nebel: David mit Akustikgitarre, Matthias am Schlagzeug und Fred am Bass',
+    en: 'Blickfeld Nord in the hall of Gasthof Buschmann under purple light and haze: David on acoustic guitar, Matthias on drums and Fred on bass',
+    nl: 'Blickfeld Nord in de zaal van Gasthof Buschmann onder paars licht en rook: David op akoestische gitaar, Matthias op drums en Fred op bas',
+  },
+  // Historie: 2026-09-05 Nachbarschaftsfest bei Matthias
+  {
+    de: 'Nachbarschaftsfest bei Matthias',
+    en: 'Neighbourhood party at Matthias’s',
+    nl: 'Buurtfeest bij Matthias',
+  },
+  {
+    de: 'Die kürzeste Anreise des Jahres hatte eindeutig Matthias: Am 5. September haben wir auf dem Nachbarschaftsfest in seiner Straße gespielt – Heimspiel im wahrsten Sinne des Wortes, quasi mit Blick auf die eigene Haustür.',
+    en: 'The shortest journey of the year clearly went to Matthias: on 5 September we played at the neighbourhood party in his street – a home game in the truest sense of the word, practically with a view of his own front door.',
+    nl: 'De kortste reis van het jaar had overduidelijk Matthias: op 5 september speelden we op het buurtfeest in zijn straat – een thuiswedstrijd in de ware zin van het woord, zo goed als met uitzicht op de eigen voordeur.',
+  },
+  {
+    de: 'Ein Pavillon, lila Licht, ein bisschen Nebel und jede Menge gut gelaunter Nachbarn: Mehr braucht es nicht für einen richtig schönen Abend. Zwischen Grill, Getränken und Gesprächen über den Gartenzaun hinweg wurde mitgesungen, getanzt und gefeiert.',
+    en: 'A gazebo, purple light, a bit of haze and loads of cheerful neighbours: that’s all it takes for a really lovely evening. Between the barbecue, drinks and chats over the garden fence, people sang along, danced and celebrated.',
+    nl: 'Een partytent, paars licht, een beetje rook en een heleboel goedgehumeurde buren: meer is er niet nodig voor een echt mooie avond. Tussen barbecue, drankjes en gesprekken over het tuinhek werd er meegezongen, gedanst en gefeest.',
+  },
+  {
+    de: 'Danke an Matthias’ Nachbarschaft für die Einladung und die tolle Stimmung. Wer solche Nachbarn hat, braucht eigentlich keine Konzerthalle mehr!',
+    en: 'Thanks to Matthias’s neighbourhood for the invitation and the great atmosphere. With neighbours like these, who needs a concert hall?',
+    nl: 'Bedankt aan de buurt van Matthias voor de uitnodiging en de geweldige sfeer. Wie zulke buren heeft, heeft eigenlijk geen concertzaal meer nodig!',
+  },
+  {
+    de: 'Blickfeld Nord beim Nachbarschaftsfest im Pavillon unter lila Licht: David mit Akustikgitarre, Matthias am Schlagzeug und Fred am Bass',
+    en: 'Blickfeld Nord at the neighbourhood party in the gazebo under purple light: David on acoustic guitar, Matthias on drums and Fred on bass',
+    nl: 'Blickfeld Nord op het buurtfeest in de partytent onder paars licht: David op akoestische gitaar, Matthias op drums en Fred op bas',
+  },
+  // Historie: 2026-08-29 Hausparty bei unseren Freunden von der Feuerwehr
+  {
+    de: 'Hausparty bei unseren Freunden von der Feuerwehr',
+    en: 'House party with our friends from the fire brigade',
+    nl: 'Huisfeest bij onze vrienden van de brandweer',
+  },
+  {
+    de: 'Wenn die Feuerwehr feiert, brennt höchstens die Stimmung: Am 29. August waren wir bei unseren Freunden von der Löscheinheit Dingden zu einer Hausparty eingeladen – Instrumente vor der Backsteinwand, Licht an und los.',
+    en: 'When the fire brigade throws a party, the only thing on fire is the atmosphere: on 29 August our friends from the Löscheinheit Dingden fire unit invited us to a house party – instruments in front of the brick wall, lights on and off we go.',
+    nl: 'Als de brandweer feest viert, staat hooguit de sfeer in vuur en vlam: op 29 augustus waren we door onze vrienden van de Löscheinheit Dingden uitgenodigd voor een huisfeest – instrumenten voor de bakstenen muur, licht aan en gaan.',
+  },
+  {
+    de: 'Gefeiert wurde bis tief in die Nacht. Und als die Verstärker irgendwann still waren, ging es draußen einfach weiter: Rund ums Lagerfeuer wurde unplugged weitergesungen – die schönste Zugabe des Abends.',
+    en: 'The party went on late into the night. And when the amps finally went quiet, it simply carried on outside: around the campfire everyone kept singing unplugged – the best encore of the evening.',
+    nl: 'Er werd tot diep in de nacht gefeest. En toen de versterkers op een gegeven moment stil waren, ging het buiten gewoon verder: rond het kampvuur werd unplugged verder gezongen – de mooiste toegift van de avond.',
+  },
+  {
+    de: 'Danke an unsere Freunde von der Feuerwehr für die Einladung und die tolle Gastfreundschaft. Löschen müsst ihr bei uns nur den Durst!',
+    en: 'Thanks to our friends from the fire brigade for the invitation and the wonderful hospitality. The only thing you need to put out with us is your thirst!',
+    nl: 'Bedankt aan onze vrienden van de brandweer voor de uitnodiging en de geweldige gastvrijheid. Bij ons hoeven jullie alleen de dorst te blussen!',
+  },
+  {
+    de: 'Aufgebaute Bühne vor einer Backsteinwand: Schlagzeug, E-Gitarre, Bass und Akustikgitarre unter roten Scheinwerfern',
+    en: 'Stage set up in front of a brick wall: drums, electric guitar, bass and acoustic guitar under red spotlights',
+    nl: 'Opgebouwd podium voor een bakstenen muur: drums, elektrische gitaar, bas en akoestische gitaar onder rode spots',
+  },
+  // Historie: 2026-08-22 Legendärer Abend im Gasthof Küpper
+  {
+    de: 'Legendärer Abend im Gasthof Küpper – mit Joker Mark',
+    en: 'Legendary night at Gasthof Küpper – with our joker Mark',
+    nl: 'Legendarische avond in Gasthof Küpper – met joker Mark',
+  },
+  {
+    de: 'Manche Abende sind gut, manche werden legendär. Der 22. August im Gasthof Küpper gehört eindeutig zur zweiten Sorte: Kneipe in Feierlaune, Gäste mit Textsicherheit und ein Abend, der eigentlich gar nicht aufhören wollte.',
+    en: 'Some nights are good, some become legendary. 22 August at Gasthof Küpper definitely belongs to the second kind: a pub in party mood, guests who knew every word and a night that just didn’t want to end.',
+    nl: 'Sommige avonden zijn goed, sommige worden legendarisch. 22 augustus in Gasthof Küpper hoort duidelijk bij de tweede soort: een kroeg in feeststemming, gasten die alle teksten kenden en een avond die eigenlijk helemaal niet wilde ophouden.',
+  },
+  {
+    de: 'Dabei hatte das Schicksal vorher noch versucht, uns aus dem Takt zu bringen: Matthias hat sich das Sprunggelenk gebrochen und wurde frisch verschraubt. Wir haben dabei gelernt: Ein Schlagzeug braucht Schrauben – ein Schlagzeuger eigentlich nicht. Statt Fußmaschine hieß es für ihn also erst einmal: Fuß hoch.',
+    en: 'And yet fate had tried to throw us off beat beforehand: Matthias broke his ankle and had just been fitted with screws. What we learned: a drum kit needs screws – a drummer, not so much. So instead of the kick pedal, it was feet up for him for the time being.',
+    nl: 'Toch had het lot eerder nog geprobeerd ons uit de maat te brengen: Matthias brak zijn enkel en werd vers vastgeschroefd. Wat we daarvan leerden: een drumstel heeft schroeven nodig – een drummer eigenlijk niet. In plaats van het voetpedaal was het voor hem dus eerst: voet omhoog.',
+  },
+  {
+    de: 'Zum Glück gibt es Freunde wie Mark. Unser Musiker-Kollege ist ohne zu zögern eingesprungen und hat gespielt, als wäre er schon immer dabei gewesen. Danke, Mark – du hast was gut bei uns! Und Matthias: Gute Besserung, die Sticks warten schon.',
+    en: 'Luckily there are friends like Mark. Our fellow musician stepped in without hesitation and played as if he’d always been part of the band. Thanks, Mark – we owe you one! And Matthias: get well soon, the sticks are waiting.',
+    nl: 'Gelukkig zijn er vrienden zoals Mark. Onze collega-muzikant sprong zonder aarzelen in en speelde alsof hij er altijd al bij was geweest. Bedankt, Mark – we staan bij je in het krijt! En Matthias: beterschap, de sticks wachten al.',
+  },
+  {
+    de: 'Danke an das Küpper-Team und an alle, die mitgefeiert haben. Einen kleinen Eindruck gibt es im Reel.',
+    en: 'Thanks to the Küpper team and everyone who partied with us. You can get a little taste of it in the reel.',
+    nl: 'Bedankt aan het Küpper-team en aan iedereen die mee heeft gefeest. Een kleine indruk zie je in de reel.',
+  },
+  {
+    de: 'Reel auf Instagram',
+    en: 'Reel on Instagram',
+    nl: 'Reel op Instagram',
+  },
+  // Historie: 2026-04-30 Heimspiel im Café Lotti
+  {
+    de: 'Heimspiel im Café Lotti – mit Pro Campesinos',
+    en: 'Home game at Café Lotti – with Pro Campesinos',
+    nl: 'Thuiswedstrijd in Café Lotti – met Pro Campesinos',
+  },
+  {
+    de: 'Es gibt Auftritte – und es gibt Heimspiele. Am 30. April waren wir bei unserer Home-Base, dem Café Lotti in Dingden, und diesmal nicht allein: Gemeinsam mit dem Dingdener Chor Pro Campesinos haben wir den Abend gestaltet.',
+    en: 'There are gigs – and there are home games. On 30 April we were at our home base, Café Lotti in Dingden, and this time not on our own: together with the Dingden choir Pro Campesinos we put on the evening.',
+    nl: 'Er zijn optredens – en er zijn thuiswedstrijden. Op 30 april waren we bij onze thuisbasis, Café Lotti in Dingden, en deze keer niet alleen: samen met het koor Pro Campesinos uit Dingden verzorgden we de avond.',
+  },
+  {
+    de: 'Draußen vor der Backsteinmauer, unter lila Scheinwerfern, trafen Gitarre, Bass und Schlagzeug auf einen ganzen Chor voller Stimmen. Für Matthias und Fred war es sogar ein doppeltes Heimspiel – beide unterstützen Pro Campesinos sonst selbst am Bass.',
+    en: 'Outside in front of the brick wall, under purple spotlights, guitar, bass and drums met a whole choir full of voices. For Matthias and Fred it was even a double home game – both of them usually support Pro Campesinos on bass themselves.',
+    nl: 'Buiten voor de bakstenen muur, onder paarse spots, ontmoetten gitaar, bas en drums een heel koor vol stemmen. Voor Matthias en Fred was het zelfs een dubbele thuiswedstrijd – ze ondersteunen Pro Campesinos normaal allebei zelf op bas.',
+  },
+  {
+    de: 'Danke an das Lotti-Team für die Gastfreundschaft, an Pro Campesinos für das gemeinsame Musizieren und an alle, die mit uns gesungen, getanzt und gefeiert haben. Bis zum nächsten Mal!',
+    en: 'Thanks to the Lotti team for the hospitality, to Pro Campesinos for making music together and to everyone who sang, danced and celebrated with us. Until next time!',
+    nl: 'Bedankt aan het Lotti-team voor de gastvrijheid, aan Pro Campesinos voor het samen musiceren en aan iedereen die met ons heeft gezongen, gedanst en gefeest. Tot de volgende keer!',
+  },
+  {
+    de: 'Blickfeld Nord live im Café Lotti: David mit Akustikgitarre, Matthias am Schlagzeug und Fred am Bass unter lila Scheinwerfern',
+    en: 'Blickfeld Nord live at Café Lotti: David on acoustic guitar, Matthias on drums and Fred on bass under purple spotlights',
+    nl: 'Blickfeld Nord live in Café Lotti: David op akoestische gitaar, Matthias op drums en Fred op bas onder paarse spots',
+  },
+  // Historie: 2026-01-16 Gemütlicher Abend mit den Bokeltsen Blagen
+  {
+    de: 'Gemütlicher Abend mit den Bokeltsen Blagen',
+    en: 'Cosy evening with the Bokeltsen Blagen',
+    nl: 'Gezellige avond met de Bokeltsen Blagen',
+  },
+  {
+    de: 'Mitte Januar, draußen kalt und dunkel – drinnen warm, gemütlich und voller netter Leute: Am 16. Januar durften wir den Abend des Lauftreffs Bokeltsen Blagen musikalisch untermalen.',
+    en: 'Mid-January, cold and dark outside – warm, cosy and full of lovely people inside: on 16 January we got to provide the music for the evening of the Bokeltsen Blagen running club.',
+    nl: 'Half januari, buiten koud en donker – binnen warm, gezellig en vol leuke mensen: op 16 januari mochten we de avond van de hardloopgroep Bokeltsen Blagen muzikaal omlijsten.',
+  },
+  {
+    de: 'Akustikgitarre, Bass, Schlagzeug und zwischendurch ein Shaker – genau die richtige Mischung, damit sich die Gespräche nicht übertönt, sondern begleitet fühlen. Wer sonst Kilometer sammelt, darf zwischendurch auch mal einfach sitzen bleiben und zuhören.',
+    en: 'Acoustic guitar, bass, drums and the odd shaker – exactly the right mix so the conversations feel accompanied rather than drowned out. Those who usually rack up the kilometres are allowed to just stay seated and listen for a change.',
+    nl: 'Akoestische gitaar, bas, drums en tussendoor een shaker – precies de juiste mix, zodat de gesprekken niet overstemd maar begeleid worden. Wie normaal kilometers verzamelt, mag tussendoor ook gewoon eens blijven zitten en luisteren.',
+  },
+  {
+    de: 'Danke an die Bokeltsen Blagen für die Einladung und den schönen Abend. Wir laufen zwar nicht mit – na gut, bis auf David, der sich tatsächlich schon mal frühmorgens mit dem Lauftreff auf die Strecke macht. Für die Musik sind wir aber alle drei jederzeit wieder am Start!',
+    en: 'Thanks to the Bokeltsen Blagen for the invitation and the lovely evening. We don’t run with you – well, apart from David, who really has hit the road with the running club early in the morning. But when it comes to music, all three of us are ready to go again any time!',
+    nl: 'Bedankt aan de Bokeltsen Blagen voor de uitnodiging en de mooie avond. We lopen weliswaar niet mee – nou ja, behalve David, die echt al eens vroeg in de ochtend met de hardloopgroep op pad is gegaan. Maar voor de muziek staan we alle drie altijd weer aan de start!',
+  },
+  {
+    de: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen: David mit Akustikgitarre, Matthias am Schlagzeug mit Shaker und Fred am Bass, im Hintergrund feiernde Gäste',
+    en: 'Blickfeld Nord at the Bokeltsen Blagen running club: David on acoustic guitar, Matthias on drums with a shaker and Fred on bass, partying guests in the background',
+    nl: 'Blickfeld Nord bij hardloopgroep Bokeltsen Blagen: David op akoestische gitaar, Matthias op drums met shaker en Fred op bas, op de achtergrond feestende gasten',
+  },
+  // Historie: 2025-10-02 Der Anfang als Trio
+  {
+    de: 'Der Anfang als Trio – im Café Lotti',
+    en: 'The start as a trio – at Café Lotti',
+    nl: 'Het begin als trio – in Café Lotti',
+  },
+  {
+    de: 'Jede Geschichte hat einen Anfang – unsere als Trio beginnt am 2. Oktober 2025 im Café Lotti. Mit Fred am Bass wurde aus dem Duo eine Dreier-Kombo, und wo ginge so ein erster Abend besser als bei unserer Home-Base?',
+    en: 'Every story has a beginning – ours as a trio starts on 2 October 2025 at Café Lotti. With Fred on bass, the duo became a three-piece, and where better for a first night like that than at our home base?',
+    nl: 'Elk verhaal heeft een begin – het onze als trio begint op 2 oktober 2025 in Café Lotti. Met Fred op bas werd het duo een driemanscombo, en waar kon zo’n eerste avond beter dan bij onze thuisbasis?',
+  },
+  {
+    de: 'Rotes Licht auf der Backsteinwand, eine Feuerschale in der Mitte, Decken auf den Knien und ein Publikum, das sich vom frischen Oktoberabend nicht im Geringsten abschrecken ließ. Gitarre, Schlagzeug und zum ersten Mal Bass – es hat sich vom ersten Song an richtig angefühlt.',
+    en: 'Red light on the brick wall, a fire pit in the middle, blankets on laps and an audience not in the least put off by the chilly October evening. Guitar, drums and, for the first time, bass – it felt right from the very first song.',
+    nl: 'Rood licht op de bakstenen muur, een vuurschaal in het midden, dekens op schoot en een publiek dat zich door de frisse oktoberavond niet in het minst liet afschrikken. Gitaar, drums en voor het eerst bas – het voelde vanaf het eerste nummer goed.',
+  },
+  {
+    de: 'Danke an alle, die an diesem Abend dabei waren und uns mit so viel Wärme empfangen haben – nicht nur wegen des Feuers. Hier hat alles angefangen.',
+    en: 'Thanks to everyone who was there that evening and welcomed us so warmly – and not just because of the fire. This is where it all began.',
+    nl: 'Bedankt aan iedereen die er die avond bij was en ons zo warm heeft ontvangen – en niet alleen vanwege het vuur. Hier is het allemaal begonnen.',
+  },
+  {
+    de: 'Blickfeld Nord zum ersten Mal als Trio im Café Lotti: Gitarre, Schlagzeug und Bass unter rotem Licht, davor Gäste mit Decken um eine Feuerschale',
+    en: 'Blickfeld Nord as a trio for the first time at Café Lotti: guitar, drums and bass under red light, in front of them guests with blankets around a fire pit',
+    nl: 'Blickfeld Nord voor het eerst als trio in Café Lotti: gitaar, drums en bas onder rood licht, daarvoor gasten met dekens rond een vuurschaal',
+  },
+  // Fotos
+  {
+    de: 'Blickfeld Nord im Saal des Gasthof Buschmann unter lila Licht und Nebel',
+    en: 'Blickfeld Nord in the hall of Gasthof Buschmann under purple light and haze',
+    nl: 'Blickfeld Nord in de zaal van Gasthof Buschmann onder paars licht en rook',
+  },
+  {
+    de: 'Gasthof Buschmann, 25.09.2026',
+    en: 'Gasthof Buschmann, 25/09/2026',
+    nl: 'Gasthof Buschmann, 25-09-2026',
+  },
+  {
+    de: 'Blickfeld Nord beim Nachbarschaftsfest im Pavillon unter lila Licht – Akustikgitarre, Schlagzeug und Bass',
+    en: 'Blickfeld Nord at the neighbourhood party in the gazebo under purple light – acoustic guitar, drums and bass',
+    nl: 'Blickfeld Nord op het buurtfeest in de partytent onder paars licht – akoestische gitaar, drums en bas',
+  },
+  {
+    de: 'Nachbarschaftsfest, 05.09.2026',
+    en: 'Neighbourhood party, 05/09/2026',
+    nl: 'Buurtfeest, 05-09-2026',
+  },
+  {
+    de: 'Hausparty bei Freunden von der Feuerwehr, 29.08.2026',
+    en: 'House party with friends from the fire brigade, 29/08/2026',
+    nl: 'Huisfeest bij vrienden van de brandweer, 29-08-2026',
+  },
+  {
+    de: 'Blickfeld Nord live im Café Lotti unter lila Scheinwerfern – Akustikgitarre, Schlagzeug und Bass',
+    en: 'Blickfeld Nord live at Café Lotti under purple spotlights – acoustic guitar, drums and bass',
+    nl: 'Blickfeld Nord live in Café Lotti onder paarse spots – akoestische gitaar, drums en bas',
+  },
+  {
+    de: 'Live im Café Lotti, 30.04.2026',
+    en: 'Live at Café Lotti, 30/04/2026',
+    nl: 'Live in Café Lotti, 30-04-2026',
+  },
+  {
+    de: 'Blickfeld Nord beim Lauftreff Bokeltsen Blagen – Akustikgitarre, Schlagzeug und Bass',
+    en: 'Blickfeld Nord at the Bokeltsen Blagen running club – acoustic guitar, drums and bass',
+    nl: 'Blickfeld Nord bij hardloopgroep Bokeltsen Blagen – akoestische gitaar, drums en bas',
+  },
+  {
+    de: 'Bei den Bokeltsen Blagen, 16.01.2026',
+    en: 'With the Bokeltsen Blagen, 16/01/2026',
+    nl: 'Bij de Bokeltsen Blagen, 16-01-2026',
+  },
+  {
+    de: 'Erster Auftritt als Trio im Café Lotti unter rotem Licht, Gäste um eine Feuerschale',
+    en: 'First gig as a trio at Café Lotti under red light, guests around a fire pit',
+    nl: 'Eerste optreden als trio in Café Lotti onder rood licht, gasten rond een vuurschaal',
+  },
+  {
+    de: 'Erster Auftritt als Trio, Café Lotti, 02.10.2025',
+    en: 'First gig as a trio, Café Lotti, 02/10/2025',
+    nl: 'Eerste optreden als trio, Café Lotti, 02-10-2025',
+  },
+  {
+    de: 'Die drei Musiker von Blickfeld Nord lachen gut gelaunt vor Backsteinwand, Gitarren und Schlagzeug',
+    en: 'The three musicians of Blickfeld Nord laughing cheerfully in front of a brick wall, guitars and drums',
+    nl: 'De drie muzikanten van Blickfeld Nord lachen goedgehumeurd voor een bakstenen muur, gitaren en drums',
+  },
+  {
+    de: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug',
+    en: 'The three musicians of Blickfeld Nord kneeling and laughing between mic stands and drums',
+    nl: 'De drie muzikanten van Blickfeld Nord knielen lachend tussen microfoonstandaards en drums',
+  },
+  {
+    de: 'David Bröker – Gesang & Gitarre',
+    en: 'David Bröker – vocals & guitar',
+    nl: 'David Bröker – zang & gitaar',
+  },
+  {
+    de: 'Matthias Wigger – Schlagzeug & Gesang',
+    en: 'Matthias Wigger – drums & vocals',
+    nl: 'Matthias Wigger – drums & zang',
+  },
+  {
+    de: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang',
+    en: 'Jan-Frederic “Fred” Overbeck – bass & vocals',
+    nl: 'Jan-Frederic ‘Fred’ Overbeck – bas & zang',
+  },
+  {
+    de: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See',
+    en: 'Blickfeld Nord logo with a compass above a misty lake',
+    nl: 'Logo van Blickfeld Nord met een kompas boven een mistig meer',
+  },
+  {
+    de: 'Blickfeld Nord',
+    en: 'Blickfeld Nord',
+    nl: 'Blickfeld Nord',
+  },
+  // Freunde
+  {
+    de: 'Schlagzeugunterricht in Hamminkeln – von unserem Drummer Matthias, für Einsteiger und Fortgeschrittene.',
+    en: 'Drum lessons in Hamminkeln – from our drummer Matthias, for beginners and advanced players.',
+    nl: 'Drumles in Hamminkeln – van onze drummer Matthias, voor beginners en gevorderden.',
+  },
+  {
+    de: 'Dein Café in Dingden für guten Kaffee, Kuchen, Frühstück, Live-Musik, Workshops und besondere Abende.',
+    en: 'Your café in Dingden for good coffee, cake, breakfast, live music, workshops and special evenings.',
+    nl: 'Jouw café in Dingden voor goede koffie, taart, ontbijt, livemuziek, workshops en bijzondere avonden.',
+  },
+  {
+    de: 'Produktion für Kunst und Kultur.',
+    en: 'Production for art and culture.',
+    nl: 'Productie voor kunst en cultuur.',
+  },
+  {
+    de: 'Der Chor aus Dingden, der seit mehr als 40 Jahren notleidenden Menschen in der Dritten Welt mit musikalischen Veranstaltungen und Spendengeldern hilft.',
+    en: 'The choir from Dingden that has been helping people in need in developing countries with musical events and donations for more than 40 years.',
+    nl: 'Het koor uit Dingden dat al meer dan 40 jaar mensen in nood in ontwikkelingslanden helpt met muzikale evenementen en donaties.',
+  },
+  {
+    de: 'Gasthof & Kneipe – beides unter einem Dach, wo gutes Essen & lockeres Trinken seit fast 150 Jahren so nah beieinander liegen.',
+    en: 'Inn & pub – both under one roof, where good food & relaxed drinking have gone hand in hand for almost 150 years.',
+    nl: 'Herberg & kroeg – allebei onder één dak, waar goed eten & ontspannen drinken al bijna 150 jaar zo dicht bij elkaar liggen.',
+  },
+  {
+    de: 'Seit 1868 Gaststätte und Hotel in Familienbesitz – am Ortsrand des idyllischen Hamminkeln-Ringenberg.',
+    en: 'A family-run inn and hotel since 1868 – on the edge of idyllic Hamminkeln-Ringenberg.',
+    nl: 'Sinds 1868 herberg en hotel in familiebezit – aan de rand van het idyllische Hamminkeln-Ringenberg.',
+  },
+  {
+    de: 'Ehrenamtlich im Einsatz für Dingden und Umgebung – rund um die Uhr, wenn es darauf ankommt.',
+    en: 'Volunteers serving Dingden and the surrounding area – around the clock, when it matters.',
+    nl: 'Als vrijwilligers in actie voor Dingden en omgeving – de klok rond, als het erop aankomt.',
+  },
+  {
+    de: 'Wo Gemeinschaft läuft und der Kaffee niemals kalt wird!',
+    en: 'Where community runs and the coffee never gets cold!',
+    nl: 'Waar gemeenschap loopt en de koffie nooit koud wordt!',
+  },
+  {
+    de: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Grün-weißer Herzensverein unseres Gitarristen.',
+    en: 'The family club – where community is lived and solidarity between young & old really matters. The green-and-white club close to our guitarist’s heart.',
+    nl: 'De familieclub – hier wordt gemeenschap geleefd en staat saamhorigheid tussen jong & oud hoog in het vaandel. De groen-witte club van het hart van onze gitarist.',
+  },
+  {
+    de: 'DJ – auch bekannt als Dr. Beat. Was er auflegt und wo er als Nächstes spielt, gibt es auf Instagram.',
+    en: 'DJ – also known as Dr. Beat. What he plays and where he’s on next, you’ll find on Instagram.',
+    nl: 'DJ – ook bekend als Dr. Beat. Wat hij draait en waar hij hierna speelt, zie je op Instagram.',
+  },
+  // Auftritte: öffentliche Namen privater Auftritte
+  {
+    de: 'Private Feier',
+    en: 'Private party',
+    nl: 'Privéfeest',
+  },
+  {
+    de: 'Bokeltsen Blagen (Lauftreff)',
+    en: 'Bokeltsen Blagen (running club)',
+    nl: 'Bokeltsen Blagen (hardloopgroep)',
+  },
+  {
+    de: 'Hausparty bei Freunden von der Löscheinheit Dingden',
+    en: 'House party with friends from the Löscheinheit Dingden fire unit',
+    nl: 'Huisfeest bij vrienden van de Löscheinheit Dingden',
+  },
+  {
+    de: 'Nachbarschaftsfest',
+    en: 'Neighbourhood party',
+    nl: 'Buurtfeest',
+  },
+  {
+    de: 'Geburtstag im Gasthof Buschmann',
+    en: 'Birthday at Gasthof Buschmann',
+    nl: 'Verjaardag in Gasthof Buschmann',
+  },
+  {
+    de: 'Bandwochenende',
+    en: 'Band weekend',
+    nl: 'Bandweekend',
+  },
+  // Technik (technik.json)
+  {
+    de: 'Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.',
+    en: 'Draft – positions, equipment and channel assignments are placeholders and will be filled in step by step.',
+    nl: 'Concept – posities, apparatuur en kanaalindeling zijn tijdelijk en worden stap voor stap aangevuld.',
+  },
+  {
+    de: 'Schlagzeug',
+    en: 'Drums',
+    nl: 'Drums',
+  },
+  {
+    de: 'Bassverstärker',
+    en: 'Bass amp',
+    nl: 'Basversterker',
+  },
+  {
+    de: 'Mischpult',
+    en: 'Mixing desk',
+    nl: 'Mengpaneel',
+  },
+  {
+    de: 'Monitor 1',
+    en: 'Monitor 1',
+    nl: 'Monitor 1',
+  },
+  {
+    de: 'Monitor 2',
+    en: 'Monitor 2',
+    nl: 'Monitor 2',
+  },
+  {
+    de: 'Monitor 3',
+    en: 'Monitor 3',
+    nl: 'Monitor 3',
+  },
+  {
+    de: 'PA links (Top + Sub)',
+    en: 'PA left (top + sub)',
+    nl: 'PA links (top + sub)',
+  },
+  {
+    de: 'PA rechts (Top + Sub)',
+    en: 'PA right (top + sub)',
+    nl: 'PA rechts (top + sub)',
+  },
+  {
+    de: 'Licht links',
+    en: 'Lights left',
+    nl: 'Licht links',
+  },
+  {
+    de: 'Licht rechts',
+    en: 'Lights right',
+    nl: 'Licht rechts',
+  },
+  {
+    de: 'Steckdose 1',
+    en: 'Socket 1',
+    nl: 'Stopcontact 1',
+  },
+  {
+    de: 'Steckdose 2',
+    en: 'Socket 2',
+    nl: 'Stopcontact 2',
+  },
+  {
+    de: 'Bassdrum',
+    en: 'Kick drum',
+    nl: 'Basdrum',
+  },
+  {
+    de: 'Mikro',
+    en: 'Mic',
+    nl: 'Microfoon',
+  },
+  {
+    de: 'kurz',
+    en: 'short',
+    nl: 'kort',
+  },
+  {
+    de: 'Klemme',
+    en: 'clamp',
+    nl: 'klem',
+  },
+  {
+    de: 'groß',
+    en: 'tall',
+    nl: 'groot',
+  },
+  {
+    de: 'Galgen',
+    en: 'boom',
+    nl: 'hengel',
+  },
+  {
+    de: 'E-Bass',
+    en: 'Electric bass',
+    nl: 'Elektrische bas',
+  },
+  {
+    de: 'Akustikgitarre',
+    en: 'Acoustic guitar',
+    nl: 'Akoestische gitaar',
+  },
+  {
+    de: 'Gesang David',
+    en: 'Vocals David',
+    nl: 'Zang David',
+  },
+  {
+    de: 'Gesang Fred',
+    en: 'Vocals Fred',
+    nl: 'Zang Fred',
+  },
+  {
+    de: 'Gesang Matthias',
+    en: 'Vocals Matthias',
+    nl: 'Zang Matthias',
+  },
+  {
+    de: 'Digitalmischpult',
+    en: 'Digital mixing desk',
+    nl: 'Digitaal mengpaneel',
+  },
+  {
+    de: 'Das Herz des Aufbaus: Alle Mikrofone und Instrumente laufen hier zusammen. Das Pult mischt den Sound für das Publikum (PA) und getrennt für jeden von uns auf den Monitoren.',
+    en: 'The heart of the set-up: all microphones and instruments come together here. The desk mixes the sound for the audience (PA) and separately for each of us on the monitors.',
+    nl: 'Het hart van de opstelling: alle microfoons en instrumenten komen hier samen. Het mengpaneel mixt het geluid voor het publiek (PA) en apart voor ieder van ons op de monitoren.',
+  },
+  {
+    de: 'Eingänge',
+    en: 'Inputs',
+    nl: 'Ingangen',
+  },
+  {
+    de: '16 Mikrofon-/Line-Kanäle mit XMAX-Class-A-Vorverstärkern',
+    en: '16 mic/line channels with XMAX Class A preamps',
+    nl: '16 microfoon-/lijnkanalen met XMAX-class-A-voorversterkers',
+  },
+  {
+    de: 'Busse',
+    en: 'Buses',
+    nl: 'Bussen',
+  },
+  {
+    de: '4 Subgruppen, 6 Aux-Wege, Main L/R',
+    en: '4 subgroups, 6 aux sends, main L/R',
+    nl: '4 subgroepen, 6 aux-sends, main L/R',
+  },
+  {
+    de: 'Bearbeitung',
+    en: 'Processing',
+    nl: 'Bewerking',
+  },
+  {
+    de: '„Fat Channel“ auf jedem Kanal: Gate, Kompressor, Limiter, 4-Band-EQ',
+    en: '“Fat Channel” on every channel: gate, compressor, limiter, 4-band EQ',
+    nl: '‘Fat Channel’ op elk kanaal: gate, compressor, limiter, 4-bands-eq',
+  },
+  {
+    de: 'Effekte',
+    en: 'Effects',
+    nl: 'Effecten',
+  },
+  {
+    de: '2 interne Effektprozessoren (Hall, Delay)',
+    en: '2 internal effects processors (reverb, delay)',
+    nl: '2 interne effectprocessors (galm, delay)',
+  },
+  {
+    de: 'Speicher',
+    en: 'Memory',
+    nl: 'Geheugen',
+  },
+  {
+    de: 'Szenen und Kanaleinstellungen abrufbar',
+    en: 'Scenes and channel settings can be recalled',
+    nl: 'Scènes en kanaalinstellingen op te roepen',
+  },
+  {
+    de: 'Recording',
+    en: 'Recording',
+    nl: 'Opname',
+  },
+  {
+    de: 'FireWire-Audiointerface für Mehrspur-Aufnahmen',
+    en: 'FireWire audio interface for multitrack recording',
+    nl: 'FireWire-audio-interface voor meersporenopnames',
+  },
+  {
+    de: 'PA-System',
+    en: 'PA system',
+    nl: 'PA-systeem',
+  },
+  {
+    de: 'Die Beschallung für das Publikum: je ein Lautsprecher-Top links und rechts der Bühne, darunter die Subwoofer für den Druck im Bassbereich.',
+    en: 'The sound system for the audience: one top speaker each to the left and right of the stage, with the subwoofers underneath for punch in the low end.',
+    nl: 'De geluidsinstallatie voor het publiek: links en rechts van het podium elk een topspeaker, daaronder de subwoofers voor de druk in het laag.',
+  },
+  {
+    de: 'Aufstellung',
+    en: 'Placement',
+    nl: 'Opstelling',
+  },
+  {
+    de: 'links und rechts vor der Spielfläche',
+    en: 'left and right in front of the stage area',
+    nl: 'links en rechts voor het speelvlak',
+  },
+  {
+    de: 'Signal',
+    en: 'Signal',
+    nl: 'Signaal',
+  },
+  {
+    de: 'Main L/R vom Mischpult',
+    en: 'Main L/R from the mixing desk',
+    nl: 'Main L/R van het mengpaneel',
+  },
+  {
+    de: 'Bühnenmonitore',
+    en: 'Stage monitors',
+    nl: 'Podiummonitoren',
+  },
+  {
+    de: 'Keilförmige Lautsprecher (Wedges) vor jedem Musiker. Jeder bekommt über einen eigenen Aux-Weg seine eigene Mischung, damit wir uns auf der Bühne gut hören.',
+    en: 'Wedge-shaped speakers (wedges) in front of each musician. Everyone gets their own mix via a separate aux send, so we can hear each other well on stage.',
+    nl: 'Wigvormige speakers (wedges) voor elke muzikant. Iedereen krijgt via een eigen aux-send een eigen mix, zodat we elkaar op het podium goed horen.',
+  },
+  {
+    de: 'Anzahl',
+    en: 'Number',
+    nl: 'Aantal',
+  },
+  {
+    de: '3 (David, Fred, Matthias)',
+    en: '3 (David, Fred, Matthias)',
+    nl: '3 (David, Fred, Matthias)',
+  },
+  {
+    de: 'Aux 1–3 vom Mischpult',
+    en: 'Aux 1–3 from the mixing desk',
+    nl: 'Aux 1–3 van het mengpaneel',
+  },
+  {
+    de: 'Lichtanlage',
+    en: 'Lighting rig',
+    nl: 'Lichtinstallatie',
+  },
+  {
+    de: 'Zwei Lichtstative an den hinteren Ecken mit PAR-Scheinwerfern, gesteuert über eine Lichtsteuerung. Auf Wunsch mit Nebelmaschine für mehr Atmosphäre.',
+    en: 'Two lighting stands in the back corners with PAR spotlights, run from a lighting controller. On request with a haze machine for extra atmosphere.',
+    nl: 'Twee lichtstatieven in de achterste hoeken met PAR-spots, aangestuurd via een lichtsturing. Op verzoek met rookmachine voor meer sfeer.',
+  },
+  {
+    de: 'Scheinwerfer',
+    en: 'Spotlights',
+    nl: 'Spots',
+  },
+  {
+    de: 'PAR-Scheinwerfer auf Stativ bzw. Lichtbrücke',
+    en: 'PAR spotlights on stands or a lighting truss',
+    nl: 'PAR-spots op statief of lichtbrug',
+  },
+  {
+    de: 'Nebelmaschine (nach Absprache)',
+    en: 'Haze machine (by arrangement)',
+    nl: 'Rookmachine (in overleg)',
+  },
+  {
+    de: 'Freds Bassverstärker auf der Bühne. Für die PA wird der Bass zusätzlich per DI-Box direkt ins Mischpult geführt.',
+    en: 'Fred’s bass amp on stage. For the PA, the bass is also fed directly into the mixing desk via a DI box.',
+    nl: 'Freds basversterker op het podium. Voor de PA gaat de bas daarnaast via een DI-box direct het mengpaneel in.',
+  },
+  {
+    de: 'Signal zur PA',
+    en: 'Signal to the PA',
+    nl: 'Signaal naar de PA',
+  },
+  {
+    de: 'DI-Box, Kanal 4',
+    en: 'DI box, channel 4',
+    nl: 'DI-box, kanaal 4',
+  },
+  {
+    de: 'Matthias’ Schlagzeug, abgenommen mit Mikrofonen für Bassdrum, Snare und Overhead.',
+    en: 'Matthias’s drum kit, miked up with microphones for kick drum, snare and overhead.',
+    nl: 'Het drumstel van Matthias, versterkt met microfoons voor basdrum, snare en overhead.',
+  },
+  {
+    de: 'Mikrofonierung',
+    en: 'Miking',
+    nl: 'Microfoonopstelling',
+  },
+  {
+    de: 'Bassdrum, Snare, Overhead (Kanal 1–3)',
+    en: 'Kick drum, snare, overhead (channels 1–3)',
+    nl: 'Basdrum, snare, overhead (kanaal 1–3)',
+  },
+  {
+    de: 'Platzbedarf',
+    en: 'Space required',
+    nl: 'Benodigde ruimte',
+  },
+  {
+    de: 'ca. 1,5 × 1,2 m',
+    en: 'approx. 1.5 × 1.2 m',
+    nl: 'ca. 1,5 × 1,2 m',
+  },
+  {
+    de: 'Stromanschluss',
+    en: 'Power supply',
+    nl: 'Stroomaansluiting',
+  },
+  {
+    de: 'Wir brauchen zwei normale Schuko-Steckdosen in der Nähe der Spielfläche. Die Verteilung auf der Bühne übernehmen wir mit eigenen Kabeltrommeln und Mehrfachsteckdosen.',
+    en: 'We need two standard Schuko (type F) sockets near the stage area. We take care of distribution on stage with our own cable reels and power strips.',
+    nl: 'We hebben twee gewone stopcontacten (randaarde) in de buurt van het speelvlak nodig. De verdeling op het podium regelen we zelf met eigen kabelhaspels en stekkerdozen.',
+  },
+  {
+    de: 'Bedarf',
+    en: 'Requirement',
+    nl: 'Benodigd',
+  },
+  {
+    de: '2 Steckdosen (230 V)',
+    en: '2 sockets (230 V)',
+    nl: '2 stopcontacten (230 V)',
+  },
+  {
+    de: 'Verteilung',
+    en: 'Distribution',
+    nl: 'Verdeling',
+  },
+  {
+    de: 'Steckdose 1: PA und Mischpult · Steckdose 2: Licht, Backline, Monitore',
+    en: 'Socket 1: PA and mixing desk · Socket 2: lights, backline, monitors',
+    nl: 'Stopcontact 1: PA en mengpaneel · Stopcontact 2: licht, backline, monitoren',
+  },
+  {
+    de: 'PA links und rechts',
+    en: 'PA left and right',
+    nl: 'PA links en rechts',
+  },
+  {
+    de: 'Licht',
+    en: 'Lights',
+    nl: 'Licht',
+  },
+  {
+    de: 'Monitore',
+    en: 'Monitors',
+    nl: 'Monitoren',
+  },
+  {
+    de: 'Nebelmaschine',
+    en: 'Haze machine',
+    nl: 'Rookmachine',
+  },
+];

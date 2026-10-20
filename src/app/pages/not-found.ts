@@ -1,25 +1,50 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { I18n, LocPipe, tr } from '../i18n';
+
+const TEXT = tr(
+  {
+    kicker: 'Fehler 404',
+    title: 'Vom Kurs abgekommen',
+    lead: 'Diese Seite gibt es leider nicht – vielleicht ist der Link veraltet oder hat einen Tippfehler. Kein Problem: Der Kompass zeigt dich zurück auf die Bühne.',
+    home: 'Zur Startseite',
+    concerts: 'Konzerte',
+    history: 'Historie',
+  },
+  {
+    kicker: 'Error 404',
+    title: 'Off course',
+    lead: "Sorry, this page doesn't exist – maybe the link is out of date or has a typo. No problem: the compass will point you back to the stage.",
+    home: 'To the home page',
+    concerts: 'Shows',
+    history: 'History',
+  },
+  {
+    kicker: 'Fout 404',
+    title: 'Uit koers geraakt',
+    lead: 'Deze pagina bestaat helaas niet – misschien is de link verouderd of zit er een typfout in. Geen probleem: het kompas wijst je de weg terug naar het podium.',
+    home: 'Naar de startpagina',
+    concerts: 'Optredens',
+    history: 'Geschiedenis',
+  },
+);
 
 // Eigene Fehlerseite für falsche oder veraltete Links (GitHub Pages liefert sie als 404.html aus)
 @Component({
   selector: 'app-not-found',
-  imports: [RouterLink, MatButtonModule, MatIconModule],
+  imports: [RouterLink, LocPipe, MatButtonModule, MatIconModule],
   template: `
     <section class="section not-found">
       <img src="kompass-440.webp" width="220" height="220" alt="" aria-hidden="true" class="compass" />
-      <p class="kicker">Fehler 404</p>
-      <h2>Vom Kurs abgekommen</h2>
-      <p class="lead">
-        Diese Seite gibt es leider nicht – vielleicht ist der Link veraltet oder hat einen Tippfehler.
-        Kein Problem: Der Kompass zeigt dich zurück auf die Bühne.
-      </p>
+      <p class="kicker">{{ t().kicker }}</p>
+      <h2>{{ t().title }}</h2>
+      <p class="lead">{{ t().lead }}</p>
       <div class="actions">
-        <a mat-flat-button routerLink="/"><mat-icon>explore</mat-icon> Zur Startseite</a>
-        <a mat-stroked-button routerLink="/" fragment="tour"><mat-icon>event</mat-icon> Konzerte</a>
-        <a mat-stroked-button routerLink="/historie"><mat-icon>schedule</mat-icon> Historie</a>
+        <a mat-flat-button [routerLink]="'/' | loc"><mat-icon>explore</mat-icon> {{ t().home }}</a>
+        <a mat-stroked-button [routerLink]="'/' | loc" fragment="tour"><mat-icon>event</mat-icon> {{ t().concerts }}</a>
+        <a mat-stroked-button [routerLink]="'/historie' | loc"><mat-icon>schedule</mat-icon> {{ t().history }}</a>
       </div>
     </section>
   `,
@@ -35,4 +60,6 @@ import { MatIconModule } from '@angular/material/icon';
     .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
   `,
 })
-export class NotFound {}
+export class NotFound {
+  protected readonly t = inject(I18n).t(TEXT);
+}

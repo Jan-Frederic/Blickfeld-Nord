@@ -1,5 +1,14 @@
-import { Component, ElementRef, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { I18n, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from './uebersetzung-hinweis';
+
+const TEXT = tr(
+  { close: 'Schließen', modelFollows: 'Genaues Modell folgt', where: 'Im Bühnenplan:' },
+  { close: 'Close', modelFollows: 'Exact model to follow', where: 'On the stage plan:' },
+  { close: 'Sluiten', modelFollows: 'Exact model volgt', where: 'Op het podiumplan:' },
+);
 
 export interface Hardware {
   kategorie: string;
@@ -12,28 +21,29 @@ export interface Hardware {
 // übernimmt der Browser). Inhalte aus dem Abschnitt „hardware“ in src/app/data/technik.json.
 @Component({
   selector: 'app-hardware-dialog',
-  imports: [MatIconModule],
+  imports: [MatIconModule, UebersetzungHinweis],
   template: `
     <dialog #dialog (close)="current.set(null)" (click)="backdrop($event)" aria-labelledby="hw-title">
       @if (current(); as c) {
         <div class="hw-body">
-          <button type="button" class="close" (click)="close()" aria-label="Schließen"><mat-icon>close</mat-icon></button>
-          <p class="hw-kicker">{{ c.hw.kategorie }}</p>
-          <h3 id="hw-title">{{ c.hw.modell ?? c.hw.kategorie }}</h3>
+          <button type="button" class="close" (click)="close()" [attr.aria-label]="t().close"><mat-icon>close</mat-icon></button>
+          <p class="hw-kicker">{{ ct.t(c.hw.kategorie) }}</p>
+          <h3 id="hw-title">{{ c.hw.modell ?? ct.t(c.hw.kategorie) }}</h3>
           @if (!c.hw.modell) {
-            <p class="hw-open"><mat-icon>edit_note</mat-icon> Genaues Modell folgt</p>
+            <p class="hw-open"><mat-icon>edit_note</mat-icon> {{ t().modelFollows }}</p>
           }
-          <p class="hw-text">{{ c.hw.beschreibung }}</p>
+          <p class="hw-text">{{ ct.t(c.hw.beschreibung) }}</p>
           @if (c.hw.details.length) {
             <dl class="hw-details">
               @for (d of c.hw.details; track d[0]) {
-                <div><dt>{{ d[0] }}</dt><dd>{{ d[1] }}</dd></div>
+                <div><dt>{{ ct.t(d[0]) }}</dt><dd>{{ ct.t(d[1]) }}</dd></div>
               }
             </dl>
           }
           @if (c.wo.length) {
-            <p class="hw-where"><mat-icon>place</mat-icon> Im Bühnenplan: {{ c.wo.join(', ') }}</p>
+            <p class="hw-where"><mat-icon>place</mat-icon> {{ t().where }} {{ c.wo.join(', ') }}</p>
           }
+          <app-uebersetzung-hinweis [status]="ct.status(c.hw.kategorie, c.hw.beschreibung, ...c.hw.details.flat())" />
         </div>
       }
     </dialog>
@@ -65,6 +75,8 @@ export interface Hardware {
 })
 export class HardwareDialog {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  protected readonly t = inject(I18n).t(TEXT);
+  protected readonly ct = inject(Content);
   protected readonly current = signal<{ hw: Hardware; wo: string[] } | null>(null);
 
   show(hw: Hardware, wo: string[]): void {

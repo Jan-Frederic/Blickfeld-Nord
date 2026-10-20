@@ -1,28 +1,37 @@
-import { Component, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from './uebersetzung-hinweis';
+
+const TEXT = tr(
+  { kicker: 'Zuletzt live', more: 'Ganzen Rückblick lesen' },
+  { kicker: 'Last seen live', more: 'Read the full story' },
+  { kicker: 'Laatst live', more: 'Lees de hele terugblik' },
+);
 
 // „Zuletzt live“: der neueste Historie-Eintrag als Vorschau auf der Startseite
 @Component({
   selector: 'app-last-live',
-  imports: [DatePipe, RouterLink, MatIconModule],
+  imports: [LDatePipe, LocPipe, RouterLink, MatIconModule, UebersetzungHinweis],
   template: `
     @if (entry; as e) {
       <section id="zuletzt-live" class="section">
-        <p class="kicker">Zuletzt live</p>
-        <a class="card" routerLink="/historie" [fragment]="'e-' + e.date">
+        <p class="kicker">{{ t().kicker }}</p>
+        <a class="card" [routerLink]="'/historie' | loc" [fragment]="'e-' + e.date">
           <span class="media">
-            <img [src]="e.images?.[0]?.src ?? 'kompass-440.webp'" [alt]="e.images?.[0]?.alt ?? ''" loading="lazy" />
+            <img [src]="e.images?.[0]?.src ?? 'kompass-440.webp'" [alt]="content.t(e.images?.[0]?.alt) ?? ''" loading="lazy" />
           </span>
-          <span class="body">
-            <time [attr.datetime]="e.date">{{ e.date | date: 'd. MMMM yyyy' : '' : 'de' }}</time>
-            <span class="title">{{ e.title }}</span>
-            <span class="excerpt">{{ excerpt }}</span>
-            <span class="more">Ganzen Rückblick lesen <mat-icon>arrow_forward</mat-icon></span>
+          <span class="body" [attr.lang]="content.langOf(e.text[0])">
+            <time [attr.datetime]="e.date">{{ e.date | ldate: 'long' }}</time>
+            <span class="title">{{ content.t(e.title) }}</span>
+            <span class="excerpt">{{ excerpt() }}</span>
+            <span class="more">{{ t().more }} <mat-icon>arrow_forward</mat-icon></span>
           </span>
         </a>
+        <app-uebersetzung-hinweis [status]="content.status(e.title, e.text[0])" />
       </section>
     }
   `,
@@ -54,11 +63,13 @@ import { BandService } from '../data/band.service';
 })
 export class LastLive {
   protected readonly entry = [...inject(BandService).history].sort((a, b) => b.date.localeCompare(a.date))[0];
+  protected readonly content = inject(Content);
+  protected readonly t = inject(I18n).t(TEXT);
 
-  // erster Absatz, auf ganze Wörter gekürzt
-  protected readonly excerpt = (() => {
-    const text = this.entry?.text[0] ?? '';
+  // erster Absatz (in der aktuellen Sprache), auf ganze Wörter gekürzt
+  protected readonly excerpt = computed(() => {
+    const text = this.content.t(this.entry?.text[0] ?? '');
     if (text.length <= 220) return text;
     return text.slice(0, 220).replace(/\s+\S*$/, '') + ' …';
-  })();
+  });
 }

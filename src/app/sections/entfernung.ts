@@ -1,6 +1,7 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Ortsverzeichnis, RADIUS_KM } from '../data/entfernung';
+import { I18n } from '../i18n';
 
 // Entfernungs-Check im Booking: Ort eingeben → Luftlinie von Hamminkeln und ob er im 50-km-Umkreis liegt (DE/EN/NL)
 const T = {
@@ -85,7 +86,8 @@ const T = {
   `,
 })
 export class Entfernung {
-  readonly lang = input<'de' | 'en' | 'nl'>('de');
+  // Sprache aus der Adresse (/, /en/…, /nl/…)
+  protected readonly lang = inject(I18n).lang;
   protected readonly t = computed(() => T[this.lang()]);
   protected readonly listId = 'orte-vorschlaege';
   protected readonly query = signal('');

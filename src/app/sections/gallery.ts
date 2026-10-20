@@ -3,20 +3,58 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { I18n, LocPipe, tr } from '../i18n';
+import { Content } from '../content';
+
+const TEXT = tr(
+  {
+    kicker: 'Momente',
+    title: 'Galerie',
+    lead: 'Eindrücke von unseren Auftritten und von uns als Band – zum Vergrößern einfach antippen.',
+    enlarge: 'Bild vergrößern: ',
+    photo: 'Foto',
+    toShow: 'Zum Auftritt',
+    prev: 'Vorheriges Bild',
+    next: 'Nächstes Bild',
+    close: 'Schließen',
+  },
+  {
+    kicker: 'Moments',
+    title: 'Gallery',
+    lead: 'Impressions from our shows and of us as a band – just tap to enlarge.',
+    enlarge: 'Enlarge photo: ',
+    photo: 'Photo',
+    toShow: 'To the show',
+    prev: 'Previous photo',
+    next: 'Next photo',
+    close: 'Close',
+  },
+  {
+    kicker: 'Momenten',
+    title: 'Galerij',
+    lead: 'Indrukken van onze optredens en van ons als band – tik om te vergroten.',
+    enlarge: 'Foto vergroten: ',
+    photo: 'Foto',
+    toShow: 'Naar het optreden',
+    prev: 'Vorige foto',
+    next: 'Volgende foto',
+    close: 'Sluiten',
+  },
+);
 
 @Component({
   selector: 'app-gallery',
-  imports: [RouterLink, MatButtonModule, MatIconModule],
+  imports: [RouterLink, LocPipe, MatButtonModule, MatIconModule],
   template: `
     <section id="galerie" class="section">
-      <p class="kicker">Momente</p>
-      <h2>Galerie</h2>
-      <p class="lead">Eindrücke von unseren Auftritten und von uns als Band – zum Vergrößern einfach antippen.</p>
+      <p class="kicker">{{ t().kicker }}</p>
+      <h2>{{ t().title }}</h2>
+      <p class="lead">{{ t().lead }}</p>
       <div class="grid">
         @for (p of band.photos; track p.src; let i = $index) {
-          <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="'Bild vergrößern: ' + p.alt">
+          <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="t().enlarge + content.t(p.alt)">
             <!-- Vorschau in drei Größen (480/720/900 px) – jedes Gerät lädt nur, was es für ein scharfes Bild braucht -->
-            <img [src]="p.thumb" [attr.srcset]="srcset(p.thumb)" [attr.sizes]="i % 5 === 0 && !p.tall ? wideSizes : sizes" [alt]="p.alt" loading="lazy" decoding="async" />
+            <img [src]="p.thumb" [attr.srcset]="srcset(p.thumb)" [attr.sizes]="i % 5 === 0 && !p.tall ? wideSizes : sizes" [alt]="content.t(p.alt)" loading="lazy" decoding="async" />
             @if (entries.has(p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
           </button>
         }
@@ -24,22 +62,22 @@ import { BandService } from '../data/band.service';
     </section>
 
     @if (current(); as p) {
-      <div class="lightbox" role="dialog" aria-modal="true" [attr.aria-label]="p.alt" (click)="close()">
+      <div class="lightbox" role="dialog" aria-modal="true" [attr.aria-label]="content.t(p.alt)" (click)="close()">
         <figure (click)="$event.stopPropagation()">
-          <img [src]="p.src" [alt]="p.alt" />
+          <img [src]="p.src" [alt]="content.t(p.alt)" />
           <figcaption>
-            <span>{{ p.caption ?? '' }}@if (p.credit) {<span class="credit"> · Foto: {{ p.credit }}</span>}</span>
+            <span>{{ content.t(p.caption) ?? '' }}@if (p.credit) {<span class="credit"> · {{ t().photo }}: {{ p.credit }}</span>}</span>
             <span class="right">
               @if (entries.get(p.src); as date) {
-                <a class="entry" routerLink="/historie" [fragment]="'e-' + date" (click)="close()">Zum Auftritt <mat-icon>arrow_forward</mat-icon></a>
+                <a class="entry" [routerLink]="'/historie' | loc" [fragment]="'e-' + date" (click)="close()">{{ t().toShow }} <mat-icon>arrow_forward</mat-icon></a>
               }
               <span class="count">{{ index()! + 1 }} / {{ band.photos.length }}</span>
             </span>
           </figcaption>
         </figure>
-        <button mat-icon-button class="nav prev" (click)="step(-1, $event)" aria-label="Vorheriges Bild"><mat-icon>chevron_left</mat-icon></button>
-        <button mat-icon-button class="nav next" (click)="step(1, $event)" aria-label="Nächstes Bild"><mat-icon>chevron_right</mat-icon></button>
-        <button mat-icon-button class="close" (click)="close()" aria-label="Schließen"><mat-icon>close</mat-icon></button>
+        <button mat-icon-button class="nav prev" (click)="step(-1, $event)" [attr.aria-label]="t().prev"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-icon-button class="nav next" (click)="step(1, $event)" [attr.aria-label]="t().next"><mat-icon>chevron_right</mat-icon></button>
+        <button mat-icon-button class="close" (click)="close()" [attr.aria-label]="t().close"><mat-icon>close</mat-icon></button>
       </div>
     }
   `,
@@ -101,6 +139,8 @@ export class Gallery {
   }
 
   protected readonly band = inject(BandService);
+  protected readonly content = inject(Content);
+  protected readonly t = inject(I18n).t(TEXT);
   protected readonly index = signal<number | null>(null);
   // Fotos, die auch in einem Historie-Eintrag stecken (gleiche Bilddatei) → Datum des Auftritts
   protected readonly entries = new Map(

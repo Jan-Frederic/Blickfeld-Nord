@@ -4,13 +4,43 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { I18n, LocPipe, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from '../sections/uebersetzung-hinweis';
+
+const TEXT = tr(
+  {
+    back: 'Zur Band',
+    soon: 'Die ausführliche Bio folgt in Kürze.',
+    others: 'Weitere Bandmitglieder',
+    notFound: 'Nicht gefunden',
+    notFoundText: 'Dieses Bandmitglied gibt es (noch) nicht.',
+    at: 'bei Blickfeld Nord.',
+  },
+  {
+    back: 'Back to the band',
+    soon: 'A longer bio is coming soon.',
+    others: 'More band members',
+    notFound: 'Not found',
+    notFoundText: "This band member doesn't exist (yet).",
+    at: 'with Blickfeld Nord.',
+  },
+  {
+    back: 'Terug naar de band',
+    soon: 'Een uitgebreide bio volgt binnenkort.',
+    others: 'Andere bandleden',
+    notFound: 'Niet gevonden',
+    notFoundText: 'Dit bandlid bestaat (nog) niet.',
+    at: 'bij Blickfeld Nord.',
+  },
+);
 
 @Component({
   selector: 'app-member',
-  imports: [RouterLink, MatButtonModule, MatIconModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, LocPipe, UebersetzungHinweis],
   template: `
     <article class="section member">
-      <a class="back" routerLink="/" fragment="band"><mat-icon>arrow_back</mat-icon> Zur Band</a>
+      <a class="back" [routerLink]="'/' | loc" fragment="band"><mat-icon>arrow_back</mat-icon> {{ t().back }}</a>
 
       @if (member(); as m) {
         <header>
@@ -20,10 +50,10 @@ import { BandService } from '../data/band.service';
             <div class="avatar" aria-hidden="true">{{ m.initials }}</div>
           }
           <div>
-            <p class="kicker">{{ m.role }}</p>
+            <p class="kicker">{{ content.t(m.role) }}</p>
             <h2>{{ m.name }}</h2>
             @if (m.tagline) {
-              <p class="tagline">{{ m.tagline }}</p>
+              <p class="tagline">{{ content.t(m.tagline) }}</p>
             }
           </div>
         </header>
@@ -31,36 +61,37 @@ import { BandService } from '../data/band.service';
         <div class="story" [class.with-photo]="m.photo">
           @if (m.photo) {
             <figure class="portrait">
-              <img [src]="m.photo.src" width="800" height="1000" [alt]="m.photo.alt" />
+              <img [src]="m.photo.src" width="800" height="1000" [alt]="content.t(m.photo.alt)" />
             </figure>
           }
           @if (m.story?.length) {
             @for (p of m.story; track $index) {
-              <p>{{ p }}</p>
+              <p>{{ content.t(p) }}</p>
             }
           } @else {
-            <p>{{ m.bio }}</p>
-            <p class="soon">Die ausführliche Bio folgt in Kürze.</p>
+            <p>{{ content.t(m.bio) }}</p>
+            <p class="soon">{{ t().soon }}</p>
           }
+          <app-uebersetzung-hinweis [status]="content.status(m.role, m.tagline, m.bio, ...(m.story ?? []), m.photo?.alt, m.link?.label)" />
         </div>
 
         @if (m.link) {
           <a mat-flat-button [href]="m.link.url" target="_blank" rel="noopener">
-            <mat-icon>open_in_new</mat-icon> {{ m.link.label }}
+            <mat-icon>open_in_new</mat-icon> {{ content.t(m.link.label) }}
           </a>
         }
 
-        <nav class="others" aria-label="Weitere Bandmitglieder">
+        <nav class="others" [attr.aria-label]="t().others">
           @for (o of others(); track o.slug) {
-            <a [routerLink]="['/band', o.slug]">
-              <span class="o-role">{{ o.role }}</span>
+            <a [routerLink]="['/band', o.slug] | loc">
+              <span class="o-role">{{ content.t(o.role) }}</span>
               <span class="o-name">{{ o.name }}</span>
             </a>
           }
         </nav>
       } @else {
-        <h2>Nicht gefunden</h2>
-        <p class="lead">Dieses Bandmitglied gibt es (noch) nicht.</p>
+        <h2>{{ t().notFound }}</h2>
+        <p class="lead">{{ t().notFoundText }}</p>
       }
     </article>
   `,
@@ -113,6 +144,9 @@ import { BandService } from '../data/band.service';
 })
 export class MemberPage {
   private readonly band = inject(BandService);
+  private readonly i18n = inject(I18n);
+  protected readonly content = inject(Content);
+  protected readonly t = this.i18n.t(TEXT);
   readonly slug = input.required<string>();
 
   protected readonly member = computed(() => this.band.members.find((m) => m.slug === this.slug()));
@@ -124,8 +158,8 @@ export class MemberPage {
       const m = this.member();
       pageMeta.set({
         title: m ? `${m.name} – Blickfeld Nord` : 'Blickfeld Nord',
-        description: m ? `${m.name} – ${m.role} bei Blickfeld Nord. ${m.bio}` : undefined,
-        path: `band/${this.slug()}`,
+        description: m ? `${m.name} – ${this.content.t(m.role)} ${this.t().at} ${this.content.t(m.bio)}` : undefined,
+        path: this.i18n.link(`/band/${this.slug()}`).slice(1),
       });
     });
   }

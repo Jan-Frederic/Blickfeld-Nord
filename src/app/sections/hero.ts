@@ -1,25 +1,71 @@
 import { Component, DestroyRef, PLATFORM_ID, computed, inject, output, signal } from '@angular/core';
-import { DatePipe, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BandService, Show } from '../data/band.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { I18n, LANGS, LDatePipe, localize, tr } from '../i18n';
+
+const TEXT = tr(
+  {
+    next: 'Nächstes Konzert:',
+    oclock: ' Uhr',
+    free: 'Eintritt frei',
+    live: 'Jetzt live!',
+    day: 'Tag',
+    days: 'Tage',
+    hours: 'Std',
+    minutes: 'Min',
+    alt: 'Logo von Blickfeld Nord mit Kompass über einem nebligen See bei Sonnenuntergang',
+    concerts: 'Konzerte',
+    band: 'Die Band',
+  },
+  {
+    next: 'Next show:',
+    oclock: '',
+    free: 'Free entry',
+    live: 'Live now!',
+    day: 'Day',
+    days: 'Days',
+    hours: 'Hrs',
+    minutes: 'Min',
+    alt: 'Blickfeld Nord logo with a compass above a misty lake at sunset',
+    concerts: 'Shows',
+    band: 'The band',
+  },
+  {
+    next: 'Volgend optreden:',
+    oclock: '',
+    free: 'Gratis entree',
+    live: 'Nu live!',
+    day: 'Dag',
+    days: 'Dagen',
+    hours: 'Uur',
+    minutes: 'Min',
+    alt: 'Logo van Blickfeld Nord met een kompas boven een mistig meer bij zonsondergang',
+    concerts: 'Optredens',
+    band: 'De band',
+  },
+);
+
+// Hinweis auf das Booking in den jeweils anderen Sprachen (Veranstalter aus den Niederlanden, internationale Gäste)
+const BOOKING_IN = { de: 'Booking auf Deutsch', en: 'Booking in English', nl: 'Boeken in het Nederlands' } as const;
 
 @Component({
   selector: 'app-next-show',
-  imports: [DatePipe],
+  imports: [LDatePipe],
   template: `
     @if (nextShow; as s) {
-      <p class="claim">Nächstes Konzert: <strong>{{ s.date | date: 'dd.MM.yyyy' }}@if (s.time) {, {{ s.time }} Uhr}</strong> · {{ s.venue }} {{ s.city ?? '' }}@if (s.price === 0) { · Eintritt frei}</p>
+      <p class="claim">{{ t().next }} <strong>{{ s.date | ldate: 'short' }}@if (s.time) {, {{ s.time }}{{ t().oclock }}}</strong> · {{ s.venue }} {{ s.city ?? '' }}@if (s.price === 0) { · {{ t().free }}}</p>
       <!-- Countdown: Platz ist immer reserviert (kein Layout-Sprung), Zahlen erscheinen erst im Browser -->
       <div class="countdown" aria-live="off">
         @if (left(); as l) {
           @if (l.live) {
-            <span class="live">Jetzt live!</span>
+            <span class="live">{{ t().live }}</span>
           } @else {
-            <span class="unit"><b>{{ l.days }}</b><small>{{ l.days === 1 ? 'Tag' : 'Tage' }}</small></span>
-            <span class="unit"><b>{{ l.hours }}</b><small>Std</small></span>
-            <span class="unit"><b>{{ l.minutes }}</b><small>Min</small></span>
+            <span class="unit"><b>{{ l.days }}</b><small>{{ l.days === 1 ? t().day : t().days }}</small></span>
+            <span class="unit"><b>{{ l.hours }}</b><small>{{ t().hours }}</small></span>
+            <span class="unit"><b>{{ l.minutes }}</b><small>{{ t().minutes }}</small></span>
           }
         }
       </div>
@@ -55,6 +101,7 @@ export class NextShow {
   private static readonly LIVE_HOURS = 3;
 
   private readonly now = signal(Date.now());
+  protected readonly t = inject(I18n).t(TEXT);
 
   // Nächster öffentlicher Termin, der noch nicht vorbei ist (Beginn + 3 h bzw. Tagesende ohne Uhrzeit)
   protected readonly nextShow = inject(BandService).publicShows.find((s) => this.end(s) > Date.now());
@@ -101,25 +148,26 @@ export class NextShow {
         width="2000"
         height="1125"
         fetchpriority="high"
-        alt="Logo von Blickfeld Nord mit Kompass über einem nebligen See bei Sonnenuntergang"
+        [alt]="t().alt"
       />
       <div class="hero-content">
         <!-- im Browser neu berechnet: das beim Build vorgerenderte Datum kann inzwischen veraltet sein -->
         <app-next-show ngSkipHydration />
         <div class="actions">
           <button mat-flat-button (click)="navigate.emit('tour')">
-            <mat-icon>explore</mat-icon> Konzerte
+            <mat-icon>explore</mat-icon> {{ t().concerts }}
           </button>
           <button mat-stroked-button (click)="navigate.emit('band')">
-            <mat-icon>groups</mat-icon> Die Band
+            <mat-icon>groups</mat-icon> {{ t().band }}
           </button>
         </div>
-        <!-- Kurzfassungen fürs Booking aus den Niederlanden und für internationale Gäste -->
+        <!-- Booking in den anderen Sprachen – für Veranstalter aus den Niederlanden und internationale Gäste -->
         <p class="langs">
           <mat-icon>translate</mat-icon>
-          <a routerLink="/booking/en" lang="en" hreflang="en">Booking in English</a>
-          <span aria-hidden="true">·</span>
-          <a routerLink="/booking/nl" lang="nl" hreflang="nl">Boeken in het Nederlands</a>
+          @for (b of otherBookings(); track b.lang; let last = $last) {
+            <a [routerLink]="b.link" [attr.lang]="b.lang" [attr.hreflang]="b.lang">{{ b.label }}</a>
+            @if (!last) { <span aria-hidden="true">·</span> }
+          }
         </p>
       </div>
     </section>
@@ -156,4 +204,9 @@ export class NextShow {
 })
 export class Hero {
   readonly navigate = output<string>();
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t(TEXT);
+  protected readonly otherBookings = computed(() =>
+    LANGS.filter((l) => l !== this.i18n.lang()).map((l) => ({ lang: l, label: BOOKING_IN[l], link: localize('/booking', l) })),
+  );
 }

@@ -4,7 +4,8 @@
 //  - je öffentlichem Konzert eine Seite /konzerte/<id> mit eigenem MusicEvent
 //  - Kalender-Abos: konzerte.ics (öffentliche Konzerte) und backstage/kalender.ics (alle Auftritte + Proben)
 //  - häufige Fragen (FAQPage) auf den Booking-Seiten in allen drei Sprachen
-//  - sitemap.xml (mit Sprachfassungen) und robots.txt
+//  - sitemap.xml (alle Seiten auf Deutsch, Englisch und Niederländisch, gegenseitig verknüpft) und robots.txt
+// Öffentliche Seiten gibt es in drei Sprachen: / (de), /en/… und /nl/…; Inhalte übersetzt src/app/data/uebersetzungen.ts.
 // Aufruf nach `ng build`, vor dem Kopieren der index.html in die Unterseiten-Ordner:  node scripts/seo.mjs
 import { build } from 'esbuild';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -30,7 +31,7 @@ await build({
   tsconfig: join(ROOT, 'tsconfig.json'),
   logLevel: 'warning',
 });
-const { members, publicShows, allShows, rehearsals, history, FAQ, buildIcs, showId } = await import(pathToFileURL(bundle).href);
+const { members, publicShows, allShows, rehearsals, history, FAQ, buildIcs, showId, UEBERSETZUNGEN } = await import(pathToFileURL(bundle).href);
 rmSync(tmp, { recursive: true, force: true });
 
 // Ortszeit Europe/Berlin → ISO 8601 mit korrektem Offset (Winter +01:00, Sommer +02:00)
@@ -58,10 +59,34 @@ function endDateTime(date, time) {
 
 const today = new Date().toISOString().slice(0, 10);
 
+const LANGS = ['de', 'en', 'nl'];
+const IN_LANGUAGE = { de: 'de-DE', en: 'en-GB', nl: 'nl-NL' };
+// Pfad einer Seite in einer Sprache: ('/booking', 'en') → '/en/booking', ('/', 'nl') → '/nl'
+const localPath = (path, lang) => (lang === 'de' ? path : path === '/' ? `/${lang}` : `/${lang}${path}`);
+const localUrl = (path, lang) => `${SITE}${localPath(path, lang)}`;
+// Ausgabedatei einer Seite im Build
+const fileOf = (path, lang) => join(DIST, ...localPath(path, lang).split('/').filter(Boolean), 'index.html');
+// übersetzte Inhalte (wie src/app/content.ts) – ohne Übersetzung das deutsche Original
+const byGerman = new Map(UEBERSETZUNGEN.map((u) => [u.de, u]));
+const tx = (de, lang) => (lang === 'de' || !de ? de : (byGerman.get(de)?.[lang] ?? de));
+
+const TEXT = {
+  band: {
+    de: 'Partyband mit drei Stimmen und jeder Menge Stimmung – Pop, Rock, Schlager, Dance und Disco für Feste, private Feiern und Kneipen.',
+    en: 'Party band with three voices and plenty of atmosphere – pop, rock, German Schlager, dance and disco for festivals, private parties and pubs.',
+    nl: 'Partyband met drie stemmen en een hoop sfeer – pop, rock, schlagers, dance en disco voor feesten, privéfeesten en cafés.',
+  },
+  event: {
+    de: (city) => `Blickfeld Nord live${city ? ' in ' + city : ''}: Partymusik zum Mitsingen und Tanzen.`,
+    en: (city) => `Blickfeld Nord live${city ? ' in ' + city : ''}: party music to sing along and dance to.`,
+    nl: (city) => `Blickfeld Nord live${city ? ' in ' + city : ''}: partymuziek om mee te zingen en op te dansen.`,
+  },
+};
+
 // Bandmitglieder als eigene Personen – mit Vor-/Nachname getrennt und Spitzname, damit Suchmaschinen
 // (und KI-Antworten) die Namen exakt so übernehmen, wie sie hier stehen
 const personId = (m) => `${SITE}/band/${m.slug}#person`;
-function person(m) {
+function person(m, lang = 'de') {
   const split = m.name.lastIndexOf(' ');
   return {
     '@type': 'Person',
@@ -70,9 +95,9 @@ function person(m) {
     givenName: m.name.slice(0, split),
     familyName: m.name.slice(split + 1),
     ...(m.nickname ? { alternateName: m.nickname } : {}),
-    jobTitle: m.role,
-    description: m.bio,
-    url: `${SITE}/band/${m.slug}`,
+    jobTitle: tx(m.role, lang),
+    description: tx(m.bio, lang),
+    url: localUrl(`/band/${m.slug}`, lang),
     ...(m.photo ? { image: `${SITE}/${m.photo.src}` } : {}),
     memberOf: { '@id': BAND_ID },
   };
@@ -81,29 +106,29 @@ function person(m) {
 // (quadratische Varianten erzeugt scripts/share-images.py)
 const images = [`${SITE}/share-1x1.jpg`, `${SITE}/share-4x3.jpg`, `${SITE}/og-image.jpg`];
 
-const band = {
+const bandLd = (lang) => ({
   '@type': 'MusicGroup',
   '@id': BAND_ID,
   name: 'Blickfeld Nord',
   url: `${SITE}/`,
   logo: `${SITE}/presse/blickfeld-nord-kompass.png`,
   image: images,
-  description: 'Partyband mit drei Stimmen und jeder Menge Stimmung – Pop, Rock, Schlager, Dance und Disco für Feste, private Feiern und Kneipen.',
+  description: TEXT.band[lang],
   genre: ['Pop', 'Rock', 'Schlager', 'Dance', 'Disco'],
   foundingDate: '2019',
   member: members.map((m) => ({
     '@type': 'OrganizationRole',
-    roleName: m.role,
+    roleName: tx(m.role, lang),
     member: { '@id': personId(m) },
   })),
   sameAs: ['https://www.instagram.com/blickfeldnord/', 'https://www.facebook.com/share/1BBobZWfjG/'],
-};
+});
 
-const concertUrl = (s) => `${SITE}/konzerte/${showId(s)}`;
-const musicEvent = (s) => ({
+const concertUrl = (s, lang = 'de') => localUrl(`/konzerte/${showId(s)}`, lang);
+const musicEvent = (s, lang = 'de') => ({
     '@type': 'MusicEvent',
     name: `Blickfeld Nord – ${s.venue}`,
-    description: `Blickfeld Nord live${s.city ? ' in ' + s.city : ''}: Partymusik zum Mitsingen und Tanzen.`,
+    description: TEXT.event[lang](s.city),
     startDate: s.time ? berlinDateTime(s.date, s.time) : s.date,
     endDate: s.time && !s.endDate ? endDateTime(s.date, s.time) : (s.endDate ?? s.date),
     eventStatus: 'https://schema.org/EventScheduled',
@@ -137,58 +162,76 @@ const musicEvent = (s) => ({
             availability: 'https://schema.org/InStock',
             // Eintritt ist ab Veröffentlichung „erhältlich“ – als Stichtag dient der Build-Tag (liegt nie in der Zukunft)
             validFrom: berlinDateTime(today, '00:00'),
-            url: concertUrl(s),
+            url: concertUrl(s, lang),
           },
           isAccessibleForFree: s.price === 0,
         }
       : {}),
-    url: concertUrl(s),
+    url: concertUrl(s, lang),
+    inLanguage: IN_LANGUAGE[lang],
   });
-const events = publicShows.filter((s) => (s.endDate ?? s.date) >= today).map(musicEvent);
+const upcoming = publicShows.filter((s) => (s.endDate ?? s.date) >= today);
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [...members.map(person), { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Blickfeld Nord', alternateName: 'Blickfeld Nord Band', url: `${SITE}/`, inLanguage: 'de-DE', publisher: { '@id': BAND_ID } }, band, ...events],
-};
-
-// In index.html einfügen (ersetzt einen evtl. vorhandenen Block, damit mehrfaches Ausführen nichts verdoppelt)
-const indexPath = join(DIST, 'index.html');
+// JSON-LD in eine vorgerenderte Seite einfügen (ersetzt einen evtl. vorhandenen Block, damit mehrfaches Ausführen nichts verdoppelt)
 const marker = /<script type="application\/ld\+json" id="bn-jsonld">[\s\S]*?<\/script>\n?/;
-const script = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>\n`;
-let html = readFileSync(indexPath, 'utf8').replace(marker, '');
-html = html.replace('</head>', `${script}</head>`);
-writeFileSync(indexPath, html);
-
-// Unterseiten der Bandmitglieder: Profilseite mit der jeweiligen Person
-for (const m of members) {
-  const path = join(DIST, 'band', m.slug, 'index.html');
-  const ld = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      { '@type': 'ProfilePage', '@id': `${SITE}/band/${m.slug}`, url: `${SITE}/band/${m.slug}`, name: `${m.name} – Blickfeld Nord`, mainEntity: { '@id': personId(m) } },
-      person(m),
-      { '@type': 'MusicGroup', '@id': BAND_ID, name: 'Blickfeld Nord', url: `${SITE}/` },
-    ],
-  };
-  const tag = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n`;
-  const page = readFileSync(path, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`);
-  writeFileSync(path, page);
-}
-
-// Konzertseiten: das jeweilige Konzert als MusicEvent (vergangene ohne Angebot – Eintritt ist dann nicht mehr erhältlich)
-for (const s of publicShows) {
-  const file = join(DIST, 'konzerte', showId(s), 'index.html');
-  const past = (s.endDate ?? s.date) < today;
-  const { offers, ...event } = musicEvent(s);
-  const ld = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      { ...(past ? event : { ...event, ...(offers ? { offers } : {}) }), '@id': `${concertUrl(s)}#event` },
-      { ...band, member: undefined },
-    ],
-  };
+function inject(file, ld) {
   const tag = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n`;
   writeFileSync(file, readFileSync(file, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`));
+}
+
+for (const lang of LANGS) {
+  // Startseite: Website, Band, Mitglieder und kommende Konzerte
+  inject(fileOf('/', lang), {
+    '@context': 'https://schema.org',
+    '@graph': [
+      ...members.map((m) => person(m, lang)),
+      { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Blickfeld Nord', alternateName: 'Blickfeld Nord Band', url: `${SITE}/`, inLanguage: ['de-DE', 'en-GB', 'nl-NL'], publisher: { '@id': BAND_ID } },
+      bandLd(lang),
+      ...upcoming.map((s) => musicEvent(s, lang)),
+    ],
+  });
+
+  // Unterseiten der Bandmitglieder: Profilseite mit der jeweiligen Person
+  for (const m of members) {
+    const url = localUrl(`/band/${m.slug}`, lang);
+    inject(fileOf(`/band/${m.slug}`, lang), {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'ProfilePage', '@id': url, url, name: `${m.name} – Blickfeld Nord`, inLanguage: IN_LANGUAGE[lang], mainEntity: { '@id': personId(m) } },
+        person(m, lang),
+        { '@type': 'MusicGroup', '@id': BAND_ID, name: 'Blickfeld Nord', url: `${SITE}/` },
+      ],
+    });
+  }
+
+  // Konzertseiten: das jeweilige Konzert als MusicEvent (vergangene ohne Angebot – Eintritt ist dann nicht mehr erhältlich)
+  for (const s of publicShows) {
+    const past = (s.endDate ?? s.date) < today;
+    const { offers, ...event } = musicEvent(s, lang);
+    inject(fileOf(`/konzerte/${showId(s)}`, lang), {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { ...(past ? event : { ...event, ...(offers ? { offers } : {}) }), '@id': `${concertUrl(s)}#event` },
+        { ...bandLd(lang), member: undefined },
+      ],
+    });
+  }
+
+  // Booking-Seite: häufige Fragen als FAQPage in der jeweiligen Sprache
+  const booking = localUrl('/booking', lang);
+  inject(fileOf('/booking', lang), {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${booking}#faq`,
+    url: booking,
+    inLanguage: IN_LANGUAGE[lang],
+    about: { '@type': 'MusicGroup', '@id': BAND_ID, name: 'Blickfeld Nord', url: `${SITE}/` },
+    mainEntity: FAQ[lang].items.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.link ? `${f.a} ${localUrl(f.link.to, lang)}` : f.a },
+    })),
+  });
 }
 
 // Kalender-Abos: kommen regelmäßig neu – Kalender-Apps fragen alle 12 Stunden nach
@@ -204,42 +247,19 @@ writeFileSync(
   buildIcs(allShows, 'Blickfeld Nord – Backstage', true, false, { rehearsals, header: subscription('Auftritte und Proben – nur für die Band') }),
 );
 
-// Booking-Seiten: häufige Fragen als FAQPage – je Sprachfassung in deren Sprache
-const BOOKING = { de: 'booking', en: 'booking/en', nl: 'booking/nl' };
-for (const [lang, path] of Object.entries(BOOKING)) {
-  const file = join(DIST, path, 'index.html');
-  const ld = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    '@id': `${SITE}/${path}#faq`,
-    url: `${SITE}/${path}`,
-    inLanguage: lang,
-    about: { '@type': 'MusicGroup', '@id': BAND_ID, name: 'Blickfeld Nord', url: `${SITE}/` },
-    mainEntity: FAQ[lang].items.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.link ? `${f.a} ${SITE}${f.link.to}` : f.a },
-    })),
-  };
-  const tag = `<script type="application/ld+json" id="bn-jsonld">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n`;
-  const page = readFileSync(file, 'utf8').replace(marker, '').replace('</head>', `${tag}</head>`);
-  writeFileSync(file, page);
-}
-
-// Sitemap (Backstage bewusst nicht enthalten)
-const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/booking/en', '/booking/nl', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
-// Sprachfassungen der Booking-Seite gegenseitig verknüpfen (wie die hreflang-Links im Seitenkopf)
-const bookingPaths = Object.values(BOOKING).map((p) => `/${p}`);
+// Sitemap (Backstage und Wunschbox bewusst nicht enthalten): jede Seite in allen drei Sprachen,
+// gegenseitig verknüpft wie die hreflang-Links im Seitenkopf
+const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
 const alternates = (p) =>
-  bookingPaths.includes(p)
-    ? [...Object.entries(BOOKING), ['x-default', BOOKING.de]].map(([l, b]) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE}/${b}"/>`).join('') + '\n  '
-    : '';
+  [...LANGS.map((l) => [l, localUrl(p, l)]), ['x-default', localUrl(p, 'de')]]
+    .map(([l, href]) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`)
+    .join('') + '\n  ';
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${pages.map((p) => `  <url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod>${alternates(p)}</url>`).join('\n')}
+${LANGS.flatMap((l) => pages.map((p) => `  <url><loc>${localUrl(p, l)}</loc><lastmod>${today}</lastmod>${alternates(p)}</url>`)).join('\n')}
 </urlset>
 `;
 writeFileSync(join(DIST, 'sitemap.xml'), sitemap);
 writeFileSync(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /backstage/\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
-console.log(`SEO: ${events.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length} Seiten in der Sitemap.`);
+console.log(`SEO: ${upcoming.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length * LANGS.length} Seiten in der Sitemap (${pages.length} je Sprache).`);

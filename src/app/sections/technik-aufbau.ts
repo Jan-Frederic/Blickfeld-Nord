@@ -1,7 +1,97 @@
-import { Component, viewChild } from '@angular/core';
+import { Component, computed, inject, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/technik.json';
 import { Hardware, HardwareDialog } from './hardware-dialog';
+import { I18n, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from './uebersetzung-hinweis';
+
+const TEXT = tr(
+  {
+    plan: 'Bühnenplan',
+    planTitle: 'Bühnenplan von Blickfeld Nord, Draufsicht',
+    area: 'SPIELFLÄCHE',
+    audience: 'PUBLIKUM',
+    details: 'technische Details anzeigen',
+    bassAmp: 'Bass-Amp',
+    legend: { musician: 'Musiker', monitor: 'Monitor', pa: 'PA', light: 'Licht', socket: 'Steckdose' },
+    caption: 'Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte antippen für Details',
+    channels: 'Kanalliste',
+    head: { channel: 'Kanal', source: 'Quelle', type: 'Art', device: 'Gerät', stand: 'Stativ' },
+    open: 'offen',
+    yes: 'ja',
+    flow: 'Signalfluss',
+    sources: 'Quellen',
+    mixer: 'Mischpult',
+    modelOpen: 'Modell offen',
+    outputs: 'Ausgänge',
+    main: 'Main L/R → PA links und rechts',
+    devices: 'Geräte',
+    modelFollows: 'Modell folgt',
+    monitors: 'Monitore',
+    for: 'für',
+    mixOpen: 'Mischung offen',
+    power: 'Strom',
+    asOf: 'Stand',
+    descArea: 'Spielfläche',
+  },
+  {
+    plan: 'Stage plan',
+    planTitle: 'Stage plan of Blickfeld Nord, top view',
+    area: 'STAGE AREA',
+    audience: 'AUDIENCE',
+    details: 'show technical details',
+    bassAmp: 'Bass amp',
+    legend: { musician: 'Musician', monitor: 'Monitor', pa: 'PA', light: 'Lights', socket: 'Power socket' },
+    caption: 'Top view, audience at the bottom · 1 square = 1 m · tap equipment for details',
+    channels: 'Channel list',
+    head: { channel: 'Channel', source: 'Source', type: 'Type', device: 'Device', stand: 'Stand' },
+    open: 'open',
+    yes: 'yes',
+    flow: 'Signal flow',
+    sources: 'Sources',
+    mixer: 'Mixing desk',
+    modelOpen: 'Model to be confirmed',
+    outputs: 'Outputs',
+    main: 'Main L/R → PA left and right',
+    devices: 'Equipment',
+    modelFollows: 'Model to follow',
+    monitors: 'Monitors',
+    for: 'for',
+    mixOpen: 'Mix to be confirmed',
+    power: 'Power',
+    asOf: 'As of',
+    descArea: 'Stage area',
+  },
+  {
+    plan: 'Podiumplan',
+    planTitle: 'Podiumplan van Blickfeld Nord, bovenaanzicht',
+    area: 'SPEELVLAK',
+    audience: 'PUBLIEK',
+    details: 'technische details tonen',
+    bassAmp: 'Basversterker',
+    legend: { musician: 'Muzikant', monitor: 'Monitor', pa: 'PA', light: 'Licht', socket: 'Stopcontact' },
+    caption: 'Bovenaanzicht, publiek onderaan · 1 vakje = 1 m · tik op apparatuur voor details',
+    channels: 'Kanalenlijst',
+    head: { channel: 'Kanaal', source: 'Bron', type: 'Soort', device: 'Apparaat', stand: 'Statief' },
+    open: 'open',
+    yes: 'ja',
+    flow: 'Signaalroute',
+    sources: 'Bronnen',
+    mixer: 'Mengpaneel',
+    modelOpen: 'Model volgt nog',
+    outputs: 'Uitgangen',
+    main: 'Main L/R → PA links en rechts',
+    devices: 'Apparatuur',
+    modelFollows: 'Model volgt',
+    monitors: 'Monitors',
+    for: 'voor',
+    mixOpen: 'Mix volgt nog',
+    power: 'Stroom',
+    asOf: 'Stand van',
+    descArea: 'Speelvlak',
+  },
+);
 
 // Technischer Aufbau aus src/app/data/technik.json: Bühnenplan (Draufsicht), Kanalliste, Monitore,
 // Signalfluss und Stromverteilung. Dieselbe Datei nutzt der Technik-Rider (scripts/build-rider.py).
@@ -35,15 +125,15 @@ const py = (m: number) => PAD_TOP + m * M;
 
 @Component({
   selector: 'app-technik-aufbau',
-  imports: [MatIconModule, HardwareDialog],
+  imports: [MatIconModule, HardwareDialog, UebersetzungHinweis],
   template: `
-    <p class="draft"><mat-icon>edit_note</mat-icon><span>{{ status }}</span></p>
+    <p class="draft"><mat-icon>edit_note</mat-icon><span>{{ ct.t(status) }}</span></p>
 
-    <h4>Bühnenplan</h4>
+    <h4>{{ t().plan }}</h4>
     <figure class="plot">
       <svg [attr.viewBox]="viewBox" role="group" aria-labelledby="plot-title plot-desc">
-        <title id="plot-title">Bühnenplan von Blickfeld Nord, Draufsicht</title>
-        <desc id="plot-desc">{{ description }}</desc>
+        <title id="plot-title">{{ t().planTitle }}</title>
+        <desc id="plot-desc">{{ description() }}</desc>
 
         <!-- Spielfläche mit 1-m-Raster -->
         <rect class="stage" [attr.x]="px(0)" [attr.y]="py(0)" [attr.width]="W * M" [attr.height]="D * M" rx="6" />
@@ -53,12 +143,12 @@ const py = (m: number) => PAD_TOP + m * M;
         @for (g of gridY; track g) {
           <line class="grid" [attr.x1]="px(0)" [attr.y1]="py(g)" [attr.x2]="px(W)" [attr.y2]="py(g)" />
         }
-        <text class="dim" [attr.x]="px(W / 2)" [attr.y]="py(0) - 26" text-anchor="middle">SPIELFLÄCHE {{ W }} × {{ D }} M</text>
-        <text class="audience" [attr.x]="px(W / 2)" [attr.y]="py(D) + 50" text-anchor="middle">▼  PUBLIKUM  ▼</text>
+        <text class="dim" [attr.x]="px(W / 2)" [attr.y]="py(0) - 26" text-anchor="middle">{{ t().area }} {{ W }} × {{ D }} M</text>
+        <text class="audience" [attr.x]="px(W / 2)" [attr.y]="py(D) + 50" text-anchor="middle">▼  {{ t().audience }}  ▼</text>
 
         @for (it of items; track it.id) {
           <g [class.hit]="it.hw" [attr.role]="it.hw ? 'button' : null" [attr.tabindex]="it.hw ? 0 : null"
-             [attr.aria-label]="it.hw ? it.label + ' – technische Details anzeigen' : null"
+             [attr.aria-label]="it.hw ? ct.t(it.label) + ' – ' + t().details : null"
              (click)="it.hw && open(it.hw)" (keydown.enter)="it.hw && open(it.hw)" (keydown.space)="it.hw && open(it.hw, $event)">
           @switch (it.typ) {
             @case ('drums') {
@@ -70,32 +160,32 @@ const py = (m: number) => PAD_TOP + m * M;
               <circle class="drum" [attr.cx]="px(it.x + 0.45)" [attr.cy]="py(it.y + 0.1)" r="17" />
               <circle class="cymbal" [attr.cx]="px(it.x - 0.6)" [attr.cy]="py(it.y - 0.38)" r="20" />
               <circle class="cymbal" [attr.cx]="px(it.x + 0.6)" [attr.cy]="py(it.y - 0.38)" r="22" />
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y - it.t! / 2) + 16" text-anchor="middle">{{ it.label }}</text>
+              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y - it.t! / 2) + 16" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('person') {
               <circle class="person" [attr.cx]="px(it.x)" [attr.cy]="py(it.y)" r="21" />
-              <text class="initial" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 6" text-anchor="middle">{{ it.label[0] }}</text>
+              <text class="initial" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 6" text-anchor="middle">{{ ct.t(it.label)[0] }}</text>
               @if (it.id !== 'matthias') {
-                <text class="label" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 42" text-anchor="middle">{{ it.label }}</text>
-                <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 58" text-anchor="middle">{{ it.rolle }}</text>
+                <text class="label" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 42" text-anchor="middle">{{ ct.t(it.label) }}</text>
+                <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 58" text-anchor="middle">{{ ct.t(it.rolle) }}</text>
               }
             }
             @case ('amp') {
               <rect class="box" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="4" />
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 4" text-anchor="middle">Bass-Amp</text>
+              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 4" text-anchor="middle">{{ t().bassAmp }}</text>
             }
             @case ('mixer') {
               <rect class="box" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="4" />
               @for (f of [-0.22, -0.11, 0, 0.11, 0.22]; track f) {
                 <line class="fader" [attr.x1]="px(it.x + f)" [attr.y1]="py(it.y - 0.1)" [attr.x2]="px(it.x + f)" [attr.y2]="py(it.y + 0.14)" />
               }
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y - it.t! / 2) - 8" text-anchor="middle">{{ it.label }}</text>
+              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y - it.t! / 2) - 8" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('monitor') {
               <g [attr.transform]="'rotate(' + (it.drehung ?? 0) + ' ' + px(it.x) + ' ' + py(it.y) + ')'">
                 <polygon class="wedge" [attr.points]="wedge(it)" />
               </g>
-              <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + (it.drehung ? 44 : 30)" text-anchor="middle">{{ it.label }}</text>
+              <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + (it.drehung ? 44 : 30)" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('pa') {
               <rect class="pa" [attr.x]="px(it.x) - 26" [attr.y]="py(it.y) - 52" width="52" height="104" rx="4" />
@@ -110,76 +200,76 @@ const py = (m: number) => PAD_TOP + m * M;
             @case ('strom') {
               <rect class="power" [attr.x]="px(it.x) - 15" [attr.y]="py(it.y) - 12" width="30" height="24" rx="4" />
               <text class="power-sym" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 6" text-anchor="middle">⚡</text>
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 20" text-anchor="middle">{{ it.label }}</text>
+              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 20" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
           }
           </g>
         }
       </svg>
       <figcaption>
-        <span><i class="key person"></i> Musiker</span>
-        <span><i class="key wedge"></i> Monitor</span>
-        <span><i class="key pa"></i> PA</span>
-        <span><i class="key light"></i> Licht</span>
-        <span><i class="key power"></i> Steckdose</span>
-        <span>Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte antippen für Details</span>
+        <span><i class="key person"></i> {{ t().legend.musician }}</span>
+        <span><i class="key wedge"></i> {{ t().legend.monitor }}</span>
+        <span><i class="key pa"></i> {{ t().legend.pa }}</span>
+        <span><i class="key light"></i> {{ t().legend.light }}</span>
+        <span><i class="key power"></i> {{ t().legend.socket }}</span>
+        <span>{{ t().caption }}</span>
       </figcaption>
     </figure>
 
-    <h4>Kanalliste</h4>
+    <h4>{{ t().channels }}</h4>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Kanal</th><th>Quelle</th><th>Art</th><th>Gerät</th><th>Stativ</th><th>48 V</th></tr>
+          <tr><th>{{ t().head.channel }}</th><th>{{ t().head.source }}</th><th>{{ t().head.type }}</th><th>{{ t().head.device }}</th><th>{{ t().head.stand }}</th><th>48 V</th></tr>
         </thead>
         <tbody>
           @for (k of kanaele; track k.kanal) {
             <tr>
               <td class="num">{{ k.kanal }}</td>
-              <td>{{ k.quelle }}</td>
-              <td>{{ k.art }}</td>
-              <td [class.open]="!k.geraet">{{ k.geraet ?? 'offen' }}</td>
-              <td [class.open]="!k.stativ">{{ k.stativ ?? '–' }}</td>
-              <td>{{ k.phantom ? 'ja' : '–' }}</td>
+              <td>{{ ct.t(k.quelle) }}</td>
+              <td>{{ ct.t(k.art) }}</td>
+              <td [class.open]="!k.geraet">{{ k.geraet ? ct.t(k.geraet) : t().open }}</td>
+              <td [class.open]="!k.stativ">{{ k.stativ ? ct.t(k.stativ) : '–' }}</td>
+              <td>{{ k.phantom ? t().yes : '–' }}</td>
             </tr>
           }
         </tbody>
       </table>
     </div>
 
-    <h4>Signalfluss</h4>
+    <h4>{{ t().flow }}</h4>
     <div class="flow">
       <div class="col">
-        <span class="col-title">Quellen</span>
+        <span class="col-title">{{ t().sources }}</span>
         @for (k of kanaele; track k.kanal) {
-          <span class="chip"><b>{{ k.kanal }}</b> {{ k.quelle }}</span>
+          <span class="chip"><b>{{ k.kanal }}</b> {{ ct.t(k.quelle) }}</span>
         }
       </div>
       <mat-icon class="arrow">arrow_forward</mat-icon>
       <div class="col center">
-        <span class="col-title">Mischpult</span>
+        <span class="col-title">{{ t().mixer }}</span>
         <button type="button" class="chip strong" [class.open]="!hardware['mischpult'].modell" (click)="open('mischpult')">
-          {{ hardware['mischpult'].modell ?? 'Modell offen' }}
+          {{ hardware['mischpult'].modell ?? t().modelOpen }}
         </button>
       </div>
       <mat-icon class="arrow">arrow_forward</mat-icon>
       <div class="col">
-        <span class="col-title">Ausgänge</span>
-        <span class="chip">Main L/R → PA links und rechts</span>
+        <span class="col-title">{{ t().outputs }}</span>
+        <span class="chip">{{ t().main }}</span>
         @for (m of monitore; track m.id) {
-          <span class="chip">Aux {{ $index + 1 }} → {{ label(m.id) }} ({{ m.fuer }})</span>
+          <span class="chip">Aux {{ $index + 1 }} → {{ label(m.id) }} ({{ ct.t(m.fuer) }})</span>
         }
       </div>
     </div>
 
     <div class="two">
       <div>
-        <h4>Geräte</h4>
+        <h4>{{ t().devices }}</h4>
         <ul class="list">
           @for (g of geraeteListe; track g.key) {
             <li>
               <button type="button" class="hw-link" (click)="open(g.key)">
-                <b>{{ g.hw.kategorie }}:</b> <span [class.open]="!g.hw.modell">{{ g.hw.modell ?? 'Modell folgt' }}</span>
+                <b>{{ ct.t(g.hw.kategorie) }}:</b> <span [class.open]="!g.hw.modell">{{ g.hw.modell ?? t().modelFollows }}</span>
                 <mat-icon>info</mat-icon>
               </button>
             </li>
@@ -187,23 +277,24 @@ const py = (m: number) => PAD_TOP + m * M;
         </ul>
       </div>
       <div>
-        <h4>Monitore</h4>
+        <h4>{{ t().monitors }}</h4>
         <ul class="list">
           @for (m of monitore; track m.id) {
-            <li><b>{{ label(m.id) }}</b> für {{ m.fuer }}: <span [class.open]="!m.mix">{{ m.mix ?? 'Mischung offen' }}</span></li>
+            <li><b>{{ label(m.id) }}</b> {{ t().for }} {{ ct.t(m.fuer) }}: <span [class.open]="!m.mix">{{ m.mix ? ct.t(m.mix) : t().mixOpen }}</span></li>
           }
         </ul>
       </div>
       <div>
-        <h4>Strom</h4>
+        <h4>{{ t().power }}</h4>
         <ul class="list">
           @for (s of strom; track s.id) {
-            <li><b>{{ label(s.id) }}:</b> {{ s.verbraucher.join(', ') }}</li>
+            <li><b>{{ label(s.id) }}:</b> {{ verbraucher(s.verbraucher) }}</li>
           }
         </ul>
       </div>
     </div>
-    <p class="stand">Stand {{ stand }}</p>
+    <app-uebersetzung-hinweis [status]="contentStatus()" />
+    <p class="stand">{{ t().asOf }} {{ i18n.date(stand, 'short') }}</p>
 
     <app-hardware-dialog />
   `,
@@ -277,7 +368,10 @@ const py = (m: number) => PAD_TOP + m * M;
 })
 export class TechnikAufbau {
   protected readonly status = data.status;
-  protected readonly stand = new Date(`${data.stand}T12:00:00`).toLocaleDateString('de-DE');
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t(TEXT);
+  protected readonly ct = inject(Content);
+  protected readonly stand = `${data.stand}T12:00:00`;
   protected readonly items = data.aufbau as Item[];
   protected readonly kanaele = data.kanaele;
   protected readonly monitore = data.monitore;
@@ -294,19 +388,40 @@ export class TechnikAufbau {
   protected readonly gridX = Array.from({ length: W - 1 }, (_, i) => i + 1);
   protected readonly gridY = Array.from({ length: D - 1 }, (_, i) => i + 1);
   protected readonly viewBox = `0 0 ${2 * PAD_X + W * M} ${PAD_TOP + D * M + 70}`;
-  protected readonly description =
-    `Spielfläche ${W} × ${D} m. ` + this.items.map((i) => `${i.label}${i.rolle ? ` (${i.rolle})` : ''}`).join(', ') + '.';
+  protected readonly description = computed(
+    () =>
+      `${this.t().descArea} ${W} × ${D} m. ` +
+      this.items.map((i) => `${this.ct.t(i.label)}${i.rolle ? ` (${this.ct.t(i.rolle)})` : ''}`).join(', ') +
+      '.',
+  );
+
+  // alle Texte aus technik.json, die übersetzt angezeigt werden – für den Hinweis „noch nicht gegengelesen“
+  protected readonly contentStatus = computed(() =>
+    this.ct.status(
+      data.status,
+      ...this.items.flatMap((i) => [i.label, i.rolle]),
+      ...this.kanaele.flatMap((k) => [k.quelle, k.art, k.geraet ?? undefined, k.stativ ?? undefined]),
+      ...this.monitore.flatMap((m) => [m.fuer, m.mix ?? undefined]),
+      ...this.strom.flatMap((s) => s.verbraucher),
+      ...Object.values(HARDWARE).map((h) => h.kategorie),
+    ),
+  );
 
   private readonly dialog = viewChild.required(HardwareDialog);
 
   protected open(key: string, event?: Event): void {
     event?.preventDefault();
     const hw = HARDWARE[key];
-    if (hw) this.dialog().show(hw, this.items.filter((i) => i.hw === key).map((i) => i.label));
+    if (hw) this.dialog().show(hw, this.items.filter((i) => i.hw === key).map((i) => this.ct.t(i.label)));
   }
 
   protected label(id: string): string {
-    return this.items.find((i) => i.id === id)?.label ?? id;
+    const label = this.items.find((i) => i.id === id)?.label;
+    return label ? this.ct.t(label) : id;
+  }
+
+  protected verbraucher(list: string[]): string {
+    return list.map((v) => this.ct.t(v)).join(', ');
   }
 
   // Monitorkeil: Trapez, die schmale Seite zeigt zum Musiker (nach oben = Richtung Bühnenrückseite)

@@ -1,18 +1,40 @@
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, friendId } from '../data/band.service';
 import { scrollToSection } from '../scroll';
+import { I18n, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from '../sections/uebersetzung-hinweis';
+
+const TEXT = tr(
+  {
+    kicker: 'Verbunden',
+    title: 'Freunde & Partner',
+    lead: 'Menschen und Projekte, mit denen wir gern zusammenarbeiten – schaut mal vorbei!',
+  },
+  {
+    kicker: 'Connected',
+    title: 'Friends & partners',
+    lead: 'People and projects we love working with – go and have a look!',
+  },
+  {
+    kicker: 'Verbonden',
+    title: 'Vrienden & partners',
+    lead: 'Mensen en projecten waarmee we graag samenwerken – neem gerust een kijkje!',
+  },
+);
 
 @Component({
   selector: 'app-freunde',
-  imports: [MatIconModule],
+  imports: [MatIconModule, UebersetzungHinweis],
   template: `
     <section class="section friends">
-      <p class="kicker">Verbunden</p>
-      <h2>Freunde &amp; Partner</h2>
-      <p class="lead">Menschen und Projekte, mit denen wir gern zusammenarbeiten – schaut mal vorbei!</p>
+      <p class="kicker">{{ t().kicker }}</p>
+      <h2>{{ t().title }}</h2>
+      <p class="lead">{{ t().lead }}</p>
+      <app-uebersetzung-hinweis class="hint" [status]="status()" />
 
       <div class="grid">
         @for (f of band.friends; track f.url) {
@@ -88,7 +110,7 @@ import { scrollToSection } from '../scroll';
             </span>
             <span class="body">
               <span class="name">{{ f.name }}</span>
-              <span class="desc">{{ f.description }}</span>
+              <span class="desc">{{ content.t(f.description) }}</span>
               <span class="url">{{ host(f.url) }} <mat-icon>open_in_new</mat-icon></span>
             </span>
           </a>
@@ -97,6 +119,7 @@ import { scrollToSection } from '../scroll';
     </section>
   `,
   styles: `
+    .hint { display: block; margin: -16px 0 20px; }
     .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
     .card {
       display: flex; gap: 20px; align-items: flex-start; padding: 24px; border-radius: 12px;
@@ -131,6 +154,9 @@ import { scrollToSection } from '../scroll';
 })
 export class Freunde implements OnInit {
   protected readonly band = inject(BandService);
+  protected readonly content = inject(Content);
+  protected readonly t = inject(I18n).t(TEXT);
+  protected readonly status = computed(() => this.content.status(...this.band.friends.map((f) => f.description)));
   protected readonly id = friendId;
   protected readonly flash = signal<string | null>(null);
   private readonly route = inject(ActivatedRoute);

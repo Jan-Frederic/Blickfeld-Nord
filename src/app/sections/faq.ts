@@ -1,12 +1,14 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { FAQ } from '../data/faq';
+import { I18n, LocPipe } from '../i18n';
 
-// Häufige Fragen von Veranstaltern auf Deutsch, Englisch und Niederländisch (Inhalte: src/app/data/faq.ts)
+// Häufige Fragen von Veranstaltern auf Deutsch, Englisch und Niederländisch (Inhalte: src/app/data/faq.ts);
+// Sprache aus der Adresse
 @Component({
   selector: 'app-faq',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, LocPipe, MatIconModule],
   template: `
     <h3>{{ faq().title }}</h3>
     @for (f of faq().items; track f.q) {
@@ -14,7 +16,7 @@ import { FAQ } from '../data/faq';
         <summary>{{ f.q }}</summary>
         <p>
           {{ f.a }}
-          @if (f.link) { <a class="faq-link" [routerLink]="f.link.to">{{ f.link.label }} <mat-icon>arrow_forward</mat-icon></a> }
+          @if (f.link) { <a class="faq-link" [routerLink]="f.link.to | loc">{{ f.link.label }} <mat-icon>arrow_forward</mat-icon></a> }
         </p>
       </details>
     }
@@ -42,6 +44,7 @@ import { FAQ } from '../data/faq';
 })
 export class Faq {
   /** Sprache der Seite */
-  readonly lang = input<'de' | 'en' | 'nl'>('de');
+  // Sprache aus der Adresse (/, /en/…, /nl/…)
+  protected readonly lang = inject(I18n).lang;
   protected readonly faq = computed(() => FAQ[this.lang()]);
 }

@@ -1,13 +1,12 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
+import { I18n } from '../i18n';
 
 // „Angebot anfragen“ in drei Schritten (Termin → Anlass → Kontakt), auf Deutsch, Englisch und Niederländisch.
 // Die Seite ist statisch, daher entsteht am Ende eine vollständig ausgefüllte E-Mail im Mailprogramm –
 // in der Sprache der Seite und mit allem, was wir sonst nachfragen müssten.
 const MAIL = 'Matthiaswigger@me.com';
-
-export type AnfrageLang = 'de' | 'en' | 'nl';
 
 const T = {
   de: {
@@ -177,7 +176,8 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 })
 export class Anfrage {
   /** Sprache der Seite – auch die E-Mail wird in dieser Sprache erstellt */
-  readonly lang = input<AnfrageLang>('de');
+  // Sprache aus der Adresse (/, /en/…, /nl/…)
+  protected readonly lang = inject(I18n).lang;
   protected readonly t = computed(() => T[this.lang()]);
 
   private readonly shows = inject(BandService).shows;

@@ -1,15 +1,40 @@
 import { Show } from './band.service';
+import { Lang, localize } from '../i18n';
 
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const TEXT: Record<Lang, { weekdays: string[]; from: (t: string) => string; free: string; entry: string; date: (d: string) => string }> = {
+  de: {
+    weekdays: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+    from: (t) => ` ab ${t} Uhr`,
+    free: 'Eintritt frei',
+    entry: 'Eintritt',
+    date: (d) => d.split('-').reverse().join('.'),
+  },
+  en: {
+    weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    from: (t) => ` from ${t}`,
+    free: 'Free entry',
+    entry: 'Entry',
+    date: (d) => d.split('-').reverse().join('/'),
+  },
+  nl: {
+    weekdays: ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'],
+    from: (t) => ` vanaf ${t} uur`,
+    free: 'Gratis entree',
+    entry: 'Entree',
+    date: (d) => d.split('-').reverse().join('-'),
+  },
+};
 
 // Konzert teilen: Teilen-Menü des Geräts, sonst WhatsApp – mit Datum, Ort, Eintritt und Link zur Konzertseite
-export function shareShow(s: Show, id: string, venue: string): void {
-  const day = (d: string) => `${WEEKDAYS[new Date(`${d}T12:00:00`).getDay()]}, ${d.split('-').reverse().join('.')}`;
-  const when = `${day(s.date)}${s.endDate ? ` – ${day(s.endDate)}` : ''}${s.time ? ` ab ${s.time} Uhr` : ''}`;
+// (Text und Link in der Sprache der Seite)
+export function shareShow(s: Show, id: string, venue: string, lang: Lang = 'de'): void {
+  const t = TEXT[lang];
+  const day = (d: string) => `${t.weekdays[new Date(`${d}T12:00:00`).getDay()]}, ${t.date(d)}`;
+  const when = `${day(s.date)}${s.endDate ? ` – ${day(s.endDate)}` : ''}${s.time ? t.from(s.time) : ''}`;
   const where = [venue, s.city].filter(Boolean).join(', ');
-  const entry = s.price === 0 ? ' · Eintritt frei' : s.price ? ` · Eintritt ${s.price} €` : '';
+  const entry = s.price === 0 ? ` · ${t.free}` : s.price ? ` · ${t.entry} ${s.price} €` : '';
   const text = `Blickfeld Nord live: ${when} – ${where}${entry}`;
-  const url = `https://blickfeld-nord.de/konzerte/${id}`;
+  const url = `https://blickfeld-nord.de${localize(`/konzerte/${id}`, lang)}`;
   if (navigator.share) {
     navigator.share({ title: 'Blickfeld Nord live', text, url }).catch(() => undefined);
   } else {

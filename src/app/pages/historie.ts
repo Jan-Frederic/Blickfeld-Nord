@@ -1,44 +1,77 @@
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
-import { DatePipe, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { scrollToSection } from '../scroll';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { InstagramReel } from './instagram-reel';
+import { I18n, LDatePipe, tr } from '../i18n';
+import { Content } from '../content';
+import { UebersetzungHinweis } from '../sections/uebersetzung-hinweis';
+
+const TEXT = tr(
+  {
+    kicker: 'Rückblick',
+    title: 'Historie',
+    lead: 'Unsere Geschichte in Momenten – Auftritte, Orte, Begegnungen und alles, was uns unterwegs passiert.',
+    example: 'Beispiel',
+    openImage: 'Bild öffnen: ',
+    photo: 'Foto',
+    empty: 'Hier entsteht bald unsere Chronik.',
+  },
+  {
+    kicker: 'Looking back',
+    title: 'History',
+    lead: 'Our story in moments – shows, places, encounters and everything that happens to us along the way.',
+    example: 'Example',
+    openImage: 'Open image: ',
+    photo: 'Photo',
+    empty: 'Our chronicle is coming soon.',
+  },
+  {
+    kicker: 'Terugblik',
+    title: 'Geschiedenis',
+    lead: 'Ons verhaal in momenten – optredens, plekken, ontmoetingen en alles wat ons onderweg overkomt.',
+    example: 'Voorbeeld',
+    openImage: 'Afbeelding openen: ',
+    photo: 'Foto',
+    empty: 'Hier verschijnt binnenkort onze kroniek.',
+  },
+);
 
 @Component({
   selector: 'app-historie',
-  imports: [DatePipe, MatIconModule, InstagramReel],
+  imports: [MatIconModule, InstagramReel, LDatePipe, UebersetzungHinweis],
   template: `
     <section class="section historie">
-      <p class="kicker">Rückblick</p>
-      <h2>Historie</h2>
-      <p class="lead">Unsere Geschichte in Momenten – Auftritte, Orte, Begegnungen und alles, was uns unterwegs passiert.</p>
+      <p class="kicker">{{ t().kicker }}</p>
+      <h2>{{ t().title }}</h2>
+      <p class="lead">{{ t().lead }}</p>
 
       <ol class="timeline">
         @for (e of entries; track e.date + e.title) {
           <li class="entry" [id]="'e-' + e.date">
             <span class="dot" aria-hidden="true"></span>
-            <time [attr.datetime]="e.date">{{ e.date | date: 'd. MMMM yyyy' : '' : 'de' }}</time>
+            <time [attr.datetime]="e.date">{{ e.date | ldate: 'long' }}</time>
             <article>
               <h3>
-                {{ e.title }}
-                @if (e.example) { <span class="example">Beispiel</span> }
+                {{ content.t(e.title) }}
+                @if (e.example) { <span class="example">{{ t().example }}</span> }
               </h3>
               @for (p of e.text; track $index) {
-                <p>{{ p }}</p>
+                <p>{{ content.t(p) }}</p>
               }
 
               @if (e.images?.length) {
                 <div class="images" [class.single]="e.images!.length === 1">
                   @for (img of e.images; track img.src) {
-                    <a [href]="img.src" target="_blank" rel="noopener" [class.portrait]="img.portrait" [attr.aria-label]="'Bild öffnen: ' + img.alt">
-                      <img [src]="img.src" [alt]="img.alt" loading="lazy" />
+                    <a [href]="img.src" target="_blank" rel="noopener" [class.portrait]="img.portrait" [attr.aria-label]="t().openImage + content.t(img.alt)">
+                      <img [src]="img.src" [alt]="content.t(img.alt)" loading="lazy" />
                     </a>
                   }
                 </div>
                 @for (img of e.images; track img.src) {
-                  @if (img.credit) { <p class="credit">Foto: {{ img.credit }}</p> }
+                  @if (img.credit) { <p class="credit">{{ t().photo }}: {{ img.credit }}</p> }
                 }
               }
 
@@ -62,16 +95,17 @@ import { InstagramReel } from './instagram-reel';
                           @case ('place') { <mat-icon>place</mat-icon> }
                           @default { <mat-icon>language</mat-icon> }
                         }
-                        {{ l.label }}
+                        {{ content.t(l.label) }}
                       </a>
                     </li>
                   }
                 </ul>
               }
+              <app-uebersetzung-hinweis [status]="content.status(e.title, ...e.text)" />
             </article>
           </li>
         } @empty {
-          <li class="empty">Hier entsteht bald unsere Chronik.</li>
+          <li class="empty">{{ t().empty }}</li>
         }
       </ol>
     </section>
@@ -124,6 +158,8 @@ import { InstagramReel } from './instagram-reel';
   `,
 })
 export class Historie implements OnInit {
+  protected readonly content = inject(Content);
+  protected readonly t = inject(I18n).t(TEXT);
   protected readonly entries = [...inject(BandService).history].sort((a, b) => b.date.localeCompare(a.date));
   private readonly route = inject(ActivatedRoute);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));

@@ -1,18 +1,46 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { I18n, LocPipe, tr } from '../i18n';
+
+const TEXT = tr(
+  {
+    frameTitle: 'Instagram-Reel von Blickfeld Nord',
+    title: 'Reel von Instagram',
+    note: 'Mit Klick auf „Reel laden“ wird das Video von Instagram (Meta Platforms Ireland Ltd.) geladen. Dabei werden Daten wie Ihre IP-Adresse an Meta übertragen und ggf. Cookies gesetzt. Mehr dazu in der',
+    privacy: 'Datenschutzerklärung',
+    load: 'Reel laden',
+    direct: 'oder direkt auf Instagram ansehen',
+  },
+  {
+    frameTitle: 'Instagram reel by Blickfeld Nord',
+    title: 'Reel from Instagram',
+    note: 'Clicking “Load reel” loads the video from Instagram (Meta Platforms Ireland Ltd.). Data such as your IP address is transferred to Meta and cookies may be set. More in our',
+    privacy: 'privacy policy',
+    load: 'Load reel',
+    direct: 'or watch it directly on Instagram',
+  },
+  {
+    frameTitle: 'Instagram-reel van Blickfeld Nord',
+    title: 'Reel van Instagram',
+    note: 'Met een klik op „Reel laden” wordt de video van Instagram (Meta Platforms Ireland Ltd.) geladen. Daarbij worden gegevens zoals je IP-adres naar Meta verstuurd en worden mogelijk cookies geplaatst. Meer hierover in de',
+    privacy: 'privacyverklaring',
+    load: 'Reel laden',
+    direct: 'of bekijk hem direct op Instagram',
+  },
+);
 
 // Zwei-Klick-Lösung: Das Instagram-Embed wird erst nach aktiver Zustimmung geladen,
 // vorher findet keine Verbindung zu Meta statt.
 @Component({
   selector: 'app-instagram-reel',
-  imports: [RouterLink],
+  imports: [RouterLink, LocPipe],
   template: `
     @if (loaded()) {
       <iframe
         class="frame"
         [src]="embedUrl()"
-        title="Instagram-Reel von Blickfeld Nord"
+        [title]="t().frameTitle"
         allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
         allowfullscreen
         loading="lazy"
@@ -24,17 +52,15 @@ import { RouterLink } from '@angular/router';
           <circle cx="12" cy="12" r="4.3" />
           <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
         </svg>
-        <p class="title">Reel von Instagram</p>
+        <p class="title">{{ t().title }}</p>
         <p class="note">
-          Mit Klick auf „Reel laden“ wird das Video von Instagram (Meta Platforms Ireland Ltd.) geladen.
-          Dabei werden Daten wie Ihre IP-Adresse an Meta übertragen und ggf. Cookies gesetzt.
-          Mehr dazu in der <a routerLink="/datenschutz">Datenschutzerklärung</a>.
+          {{ t().note }} <a [routerLink]="'/datenschutz' | loc">{{ t().privacy }}</a>.
         </p>
         <button type="button" class="load" (click)="loaded.set(true)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
-          Reel laden
+          {{ t().load }}
         </button>
-        <a class="direct" [href]="url()" target="_blank" rel="noopener">oder direkt auf Instagram ansehen</a>
+        <a class="direct" [href]="url()" target="_blank" rel="noopener">{{ t().direct }}</a>
       </div>
     }
   `,
@@ -68,6 +94,7 @@ export class InstagramReel {
   /** Reel-Kennung aus der URL, z. B. „DcWl7qDO7gp“ */
   readonly id = input.required<string>();
   protected readonly loaded = signal(false);
+  protected readonly t = inject(I18n).t(TEXT);
   private readonly sanitizer = inject(DomSanitizer);
   protected readonly url = computed(() => `https://www.instagram.com/reel/${encodeURIComponent(this.id())}/`);
   protected readonly embedUrl = computed(() =>

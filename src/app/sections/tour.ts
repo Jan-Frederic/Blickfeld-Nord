@@ -1,45 +1,98 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show, friendId } from '../data/band.service';
 import { downloadIcs } from '../data/calendar';
 import { AboButton } from './abo-button';
+import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
+import { Content } from '../content';
+
+const TEXT = tr(
+  {
+    title: 'Tour und Konzerte',
+    date: 'Datum',
+    city: 'Ort',
+    venue: 'Location',
+    details: 'Details',
+    detailsLabel: 'Details zum Konzert',
+    oclock: ' Uhr',
+    past: 'Vergangene Auftritte',
+    private: 'privat',
+    recap: 'Rückblick',
+    free: 'Eintritt frei',
+    entry: 'Eintritt',
+    toFriends: 'Zu unseren Freunden',
+    icsName: 'Blickfeld Nord – Konzerte',
+  },
+  {
+    title: 'Tour and shows',
+    date: 'Date',
+    city: 'Town',
+    venue: 'Venue',
+    details: 'Details',
+    detailsLabel: 'show details',
+    oclock: '',
+    past: 'Past shows',
+    private: 'private',
+    recap: 'Look back',
+    free: 'Free entry',
+    entry: 'Entry',
+    toFriends: 'To our friends',
+    icsName: 'Blickfeld Nord – Shows',
+  },
+  {
+    title: 'Tour en optredens',
+    date: 'Datum',
+    city: 'Plaats',
+    venue: 'Locatie',
+    details: 'Details',
+    detailsLabel: 'details van het optreden',
+    oclock: '',
+    past: 'Eerdere optredens',
+    private: 'privé',
+    recap: 'Terugblik',
+    free: 'Gratis entree',
+    entry: 'Entree',
+    toFriends: 'Naar onze vrienden',
+    icsName: 'Blickfeld Nord – Optredens',
+  },
+);
 
 @Component({
   selector: 'app-tour',
-  imports: [DatePipe, NgTemplateOutlet, RouterLink, MatTableModule, MatIconModule, AboButton],
+  imports: [LDatePipe, LocPipe, NgTemplateOutlet, RouterLink, MatTableModule, MatIconModule, AboButton],
   template: `
     <section id="tour" class="section">
       <p class="kicker">Live</p>
       <div class="head">
-        <h2>Tour und Konzerte</h2>
+        <h2>{{ t().title }}</h2>
         <app-abo-button path="konzerte.ics" (download)="addAll()" />
       </div>
 
       <div class="table-wrap">
         <table mat-table [dataSource]="shows">
           <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef>Datum</th>
+            <th mat-header-cell *matHeaderCellDef>{{ t().date }}</th>
             <td mat-cell *matCellDef="let s" class="date">
-              <a class="details" [routerLink]="['/konzerte', band.showId(s)]" [attr.aria-label]="(s.date | date: 'd. MMMM yyyy' : '' : 'de') + ', ' + s.venue + ' – Details zum Konzert'">
-              <span class="long">{{ s.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}</span>
-              <span class="short">{{ s.date | date: 'dd.MM.yy' }}@if (s.time) {<span class="time">{{ s.time }} Uhr</span>}@if (s.endDate) {<br />– {{ s.endDate | date: 'dd.MM.yy' }}}</span>
+              <a class="details" [routerLink]="['/konzerte', band.showId(s)] | loc" [attr.aria-label]="(s.date | ldate: 'long') + ', ' + s.venue + ' – ' + t().detailsLabel">
+              <span class="long">{{ s.date | ldate: 'weekday' }}@if (s.time) {<span class="time">{{ s.time }}{{ t().oclock }}</span>}@if (s.endDate) {<br />– {{ s.endDate | ldate: 'weekday' }}}</span>
+              <span class="short">{{ s.date | ldate: 'tiny' }}@if (s.time) {<span class="time">{{ s.time }}{{ t().oclock }}</span>}@if (s.endDate) {<br />– {{ s.endDate | ldate: 'tiny' }}}</span>
               </a>
             </td>
           </ng-container>
           <ng-container matColumnDef="city">
-            <th mat-header-cell *matHeaderCellDef>Ort</th>
+            <th mat-header-cell *matHeaderCellDef>{{ t().city }}</th>
             <td mat-cell *matCellDef="let s"><strong>{{ s.city ?? '–' }}</strong><span class="venue-inline"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /><ng-container *ngTemplateOutlet="entry; context: { $implicit: s }" /></span></td>
           </ng-container>
           <ng-container matColumnDef="venue">
-            <th mat-header-cell *matHeaderCellDef class="venue">Location</th>
+            <th mat-header-cell *matHeaderCellDef class="venue">{{ t().venue }}</th>
             <td mat-cell *matCellDef="let s" class="venue"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" /><ng-container *ngTemplateOutlet="entry; context: { $implicit: s }" /></td>
           </ng-container>
           <ng-container matColumnDef="open">
-            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Details</span></th>
-            <td mat-cell *matCellDef="let s" class="open"><span class="label">Details</span><mat-icon>chevron_right</mat-icon></td>
+            <th mat-header-cell *matHeaderCellDef><span class="sr-only">{{ t().details }}</span></th>
+            <td mat-cell *matCellDef="let s" class="open"><span class="label">{{ t().details }}</span><mat-icon>chevron_right</mat-icon></td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
           <!-- ganze Zeile führt zur Konzertseite; per Tastatur über den Link im Datum -->
@@ -49,18 +102,18 @@ import { AboButton } from './abo-button';
 
       @if (past.length) {
         <details class="past">
-          <summary>Vergangene Auftritte ({{ past.length }})</summary>
+          <summary>{{ t().past }} ({{ past.length }})</summary>
           <ul>
             @for (s of past; track s.date + s.venue) {
               <li>
                 @if (s.private) {
-                  <time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time>
+                  <time [attr.datetime]="s.date">{{ s.date | ldate: 'short' }}</time>
                 } @else {
-                  <a class="details" [routerLink]="['/konzerte', band.showId(s)]"><time [attr.datetime]="s.date">{{ s.date | date: 'dd.MM.yyyy' }}</time></a>
+                  <a class="details" [routerLink]="['/konzerte', band.showId(s)] | loc"><time [attr.datetime]="s.date">{{ s.date | ldate: 'short' }}</time></a>
                 }
-                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}@if (s.private && s.publicName) {<span class="private">privat</span>}</span>
+                <span class="where"><ng-container *ngTemplateOutlet="venue; context: { $implicit: s }" />@if (s.city) {<span class="city">, {{ s.city }}</span>}@if (s.private && s.publicName) {<span class="private">{{ t().private }}</span>}</span>
                 @if (historyDates.has(s.date)) {
-                  <a routerLink="/historie" [fragment]="'e-' + s.date" class="recap">Rückblick <mat-icon>arrow_forward</mat-icon></a>
+                  <a [routerLink]="'/historie' | loc" [fragment]="'e-' + s.date" class="recap">{{ t().recap }} <mat-icon>arrow_forward</mat-icon></a>
                 }
               </li>
             }
@@ -69,10 +122,10 @@ import { AboButton } from './abo-button';
       }
 
       <!-- Eintritt: „frei“ bei price 0, sonst Betrag; ohne Angabe nichts -->
-      <ng-template #entry let-s>@if (s.price === 0) {<span class="entry">Eintritt frei</span>} @else if (s.price) {<span class="entry">Eintritt {{ s.price }} €</span>}</ng-template>
+      <ng-template #entry let-s>@if (s.price === 0) {<span class="entry">{{ t().free }}</span>} @else if (s.price) {<span class="entry">{{ t().entry }} {{ s.price }} €</span>}</ng-template>
 
       <!-- Location: Freunde der Band verlinken auf ihre Karte unter /freunde (die dort kurz aufleuchtet) -->
-      <ng-template #venue let-s>@for (p of venueParts.get(band.publicVenue(s)); track $index) {@if (p.friend) {<a class="friend" routerLink="/freunde" [fragment]="p.id" title="Zu unseren Freunden">{{ p.text }}</a>} @else {{{ p.text }}}}</ng-template>
+      <ng-template #venue let-s>@for (p of venueParts().get(band.publicVenue(s)); track $index) {@if (p.friend) {<a class="friend" [routerLink]="'/freunde' | loc" [fragment]="p.id" [title]="t().toFriends">{{ p.text }}</a>} @else {{{ p.text }}}}</ng-template>
     </section>
   `,
   styles: `
@@ -130,6 +183,9 @@ import { AboButton } from './abo-button';
 })
 export class Tour {
   protected readonly band = inject(BandService);
+  private readonly content = inject(Content);
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t(TEXT);
   // Termine bis einschließlich heute (bei mehrtägigen bis zum letzten Tag) gelten als kommend
   private readonly today = localToday();
   protected readonly shows = this.band.publicShows.filter((s) => (s.endDate ?? s.date) >= this.today);
@@ -139,12 +195,19 @@ export class Tour {
     .filter((s) => s.confirmed && (s.endDate ?? s.date) < this.today)
     .sort((a, b) => b.date.localeCompare(a.date));
   protected readonly historyDates = new Set(this.band.history.map((h) => h.date));
-  // Öffentlicher Location-Name → Textstücke, Freunde mit Anker auf /freunde (private Namen bleiben intern)
-  protected readonly venueParts = new Map(
-    this.band.shows.filter((s) => s.confirmed).map((s) => [
-      this.band.publicVenue(s),
-      this.band.venueParts(this.band.publicVenue(s)).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
-    ]),
+  // Öffentlicher Location-Name → Textstücke (übersetzt, z. B. „Private Feier“), Freunde mit Anker auf /freunde
+  // (private Namen bleiben intern)
+  protected readonly venueParts = computed(
+    () =>
+      new Map(
+        this.band.shows.filter((s) => s.confirmed).map((s) => {
+          const name = this.band.publicVenue(s);
+          return [
+            name,
+            this.band.venueParts(this.content.t(name)).map((p) => ({ text: p.text, friend: !!p.friend, id: p.friend ? friendId(p.friend) : '' })),
+          ];
+        }),
+      ),
   );
   protected readonly columns = ['date', 'city', 'venue', 'open'];
   private readonly router = inject(Router);
@@ -152,11 +215,11 @@ export class Tour {
   // Klick irgendwo in die Zeile öffnet die Konzertseite – Links in der Zeile (Datum, Freunde) behalten ihr Ziel
   protected open(s: Show, event: MouseEvent): void {
     if ((event.target as HTMLElement).closest('a')) return;
-    this.router.navigate(['/konzerte', this.band.showId(s)]);
+    this.router.navigate([this.i18n.link('/konzerte'), this.band.showId(s)]);
   }
 
   protected addAll(): void {
-    downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', 'Blickfeld Nord – Konzerte');
+    downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', this.t().icsName);
   }
 }
 

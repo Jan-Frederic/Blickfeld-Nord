@@ -101,13 +101,25 @@ test('Booking: freier Tag im Kalender → Anfrage-Assistent in 3 Schritten', asy
 
 test('Booking NL: Entfernungs-Check und niederländische Anfrage', async () => {
   const p = await page();
-  await p.go('/booking/nl/');
+  await p.go('/nl/booking/');
   await p.locator('app-entfernung input').fill('Winterswijk');
   await until(async () => (await p.locator('app-entfernung .result').count()) && (await p.locator('app-entfernung .result').innerText()).includes('dat past'), 'Entfernungs-Check meldet Winterswijk nicht als passend');
   await p.locator('app-entfernung input').fill('7091');
   await until(async () => (await p.locator('app-entfernung .result').innerText()).includes('Postcode 7091'), 'Entfernungs-Check erkennt die Postcode 7091 nicht');
   expect((await p.locator('app-anfrage h3').innerText()).toLowerCase().includes('offerte'), 'Anfrage nicht auf Niederländisch');
   expect((await p.locator('app-faq h3').innerText()).toLowerCase().includes('veelgestelde'), 'FAQ nicht auf Niederländisch');
+  return p;
+});
+
+test('Sprachen: Umschalter wechselt auf dieselbe Seite in Englisch, alte Adresse leitet weiter', async () => {
+  const p = await page();
+  await p.go('/repertoire/');
+  await p.locator('nav.languages a[hreflang=en]').click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/en/repertoire', 'Umschalter führt nicht zu /en/repertoire');
+  await until(async () => (await p.locator('html').getAttribute('lang')) === 'en', 'Seite nicht auf Englisch (lang-Attribut)');
+  await until(async () => (await p.locator('footer').innerText()).includes('All rights reserved'), 'Fußzeile nicht auf Englisch');
+  await p.go('/booking/en/');
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/en/booking', 'alte Adresse /booking/en leitet nicht weiter');
   return p;
 });
 
