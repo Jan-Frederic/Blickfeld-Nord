@@ -35,6 +35,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
   Easter Egg: fünfmal schnell auf das Logo oben links klicken. Jede Zeile der Tabelle öffnet die **Unterseite des Auftritts**
   (`/backstage/<datum>`, bei zwei Terminen am selben Tag `<datum>-2`; `src/app/pages/backstage-show.ts`) mit allen Daten,
   Kalendereintrag und Vor/Zurück zum nächsten Termin.
+  Unter der Tabelle erzeugt **Neuen Termin eintragen** (`src/app/pages/termin-formular.ts`) aus Datum, Ort, privat/öffentlich
+  und Eintritt die fertige Zeile für `shows` bzw. `rehearsals` und öffnet `band.service.ts` im GitHub-Editor (Anleitung: `PFLEGE.md`).
   Für kommende öffentliche und geklärte Termine erzeugt dort der Button **Plakat** ein Instagram-Bild (1080 × 1350) im Logo-Design
   (`src/app/data/poster.ts`) – am Handy direkt zum Teilen, am Rechner als Download.
   Daneben kopiert **Text kopieren** einen fertigen Instagram-Post (Datum, Uhrzeit, Ort, Eintritt, Hashtags).
