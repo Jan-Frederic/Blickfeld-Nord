@@ -49,7 +49,8 @@ const TEXT = tr(
 );
 
 // Hinweis auf das Booking in den jeweils anderen Sprachen (Veranstalter aus den Niederlanden, internationale Gäste)
-const BOOKING_IN = { de: 'Booking auf Deutsch', en: 'Booking in English', nl: 'Boeken in het Nederlands' } as const;
+// in der jeweiligen Sprache selbst beschriftet, damit Besucher ihre Sprache auf Anhieb finden
+const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands' } as const;
 
 @Component({
   selector: 'app-next-show',
@@ -161,10 +162,10 @@ export class NextShow {
             <mat-icon>groups</mat-icon> {{ t().band }}
           </button>
         </div>
-        <!-- Booking in den anderen Sprachen – für Veranstalter aus den Niederlanden und internationale Gäste -->
+        <!-- Startseite in den anderen Sprachen – für Gäste und Veranstalter aus den Niederlanden und international -->
         <p class="langs">
           <mat-icon>translate</mat-icon>
-          @for (b of otherBookings(); track b.lang; let last = $last) {
+          @for (b of otherLanguages(); track b.lang; let last = $last) {
             <a [routerLink]="b.link" [attr.lang]="b.lang" [attr.hreflang]="b.lang">{{ b.label }}</a>
             @if (!last) { <span aria-hidden="true">·</span> }
           }
@@ -206,7 +207,7 @@ export class Hero {
   readonly navigate = output<string>();
   private readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t(TEXT);
-  protected readonly otherBookings = computed(() =>
-    LANGS.filter((l) => l !== this.i18n.lang()).map((l) => ({ lang: l, label: BOOKING_IN[l], link: localize('/booking', l) })),
+  protected readonly otherLanguages = computed(() =>
+    LANGS.filter((l) => l !== this.i18n.lang()).map((l) => ({ lang: l, label: LANG_LINK[l], link: localize('/', l) })),
   );
 }
