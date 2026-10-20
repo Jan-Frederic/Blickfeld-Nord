@@ -73,3 +73,13 @@
     <p class="version"><a [href]="releaseUrl" target="_blank" rel="noopener" title="Was ist neu?">Version {{ version }}</a></p>
   }
 </footer>
+
+<!-- neue Version während der Nutzung angekommen -->
+@if (updateReady()) {
+  <div class="update" role="status">
+    <mat-icon>system_update</mat-icon>
+    <span>Neue Version verfügbar</span>
+    <button type="button" (click)="reload()">Neu laden</button>
+    <button type="button" class="close" (click)="updateReady.set(false)" aria-label="Hinweis schließen"><mat-icon>close</mat-icon></button>
+  </div>
+}

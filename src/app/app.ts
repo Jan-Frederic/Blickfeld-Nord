@@ -8,7 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
-import { enableOffline, install, installable, iosHint, setupPwa } from './pwa';
+import { enableOffline, install, installable, iosHint, setupPwa, updateReady } from './pwa';
 
 @Component({
   selector: 'app-root',
@@ -33,6 +33,10 @@ export class App {
   protected readonly installable = installable;
   protected readonly iosHint = iosHint;
   protected readonly install = install;
+  protected readonly updateReady = updateReady;
+  protected reload(): void {
+    location.reload();
+  }
 
   constructor() {
     trackPageViews();

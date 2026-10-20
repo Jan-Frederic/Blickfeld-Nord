@@ -39,6 +39,18 @@ footer {
 }
 .install:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 .install mat-icon, .install-hint mat-icon { font-size: 18px; width: 18px; height: 18px; vertical-align: -4px; }
+.update {
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 1000;
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 999px; max-width: calc(100vw - 32px);
+  background: #1f2328; border: 1px solid var(--bn-sunset); color: var(--bn-ink); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); font-size: .9rem;
+}
+.update > mat-icon { color: var(--bn-sunset); flex: none; }
+.update button {
+  padding: 6px 14px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+  background: var(--bn-sunset); color: #2a1708; white-space: nowrap;
+}
+.update button.close { display: grid; place-items: center; padding: 4px; background: transparent; color: var(--bn-fog); }
+.update button.close mat-icon { font-size: 18px; width: 18px; height: 18px; }
 .install-hint { margin: 4px 0 14px; font-size: .85rem; color: var(--bn-fog); text-transform: none; letter-spacing: normal; }
 .version a { color: var(--bn-fog); text-decoration: none; }
 .version a:hover { color: var(--bn-sunset); }
