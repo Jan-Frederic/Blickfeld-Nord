@@ -2,6 +2,7 @@ import { Component, computed, effect, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { SetlistVorlagen } from './setlist-vorlagen';
+import { SetlistBuehne } from './setlist-buehne';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
@@ -13,7 +14,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-setlist',
-  imports: [MatIconModule, SetlistVorlagen],
+  imports: [MatIconModule, SetlistVorlagen, SetlistBuehne],
   template: `
     <section class="setlist" aria-labelledby="setlist-title">
       <div class="head">
@@ -26,8 +27,9 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           @if (total().seconds) { · <strong>{{ time(total().seconds) }}</strong>@if (total().missing) { <span title="Songs ohne Längenangabe von Spotify"> + {{ total().missing }} ohne Länge</span>} }
         </span>
         <div class="tools">
+          <button type="button" class="primary" (click)="stage.set(true)" [disabled]="!songCount()"><mat-icon>fit_screen</mat-icon> Bühnen-Modus</button>
           <button type="button" (click)="addPause()" [disabled]="!entries().length"><mat-icon>coffee</mat-icon> Pause einfügen</button>
-          <button type="button" class="primary" (click)="print()" [disabled]="!songCount()"><mat-icon>print</mat-icon> Drucken / PDF</button>
+          <button type="button" (click)="print()" [disabled]="!songCount()"><mat-icon>print</mat-icon> Drucken / PDF</button>
           <button type="button" (click)="share()" [disabled]="!songCount()"><mat-icon>{{ copied() ? 'check' : 'send' }}</mat-icon> {{ copied() ? 'Kopiert!' : 'An die Band' }}</button>
           <button type="button" (click)="clear()" [disabled]="!entries().length"><mat-icon>delete_sweep</mat-icon> Leeren</button>
         </div>
@@ -78,6 +80,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
         </ol>
       </div>
       <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
+      @if (stage()) { <app-setlist-buehne [entries]="entries()" (closed)="stage.set(false)" /> }
       <p class="hint">Die Setlist wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>
     </section>
   `,
@@ -139,6 +142,7 @@ export class Setlist {
   readonly title = input('');
 
   protected readonly query = signal('');
+  protected readonly stage = signal(false);
   protected readonly entries = signal<Entry[]>([]);
   private readonly key = computed(() => SETLIST_PREFIX + this.show());
 
