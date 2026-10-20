@@ -101,3 +101,6 @@ body::after {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
+// Scrollbare Tabellen: Bezugsrahmen für .sr-only-Texte darin – sonst rutschen sie aus dem Scrollbereich
+// und machen die ganze Seite breiter (seitliches Wegscrollen auf dem Handy)
+.table-wrap { position: relative; }

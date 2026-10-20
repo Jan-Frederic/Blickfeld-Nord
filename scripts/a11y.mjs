@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Barrierefreiheits-Check (WCAG 2.1 A/AA) mit axe-core für alle Seiten der Sitemap, eine Konzertseite und den
 // Backstage-Bereich. Schwere Verstöße (serious/critical) lassen den Build scheitern, leichtere werden nur gemeldet.
+// Außerdem: Keine Seite darf auf einem schmalen Handy (360 px) breiter als der Bildschirm sein (seitliches Wegscrollen).
 // Aufruf nach Build, seo.mjs und SPA-Fallback:  node scripts/a11y.mjs
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -60,8 +61,21 @@ for (const path of pages) {
     console.log(`${bad ? '::error::' : '::warning::'}${path}: [${v.impact}] ${v.id} – ${v.help} (${v.nodes.length}×: ${where})`);
   }
 }
+// Handy-Breite: Seite darf nicht seitlich scrollen
+const phone = await browser.newPage({ viewport: { width: 360, height: 780 } });
+await phone.context().route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+for (const path of pages) {
+  await phone.goto(BASE + path, { waitUntil: 'networkidle' });
+  await phone.waitForTimeout(300);
+  const width = await phone.evaluate(() => document.documentElement.scrollWidth);
+  if (width > 360) {
+    serious++;
+    console.log(`::error::${path}: Seite ist auf dem Handy ${width} px breit statt 360 px (seitliches Scrollen)`);
+  }
+}
+
 await browser.close();
 server.close();
 
-console.log(`Barrierefreiheit: ${pages.length} Seiten geprüft, ${serious} schwere und ${minor} leichte Verstöße.`);
+console.log(`Barrierefreiheit und Handy-Breite: ${pages.length} Seiten geprüft, ${serious} schwere und ${minor} leichte Verstöße.`);
 process.exit(serious ? 1 : 0);
