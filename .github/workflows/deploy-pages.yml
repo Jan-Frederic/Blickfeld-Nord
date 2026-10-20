@@ -105,6 +105,9 @@ jobs:
       - name: Service Worker für den Offline-Backstage
         run: node scripts/build-sw.mjs
 
+      - name: Klicktests (wichtige Abläufe wie ein Besucher durchklicken) – ein Fehler stoppt den Deploy
+        run: node scripts/e2e.mjs
+
       - name: Linkcheck (interne Links und Bilder; externe Links nur als Warnung)
         run: node scripts/check-links.mjs --extern
 
