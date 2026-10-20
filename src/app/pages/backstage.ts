@@ -156,8 +156,8 @@ function loadFilters(): Set<FilterKey> {
     .exchange { margin-top: 40px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
     .exchange h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .exchange p { margin: 0 0 14px; max-width: 720px; font-size: .9rem; line-height: 1.6; color: var(--bn-fog); }
-    .exchange .offline { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; color: #7fc29b; }
-    .offline mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .exchange .offline { display: flex; align-items: flex-start; gap: 6px; margin: 14px 0 0; color: #5fb88a; line-height: 1.4; }
+    .offline mat-icon { font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
     .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .filters button {
       display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
