@@ -1,10 +1,18 @@
 import { Show } from './band.service';
 
-// Gig-Plakat im Logo-Design, direkt im Browser gezeichnet (Canvas) – Format 1080 × 1350 (Instagram-Hochformat).
+// Gig-Plakat im Logo-Design, direkt im Browser gezeichnet (Canvas) – zwei Formate:
+//  - feed:  1080 × 1350 (Instagram-Beitrag, Hochformat 4:5)
+//  - story: 1080 × 1920 (Instagram-/WhatsApp-Status, 9:16) – oben und unten Platz für die Bedienelemente der App
 // Auf dem Handy öffnet sich das Teilen-Menü (z. B. direkt Instagram), am Rechner wird das Bild heruntergeladen.
 
+export type PosterFormat = 'feed' | 'story';
+
 const W = 1080;
-const H = 1350;
+const FORMAT = {
+  feed: { h: 1350, heroY: 60, gap: 1, footer: 70 },
+  // Instagram blendet oben ca. 250 px und unten ca. 250 px Bedienelemente ein – dort steht nichts Wichtiges
+  story: { h: 1920, heroY: 250, gap: 1.25, footer: 270 },
+};
 const NIGHT = '#141619';
 const INK = '#ece9e4';
 const FOG = '#8d939b';
@@ -12,13 +20,13 @@ const SUNSET = '#e8a46a';
 
 const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
-export function posterFileName(s: Show): string {
+export function posterFileName(s: Show, format: PosterFormat = 'feed'): string {
   const slug = s.venue
     .toLowerCase()
     .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
-  return `blickfeld-nord-plakat-${s.date}-${slug}.png`;
+  return `blickfeld-nord-${format === 'story' ? 'story' : 'plakat'}-${s.date}-${slug}.png`;
 }
 
 function formatDate(date: string): { weekday: string; day: string } {
@@ -59,7 +67,8 @@ function fit(ctx: CanvasRenderingContext2D, text: string, font: (px: number) => 
   }
 }
 
-export async function renderPoster(s: Show): Promise<Blob> {
+export async function renderPoster(s: Show, format: PosterFormat = 'feed'): Promise<Blob> {
+  const { h: H, heroY, gap, footer } = FORMAT[format];
   // Schriften der Website sicher geladen, bevor gezeichnet wird
   await Promise.all([
     document.fonts.load('400 64px Michroma'),
@@ -81,7 +90,6 @@ export async function renderPoster(s: Show): Promise<Blob> {
   // Logo-Motiv oben in voller Breite
   const heroW = W;
   const heroH = (heroW * hero.height) / hero.width;
-  const heroY = 60;
   ctx.drawImage(hero, (W - heroW) / 2, heroY, heroW, heroH);
   // weicher Übergang in den dunklen Infobereich
   const fade = ctx.createLinearGradient(0, heroY + heroH * 0.62, 0, heroY + heroH);
@@ -89,11 +97,14 @@ export async function renderPoster(s: Show): Promise<Blob> {
   fade.addColorStop(1, NIGHT);
   ctx.fillStyle = fade;
   ctx.fillRect(0, heroY + heroH * 0.62, W, heroH * 0.38 + 2);
-  const top = ctx.createLinearGradient(0, 0, 0, heroY + 80);
+  // oberer Bildrand weich ausblenden (im Story-Format steht das Bild tiefer)
+  const fadeTop = format === 'story' ? heroY : 0;
+  const fadeEnd = heroY + (format === 'story' ? 160 : 80);
+  const top = ctx.createLinearGradient(0, fadeTop, 0, fadeEnd);
   top.addColorStop(0, NIGHT);
   top.addColorStop(1, 'rgba(20, 22, 25, 0)');
   ctx.fillStyle = top;
-  ctx.fillRect(0, 0, W, heroY + 80);
+  ctx.fillRect(0, fadeTop, W, fadeEnd - fadeTop);
 
   // Sonnenuntergangs-Schimmer am unteren Rand
   const glow = ctx.createRadialGradient(W / 2, H + 120, 40, W / 2, H + 120, 760);
@@ -123,24 +134,24 @@ export async function renderPoster(s: Show): Promise<Blob> {
   // Datum
   const { weekday, day } = formatDate(s.date);
   const end = s.endDate ? formatDate(s.endDate) : null;
-  y += 74;
+  y += 74 * gap;
   ctx.fillStyle = FOG;
   ctx.font = '300 34px Montserrat';
   spaced(ctx, (end ? `${weekday} bis ${end.weekday}` : weekday).toUpperCase(), cx, y, 10);
-  y += 104;
+  y += 104 * gap;
   ctx.fillStyle = INK;
   const dateText = end ? `${day.slice(0, 6)} – ${end.day}` : day;
   fit(ctx, dateText, (px) => `400 ${px}px Michroma`, 92, W - 120);
   ctx.fillText(dateText, cx, y);
   if (s.time) {
-    y += 70;
+    y += 70 * gap;
     ctx.fillStyle = SUNSET;
     ctx.font = '400 44px Montserrat';
     spaced(ctx, `${s.time} UHR`, cx, y, 8);
   }
 
   // Location und Ort
-  y += 110;
+  y += 110 * gap;
   ctx.fillStyle = INK;
   fit(ctx, s.venue, (px) => `600 ${px}px Inter`, 60, W - 120);
   ctx.fillText(s.venue, cx, y);
@@ -151,20 +162,35 @@ export async function renderPoster(s: Show): Promise<Blob> {
     ctx.fillText(s.city, cx, y);
   }
 
+  // Story: genug Platz für „Eintritt frei“ als Hinweis
+  if (format === 'story' && s.price === 0) {
+    y += 120;
+    ctx.font = '400 30px Montserrat';
+    const label = 'EINTRITT FREI';
+    const w = [...label].reduce((a, ch) => a + ctx.measureText(ch).width, 0) + 8 * (label.length - 1) + 64;
+    ctx.strokeStyle = '#7fc29b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(cx - w / 2, y - 44, w, 64, 32);
+    ctx.stroke();
+    ctx.fillStyle = '#7fc29b';
+    spaced(ctx, label, cx, y, 8);
+  }
+
   // Fußzeile
   ctx.fillStyle = INK;
   ctx.font = '400 28px Montserrat';
-  spaced(ctx, 'BLICKFELD-NORD.DE', cx, H - 70, 8);
+  spaced(ctx, 'BLICKFELD-NORD.DE', cx, H - footer, 8);
   ctx.fillStyle = FOG;
   ctx.font = '400 26px Inter';
-  ctx.fillText('Instagram @blickfeldnord', cx, H - 30);
+  ctx.fillText('Instagram @blickfeldnord', cx, H - footer + 40);
 
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Plakat konnte nicht erzeugt werden'))), 'image/png'));
 }
 
-export async function sharePoster(s: Show): Promise<void> {
-  const blob = await renderPoster(s);
-  const name = posterFileName(s);
+export async function sharePoster(s: Show, format: PosterFormat = 'feed'): Promise<void> {
+  const blob = await renderPoster(s, format);
+  const name = posterFileName(s, format);
   const file = new File([blob], name, { type: 'image/png' });
   // Handy: Teilen-Menü (Instagram, WhatsApp, Fotos …); Rechner: Download
   if (navigator.canShare?.({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {

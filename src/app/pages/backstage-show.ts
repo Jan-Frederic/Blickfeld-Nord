@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
-import { postText, sharePoster } from '../data/poster';
+import { PosterFormat, postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
 import { FIELDS } from './vorort';
@@ -75,6 +75,7 @@ const DAY = 24 * 60 * 60 * 1000;
           <button mat-stroked-button (click)="laufzettel()"><mat-icon>assignment</mat-icon> Laufzettel</button>
           @if (posterAllowed()) {
             <button mat-stroked-button (click)="poster()"><mat-icon>image</mat-icon> Plakat</button>
+            <button mat-stroked-button (click)="poster('story')"><mat-icon>smartphone</mat-icon> Story</button>
             <button mat-stroked-button (click)="copyText()">
               <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
               {{ copied() ? 'Kopiert!' : 'Text kopieren' }}
@@ -232,8 +233,9 @@ export class BackstageShow implements OnDestroy {
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
   }
 
-  protected poster(): void {
-    sharePoster(this.show()!).catch((err) => console.error(err));
+  // Plakat als Instagram-Beitrag (4:5) oder als Story / WhatsApp-Status (9:16)
+  protected poster(format: PosterFormat = 'feed'): void {
+    sharePoster(this.show()!, format).catch((err) => console.error(err));
   }
 
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage
