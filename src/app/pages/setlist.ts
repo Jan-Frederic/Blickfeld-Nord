@@ -1,6 +1,7 @@
 import { Component, computed, effect, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { SetlistVorlagen } from './setlist-vorlagen';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
@@ -12,7 +13,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-setlist',
-  imports: [MatIconModule],
+  imports: [MatIconModule, SetlistVorlagen],
   template: `
     <section class="setlist" aria-labelledby="setlist-title">
       <div class="head">
@@ -76,6 +77,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           }
         </ol>
       </div>
+      <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
       <p class="hint">Die Setlist wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>
     </section>
   `,
@@ -198,6 +200,10 @@ export class Setlist {
 
   protected remove(i: number): void {
     this.update((l) => l.filter((_, j) => j !== i));
+  }
+
+  protected replace(entries: Entry[]): void {
+    this.update(() => entries);
   }
 
   protected clear(): void {
