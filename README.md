@@ -4,6 +4,8 @@ Offizielle Website der Band **Blickfeld Nord**, gebaut mit Angular & Angular Mat
 
 **Live:** https://blickfeld-nord.de
 
+Architektur mit Diagrammen: [ARCHITECTURE.md](ARCHITECTURE.md) · Inhalte pflegen: [PFLEGE.md](PFLEGE.md)
+
 ## Inhalte
 
 - **Hero** mit Logo-Motiv und dem nächsten Konzerttermin
