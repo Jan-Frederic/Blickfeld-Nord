@@ -35,7 +35,7 @@ import { shareShow } from '../data/share';
           </div>
           <div>
             <dt><mat-icon>schedule</mat-icon> Beginn</dt>
-            <dd>{{ s.time ? s.time + ' Uhr' : 'wird noch bekannt gegeben' }}</dd>
+            <dd>{{ s.time ? s.time + ' Uhr' : past() ? '–' : 'wird noch bekannt gegeben' }}</dd>
           </div>
           <div>
             <dt><mat-icon>place</mat-icon> Ort</dt>
@@ -43,7 +43,7 @@ import { shareShow } from '../data/share';
           </div>
           <div>
             <dt><mat-icon>local_activity</mat-icon> Eintritt</dt>
-            <dd>{{ s.price === 0 ? 'frei' : s.price ? s.price + ' €' : 'Infos folgen' }}</dd>
+            <dd>{{ s.price === 0 ? 'frei' : s.price ? s.price + ' €' : past() ? '–' : 'Infos folgen' }}</dd>
           </div>
         </dl>
 
@@ -55,12 +55,30 @@ import { shareShow } from '../data/share';
           @if (s.mapsUrl) {
             <a class="btn" [href]="s.mapsUrl" target="_blank" rel="noopener"><mat-icon>place</mat-icon> Anfahrt</a>
           }
-          @if (recap()) {
-            <a class="btn" routerLink="/historie" [fragment]="'e-' + s.date"><mat-icon>history_edu</mat-icon> Rückblick lesen</a>
-          }
         </div>
         @if (!past()) {
           <p class="hint">„Erinnere mich“ lädt einen Kalendereintrag mit Erinnerung am Vortag herunter.</p>
+        }
+
+        <!-- vergangene Konzerte: Rückblick aus der Historie mit Fotos -->
+        @if (recap(); as h) {
+          <section class="recap" aria-labelledby="recap-title">
+            <p class="kicker">Rückblick</p>
+            <h3 id="recap-title">{{ h.title }}</h3>
+            @for (img of h.images ?? []; track img.src) {
+              <figure>
+                <img [src]="img.src" [alt]="img.alt" loading="lazy" decoding="async" />
+                @if (img.credit) { <figcaption>Foto: {{ img.credit }}</figcaption> }
+              </figure>
+            }
+            <p>{{ h.text[0] }}</p>
+            <div class="recap-links">
+              <a class="btn" routerLink="/historie" [fragment]="'e-' + s.date"><mat-icon>history_edu</mat-icon> Ganzen Rückblick lesen</a>
+              @if (h.reel) {
+                <a class="btn" [href]="'https://www.instagram.com/reel/' + h.reel + '/'" target="_blank" rel="noopener"><mat-icon>play_circle</mat-icon> Video auf Instagram</a>
+              }
+            </div>
+          </section>
         }
 
         <div class="more">
@@ -100,6 +118,13 @@ import { shareShow } from '../data/share';
     .btn.primary:hover { background: #f0b884; color: #2a1708; }
     .btn mat-icon { width: 20px; height: 20px; font-size: 20px; }
     .hint { margin: 12px 0 0; font-size: .82rem; color: var(--bn-fog); }
+    .recap { margin-top: 40px; padding: 24px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
+    .recap h3 { margin: 0 0 16px; font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .06em; line-height: 1.4; }
+    .recap figure { margin: 0 0 16px; }
+    .recap img { display: block; width: 100%; max-height: 520px; object-fit: cover; border-radius: 10px; }
+    .recap figcaption { margin-top: 6px; font-size: .78rem; color: var(--bn-fog); }
+    .recap p:not(.kicker) { margin: 0 0 16px; max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); }
+    .recap-links { display: flex; flex-wrap: wrap; gap: 10px; }
     .more { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--bn-line); }
     .more p { margin: 0 0 12px; color: rgba(236, 233, 228, .86); }
   `,
@@ -113,7 +138,7 @@ export class KonzertPage {
   protected readonly show = computed(() => this.band.publicShows.find((s) => this.band.showId(s) === this.id()));
   private readonly today = new Date().toISOString().slice(0, 10);
   protected readonly past = computed(() => (this.show()!.endDate ?? this.show()!.date) < this.today);
-  protected readonly recap = computed(() => this.band.history.some((h) => h.date === this.show()?.date));
+  protected readonly recap = computed(() => this.band.history.find((h) => h.date === this.show()?.date && !h.example));
 
   constructor() {
     const pageMeta = inject(PageMetaService);

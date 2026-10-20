@@ -30,7 +30,7 @@ await build({
   tsconfig: join(ROOT, 'tsconfig.json'),
   logLevel: 'warning',
 });
-const { members, publicShows, allShows, rehearsals, FAQ, buildIcs, showId } = await import(pathToFileURL(bundle).href);
+const { members, publicShows, allShows, rehearsals, history, FAQ, buildIcs, showId } = await import(pathToFileURL(bundle).href);
 rmSync(tmp, { recursive: true, force: true });
 
 // Ortszeit Europe/Berlin → ISO 8601 mit korrektem Offset (Winter +01:00, Sommer +02:00)
@@ -119,7 +119,11 @@ const musicEvent = (s) => ({
         addressCountry: 'DE',
       },
     },
-    image: images,
+    // vergangene Konzerte mit Rückblick: echte Fotos vom Abend, sonst die Vorschaubilder
+    image: (() => {
+      const photos = history.find((h) => h.date === s.date)?.images?.map((i) => `${SITE}/${i.src}`);
+      return photos?.length ? photos : images;
+    })(),
     performer: { '@id': BAND_ID },
     // Veranstalter: falls nicht eingetragen, die Band als Ansprechpartner
     organizer: s.organizer ? { '@type': 'Organization', name: s.organizer } : { '@id': BAND_ID },
