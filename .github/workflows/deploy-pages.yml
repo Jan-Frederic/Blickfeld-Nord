@@ -72,10 +72,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Icon font subset
+      - name: Schriften verkleinern (Icons und Textschriften)
         run: |
           pip install --quiet fonttools brotli
           python scripts/subset-icons.py
+          python scripts/subset-fonts.py
 
       - name: Version (letzter Release-Tag) für den Footer
         run: node scripts/write-version.mjs

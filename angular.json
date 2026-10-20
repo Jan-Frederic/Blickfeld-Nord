@@ -30,12 +30,7 @@
               }
             ],
             "styles": [
-              "@fontsource/inter/latin-400.css",
-              "@fontsource/inter/latin-500.css",
-              "@fontsource/inter/latin-600.css",
-              "@fontsource/michroma/latin-400.css",
-              "@fontsource/montserrat/latin-300.css",
-              "@fontsource/montserrat/latin-400.css",
+              "src/fonts.css",
               "src/icons.css",
               "src/styles.scss"
             ],

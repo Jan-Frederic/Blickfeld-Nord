@@ -12,9 +12,11 @@ const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
 
 const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.js');
 const fonts = readdirSync(join(DIST, 'fonts')).map((f) => `fonts/${f}`);
+// Textschriften (von Angular mit Hash nach media/ kopiert)
+const media = readdirSync(join(DIST, 'media')).filter((f) => f.endsWith('.woff2')).map((f) => `media/${f}`);
 const assets = ['/site.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png', '/hero-800.webp', '/kompass-440.webp'];
 // Seiten selbst landen erst beim Aufruf im Speicher (spart Datenvolumen beim ersten Besuch)
-const files = ['/', '/backstage/index.html', ...top.map((f) => `/${f}`), ...fonts.map((f) => `/${f}`), ...assets];
+const files = ['/', '/backstage/index.html', ...top.map((f) => `/${f}`), ...fonts.map((f) => `/${f}`), ...media.map((f) => `/${f}`), ...assets];
 
 const hash = createHash('sha256');
 for (const f of files) hash.update(readFileSync(join(DIST, f.endsWith('/') ? f + 'index.html' : f)));
