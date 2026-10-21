@@ -24,8 +24,8 @@
 }
 .languages a:hover { color: var(--bn-ink); }
 .languages a.current { color: var(--bn-sunset); }
-// Die volle Navigation braucht je nach Sprache bis zu ~1140 px – darunter übernimmt das Menü
-@media (max-width: 1180px) {
+// Die volle Navigation braucht je nach Sprache bis zu ~1355 px (Niederländisch) – darunter übernimmt das Menü
+@media (max-width: 1365px) {
   .desktop-nav { display: none; }
   .mobile-nav { display: inline-flex; }
 }

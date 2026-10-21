@@ -1,7 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { PageLinks } from '../sections/page-links';
 import { TechnikAufbau } from '../sections/technik-aufbau';
 import { I18n, LocPipe, tr } from '../i18n';
 
@@ -93,14 +92,12 @@ const TEXT = tr(
 // Angaben bitte gleich halten mit dem Technik-Rider (scripts/build-rider.py) und den FAQ (src/app/data/faq.ts, alle drei Sprachen).
 @Component({
   selector: 'app-technik',
-  imports: [RouterLink, MatIconModule, PageLinks, TechnikAufbau, LocPipe],
+  imports: [RouterLink, MatIconModule, TechnikAufbau, LocPipe],
   template: `
     <section class="section">
       <p class="kicker">{{ t().kicker }}</p>
       <h2>{{ t().title }}</h2>
       <p class="lead">{{ t().lead }}</p>
-
-      <app-page-links current="technik" />
 
       <div class="downloads">
         <a class="btn primary" [href]="'presse/blickfeld-nord-technik-rider' + sfx() + '.pdf'" download>

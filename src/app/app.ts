@@ -14,7 +14,7 @@ import { SprachHinweis } from './sections/sprach-hinweis';
 
 const TEXT = tr(
   {
-    nav: { band: 'Band', tour: 'Konzerte', booking: 'Booking', repertoire: 'Repertoire', gallery: 'Galerie', history: 'Historie', friends: 'Freunde' },
+    nav: { band: 'Band', tour: 'Konzerte', booking: 'Booking', press: 'Pressekit', tech: 'Technik', repertoire: 'Repertoire', gallery: 'Galerie', history: 'Historie', friends: 'Freunde' },
     footer: { press: 'Presse', tech: 'Technik', imprint: 'Impressum', privacy: 'Datenschutz' },
     toTop: 'Zum Seitenanfang',
     openMenu: 'Menü öffnen',
@@ -33,7 +33,7 @@ const TEXT = tr(
     closeHint: 'Hinweis schließen',
   },
   {
-    nav: { band: 'Band', tour: 'Shows', booking: 'Booking', repertoire: 'Repertoire', gallery: 'Gallery', history: 'History', friends: 'Friends' },
+    nav: { band: 'Band', tour: 'Shows', booking: 'Booking', press: 'Press kit', tech: 'Tech info', repertoire: 'Repertoire', gallery: 'Gallery', history: 'History', friends: 'Friends' },
     footer: { press: 'Press', tech: 'Technical info', imprint: 'Legal notice', privacy: 'Privacy' },
     toTop: 'Back to top',
     openMenu: 'Open menu',
@@ -52,7 +52,7 @@ const TEXT = tr(
     closeHint: 'Close notice',
   },
   {
-    nav: { band: 'Band', tour: 'Optredens', booking: 'Boeken', repertoire: 'Repertoire', gallery: 'Galerij', history: 'Geschiedenis', friends: 'Vrienden' },
+    nav: { band: 'Band', tour: 'Optredens', booking: 'Boeken', press: 'Perskit', tech: 'Techniek', repertoire: 'Repertoire', gallery: 'Galerij', history: 'Geschiedenis', friends: 'Vrienden' },
     footer: { press: 'Pers', tech: 'Techniek', imprint: 'Colofon', privacy: 'Privacy' },
     toTop: 'Naar boven',
     openMenu: 'Menu openen',
@@ -87,6 +87,8 @@ export class App {
       { id: 'band', label: n.band },
       { id: 'tour', label: n.tour },
       { link: '/booking', label: n.booking },
+      { link: '/presse', label: n.press },
+      { link: '/technik', label: n.tech },
       { link: '/repertoire', label: n.repertoire },
       { link: '/galerie', label: n.gallery },
     ];

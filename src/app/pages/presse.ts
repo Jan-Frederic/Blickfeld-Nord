@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { PageLinks } from '../sections/page-links';
 import { I18n, tr } from '../i18n';
 
 // Dateien werden von scripts/build-pressekit.py nach public/presse/ erzeugt
@@ -120,14 +119,12 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-presse',
-  imports: [MatIconModule, PageLinks],
+  imports: [MatIconModule],
   template: `
     <section class="section presse">
       <p class="kicker">{{ t().kicker }}</p>
       <h2>Pressekit</h2>
       <p class="lead">{{ t().lead }}</p>
-
-      <app-page-links current="presse" />
 
       <div class="main-downloads">
         <a class="btn primary" [href]="'presse/blickfeld-nord-pressekit' + sfx() + '.pdf'" download>

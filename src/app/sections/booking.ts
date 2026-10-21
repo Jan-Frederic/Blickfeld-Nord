@@ -2,7 +2,6 @@ import { Component, computed, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Availability } from './availability';
-import { PageLinks } from './page-links';
 import { Anfrage } from './anfrage';
 import { Faq } from './faq';
 import { Angebot } from './angebot';
@@ -118,13 +117,12 @@ Met vriendelijke groet
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, LocPipe, MatIconModule, Availability, PageLinks, Anfrage, Faq, Angebot, Entfernung],
+  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Faq, Angebot, Entfernung],
   template: `
     <section class="section">
       <p class="kicker">{{ t().kicker }}</p>
       <h2>Booking</h2>
       <p class="lead">{{ t().lead }}</p>
-      <app-page-links current="booking" />
 
       <ul class="facts">
         @for (f of t().facts; track f.icon) {
