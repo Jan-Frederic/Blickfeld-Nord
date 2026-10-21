@@ -6,6 +6,7 @@ Benötigt: pillow, reportlab, fonttools
 Angaben je Sprache stehen in scripts/pdf_texte.py (RIDER) – bei Änderungen auch die FAQ in src/app/data/faq.ts (DE/EN/NL) und die Technik-Seite src/app/pages/technik.ts anpassen.
 Seite 2 (Bühnenplan, Kanalliste, Monitore, Strom) kommt aus src/app/data/technik.json – derselben Datei wie auf /technik.
 """
+import math
 import importlib.util
 import json
 import os
@@ -85,7 +86,8 @@ def stage_plot(c, x0, top, width, lang):
             c.setDash(*((3, 2) if t == 'drums' else ()))
             c.rect(x - w / 2, y - h / 2, w, h, stroke=1, fill=0)
             c.setDash()
-            label(tx(it['label'], lang), x, y + h / 2 - 9 if t == 'drums' else y - 2)
+            # Schlagzeug: Beschriftung vorne (Richtung Publikum), hinten sitzt Matthias
+            label(tx(it['label'], lang), x, y - h / 2 + 4 if t == 'drums' else y - 2)
         elif t == 'person':
             c.setFillColor(pk.SUNSET)
             c.circle(x, y, 4.2 * mm, stroke=0, fill=1)
@@ -105,8 +107,21 @@ def stage_plot(c, x0, top, width, lang):
             c.drawPath(p, stroke=1, fill=0)
             label(tx(it['label'], lang), x, y - (8.5 if it.get('drehung') else 6) * mm)
         elif t == 'pa':
-            c.rect(x - 4 * mm, y - 8 * mm, 8 * mm, 16 * mm, stroke=1, fill=0)
-            label('PA', x, y + 9.5 * mm)
+            # Top auf dem Subwoofer
+            c.rect(x - 3.5 * mm, y + 1 * mm, 7 * mm, 11 * mm, stroke=1, fill=0)
+            c.rect(x - 4.5 * mm, y - 8.5 * mm, 9 * mm, 9 * mm, stroke=1, fill=0)
+            c.circle(x, y - 4 * mm, 3 * mm, stroke=1, fill=0)
+            label('PA', x, y + 13.5 * mm)
+            label('Sub', x, y - 11.5 * mm, 6)
+        elif t == 'mikro':
+            # Mikrofonständer: Dreibein, beim Galgen mit Arm zum Musiker
+            for a in (90, 210, 330):
+                c.line(x, y, x + 2 * mm * math.cos(math.radians(a)), y + 2 * mm * math.sin(math.radians(a)))
+            mx, my = (px(it['arm'][0]), py(it['arm'][1])) if it.get('arm') else (x, y)
+            if it.get('arm'):
+                c.line(x, y, mx, my)
+            c.setFillColor(pk.TEXT_DARK)
+            c.circle(mx, my, 1 * mm, stroke=0, fill=1)
         elif t == 'licht':
             c.circle(x, y, 2.6 * mm, stroke=1, fill=0)
             c.circle(x, y, 1 * mm, stroke=0, fill=1)
