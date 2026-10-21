@@ -1,6 +1,6 @@
 {
   "status": "Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.",
-  "stand": "2026-10-19",
+  "stand": "2026-10-21",
   "buehne": { "breite": 4, "tiefe": 3 },
   "aufbau": [
     { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2, "hw": "schlagzeug" },
@@ -25,8 +25,8 @@
     { "kanal": 3, "quelle": "Overhead", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": true },
     { "kanal": 4, "quelle": "E-Bass", "art": "DI", "geraet": null, "stativ": null, "phantom": false },
     { "kanal": 5, "quelle": "Akustikgitarre", "art": "DI", "geraet": null, "stativ": null, "phantom": false },
-    { "kanal": 6, "quelle": "Gesang David", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": false },
-    { "kanal": 7, "quelle": "Gesang Fred", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": false },
+    { "kanal": 6, "quelle": "Gesang David", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false },
+    { "kanal": 7, "quelle": "Gesang Fred", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false },
     { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false }
   ],
   "monitore": [

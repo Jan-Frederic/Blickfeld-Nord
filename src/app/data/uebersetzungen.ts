@@ -591,6 +591,12 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     nl: 'Zang Matthias',
   },
   {
+    de: 'Shure SM58',
+    en: 'Shure SM58',
+    nl: 'Shure SM58',
+    geprueft: { en: true, nl: true },
+  },
+  {
     de: 'Digitalmischpult',
     en: 'Digital mixing desk',
     nl: 'Digitaal mengpaneel',
