@@ -438,7 +438,7 @@ flowchart TD
     F1 --> F2["Fotos vorbereiten<br/>bilder.py: Vorschaubilder, max. 2000 px,<br/>Metadaten weg, GPS-Prüfung"]
     F2 --> V["write-version.mjs"]
     V --> NG["ng build (Prerendering)"]
-    NG --> SEO["seo.mjs: JSON-LD, Sitemap,<br/>robots.txt, ICS-Kalender"]
+    NG --> SEO["seo.mjs: JSON-LD, Sitemap,<br/>robots.txt, ICS-Kalender,<br/>modulepreload entfernen"]
     SEO --> SPA["SPA fallback: 404.html,<br/>backstage/index.html"]
     SPA --> A11Y["a11y.mjs: axe WCAG 2.1 AA<br/>+ Handy-Breite 360 px"]
     A11Y --> SWB["build-sw.mjs: Service Worker"]
