@@ -5,10 +5,11 @@
 //  - Kalender-Abos: konzerte.ics (öffentliche Konzerte) und backstage/kalender.ics (alle Auftritte + Proben)
 //  - häufige Fragen (FAQPage) auf den Booking-Seiten in allen drei Sprachen
 //  - sitemap.xml (alle Seiten auf Deutsch, Englisch und Niederländisch, gegenseitig verknüpft) und robots.txt
+//  - vorgerenderte Seiten ohne <link rel="modulepreload"> (das JavaScript bremst sonst Startbild und ersten Inhalt)
 // Öffentliche Seiten gibt es in drei Sprachen: / (de), /en/… und /nl/…; Inhalte übersetzt src/app/data/uebersetzungen.ts.
 // Aufruf nach `ng build`, vor dem Kopieren der index.html in die Unterseiten-Ordner:  node scripts/seo.mjs
 import { build } from 'esbuild';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -270,4 +271,20 @@ ${LANGS.flatMap((l) => pages.map((p) => `  <url><loc>${localUrl(p, l)}</loc><las
 writeFileSync(join(DIST, 'sitemap.xml'), sitemap);
 writeFileSync(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /backstage/\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
-console.log(`SEO: ${upcoming.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length * LANGS.length} Seiten in der Sitemap (${pages.length} je Sprache).`);
+// Vorgerenderte Seiten sind ohne JavaScript schon vollständig. Die modulepreload-Links holen trotzdem alle
+// Chunks (~120 KB komprimiert) mit hoher Priorität und nehmen dem Startbild auf dem Handy die Bandbreite –
+// ohne sie lädt der Browser die Chunks direkt nach main.js. Die Backstage-Shell (index.csr.html) rendert
+// erst im Browser und behält ihre Preloads.
+let preloadPages = 0;
+for (const file of readdirSync(DIST, { recursive: true })) {
+  if (!file.endsWith('index.html')) continue;
+  const path = join(DIST, file);
+  const html = readFileSync(path, 'utf8');
+  const stripped = html.replace(/<link rel="modulepreload" href="[^"]*">/g, '');
+  if (stripped !== html) {
+    writeFileSync(path, stripped);
+    preloadPages++;
+  }
+}
+
+console.log(`SEO: ${upcoming.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length * LANGS.length} Seiten in der Sitemap (${pages.length} je Sprache), ${preloadPages} Seiten ohne modulepreload.`);
