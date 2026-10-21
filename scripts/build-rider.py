@@ -107,12 +107,13 @@ def stage_plot(c, x0, top, width, lang):
             c.drawPath(p, stroke=1, fill=0)
             label(tx(it['label'], lang), x, y - (8.5 if it.get('drehung') else 6) * mm)
         elif t == 'pa':
-            # Top auf dem Subwoofer
+            # Top, ggf. auf dem Subwoofer („sub“: true)
             c.rect(x - 3.5 * mm, y + 1 * mm, 7 * mm, 11 * mm, stroke=1, fill=0)
-            c.rect(x - 4.5 * mm, y - 8.5 * mm, 9 * mm, 9 * mm, stroke=1, fill=0)
-            c.circle(x, y - 4 * mm, 3 * mm, stroke=1, fill=0)
             label('PA', x, y + 13.5 * mm)
-            label('Sub', x, y - 11.5 * mm, 6)
+            if it.get('sub'):
+                c.rect(x - 4.5 * mm, y - 8.5 * mm, 9 * mm, 9 * mm, stroke=1, fill=0)
+                c.circle(x, y - 4 * mm, 3 * mm, stroke=1, fill=0)
+                label('Sub', x, y - 11.5 * mm, 6)
         elif t == 'mikro':
             # Mikrofonständer: Dreibein, beim Galgen mit Arm zum Musiker
             for a in (90, 210, 330):
