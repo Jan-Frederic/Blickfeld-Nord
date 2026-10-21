@@ -112,6 +112,8 @@ interface Item {
   hw?: string;
   /** Galgenstativ: Ende des Arms (Position des Mikros) */
   arm?: number[];
+  /** PA: Top steht auf einem Subwoofer */
+  sub?: boolean;
 }
 
 
@@ -192,14 +194,16 @@ const py = (m: number) => PAD_TOP + m * M;
               <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + (it.drehung ? 44 : 30)" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('pa') {
-              <!-- Top auf dem Subwoofer -->
+              <!-- Top, ggf. auf dem Subwoofer („sub“: true) -->
               <rect class="pa" [attr.x]="px(it.x) - 24" [attr.y]="py(it.y) - 84" width="48" height="74" rx="4" />
               <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) - 64" r="10" />
               <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) - 33" r="15" />
-              <rect class="pa" [attr.x]="px(it.x) - 30" [attr.y]="py(it.y) - 6" width="60" height="62" rx="4" />
-              <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) + 25" r="22" />
+              @if (it.sub) {
+                <rect class="pa" [attr.x]="px(it.x) - 30" [attr.y]="py(it.y) - 6" width="60" height="62" rx="4" />
+                <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) + 25" r="22" />
+                <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 72" text-anchor="middle">Sub</text>
+              }
               <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 94" text-anchor="middle">PA</text>
-              <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 72" text-anchor="middle">Sub</text>
             }
             @case ('mikro') {
               <!-- Mikrofonständer von oben: Dreibein, beim Galgen mit Arm zum Musiker -->

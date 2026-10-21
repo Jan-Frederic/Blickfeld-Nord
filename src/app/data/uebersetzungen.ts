@@ -608,10 +608,9 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'PA rechts (Top + Sub)',
-    en: 'PA right (top + sub)',
-    nl: 'PA rechts (top + sub)',
-    geprueft: { en: true },
+    de: 'PA rechts (Top)',
+    en: 'PA right (top)',
+    nl: 'PA rechts (top)',
   },
   {
     de: 'Licht links',
@@ -938,10 +937,9 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'Die Beschallung für das Publikum: je ein Lautsprecher-Top links und rechts der Bühne, darunter die Subwoofer für den Druck im Bassbereich.',
-    en: 'The sound system for the audience: one top speaker each to the left and right of the stage, with the subwoofers underneath for punch in the low end.',
-    nl: 'De geluidsinstallatie voor het publiek: links en rechts van het podium elk een topspeaker, daaronder de subwoofers voor de druk in het laag.',
-    geprueft: { en: true },
+    de: 'Die Beschallung für das Publikum: je ein Lautsprecher-Top links und rechts der Bühne, links darunter der Subwoofer für den Druck im Bassbereich.',
+    en: 'The sound system for the audience: one top speaker each to the left and right of the stage, with the subwoofer underneath on the left for punch in the low end.',
+    nl: 'De geluidsinstallatie voor het publiek: links en rechts van het podium elk een topspeaker, links daaronder de subwoofer voor de druk in het laag.',
   },
   {
     de: 'Aufstellung',

@@ -39,7 +39,7 @@ const TEXT = tr(
     rider: 'Tech rider (PDF)',
     bring: 'What we bring',
     cards: [
-      { icon: 'speaker', title: 'PA', items: ['Speakers (tops) and subwoofers', 'Mixing desk', 'Three vocal mics and drum mics', 'Monitor speakers'] },
+      { icon: 'speaker', title: 'PA', items: ['Speakers (tops) and subwoofer', 'Mixing desk', 'Three vocal mics and drum mics', 'Monitor speakers'] },
       { icon: 'lightbulb', title: 'Lights', items: ['PAR lights', 'Lighting stand or truss', 'Lighting control', 'Fog machine'] },
       { icon: 'queue_music', title: 'Instruments', items: ['Acoustic guitar', 'Electric bass with amp', 'Drum kit', 'Cables, stands and power strips'] },
     ],
@@ -66,7 +66,7 @@ const TEXT = tr(
     rider: 'Techniek-rider (pdf)',
     bring: 'Wat we meenemen',
     cards: [
-      { icon: 'speaker', title: 'PA', items: ['Speakers (tops) en subwoofers', 'Mengpaneel', "Drie zangmicrofoons en drummicrofoons", 'Monitorspeakers'] },
+      { icon: 'speaker', title: 'PA', items: ['Speakers (tops) en subwoofer', 'Mengpaneel', "Drie zangmicrofoons en drummicrofoons", 'Monitorspeakers'] },
       { icon: 'lightbulb', title: 'Licht', items: ['PAR-spots', 'Lichtstatief of lichtbrug', 'Lichtsturing', 'Rookmachine'] },
       { icon: 'queue_music', title: 'Instrumenten', items: ['Akoestische gitaar', 'Elektrische bas met versterker', 'Drumstel', 'Kabels, statieven en stekkerdozen'] },
     ],
