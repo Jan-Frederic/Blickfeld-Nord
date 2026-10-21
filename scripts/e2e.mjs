@@ -144,8 +144,7 @@ test('Technik: Klick auf einen Musiker im Bühnenplan öffnet sein Setup', async
   await p.locator('app-technik-aufbau g[aria-label^="Fred"]').click();
   const dialog = p.locator('app-hardware-dialog dialog[open]');
   await dialog.waitFor();
-  const text = await dialog.innerText();
-  expect(text.includes('Fred') && text.includes('Boss RC-5'), 'Setup-Dialog zeigt nicht Freds Pedalboard');
+  await until(async () => (await dialog.innerText()).includes('Boss RC-5'), 'Setup-Dialog zeigt nicht Freds Pedalboard');
   await dialog.locator('button.close').click();
   await until(async () => (await dialog.count()) === 0, 'Setup-Dialog schließt nicht');
   await p.locator('app-technik-aufbau g[aria-label^="Matthias"]').click();
