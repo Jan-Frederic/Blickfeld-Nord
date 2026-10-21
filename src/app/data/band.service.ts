@@ -433,6 +433,7 @@ export class BandService {
     { date: '2027-10-22', time: '18:00' },
     { date: '2027-11-19', time: '18:00' },
     { date: '2027-12-17', time: '18:00' },
+    { date: '2028-01-14', time: '18:00', endTime: '21:00', place: 'Proberaum', note: 'Neue Songs' },
   ];
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)
