@@ -257,7 +257,7 @@ export class KonzertPage {
   }
 
   protected remind(s: Show): void {
-    downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true);
+    downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true, { lang: this.i18n.lang() });
   }
 
   protected share(s: Show): void {

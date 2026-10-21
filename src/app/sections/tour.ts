@@ -68,7 +68,7 @@ const TEXT = tr(
       <p class="kicker">Live</p>
       <div class="head">
         <h2>{{ t().title }}</h2>
-        <app-abo-button path="konzerte.ics" (download)="addAll()" />
+        <app-abo-button [path]="aboPath()" (download)="addAll()" />
       </div>
 
       <div class="table-wrap">
@@ -186,6 +186,8 @@ export class Tour {
   private readonly content = inject(Content);
   private readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t(TEXT);
+  // Kalender-Abo in der Sprache der Seite: konzerte.ics, en/konzerte.ics, nl/konzerte.ics (scripts/seo.mjs)
+  protected readonly aboPath = computed(() => this.i18n.link('/konzerte.ics').slice(1));
   // Termine bis einschließlich heute (bei mehrtägigen bis zum letzten Tag) gelten als kommend
   private readonly today = localToday();
   protected readonly shows = this.band.publicShows.filter((s) => (s.endDate ?? s.date) >= this.today);
@@ -219,7 +221,7 @@ export class Tour {
   }
 
   protected addAll(): void {
-    downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', this.t().icsName);
+    downloadIcs(this.shows, 'blickfeld-nord-konzerte.ics', this.t().icsName, false, false, { lang: this.i18n.lang() });
   }
 }
 

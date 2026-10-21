@@ -236,9 +236,17 @@ for (const lang of LANGS) {
 
 // Kalender-Abos: kommen regelmäßig neu – Kalender-Apps fragen alle 12 Stunden nach
 const subscription = (desc) => [`X-WR-CALDESC:${desc}`, 'REFRESH-INTERVAL;VALUE=DURATION:PT12H', 'X-PUBLISHED-TTL:PT12H'];
-// öffentlich: alle öffentlichen, geklärten Konzerte
-const ics = buildIcs(publicShows, 'Blickfeld Nord – Konzerte', false, false, { header: subscription('Alle öffentlichen Konzerte von Blickfeld Nord') });
-writeFileSync(join(DIST, 'konzerte.ics'), ics);
+// öffentlich: alle öffentlichen, geklärten Konzerte – je Sprache eine Datei (konzerte.ics, en/konzerte.ics, nl/konzerte.ics)
+const ICS = {
+  de: ['Blickfeld Nord – Konzerte', 'Alle öffentlichen Konzerte von Blickfeld Nord'],
+  en: ['Blickfeld Nord – Shows', 'All public shows of Blickfeld Nord'],
+  nl: ['Blickfeld Nord – Optredens', 'Alle openbare optredens van Blickfeld Nord'],
+};
+for (const lang of ['de', 'en', 'nl']) {
+  const [name, desc] = ICS[lang];
+  const ics = buildIcs(publicShows, name, false, false, { header: subscription(desc), lang });
+  writeFileSync(join(DIST, ...(lang === 'de' ? [] : [lang]), 'konzerte.ics'), ics);
+}
 // Backstage: alle Auftritte (auch private, mit Status und Kommentar) und Probetermine – dieselben Angaben,
 // die ohnehin im Backstage-Bereich stehen; Suchmaschinen sind per robots.txt ausgesperrt
 mkdirSync(join(DIST, 'backstage'), { recursive: true });

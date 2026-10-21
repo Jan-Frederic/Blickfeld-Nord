@@ -1,4 +1,12 @@
 import { Rehearsal, Show } from './band.service';
+import type { Lang } from '../i18n';
+
+// Texte in den Kalendereinträgen – je nach Sprache der Seite, von der der Kalender kommt (Backstage: Deutsch)
+const TEXT: Record<Lang, { private: string; open: string; route: string; tomorrow: string; site: string }> = {
+  de: { private: 'Privater Termin', open: 'Status: offen', route: 'Anfahrt: ', tomorrow: 'Morgen: Blickfeld Nord live – ', site: 'https://blickfeld-nord.de/' },
+  en: { private: 'Private event', open: 'Status: open', route: 'Directions: ', tomorrow: 'Tomorrow: Blickfeld Nord live – ', site: 'https://blickfeld-nord.de/en' },
+  nl: { private: 'Privé-optreden', open: 'Status: open', route: 'Route: ', tomorrow: 'Morgen: Blickfeld Nord live – ', site: 'https://blickfeld-nord.de/nl' },
+};
 
 // Erzeugt Kalenderdateien (iCalendar/.ics) direkt im Browser – ohne externen Dienst.
 // Mit Uhrzeit: Termin in Ortszeit (Europe/Berlin) mit angenommener Dauer; ohne Uhrzeit: ganztägig.
@@ -72,13 +80,14 @@ function slug(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function event(s: Show, stamp: string, withNotes: boolean, reminder: boolean): string[] {
+function event(s: Show, stamp: string, withNotes: boolean, reminder: boolean, lang: Lang): string[] {
+  const t = TEXT[lang];
   const location = [s.venue, s.city].filter(Boolean).join(', ');
   const description = [
-    s.private ? 'Privater Termin' : 'Blickfeld Nord live – https://blickfeld-nord.de',
-    withNotes && !s.confirmed ? 'Status: offen' : '',
+    s.private ? t.private : 'Blickfeld Nord live – ' + t.site.replace(/\/$/, ''),
+    withNotes && !s.confirmed ? t.open : '',
     withNotes && s.comment ? s.comment : '',
-    s.mapsUrl ? 'Anfahrt: ' + s.mapsUrl : '',
+    s.mapsUrl ? t.route + s.mapsUrl : '',
   ].filter(Boolean);
   return [
     'BEGIN:VEVENT',
@@ -93,12 +102,12 @@ function event(s: Show, stamp: string, withNotes: boolean, reminder: boolean): s
     `SUMMARY:${esc('Blickfeld Nord: ' + s.venue)}`,
     `LOCATION:${esc(location)}`,
     `DESCRIPTION:${esc(description.join('\n'))}`,
-    'URL:https://blickfeld-nord.de/',
+    `URL:${t.site}`,
     `STATUS:${s.confirmed ? 'CONFIRMED' : 'TENTATIVE'}`,
     'TRANSP:TRANSPARENT',
     // „Erinnere mich“: Hinweis am Vortag – 24 h vor Beginn, bei ganztägigen Terminen am Vortag um 12 Uhr
     ...(reminder
-      ? ['BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc('Morgen: Blickfeld Nord live – ' + location)}`, `TRIGGER:${s.time ? '-P1D' : '-PT12H'}`, 'END:VALARM']
+      ? ['BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(t.tomorrow + location)}`, `TRIGGER:${s.time ? '-P1D' : '-PT12H'}`, 'END:VALARM']
       : []),
     'END:VEVENT',
   ];
@@ -128,6 +137,8 @@ export interface IcsExtras {
   rehearsals?: Rehearsal[];
   /** zusätzliche Kalender-Kopfzeilen, z. B. für Abos: 'REFRESH-INTERVAL;VALUE=DURATION:PT12H' */
   header?: string[];
+  /** Sprache der Einträge (Standard: Deutsch) */
+  lang?: Lang;
 }
 
 export function buildIcs(shows: Show[], calendarName: string, withNotes = false, reminder = false, extras: IcsExtras = {}): string {
@@ -143,7 +154,7 @@ export function buildIcs(shows: Show[], calendarName: string, withNotes = false,
     'X-WR-TIMEZONE:Europe/Berlin',
     ...(extras.header ?? []),
     ...(shows.some((s) => s.time) || rehearsals.some((r) => r.time) ? VTIMEZONE : []),
-    ...shows.flatMap((s) => event(s, stamp, withNotes, reminder)),
+    ...shows.flatMap((s) => event(s, stamp, withNotes, reminder, extras.lang ?? 'de')),
     ...rehearsals.flatMap((r) => rehearsalEvent(r, stamp)),
     'END:VCALENDAR',
   ];

@@ -235,12 +235,14 @@ test('Backstage: Vor Ort berechnet Abfahrt, Daten lassen sich exportieren und im
 
 test('Kalender-Dateien und Service Worker sind vorhanden', async () => {
   const p = await page();
-  for (const f of ['/konzerte.ics', '/backstage/kalender.ics', '/sw.js', '/site.webmanifest']) {
+  for (const f of ['/konzerte.ics', '/en/konzerte.ics', '/nl/konzerte.ics', '/backstage/kalender.ics', '/sw.js', '/site.webmanifest']) {
     const res = await p.request.get(BASE + f);
     expect(res.ok(), `${f} fehlt`);
   }
   const ics = await (await p.request.get(BASE + '/backstage/kalender.ics')).text();
   expect(ics.includes('Probe Blickfeld Nord'), 'Backstage-Kalender ohne Proben');
+  const nl = await (await p.request.get(BASE + '/nl/konzerte.ics')).text();
+  expect(nl.includes('X-WR-CALNAME:Blickfeld Nord – Optredens') && nl.includes('blickfeld-nord.de/nl'), 'Kalender-Abo nicht auf Niederländisch');
   return p;
 });
 
