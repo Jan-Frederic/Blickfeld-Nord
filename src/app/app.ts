@@ -4,7 +4,6 @@ import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
@@ -74,7 +73,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterOutlet, RouterLink, LocPipe, SprachHinweis],
+  imports: [MatToolbarModule, MatButtonModule, MatIconModule, RouterOutlet, RouterLink, LocPipe, SprachHinweis],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

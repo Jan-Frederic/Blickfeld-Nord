@@ -17,6 +17,17 @@
 .desktop-nav button, .desktop-nav a { font-family: var(--bn-wide); letter-spacing: .18em; text-transform: uppercase; font-size: .78rem; }
 .spacer { flex: 1; }
 .mobile-nav { display: none; }
+.menu-panel {
+  position: fixed; inset: 60px 8px auto auto; margin: 0; padding: 8px 0; min-width: 220px; max-height: 80vh; overflow-y: auto;
+  border: 1px solid var(--bn-line); border-radius: 12px; background: #1b1e22; color: var(--bn-ink); box-shadow: 0 12px 32px #0008;
+  font: 400 1rem Inter, sans-serif;
+}
+.menu-panel:popover-open { display: flex; flex-direction: column; }
+.menu-item {
+  display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 20px;
+  border: 0; background: none; color: inherit; font: inherit; text-decoration: none; cursor: pointer;
+}
+.menu-item:hover, .menu-item:focus-visible { background: #ece9e412; color: var(--bn-sunset); }
 .languages { display: flex; align-items: center; gap: 2px; margin-left: 8px; }
 .languages a {
   padding: 6px 7px; border-radius: 6px; color: var(--bn-fog); text-decoration: none;

@@ -28,27 +28,29 @@
       }
     </nav>
   }
-  <button mat-icon-button class="mobile-nav" [matMenuTriggerFor]="menu" [attr.aria-label]="t().openMenu">
+  <!-- Handy-Menü als natives Popover: Esc, Klick daneben und aria-expanded übernimmt der Browser
+       (spart gegenüber mat-menu rund 60 KB JavaScript auf jeder Seite) -->
+  <button mat-icon-button class="mobile-nav" popovertarget="hauptmenue" [attr.aria-label]="t().openMenu">
     <mat-icon>menu</mat-icon>
   </button>
-  <mat-menu #menu="matMenu">
+  <nav id="hauptmenue" class="menu-panel" popover #menu [attr.aria-label]="t().openMenu">
     @for (n of nav(); track n.label) {
       @if (n.link) {
-        <a mat-menu-item [routerLink]="n.link | loc">{{ n.label }}</a>
+        <a class="menu-item" [routerLink]="n.link | loc" (click)="menu.hidePopover()">{{ n.label }}</a>
       } @else {
-        <button mat-menu-item (click)="scrollTo(n.id!)">{{ n.label }}</button>
+        <button type="button" class="menu-item" (click)="menu.hidePopover(); scrollTo(n.id!)">{{ n.label }}</button>
       }
     }
-    <a mat-menu-item [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
-    <a mat-menu-item [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
+    <a class="menu-item" [routerLink]="'/historie' | loc" (click)="menu.hidePopover()">{{ t().nav.history }}</a>
+    <a class="menu-item" [routerLink]="'/freunde' | loc" (click)="menu.hidePopover()">{{ t().nav.friends }}</a>
     @if (showLanguages()) {
       @for (l of languages(); track l.lang) {
         @if (!l.current) {
-          <a mat-menu-item [routerLink]="l.link" (click)="remember(l.lang)" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><mat-icon>translate</mat-icon> {{ l.name }}</a>
+          <a class="menu-item" [routerLink]="l.link" (click)="remember(l.lang); menu.hidePopover()" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><mat-icon>translate</mat-icon> {{ l.name }}</a>
         }
       }
     }
-  </mat-menu>
+  </nav>
 </mat-toolbar>
 
 <main>
