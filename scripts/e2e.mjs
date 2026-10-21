@@ -148,7 +148,7 @@ test('Technik: Klick auf einen Musiker im Bühnenplan öffnet sein Setup', async
   await dialog.locator('button.close').click();
   await until(async () => (await dialog.count()) === 0, 'Setup-Dialog schließt nicht');
   await p.locator('app-technik-aufbau g[aria-label^="Matthias"]').click();
-  await until(async () => (await dialog.innerText()).includes('Galgenstativ'), 'Klick auf M öffnet nicht Matthias’ Setup');
+  await until(async () => (await dialog.innerText()).includes('Galgen'), 'Klick auf M öffnet nicht Matthias’ Setup');
   return p;
 });
 
@@ -165,8 +165,15 @@ test('Handy: Menü öffnet sich, Seite verschiebt sich nicht seitlich', async ()
   const p = await page({ ...devices['Pixel 7'] });
   await p.go('/');
   await p.locator('button.mobile-nav').click();
-  await p.locator('.mat-mdc-menu-panel a, .mat-mdc-menu-panel button').first().waitFor();
+  const menu = p.locator('#hauptmenue');
+  await menu.locator('a, button').first().waitFor();
   await p.keyboard.press('Escape');
+  await until(async () => !(await menu.isVisible()), 'Menü schließt nicht mit Esc');
+  // Menüpunkt führt zur Seite und schließt das Menü
+  await p.locator('button.mobile-nav').click();
+  await menu.locator('a[href="/galerie"]').click();
+  await p.waitForURL(/\/galerie/);
+  await until(async () => !(await menu.isVisible()), 'Menü bleibt nach dem Klick offen');
   await p.mouse.wheel(300, 0);
   expect((await p.evaluate(() => scrollX)) === 0, 'Seite lässt sich seitlich verschieben');
   return p;

@@ -15,6 +15,8 @@ export interface Hardware {
   modell: string | null;
   beschreibung: string;
   details: string[][];
+  /** bereits übersetzte Zeilen, die die Seite selbst zusammensetzt (Setup eines Musikers) */
+  extra?: string[][];
 }
 
 // Detail-Dialog für ein Gerät der Technik-Seite (natives <dialog>: Fokus, Esc und Hintergrund-Sperre
@@ -33,8 +35,11 @@ export interface Hardware {
             <p class="hw-open"><mat-icon>edit_note</mat-icon> {{ t().modelFollows }}</p>
           }
           <p class="hw-text">{{ ct.t(c.hw.beschreibung) }}</p>
-          @if (c.hw.details.length) {
+          @if (c.hw.details.length || c.hw.extra?.length) {
             <dl class="hw-details">
+              @for (d of c.hw.extra ?? []; track $index) {
+                <div><dt>{{ d[0] }}</dt><dd>{{ d[1] }}</dd></div>
+              }
               @for (d of c.hw.details; track d[0]) {
                 <div><dt>{{ ct.t(d[0]) }}</dt><dd>{{ ct.t(d[1]) }}</dd></div>
               }
