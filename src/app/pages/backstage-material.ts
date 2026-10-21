@@ -14,6 +14,7 @@ const MATERIAL = [
   { file: 'blickfeld-nord-wunschbox', ext: 'pdf', icon: 'qr_code_2', title: 'Wunschbox-Schild', text: 'A4-Schild mit großem QR-Code zur Live-Wunschbox – für Bühne oder Theke.' },
   { file: 'blickfeld-nord-qr-karte', ext: 'pdf', icon: 'style', title: 'QR-Code-Karte', text: 'Schild mit QR-Codes zu Website und Instagram plus vier Flyer-Karten zum Ausschneiden.' },
   { file: 'blickfeld-nord-technik-rider', ext: 'pdf', icon: 'speaker', title: 'Technik-Rider', text: 'Platz, Strom, Zeitplan, Bühnenplan und Kanalliste – für Veranstalter und Technik.' },
+  { file: 'blickfeld-nord-buehnenplan', ext: 'pdf', icon: 'grid_view', title: 'Bühnenplan', text: 'Nur der Bühnenplan auf einer Seite (quer) – zum Weiterleiten an die Technik vor Ort.' },
   { file: 'blickfeld-nord-pressekit', ext: 'pdf', icon: 'newspaper', title: 'Pressekit', text: 'Infos, Pressetext, Kontakt, Fotos und Logos auf drei Seiten.' },
   { file: 'blickfeld-nord-pressekit', ext: 'zip', icon: 'folder_zip', title: 'Pressekit komplett (ZIP)', text: 'PDF, Pressetext, Fotos und Logos in voller Auflösung.' },
 ];

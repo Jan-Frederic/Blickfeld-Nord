@@ -15,12 +15,14 @@ Architektur mit Diagrammen: [ARCHITECTURE.md](ARCHITECTURE.md) · Inhalte pflege
 - **Booking** (`/booking`, auf der Startseite nur ein Teaser) – Infos für Veranstalter (Anlässe, Spielzeit, Technik),
   Verfügbarkeitskalender (belegte Tage aus `shows`: geklärt = belegt, offen = reserviert – ohne Details; Klick auf
   einen freien Tag öffnet die E-Mail-Vorlage mit Datum), häufige Fragen (FAQ), Technik-Rider als PDF, Repertoire-Playlist auf Spotify, Anfrage per E-Mail-Vorlage, Instagram- oder Facebook-Nachricht
-- **Technik** (`/technik`, nur im Footer und in den Booking-FAQ verlinkt) – was wir mitbringen (PA, Licht, Instrumente),
-  was wir brauchen (Platz, Strom), Zeitplan und Technik-Rider als PDF
+- **Technik** (`/technik`, in der Hauptnavigation) – was wir mitbringen (PA, Licht, Instrumente),
+  was wir brauchen (Platz, Strom), Zeitplan, Technik-Rider und Bühnenplan einzeln als PDF
   Darunter der **technische Aufbau** aus `src/app/data/technik.json`: Bühnenplan (Draufsicht, Positionen in Metern),
   Kanalliste, Signalfluss, Monitore und Strom – dieselbe Datei erzeugt Seite 2 des Technik-Riders
   (`python3 scripts/build-rider.py`). `null` bedeutet „noch offen“. Jedes Gerät mit `hw` ist im Bühnenplan und in der
   Geräteliste anklickbar und öffnet einen Dialog mit Beschreibung und technischen Daten (Abschnitt `hardware`).
+  Ein Klick auf einen Musiker (oder sein Mikro) zeigt sein Setup: Die Beschreibung steht unter `setup-<name>`, Kanäle,
+  Geräte und Monitor kommen automatisch dazu – alles, was in `technik.json` mit `"musiker": "<name>"` markiert ist.
 - **Drei Sprachen** – alle öffentlichen Seiten auf Deutsch (`/`), Englisch (`/en/…`) und Niederländisch (`/nl/…`),
   Umschalter in Kopf- und Fußzeile. Oberflächentexte als Wörterbücher in den Komponenten (`tr()` aus `src/app/i18n.ts`),
   Inhalte (Bios, Historie, Bildtexte, Freunde, Technik) in `src/app/data/uebersetzungen.ts` mit Markierung `geprueft`.

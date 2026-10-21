@@ -10,6 +10,7 @@ const TEXT = tr(
     title: 'Technik',
     lead: 'Ihr kümmert euch um die Gäste, wir um den Sound: PA, Licht und Instrumente bringen wir selbst mit. Von euch brauchen wir nur ein bisschen Platz und Strom – hier sind alle Details auf einen Blick.',
     rider: 'Technik-Rider (PDF)',
+    plan: 'Nur Bühnenplan (PDF)',
     bring: 'Was wir mitbringen',
     cards: [
       { icon: 'speaker', title: 'PA', items: ['Lautsprecher (Tops) und Subwoofer', 'Mischpult', 'Drei Gesangsmikrofone und Drum-Mikrofone', 'Monitorboxen'] },
@@ -37,6 +38,7 @@ const TEXT = tr(
     title: 'Technical info',
     lead: 'You take care of the guests, we take care of the sound: we bring our own PA, lights and instruments. All we need from you is a little space and power – here are all the details at a glance.',
     rider: 'Tech rider (PDF)',
+    plan: 'Stage plan only (PDF)',
     bring: 'What we bring',
     cards: [
       { icon: 'speaker', title: 'PA', items: ['Speakers (tops) and subwoofer', 'Mixing desk', 'Three vocal mics and drum mics', 'Monitor speakers'] },
@@ -64,6 +66,7 @@ const TEXT = tr(
     title: 'Techniek',
     lead: 'Jullie zorgen voor de gasten, wij voor het geluid: geluid (PA), licht en instrumenten nemen we zelf mee. Van jullie hebben we alleen wat ruimte en stroom nodig – hier staan alle details op een rij.',
     rider: 'Techniek-rider (pdf)',
+    plan: 'Alleen podiumplan (pdf)',
     bring: 'Wat we meenemen',
     cards: [
       { icon: 'speaker', title: 'PA', items: ['Speakers (tops) en subwoofer', 'Mengpaneel', "Drie zangmicrofoons en drummicrofoons", 'Monitorspeakers'] },
@@ -102,6 +105,9 @@ const TEXT = tr(
       <div class="downloads">
         <a class="btn primary" [href]="'presse/blickfeld-nord-technik-rider' + sfx() + '.pdf'" download>
           <mat-icon>description</mat-icon> {{ t().rider }}
+        </a>
+        <a class="btn" [href]="'presse/blickfeld-nord-buehnenplan' + sfx() + '.pdf'" download>
+          <mat-icon>grid_view</mat-icon> {{ t().plan }}
         </a>
       </div>
 

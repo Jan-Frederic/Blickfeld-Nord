@@ -97,11 +97,12 @@ const TEXT = tr(
 // Signalfluss und Stromverteilung. Dieselbe Datei nutzt der Technik-Rider (scripts/build-rider.py).
 // Werte mit null gelten als „noch offen“. Geräte mit „hw“ sind anklickbar und öffnen einen Dialog mit
 // Beschreibung und technischen Daten (Abschnitt „hardware“ der JSON-Datei). Die Musiker öffnen ihr Setup
-// („setup-<name>“) – das steht nicht in der Geräteliste.
+// („setup-<name>“, nicht in der Geräteliste): Zu der Beschreibung kommen automatisch die Kanäle, Geräte und der
+// Monitor, die in der JSON-Datei mit „musiker“ zugeordnet sind – Änderungen also nur an einer Stelle.
 
 interface Item {
   id: string;
-  typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom' | 'mikro';
+  typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom' | 'mikro' | 'pedalboard';
   label: string;
   rolle?: string;
   x: number;
@@ -114,6 +115,8 @@ interface Item {
   arm?: number[];
   /** PA: Top steht auf einem Subwoofer */
   sub?: boolean;
+  /** gehört zum Setup dieses Musikers (id der Person) */
+  musiker?: string;
 }
 
 
@@ -204,6 +207,13 @@ const py = (m: number) => PAD_TOP + m * M;
                 <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 72" text-anchor="middle">Sub</text>
               }
               <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 94" text-anchor="middle">PA</text>
+            }
+            @case ('pedalboard') {
+              <rect class="box" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="3" />
+              @for (f of [-0.13, 0, 0.13]; track f) {
+                <rect class="pedal" [attr.x]="px(it.x + f) - 7" [attr.y]="py(it.y) - 7" width="14" height="14" rx="2" />
+              }
+              <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y + it.t! / 2) + 14" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('mikro') {
               <!-- Mikrofonständer von oben: Dreibein, beim Galgen mit Arm zum Musiker -->
@@ -344,7 +354,8 @@ const py = (m: number) => PAD_TOP + m * M;
     .label { fill: var(--bn-ink); font-size: 14px; font-weight: 600; }
     .small { fill: var(--bn-fog); font-size: 12px; }
     .tiny { fill: var(--bn-fog); font-size: 11px; }
-    .fader { stroke: var(--bn-sunset); stroke-width: 2; }
+    .fader, .pedal { stroke: var(--bn-sunset); stroke-width: 2; }
+    .pedal { fill: none; stroke-width: 1.2; }
     .cone { fill: none; stroke: var(--bn-fog); stroke-width: 1.5; }
     .light { fill: rgba(255, 220, 150, .15); stroke: #f5d48f; stroke-width: 1.5; }
     .light-core, .key.light { fill: #f5d48f; background: #f5d48f; }
@@ -436,9 +447,30 @@ export class TechnikAufbau {
   protected open(key: string, event?: Event): void {
     event?.preventDefault();
     const hw = HARDWARE[key];
+    if (!hw) return;
     // beim Setup eines Musikers wäre „Im Bühnenplan: David“ doppelt – dort keine Ortsangabe
-    const wo = key.startsWith('setup-') ? [] : this.items.filter((i) => i.hw === key).map((i) => this.ct.t(i.label));
-    if (hw) this.dialog().show(hw, wo);
+    if (key.startsWith('setup-')) this.dialog().show({ ...hw, extra: this.setup(key.slice('setup-'.length)) }, []);
+    else this.dialog().show(hw, this.items.filter((i) => i.hw === key).map((i) => this.ct.t(i.label)));
+  }
+
+  // Setup-Zeilen eines Musikers aus Kanalliste, Geräten und Monitoren (bereits übersetzt)
+  private setup(musiker: string): string[][] {
+    const t = this.t();
+    const kanaele = this.kanaele
+      .filter((k) => k.musiker === musiker)
+      .map((k) => [
+        this.ct.t(k.quelle),
+        [k.art === 'DI' ? 'DI' : k.geraet ? this.ct.t(k.geraet) : t.modelFollows, `${t.head.channel} ${k.kanal}`, k.stativ && `${t.head.stand}: ${this.ct.t(k.stativ)}`]
+          .filter(Boolean)
+          .join(' · '),
+      ]);
+    const geraete = this.items
+      .filter((i) => i.musiker === musiker && i.hw && HARDWARE[i.hw])
+      .map((i) => [this.ct.t(HARDWARE[i.hw!].kategorie), HARDWARE[i.hw!].modell ?? t.modelFollows]);
+    const monitor = this.monitore
+      .filter((m) => m.musiker === musiker)
+      .map((m) => [this.ct.t('Monitor'), [this.label(m.id), `Aux ${this.monitore.indexOf(m) + 1}`, m.mix && this.ct.t(m.mix)].filter(Boolean).join(' · ')]);
+    return [...kanaele, ...geraete, ...monitor];
   }
 
   protected label(id: string): string {

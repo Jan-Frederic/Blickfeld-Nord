@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Erzeugt den Technik-Rider für Veranstalter: public/presse/blickfeld-nord-technik-rider(-en|-nl).pdf
+und den Bühnenplan einzeln (eine Seite quer, zum Weiterleiten an die Technik): blickfeld-nord-buehnenplan(-en|-nl).pdf
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-rider.py
 Benötigt: pillow, reportlab, fonttools
@@ -14,7 +15,7 @@ import tempfile
 from datetime import date
 
 from reportlab.lib.colors import HexColor
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
@@ -31,8 +32,8 @@ T = pk.pdf_texte
 tx = T.tx
 
 
-def out(lang):
-    return os.path.join(pk.OUT, f'blickfeld-nord-technik-rider{T.suffix(lang)}.pdf')
+def out(lang, name='technik-rider'):
+    return os.path.join(pk.OUT, f'blickfeld-nord-{name}{T.suffix(lang)}.pdf')
 
 
 def header(c, w, h, lang):
@@ -81,7 +82,7 @@ def stage_plot(c, x0, top, width, lang):
         x, y, t = px(it['x']), py(it['y']), it['typ']
         c.setStrokeColor(pk.TEXT_DARK)
         c.setLineWidth(0.9)
-        if t in ('drums', 'amp', 'mixer'):
+        if t in ('drums', 'amp', 'mixer', 'pedalboard'):
             w, h = it['b'] * m, it['t'] * m
             c.setDash(*((3, 2) if t == 'drums' else ()))
             c.rect(x - w / 2, y - h / 2, w, h, stroke=1, fill=0)
@@ -194,7 +195,33 @@ def main():
         pk.register_fonts(tmp)
         for lang in T.LANGS:
             build(lang)
-            print(f'{os.path.relpath(out(lang))}  {os.path.getsize(out(lang)) / 1024:.0f} KB')
+            build_plan(lang)
+            for name in ('technik-rider', 'buehnenplan'):
+                print(f'{os.path.relpath(out(lang, name))}  {os.path.getsize(out(lang, name)) / 1024:.0f} KB')
+
+
+def build_plan(lang):
+    """Nur der Bühnenplan, A4 quer – derselbe Plan wie auf Seite 2 des Riders."""
+    t, pt = T.RIDER[lang], T.PRESSEKIT[lang]
+    w, h = landscape(A4)
+    m = 18 * mm
+    c = canvas.Canvas(out(lang, 'buehnenplan'), pagesize=(w, h))
+    c.setTitle(f'Blickfeld Nord – {t["plan"]}')
+    c.setAuthor('Blickfeld Nord')
+    pk.kicker(c, t['setup'], m, h - 16 * mm)
+    pk.heading(c, t['plan'], m, h - 26 * mm, size=14)
+    c.setFont('Inter', 8)
+    c.setFillColor(pk.TEXT_MID)
+    c.drawString(m, h - 32 * mm, t['plan_caption'])
+    # Breite so wählen, dass Plan samt Beschriftung und Publikum-Zeile auf die Seite passt
+    pw = 190 * mm
+    stage_plot(c, (w - pw) / 2, h - 52 * mm, pw, lang)
+    c.setFont('Montserrat', 7.5)
+    c.setFillColor(pk.TEXT_MID)
+    c.drawString(m, 10 * mm, f'BLICKFELD NORD · {t["plan"].upper()} · BLICKFELD-NORD.DE')
+    c.drawRightString(w - m, 10 * mm, f'{pt["as_of"]} {date.today():%m/%Y}')
+    c.showPage()
+    c.save()
 
 
 def build(lang):

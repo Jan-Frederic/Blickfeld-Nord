@@ -3,11 +3,12 @@
   "stand": "2026-10-21",
   "buehne": { "breite": 4, "tiefe": 3 },
   "aufbau": [
-    { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2, "hw": "schlagzeug" },
+    { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2, "hw": "schlagzeug", "musiker": "matthias" },
     { "id": "matthias", "typ": "person", "label": "Matthias", "rolle": "Schlagzeug & Gesang", "x": 2, "y": 0.42, "hw": "setup-matthias" },
     { "id": "david", "typ": "person", "label": "David", "rolle": "Gesang & Gitarre", "x": 1, "y": 2.1, "hw": "setup-david" },
     { "id": "fred", "typ": "person", "label": "Fred", "rolle": "Bass & Gesang", "x": 3, "y": 2.1, "hw": "setup-fred" },
-    { "id": "bassamp", "typ": "amp", "label": "Bassverstärker", "x": 3.45, "y": 1.35, "b": 0.6, "t": 0.4, "hw": "bassamp" },
+    { "id": "bassamp", "typ": "amp", "label": "Bassverstärker", "x": 3.45, "y": 1.35, "b": 0.6, "t": 0.4, "hw": "bassamp", "musiker": "fred" },
+    { "id": "pedalboard", "typ": "pedalboard", "label": "Pedalboard", "x": 3.55, "y": 1.86, "b": 0.44, "t": 0.2, "hw": "pedalboard", "musiker": "fred" },
     { "id": "mixer", "typ": "mixer", "label": "Mischpult", "x": 0.55, "y": 1.3, "b": 0.7, "t": 0.5, "hw": "mischpult" },
     { "id": "mic-david", "typ": "mikro", "label": "Mikro David", "x": 1.42, "y": 2.62, "hw": "setup-david" },
     { "id": "mic-fred", "typ": "mikro", "label": "Mikro Fred", "x": 2.58, "y": 2.62, "hw": "setup-fred" },
@@ -23,52 +24,38 @@
     { "id": "strom-2", "typ": "strom", "label": "Steckdose 2", "x": 3.4, "y": 0, "hw": "strom" }
   ],
   "kanaele": [
-    { "kanal": 1, "quelle": "Bassdrum", "art": "Mikro", "geraet": null, "stativ": "kurz", "phantom": false },
-    { "kanal": 2, "quelle": "Snare", "art": "Mikro", "geraet": null, "stativ": "Klemme", "phantom": false },
-    { "kanal": 3, "quelle": "Overhead", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": true },
-    { "kanal": 4, "quelle": "E-Bass", "art": "DI", "geraet": null, "stativ": null, "phantom": false },
-    { "kanal": 5, "quelle": "Akustikgitarre", "art": "DI", "geraet": null, "stativ": null, "phantom": false },
-    { "kanal": 6, "quelle": "Gesang David", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false },
-    { "kanal": 7, "quelle": "Gesang Fred", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false },
-    { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false }
+    { "kanal": 1, "quelle": "Bassdrum", "art": "Mikro", "geraet": null, "stativ": "kurz", "phantom": false, "musiker": "matthias" },
+    { "kanal": 2, "quelle": "Snare", "art": "Mikro", "geraet": null, "stativ": "Klemme", "phantom": false, "musiker": "matthias" },
+    { "kanal": 3, "quelle": "Overhead", "art": "Mikro", "geraet": null, "stativ": "groß", "phantom": true, "musiker": "matthias" },
+    { "kanal": 4, "quelle": "E-Bass", "art": "DI", "geraet": null, "stativ": null, "phantom": false, "musiker": "fred" },
+    { "kanal": 5, "quelle": "Akustikgitarre", "art": "DI", "geraet": null, "stativ": null, "phantom": false, "musiker": "david" },
+    { "kanal": 6, "quelle": "Gesang David", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false, "musiker": "david" },
+    { "kanal": 7, "quelle": "Gesang Fred", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false, "musiker": "fred" },
+    { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false, "musiker": "matthias" }
   ],
   "monitore": [
-    { "id": "mon1", "fuer": "David", "mix": null },
-    { "id": "mon2", "fuer": "Fred", "mix": null },
-    { "id": "mon3", "fuer": "Matthias", "mix": null }
+    { "id": "mon1", "fuer": "David", "mix": null, "musiker": "david" },
+    { "id": "mon2", "fuer": "Fred", "mix": null, "musiker": "fred" },
+    { "id": "mon3", "fuer": "Matthias", "mix": null, "musiker": "matthias" }
   ],
   "hardware": {
     "setup-david": {
       "kategorie": "Setup",
       "modell": "David",
       "beschreibung": "Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre.",
-      "details": [
-        ["Gesang", "Shure SM58, Kanal 6, großes Stativ"],
-        ["Gitarre", "Akustikgitarre per DI, Kanal 5"],
-        ["Monitor", "Monitor 1 (Aux 1)"]
-      ]
+      "details": []
     },
     "setup-fred": {
       "kategorie": "Setup",
       "modell": "Fred",
       "beschreibung": "Freds Platz vorne rechts (vom Publikum aus gesehen): E-Bass mit Pedalboard, Bassverstärker und Gesang.",
-      "details": [
-        ["Bass", "E-Bass, per DI-Box an Kanal 4"],
-        ["Pedalboard", "Boss RC-5 Loop Station, weitere Pedale folgen"],
-        ["Verstärker", "eigener Bassverstärker auf der Bühne"],
-        ["Gesang", "Shure SM58, Kanal 7, großes Stativ"],
-        ["Monitor", "Monitor 2 (Aux 2)"]
-      ]
+      "details": []
     },
     "setup-matthias": {
       "kategorie": "Setup",
       "modell": "Matthias",
       "beschreibung": "Matthias sitzt hinten in der Mitte am Schlagzeug und singt mit.",
-      "details": [
-        ["Schlagzeug", "Bassdrum, Snare, Overhead (Kanal 1–3)"],
-        ["Gesang", "Mikro am Galgenstativ, Kanal 8, Modell folgt"],
-        ["Monitor", "Monitor 3 (Aux 3)"]
-      ]
+      "details": []
     },
     "mischpult": {
       "kategorie": "Digitalmischpult",
@@ -108,6 +95,14 @@
       "details": [
         ["Scheinwerfer", "PAR-Scheinwerfer auf Stativ bzw. Lichtbrücke"],
         ["Effekte", "Nebelmaschine (nach Absprache)"]
+      ]
+    },
+    "pedalboard": {
+      "kategorie": "Pedalboard",
+      "modell": "Boss RC-5 Loop Station",
+      "beschreibung": "Freds Pedalboard mit der Boss RC-5 Loop Station und weiteren Effektpedalen.",
+      "details": [
+        ["Weitere Pedale", "folgen"]
       ]
     },
     "bassamp": {
