@@ -15,7 +15,7 @@ const TEXT = tr(
     details: 'technische Details anzeigen',
     bassAmp: 'Bass-Amp',
     legend: { musician: 'Musiker', monitor: 'Monitor', pa: 'PA', light: 'Licht', socket: 'Steckdose' },
-    caption: 'Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte antippen für Details',
+    caption: 'Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte und Musiker antippen für Details',
     channels: 'Kanalliste',
     head: { channel: 'Kanal', source: 'Quelle', type: 'Art', device: 'Gerät', stand: 'Stativ' },
     open: 'offen',
@@ -43,7 +43,7 @@ const TEXT = tr(
     details: 'show technical details',
     bassAmp: 'Bass amp',
     legend: { musician: 'Musician', monitor: 'Monitor', pa: 'PA', light: 'Lights', socket: 'Power socket' },
-    caption: 'Top view, audience at the bottom · 1 square = 1 m · tap equipment for details',
+    caption: 'Top view, audience at the bottom · 1 square = 1 m · tap equipment or musicians for details',
     channels: 'Channel list',
     head: { channel: 'Channel', source: 'Source', type: 'Type', device: 'Device', stand: 'Stand' },
     open: 'open',
@@ -71,7 +71,7 @@ const TEXT = tr(
     details: 'technische details tonen',
     bassAmp: 'Basversterker',
     legend: { musician: 'Muzikant', monitor: 'Monitor', pa: 'PA', light: 'Licht', socket: 'Stopcontact' },
-    caption: 'Bovenaanzicht, publiek onderaan · 1 vakje = 1 m · tik op apparatuur voor details',
+    caption: 'Bovenaanzicht, publiek onderaan · 1 vakje = 1 m · tik op apparatuur of muzikanten voor details',
     channels: 'Kanalenlijst',
     head: { channel: 'Kanaal', source: 'Bron', type: 'Soort', device: 'Apparaat', stand: 'Statief' },
     open: 'open',
@@ -96,7 +96,8 @@ const TEXT = tr(
 // Technischer Aufbau aus src/app/data/technik.json: Bühnenplan (Draufsicht), Kanalliste, Monitore,
 // Signalfluss und Stromverteilung. Dieselbe Datei nutzt der Technik-Rider (scripts/build-rider.py).
 // Werte mit null gelten als „noch offen“. Geräte mit „hw“ sind anklickbar und öffnen einen Dialog mit
-// Beschreibung und technischen Daten (Abschnitt „hardware“ der JSON-Datei).
+// Beschreibung und technischen Daten (Abschnitt „hardware“ der JSON-Datei). Die Musiker öffnen ihr Setup
+// („setup-<name>“) – das steht nicht in der Geräteliste.
 
 interface Item {
   id: string;
@@ -378,7 +379,9 @@ export class TechnikAufbau {
   protected readonly strom = data.strom;
   protected readonly hardware = HARDWARE;
 
-  protected readonly geraeteListe = Object.entries(HARDWARE).map(([key, hw]) => ({ key, hw }));
+  protected readonly geraeteListe = Object.entries(HARDWARE)
+    .filter(([key]) => !key.startsWith('setup-'))
+    .map(([key, hw]) => ({ key, hw }));
 
   protected readonly W = W;
   protected readonly D = D;
@@ -412,7 +415,9 @@ export class TechnikAufbau {
   protected open(key: string, event?: Event): void {
     event?.preventDefault();
     const hw = HARDWARE[key];
-    if (hw) this.dialog().show(hw, this.items.filter((i) => i.hw === key).map((i) => this.ct.t(i.label)));
+    // beim Setup eines Musikers wäre „Im Bühnenplan: David“ doppelt – dort keine Ortsangabe
+    const wo = key.startsWith('setup-') ? [] : this.items.filter((i) => i.hw === key).map((i) => this.ct.t(i.label));
+    if (hw) this.dialog().show(hw, wo);
   }
 
   protected label(id: string): string {

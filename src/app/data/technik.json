@@ -4,9 +4,9 @@
   "buehne": { "breite": 4, "tiefe": 3 },
   "aufbau": [
     { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2, "hw": "schlagzeug" },
-    { "id": "matthias", "typ": "person", "label": "Matthias", "rolle": "Schlagzeug & Gesang", "x": 2, "y": 1.05 },
-    { "id": "david", "typ": "person", "label": "David", "rolle": "Gesang & Gitarre", "x": 1, "y": 2.1 },
-    { "id": "fred", "typ": "person", "label": "Fred", "rolle": "Bass & Gesang", "x": 3, "y": 2.1 },
+    { "id": "matthias", "typ": "person", "label": "Matthias", "rolle": "Schlagzeug & Gesang", "x": 2, "y": 1.05, "hw": "setup-matthias" },
+    { "id": "david", "typ": "person", "label": "David", "rolle": "Gesang & Gitarre", "x": 1, "y": 2.1, "hw": "setup-david" },
+    { "id": "fred", "typ": "person", "label": "Fred", "rolle": "Bass & Gesang", "x": 3, "y": 2.1, "hw": "setup-fred" },
     { "id": "bassamp", "typ": "amp", "label": "Bassverstärker", "x": 3.45, "y": 1.35, "b": 0.6, "t": 0.4, "hw": "bassamp" },
     { "id": "mixer", "typ": "mixer", "label": "Mischpult", "x": 0.55, "y": 1.3, "b": 0.7, "t": 0.5, "hw": "mischpult" },
     { "id": "mon1", "typ": "monitor", "label": "Monitor 1", "x": 1, "y": 2.72, "hw": "monitore" },
@@ -35,6 +35,38 @@
     { "id": "mon3", "fuer": "Matthias", "mix": null }
   ],
   "hardware": {
+    "setup-david": {
+      "kategorie": "Setup",
+      "modell": "David",
+      "beschreibung": "Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre.",
+      "details": [
+        ["Gesang", "Shure SM58, Kanal 6, großes Stativ"],
+        ["Gitarre", "Akustikgitarre per DI, Kanal 5"],
+        ["Monitor", "Monitor 1 (Aux 1)"]
+      ]
+    },
+    "setup-fred": {
+      "kategorie": "Setup",
+      "modell": "Fred",
+      "beschreibung": "Freds Platz vorne rechts (vom Publikum aus gesehen): E-Bass mit Pedalboard, Bassverstärker und Gesang.",
+      "details": [
+        ["Bass", "E-Bass, per DI-Box an Kanal 4"],
+        ["Pedalboard", "Boss RC-5 Loop Station, weitere Pedale folgen"],
+        ["Verstärker", "eigener Bassverstärker auf der Bühne"],
+        ["Gesang", "Shure SM58, Kanal 7, großes Stativ"],
+        ["Monitor", "Monitor 2 (Aux 2)"]
+      ]
+    },
+    "setup-matthias": {
+      "kategorie": "Setup",
+      "modell": "Matthias",
+      "beschreibung": "Matthias sitzt hinten in der Mitte am Schlagzeug und singt mit.",
+      "details": [
+        ["Schlagzeug", "Bassdrum, Snare, Overhead (Kanal 1–3)"],
+        ["Gesang", "Mikro am Galgenstativ, Kanal 8, Modell folgt"],
+        ["Monitor", "Monitor 3 (Aux 3)"]
+      ]
+    },
     "mischpult": {
       "kategorie": "Digitalmischpult",
       "modell": "PreSonus StudioLive 16.4.2",

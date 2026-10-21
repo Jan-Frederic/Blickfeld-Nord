@@ -597,6 +597,111 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true, nl: true },
   },
   {
+    de: 'Setup',
+    en: 'Set-up',
+    nl: 'Set-up',
+  },
+  {
+    de: 'Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre.',
+    en: 'David’s spot at the front left (as seen from the audience): vocals and acoustic guitar.',
+    nl: 'De plek van David vooraan links (gezien vanuit het publiek): zang en akoestische gitaar.',
+  },
+  {
+    de: 'Freds Platz vorne rechts (vom Publikum aus gesehen): E-Bass mit Pedalboard, Bassverstärker und Gesang.',
+    en: 'Fred’s spot at the front right (as seen from the audience): electric bass with pedalboard, bass amp and vocals.',
+    nl: 'De plek van Fred vooraan rechts (gezien vanuit het publiek): elektrische bas met pedalboard, basversterker en zang.',
+  },
+  {
+    de: 'Matthias sitzt hinten in der Mitte am Schlagzeug und singt mit.',
+    en: 'Matthias sits at the drums at the back in the middle and sings along.',
+    nl: 'Matthias zit achteraan in het midden achter het drumstel en zingt mee.',
+  },
+  {
+    de: 'Gesang',
+    en: 'Vocals',
+    nl: 'Zang',
+  },
+  {
+    de: 'Gitarre',
+    en: 'Guitar',
+    nl: 'Gitaar',
+  },
+  {
+    de: 'Bass',
+    en: 'Bass',
+    nl: 'Bas',
+  },
+  {
+    de: 'Pedalboard',
+    en: 'Pedalboard',
+    nl: 'Pedalboard',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'Verstärker',
+    en: 'Amp',
+    nl: 'Versterker',
+  },
+  {
+    de: 'Monitor',
+    en: 'Monitor',
+    nl: 'Monitor',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'Shure SM58, Kanal 6, großes Stativ',
+    en: 'Shure SM58, channel 6, tall stand',
+    nl: 'Shure SM58, kanaal 6, groot statief',
+  },
+  {
+    de: 'Shure SM58, Kanal 7, großes Stativ',
+    en: 'Shure SM58, channel 7, tall stand',
+    nl: 'Shure SM58, kanaal 7, groot statief',
+  },
+  {
+    de: 'Akustikgitarre per DI, Kanal 5',
+    en: 'Acoustic guitar via DI, channel 5',
+    nl: 'Akoestische gitaar via DI, kanaal 5',
+  },
+  {
+    de: 'Monitor 1 (Aux 1)',
+    en: 'Monitor 1 (Aux 1)',
+    nl: 'Monitor 1 (Aux 1)',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'Monitor 2 (Aux 2)',
+    en: 'Monitor 2 (Aux 2)',
+    nl: 'Monitor 2 (Aux 2)',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'Monitor 3 (Aux 3)',
+    en: 'Monitor 3 (Aux 3)',
+    nl: 'Monitor 3 (Aux 3)',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'E-Bass, per DI-Box an Kanal 4',
+    en: 'Electric bass, via DI box to channel 4',
+    nl: 'Elektrische bas, via DI-box naar kanaal 4',
+  },
+  {
+    de: 'Boss RC-5 Loop Station, weitere Pedale folgen',
+    en: 'Boss RC-5 Loop Station, further pedals to follow',
+    nl: 'Boss RC-5 Loop Station, verdere pedalen volgen',
+  },
+  {
+    de: 'eigener Bassverstärker auf der Bühne',
+    en: 'own bass amp on stage',
+    nl: 'eigen basversterker op het podium',
+  },
+  {
+    de: 'Mikro am Galgenstativ, Kanal 8, Modell folgt',
+    en: 'Mic on a boom stand, channel 8, model to follow',
+    nl: 'Microfoon op hengelstatief, kanaal 8, model volgt',
+  },
+  {
     de: 'Digitalmischpult',
     en: 'Digital mixing desk',
     nl: 'Digitaal mengpaneel',
