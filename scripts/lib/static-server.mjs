@@ -8,7 +8,7 @@ const TYPES = {
   '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ics': 'text/calendar', '.pdf': 'application/pdf',
 };
 
-export function serve(dir) {
+export function serve(dir, port = 0) {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     let file = join(dir, path);
@@ -16,6 +16,6 @@ export function serve(dir) {
     const found = existsSync(file);
     res.writeHead(found ? 200 : 404, { 'Content-Type': found ? (TYPES[extname(file)] ?? 'application/octet-stream') : 'text/html' });
     res.end(readFileSync(found ? file : join(dir, '404.html')));
-  }).listen(0);
+  }).listen(port);
   return { base: `http://127.0.0.1:${server.address().port}`, close: () => server.close() };
 }

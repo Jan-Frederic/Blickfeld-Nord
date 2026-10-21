@@ -77,7 +77,10 @@ Das Repo ist öffentlich.
 
 Die Dateien in `public/presse/` (PDF, ZIP, Logos, Fotos, Pressetext) erzeugt
 `scripts/build-pressekit.py` aus `public/hero.webp` und `scripts/presse-quellen/`.
-Texte stehen oben im Skript. Neu bauen (nach `npm ci`):
+Pressekit, Technik-Rider, QR-Code-Karte und Wunschbox-Schild entstehen auf Deutsch (ohne Zusatz), Englisch (`-en`) und
+Niederländisch (`-nl`). Die Texte stehen in `scripts/pdf_texte.py`, die Technik-Angaben werden mit
+`src/app/data/uebersetzungen.ts` übersetzt. Die Website verlinkt automatisch die Fassung der jeweiligen Sprache.
+Neu bauen (nach `npm ci`):
 
 ```bash
 pip install pillow reportlab fonttools
@@ -95,6 +98,15 @@ Ausschneiden) erzeugt `python3 scripts/build-qr-karte.py` (zusätzlich `pip inst
 
 Das freigestellte Kompass-Logo (SVG, hell/dunkel) erzeugt `scripts/kompass-logo.py`; die transparenten PNGs
 (2048 px) wurden daraus gerendert und liegen in `scripts/presse-quellen/`.
+
+### Screenshot-Vergleich
+
+Vor jedem Deploy vergleicht `npx playwright test` (`tests/visual/seiten.spec.mjs`, `playwright.config.mjs`) wichtige
+Seitenbereiche in allen drei Sprachen auf Desktop und Handy mit Referenzbildern in `tests/visual/referenz/`. Weicht ein
+Bereich um mehr als 2 % ab, stoppt der Deploy. Die Unterschiede liegen dann als Artefakt `screenshot-vergleich` am Lauf.
+Laufend wechselnde Inhalte (nächster Auftritt, Konzertliste, Verfügbarkeit, Versionsnummer) sind ausgenommen.
+Nach gewollten Änderungen am Aussehen: Actions → „Screenshots aktualisieren“ (nimmt die Referenzbilder auf dem
+GitHub-Runner neu auf, speichert sie und startet den Deploy neu).
 
 ### Suchmaschinen (Google)
 

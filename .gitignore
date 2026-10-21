@@ -44,3 +44,7 @@ __screenshots__/
 Thumbs.db
 __pycache__/
 lighthouse-berichte/
+
+# Screenshot-Vergleich (Ergebnisse und Bericht, Referenzbilder liegen in tests/visual/referenz)
+/screenshot-ergebnisse
+/screenshot-bericht

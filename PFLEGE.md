@@ -150,6 +150,11 @@ Bevor etwas online geht, prüft GitHub unter anderem:
   jedes Foto mit Beschreibung (Schritt „Tests“)
 - **Fotos:** Eingetragenes Bild fehlt im Ordner oder enthält einen GPS-Standort (Schritt „Fotos vorbereiten“).
 - **Links**, **Barrierefreiheit** und **Klicktests** der wichtigsten Seiten
+- **Aussehen:** Die wichtigsten Seiten werden fotografiert und mit Referenzbildern verglichen (Schritt
+  „Screenshot-Vergleich“). Neue Auftritte, Fotos oder Rückblicke stören dabei nicht. Schlägt der Schritt fehl, sieht
+  eine Seite anders aus als vorher. Die Unterschiede stehen rot markiert im Lauf unter **Artifacts →
+  screenshot-vergleich**. War die Änderung gewollt, z. B. ein neuer Text auf der Technik-Seite: unter Actions
+  **„Screenshots aktualisieren“** starten (*Run workflow*). Danach geht die Seite automatisch neu online.
 
 Nicht weiterkommen? Einfach Fred fragen. Über **History** (Uhr-Symbol oben in der Datei) seht ihr jede frühere
 Fassung und könnt den alten Text von dort zurückkopieren.

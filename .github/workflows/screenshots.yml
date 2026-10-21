@@ -1,0 +1,60 @@
+# Nimmt die Referenzbilder für den Screenshot-Vergleich (tests/visual) neu auf und speichert sie im Repo.
+# Starten nach gewollten Änderungen am Aussehen (Actions → „Screenshots aktualisieren“ → Run workflow).
+# Danach startet der Deploy automatisch neu – mit den neuen Referenzbildern.
+# Die Bilder entstehen hier auf demselben Ubuntu-Runner wie beim Deploy, damit Schriften identisch gerendert werden.
+name: Screenshots aktualisieren
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Website bauen
+        uses: ./.github/actions/build-site
+
+      - name: Referenzbilder aufnehmen
+        run: |
+          npx playwright install --with-deps chromium
+          rm -rf tests/visual/referenz
+          npx playwright test --update-snapshots
+
+      - name: Referenzbilder speichern und neu deployen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/visual/referenz
+          if git diff --cached --quiet; then
+            echo "Referenzbilder unverändert."
+          else
+            git commit -m "test: Screenshot-Referenzen aktualisiert"
+            git push
+          fi
+          # Pushes mit dem Workflow-Token starten keinen Deploy von selbst – daher ausdrücklich anstoßen
+          # (ein angehaltener Deploy kommt so mit den neuen Referenzbildern durch)
+          gh workflow run deploy-pages.yml --ref main

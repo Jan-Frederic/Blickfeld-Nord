@@ -67,41 +67,8 @@ jobs:
       - name: Tests (Inhalte in band.service.ts)
         run: npx ng test --watch=false
 
-      - name: Setup Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-
-      - name: Schriften verkleinern (Icons und Textschriften)
-        run: |
-          pip install --quiet fonttools brotli
-          python scripts/subset-icons.py
-          python scripts/subset-fonts.py
-
-      - name: Fotos vorbereiten (Vorschaubilder, Größe, GPS-Prüfung)
-        run: |
-          pip install --quiet pillow
-          python scripts/bilder.py
-
-      - name: Version (letzter Release-Tag) für den Footer
-        run: node scripts/write-version.mjs
-
-      - name: Build
-        run: npx ng build --base-href /
-
-      - name: Structured data, sitemap and robots.txt
-        run: node scripts/seo.mjs
-
-      - name: SPA fallback for client-only routes
-        run: |
-          cd dist/blickfeld-nord/browser
-          # Öffentliche Seiten sind vorgerendert (eigene index.html je Route).
-          # Unbekannte Pfade bekommen die vorgerenderte Fehlerseite, Backstage die clientseitige Shell.
-          cp 404/index.html 404.html
-          mkdir -p backstage && cp index.csr.html backstage/index.html
-          # Backstage-Unterseiten (/backstage/<id>[/<teil>]) haben keine eigene Datei: Die Fehlerseite leitet sie
-          # zur Backstage-Shell weiter (/backstage/?auftritt=<id>[&teil=<teil>]), die dann zur Unterseite navigiert.
-          sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2]+(p[3]?"\\x26teil="+p[3]:""))</script>#' 404.html
+      - name: Website bauen (Schriften, Fotos, Build, strukturierte Daten, Fehlerseite)
+        uses: ./.github/actions/build-site
 
       - name: Barrierefreiheit (WCAG 2.1 AA, axe-core) – schwere Verstöße stoppen den Deploy
         run: |
@@ -113,6 +80,27 @@ jobs:
 
       - name: Klicktests (wichtige Abläufe wie ein Besucher durchklicken) – ein Fehler stoppt den Deploy
         run: node scripts/e2e.mjs
+
+      - name: Screenshot-Vergleich (Layout in DE/EN/NL, Desktop und Handy) – verrutschte Seiten stoppen den Deploy
+        run: |
+          if [ -z "$(ls tests/visual/referenz 2>/dev/null)" ]; then
+            echo "::notice::Noch keine Referenzbilder – einmal Actions → „Screenshots aktualisieren“ starten."
+            exit 0
+          fi
+          npx playwright test || {
+            echo "::error::Seiten sehen anders aus als die Referenzbilder. Unterschiede: Lauf → Artifacts → screenshot-vergleich (rot markiert). Gewollte Änderung? Actions → „Screenshots aktualisieren“ starten – danach läuft der Deploy automatisch neu."
+            exit 1
+          }
+
+      - name: Unterschiede des Screenshot-Vergleichs speichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-vergleich
+          path: |
+            screenshot-bericht
+            screenshot-ergebnisse
+          retention-days: 14
 
       - name: Linkcheck (interne Links und Bilder; externe Links nur als Warnung)
         run: node scripts/check-links.mjs --extern

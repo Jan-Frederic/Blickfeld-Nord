@@ -441,7 +441,8 @@ flowchart TD
     SPA --> A11Y["a11y.mjs: axe WCAG 2.1 AA<br/>+ Handy-Breite 360 px"]
     A11Y --> SWB["build-sw.mjs: Service Worker"]
     SWB --> E2E["e2e.mjs: Klicktests"]
-    E2E --> LC["check-links.mjs: Linkcheck"]
+    E2E --> VIS["Screenshot-Vergleich<br/>DE/EN/NL, Desktop + Handy"]
+    VIS --> LC["check-links.mjs: Linkcheck"]
     LC --> UP["Pages-Artefakt hochladen"]
   end
 
@@ -476,6 +477,7 @@ eine Patch-Version, die übrigen keine. Die Versionsnummer steht im Footer.
 | Fotos | `scripts/bilder.py` | Eingetragenes Bild fehlt, GPS-Standort im Bild |
 | Barrierefreiheit | `scripts/a11y.mjs` (Playwright + axe-core) | WCAG-2.1-AA-Verstöße auf allen Seiten; Überlauf auf 360 px Breite mit +15 % Schrift |
 | Klicktests | `scripts/e2e.mjs` (Playwright) | Wichtige Abläufe: Konzertliste, Anfrage, Entfernungs-Check, Repertoire-Suche, Menü, Backstage-Filter, Setlist, Vor Ort, Export/Import, Kalender und Service Worker |
+| Screenshot-Vergleich | `tests/visual` (`@playwright/test`, `toHaveScreenshot`) | Verrutschte Layouts: Startseite, Booking, Technik, Presse, Impressum und Fehlerseite in DE/EN/NL auf Desktop und Handy gegen Referenzbilder (über 2 % Abweichung stoppt den Deploy). Wechselnde Inhalte sind abgedeckt, die Referenzbilder entstehen per Workflow „Screenshots aktualisieren“ auf dem Runner. |
 | Links | `scripts/check-links.mjs` | Defekte interne Links und Bilder (externe Links nur als Warnung) |
 | Lighthouse | Lighthouse CI nach dem Deploy | Rückschritte bei Performance, SEO und Best Practices |
 | Commit-Format | commitlint (PR-Titel) | Saubere Versionen und Release Notes |
