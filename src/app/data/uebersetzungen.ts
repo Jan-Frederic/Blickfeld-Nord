@@ -18,21 +18,25 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     de: 'Gesang & Gitarre',
     en: 'Vocals & guitar',
     nl: 'Zang & gitaar',
+    geprueft: { en: true },
   },
   {
     de: 'Schlagzeug & Gesang',
     en: 'Drums & vocals',
     nl: 'Drums & zang',
+    geprueft: { en: true },
   },
   {
     de: 'Bass & Gesang',
     en: 'Bass & vocals',
     nl: 'Bas & zang',
+    geprueft: { en: true },
   },
   {
     de: 'Seit 2019 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.',
     en: 'On board since 2019 and up front at the mic: with his voice and guitar, David wins the crowd over from the very first note.',
     nl: 'Sinds 2019 aan boord en vooraan bij de microfoon: met stem en gitaar pakt David het publiek vanaf de eerste noot.',
+    geprueft: { en: true },
   },
   {
     de: 'Der Puls der Band seit 2019: Matthias sorgt hinterm Drumset für den Groove – und singt dabei auch noch mit.',
