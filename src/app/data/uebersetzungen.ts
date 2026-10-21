@@ -595,6 +595,21 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     nl: 'Zang Matthias',
   },
   {
+    de: 'Mikro David',
+    en: 'Mic David',
+    nl: 'Microfoon David',
+  },
+  {
+    de: 'Mikro Fred',
+    en: 'Mic Fred',
+    nl: 'Microfoon Fred',
+  },
+  {
+    de: 'Mikro Matthias',
+    en: 'Mic Matthias',
+    nl: 'Microfoon Matthias',
+  },
+  {
     de: 'Shure SM58',
     en: 'Shure SM58',
     nl: 'Shure SM58',

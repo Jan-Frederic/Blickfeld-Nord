@@ -14,7 +14,7 @@ const TEXT = tr(
     audience: 'PUBLIKUM',
     details: 'technische Details anzeigen',
     bassAmp: 'Bass-Amp',
-    legend: { musician: 'Musiker', monitor: 'Monitor', pa: 'PA', light: 'Licht', socket: 'Steckdose' },
+    legend: { musician: 'Musiker', monitor: 'Monitor', mic: 'Mikroständer', pa: 'PA', light: 'Licht', socket: 'Steckdose' },
     caption: 'Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte und Musiker antippen für Details',
     channels: 'Kanalliste',
     head: { channel: 'Kanal', source: 'Quelle', type: 'Art', device: 'Gerät', stand: 'Stativ' },
@@ -42,7 +42,7 @@ const TEXT = tr(
     audience: 'AUDIENCE',
     details: 'show technical details',
     bassAmp: 'Bass amp',
-    legend: { musician: 'Musician', monitor: 'Monitor', pa: 'PA', light: 'Lights', socket: 'Power socket' },
+    legend: { musician: 'Musician', monitor: 'Monitor', mic: 'Mic stand', pa: 'PA', light: 'Lights', socket: 'Power socket' },
     caption: 'Top view, audience at the bottom · 1 square = 1 m · tap equipment or musicians for details',
     channels: 'Channel list',
     head: { channel: 'Channel', source: 'Source', type: 'Type', device: 'Device', stand: 'Stand' },
@@ -70,7 +70,7 @@ const TEXT = tr(
     audience: 'PUBLIEK',
     details: 'technische details tonen',
     bassAmp: 'Basversterker',
-    legend: { musician: 'Muzikant', monitor: 'Monitor', pa: 'PA', light: 'Licht', socket: 'Stopcontact' },
+    legend: { musician: 'Muzikant', monitor: 'Monitor', mic: 'Microfoonstandaard', pa: 'PA', light: 'Licht', socket: 'Stopcontact' },
     caption: 'Bovenaanzicht, publiek onderaan · 1 vakje = 1 m · tik op apparatuur of muzikanten voor details',
     channels: 'Kanalenlijst',
     head: { channel: 'Kanaal', source: 'Bron', type: 'Soort', device: 'Apparaat', stand: 'Statief' },
@@ -101,7 +101,7 @@ const TEXT = tr(
 
 interface Item {
   id: string;
-  typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom';
+  typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom' | 'mikro';
   label: string;
   rolle?: string;
   x: number;
@@ -110,6 +110,8 @@ interface Item {
   t?: number;
   drehung?: number;
   hw?: string;
+  /** Galgenstativ: Ende des Arms (Position des Mikros) */
+  arm?: number[];
 }
 
 
@@ -154,14 +156,15 @@ const py = (m: number) => PAD_TOP + m * M;
           @switch (it.typ) {
             @case ('drums') {
               <rect class="riser" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="10" />
-              <circle class="drum" [attr.cx]="px(it.x)" [attr.cy]="py(it.y + 0.3)" r="26" />
-              <circle class="drum" [attr.cx]="px(it.x - 0.42)" [attr.cy]="py(it.y + 0.12)" r="15" />
-              <circle class="drum" [attr.cx]="px(it.x - 0.18)" [attr.cy]="py(it.y - 0.18)" r="13" />
-              <circle class="drum" [attr.cx]="px(it.x + 0.18)" [attr.cy]="py(it.y - 0.18)" r="13" />
-              <circle class="drum" [attr.cx]="px(it.x + 0.45)" [attr.cy]="py(it.y + 0.1)" r="17" />
-              <circle class="cymbal" [attr.cx]="px(it.x - 0.6)" [attr.cy]="py(it.y - 0.38)" r="20" />
-              <circle class="cymbal" [attr.cx]="px(it.x + 0.6)" [attr.cy]="py(it.y - 0.38)" r="22" />
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y - it.t! / 2) + 16" text-anchor="middle">{{ ct.t(it.label) }}</text>
+              <!-- Blick des Schlagzeugers zum Publikum: Bassdrum und Hocker hinten, Toms und Becken vorne -->
+              <circle class="drum" [attr.cx]="px(it.x)" [attr.cy]="py(it.y - 0.1)" r="26" />
+              <circle class="drum" [attr.cx]="px(it.x + 0.42)" [attr.cy]="py(it.y - 0.12)" r="15" />
+              <circle class="drum" [attr.cx]="px(it.x + 0.18)" [attr.cy]="py(it.y + 0.18)" r="13" />
+              <circle class="drum" [attr.cx]="px(it.x - 0.18)" [attr.cy]="py(it.y + 0.18)" r="13" />
+              <circle class="drum" [attr.cx]="px(it.x - 0.45)" [attr.cy]="py(it.y - 0.1)" r="17" />
+              <circle class="cymbal" [attr.cx]="px(it.x + 0.6)" [attr.cy]="py(it.y + 0.36)" r="20" />
+              <circle class="cymbal" [attr.cx]="px(it.x - 0.6)" [attr.cy]="py(it.y + 0.36)" r="22" />
+              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y + it.t! / 2) - 8" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('person') {
               <circle class="person" [attr.cx]="px(it.x)" [attr.cy]="py(it.y)" r="21" />
@@ -189,10 +192,24 @@ const py = (m: number) => PAD_TOP + m * M;
               <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + (it.drehung ? 44 : 30)" text-anchor="middle">{{ ct.t(it.label) }}</text>
             }
             @case ('pa') {
-              <rect class="pa" [attr.x]="px(it.x) - 26" [attr.y]="py(it.y) - 52" width="52" height="104" rx="4" />
-              <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) - 22" r="14" />
-              <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) + 22" r="18" />
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 62" text-anchor="middle">PA</text>
+              <!-- Top auf dem Subwoofer -->
+              <rect class="pa" [attr.x]="px(it.x) - 24" [attr.y]="py(it.y) - 84" width="48" height="74" rx="4" />
+              <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) - 64" r="10" />
+              <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) - 33" r="15" />
+              <rect class="pa" [attr.x]="px(it.x) - 30" [attr.y]="py(it.y) - 6" width="60" height="62" rx="4" />
+              <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) + 25" r="22" />
+              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 94" text-anchor="middle">PA</text>
+              <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 72" text-anchor="middle">Sub</text>
+            }
+            @case ('mikro') {
+              <!-- Mikrofonständer von oben: Dreibein, beim Galgen mit Arm zum Musiker -->
+              @for (a of [90, 210, 330]; track a) {
+                <line class="mic" [attr.x1]="px(it.x)" [attr.y1]="py(it.y)" [attr.x2]="px(it.x) + leg(a, 'x')" [attr.y2]="py(it.y) + leg(a, 'y')" />
+              }
+              @if (it.arm) {
+                <line class="mic" [attr.x1]="px(it.x)" [attr.y1]="py(it.y)" [attr.x2]="px(it.arm[0])" [attr.y2]="py(it.arm[1])" />
+              }
+              <circle class="mic" [attr.cx]="px(it.arm ? it.arm[0] : it.x)" [attr.cy]="py(it.arm ? it.arm[1] : it.y)" r="5" />
             }
             @case ('licht') {
               <circle class="light" [attr.cx]="px(it.x)" [attr.cy]="py(it.y)" r="14" />
@@ -210,6 +227,7 @@ const py = (m: number) => PAD_TOP + m * M;
       <figcaption>
         <span><i class="key person"></i> {{ t().legend.musician }}</span>
         <span><i class="key wedge"></i> {{ t().legend.monitor }}</span>
+        <span><i class="key mic"></i> {{ t().legend.mic }}</span>
         <span><i class="key pa"></i> {{ t().legend.pa }}</span>
         <span><i class="key light"></i> {{ t().legend.light }}</span>
         <span><i class="key power"></i> {{ t().legend.socket }}</span>
@@ -314,7 +332,7 @@ const py = (m: number) => PAD_TOP + m * M;
     .dim, .audience { fill: var(--bn-fog); font-size: 13px; letter-spacing: .16em; }
     .audience { fill: var(--bn-sunset); }
     .riser { fill: rgba(236, 233, 228, .04); stroke: rgba(236, 233, 228, .25); stroke-dasharray: 5 4; }
-    .drum, .box, .pa, .wedge { fill: #22262b; stroke: var(--bn-ink); stroke-width: 1.5; }
+    .drum, .box, .pa, .wedge, .power { fill: #22262b; stroke: var(--bn-ink); stroke-width: 1.5; }
     .wedge { fill: #2c3238; }
     .cymbal { fill: rgba(232, 164, 106, .12); stroke: var(--bn-sunset); stroke-width: 1.2; }
     .person { fill: var(--bn-sunset); }
@@ -326,26 +344,26 @@ const py = (m: number) => PAD_TOP + m * M;
     .cone { fill: none; stroke: var(--bn-fog); stroke-width: 1.5; }
     .light { fill: rgba(255, 220, 150, .15); stroke: #f5d48f; stroke-width: 1.5; }
     .light-core, .key.light { fill: #f5d48f; background: #f5d48f; }
-    .power { fill: #22262b; stroke: #7fc29b; stroke-width: 1.5; }
+    .power { stroke: #7fc29b; }
     .power-sym { font-size: 14px; fill: #7fc29b; }
     figcaption { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 12px; font-size: .8rem; color: var(--bn-fog); }
     figcaption span { display: inline-flex; align-items: center; gap: 6px; }
     .key { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
     .key.person { background: var(--bn-sunset); border-radius: 50%; }
     .key.wedge, .key.pa { background: #22262b; border: 1px solid var(--bn-ink); }
-    .key.light { border-radius: 50%; }
+    .mic, .key.mic { fill: var(--bn-ink); stroke: var(--bn-ink); background: var(--bn-ink); }
+    .key.light, .key.mic { border-radius: 50%; }
     .key.power { border: 1px solid #7fc29b; }
     .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--bn-line); }
     table { width: 100%; border-collapse: collapse; font-size: .92rem; }
     th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--bn-line); white-space: nowrap; }
-    th { font-family: var(--bn-wide); font-weight: 400; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bn-fog); }
+    th, .col-title { font-family: var(--bn-wide); font-weight: 400; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bn-fog); }
     tbody tr:last-child td { border-bottom: 0; }
     .num { color: var(--bn-sunset); font-variant-numeric: tabular-nums; width: 3em; }
     .open { color: var(--bn-fog); font-style: italic; }
     .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .col { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
     .col.center { flex: 0 1 180px; min-width: 160px; }
-    .col-title { font-family: var(--bn-wide); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--bn-fog); }
     .chip { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--bn-line); font-size: .88rem; }
     .chip b { color: var(--bn-sunset); margin-right: 6px; font-variant-numeric: tabular-nums; }
     .chip.strong { padding: 18px 12px; text-align: center; border-color: var(--bn-sunset); }
@@ -356,13 +374,12 @@ const py = (m: number) => PAD_TOP + m * M;
     .hit:hover > *, .hit:focus-visible > * { stroke: var(--bn-sunset); }
     .hit:hover text, .hit:focus-visible text { fill: var(--bn-sunset); stroke: none; }
     button.chip { font: inherit; color: inherit; background: transparent; cursor: pointer; }
-    button.chip:hover { color: var(--bn-sunset); }
     .hw-link {
       display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit;
       font: inherit; text-align: left; cursor: pointer;
     }
     .hw-link mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--bn-fog); }
-    .hw-link:hover, .hw-link:hover mat-icon { color: var(--bn-sunset); }
+    button.chip:hover, .hw-link:hover, .hw-link:hover mat-icon { color: var(--bn-sunset); }
     .stand { margin: 20px 0 0; font-size: .78rem; color: var(--bn-fog); }
     @media (max-width: 700px) { .flow { flex-direction: column; align-items: stretch; } .arrow { transform: rotate(90deg); align-self: center; } }
   `,
@@ -427,6 +444,12 @@ export class TechnikAufbau {
 
   protected verbraucher(list: string[]): string {
     return list.map((v) => this.ct.t(v)).join(', ');
+  }
+
+  // Bein des Mikrofonstativs (Dreibein, 12 px lang) in Richtung a Grad
+  protected leg(a: number, axis: 'x' | 'y'): number {
+    const r = (a * Math.PI) / 180;
+    return 12 * (axis === 'x' ? Math.cos(r) : -Math.sin(r));
   }
 
   // Monitorkeil: Trapez, die schmale Seite zeigt zum Musiker (nach oben = Richtung Bühnenrückseite)
