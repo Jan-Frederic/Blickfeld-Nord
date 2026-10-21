@@ -69,14 +69,14 @@ const TEXT = tr(
   {
     kicker: 'For press & organisers',
     lead: 'Everything you need for an announcement or a report about Blickfeld Nord: info, press text, logos and photos in full resolution.',
-    pdf: 'Press kit as PDF (German)',
-    zip: 'Download everything as ZIP (German)',
-    qr: 'QR code card to print (German)',
+    pdf: 'Press kit as PDF',
+    zip: 'Download everything as ZIP',
+    qr: 'QR code card to print',
     pressText: 'Press text',
     text: PRESS_TEXT_EN,
     copied: 'Copied!',
     copy: 'Copy text',
-    txt: 'As text file (German)',
+    txt: 'As text file',
     logos: 'Logos & photos',
     usage: 'Logos and photos may be used free of charge to announce shows and for reporting on Blickfeld Nord. Please do not alter them. Photo credit: Blickfeld Nord.',
     assets: [
@@ -94,14 +94,14 @@ const TEXT = tr(
   {
     kicker: 'Voor pers & organisatoren',
     lead: "Alles wat je nodig hebt voor een aankondiging of een bericht over Blickfeld Nord: info, perstekst, logo's en foto's in volledige resolutie.",
-    pdf: 'Perskit als pdf (Duits)',
-    zip: 'Alles downloaden als zip (Duits)',
-    qr: 'QR-codekaart om te printen (Duits)',
+    pdf: 'Perskit als pdf',
+    zip: 'Alles downloaden als zip',
+    qr: 'QR-codekaart om te printen',
     pressText: 'Perstekst',
     text: PRESS_TEXT_NL,
     copied: 'Gekopieerd!',
     copy: 'Tekst kopiëren',
-    txt: 'Als tekstbestand (Duits)',
+    txt: 'Als tekstbestand',
     logos: "Logo's & foto's",
     usage: "Logo's en foto's mogen kosteloos worden gebruikt om optredens aan te kondigen en voor berichtgeving over Blickfeld Nord. Graag niet bewerken. Fotocredit: Blickfeld Nord.",
     assets: [
@@ -130,13 +130,13 @@ const TEXT = tr(
       <app-page-links current="presse" />
 
       <div class="main-downloads">
-        <a class="btn primary" href="presse/blickfeld-nord-pressekit.pdf" download>
+        <a class="btn primary" [href]="'presse/blickfeld-nord-pressekit' + sfx() + '.pdf'" download>
           <mat-icon>picture_as_pdf</mat-icon> {{ t().pdf }}
         </a>
-        <a class="btn" href="presse/blickfeld-nord-pressekit.zip" download>
+        <a class="btn" [href]="'presse/blickfeld-nord-pressekit' + sfx() + '.zip'" download>
           <mat-icon>folder_zip</mat-icon> {{ t().zip }}
         </a>
-        <a class="btn" href="presse/blickfeld-nord-qr-karte.pdf" download>
+        <a class="btn" [href]="'presse/blickfeld-nord-qr-karte' + sfx() + '.pdf'" download>
           <mat-icon>qr_code_2</mat-icon> {{ t().qr }}
         </a>
       </div>
@@ -151,7 +151,7 @@ const TEXT = tr(
             <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
             {{ copied() ? t().copied : t().copy }}
           </button>
-          <a class="btn small" href="presse/blickfeld-nord-pressetext.txt" download>
+          <a class="btn small" [href]="'presse/blickfeld-nord-pressetext' + sfx() + '.txt'" download>
             <mat-icon>description</mat-icon> {{ t().txt }}
           </a>
         </div>
@@ -226,7 +226,10 @@ const TEXT = tr(
   `,
 })
 export class Presse {
-  protected readonly t = inject(I18n).t(TEXT);
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t(TEXT);
+  // Pressekit, Pressetext und QR-Karte gibt es je Sprache (scripts/build-pressekit.py, build-qr-karte.py): Deutsch ohne Zusatz, sonst -en / -nl
+  protected readonly sfx = computed(() => (this.i18n.lang() === 'de' ? '' : '-' + this.i18n.lang()));
   protected readonly paragraphs = computed(() => this.t().text.split('\n\n'));
   protected readonly copied = signal(false);
   protected readonly assets = computed((): Asset[] => FILES.map((f, i) => ({ ...f, ...this.t().assets[i] })));

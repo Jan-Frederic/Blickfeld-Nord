@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Erzeugt die QR-Code-Karte zum Ausdrucken: public/presse/blickfeld-nord-qr-karte.pdf
+"""Erzeugt die QR-Code-Karte zum Ausdrucken: public/presse/blickfeld-nord-qr-karte(-en|-nl).pdf
 
 Seite 1: Schild (A4) für Bühne und Theke – QR-Codes zu Website und Instagram
 Seite 2: vier Flyer-Karten (A6) zum Ausschneiden
-Außerdem: public/presse/blickfeld-nord-wunschbox.pdf – Schild für die Live-Wunschbox (/wunsch) auf der Bühne
+Außerdem: public/presse/blickfeld-nord-wunschbox(-en|-nl).pdf – Schild für die Live-Wunschbox (/wunsch) auf der Bühne
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-qr-karte.py
 Benötigt: reportlab, fonttools, segno  (pip install reportlab fonttools segno)
+Texte je Sprache: scripts/pdf_texte.py (QR); die QR-Codes führen auf die Website in derselben Sprache.
 """
 import importlib.util
 import os
@@ -22,12 +23,18 @@ spec = importlib.util.spec_from_file_location('pressekit', os.path.join(HERE, 'b
 pk = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pk)
 
-OUT = os.path.join(pk.OUT, 'blickfeld-nord-qr-karte.pdf')
+T = pk.pdf_texte
 LOGO = os.path.join(pk.SRC, 'kompass-logo-hell.png')
-WEBSITE = ('Website', 'blickfeld-nord.de', 'https://blickfeld-nord.de/')
 INSTAGRAM = ('Instagram', '@blickfeldnord', 'https://www.instagram.com/blickfeldnord/')
-WUNSCH = 'https://blickfeld-nord.de/wunsch'
-OUT_WUNSCH = os.path.join(pk.OUT, 'blickfeld-nord-wunschbox.pdf')
+
+
+# je Sprache eine Datei; die QR-Codes führen auf die Website in derselben Sprache
+def out(name, lang):
+    return os.path.join(pk.OUT, f'blickfeld-nord-{name}{T.suffix(lang)}.pdf')
+
+
+def website(lang):
+    return ('Website', 'blickfeld-nord.de' + ('' if lang == 'de' else f'/{lang}'), T.site('/', lang))
 
 
 def qr(c, url, x, y, size):
@@ -94,46 +101,48 @@ def qr_block(c, entry, cx, top, size):
     centered(c, display, cx, top - size - 16 * mm, 'Inter-SemiBold', 13, pk.INK)
 
 
-def sign_page(c):
+def sign_page(c, lang):
+    t = T.QR[lang]
     w, h = A4
     c.setFillColor(pk.NIGHT)
     c.rect(0, 0, w, h, stroke=0, fill=1)
     ls = 78 * mm
     c.drawImage(LOGO, (w - ls) / 2, h - 22 * mm - ls, ls, ls, mask='auto')
     wordmark(c, w / 2, h - 122 * mm, 26)
-    centered(c, pk.TEXT['claim'], w / 2, h - 134 * mm, 'Inter', 12.5, pk.FOG)
+    centered(c, T.PRESSEKIT[lang]['claim'], w / 2, h - 134 * mm, 'Inter', 12.5, pk.FOG)
     size = 62 * mm
     top = h - 152 * mm
-    qr_block(c, WEBSITE, w / 2 - 44 * mm, top, size)
+    qr_block(c, website(lang), w / 2 - 44 * mm, top, size)
     qr_block(c, INSTAGRAM, w / 2 + 44 * mm, top, size)
     c.setStrokeColor(pk.SUNSET)
     c.setLineWidth(0.8)
     c.line(w / 2 - 20 * mm, 30 * mm, w / 2 + 20 * mm, 30 * mm)
-    centered(c, 'Termine, Booking & Fotos: einfach scannen', w / 2, 20 * mm, 'Inter', 11, pk.INK)
+    centered(c, t['scan'], w / 2, 20 * mm, 'Inter', 11, pk.INK)
     c.showPage()
 
 
-def card(c, x, y, w, h):
+def card(c, x, y, w, h, lang):
+    t = T.QR[lang]
     c.setFillColor(pk.NIGHT)
     c.rect(x, y, w, h, stroke=0, fill=1)
     cx = x + w / 2
     ls = 34 * mm
     c.drawImage(LOGO, cx - ls / 2, y + h - 8 * mm - ls, ls, ls, mask='auto')
     wordmark(c, cx, y + h - 52 * mm, 13)
-    centered(c, 'Partyband · Feste, private Feiern und Kneipen', cx, y + h - 59 * mm, 'Inter', 7.5, pk.FOG)
+    centered(c, t['card_claim'], cx, y + h - 59 * mm, 'Inter', 7.5, pk.FOG)
     size = 42 * mm
-    qr(c, WEBSITE[2], cx - size / 2, y + 26 * mm, size)
-    spaced(c, 'TERMINE & BOOKING', cx, y + 18 * mm, 'Montserrat', 7, pk.SUNSET)
-    centered(c, 'blickfeld-nord.de', cx, y + 12 * mm, 'Inter-SemiBold', 10, pk.INK)
+    qr(c, website(lang)[2], cx - size / 2, y + 26 * mm, size)
+    spaced(c, t['card_label'], cx, y + 18 * mm, 'Montserrat', 7, pk.SUNSET)
+    centered(c, website(lang)[1], cx, y + 12 * mm, 'Inter-SemiBold', 10, pk.INK)
     centered(c, 'Instagram @blickfeldnord', cx, y + 6.5 * mm, 'Inter', 7.5, pk.FOG)
 
 
-def cards_page(c):
+def cards_page(c, lang):
     w, h = A4
     cw, ch = w / 2, h / 2  # 4 × A6
     for i in range(2):
         for j in range(2):
-            card(c, i * cw, j * ch, cw, ch)
+            card(c, i * cw, j * ch, cw, ch, lang)
     # Schnittlinien
     c.setStrokeColor(pk.FOG)
     c.setLineWidth(0.4)
@@ -143,43 +152,46 @@ def cards_page(c):
     c.showPage()
 
 
-def wunsch_page(c):
+def wunsch_page(c, lang):
     """Schild für die Bühne: großer QR-Code zur Live-Wunschbox."""
+    t = T.QR[lang]
+    url = T.site('/wunsch', lang)
     w, h = A4
     c.setFillColor(pk.NIGHT)
     c.rect(0, 0, w, h, stroke=0, fill=1)
     ls = 40 * mm
     c.drawImage(LOGO, (w - ls) / 2, h - 18 * mm - ls, ls, ls, mask='auto')
     wordmark(c, w / 2, h - 70 * mm, 18)
-    spaced(c, 'LIVE-WUNSCHBOX', w / 2, h - 88 * mm, 'Montserrat', 14, pk.SUNSET)
-    centered(c, 'Euer Song?', w / 2, h - 106 * mm, 'Inter-SemiBold', 34, pk.INK)
+    spaced(c, t['wish_kicker'], w / 2, h - 88 * mm, 'Montserrat', 14, pk.SUNSET)
+    centered(c, t['wish_question'], w / 2, h - 106 * mm, 'Inter-SemiBold', 34, pk.INK)
     size = 112 * mm
-    qr(c, WUNSCH, (w - size) / 2, h - 116 * mm - size, size)
-    centered(c, 'Scannen, Song aussuchen, abschicken.', w / 2, 42 * mm, 'Inter-SemiBold', 15, pk.INK)
-    centered(c, 'Wir spielen ihn, sobald er in den Abend passt.', w / 2, 34 * mm, 'Inter', 12.5, pk.FOG)
+    qr(c, url, (w - size) / 2, h - 116 * mm - size, size)
+    centered(c, t['wish_how'], w / 2, 42 * mm, 'Inter-SemiBold', 15, pk.INK)
+    centered(c, t['wish_promise'], w / 2, 34 * mm, 'Inter', 12.5, pk.FOG)
     c.setStrokeColor(pk.SUNSET)
     c.setLineWidth(0.8)
     c.line(w / 2 - 20 * mm, 24 * mm, w / 2 + 20 * mm, 24 * mm)
-    centered(c, 'blickfeld-nord.de/wunsch', w / 2, 15 * mm, 'Inter', 11, pk.FOG)
+    centered(c, url.replace('https://', ''), w / 2, 15 * mm, 'Inter', 11, pk.FOG)
     c.showPage()
 
 
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         pk.register_fonts(tmp)
-        c = canvas.Canvas(OUT, pagesize=A4)
-        c.setTitle('Blickfeld Nord – QR-Code-Karte')
-        c.setAuthor('Blickfeld Nord')
-        sign_page(c)
-        cards_page(c)
-        c.save()
-        w = canvas.Canvas(OUT_WUNSCH, pagesize=A4)
-        w.setTitle('Blickfeld Nord – Live-Wunschbox')
-        w.setAuthor('Blickfeld Nord')
-        wunsch_page(w)
-        w.save()
-    print(f'{os.path.relpath(OUT)}  {os.path.getsize(OUT) / 1024:.0f} KB')
-    print(f'{os.path.relpath(OUT_WUNSCH)}  {os.path.getsize(OUT_WUNSCH) / 1024:.0f} KB')
+        for lang in T.LANGS:
+            c = canvas.Canvas(out('qr-karte', lang), pagesize=A4)
+            c.setTitle(T.QR[lang]['title'])
+            c.setAuthor('Blickfeld Nord')
+            sign_page(c, lang)
+            cards_page(c, lang)
+            c.save()
+            w = canvas.Canvas(out('wunschbox', lang), pagesize=A4)
+            w.setTitle(T.QR[lang]['wish_title'])
+            w.setAuthor('Blickfeld Nord')
+            wunsch_page(w, lang)
+            w.save()
+            for name in ('qr-karte', 'wunschbox'):
+                print(f'{os.path.relpath(out(name, lang))}  {os.path.getsize(out(name, lang)) / 1024:.0f} KB')
 
 
 if __name__ == '__main__':

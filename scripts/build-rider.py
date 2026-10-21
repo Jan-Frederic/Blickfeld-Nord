@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Erzeugt den Technik-Rider für Veranstalter: public/presse/blickfeld-nord-technik-rider.pdf
+"""Erzeugt den Technik-Rider für Veranstalter: public/presse/blickfeld-nord-technik-rider(-en|-nl).pdf
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-rider.py
 Benötigt: pillow, reportlab, fonttools
-Angaben stehen unten in RIDER – bei Änderungen auch die FAQ in src/app/data/faq.ts (DE/EN/NL) und die Technik-Seite src/app/pages/technik.ts anpassen.
+Angaben je Sprache stehen in scripts/pdf_texte.py (RIDER) – bei Änderungen auch die FAQ in src/app/data/faq.ts (DE/EN/NL) und die Technik-Seite src/app/pages/technik.ts anpassen.
 Seite 2 (Bühnenplan, Kanalliste, Monitore, Strom) kommt aus src/app/data/technik.json – derselben Datei wie auf /technik.
 """
 import importlib.util
@@ -22,47 +22,37 @@ spec = importlib.util.spec_from_file_location('pressekit', os.path.join(HERE, 'b
 pk = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pk)
 
-OUT = os.path.join(pk.OUT, 'blickfeld-nord-technik-rider.pdf')
 LOGO = os.path.join(pk.SRC, 'kompass-logo-hell.png')
 with open(os.path.join(HERE, '..', 'src', 'app', 'data', 'technik.json'), encoding='utf-8') as fh:
     TECHNIK = json.load(fh)
 
-RIDER = [
-    ('Platz, Strom & Technik', [
-        ('Spielfläche', 'ca. 4 × 3 m'),
-        ('Strom', '2 Steckdosen in der Nähe der Spielfläche'),
-        ('PA & Licht', 'bringen wir selbst mit'),
-    ]),
-    ('Zeitplan', [
-        ('Aufbau', 'ca. 3 Stunden vor Beginn'),
-        ('Spielzeit', '3 bis 4 Stunden, in Sets à 1 Stunde'),
-        ('Pausen', 'nach Absprache oder spontan'),
-        ('Abbau', 'ca. 1 Stunde'),
-    ]),
-    ('Buchung', [
-        ('Anfahrt', 'im Umkreis von bis zu 50 km rund um Hamminkeln'),
-        ('Vorlauf', 'mindestens 4 Wochen im Voraus'),
-    ]),
-]
+T = pk.pdf_texte
+tx = T.tx
 
 
-def header(c, w, h):
+def out(lang):
+    return os.path.join(pk.OUT, f'blickfeld-nord-technik-rider{T.suffix(lang)}.pdf')
+
+
+def header(c, w, h, lang):
+    t, pt = T.RIDER[lang], T.PRESSEKIT[lang]
     band = 46 * mm
     c.setFillColor(pk.NIGHT)
     c.rect(0, h - band, w, band, stroke=0, fill=1)
     ls = 34 * mm
     c.drawImage(LOGO, w - 20 * mm - ls, h - band + (band - ls) / 2, ls, ls, mask='auto')
     m = 20 * mm
-    pk.kicker(c, 'Für Veranstalter', m, h - 17 * mm)
+    pk.kicker(c, pt['organisers'], m, h - 17 * mm)
     c.setFont('Michroma', 22)
     c.setFillColor(pk.INK)
-    c.drawString(m, h - 30 * mm, 'TECHNIK-RIDER')
+    c.drawString(m, h - 30 * mm, t['heading'])
     c.setFont('Montserrat', 10)
     c.setFillColor(pk.FOG)
-    c.drawString(m, h - 38 * mm, 'Blickfeld Nord · ' + pk.TEXT['claim'])
+    c.drawString(m, h - 38 * mm, 'Blickfeld Nord · ' + pt['claim'])
 
 
-def stage_plot(c, x0, top, width):
+def stage_plot(c, x0, top, width, lang):
+    t = T.RIDER[lang]
     """Bühnenplan als Draufsicht (druckfreundlich: dunkle Linien auf Weiß), Publikum unten."""
     bw, bd = TECHNIK['buehne']['breite'], TECHNIK['buehne']['tiefe']
     pad = 16 * mm  # Platz für die PA links und rechts
@@ -95,16 +85,16 @@ def stage_plot(c, x0, top, width):
             c.setDash(*((3, 2) if t == 'drums' else ()))
             c.rect(x - w / 2, y - h / 2, w, h, stroke=1, fill=0)
             c.setDash()
-            label(it['label'], x, y + h / 2 - 9 if t == 'drums' else y - 2)
+            label(tx(it['label'], lang), x, y + h / 2 - 9 if t == 'drums' else y - 2)
         elif t == 'person':
             c.setFillColor(pk.SUNSET)
             c.circle(x, y, 4.2 * mm, stroke=0, fill=1)
             label(it['label'][0], x, y - 3, 9, pk.TEXT_DARK, 'Inter-SemiBold')
             if it['id'] != 'matthias':
-                label(it['label'], x, y - 8 * mm, 8, pk.TEXT_DARK, 'Inter-SemiBold')
-                label(it.get('rolle', ''), x, y - 11 * mm)
+                label(tx(it['label'], lang), x, y - 8 * mm, 8, pk.TEXT_DARK, 'Inter-SemiBold')
+                label(tx(it.get('rolle', ''), lang), x, y - 11 * mm)
             else:
-                label(it['label'], x, y - 7.5 * mm, 7, pk.TEXT_DARK, 'Inter-SemiBold')
+                label(tx(it['label'], lang), x, y - 7.5 * mm, 7, pk.TEXT_DARK, 'Inter-SemiBold')
         elif t == 'monitor':
             p = c.beginPath()
             if it.get('drehung'):
@@ -113,7 +103,7 @@ def stage_plot(c, x0, top, width):
                 p.moveTo(x - 5 * mm, y - 2.5 * mm); p.lineTo(x + 5 * mm, y - 2.5 * mm); p.lineTo(x + 4 * mm, y + 2.5 * mm); p.lineTo(x - 4 * mm, y + 2.5 * mm)
             p.close()
             c.drawPath(p, stroke=1, fill=0)
-            label(it['label'], x, y - (8.5 if it.get('drehung') else 6) * mm)
+            label(tx(it['label'], lang), x, y - (8.5 if it.get('drehung') else 6) * mm)
         elif t == 'pa':
             c.rect(x - 4 * mm, y - 8 * mm, 8 * mm, 16 * mm, stroke=1, fill=0)
             label('PA', x, y + 9.5 * mm)
@@ -123,13 +113,13 @@ def stage_plot(c, x0, top, width):
         elif t == 'strom':
             c.setStrokeColor(HexColor('#3f8f63'))
             c.rect(x - 3 * mm, y - 2.2 * mm, 6 * mm, 4.4 * mm, stroke=1, fill=0)
-            label(it['label'], x, y + 3.6 * mm)
-    label(f"SPIELFLÄCHE {bw} × {bd} M", px(bw / 2), py(0) + 9 * mm, 7.5, pk.TEXT_MID, 'Montserrat')
-    label('P U B L I K U M', px(bw / 2), py(bd) - 7 * mm, 8, HexColor('#c27a3e'), 'Montserrat')
+            label(tx(it['label'], lang), x, y + 3.6 * mm)
+    label(f"{T.RIDER[lang]['stage']} {bw} × {bd} M", px(bw / 2), py(0) + 9 * mm, 7.5, pk.TEXT_MID, 'Montserrat')
+    label(T.RIDER[lang]['audience'], px(bw / 2), py(bd) - 7 * mm, 8, HexColor('#c27a3e'), 'Montserrat')
     return py(bd) - 16 * mm
 
 
-def table(c, x, y, cols, rows, widths):
+def table(c, x, y, cols, rows, widths, open_text='offen'):
     c.setFont('Montserrat', 7)
     c.setFillColor(pk.TEXT_MID)
     cx = x
@@ -147,103 +137,110 @@ def table(c, x, y, cols, rows, widths):
             open_ = val is None
             c.setFont('Inter-SemiBold' if i == 0 else 'Inter', 9)
             c.setFillColor(HexColor('#c27a3e') if i == 0 else (pk.TEXT_MID if open_ else pk.TEXT_DARK))
-            c.drawString(cx, y, 'offen' if open_ else str(val))
+            c.drawString(cx, y, open_text if open_ else str(val))
             cx += w
         y -= 2.5 * mm
     return y
 
 
-def page_two(c, w, h):
+def page_two(c, w, h, lang):
+    t = T.RIDER[lang]
     m = 20 * mm
-    pk.kicker(c, 'Technischer Aufbau', m, h - 20 * mm)
-    pk.heading(c, 'Bühnenplan & Kanalliste', m, h - 30 * mm, size=14)
+    pk.kicker(c, t['setup'], m, h - 20 * mm)
+    pk.heading(c, t['plot'], m, h - 30 * mm, size=14)
     c.setFont('Inter', 8)
     c.setFillColor(pk.TEXT_MID)
-    c.drawString(m, h - 36 * mm, TECHNIK['status'])
+    c.drawString(m, h - 36 * mm, tx(TECHNIK['status'], lang))
     hw = TECHNIK['hardware']
     c.setFont('Inter-SemiBold', 8.5)
     c.setFillColor(pk.TEXT_DARK)
     c.drawString(m, h - 41.5 * mm, '   ·   '.join(
-        f'{k}: {hw[key]["modell"] or "offen"}' for k, key in [('Mischpult', 'mischpult'), ('PA', 'pa'), ('Monitore', 'monitore'), ('Licht', 'licht')]))
-    y = stage_plot(c, m, h - 60 * mm, w - 2 * m)
-    rows = [[k['kanal'], k['quelle'], k['art'], k['geraet'], k['stativ'] or '–', 'ja' if k['phantom'] else '–'] for k in TECHNIK['kanaele']]
-    y = table(c, m, y, ['Kanal', 'Quelle', 'Art', 'Gerät', 'Stativ', '48 V'], rows, [16 * mm, 45 * mm, 20 * mm, 45 * mm, 25 * mm, 15 * mm])
+        f'{k}: {hw[key]["modell"] or t["open"]}' for k, key in t['hw']))
+    y = stage_plot(c, m, h - 60 * mm, w - 2 * m, lang)
+    rows = [[k['kanal'], tx(k['quelle'], lang), tx(k['art'], lang), tx(k['geraet'], lang), tx(k['stativ'], lang) or '–', t['yes'] if k['phantom'] else '–'] for k in TECHNIK['kanaele']]
+    y = table(c, m, y, t['cols'], rows, [16 * mm, 45 * mm, 20 * mm, 45 * mm, 25 * mm, 15 * mm], t['open'])
     y -= 6 * mm
-    labels = {i['id']: i['label'] for i in TECHNIK['aufbau']}
+    labels = {i['id']: tx(i['label'], lang) for i in TECHNIK['aufbau']}
     half = (w - 2 * m) / 2
-    pk.heading(c, 'Monitore', m, y, size=10)
-    pk.heading(c, 'Strom', m + half, y, size=10)
+    pk.heading(c, t['monitors'], m, y, size=10)
+    pk.heading(c, t['power'], m + half, y, size=10)
     yl = yr = y - 6 * mm
     for i, mon in enumerate(TECHNIK['monitore'], 1):
-        text = f"{labels.get(mon['id'], mon['id'])} (Aux {i}) für {mon['fuer']}: {mon['mix'] or 'Mischung offen'}"
+        text = t['monitor_line'].format(label=labels.get(mon['id'], mon['id']), i=i, fuer=tx(mon['fuer'], lang), mix=tx(mon['mix'], lang) or t['mix_open'])
         yl = pk.paragraph(c, text, m, yl, half - 6 * mm, size=8.5, leading=11) - 1.5 * mm
     for s_ in TECHNIK['strom']:
-        text = f"{labels.get(s_['id'], s_['id'])}: {', '.join(s_['verbraucher'])}"
+        text = f"{labels.get(s_['id'], s_['id'])}: {', '.join(tx(v, lang) for v in s_['verbraucher'])}"
         yr = pk.paragraph(c, text, m + half, yr, half, size=8.5, leading=11) - 1.5 * mm
 
 
 def main():
-    w, h = A4
-    m = 20 * mm
     with tempfile.TemporaryDirectory() as tmp:
         pk.register_fonts(tmp)
-        c = canvas.Canvas(OUT, pagesize=A4)
-        c.setTitle('Blickfeld Nord – Technik-Rider')
-        c.setAuthor('Blickfeld Nord')
-        header(c, w, h)
+        for lang in T.LANGS:
+            build(lang)
+            print(f'{os.path.relpath(out(lang))}  {os.path.getsize(out(lang)) / 1024:.0f} KB')
 
-        y = h - 62 * mm
-        label_w = 52 * mm
-        for section, rows in RIDER:
-            pk.heading(c, section, m, y, size=12)
-            y -= 4 * mm
-            c.setStrokeColor(HexColor('#c27a3e'))
-            c.setLineWidth(1)
-            c.line(m, y, m + 10 * mm, y)
-            y -= 8 * mm
-            for label, value in rows:
-                c.setFont('Montserrat', 8)
-                c.setFillColor(pk.TEXT_MID)
-                c.drawString(m, y, ' '.join(label.upper()))
-                pk.paragraph(c, value, m + label_w, y, w - 2 * m - label_w, size=11, leading=14)
-                y -= 4 * mm
-                c.setStrokeColor(pk.LINE)
-                c.setLineWidth(0.5)
-                c.line(m, y, w - m, y)
-                y -= 5.5 * mm
-            y -= 6 * mm
 
-        # Besetzung und Kontakt
-        pk.heading(c, 'Besetzung', m, y, size=12)
-        y -= 9 * mm
-        members = ' · '.join(f'{n} ({r})' for n, r in pk.TEXT['members'])
-        y = pk.paragraph(c, members, m, y, w - 2 * m, size=10.5, leading=15) - 8 * mm
-        pk.heading(c, 'Kontakt', m, y, size=12)
-        y -= 9 * mm
-        for label, value, url in [e for e in pk.TEXT['contact'] if e[0] in ('Booking', 'Instagram', 'Website')]:
+def build(lang):
+    t, pt = T.RIDER[lang], T.PRESSEKIT[lang]
+    w, h = A4
+    m = 20 * mm
+    c = canvas.Canvas(out(lang), pagesize=A4)
+    c.setTitle(t['title'])
+    c.setAuthor('Blickfeld Nord')
+    header(c, w, h, lang)
+
+    y = h - 62 * mm
+    label_w = 52 * mm
+    for section, rows in t['sections']:
+        pk.heading(c, section, m, y, size=12)
+        y -= 4 * mm
+        c.setStrokeColor(HexColor('#c27a3e'))
+        c.setLineWidth(1)
+        c.line(m, y, m + 10 * mm, y)
+        y -= 8 * mm
+        for label, value in rows:
             c.setFont('Montserrat', 8)
             c.setFillColor(pk.TEXT_MID)
             c.drawString(m, y, ' '.join(label.upper()))
-            c.setFont('Inter', 10.5)
-            c.setFillColor(pk.TEXT_DARK)
-            c.drawString(m + label_w, y, value)
-            c.linkURL(url, (m + label_w, y - 2, m + label_w + c.stringWidth(value, 'Inter', 10.5), y + 10), relative=0)
-            y -= 6.5 * mm
+            pk.paragraph(c, value, m + label_w, y, w - 2 * m - label_w, size=11, leading=14)
+            y -= 4 * mm
+            c.setStrokeColor(pk.LINE)
+            c.setLineWidth(0.5)
+            c.line(m, y, w - m, y)
+            y -= 5.5 * mm
+        y -= 6 * mm
 
-        c.setFont('Montserrat', 7.5)
+    # Besetzung und Kontakt
+    pk.heading(c, pt['lineup'], m, y, size=12)
+    y -= 9 * mm
+    members = ' · '.join(f'{n} ({r})' for n, r in pt['members'])
+    y = pk.paragraph(c, members, m, y, w - 2 * m, size=10.5, leading=15) - 8 * mm
+    pk.heading(c, pt['contact_label'], m, y, size=12)
+    y -= 9 * mm
+    for label, value, url in [e for e in T.contact(lang) if e[0] in ('Booking', 'Instagram', 'Website')]:
+        c.setFont('Montserrat', 8)
         c.setFillColor(pk.TEXT_MID)
-        c.drawString(m, 12 * mm, 'BLICKFELD NORD · TECHNIK-RIDER · BLICKFELD-NORD.DE')
-        c.drawRightString(w - m, 12 * mm, f'Stand {date.today():%m/%Y}')
-        c.showPage()
+        c.drawString(m, y, ' '.join(label.upper()))
+        c.setFont('Inter', 10.5)
+        c.setFillColor(pk.TEXT_DARK)
+        c.drawString(m + label_w, y, value)
+        c.linkURL(url, (m + label_w, y - 2, m + label_w + c.stringWidth(value, 'Inter', 10.5), y + 10), relative=0)
+        y -= 6.5 * mm
 
-        page_two(c, w, h)
-        c.setFont('Montserrat', 7.5)
-        c.setFillColor(pk.TEXT_MID)
-        c.drawString(m, 12 * mm, 'BLICKFELD NORD · TECHNIK-RIDER · BLICKFELD-NORD.DE')
-        c.drawRightString(w - m, 12 * mm, f'Stand {date.today():%m/%Y} · Seite 2')
-        c.showPage()
-        c.save()
-    print(f'{os.path.relpath(OUT)}  {os.path.getsize(OUT) / 1024:.0f} KB')
+    c.setFont('Montserrat', 7.5)
+    c.setFillColor(pk.TEXT_MID)
+    c.drawString(m, 12 * mm, f'BLICKFELD NORD · {t["footer"]} · BLICKFELD-NORD.DE')
+    c.drawRightString(w - m, 12 * mm, f'{pt["as_of"]} {date.today():%m/%Y}')
+    c.showPage()
+
+    page_two(c, w, h, lang)
+    c.setFont('Montserrat', 7.5)
+    c.setFillColor(pk.TEXT_MID)
+    c.drawString(m, 12 * mm, f'BLICKFELD NORD · {t["footer"]} · BLICKFELD-NORD.DE')
+    c.drawRightString(w - m, 12 * mm, f'{pt["as_of"]} {date.today():%m/%Y} · {t["page"]} 2')
+    c.showPage()
+    c.save()
 
 
 if __name__ == '__main__':

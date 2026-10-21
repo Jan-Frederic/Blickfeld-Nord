@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { PageLinks } from '../sections/page-links';
@@ -37,7 +37,7 @@ const TEXT = tr(
     kicker: 'For organisers',
     title: 'Technical info',
     lead: 'You take care of the guests, we take care of the sound: we bring our own PA, lights and instruments. All we need from you is a little space and power – here are all the details at a glance.',
-    rider: 'Tech rider (PDF, in German)',
+    rider: 'Tech rider (PDF)',
     bring: 'What we bring',
     cards: [
       { icon: 'speaker', title: 'PA', items: ['Speakers (tops) and subwoofers', 'Mixing desk', 'Three vocal mics and drum mics', 'Monitor speakers'] },
@@ -64,7 +64,7 @@ const TEXT = tr(
     kicker: 'Voor organisatoren',
     title: 'Techniek',
     lead: 'Jullie zorgen voor de gasten, wij voor het geluid: geluid (PA), licht en instrumenten nemen we zelf mee. Van jullie hebben we alleen wat ruimte en stroom nodig – hier staan alle details op een rij.',
-    rider: 'Techniek-rider (pdf, Duits)',
+    rider: 'Techniek-rider (pdf)',
     bring: 'Wat we meenemen',
     cards: [
       { icon: 'speaker', title: 'PA', items: ['Speakers (tops) en subwoofers', 'Mengpaneel', "Drie zangmicrofoons en drummicrofoons", 'Monitorspeakers'] },
@@ -103,7 +103,7 @@ const TEXT = tr(
       <app-page-links current="technik" />
 
       <div class="downloads">
-        <a class="btn primary" href="presse/blickfeld-nord-technik-rider.pdf" download>
+        <a class="btn primary" [href]="'presse/blickfeld-nord-technik-rider' + sfx() + '.pdf'" download>
           <mat-icon>description</mat-icon> {{ t().rider }}
         </a>
       </div>
@@ -199,5 +199,8 @@ const TEXT = tr(
   `,
 })
 export class Technik {
-  protected readonly t = inject(I18n).t(TEXT);
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t(TEXT);
+  // Technik-Rider je Sprache (scripts/build-rider.py): Deutsch ohne Zusatz, sonst -en / -nl
+  protected readonly sfx = computed(() => (this.i18n.lang() === 'de' ? '' : '-' + this.i18n.lang()));
 }

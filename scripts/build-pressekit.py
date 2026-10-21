@@ -3,10 +3,12 @@
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-pressekit.py
 Benötigt: pillow, reportlab, fonttools  (pip install pillow reportlab fonttools)
-Texte für PDF und Pressetext stehen unten in TEXT – bei Änderungen dort anpassen und neu bauen.
+Texte für PDF und Pressetext je Sprache stehen in scripts/pdf_texte.py – bei Änderungen dort anpassen und neu bauen.
+Erzeugt Deutsch (ohne Zusatz) sowie Englisch und Niederländisch (-en, -nl).
 """
 import os
 import shutil
+import sys
 import tempfile
 import zipfile
 from datetime import date
@@ -34,42 +36,19 @@ TEXT_DARK = HexColor('#1d2024')
 TEXT_MID = HexColor('#555b63')
 LINE = HexColor('#d9d6d0')
 
-TEXT = {
-    'claim': 'Partyband mit drei Stimmen und jeder Menge Stimmung',
-    'about': [
-        'Was 2019 als Kombo von David Bröker und Matthias Wigger begann, ist heute ein echtes Power-Trio: '
-        'Seit Oktober 2025 macht Jan-Frederic „Fred“ Overbeck am Bass die Runde komplett. Seitdem heißt es: '
-        'drei Stimmen, ein Ziel – Party.',
-        'Blickfeld Nord spielt Musik, die ins Bein geht und zum Mitsingen einlädt – ein vielseitiges Repertoire '
-        'aus Pop, Rock, Schlager, Dance und Disco. Egal ob Weihnachtsmarkt, Stadtfest oder private Feier: '
-        'Wenn Blickfeld Nord auf der Bühne steht, bleibt keiner lange sitzen.',
-    ],
-    'members': [
-        ('David Bröker', 'Gesang & Gitarre'),
-        ('Matthias Wigger', 'Schlagzeug & Gesang'),
-        ('Jan-Frederic Overbeck', 'Bass & Gesang'),
-    ],
-    'facts': [
-        ('Anlässe', 'Feste, private Feiern und Kneipen'),
-        ('Spielzeit', '3 bis 4 Stunden – in Sets à 1 Stunde'),
-        ('Pausen', 'Nach Absprache oder spontan'),
-        ('Technik', 'Eigene PA und Licht bringen wir mit'),
-    ],
-    # (Bezeichnung, Anzeige, Link)
-    'contact': [
-        ('Booking', 'Matthiaswigger@me.com', 'mailto:Matthiaswigger@me.com?subject=Booking-Anfrage%20Blickfeld%20Nord'),
-        ('Instagram', '@blickfeldnord', 'https://www.instagram.com/blickfeldnord/'),
-        ('Facebook', 'Blickfeld Nord', 'https://www.facebook.com/share/1BBobZWfjG/'),
-        ('Website', 'blickfeld-nord.de', 'https://blickfeld-nord.de/'),
-        ('Repertoire', 'Playlist auf Spotify', 'https://open.spotify.com/playlist/6O7apXN53rSGaWGhP8S8TW'),
-    ],
-    'usage': 'Logos und Fotos dürfen für die Ankündigung von Auftritten sowie für die Berichterstattung über '
-             'Blickfeld Nord honorarfrei verwendet werden. Bitte nicht verfremden. Bildnachweis: Blickfeld Nord.',
-}
+# Texte je Sprache: scripts/pdf_texte.py (Deutsch, Englisch, Niederländisch – wie auf der Website)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pdf_texte  # noqa: E402
+
+
+def texts(lang):
+    return {**pdf_texte.PRESSEKIT[lang], 'contact': pdf_texte.contact(lang)}
+
+
+# deutsche Fassung – auch für Technik-Rider und QR-Code-Karte
+TEXT = texts('de')
 
 FILES = {
-    'pdf': 'blickfeld-nord-pressekit.pdf',
-    'zip': 'blickfeld-nord-pressekit.zip',
     'logo': 'blickfeld-nord-logo-motiv.jpg',
     'kompass_png': 'blickfeld-nord-kompass.png',
     'kompass_svg': 'blickfeld-nord-kompass.svg',
@@ -79,8 +58,17 @@ FILES = {
     'logo_dunkel_svg': 'blickfeld-nord-kompass-logo-dunkel.svg',
     'foto1': 'blickfeld-nord-bandfoto-1.jpg',
     'foto2': 'blickfeld-nord-bandfoto-2.jpg',
-    'text': 'blickfeld-nord-pressetext.txt',
 }
+
+
+def lang_files(lang):
+    """PDF, ZIP und Pressetext je Sprache: Deutsch ohne Zusatz, sonst -en / -nl"""
+    sfx = pdf_texte.suffix(lang)
+    return {
+        'pdf': f'blickfeld-nord-pressekit{sfx}.pdf',
+        'zip': f'blickfeld-nord-pressekit{sfx}.zip',
+        'text': f'blickfeld-nord-pressetext{sfx}.txt',
+    }
 
 
 def register_fonts(tmp):
@@ -115,18 +103,19 @@ def build_images():
         im.save(os.path.join(OUT, FILES[key]), quality=92, optimize=True)
 
 
-def build_text():
-    lines = ['BLICKFELD NORD – Pressetext', '', TEXT['claim'], '']
-    lines += [p for para in TEXT['about'] for p in (para, '')]
-    lines += ['Besetzung:'] + [f'– {n}: {r}' for n, r in TEXT['members']] + ['']
-    lines += ['Für Veranstalter:'] + [f'– {k}: {v}' for k, v in TEXT['facts']] + ['']
-    lines += ['Kontakt:']
-    for label, value, url in TEXT['contact']:
+def build_text(lang):
+    t = texts(lang)
+    lines = [f'BLICKFELD NORD – {t["text_title"]}', '', t['claim'], '']
+    lines += [p for para in t['about'] for p in (para, '')]
+    lines += [f'{t["lineup"]}:'] + [f'– {n}: {r}' for n, r in t['members']] + ['']
+    lines += [f'{t["organisers"]}:'] + [f'– {k}: {v}' for k, v in t['facts']] + ['']
+    lines += [f'{t["contact_label"]}:']
+    for label, value, url in t['contact']:
         link = url.split('?')[0].replace('mailto:', '')
         lines.append(f'– {label}: {value}' + ('' if link == value else f' ({link})'))
     lines.append('')
-    lines += ['Nutzung:', TEXT['usage'], '', f'Stand: {date.today():%m/%Y}']
-    with open(os.path.join(OUT, FILES['text']), 'w', encoding='utf-8') as f:
+    lines += [f'{t["usage_label"]}:', t['usage'], '', f'{t["as_of"]}: {date.today():%m/%Y}']
+    with open(os.path.join(OUT, lang_files(lang)['text']), 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
 
 
@@ -168,11 +157,11 @@ def heading(c, text, x, y, size=17, color=TEXT_DARK):
     c.drawString(x, y, text.upper())
 
 
-def footer(c, page, dark=False):
+def footer(c, page, dark=False, label='PRESSEKIT'):
     w, _ = A4
     c.setFont('Montserrat', 7.5)
     c.setFillColor(FOG if dark else TEXT_MID)
-    c.drawString(20 * mm, 12 * mm, 'BLICKFELD NORD · PRESSEKIT · BLICKFELD-NORD.DE')
+    c.drawString(20 * mm, 12 * mm, f'BLICKFELD NORD · {label} · BLICKFELD-NORD.DE')
     c.drawRightString(w - 20 * mm, 12 * mm, f'{page} / 3')
 
 
@@ -189,13 +178,14 @@ def cover_image(c, path, x, y, w, h):
     c.restoreState()
 
 
-def build_pdf(tmp):
+def build_pdf(tmp, lang):
+    t = texts(lang)
     w, h = A4
     m = 20 * mm
-    c = canvas.Canvas(os.path.join(OUT, FILES['pdf']), pagesize=A4)
-    c.setTitle('Blickfeld Nord – Pressekit')
+    c = canvas.Canvas(os.path.join(OUT, lang_files(lang)['pdf']), pagesize=A4)
+    c.setTitle(t['title'])
     c.setAuthor('Blickfeld Nord')
-    c.setSubject(TEXT['claim'])
+    c.setSubject(t['claim'])
 
     # Seite 1: Cover
     c.setFillColor(NIGHT)
@@ -205,7 +195,7 @@ def build_pdf(tmp):
     lh = w * lh_px / lw_px
     c.drawImage(logo, 0, h - lh, w, lh)
     y = h - lh - 22 * mm
-    kicker(c, 'Pressekit', m, y)
+    kicker(c, t['kicker'], m, y)
     y -= 14 * mm
     c.setFont('Michroma', 26)
     c.setFillColor(INK)
@@ -213,14 +203,14 @@ def build_pdf(tmp):
     y -= 10 * mm
     c.setFont('Montserrat', 12)
     c.setFillColor(SUNSET)
-    c.drawString(m, y, TEXT['claim'])
+    c.drawString(m, y, t['claim'])
     y -= 14 * mm
-    for para in TEXT['about']:
+    for para in t['about']:
         y = paragraph(c, para, m, y, w - 2 * m, size=11, leading=17, color=INK) - 6
     # Besetzung als drei Spalten
     y -= 8 * mm
     col = (w - 2 * m) / 3
-    for i, (name, role) in enumerate(TEXT['members']):
+    for i, (name, role) in enumerate(t['members']):
         x = m + i * col
         c.setStrokeColor(SUNSET)
         c.setLineWidth(1)
@@ -231,18 +221,18 @@ def build_pdf(tmp):
         c.setFont('Montserrat', 8.5)
         c.setFillColor(FOG)
         c.drawString(x, y - 5.5 * mm, role)
-    footer(c, 1, dark=True)
+    footer(c, 1, dark=True, label=t['footer'])
     c.showPage()
 
     # Seite 2: Booking & Kontakt
     y = h - 28 * mm
-    kicker(c, 'Für Veranstalter', m, y, color=HexColor('#c27a3e'))
+    kicker(c, t['organisers'], m, y, color=HexColor('#c27a3e'))
     y -= 12 * mm
-    heading(c, 'Booking', m, y)
+    heading(c, t['booking'], m, y)
     y -= 14 * mm
     box_w = (w - 2 * m - 6 * mm) / 2
     box_h = 24 * mm
-    for i, (label, value) in enumerate(TEXT['facts']):
+    for i, (label, value) in enumerate(t['facts']):
         bx = m + (i % 2) * (box_w + 6 * mm)
         by = y - (i // 2) * (box_h + 6 * mm) - box_h
         c.setStrokeColor(LINE)
@@ -256,19 +246,18 @@ def build_pdf(tmp):
 
     heading(c, 'Repertoire', m, y, size=13)
     y -= 9 * mm
-    y = paragraph(c, 'Pop, Rock, Schlager, Dance und Disco – die komplette Songliste gibt es als Playlist auf Spotify:',
-                  m, y, w - 2 * m)
-    spotify = TEXT['contact'][-1][2]
+    y = paragraph(c, t['repertoire'], m, y, w - 2 * m)
+    spotify = t['contact'][-1][2]
     c.setFont('Inter-SemiBold', 10.5)
     c.setFillColor(HexColor('#c27a3e'))
-    c.drawString(m, y, 'Playlist auf Spotify öffnen →')
+    c.drawString(m, y, t['open_playlist'])
     c.linkURL(spotify, (m, y - 3, m + 70 * mm, y + 11), relative=0)
     y -= 16
     y -= 12 * mm
 
-    heading(c, 'Kontakt', m, y, size=13)
+    heading(c, t['contact_label'], m, y, size=13)
     y -= 10 * mm
-    for label, value, url in TEXT['contact']:
+    for label, value, url in t['contact']:
         c.setFont('Montserrat', 8)
         c.setFillColor(TEXT_MID)
         c.drawString(m, y, label.upper())
@@ -280,14 +269,14 @@ def build_pdf(tmp):
         c.setStrokeColor(LINE)
         c.line(m, y - 4 * mm, w - m, y - 4 * mm)
         y -= 11 * mm
-    footer(c, 2)
+    footer(c, 2, label=t['footer'])
     c.showPage()
 
     # Seite 3: Pressefotos & Logos
     y = h - 28 * mm
     kicker(c, 'Download', m, y, color=HexColor('#c27a3e'))
     y -= 12 * mm
-    heading(c, 'Fotos & Logos', m, y)
+    heading(c, t['photos'], m, y)
     y -= 10 * mm
     full = w - 2 * m
     ph = full * 0.5
@@ -303,21 +292,21 @@ def build_pdf(tmp):
     ks = sh * 0.72
     c.drawImage(pdf_jpeg(tmp, os.path.join(OUT, FILES['kompass_png']), 800), kx + (half - ks) / 2, y - sh + (sh - ks) / 2, ks, ks)
     y -= sh + 10 * mm
-    y = paragraph(c, 'Alle Bilder und Logos in voller Auflösung zum Download: blickfeld-nord.de/presse', m, y, full,
-                  font='Inter-SemiBold', size=10.5)
-    c.linkURL('https://blickfeld-nord.de/presse', (m, y + 2, m + full, y + 18), relative=0)
+    y = paragraph(c, t['full_res'], m, y, full, font='Inter-SemiBold', size=10.5)
+    c.linkURL(pdf_texte.site('/presse', lang), (m, y + 2, m + full, y + 18), relative=0)
     y -= 4
-    paragraph(c, TEXT['usage'], m, y, full, size=9.5, leading=14, color=TEXT_MID)
-    footer(c, 3)
+    paragraph(c, t['usage'], m, y, full, size=9.5, leading=14, color=TEXT_MID)
+    footer(c, 3, label=t['footer'])
     c.showPage()
     c.save()
 
 
-def build_zip():
-    with zipfile.ZipFile(os.path.join(OUT, FILES['zip']), 'w', zipfile.ZIP_DEFLATED) as z:
+def build_zip(lang):
+    files = {**FILES, **lang_files(lang)}
+    with zipfile.ZipFile(os.path.join(OUT, files['zip']), 'w', zipfile.ZIP_DEFLATED) as z:
         for key in ['pdf', 'text', 'logo', 'kompass_png', 'kompass_svg', 'logo_hell_png', 'logo_hell_svg',
                     'logo_dunkel_png', 'logo_dunkel_svg', 'foto1', 'foto2']:
-            z.write(os.path.join(OUT, FILES[key]), 'blickfeld-nord-pressekit/' + FILES[key])
+            z.write(os.path.join(OUT, files[key]), 'blickfeld-nord-pressekit/' + files[key])
 
 
 def main():
@@ -325,9 +314,10 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         register_fonts(tmp)
         build_images()
-        build_text()
-        build_pdf(tmp)
-        build_zip()
+        for lang in pdf_texte.LANGS:
+            build_text(lang)
+            build_pdf(tmp, lang)
+            build_zip(lang)
     for name in sorted(os.listdir(OUT)):
         print(f'{name:40} {os.path.getsize(os.path.join(OUT, name)) / 1024:8.0f} KB')
 
