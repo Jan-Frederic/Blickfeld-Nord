@@ -13,6 +13,7 @@ const TEXT = tr(
     copy: 'Adresse kopieren',
     download: 'einmalig herunterladen',
     prompt: 'Kalender-Adresse kopieren:',
+    outlook: 'Outlook zeigt abonnierte Termine nur bis ein Jahr im Voraus – spätere erscheinen automatisch, sobald sie näher rücken.',
   },
   {
     hint: 'New dates appear in your calendar automatically',
@@ -23,6 +24,7 @@ const TEXT = tr(
     copy: 'Copy address',
     download: 'download once',
     prompt: 'Copy calendar address:',
+    outlook: 'Outlook only shows subscribed dates up to one year ahead – later ones appear automatically as they get closer.',
   },
   {
     hint: 'Nieuwe data verschijnen automatisch in je agenda',
@@ -33,12 +35,14 @@ const TEXT = tr(
     copy: 'Adres kopiëren',
     download: 'eenmalig downloaden',
     prompt: 'Agenda-adres kopiëren:',
+    outlook: 'Outlook toont geabonneerde data maar tot een jaar vooruit – latere verschijnen vanzelf zodra ze dichterbij komen.',
   },
 );
 
 // „Kalender abonnieren“ für eine beim Build erzeugte .ics-Datei (scripts/seo.mjs).
 // Android kennt kein webcal:// – dort öffnet der Button direkt das Abo in Google Kalender.
 // Das neue Outlook für Windows verstümmelt webcal://-Links – dafür gibt es „Adresse kopieren“ (https).
+// Microsoft 365 übernimmt aus Abos nur Termine bis etwa ein Jahr im Voraus – darauf weist die letzte Zeile hin.
 @Component({
   selector: 'app-abo-button',
   imports: [MatButtonModule, MatIconModule],
@@ -53,13 +57,15 @@ const TEXT = tr(
       <button type="button" (click)="copy()" [title]="t().copyHint">{{ copied() ? t().copied : t().copy }}</button> ·
       <button type="button" (click)="download.emit()">{{ t().download }}</button>
     </span>
+    <span class="note">{{ t().outlook }}</span>
   `,
   styles: `
     :host { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .alt { font-size: .8rem; color: var(--bn-fog); }
+    .note { max-width: 34em; font-size: .72rem; line-height: 1.4; color: var(--bn-fog); text-align: right; }
     .alt a, .alt button { color: inherit; font: inherit; padding: 0; border: 0; background: none; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
     .alt a:hover, .alt button:hover { color: var(--bn-sunset); }
-    @media (max-width: 640px) { :host { align-items: flex-start; } }
+    @media (max-width: 640px) { :host { align-items: flex-start; } .note { text-align: left; } }
   `,
 })
 export class AboButton {
