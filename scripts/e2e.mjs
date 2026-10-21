@@ -175,9 +175,22 @@ test('Backstage: Übersetzung als passend markieren', async () => {
   return p;
 });
 
-test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
+test('Backstage: Übersicht führt in die Bereiche, Direktaufruf eines Bereichs klappt', async () => {
   const p = await page();
   await p.go('/backstage/');
+  await p.locator('app-backstage .tiles a', { hasText: 'Material' }).click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/material', 'Kachel „Material“ führt nicht zu /backstage/material');
+  await until(async () => (await p.locator('app-backstage-nav a.on').innerText()).includes('Material'), 'Navigation markiert den Bereich nicht');
+  // Direktaufruf (z. B. Lesezeichen) geht über die Fehlerseite – muss im richtigen Bereich landen
+  await p.go('/backstage/zahlen/');
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/zahlen', 'Direktaufruf /backstage/zahlen landet woanders');
+  await p.locator('app-backstage-besucher').waitFor();
+  return p;
+});
+
+test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
   const rows = () => p.locator('tr.mat-mdc-row').count();
   const filter = (t) => p.locator('.filters button', { hasText: t });
   for (const t of ['Ausstehende', 'Probe', 'Vergangene']) if ((await filter(t).getAttribute('aria-pressed')) !== 'true') await filter(t).click();
@@ -225,7 +238,7 @@ test('Backstage: Vor Ort berechnet Abfahrt, Daten lassen sich exportieren und im
   const [dl] = await Promise.all([p.waitForEvent('download'), p.locator('app-backstage-sync button').click()]);
   const file = await dl.path();
   const q = await page();
-  await q.go('/backstage/');
+  await q.go('/backstage/abgleich/');
   await q.locator('app-backstage-sync input[type=file]').setInputFiles(file);
   await q.waitForTimeout(1500);
   await q.go(`/backstage/${id}/vorort`);

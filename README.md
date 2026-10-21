@@ -35,8 +35,12 @@ Architektur mit Diagrammen: [ARCHITECTURE.md](ARCHITECTURE.md) · Inhalte pflege
 - **Pressekit** (`/presse`) – Pressetext, Logos, Fotos, PDF und ZIP zum Download
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten. Steckt der Name eines Freundes im Location-Namen
   eines Auftritts, verlinkt die Konzertliste automatisch auf dessen Karte (`/freunde#cafe-lotti`), die dort kurz aufleuchtet
-- **Backstage** (`/backstage`, versteckt) – alle Auftritte inkl. privater Termine mit Status und Kommentar, exportierbar als Bandkalender.
-  Easter Egg: fünfmal schnell auf das Logo oben links klicken. Jede Zeile der Tabelle öffnet die **Unterseite des Auftritts**
+- **Backstage** (`/backstage`, versteckt) – in Bereiche gegliedert, gemeinsame Navigation `backstage-nav.ts`:
+  **Übersicht** (Kennzahlen, nächste Termine, Kacheln), **Termine** (`/backstage/termine`: alle Auftritte inkl. privater
+  mit Status und Kommentar sowie Proben, Filter, Sortierung, Bandkalender-Abo, neuen Termin eintragen), **Zahlen**
+  (Besucher, Setlist-Statistik), **Übersetzungen** (Stand und Gegenlesen), **Material** (Wunschbox-Schild, QR-Karte,
+  Rider, Pressekit in DE/EN/NL) und **Abgleich** (Export/Import der Gerätedaten).
+  Easter Egg: fünfmal schnell auf das Logo oben links klicken. Jede Zeile der Termin-Tabelle öffnet die **Unterseite des Auftritts**
   (`/backstage/<datum>`, bei zwei Terminen am selben Tag `<datum>-2`; `src/app/pages/backstage-show.ts`) mit allen Daten,
   Kalendereintrag und Vor/Zurück zum nächsten Termin.
   Unter der Tabelle erzeugt **Neuen Termin eintragen** (`src/app/pages/termin-formular.ts`) aus Datum, Ort, privat/öffentlich

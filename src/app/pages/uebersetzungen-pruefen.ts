@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { BackstageNav } from './backstage-nav';
+import { BackstageUebersetzungen } from './backstage-uebersetzungen';
 import { BandService } from '../data/band.service';
 import { UEBERSETZUNGEN, Uebersetzung } from '../data/uebersetzungen';
 import { Entscheidung, Pruefung, Sprache, patchSource } from '../data/uebersetzungen-patch';
@@ -25,16 +26,18 @@ function load(): Pruefung {
 
 @Component({
   selector: 'app-uebersetzungen-pruefen',
-  imports: [RouterLink, MatIconModule],
+  imports: [MatIconModule, BackstageNav, BackstageUebersetzungen],
   template: `
     <section class="section">
-      <a routerLink="/backstage" class="back"><mat-icon>arrow_back</mat-icon> Backstage</a>
+      <app-backstage-nav />
       <p class="kicker">Backstage</p>
       <h2>Übersetzungen prüfen</h2>
       <p class="lead">
         Links steht der deutsche Text, rechts die Übersetzung. Bei Bedarf korrigieren und <strong>„Passt“</strong> anklicken.
         Alles bleibt in diesem Browser gespeichert, bis ihr es unten übernehmt.
       </p>
+
+      <app-backstage-uebersetzungen />
 
       <div class="controls">
         <div class="seg" role="group" aria-label="Sprache">
@@ -92,7 +95,6 @@ function load(): Pruefung {
     </section>
   `,
   styles: `
-    .back { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-fog); text-decoration: none; font-size: .9rem; }
     .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 8px; }
     .seg { display: inline-flex; border: 1px solid var(--bn-line); border-radius: 999px; overflow: hidden; }
     .seg button { padding: 8px 14px; border: 0; background: none; color: var(--bn-ink); font: inherit; font-size: .88rem; cursor: pointer; }

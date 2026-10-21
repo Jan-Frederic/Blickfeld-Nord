@@ -1,5 +1,4 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
@@ -11,7 +10,7 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
 
 @Component({
   selector: 'app-backstage-uebersetzungen',
-  imports: [MatIconModule, RouterLink],
+  imports: [MatIconModule],
   template: `
     <section class="box" aria-labelledby="uebersetzungen-titel">
       <h2 id="uebersetzungen-titel"><mat-icon>translate</mat-icon> Übersetzungen der Inhalte</h2>
@@ -34,9 +33,8 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
           </ul>
         </details>
       }
-      <a class="review" routerLink="/backstage/uebersetzungen"><mat-icon>fact_check</mat-icon> Übersetzungen prüfen</a>
       <p class="foot">
-        Original und Übersetzung nebeneinander, korrigieren, „Passt“ anklicken – auch ohne Code-Kenntnisse ·
+        Gegenlesen weiter unten: Original und Übersetzung nebeneinander, korrigieren, „Passt“ anklicken ·
         <a [href]="editUrl" target="_blank" rel="noopener">Datei direkt auf GitHub öffnen</a>
       </p>
     </section>
@@ -56,7 +54,6 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
     details { margin-top: 16px; font-size: .88rem; }
     summary { cursor: pointer; }
     .list { margin: 8px 0 0; padding-left: 20px; color: var(--bn-fog); }
-    .review { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 8px 14px; border-radius: 999px; background: var(--bn-sunset); color: #2a1708 !important; text-decoration: none; font-weight: 500; }
     .foot { margin: 16px 0 0; font-size: .78rem; color: var(--bn-fog); }
     a { color: var(--bn-sunset); }
   `,

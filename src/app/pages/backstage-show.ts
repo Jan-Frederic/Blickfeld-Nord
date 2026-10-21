@@ -21,7 +21,7 @@ const DAY = 24 * 60 * 60 * 1000;
   imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter],
   template: `
     <section class="section">
-      <a class="back" routerLink="/backstage"><mat-icon>arrow_back</mat-icon> Alle Auftritte</a>
+      <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
 
       @if (show(); as s) {
         <p class="kicker">Backstage · Auftritt</p>
@@ -117,7 +117,7 @@ const DAY = 24 * 60 * 60 * 1000;
         </nav>
       } @else {
         <h2>Auftritt nicht gefunden</h2>
-        <p class="lead">Diesen Termin gibt es nicht (mehr). Zurück zur <a routerLink="/backstage">Übersicht</a>.</p>
+        <p class="lead">Diesen Termin gibt es nicht (mehr). Zurück zu den <a routerLink="/backstage/termine">Terminen</a>.</p>
       }
     </section>
   `,

@@ -340,12 +340,14 @@ und Hilfen am Abend des Auftritts. Er ist **kein geschützter Bereich**. Alle Te
 
 ```mermaid
 flowchart TB
-  BS["/backstage"] --> ST["Kennzahlen-Kacheln"]
-  BS --> TAB["Tabelle Auftritte + Proben<br/>kombinierbare Filter, sortierbar"]
-  BS --> ABO["Band-Kalender abonnieren"]
-  BS --> VIS["Besucherzahlen (GoatCounter)"]
-  BS --> NEU["Neuen Termin eintragen<br/>→ Zeile + GitHub-Editor"]
-  BS --> SYNC["Austausch: Export/Import JSON"]
+  BS["/backstage – Übersicht<br/>Kennzahlen, nächste Termine, Kacheln"] --> TER["/backstage/termine"]
+  BS --> ZA["/backstage/zahlen<br/>Besucher (GoatCounter), Setlist-Statistik"]
+  BS --> UE["/backstage/uebersetzungen<br/>Stand + gegenlesen"]
+  BS --> MAT["/backstage/material<br/>Schilder, Karten, Rider, Pressekit (DE/EN/NL)"]
+  BS --> SYNC["/backstage/abgleich<br/>Export/Import JSON"]
+  TER --> TAB["Tabelle Auftritte + Proben<br/>kombinierbare Filter, sortierbar"]
+  TER --> ABO["Band-Kalender abonnieren"]
+  TER --> NEU["Neuen Termin eintragen<br/>→ Zeile + GitHub-Editor"]
 
   TAB --> SHOW["/backstage/:id"]
   SHOW --> POS["Plakat (Feed/Story), Post-Text"]

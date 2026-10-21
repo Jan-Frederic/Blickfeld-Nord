@@ -1,325 +1,118 @@
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { Meta } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { downloadIcs } from '../data/calendar';
-import { SetlistStats } from './setlist-stats';
 import { BackstageStats } from './backstage-stats';
-import { TerminFormular } from './termin-formular';
-import { BackstageBesucher } from './backstage-besucher';
-import { BackstageUebersetzungen } from './backstage-uebersetzungen';
-import { AboButton } from '../sections/abo-button';
-import { BackstageSync } from './backstage-sync';
-import { offlineReady } from '../pwa';
-import { BandService, Rehearsal, Show } from '../data/band.service';
+import { BACKSTAGE_BEREICHE, BackstageNav } from './backstage-nav';
+import { BandService } from '../data/band.service';
 
-type FilterKey = 'kommend' | 'proben' | 'vergangen';
-type SortCol = 'date' | 'venue' | 'type' | 'status' | 'comment';
-// unsortiert / aufsteigend / absteigend
-const SORT_ICONS = [{ icon: 'unfold_more' }, { icon: 'arrow_upward' }, { icon: 'arrow_downward' }];
-interface Row {
-  show?: Show;
-  probe?: Rehearsal;
-  date: string;
-  endDate?: string;
-  time?: string;
-  past: boolean;
-}
-
-const FILTER_KEY = 'bn-backstage-filter';
-function loadFilters(): Set<FilterKey> {
-  try {
-    const saved = JSON.parse(localStorage.getItem(FILTER_KEY) ?? 'null') as FilterKey[] | null;
-    if (Array.isArray(saved)) return new Set(saved);
-  } catch {
-    // Standard unten
-  }
-  return new Set<FilterKey>(['kommend', 'proben']);
-}
-
-// Versteckte Übersicht aller Auftritte (auch private), erreichbar per Easter Egg:
-// fünfmal schnell auf das Logo oben links klicken. Jede Zeile führt zur Unterseite des Auftritts.
+// Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
+// Die Übersicht zeigt Kennzahlen und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
+// (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, SetlistStats, AboButton, BackstageSync, BackstageStats, TerminFormular, BackstageBesucher, BackstageUebersetzungen],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, BackstageNav],
   template: `
     <section class="section">
+      <app-backstage-nav />
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
-      <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen, dazu die Probetermine. Für Details, Plakat, Setlist und Packliste einfach einen Auftritt antippen.</p>
+      <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
 
       <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
 
-      <div class="summary">
-        <a class="wunschbox" href="presse/blickfeld-nord-wunschbox.pdf" target="_blank" rel="noopener" title="Schild mit QR-Code zur Live-Wunschbox (/wunsch) für die Bühne">
-          <mat-icon>qr_code_2</mat-icon> Wunschbox-Schild drucken
-        </a>
-        <app-abo-button class="export" path="backstage/kalender.ics" (download)="exportAll()" />
-      </div>
-
-      <!-- Filter lassen sich frei kombinieren; sortiert wird standardmäßig nach Datum, per Klick auf die Spaltenköpfe auch anders -->
-      <div class="filters" role="group" aria-label="Termine filtern">
-        @for (f of filters; track f.key) {
-          <button type="button" [class.on]="active().has(f.key)" [attr.aria-pressed]="active().has(f.key)" (click)="toggle(f.key)">
-            <mat-icon>{{ active().has(f.key) ? 'check' : f.icon }}</mat-icon> {{ f.label }} <span class="count">{{ counts[f.key] }}</span>
-          </button>
-        }
-      </div>
-
-      @if (!active().size) {
-        <p class="empty">Mindestens einen Filter wählen.</p>
-      } @else if (!rows().length) {
-        <p class="empty">
-          Keine Termine für diese Auswahl.
-          @if (active().has('proben') && !rehearsals.length) { Probetermine werden in src/app/data/band.service.ts unter „rehearsals“ eingetragen. }
-        </p>
+      <h3>Als Nächstes</h3>
+      @if (next.length) {
+        <ol class="next">
+          @for (n of next; track n.date + n.label) {
+            <li>
+              <a [routerLink]="n.link">
+                <span class="date">{{ n.date | date: 'EEE, dd.MM.' : '' : 'de' }}@if (n.time) { · {{ n.time }}}</span>
+                <span class="what"><mat-icon>{{ n.icon }}</mat-icon> {{ n.label }}</span>
+                @if (n.status) { <span class="status" [class.ok]="n.status === 'Geklärt'">{{ n.status }}</span> }
+              </a>
+            </li>
+          }
+        </ol>
       } @else {
-      <div class="table-wrap">
-        <table mat-table [dataSource]="rows()">
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('date')">
-              <button type="button" class="sort" (click)="sortBy('date')">Datum<mat-icon>{{ sortIcons().date }}</mat-icon></button>
-            </th>
-            <td mat-cell *matCellDef="let r" class="date" [class.past]="r.past">
-              {{ r.date | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}
-              @if (r.time) {<span class="time">{{ r.time }} Uhr</span>}
-              @if (r.endDate) {<br />– {{ r.endDate | date: 'EEE, dd.MM.yyyy' : '' : 'de' }}}
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="venue">
-            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('venue')">
-              <button type="button" class="sort" (click)="sortBy('venue')">Termin<mat-icon>{{ sortIcons().venue }}</mat-icon></button>
-            </th>
-            <td mat-cell *matCellDef="let r">
-              @if (r.show; as s) {
-                <!-- Link für Tastatur und Screenreader; die ganze Zeile ist zusätzlich klickbar -->
-                <a class="row-link" [routerLink]="['/backstage', band.showId(s)]"><strong>{{ s.venue }}</strong></a>
-                @if (s.city) { <span class="sub">{{ s.city }}</span> }
-              } @else {
-                <strong>Probe</strong>
-                @if (r.probe.place) { <span class="sub">{{ r.probe.place }}</span> }
-              }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('type')">
-              <button type="button" class="sort" (click)="sortBy('type')">Art<mat-icon>{{ sortIcons().type }}</mat-icon></button>
-            </th>
-            <td mat-cell *matCellDef="let r">
-              @if (r.show; as s) {
-                <span class="tag" [class.private]="s.private">{{ s.private ? 'Privat' : 'Öffentlich' }}</span>
-              } @else {
-                <span class="tag probe">Probe</span>
-              }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('status')">
-              <button type="button" class="sort" (click)="sortBy('status')">Status<mat-icon>{{ sortIcons().status }}</mat-icon></button>
-            </th>
-            <td mat-cell *matCellDef="let r">
-              @if (r.show; as s) {
-                <span class="status" [class.ok]="s.confirmed">
-                  <mat-icon>{{ s.confirmed ? 'check_circle' : 'schedule' }}</mat-icon>
-                  {{ s.confirmed ? 'Geklärt' : 'Offen' }}
-                </span>
-              } @else { – }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="comment">
-            <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('comment')">
-              <button type="button" class="sort" (click)="sortBy('comment')">Kommentar<mat-icon>{{ sortIcons().comment }}</mat-icon></button>
-            </th>
-            <td mat-cell *matCellDef="let r" class="comment">{{ (r.show ? r.show.comment : r.probe.note) || '–' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="open">
-            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Öffnen</span></th>
-            <td mat-cell *matCellDef="let r" class="open">@if (r.show) {<mat-icon>chevron_right</mat-icon>}</td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns" [class.link]="!!row.show" (click)="openRow(row, $event)"></tr>
-        </table>
-      </div>
+        <p class="empty">Keine kommenden Termine eingetragen.</p>
       }
 
-      <app-backstage-besucher />
-
-      <app-backstage-uebersetzungen />
-
-      <app-termin-formular />
-
-      <div class="exchange">
-        <h3>Mit der Band abgleichen</h3>
-        <p>Setlists, Packlisten und Vor-Ort-Angaben werden nur auf diesem Gerät gespeichert. Schickt sie als Datei
-          (z. B. in die WhatsApp-Gruppe) und importiert sie auf den anderen Handys – dann haben alle denselben Stand.</p>
-        <app-backstage-sync />
-        @if (offline()) {
-          <p class="offline"><mat-icon>offline_pin</mat-icon> Backstage ist auf diesem Gerät auch ohne Netz verfügbar.</p>
+      <ul class="tiles">
+        @for (b of bereiche; track b.path) {
+          <li>
+            <a [routerLink]="b.path">
+              <mat-icon>{{ b.icon }}</mat-icon>
+              <span class="title">{{ b.label }}</span>
+              <span class="text">{{ b.text }}</span>
+            </a>
+          </li>
         }
-      </div>
-
-      <app-setlist-stats />
+      </ul>
     </section>
   `,
   styles: `
-    .summary { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 16px 0 20px; }
-    .wunschbox { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none; font-size: .88rem; }
-    .wunschbox:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-    .wunschbox mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .exchange { margin-top: 40px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
-    .exchange h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
-    .exchange p { margin: 0 0 14px; max-width: 720px; font-size: .9rem; line-height: 1.6; color: var(--bn-fog); }
-    .exchange .offline { display: flex; align-items: flex-start; gap: 6px; margin: 14px 0 0; color: #5fb88a; line-height: 1.4; }
-    .offline mat-icon { font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
-    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .filters button {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
-      border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .9rem;
+    h3 { margin: 32px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+    .next { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .next a {
+      display: grid; grid-template-columns: 9em 1fr auto; align-items: center; gap: 12px; padding: 12px 16px;
+      border-radius: 10px; border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none;
     }
-    .filters button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-    .filters button.on { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
-    .filters mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .count { font-size: .78rem; opacity: .75; font-variant-numeric: tabular-nums; }
-    .empty { padding: 20px; border: 1px dashed var(--bn-line); border-radius: 12px; color: var(--bn-fog); }
-    .sort {
-      display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; cursor: pointer;
-      color: inherit; font: inherit; font-weight: 500;
-    }
-    .sort mat-icon { font-size: 16px; width: 16px; height: 16px; opacity: .5; }
-    th[aria-sort] .sort mat-icon { opacity: 1; color: var(--bn-sunset); }
-    .sort:hover mat-icon { opacity: 1; }
-    .tag.probe { border-color: #7fb3e0; color: #7fb3e0; }
-    .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant); }
-    table { width: 100%; min-width: 820px; background: transparent; }
-    .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
-    /* vergangene Termine gedämpft, aber mit ausreichendem Kontrast */
-    .past, .past .time { color: var(--bn-fog); }
-    .time { display: block; font-size: .82rem; color: var(--bn-sunset); }
-    .sub { display: block; font-size: .85rem; opacity: .7; }
-    .tag {
-      display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .75rem;
-      border: 1px solid var(--bn-line); color: var(--bn-fog);
-    }
-    .tag.private { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-    .status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: #e0b25a; }
+    .next a:hover { border-color: var(--bn-sunset); }
+    .date { font-variant-numeric: tabular-nums; color: var(--bn-sunset); font-size: .9rem; }
+    .what { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .what mat-icon, .tiles mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--bn-fog); }
+    .status { font-size: .8rem; color: #e0b25a; }
     .status.ok { color: #5fb88a; }
-    .status mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    tr.link { cursor: pointer; transition: background .15s; }
-    tr.link:hover, tr.link:focus-within { background: rgba(232, 164, 106, .07); }
-    .row-link { color: inherit; text-decoration: none; }
-    .row-link:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; border-radius: 2px; }
-    .open { width: 32px; color: var(--bn-fog); }
-    tr.link:hover .open { color: var(--bn-sunset); }
-    .comment { max-width: 320px; white-space: pre-line; color: rgba(236, 233, 228, .82); }
+    .empty { padding: 16px; border: 1px dashed var(--bn-line); border-radius: 12px; color: var(--bn-fog); }
+    .tiles { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+    .tiles a {
+      display: grid; align-content: start; gap: 6px; height: 100%; box-sizing: border-box; padding: 18px; border-radius: 12px;
+      border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); color: var(--bn-ink); text-decoration: none;
+    }
+    .tiles a:hover { border-color: var(--bn-sunset); }
+    .tiles mat-icon { color: var(--bn-sunset); }
+    .title { font-weight: 600; }
+    .text { font-size: .85rem; line-height: 1.5; color: var(--bn-fog); }
+    @media (max-width: 560px) {
+      .next a { grid-template-columns: 1fr auto; }
+      .what { grid-column: 1 / -1; grid-row: 2; }
+    }
   `,
 })
-export class Backstage implements OnDestroy {
-  private readonly meta = inject(Meta);
+export class Backstage {
   private readonly router = inject(Router);
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
-  protected readonly offline = offlineReady;
-  protected readonly columns = ['date', 'venue', 'type', 'status', 'comment', 'open'];
-  protected readonly today = new Date().toISOString().slice(0, 10);
   protected readonly rehearsals = [...this.band.rehearsals].sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''));
+  protected readonly bereiche = BACKSTAGE_BEREICHE.slice(1);
 
-  // Filter über der Tabelle – frei kombinierbar (Auswahl merkt sich das Gerät)
-  protected readonly filters = [
-    { key: 'kommend', label: 'Ausstehende Auftritte', icon: 'upcoming' },
-    { key: 'proben', label: 'Probetermine', icon: 'music_note' },
-    { key: 'vergangen', label: 'Vergangene Auftritte', icon: 'history' },
-  ] as const;
-  protected readonly active = signal<ReadonlySet<FilterKey>>(loadFilters());
-
-  // Auftritte und Proben als gemeinsame Zeilen
-  private readonly allRows: Row[] = [
-    ...this.shows.map((s) => ({ show: s, date: s.date, endDate: s.endDate, time: s.time, past: (s.endDate ?? s.date) < this.today })),
-    ...this.rehearsals.map((p) => ({
-      probe: p,
-      date: p.date,
-      time: p.time ? p.time + (p.endTime ? '–' + p.endTime : '') : undefined,
-      past: p.date < this.today,
-    })),
-  ];
-  private readonly matches = (r: Row, f: FilterKey) =>
-    f === 'proben' ? !!r.probe : !!r.show && (f === 'vergangen' ? r.past : !r.past);
-  protected readonly counts = Object.fromEntries(
-    this.filters.map((f) => [f.key, this.allRows.filter((r) => this.matches(r, f.key)).length]),
-  ) as Record<FilterKey, number>;
-  // Sortierung: Standard zeitlich aufsteigend; Klick auf einen Spaltenkopf sortiert danach, erneuter Klick dreht um
-  protected readonly sort = signal<{ col: SortCol; dir: 1 | -1 }>({ col: 'date', dir: 1 });
-  private readonly sortValue: Record<SortCol, (r: Row) => string> = {
-    date: (r) => r.date + (r.time ?? ''),
-    venue: (r) => (r.show ? r.show.venue : 'Probe ' + (r.probe!.place ?? '')).toLocaleLowerCase('de'),
-    type: (r) => (r.probe ? 'Probe' : r.show!.private ? 'Privat' : 'Öffentlich'),
-    status: (r) => (r.probe ? '' : r.show!.confirmed ? 'Geklärt' : 'Offen'),
-    comment: (r) => ((r.show ? r.show.comment : r.probe!.note) ?? '').toLocaleLowerCase('de'),
-  };
-  protected readonly rows = computed(() => {
-    const { col, dir } = this.sort();
-    const value = this.sortValue[col];
-    const time = this.sortValue.date;
-    return this.allRows
-      .filter((r) => [...this.active()].some((f) => this.matches(r, f)))
-      // gleiche Werte (z. B. „Geklärt“) bleiben untereinander zeitlich sortiert
-      .sort((a, b) => dir * value(a).localeCompare(value(b), 'de') || time(a).localeCompare(time(b)));
-  });
-
-  protected sortBy(col: SortCol): void {
-    const cur = this.sort();
-    this.sort.set({ col, dir: cur.col === col ? (-cur.dir as 1 | -1) : 1 });
-  }
-
-  // Pfeil je Spalte (als Feld statt Funktionsaufruf, damit scripts/subset-icons.py die Spaltennamen nicht für Icons hält)
-  protected readonly sortIcons = computed(() => {
-    const { col, dir } = this.sort();
-    const icons = {} as Record<SortCol, string>;
-    for (const c of Object.keys(this.sortValue) as SortCol[]) icons[c] = SORT_ICONS[c !== col ? 0 : dir === 1 ? 1 : 2].icon;
-    return icons;
-  });
-
-  protected ariaSort(col: SortCol): string | null {
-    const cur = this.sort();
-    return cur.col !== col ? null : cur.dir === 1 ? 'ascending' : 'descending';
-  }
-
-  protected toggle(f: FilterKey): void {
-    const next = new Set(this.active());
-    if (next.has(f)) next.delete(f);
-    else next.add(f);
-    this.active.set(next);
-    try {
-      localStorage.setItem(FILTER_KEY, JSON.stringify([...next]));
-    } catch {
-      // ohne Speicher gilt die Auswahl bis zum Neuladen
-    }
-  }
-
+  // die nächsten vier Termine – Auftritte und Proben gemischt
+  private readonly today = new Date().toISOString().slice(0, 10);
+  protected readonly next = [
+    ...this.shows
+      .filter((s) => (s.endDate ?? s.date) >= this.today)
+      .map((s) => ({
+        date: s.date,
+        time: s.time,
+        label: s.venue + (s.city ? ', ' + s.city : ''),
+        icon: s.private ? 'lock' : 'celebration',
+        status: s.confirmed ? 'Geklärt' : 'Offen',
+        link: ['/backstage', this.band.showId(s)],
+      })),
+    ...this.rehearsals
+      .filter((r) => r.date >= this.today)
+      .map((r) => ({ date: r.date, time: r.time, label: 'Probe' + (r.place ? ', ' + r.place : ''), icon: 'music_note', status: '', link: ['/backstage/termine'] })),
+  ]
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
+    .slice(0, 4);
 
   constructor() {
-    // Suchmaschinen sollen die Seite nicht aufnehmen
-    this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
     // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id>[/<teil>] über die Fehlerseite
     // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter.
     const query = inject(ActivatedRoute).snapshot.queryParamMap;
     const id = query.get('auftritt');
     const teil = query.get('teil');
     if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true });
-  }
-
-  protected openRow(r: Row, event: MouseEvent): void {
-    if (!r.show || (event.target as HTMLElement).closest('a')) return;
-    this.router.navigate(['/backstage', this.band.showId(r.show)]);
-  }
-
-  // Bandkalender inkl. privater Termine, Status und Kommentaren
-  protected exportAll(): void {
-    downloadIcs(this.shows, 'blickfeld-nord-backstage.ics', 'Blickfeld Nord – Backstage', true, false, { rehearsals: this.rehearsals });
-  }
-
-  ngOnDestroy(): void {
-    this.meta.removeTag("name='robots'");
   }
 }

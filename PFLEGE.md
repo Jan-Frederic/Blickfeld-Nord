@@ -27,7 +27,7 @@ Bestimmte Stellen findet ihr im Editor mit **Strg+F** (am Handy: Suche im Browse
 
 Am einfachsten über das Formular im Backstage:
 
-1. https://blickfeld-nord.de/backstage öffnen, ganz unten **Neuen Termin eintragen**.
+1. https://blickfeld-nord.de/backstage/termine öffnen (im Backstage der Bereich **Termine**), ganz unten **Neuen Termin eintragen**.
 2. Datum, Location, Ort, Eintritt sowie „privat“ und „geklärt“ ausfüllen. Darunter erscheint die fertige Zeile.
    Ist der Tag schon belegt, warnt das Formular.
 3. **Zeile kopieren**, dann **Datei auf GitHub öffnen**.
@@ -126,7 +126,7 @@ Die Website gibt es auch auf Englisch (`/en/…`) und Niederländisch (`/nl/…`
   Das Deutsche muss **zeichengenau** mit dem Text in `band.service.ts` übereinstimmen. Am einfachsten kopiert ihr es
   von dort. Übersetzen kann auch Fred oder Claude.
 - **Gegenlesen:** Übersetzte Texte zeigen den Hinweis „Translated from German – not yet proofread by the band“.
-  Am einfachsten geht das Gegenlesen im Backstage unter **Übersetzungen prüfen** (`/backstage/uebersetzungen`):
+  Am einfachsten geht das Gegenlesen im Backstage im Bereich **Übersetzungen** (`/backstage/uebersetzungen`):
   1. Sprache wählen. Links steht das Original, rechts die Übersetzung.
   2. Bei Bedarf korrigieren und **„Passt“** anklicken. Alles bleibt im Browser gespeichert, ihr könnt also in mehreren
      Etappen arbeiten.
@@ -136,7 +136,7 @@ Die Website gibt es auch auf Englisch (`/en/…`) und Niederländisch (`/nl/…`
   Wer kein GitHub-Konto hat (z. B. Freunde aus den Niederlanden), nimmt **Als Nachricht schicken** und schickt das
   Ergebnis an Fred. Von Hand geht es auch: in der Datei `geprueft: { en: true }` (bzw. `{ nl: true }` oder
   `{ en: true, nl: true }`) beim Eintrag ergänzen.
-- Wie viel schon gegengelesen ist und welche Texte noch fehlen, zeigt der **Backstage** unter
+- Wie viel schon gegengelesen ist und welche Texte noch fehlen, zeigt derselbe Bereich oben unter
   „Übersetzungen der Inhalte“.
 - **Impressum und Datenschutz:** Nach einer Änderung am deutschen Text bitte Bescheid geben, damit die Übersetzungen
   nachgezogen werden. Verbindlich ist immer die deutsche Fassung.
