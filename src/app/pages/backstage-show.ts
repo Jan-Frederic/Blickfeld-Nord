@@ -9,6 +9,7 @@ import { BandService } from '../data/band.service';
 import { PosterFormat, postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
+import { printMixerZettel } from './mixer-zettel';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
 
@@ -74,6 +75,7 @@ const DAY = 24 * 60 * 60 * 1000;
         <div class="actions">
           <button mat-stroked-button (click)="calendar()"><mat-icon>event_available</mat-icon> In den Kalender</button>
           <button mat-stroked-button (click)="laufzettel()"><mat-icon>assignment</mat-icon> Laufzettel</button>
+          <button mat-stroked-button (click)="mixerZettel()"><mat-icon>tune</mat-icon> Mixer-Zettel</button>
           @if (posterAllowed()) {
             <button mat-stroked-button (click)="poster()"><mat-icon>image</mat-icon> Plakat</button>
             <button mat-stroked-button (click)="poster('story')"><mat-icon>smartphone</mat-icon> Story</button>
@@ -255,12 +257,17 @@ export class BackstageShow implements OnDestroy {
     }
   }
 
-  // Einzeltermin mit Status und Kommentar für den eigenen Kalender
   // Alles für den Abend auf einem Ausdruck: Zeitplan, Vor Ort, Setlist, Packliste
   protected laufzettel(): void {
     printLaufzettel(this.show()!, this.id());
   }
 
+  // Kanalliste mit Monitormischungen und Strom auf einem Blatt zum Aufbauen
+  protected mixerZettel(): void {
+    printMixerZettel(this.show()!);
+  }
+
+  // Einzeltermin mit Status und Kommentar für den eigenen Kalender
   protected calendar(): void {
     const s = this.show()!;
     downloadIcs([s], icsFileName(s), 'Blickfeld Nord – Backstage', true);
