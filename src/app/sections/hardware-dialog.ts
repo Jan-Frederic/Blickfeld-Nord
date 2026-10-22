@@ -72,7 +72,7 @@ export interface Hardware {
     .hw-text { margin: 0 0 16px; line-height: 1.65; color: rgba(236, 233, 228, .88); }
     .hw-details { margin: 0; border-top: 1px solid var(--bn-line); }
     .hw-details div { display: grid; grid-template-columns: 9em 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--bn-line); }
-    .hw-details dt { font-family: var(--bn-wide); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bn-fog); padding-top: 3px; }
+    .hw-details dt { font-family: var(--bn-wide); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bn-fog); padding-top: 3px; overflow-wrap: anywhere; }
     .hw-details dd { margin: 0; line-height: 1.5; font-size: .92rem; }
     .hw-where { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; font-size: .82rem; color: var(--bn-fog); }
     @media (max-width: 520px) { .hw-details div { grid-template-columns: 1fr; gap: 2px; } }
