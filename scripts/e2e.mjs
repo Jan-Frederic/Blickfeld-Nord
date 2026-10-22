@@ -235,6 +235,22 @@ test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', asy
   return p;
 });
 
+test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', async () => {
+  const p = await page();
+  await p.go('/backstage/buehnenplan/');
+  const amp = p.locator('app-technik-aufbau g[aria-label^="Bass-Amp"], app-technik-aufbau g[aria-label^="Bassverstärker"]').first();
+  const box = await amp.boundingBox();
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await p.mouse.down();
+  await p.mouse.move(box.x + box.width / 2 - 60, box.y + box.height / 2 + 20, { steps: 5 });
+  await p.mouse.up();
+  await until(async () => (await p.locator('app-backstage-buehnenplan .apply').innerText()).includes('Bassverstärker'), 'Ziehen verschiebt nichts');
+  await p.locator('app-technik-aufbau g[aria-label^="Mischpult"]').focus();
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await p.locator('app-backstage-buehnenplan .apply').innerText()).includes('Mischpult'), 'Pfeiltaste verschiebt nichts');
+  return p;
+});
+
 test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   const p = await page();
   await p.go('/backstage/termine/');

@@ -1,4 +1,4 @@
-import { Component, computed, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/technik.json';
 import { Hardware, HardwareDialog } from './hardware-dialog';
@@ -109,7 +109,7 @@ const TEXT = tr(
 // („setup-<name>“, nicht in der Geräteliste): Zu der Beschreibung kommen automatisch die Kanäle, Geräte und der
 // Monitor, die in der JSON-Datei mit „musiker“ zugeordnet sind – Änderungen also nur an einer Stelle.
 
-interface Item {
+export interface Item {
   id: string;
   typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom' | 'mikro' | 'pedalboard';
   label: string;
@@ -158,7 +158,7 @@ const py = (m: number) => PAD_TOP + m * M;
 
     <h4>{{ t().plan }}</h4>
     <figure class="plot">
-      <svg [attr.viewBox]="viewBox" role="group" aria-labelledby="plot-title plot-desc">
+      <svg #plan [attr.viewBox]="viewBox" role="group" aria-labelledby="plot-title plot-desc" [style.touch-action]="bearbeiten() ? 'none' : null">
         <title id="plot-title">{{ t().planTitle }}</title>
         <desc id="plot-desc">{{ description() }}</desc>
 
@@ -173,10 +173,12 @@ const py = (m: number) => PAD_TOP + m * M;
         <text class="dim" [attr.x]="px(W / 2)" [attr.y]="py(0) - 26" text-anchor="middle">{{ t().area }} {{ W }} × {{ D }} M</text>
         <text class="audience" [attr.x]="px(W / 2)" [attr.y]="py(D) + 50" text-anchor="middle">▼  {{ t().audience }}  ▼</text>
 
-        @for (it of items; track it.id) {
-          <g [class.hit]="it.hw" [attr.role]="it.hw ? 'button' : null" [attr.tabindex]="it.hw ? 0 : null"
-             [attr.aria-label]="it.hw ? ct.t(it.label) + ' – ' + t().details : null"
-             (click)="it.hw && open(it.hw)" (keydown.enter)="it.hw && open(it.hw)" (keydown.space)="it.hw && open(it.hw, $event)">
+        @for (it of items(); track it.id) {
+          <g [class.hit]="it.hw || bearbeiten()" [attr.role]="it.hw || bearbeiten() ? 'button' : null" [attr.tabindex]="it.hw || bearbeiten() ? 0 : null"
+             [attr.aria-label]="bearbeiten() ? ct.t(it.label) + ' verschieben (Pfeiltasten)' : it.hw ? ct.t(it.label) + ' – ' + t().details : null"
+             [style.cursor]="bearbeiten() ? 'grab' : null"
+             (click)="!bearbeiten() && it.hw && open(it.hw)" (keydown.enter)="!bearbeiten() && it.hw && open(it.hw)" (keydown.space)="!bearbeiten() && it.hw && open(it.hw, $event)"
+             (pointerdown)="bearbeiten() && greifen($event, it)" (keydown)="bearbeiten() && schieben($event, it)">
           @switch (it.typ) {
             @case ('drums') {
               <rect class="riser" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="10" />
@@ -268,6 +270,7 @@ const py = (m: number) => PAD_TOP + m * M;
       </figcaption>
     </figure>
 
+    @if (!nurPlan()) {
     <h4>{{ t().channels }}</h4>
     <div class="table-wrap">
       <table>
@@ -376,6 +379,7 @@ const py = (m: number) => PAD_TOP + m * M;
     <app-uebersetzung-hinweis [status]="contentStatus()" />
     <p class="stand">{{ t().asOf }} {{ i18n.date(stand, 'short') }}</p>
 
+    }
     <app-hardware-dialog />
   `,
   styles: `
@@ -452,7 +456,14 @@ export class TechnikAufbau {
   protected readonly t = this.i18n.t(TEXT);
   protected readonly ct = inject(Content);
   protected readonly stand = `${data.stand}T12:00:00`;
-  protected readonly items = data.aufbau as Item[];
+  /** Bühnenplan-Editor im Backstage: Elemente lassen sich verschieben (Maus, Finger, Pfeiltasten) */
+  readonly bearbeiten = input(false);
+  /** nur den Plan zeigen (ohne Kanalliste, Monitore usw.) */
+  readonly nurPlan = input(false);
+  /** neue Positionen nach jedem Verschieben */
+  readonly geaendert = output<Item[]>();
+  readonly items = signal(structuredClone(data.aufbau) as Item[]);
+  private readonly plan = viewChild.required<ElementRef<SVGSVGElement>>('plan');
   protected readonly kanaele = data.kanaele;
   protected readonly monitore = data.monitore as Monitor[];
   protected readonly strom = data.strom;
@@ -473,7 +484,7 @@ export class TechnikAufbau {
   protected readonly description = computed(
     () =>
       `${this.t().descArea} ${W} × ${D} m. ` +
-      this.items.map((i) => `${this.ct.t(i.label)}${i.rolle ? ` (${this.ct.t(i.rolle)})` : ''}`).join(', ') +
+      this.items().map((i) => `${this.ct.t(i.label)}${i.rolle ? ` (${this.ct.t(i.rolle)})` : ''}`).join(', ') +
       '.',
   );
 
@@ -481,7 +492,7 @@ export class TechnikAufbau {
   protected readonly contentStatus = computed(() =>
     this.ct.status(
       data.status,
-      ...this.items.flatMap((i) => [i.label, i.rolle]),
+      ...this.items().flatMap((i) => [i.label, i.rolle]),
       ...this.kanaele.flatMap((k) => [k.quelle, k.art, k.geraet ?? undefined, k.stativ ?? undefined]),
       ...this.monitore.flatMap((m) => [m.fuer, m.notiz, ...(m.mix ?? []).map((x) => x.pegel)]),
       ...this.strom.flatMap((s) => s.verbraucher),
@@ -497,7 +508,7 @@ export class TechnikAufbau {
     if (!hw) return;
     // beim Setup eines Musikers wäre „Im Bühnenplan: David“ doppelt – dort keine Ortsangabe
     if (key.startsWith('setup-')) this.dialog().show({ ...hw, extra: this.setup(key.slice('setup-'.length)) }, []);
-    else this.dialog().show(hw, this.items.filter((i) => i.hw === key).map((i) => this.ct.t(i.label)));
+    else this.dialog().show(hw, this.items().filter((i) => i.hw === key).map((i) => this.ct.t(i.label)));
   }
 
   // Setup-Zeilen eines Musikers aus Kanalliste, Geräten und Monitoren (bereits übersetzt)
@@ -511,7 +522,7 @@ export class TechnikAufbau {
           .filter(Boolean)
           .join(' · '),
       ]);
-    const geraete = this.items
+    const geraete = this.items()
       .filter((i) => i.musiker === musiker && i.hw && HARDWARE[i.hw])
       .map((i) => [this.ct.t(HARDWARE[i.hw!].kategorie), HARDWARE[i.hw!].modell ?? t.modelFollows]);
     const monitor = this.monitore
@@ -533,8 +544,67 @@ export class TechnikAufbau {
     return m.vorschlag ? `${text} (${this.t().proposal})` : text;
   }
 
+  // Mauszeiger → Meter im Plan
+  private meter(e: PointerEvent): { x: number; y: number } {
+    const svg = this.plan().nativeElement;
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM()!.inverse());
+    return { x: (p.x - PAD_X) / M, y: (p.y - PAD_TOP) / M };
+  }
+
+  protected greifen(e: PointerEvent, it: Item): void {
+    e.preventDefault();
+    const el = e.currentTarget as SVGGElement;
+    el.setPointerCapture(e.pointerId);
+    el.focus();
+    const start = this.meter(e);
+    const von = { x: it.x, y: it.y };
+    const move = (ev: PointerEvent) => {
+      const p = this.meter(ev);
+      this.setzen(it.id, von.x + p.x - start.x, von.y + p.y - start.y);
+    };
+    const up = () => {
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  }
+
+  // Pfeiltasten: 5 cm, mit Umschalt 25 cm
+  protected schieben(e: KeyboardEvent, it: Item): void {
+    const d = e.shiftKey ? 0.25 : 0.05;
+    const step = ({ ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, -d], ArrowDown: [0, d] } as Record<string, number[]>)[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const jetzt = this.items().find((i) => i.id === it.id)!;
+    this.setzen(it.id, jetzt.x + step[0], jetzt.y + step[1]);
+  }
+
+  // an Position (in Metern) setzen – auf 5 cm gerundet, auf oder neben der Bühne; ein Galgen-Arm wandert mit
+  private setzen(id: string, nx: number, ny: number): void {
+    const r = (v: number) => Math.round(v * 20) / 20;
+    this.items.update((list) =>
+      list.map((i) => {
+        if (i.id !== id) return i;
+        const x = Math.min(W + 0.5, Math.max(-0.5, r(nx)));
+        const y = Math.min(D, Math.max(0, r(ny)));
+        const arm = i.arm && [r(i.arm[0] + x - i.x), r(i.arm[1] + y - i.y)];
+        return { ...i, x, y, ...(arm ? { arm } : {}) };
+      }),
+    );
+    this.geaendert.emit(this.items());
+  }
+
+  /** alle Positionen wie in technik.json */
+  reset(): void {
+    this.items.set(structuredClone(data.aufbau) as Item[]);
+    this.geaendert.emit(this.items());
+  }
+
   protected label(id: string): string {
-    const label = this.items.find((i) => i.id === id)?.label;
+    const label = this.items().find((i) => i.id === id)?.label;
     return label ? this.ct.t(label) : id;
   }
 
