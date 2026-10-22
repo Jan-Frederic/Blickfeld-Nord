@@ -141,6 +141,18 @@ Die Website gibt es auch auf Englisch (`/en/…`) und Niederländisch (`/nl/…`
 - **Impressum und Datenschutz:** Nach einer Änderung am deutschen Text bitte Bescheid geben, damit die Übersetzungen
   nachgezogen werden. Verbindlich ist immer die deutsche Fassung.
 
+## Aufgaben-Checkliste
+
+Was an der Website noch zu tun ist, steht im Backstage im Bereich **Aufgaben** (`/backstage/aufgaben`).
+
+- **Aus den Daten erkannt:** offene Auftritte, Proben ohne Endzeit oder Ort, fehlende Bios, offene Technik-Angaben
+  und ungeprüfte Übersetzungen. Diese Punkte verschwinden von selbst, sobald die Angaben eingetragen sind.
+- **Von Hand gepflegt:** alles andere, in
+  [`src/app/data/aufgaben.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/aufgaben.ts).
+  Jede Aufgabe hat einen Bereich und ist entweder „Muss“ oder „Kann“. Zum Ergänzen eine Zeile kopieren und anpassen.
+  Erledigt: `erledigt: true` dazuschreiben oder die Aufgabe löschen. Das Häkchen auf der Seite gilt nur auf dem
+  eigenen Gerät.
+
 ## Was die automatischen Prüfungen abfangen
 
 Bevor etwas online geht, prüft GitHub unter anderem:
