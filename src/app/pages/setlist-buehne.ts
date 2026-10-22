@@ -1,10 +1,12 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
+import { songInfo } from '../data/songinfo';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
 // die Uhr zeigt, wie lange das Set schon läuft und wie lange es laut Spotify-Längen noch dauert.
+// Tonart und Tempo aus songinfo.ts stehen unter dem Titel; „Klick“ blinkt (und piept auf Wunsch) im Tempo.
 @Component({
   selector: 'app-setlist-buehne',
   imports: [MatIconModule],
@@ -29,6 +31,17 @@ import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from
             <p class="no">{{ songNo() }}</p>
             <h1>{{ $any(c).title }}</h1>
             <p class="artist">{{ $any(c).artist }} @if (length(c)) { · {{ length(c) }} }</p>
+            @if (info(); as i) {
+              <p class="info">
+                @if (i.tonart) { <span class="key">{{ i.tonart }}</span> }
+                @if (i.bpm) {
+                  <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
+                    {{ i.bpm }} bpm · Klick
+                  </button>
+                }
+                @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
+              </p>
+            }
           }
         } @else {
           <p class="pause">Ende – danke!</p>
@@ -62,6 +75,12 @@ import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from
     .no { margin: 0; font-size: clamp(1.5rem, 5vw, 3rem); color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
     h1 { margin: .1em 0; font-size: clamp(2.6rem, 11vw, 7.5rem); line-height: 1.05; font-weight: 700; overflow-wrap: anywhere; }
     .artist { margin: 0; font-size: clamp(1.1rem, 4vw, 2.2rem); color: #b0b6bc; }
+    .info { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 16px 0 0; font-size: clamp(1rem, 3vw, 1.6rem); }
+    .key { padding: 4px 14px; border-radius: 8px; background: #e8a46a; color: #000; font-weight: 700; }
+    .bpm { padding: 4px 14px; border-radius: 8px; border: 1px solid #555; background: transparent; color: #fff; font: inherit; cursor: pointer; }
+    .bpm.on { border-color: #e8a46a; }
+    .bpm.on.beat { background: #e8a46a; color: #000; }
+    .note { color: #b0b6bc; }
     .pause { display: flex; align-items: center; justify-content: center; gap: .3em; margin: 0; font-size: clamp(3rem, 12vw, 8rem); font-weight: 700; color: var(--bn-sunset); }
     .pause mat-icon { font-size: 1em; width: 1em; height: 1em; }
     .hint { color: #9aa0a6; font-size: clamp(1rem, 3vw, 1.6rem); }
@@ -94,6 +113,16 @@ export class SetlistBuehne {
   protected readonly plannedText = computed(() => setTime(this.planned()));
   protected readonly remaining = computed(() => this.planned() - this.elapsed());
 
+  protected readonly info = computed(() => {
+    const c = this.current();
+    return c && !isPause(c) ? songInfo(c.title, c.artist) : undefined;
+  });
+  // Klick: blinkt im Tempo des aktuellen Songs, kurzer Ton über Web Audio
+  protected readonly klick = signal(false);
+  protected readonly beat = signal(false);
+  private klickTimer: ReturnType<typeof setInterval> | undefined;
+  private audio: AudioContext | undefined;
+
   private wakeLock: { release(): Promise<void> } | null = null;
   private startX = 0;
 
@@ -112,6 +141,8 @@ export class SetlistBuehne {
     queueMicrotask(() => this.host.nativeElement.focus());
     inject(DestroyRef).onDestroy(() => {
       clearInterval(timer);
+      this.stopKlick();
+      this.audio?.close().catch(() => undefined);
       document.removeEventListener('visibilitychange', visible);
       this.wakeLock?.release().catch(() => undefined);
       if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
@@ -127,12 +158,44 @@ export class SetlistBuehne {
     return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   }
 
+  protected toggleKlick(e: Event): void {
+    e.stopPropagation();
+    this.klick.update((k) => !k);
+    this.startKlick();
+  }
+
+  private startKlick(): void {
+    this.stopKlick();
+    const bpm = this.info()?.bpm;
+    if (!this.klick() || !bpm) return;
+    this.audio ??= new AudioContext();
+    this.klickTimer = setInterval(() => {
+      this.beat.set(true);
+      setTimeout(() => this.beat.set(false), 90);
+      const osc = this.audio!.createOscillator();
+      const gain = this.audio!.createGain();
+      osc.frequency.value = 1000;
+      gain.gain.setValueAtTime(0.2, this.audio!.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audio!.currentTime + 0.05);
+      osc.connect(gain).connect(this.audio!.destination);
+      osc.start();
+      osc.stop(this.audio!.currentTime + 0.05);
+    }, 60000 / bpm);
+  }
+
+  private stopKlick(): void {
+    clearInterval(this.klickTimer);
+    this.beat.set(false);
+  }
+
   protected go(step: number): void {
     const before = this.setNo();
     const target = Math.min(this.entries().length, Math.max(0, this.index() + step));
     this.index.set(target);
     // neues Set beginnt (nach der Pause weiter) → Uhr neu starten
     if (this.setNo() !== before) this.setStart = Date.now();
+    // Klick läuft im Tempo des neuen Songs weiter (ohne Tempo: aus)
+    this.startKlick();
   }
 
   // Tippen: rechte zwei Drittel weiter, linkes Drittel zurück; Wischen nach links/rechts ebenso

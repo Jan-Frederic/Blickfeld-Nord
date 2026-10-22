@@ -1,6 +1,7 @@
 import { Show } from '../data/band.service';
 import { loadSetlist, setLength, setTime, setsOf } from '../data/setlist-data';
 import { arrivalTime, departureTime, DEFAULT_START } from '../data/trip';
+import { songInfoText } from '../data/songinfo';
 import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
 import { FIELDS, VORORT_PREFIX, loadVorOrt } from './vorort';
 
@@ -31,7 +32,7 @@ export function printLaufzettel(show: Show, id: string): void {
     ? sets
         .map((set, i) => {
           const sec = setLength(set).seconds;
-          return `<section class="set"><h3>Set ${i + 1}${sec ? ` · ${setTime(sec)}` : ''}</h3><ol>${set.map((t) => `<li value="${++n}">${esc(t.title)} <small>${esc(t.artist)}</small></li>`).join('')}</ol></section>`;
+          return `<section class="set"><h3>Set ${i + 1}${sec ? ` · ${setTime(sec)}` : ''}</h3><ol>${set.map((t) => `<li value="${++n}">${esc(t.title)} <small>${esc(t.artist)}${songInfoText(t.title, t.artist) ? ' · ' + esc(songInfoText(t.title, t.artist)) : ''}</small></li>`).join('')}</ol></section>`;
         })
         .join('')
     : '<p class="note">Noch keine Setlist angelegt.</p>';

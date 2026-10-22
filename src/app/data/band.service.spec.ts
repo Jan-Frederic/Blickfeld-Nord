@@ -1,5 +1,6 @@
 import { BandService, friendId } from './band.service';
 import repertoire from './repertoire.json';
+import { SONGINFO } from './songinfo';
 import technik from './technik.json';
 
 // Prüft die zentral gepflegten Inhalte auf typische Tippfehler, bevor sie live gehen
@@ -60,6 +61,16 @@ describe('Proben', () => {
   it.each(band.rehearsals.map((r) => [r.date, r] as const))('%s ist gültig', (_, r) => {
     expect(isDate(r.date)).toBe(true);
     for (const t of [r.time, r.endTime]) if (t) expect(t).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/);
+  });
+});
+
+describe('Tonart und Tempo (songinfo.ts)', () => {
+  it('passen zu Songs im Repertoire und haben gültige Werte', () => {
+    for (const s of SONGINFO) {
+      expect(repertoire.tracks.some((t) => t.title === s.title && t.artist === s.artist), `${s.title} – ${s.artist} nicht im Repertoire`).toBe(true);
+      if (s.tonart) expect(s.tonart).toMatch(/^[A-H][#b]?m?$/);
+      if (s.bpm) expect(s.bpm >= 40 && s.bpm <= 240).toBe(true);
+    }
   });
 });
 

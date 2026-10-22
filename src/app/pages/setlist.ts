@@ -4,6 +4,7 @@ import data from '../data/repertoire.json';
 import { SetlistVorlagen } from './setlist-vorlagen';
 import { SetlistBuehne } from './setlist-buehne';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
+import { songInfoText } from '../data/songinfo';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
 // den Sets einfügen und als großformatige Bühnen-Setlist drucken bzw. als PDF speichern.
@@ -63,6 +64,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
               } @else {
                 <span class="no">{{ number(i) }}</span>
                 <span class="t">{{ $any(e).title }}</span><span class="a">{{ $any(e).artist }}</span>
+                @if (info($any(e)); as i) { <span class="dur">{{ i }}</span> }
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
@@ -164,6 +166,11 @@ export class Setlist {
     const before = setsOf(this.entries().slice(0, index)).at(-1);
     return before ? setLength(before) : null;
   }
+  // Tonart · Tempo · Notiz aus songinfo.ts
+  protected info(s: { title: string; artist: string }): string {
+    return songInfoText(s.title, s.artist);
+  }
+
   protected length(s: { title: string; artist: string }): string | null {
     const d = durationOf(s);
     return d ? songTime(d) : null;

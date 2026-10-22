@@ -7,6 +7,8 @@ import { BandService } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
+import { SONGINFO } from '../data/songinfo';
+import repertoire from '../data/repertoire.json';
 import technik from '../data/technik.json';
 
 // Backstage → Aufgaben: Checkliste für die Website. Oben, was die Seite selbst aus den Daten erkennt (offene
@@ -224,6 +226,10 @@ export class BackstageAufgaben {
       const n = UEBERSETZUNGEN.filter((u) => !u.geprueft?.[lang]).length;
       if (n) out.push({ text: `${n} ${name} ${n === 1 ? 'Übersetzung' : 'Übersetzungen'} noch nicht gegengelesen`, details: [], link: '/backstage/uebersetzungen', icon: 'translate' });
     }
+
+    const ohneInfo = repertoire.tracks.filter((t) => !SONGINFO.some((s) => s.title === t.title && s.artist === t.artist && (s.tonart || s.bpm))).length;
+    if (ohneInfo)
+      out.push({ text: `Optional: Tonart und Tempo für ${ohneInfo} von ${repertoire.tracks.length} Songs eintragen`, details: ['src/app/data/songinfo.ts – erscheint in Setlist, Bühnen-Modus und Laufzettel'], link: '/repertoire', icon: 'music_note' });
 
     if (!this.band.instagramPosts.length)
       out.push({ text: 'Optional: Instagram-Beiträge für die Startseite eintragen', details: ['instagramPosts in src/app/data/band.service.ts'], link: '/', icon: 'photo_camera' });

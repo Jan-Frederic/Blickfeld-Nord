@@ -67,6 +67,20 @@ Wenn jemand an bestimmten Tagen nicht spielen kann (Urlaub, Schicht, Familienfei
   meldet Auftritte, die in eine Abwesenheit fallen.
 - Das Repo ist öffentlich: als Grund nur ein Stichwort, keine Details.
 
+## Tonart und Tempo der Songs
+
+Für Setlist, Bühnen-Modus und Laufzettel im Backstage. In
+[`src/app/data/songinfo.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts)
+unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
+
+```ts
+  { title: '80 Millionen', artist: 'Max Giesinger', tonart: 'G', bpm: 120, notiz: 'Capo 2' },
+```
+
+- Titel und Interpret genau wie im Repertoire schreiben (am besten von `/repertoire` kopieren).
+- Tonart: Dur als Großbuchstabe (`C`, `F#`, `Bb`), Moll mit kleinem `m` (`Am`, `C#m`). Alles ist optional.
+- Im Bühnen-Modus blinkt **Klick** im Tempo und piept leise – praktisch zum Einzählen.
+
 ## Foto in die Galerie
 
 1. **Standort entfernen.** Handyfotos enthalten oft den GPS-Ort, und der wäre sonst öffentlich. Ihr könnt beim
