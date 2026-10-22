@@ -88,12 +88,4 @@ export const AUFGABEN: Aufgabe[] = [
     art: 'muss',
     link: '/freunde',
   },
-  {
-    id: 'foto-credits',
-    bereich: 'Inhalte',
-    text: 'Fotografen der Galerie-Fotos nennen, sofern sie genannt werden möchten',
-    art: 'kann',
-    hinweis: 'Feld „credit“ bei den Fotos in src/app/data/band.service.ts.',
-    link: '/galerie',
-  },
 ];

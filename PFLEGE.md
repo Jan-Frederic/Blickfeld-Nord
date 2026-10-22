@@ -160,8 +160,9 @@ Die Website gibt es auch auf Englisch (`/en/…`) und Niederländisch (`/nl/…`
 
 Was an der Website noch zu tun ist, steht im Backstage im Bereich **Aufgaben** (`/backstage/aufgaben`).
 
-- **Aus den Daten erkannt:** offene Auftritte, Proben ohne Endzeit oder Ort, fehlende Bios, offene Technik-Angaben
-  und ungeprüfte Übersetzungen. Diese Punkte verschwinden von selbst, sobald die Angaben eingetragen sind.
+- **Aus den Daten erkannt:** offene Auftritte, Auftritte während einer Abwesenheit, Werbung für öffentliche Auftritte
+  in den nächsten vier Wochen, fehlende Rückblicke, Fotos ohne Fotografen-Angabe, Proben ohne Endzeit oder Ort,
+  fehlende Bios, offene Technik-Angaben und ungeprüfte Übersetzungen. Diese Punkte verschwinden von selbst, sobald die Angaben eingetragen sind.
 - **Von Hand gepflegt:** alles andere, in
   [`src/app/data/aufgaben.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/aufgaben.ts).
   Jede Aufgabe hat einen Bereich und ist entweder „Muss“ oder „Kann“. Zum Ergänzen eine Zeile kopieren und anpassen.

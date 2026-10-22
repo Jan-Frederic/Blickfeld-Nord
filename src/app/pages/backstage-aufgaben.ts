@@ -143,6 +143,46 @@ export class BackstageAufgaben {
         icon: 'music_note',
       });
 
+    // Auftritte, die in eine Abwesenheit fallen
+    const konflikte = this.band.shows.flatMap((s) =>
+      this.band.abwesenheiten
+        .filter((a) => (s.endDate ?? s.date) >= this.heute && a.von <= (s.endDate ?? s.date) && s.date <= (a.bis ?? a.von))
+        .map((a) => `${datum(s.date)} – ${s.venue}: ${a.wer} ist nicht da`),
+    );
+    if (konflikte.length)
+      out.push({ text: `${konflikte.length} ${konflikte.length === 1 ? 'Auftritt fällt' : 'Auftritte fallen'} in eine Abwesenheit`, details: konflikte, link: '/backstage/termine', icon: 'event_busy' });
+
+    // Werbung: öffentliche, geklärte Auftritte in den nächsten 4 Wochen
+    const bald = new Date(Date.now() + 28 * 864e5).toISOString().slice(0, 10);
+    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute && x.date <= bald))
+      out.push({
+        text: `Werbung: Plakat und Story für ${s.venue} (${datum(s.date)}) teilen`,
+        details: ['Erinnerung bis zum Auftritt – Plakat, Story und Instagram-Text auf der Seite des Auftritts'],
+        link: `/backstage/${this.band.showId(s)}`,
+        icon: 'campaign',
+      });
+
+    // Rückblick fehlt: geklärte Auftritte der letzten 12 Monate ohne Historie-Eintrag am selben Tag
+    const vorEinemJahr = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+    const ohneRueckblick = this.band.shows.filter(
+      (s) => s.confirmed && (s.endDate ?? s.date) < this.heute && s.date >= vorEinemJahr && !this.band.history.some((h) => h.date === s.date && !h.example),
+    );
+    if (ohneRueckblick.length)
+      out.push({
+        text: `Rückblick fehlt für ${ohneRueckblick.length} ${ohneRueckblick.length === 1 ? 'Auftritt' : 'Auftritte'}`,
+        details: ohneRueckblick.map((s) => `${datum(s.date)} – ${s.private ? s.publicName ?? 'Private Feier' : s.venue}`),
+        link: '/historie',
+        icon: 'history_edu',
+      });
+
+    // Fotos ohne Fotografen-Angabe (Galerie und Historie)
+    const ohneCredit = [...new Set([
+      ...this.band.photos.filter((p) => !p.credit).map((p) => p.caption ?? p.alt),
+      ...this.band.history.flatMap((h) => (h.images ?? []).filter((i) => !i.credit).map(() => `Historie: ${h.title}`)),
+    ])];
+    if (ohneCredit.length)
+      out.push({ text: `${ohneCredit.length} ${ohneCredit.length === 1 ? 'Foto' : 'Fotos'} ohne Fotografen-Angabe`, details: ohneCredit, link: '/galerie', icon: 'photo_camera' });
+
     const ohneBio = this.band.members.filter((m) => !m.story?.length);
     if (ohneBio.length)
       out.push({
