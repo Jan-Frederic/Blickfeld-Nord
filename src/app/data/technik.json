@@ -99,10 +99,14 @@
     },
     "pedalboard": {
       "kategorie": "Pedalboard",
-      "modell": "Boss RC-5 Loop Station",
-      "beschreibung": "Freds Pedalboard mit der Boss RC-5 Loop Station und weiteren Effektpedalen.",
+      "modell": "Line 6 POD Express Bass & Boss RC-5",
+      "beschreibung": "Freds Pedalboard: Multi-Effekt, Looper, Stimmgerät und Fußschalter, dazu ein MIDI-Controller zum Umschalten.",
       "details": [
-        ["Weitere Pedale", "folgen"]
+        ["Multi-Effekt", "Line 6 POD Express Bass"],
+        ["Looper", "Boss RC-5 Loop Station"],
+        ["MIDI-Controller", "Live Logic MIDI Controller"],
+        ["Fußschalter", "NUX NMP-2 Footswitch"],
+        ["Stimmgerät", "Harley Benton CPT-20"]
       ]
     },
     "bassamp": {
