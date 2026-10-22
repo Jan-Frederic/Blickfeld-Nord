@@ -34,7 +34,19 @@
     { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false, "musiker": "matthias" }
   ],
   "monitore": [
-    { "id": "mon1", "fuer": "David", "mix": null, "musiker": "david" },
+    {
+      "id": "mon1", "fuer": "David", "musiker": "david", "vorschlag": true,
+      "mix": [
+        { "kanal": 6, "pegel": "laut" },
+        { "kanal": 5, "pegel": "laut" },
+        { "kanal": 7, "pegel": "mittel" },
+        { "kanal": 8, "pegel": "mittel" },
+        { "kanal": 1, "pegel": "mittel" },
+        { "kanal": 4, "pegel": "leise" },
+        { "kanal": 2, "pegel": "leise" }
+      ],
+      "notiz": "David braucht vor allem seine Stimme und die Gitarre. Bassdrum und etwas Bass geben ihm das Timing, den Gesang von Fred und Matthias mittel für die Harmonien."
+    },
     {
       "id": "mon2", "fuer": "Fred", "musiker": "fred", "vorschlag": true,
       "mix": [
@@ -42,12 +54,22 @@
         { "kanal": 1, "pegel": "laut" },
         { "kanal": 2, "pegel": "mittel" },
         { "kanal": 6, "pegel": "mittel" },
-        { "kanal": 8, "pegel": "leise" },
+        { "kanal": 8, "pegel": "mittel" },
         { "kanal": 5, "pegel": "leise" }
       ],
-      "notiz": "Den Bass hört Fred über seinen eigenen Verstärker, deshalb nicht im Monitor. Bassdrum laut für das Zusammenspiel mit dem Schlagzeug, Davids Gesang mittel für die Harmonien."
+      "notiz": "Den Bass hört Fred über seinen eigenen Verstärker, deshalb nicht im Monitor. Bassdrum laut für das Zusammenspiel mit dem Schlagzeug, den Gesang von David und Matthias mittel für die Harmonien."
     },
-    { "id": "mon3", "fuer": "Matthias", "mix": null, "musiker": "matthias" }
+    {
+      "id": "mon3", "fuer": "Matthias", "musiker": "matthias", "vorschlag": true,
+      "mix": [
+        { "kanal": 8, "pegel": "laut" },
+        { "kanal": 4, "pegel": "laut" },
+        { "kanal": 6, "pegel": "mittel" },
+        { "kanal": 7, "pegel": "mittel" },
+        { "kanal": 5, "pegel": "mittel" }
+      ],
+      "notiz": "Das Schlagzeug hört Matthias direkt, deshalb nicht im Monitor. Der Bass laut für das Zusammenspiel, den Gesang von David und Fred mittel für die Harmonien."
+    }
   ],
   "hardware": {
     "setup-david": {

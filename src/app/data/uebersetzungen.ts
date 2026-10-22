@@ -829,9 +829,19 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     nl: 'zacht',
   },
   {
-    de: 'Den Bass hört Fred über seinen eigenen Verstärker, deshalb nicht im Monitor. Bassdrum laut für das Zusammenspiel mit dem Schlagzeug, Davids Gesang mittel für die Harmonien.',
-    en: 'Fred hears the bass through his own amp, so it is not in the monitor. Kick drum loud to lock in with the drums, David’s vocals medium for the harmonies.',
-    nl: 'Fred hoort de bas via zijn eigen versterker, daarom niet in de monitor. Basdrum hard voor het samenspel met de drums, de zang van David middel voor de harmonieën.',
+    de: 'Den Bass hört Fred über seinen eigenen Verstärker, deshalb nicht im Monitor. Bassdrum laut für das Zusammenspiel mit dem Schlagzeug, den Gesang von David und Matthias mittel für die Harmonien.',
+    en: 'Fred hears the bass through his own amp, so it is not in the monitor. Kick drum loud to lock in with the drums, vocals from David and Matthias medium for the harmonies.',
+    nl: 'Fred hoort de bas via zijn eigen versterker, daarom niet in de monitor. Basdrum hard voor het samenspel met de drums, de zang van David en Matthias middel voor de harmonieën.',
+  },
+  {
+    de: 'David braucht vor allem seine Stimme und die Gitarre. Bassdrum und etwas Bass geben ihm das Timing, den Gesang von Fred und Matthias mittel für die Harmonien.',
+    en: 'David mainly needs his voice and the guitar. Kick drum and a little bass give him the timing, vocals from Fred and Matthias medium for the harmonies.',
+    nl: 'David heeft vooral zijn stem en de gitaar nodig. Basdrum en een beetje bas geven hem de timing, de zang van Fred en Matthias middel voor de harmonieën.',
+  },
+  {
+    de: 'Das Schlagzeug hört Matthias direkt, deshalb nicht im Monitor. Der Bass laut für das Zusammenspiel, den Gesang von David und Fred mittel für die Harmonien.',
+    en: 'Matthias hears the drums directly, so they are not in the monitor. Bass loud to lock in, vocals from David and Fred medium for the harmonies.',
+    nl: 'Matthias hoort de drums direct, daarom niet in de monitor. De bas hard voor het samenspel, de zang van David en Fred middel voor de harmonieën.',
   },
   {
     de: 'Shure SM58',

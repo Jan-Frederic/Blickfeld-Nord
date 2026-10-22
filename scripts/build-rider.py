@@ -88,7 +88,7 @@ def stage_plot(c, x0, top, width, lang):
             c.rect(x - w / 2, y - h / 2, w, h, stroke=1, fill=0)
             c.setDash()
             # Schlagzeug: Beschriftung vorne (Richtung Publikum), hinten sitzt Matthias
-            label(tx(it['label'], lang), x, y - h / 2 + 4 if t == 'drums' else y - 2)
+            label(tx(it['label'], lang), x, y - h / 2 + 4 if t == 'drums' else y - 2, 6 if t == 'pedalboard' else 7)
         elif t == 'person':
             c.setFillColor(pk.SUNSET)
             c.circle(x, y, 4.2 * mm, stroke=0, fill=1)
@@ -182,21 +182,25 @@ def page_two(c, w, h, lang):
     c.setFillColor(pk.TEXT_DARK)
     c.drawString(m, h - 41.5 * mm, '   ·   '.join(
         f'{k}: {hw[key]["modell"] or t["open"]}' for k, key in t['hw']))
-    y = stage_plot(c, m, h - 60 * mm, w - 2 * m, lang)
+    # Plan etwas schmaler als die Seite, damit Kanalliste, Monitormischungen und Strom darunter Platz haben
+    pw = (w - 2 * m) * 0.9
+    y = stage_plot(c, (w - pw) / 2, h - 60 * mm, pw, lang)
     rows = [[k['kanal'], tx(k['quelle'], lang), tx(k['art'], lang), tx(k['geraet'], lang), tx(k['stativ'], lang) or '–', t['yes'] if k['phantom'] else '–'] for k in TECHNIK['kanaele']]
     y = table(c, m, y, t['cols'], rows, [16 * mm, 45 * mm, 20 * mm, 45 * mm, 25 * mm, 15 * mm], t['open'])
     y -= 6 * mm
     labels = {i['id']: tx(i['label'], lang) for i in TECHNIK['aufbau']}
-    half = (w - 2 * m) / 2
+    # Monitore über die volle Breite (die Mischungen sind lang), Strom darunter
     pk.heading(c, t['monitors'], m, y, size=10)
-    pk.heading(c, t['power'], m + half, y, size=10)
-    yl = yr = y - 6 * mm
+    y -= 6 * mm
     for i, mon in enumerate(TECHNIK['monitore'], 1):
         text = t['monitor_line'].format(label=labels.get(mon['id'], mon['id']), i=i, fuer=tx(mon['fuer'], lang), mix=mix_text(mon, lang) or t['mix_open'])
-        yl = pk.paragraph(c, text, m, yl, half - 6 * mm, size=8.5, leading=11) - 1.5 * mm
+        y = pk.paragraph(c, text, m, y, w - 2 * m, size=8.5, leading=11) - 1.5 * mm
+    y -= 3 * mm
+    pk.heading(c, t['power'], m, y, size=10)
+    y -= 6 * mm
     for s_ in TECHNIK['strom']:
         text = f"{labels.get(s_['id'], s_['id'])}: {', '.join(tx(v, lang) for v in s_['verbraucher'])}"
-        yr = pk.paragraph(c, text, m + half, yr, half, size=8.5, leading=11) - 1.5 * mm
+        y = pk.paragraph(c, text, m, y, w - 2 * m, size=8.5, leading=11) - 1.5 * mm
 
 
 def main():
