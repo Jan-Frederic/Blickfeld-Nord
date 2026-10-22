@@ -37,6 +37,14 @@ export const AUFGABEN: Aufgabe[] = [
     hinweis: 'Steht auf der Rückseite des Pults; danach in src/app/data/technik.json unter „mischpult“ eintragen.',
   },
   {
+    id: 'kanalliste',
+    bereich: 'Technik',
+    text: 'Kanalliste klären: Stimmen Kanäle, Quellen, Mikrofone, Stative und Phantomspeisung?',
+    art: 'muss',
+    hinweis: 'Die Liste ist noch ein Entwurf. Sie steht in src/app/data/technik.json unter „kanaele“ und erscheint auf der Technik-Seite, im Technik-Rider und in den Setups der Musiker.',
+    link: '/technik',
+  },
+  {
     id: 'strom-watt',
     bereich: 'Technik',
     text: 'Strombedarf in Watt je Steckdose ergänzen',
