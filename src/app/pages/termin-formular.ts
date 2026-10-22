@@ -61,6 +61,9 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
         @if (taken(); as t) {
           <p class="problem"><mat-icon>warning</mat-icon> An diesem Tag steht schon: {{ t }} – Doppelung?</p>
         }
+        @if (abwesend(); as a) {
+          <p class="problem"><mat-icon>warning</mat-icon> An diesem Tag nicht da: {{ a }}</p>
+        }
         <pre class="code">{{ line() }}</pre>
         <div class="actions">
           <button type="button" class="primary" (click)="copy()"><mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon> {{ copied() ? 'Kopiert!' : 'Zeile kopieren' }}</button>
@@ -117,6 +120,12 @@ export class TerminFormular {
     const show = this.band.shows.find((s) => s.date === date || (s.endDate && s.date <= date && date <= s.endDate));
     if (show) return `${show.venue}${show.city ? ' (' + show.city + ')' : ''}`;
     return this.band.rehearsals.some((r) => r.date === date) ? 'Probe' : null;
+  });
+  // Hinweis, wenn an dem Tag jemand abwesend ist (Abwesenheiten in band.service.ts)
+  protected readonly abwesend = computed(() => {
+    const date = this.f().date;
+    const weg = this.band.abwesenheiten.filter((a) => a.von <= date && date <= (a.bis ?? a.von));
+    return weg.length ? weg.map((a) => a.wer + (a.grund ? ` (${a.grund})` : '')).join(', ') : null;
   });
   protected readonly editUrl = EDIT_URL;
 

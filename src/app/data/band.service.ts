@@ -102,6 +102,18 @@ export interface Rehearsal {
   note?: string;
 }
 
+// Abwesenheit eines Bandmitglieds (oder der ganzen Band) – der Verfügbarkeitskalender im Booking zeigt die Tage
+// als belegt, ohne Namen oder Grund. Das Repo ist öffentlich: als Grund nur Stichworte wie „Urlaub“.
+export interface Abwesenheit {
+  // Vorname bzw. Spitzname (David, Matthias, Fred) oder 'Band'
+  wer: string;
+  von: string;
+  // optional: letzter Tag (Standard: nur „von“)
+  bis?: string;
+  // optional: Stichwort, nur im Backstage sichtbar
+  grund?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BandService {
   // Öffentlich gelistet wird nur, was öffentlich UND geklärt ist – chronologisch
@@ -414,6 +426,10 @@ export class BandService {
     { src: 'band/jan-frederic-overbeck.webp', thumb: 'galerie/portrait-jan-frederic-overbeck-thumb.webp', tall: true, alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer', caption: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang' },
     { src: 'hero.webp', thumb: 'galerie/logo-thumb.webp', alt: 'Blickfeld-Nord-Logo mit Kompass über einem nebligen See', caption: 'Blickfeld Nord' },
   ];
+
+  // Abwesenheiten: Tage, an denen jemand nicht spielen kann – im Booking-Kalender „belegt“, im Termin-Formular
+  // mit Warnung. Beispiel: { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' }
+  readonly abwesenheiten: Abwesenheit[] = [];
 
   // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
   // Beispiel: { date: '2026-11-05', time: '19:30', endTime: '22:00', place: 'Proberaum', note: 'Weihnachtsmarkt-Set' }

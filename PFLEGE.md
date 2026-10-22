@@ -52,6 +52,21 @@ Aus „offen“ wird „geklärt“, indem ihr `confirmed: false` in `confirmed:
 Im Formular oben **Probe** wählen. Die Zeile kommt unter `readonly rehearsals: Rehearsal[] = [`.
 Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 
+## Abwesenheit eintragen
+
+Wenn jemand an bestimmten Tagen nicht spielen kann (Urlaub, Schicht, Familienfeier), nach
+`readonly abwesenheiten: Abwesenheit[] = [` suchen und darunter einfügen:
+
+```ts
+    { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' },
+```
+
+- `wer`: David, Matthias, Fred oder `'Band'`. `bis` weglassen, wenn es nur ein Tag ist.
+- Im Verfügbarkeitskalender beim Booking erscheinen die Tage als **belegt** – ohne Namen und Grund.
+- Das Termin-Formular im Backstage warnt, wenn ein neuer Termin auf so einen Tag fällt, und die Aufgaben-Seite
+  meldet Auftritte, die in eine Abwesenheit fallen.
+- Das Repo ist öffentlich: als Grund nur ein Stichwort, keine Details.
+
 ## Foto in die Galerie
 
 1. **Standort entfernen.** Handyfotos enthalten oft den GPS-Ort, und der wäre sonst öffentlich. Ihr könnt beim

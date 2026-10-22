@@ -156,10 +156,16 @@ export class Availability {
   private readonly now = new Date();
   private readonly today = iso(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
 
-  // Belegte Tage aus allen Auftritten (auch privaten); mehrtägige Termine belegen jeden Tag
+  // Belegte Tage aus allen Auftritten (auch privaten) und Abwesenheiten; mehrtägige Termine belegen jeden Tag
   private readonly busy = (() => {
     const map = new Map<string, DayState>();
-    for (const s of inject(BandService).shows) {
+    const band = inject(BandService);
+    for (const a of band.abwesenheiten) {
+      const d = new Date(`${a.von}T12:00:00`);
+      const end = new Date(`${a.bis ?? a.von}T12:00:00`);
+      for (; d <= end; d.setDate(d.getDate() + 1)) map.set(iso(d.getFullYear(), d.getMonth(), d.getDate()), 'booked');
+    }
+    for (const s of band.shows) {
       const state: DayState = s.confirmed ? 'booked' : 'option';
       const d = new Date(`${s.date}T12:00:00`);
       const end = new Date(`${s.endDate ?? s.date}T12:00:00`);

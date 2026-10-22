@@ -63,6 +63,21 @@ describe('Proben', () => {
   });
 });
 
+describe('Abwesenheiten', () => {
+  const namen = ['Band', ...band.members.map((m) => m.nickname ?? m.name.split(' ')[0])];
+  // eine Schleife statt it.each – die Liste darf leer sein
+  it('haben gültige Namen und Daten, „bis“ nicht vor „von“', () => {
+    for (const a of band.abwesenheiten) {
+      expect(namen).toContain(a.wer);
+      expect(isDate(a.von)).toBe(true);
+      if (a.bis) {
+        expect(isDate(a.bis)).toBe(true);
+        expect(a.bis >= a.von).toBe(true);
+      }
+    }
+  });
+});
+
 describe('Historie', () => {
   it.each(band.history.map((h) => [`${h.date} ${h.title}`, h] as const))('%s ist gültig', (_, h) => {
     expect(isDate(h.date)).toBe(true);
