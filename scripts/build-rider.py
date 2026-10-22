@@ -160,6 +160,15 @@ def table(c, x, y, cols, rows, widths, open_text='offen'):
     return y
 
 
+def mix_text(mon, lang):
+    """Monitormischung als Text, z. B. „Gesang Fred laut, Bassdrum laut … (Vorschlag)“ – None, solange offen."""
+    if not mon.get('mix'):
+        return None
+    quelle = {k['kanal']: k['quelle'] for k in TECHNIK['kanaele']}
+    text = ', '.join(f"{tx(quelle[x['kanal']], lang)} {tx(x['pegel'], lang)}" for x in mon['mix'])
+    return f"{text} ({T.RIDER[lang]['proposal']})" if mon.get('vorschlag') else text
+
+
 def page_two(c, w, h, lang):
     t = T.RIDER[lang]
     m = 20 * mm
@@ -183,7 +192,7 @@ def page_two(c, w, h, lang):
     pk.heading(c, t['power'], m + half, y, size=10)
     yl = yr = y - 6 * mm
     for i, mon in enumerate(TECHNIK['monitore'], 1):
-        text = t['monitor_line'].format(label=labels.get(mon['id'], mon['id']), i=i, fuer=tx(mon['fuer'], lang), mix=tx(mon['mix'], lang) or t['mix_open'])
+        text = t['monitor_line'].format(label=labels.get(mon['id'], mon['id']), i=i, fuer=tx(mon['fuer'], lang), mix=mix_text(mon, lang) or t['mix_open'])
         yl = pk.paragraph(c, text, m, yl, half - 6 * mm, size=8.5, leading=11) - 1.5 * mm
     for s_ in TECHNIK['strom']:
         text = f"{labels.get(s_['id'], s_['id'])}: {', '.join(tx(v, lang) for v in s_['verbraucher'])}"

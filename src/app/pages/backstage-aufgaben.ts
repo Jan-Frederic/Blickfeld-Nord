@@ -156,7 +156,6 @@ export class BackstageAufgaben {
     const technikOffen = [
       ...Object.entries(hardware).filter(([k, h]) => !k.startsWith('setup-') && !h.modell).map(([, h]) => `${h.kategorie}: Modell`),
       ...technik.kanaele.filter((k) => k.art !== 'DI' && !k.geraet).map((k) => `Kanal ${k.kanal} (${k.quelle}): Mikrofon`),
-      ...technik.monitore.filter((m) => !m.mix).map((m) => `Monitormischung für ${m.fuer}`),
     ];
     if (technikOffen.length)
       out.push({ text: `${technikOffen.length} offene Technik-Angaben`, details: technikOffen, link: '/technik', icon: 'speaker' });

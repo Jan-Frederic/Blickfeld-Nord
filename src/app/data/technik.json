@@ -1,6 +1,6 @@
 {
   "status": "Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.",
-  "stand": "2026-10-21",
+  "stand": "2026-10-22",
   "buehne": { "breite": 4, "tiefe": 3 },
   "aufbau": [
     { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2, "hw": "schlagzeug", "musiker": "matthias" },
@@ -35,7 +35,18 @@
   ],
   "monitore": [
     { "id": "mon1", "fuer": "David", "mix": null, "musiker": "david" },
-    { "id": "mon2", "fuer": "Fred", "mix": null, "musiker": "fred" },
+    {
+      "id": "mon2", "fuer": "Fred", "musiker": "fred", "vorschlag": true,
+      "mix": [
+        { "kanal": 7, "pegel": "laut" },
+        { "kanal": 1, "pegel": "laut" },
+        { "kanal": 2, "pegel": "mittel" },
+        { "kanal": 6, "pegel": "mittel" },
+        { "kanal": 8, "pegel": "leise" },
+        { "kanal": 5, "pegel": "leise" }
+      ],
+      "notiz": "Den Bass hört Fred über seinen eigenen Verstärker, deshalb nicht im Monitor. Bassdrum laut für das Zusammenspiel mit dem Schlagzeug, Davids Gesang mittel für die Harmonien."
+    },
     { "id": "mon3", "fuer": "Matthias", "mix": null, "musiker": "matthias" }
   ],
   "hardware": {

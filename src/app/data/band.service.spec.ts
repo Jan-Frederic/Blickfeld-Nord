@@ -153,6 +153,16 @@ describe('Technischer Aufbau (technik.json)', () => {
     for (const s of technik.strom) expect(ids).toContain(s.id);
   });
 
+  it('mischt auf den Monitoren nur vorhandene Kanäle mit gültigem Pegel', () => {
+    const kanaele = technik.kanaele.map((k) => k.kanal);
+    for (const m of technik.monitore as { mix: { kanal: number; pegel: string }[] | null }[]) {
+      for (const x of m.mix ?? []) {
+        expect(kanaele).toContain(x.kanal);
+        expect(['laut', 'mittel', 'leise']).toContain(x.pegel);
+      }
+    }
+  });
+
   it('platziert alles auf oder neben der Bühne', () => {
     for (const i of technik.aufbau) {
       expect(i.x).toBeGreaterThanOrEqual(-0.5);

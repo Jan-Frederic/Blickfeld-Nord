@@ -45,6 +45,14 @@ export const AUFGABEN: Aufgabe[] = [
     link: '/technik',
   },
   {
+    id: 'monitormischungen',
+    bereich: 'Technik',
+    text: 'Monitormischungen klären: Was hört jeder auf seinem Monitor?',
+    art: 'muss',
+    hinweis: 'Für Fred steht ein Vorschlag drin, David und Matthias sind noch offen. Eintragen in src/app/data/technik.json unter „monitore“ (Kanal und Pegel laut/mittel/leise); bestätigt ist eine Mischung, wenn „vorschlag“ entfällt.',
+    link: '/technik',
+  },
+  {
     id: 'strom-watt',
     bereich: 'Technik',
     text: 'Strombedarf in Watt je Steckdose ergänzen',

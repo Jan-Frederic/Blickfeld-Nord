@@ -31,6 +31,9 @@ const TEXT = tr(
     monitors: 'Monitore',
     for: 'für',
     mixOpen: 'Mischung offen',
+    mixes: 'Monitormischungen',
+    mixIntro: 'Was jeder auf seinem Monitor hört – laut, mittel oder leise; „–“ heißt: nicht im Monitor.',
+    proposal: 'Vorschlag',
     power: 'Strom',
     asOf: 'Stand',
     descArea: 'Spielfläche',
@@ -59,6 +62,9 @@ const TEXT = tr(
     monitors: 'Monitors',
     for: 'for',
     mixOpen: 'Mix to be confirmed',
+    mixes: 'Monitor mixes',
+    mixIntro: 'What everyone hears on their monitor – loud, medium or low; “–” means: not in the monitor.',
+    proposal: 'Proposal',
     power: 'Power',
     asOf: 'As of',
     descArea: 'Stage area',
@@ -87,6 +93,9 @@ const TEXT = tr(
     monitors: 'Monitors',
     for: 'voor',
     mixOpen: 'Mix volgt nog',
+    mixes: 'Monitormixen',
+    mixIntro: 'Wat iedereen op zijn monitor hoort – hard, middel of zacht; „–” betekent: niet in de monitor.',
+    proposal: 'Voorstel',
     power: 'Stroom',
     asOf: 'Stand van',
     descArea: 'Speelvlak',
@@ -117,6 +126,16 @@ interface Item {
   sub?: boolean;
   /** gehört zum Setup dieses Musikers (id der Person) */
   musiker?: string;
+}
+
+// Monitormischung: welche Kanäle wie laut auf dem Monitor liegen; null = noch offen, vorschlag = noch nicht bestätigt
+interface Monitor {
+  id: string;
+  fuer: string;
+  musiker?: string;
+  mix: { kanal: number; pegel: string }[] | null;
+  vorschlag?: boolean;
+  notiz?: string;
 }
 
 
@@ -313,7 +332,7 @@ const py = (m: number) => PAD_TOP + m * M;
         <h4>{{ t().monitors }}</h4>
         <ul class="list">
           @for (m of monitore; track m.id) {
-            <li><b>{{ label(m.id) }}</b> {{ t().for }} {{ ct.t(m.fuer) }}: <span [class.open]="!m.mix">{{ m.mix ? ct.t(m.mix) : t().mixOpen }}</span></li>
+            <li><b>{{ label(m.id) }}</b> {{ t().for }} {{ ct.t(m.fuer) }}: <span [class.open]="!m.mix">{{ mixText(m) ?? t().mixOpen }}</span></li>
           }
         </ul>
       </div>
@@ -326,6 +345,34 @@ const py = (m: number) => PAD_TOP + m * M;
         </ul>
       </div>
     </div>
+    <h4>{{ t().mixes }}</h4>
+    <p class="stand">{{ t().mixIntro }}</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t().head.channel }}</th><th>{{ t().head.source }}</th>
+            @for (m of monitore; track m.id) {
+              <th>{{ label(m.id) }}<br />{{ ct.t(m.fuer) }} · {{ m.mix ? (m.vorschlag ? t().proposal : '✓') : t().open }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (k of kanaele; track k.kanal) {
+            <tr>
+              <td class="num">{{ k.kanal }}</td>
+              <td>{{ ct.t(k.quelle) }}</td>
+              @for (m of monitore; track m.id) {
+                <td [class.open]="!pegel(m, k.kanal)">{{ pegel(m, k.kanal) ? ct.t(pegel(m, k.kanal)!) : '–' }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @for (m of monitore; track m.id) {
+      @if (m.notiz) { <p class="stand"><b>{{ label(m.id) }} ({{ ct.t(m.fuer) }}):</b> {{ ct.t(m.notiz) }}</p> }
+    }
     <app-uebersetzung-hinweis [status]="contentStatus()" />
     <p class="stand">{{ t().asOf }} {{ i18n.date(stand, 'short') }}</p>
 
@@ -407,7 +454,7 @@ export class TechnikAufbau {
   protected readonly stand = `${data.stand}T12:00:00`;
   protected readonly items = data.aufbau as Item[];
   protected readonly kanaele = data.kanaele;
-  protected readonly monitore = data.monitore;
+  protected readonly monitore = data.monitore as Monitor[];
   protected readonly strom = data.strom;
   protected readonly hardware = HARDWARE;
 
@@ -436,7 +483,7 @@ export class TechnikAufbau {
       data.status,
       ...this.items.flatMap((i) => [i.label, i.rolle]),
       ...this.kanaele.flatMap((k) => [k.quelle, k.art, k.geraet ?? undefined, k.stativ ?? undefined]),
-      ...this.monitore.flatMap((m) => [m.fuer, m.mix ?? undefined]),
+      ...this.monitore.flatMap((m) => [m.fuer, m.notiz, ...(m.mix ?? []).map((x) => x.pegel)]),
       ...this.strom.flatMap((s) => s.verbraucher),
       ...Object.values(HARDWARE).map((h) => h.kategorie),
     ),
@@ -469,8 +516,21 @@ export class TechnikAufbau {
       .map((i) => [this.ct.t(HARDWARE[i.hw!].kategorie), HARDWARE[i.hw!].modell ?? t.modelFollows]);
     const monitor = this.monitore
       .filter((m) => m.musiker === musiker)
-      .map((m) => [this.ct.t('Monitor'), [this.label(m.id), `Aux ${this.monitore.indexOf(m) + 1}`, m.mix && this.ct.t(m.mix)].filter(Boolean).join(' · ')]);
+      .map((m) => [this.ct.t('Monitor'), [this.label(m.id), `Aux ${this.monitore.indexOf(m) + 1}`, this.mixText(m)].filter(Boolean).join(' · ')]);
     return [...kanaele, ...geraete, ...monitor];
+  }
+
+  // Pegel eines Kanals auf einem Monitor ('laut' | 'mittel' | 'leise') oder undefined
+  protected pegel(m: Monitor, kanal: number): string | undefined {
+    return m.mix?.find((x) => x.kanal === kanal)?.pegel;
+  }
+
+  // Mischung als Text, z. B. „Gesang Fred laut, Bassdrum laut, … (Vorschlag)“ – null, solange offen
+  protected mixText(m: Monitor): string | null {
+    if (!m.mix) return null;
+    const quelle = (kanal: number) => this.ct.t(this.kanaele.find((k) => k.kanal === kanal)?.quelle ?? String(kanal));
+    const text = m.mix.map((x) => `${quelle(x.kanal)} ${this.ct.t(x.pegel)}`).join(', ');
+    return m.vorschlag ? `${text} (${this.t().proposal})` : text;
   }
 
   protected label(id: string): string {

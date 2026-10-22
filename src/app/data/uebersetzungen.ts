@@ -814,6 +814,26 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true, nl: true },
   },
   {
+    de: 'laut',
+    en: 'loud',
+    nl: 'hard',
+  },
+  {
+    de: 'mittel',
+    en: 'medium',
+    nl: 'middel',
+  },
+  {
+    de: 'leise',
+    en: 'low',
+    nl: 'zacht',
+  },
+  {
+    de: 'Den Bass hört Fred über seinen eigenen Verstärker, deshalb nicht im Monitor. Bassdrum laut für das Zusammenspiel mit dem Schlagzeug, Davids Gesang mittel für die Harmonien.',
+    en: 'Fred hears the bass through his own amp, so it is not in the monitor. Kick drum loud to lock in with the drums, David’s vocals medium for the harmonies.',
+    nl: 'Fred hoort de bas via zijn eigen versterker, daarom niet in de monitor. Basdrum hard voor het samenspel met de drums, de zang van David middel voor de harmonieën.',
+  },
+  {
     de: 'Shure SM58',
     en: 'Shure SM58',
     nl: 'Shure SM58',
