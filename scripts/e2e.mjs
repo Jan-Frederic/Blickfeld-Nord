@@ -209,6 +209,18 @@ test('Backstage: Übersicht führt in die Bereiche, Direktaufruf eines Bereichs 
   return p;
 });
 
+test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neuladen', async () => {
+  const p = await page();
+  await p.go('/backstage/aufgaben/');
+  await p.locator('app-backstage-aufgaben .item').first().waitFor();
+  expect((await p.locator('app-backstage-aufgaben').innerText()).includes('offene Technik-Angaben'), 'Technik-Lücken werden nicht erkannt');
+  const box = p.locator('app-backstage-aufgaben input[type=checkbox]:not([disabled])').first();
+  await box.check();
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => await p.locator('app-backstage-aufgaben input[type=checkbox]:checked').count() >= 1, 'Häkchen nach Neuladen weg');
+  return p;
+});
+
 test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   const p = await page();
   await p.go('/backstage/termine/');

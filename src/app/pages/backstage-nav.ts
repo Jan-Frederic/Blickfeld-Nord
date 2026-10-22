@@ -10,6 +10,7 @@ export const BACKSTAGE_BEREICHE = [
   { path: '/backstage/uebersetzungen', label: 'Übersetzungen', icon: 'translate', text: 'Stand der englischen und niederländischen Texte, gegenlesen' },
   { path: '/backstage/material', label: 'Material', icon: 'print', text: 'Schilder, Karten, Rider und Pressekit zum Drucken und Verschicken' },
   { path: '/backstage/abgleich', label: 'Abgleich', icon: 'sync', text: 'Setlists, Packlisten und Vor-Ort-Angaben mit der Band teilen' },
+  { path: '/backstage/aufgaben', label: 'Aufgaben', icon: 'checklist', text: 'Was an der Website noch zu tun ist – Checkliste' },
 ] as const;
 
 @Component({
