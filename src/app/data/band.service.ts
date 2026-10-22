@@ -418,22 +418,22 @@ export class BandService {
   // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
   // Beispiel: { date: '2026-11-05', time: '19:30', endTime: '22:00', place: 'Proberaum', note: 'Weihnachtsmarkt-Set' }
   readonly rehearsals: Rehearsal[] = [
-    { date: '2026-10-23', time: '18:00' },
-    { date: '2026-11-20', time: '18:00' },
-    { date: '2026-12-11', time: '18:00' },
-    { date: '2027-01-15', time: '18:00' },
-    { date: '2027-02-12', time: '18:00' },
-    { date: '2027-03-12', time: '18:00' },
-    { date: '2027-04-09', time: '18:00' },
-    { date: '2027-06-04', time: '18:00' },
-    { date: '2027-07-02', time: '18:00' },
-    { date: '2027-07-30', time: '18:00' },
-    { date: '2027-08-27', time: '18:00' },
-    { date: '2027-09-24', time: '18:00' },
-    { date: '2027-10-22', time: '18:00' },
-    { date: '2027-11-19', time: '18:00' },
-    { date: '2027-12-17', time: '18:00' },
-    { date: '2028-01-14', time: '18:00', endTime: '21:00', place: 'Proberaum', note: 'Neue Songs' },
+    { date: '2026-10-23', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2026-11-20', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2026-12-11', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-01-15', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-02-12', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-03-12', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-04-09', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-06-04', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-07-02', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-07-30', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-08-27', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-09-24', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-10-22', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-11-19', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2027-12-17', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2028-01-14', time: '18:00', endTime: '21:00', place: 'Dingden', note: 'Neue Songs' },
   ];
 
   // Alle Auftritte; öffentlich gelistet werden nur nicht-private UND geklärte (siehe publicShows)

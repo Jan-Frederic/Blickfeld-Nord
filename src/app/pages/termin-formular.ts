@@ -18,7 +18,7 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
 
       <div class="art" role="radiogroup" aria-label="Art des Termins">
         <button type="button" [class.on]="art() === 'auftritt'" (click)="art.set('auftritt')"><mat-icon>celebration</mat-icon> Auftritt</button>
-        <button type="button" [class.on]="art() === 'probe'" (click)="art.set('probe')"><mat-icon>music_note</mat-icon> Probe</button>
+        <button type="button" [class.on]="art() === 'probe'" (click)="probe()"><mat-icon>music_note</mat-icon> Probe</button>
       </div>
 
       <div class="grid">
@@ -29,7 +29,7 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
         <label>Beginn<input type="time" [value]="f().time" (input)="set('time', $event)" /></label>
         @if (art() === 'probe') {
           <label>Ende<input type="time" [value]="f().endTime" (input)="set('endTime', $event)" /></label>
-          <label class="wide">Ort<input [value]="f().place" (input)="set('place', $event)" placeholder="z. B. Proberaum" maxlength="80" /></label>
+          <label class="wide">Ort<input [value]="f().place" (input)="set('place', $event)" placeholder="z. B. Dingden" maxlength="80" /></label>
           <label class="wide">Notiz<input [value]="f().note" (input)="set('note', $event)" placeholder="z. B. neue Songs fürs Weihnachtsset" maxlength="120" /></label>
         } @else {
           <label>Location *<input [value]="f().venue" (input)="set('venue', $event)" placeholder="z. B. Gasthof Küpper" maxlength="80" /></label>
@@ -119,6 +119,12 @@ export class TerminFormular {
     return this.band.rehearsals.some((r) => r.date === date) ? 'Probe' : null;
   });
   protected readonly editUrl = EDIT_URL;
+
+  // Proben sind in der Regel 18–21 Uhr in Dingden – leere Felder damit vorbelegen
+  protected probe(): void {
+    this.art.set('probe');
+    this.f.update((f) => ({ ...f, time: f.time || '18:00', endTime: f.endTime || '21:00', place: f.place || 'Dingden' }));
+  }
 
   protected set(key: string, e: Event): void {
     const value = (e.target as HTMLInputElement).value;
