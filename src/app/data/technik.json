@@ -100,13 +100,16 @@
     "pedalboard": {
       "kategorie": "Pedalboard",
       "modell": "Line 6 POD Express Bass & Boss RC-5",
-      "beschreibung": "Freds Pedalboard: Multi-Effekt, Looper, Stimmgerät und Fußschalter, dazu ein MIDI-Controller zum Umschalten.",
+      "beschreibung": "Freds Pedalboard: Multi-Effekt, Looper, Wah-/Volume-Pedal, Stimmgerät und Fußschalter, dazu ein MIDI-Controller zum Umschalten, ein kabelloses Blätterpedal und ein Netzteil für alle Pedale.",
       "details": [
         ["Multi-Effekt", "Line 6 POD Express Bass"],
         ["Looper", "Boss RC-5 Loop Station"],
         ["MIDI-Controller", "Live Logic MIDI Controller"],
         ["Fußschalter", "NUX NMP-2 Footswitch"],
-        ["Stimmgerät", "Harley Benton CPT-20"]
+        ["Wah/Volume", "Hotone Soul Press II"],
+        ["Stimmgerät", "Harley Benton CPT-20"],
+        ["Blätterpedal", "LEKATO Wireless Page Turner"],
+        ["Netzteil", "LEKATO MPP-10, 10 isolierte Ausgänge (9/12/18 V)"]
       ]
     },
     "bassamp": {

@@ -721,11 +721,6 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'Freds Pedalboard: Multi-Effekt, Looper, Stimmgerät und Fußschalter, dazu ein MIDI-Controller zum Umschalten.',
-    en: 'Fred’s pedalboard: multi-effects, looper, tuner and footswitch, plus a MIDI controller for switching.',
-    nl: 'Het pedalboard van Fred: multi-effect, looper, stemapparaat en voetschakelaar, plus een MIDI-controller om te schakelen.',
-  },
-  {
     de: 'Multi-Effekt',
     en: 'Multi-effects',
     nl: 'Multi-effect',
@@ -779,6 +774,43 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     de: 'Harley Benton CPT-20',
     en: 'Harley Benton CPT-20',
     nl: 'Harley Benton CPT-20',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'Freds Pedalboard: Multi-Effekt, Looper, Wah-/Volume-Pedal, Stimmgerät und Fußschalter, dazu ein MIDI-Controller zum Umschalten, ein kabelloses Blätterpedal und ein Netzteil für alle Pedale.',
+    en: 'Fred’s pedalboard: multi-effects, looper, wah/volume pedal, tuner and footswitch, plus a MIDI controller for switching, a wireless page-turner pedal and a power supply for all pedals.',
+    nl: 'Het pedalboard van Fred: multi-effect, looper, wah-/volumepedaal, stemapparaat en voetschakelaar, plus een MIDI-controller om te schakelen, een draadloos bladomslagpedaal en een voeding voor alle pedalen.',
+  },
+  {
+    de: 'Wah/Volume',
+    en: 'Wah/volume',
+    nl: 'Wah/volume',
+  },
+  {
+    de: 'Blätterpedal',
+    en: 'Page-turner pedal',
+    nl: 'Bladomslagpedaal',
+  },
+  {
+    de: 'Netzteil',
+    en: 'Power supply',
+    nl: 'Voeding',
+  },
+  {
+    de: 'LEKATO MPP-10, 10 isolierte Ausgänge (9/12/18 V)',
+    en: 'LEKATO MPP-10, 10 isolated outputs (9/12/18 V)',
+    nl: 'LEKATO MPP-10, 10 geïsoleerde uitgangen (9/12/18 V)',
+  },
+  {
+    de: 'Hotone Soul Press II',
+    en: 'Hotone Soul Press II',
+    nl: 'Hotone Soul Press II',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'LEKATO Wireless Page Turner',
+    en: 'LEKATO Wireless Page Turner',
+    nl: 'LEKATO Wireless Page Turner',
     geprueft: { en: true, nl: true },
   },
   {
