@@ -22,6 +22,14 @@ export interface Aufgabe {
 
 export const AUFGABEN: Aufgabe[] = [
   {
+    id: 'verfuegbarkeit',
+    bereich: 'Website',
+    text: 'Verfügbarkeit der Band klären: An welchen Tagen kann jemand nicht spielen?',
+    art: 'muss',
+    hinweis: 'Der Verfügbarkeitskalender im Booking zeigt bisher nur eingetragene Auftritte. Sind die Tage geklärt, können sie dort als belegt erscheinen und der Hinweis „noch nicht vollständig gepflegt“ entfällt.',
+    link: '/booking',
+  },
+  {
     id: 'mischpult-modell',
     bereich: 'Technik',
     text: 'Modell des Mischpults bestätigen: PreSonus StudioLive 16.4.2 oder 16.4.2AI?',
