@@ -88,7 +88,7 @@ function loadFilters(): Set<FilterKey> {
                 <a class="row-link" [routerLink]="['/backstage', band.showId(s)]"><strong>{{ s.venue }}</strong></a>
                 @if (s.city) { <span class="sub">{{ s.city }}</span> }
               } @else {
-                <strong>Probe</strong>
+                <a class="row-link" [routerLink]="['/backstage/probe', r.probe.date]"><strong>Probe</strong></a>
                 @if (r.probe.place) { <span class="sub">{{ r.probe.place }}</span> }
               }
             </td>
@@ -129,7 +129,7 @@ function loadFilters(): Set<FilterKey> {
             <td mat-cell *matCellDef="let r" class="open">@if (r.show) {<mat-icon>chevron_right</mat-icon>}</td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns" [class.link]="!!row.show" (click)="openRow(row, $event)"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns" class="link" (click)="openRow(row, $event)"></tr>
         </table>
       </div>
       }
@@ -262,8 +262,9 @@ export class BackstageTermine {
   }
 
   protected openRow(r: Row, event: MouseEvent): void {
-    if (!r.show || (event.target as HTMLElement).closest('a')) return;
-    this.router.navigate(['/backstage', this.band.showId(r.show)]);
+    if ((event.target as HTMLElement).closest('a')) return;
+    if (r.probe) this.router.navigate(['/backstage/probe', r.probe.date]);
+    else if (r.show) this.router.navigate(['/backstage', this.band.showId(r.show)]);
   }
 
   // Bandkalender inkl. privater Termine, Status und Kommentaren

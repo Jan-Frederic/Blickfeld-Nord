@@ -148,6 +148,7 @@ export const routes: Routes = [
   { path: 'backstage/aufgaben', loadComponent: () => import('./pages/backstage-aufgaben').then((m) => m.BackstageAufgaben), title: 'Aufgaben – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/abgleich', loadComponent: () => import('./pages/backstage-abgleich').then((m) => m.BackstageAbgleich), title: 'Abgleich – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/uebersetzungen', loadComponent: () => import('./pages/uebersetzungen-pruefen').then((m) => m.UebersetzungenPruefen), title: 'Übersetzungen prüfen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/probe/:datum', loadComponent: () => import('./pages/backstage-probe').then((m) => m.BackstageProbe), title: 'Probe – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/:id/:teil', loadComponent: () => import('./pages/backstage-tool').then((m) => m.BackstageTool), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/:id', loadComponent: () => import('./pages/backstage-show').then((m) => m.BackstageShow), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage', loadComponent: () => import('./pages/backstage').then((m) => m.Backstage), title: 'Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },

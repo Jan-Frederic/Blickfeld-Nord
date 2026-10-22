@@ -221,6 +221,20 @@ test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neulad
   return p;
 });
 
+test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  await p.locator('app-backstage-probe input[type=search]').fill('Millionen');
+  await p.locator('app-backstage-probe .hits button').first().click();
+  await p.locator('app-backstage-probe form.add input').fill('Kabel besorgen');
+  await p.locator('app-backstage-probe form.add button').click();
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => (await p.locator('app-backstage-probe .list li').count()) === 2, 'Song und Punkt nach Neuladen weg');
+  return p;
+});
+
 test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   const p = await page();
   await p.go('/backstage/termine/');

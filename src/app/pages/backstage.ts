@@ -102,7 +102,7 @@ export class Backstage {
       })),
     ...this.rehearsals
       .filter((r) => r.date >= this.today)
-      .map((r) => ({ date: r.date, time: r.time, label: 'Probe' + (r.place ? ', ' + r.place : ''), icon: 'music_note', status: '', link: ['/backstage/termine'] })),
+      .map((r) => ({ date: r.date, time: r.time, label: 'Probe' + (r.place ? ', ' + r.place : ''), icon: 'music_note', status: '', link: ['/backstage/probe', r.date] })),
   ]
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 4);

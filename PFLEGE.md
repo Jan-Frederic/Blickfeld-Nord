@@ -52,6 +52,10 @@ Aus „offen“ wird „geklärt“, indem ihr `confirmed: false` in `confirmed:
 Im Formular oben **Probe** wählen. Die Zeile kommt unter `readonly rehearsals: Rehearsal[] = [`.
 Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 
+**Probe planen:** Im Backstage unter **Termine** auf eine Probe klicken. Dort stehen die Songs zum Üben (mit Tonart
+und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
+an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
+
 ## Abwesenheit eintragen
 
 Wenn jemand an bestimmten Tagen nicht spielen kann (Urlaub, Schicht, Familienfeier), nach

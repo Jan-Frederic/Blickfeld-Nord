@@ -1,11 +1,11 @@
 import { Component, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
-// Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben) liegen nur im Browser des jeweiligen Geräts.
+// Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung) liegen nur im Browser des jeweiligen Geräts.
 // Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
 // und auf dem anderen Gerät importieren. Ohne Server – die Datei geht direkt von Gerät zu Gerät.
 
-const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-'];
+const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-'];
 const APP = 'blickfeld-nord-backstage';
 
 interface Backup {
@@ -35,7 +35,7 @@ function collect(show?: string): Record<string, unknown> {
   imports: [MatIconModule],
   template: `
     <div class="sync">
-      <button type="button" (click)="send()"><mat-icon>ios_share</mat-icon> {{ show() ? 'Diesen Auftritt an die Band' : 'Alles an die Band schicken' }}</button>
+      <button type="button" (click)="send()"><mat-icon>ios_share</mat-icon> {{ show() ? 'Diesen Termin an die Band' : 'Alles an die Band schicken' }}</button>
       <label class="import">
         <mat-icon>file_open</mat-icon> Datei importieren
         <input type="file" accept=".json,application/json" (change)="load($event)" />
