@@ -166,8 +166,9 @@ Was an der Website noch zu tun ist, steht im Backstage im Bereich **Aufgaben** (
 - **Von Hand gepflegt:** alles andere, in
   [`src/app/data/aufgaben.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/aufgaben.ts).
   Jede Aufgabe hat einen Bereich und ist entweder „Muss“ oder „Kann“. Zum Ergänzen eine Zeile kopieren und anpassen.
-  Erledigt: `erledigt: true` dazuschreiben oder die Aufgabe löschen. Das Häkchen auf der Seite gilt nur auf dem
-  eigenen Gerät.
+  Erledigt: Auf der Seite abhaken – das gilt zunächst nur auf dem eigenen Gerät. Für alle übernehmen: unten
+  **Datei für GitHub erzeugen**, „Datei auf GitHub öffnen“, mit Strg+A alles markieren, einfügen und „Commit changes“.
+  Danach die Häkchen zurücksetzen. Von Hand geht es auch: `erledigt: true` dazuschreiben oder die Aufgabe löschen.
 
 ## Was die automatischen Prüfungen abfangen
 

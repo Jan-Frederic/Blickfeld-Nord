@@ -6,6 +6,7 @@ import { BackstageNav } from './backstage-nav';
 import { BandService } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
+import { markErledigt } from '../data/aufgaben-patch';
 import technik from '../data/technik.json';
 
 // Backstage → Aufgaben: Checkliste für die Website. Oben, was die Seite selbst aus den Daten erkennt (offene
@@ -14,6 +15,7 @@ import technik from '../data/technik.json';
 // für alle per `erledigt: true` in der Datei.
 const STORAGE_KEY = 'bn-aufgaben';
 const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/aufgaben.ts';
+const RAW_URL = 'https://raw.githubusercontent.com/Jan-Frederic/Blickfeld-Nord/main/src/app/data/aufgaben.ts';
 
 interface AutoAufgabe {
   text: string;
@@ -77,10 +79,21 @@ interface AutoAufgabe {
         </ul>
       }
 
+      @if (offenAbgehakt().length) {
+        <div class="apply">
+          <p><strong>{{ offenAbgehakt().length }}</strong> {{ offenAbgehakt().length === 1 ? 'Aufgabe' : 'Aufgaben' }} auf diesem Gerät abgehakt – für alle übernehmen:</p>
+          <ol>
+            <li><button type="button" (click)="erzeugen()"><mat-icon>content_copy</mat-icon> Datei für GitHub erzeugen</button></li>
+            <li><a [href]="editUrl" target="_blank" rel="noopener"><mat-icon>open_in_new</mat-icon> Datei auf GitHub öffnen</a>, mit Strg+A alles markieren, einfügen, „Commit changes“</li>
+            <li><button type="button" (click)="zuruecksetzen()"><mat-icon>restart_alt</mat-icon> Häkchen auf diesem Gerät zurücksetzen</button></li>
+          </ol>
+          @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
+        </div>
+      }
+
       <p class="foot">
-        Abhaken gilt nur auf diesem Gerät. Für alle erledigt: bei der Aufgabe <code>erledigt: true</code> ergänzen
-        oder die Zeile löschen, in <a [href]="editUrl" target="_blank" rel="noopener">src/app/data/aufgaben.ts</a>.
-        Dort kommen auch neue Aufgaben dazu.
+        Abhaken gilt zunächst nur auf diesem Gerät. Neue Aufgaben kommen in
+        <a [href]="editUrl" target="_blank" rel="noopener">src/app/data/aufgaben.ts</a> dazu.
       </p>
     </section>
   `,
@@ -88,6 +101,13 @@ interface AutoAufgabe {
     h3 { margin: 32px 0 8px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .note, .foot { font-size: .85rem; color: var(--bn-fog); margin: 0 0 12px; line-height: 1.6; }
     .foot { margin-top: 32px; }
+    .apply { margin-top: 32px; padding: 16px 18px; border: 1px solid var(--bn-sunset); border-radius: 12px; font-size: .9rem; line-height: 1.6; }
+    .apply p { margin: 0 0 8px; }
+    .apply ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+    .apply button, .apply a { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; text-decoration: none; cursor: pointer; }
+    .apply button:hover, .apply a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .apply mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .meldung { margin: 10px 0 0 !important; color: #5fb88a; }
     .foot a, .hint a { color: var(--bn-sunset); }
     code { font-size: .85em; }
     .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -221,6 +241,36 @@ export class BackstageAufgaben {
   });
 
   protected readonly offen = computed(() => this.auto().length + AUFGABEN.filter((a) => !this.fertig(a)).length);
+
+  // auf diesem Gerät abgehakt, aber in der Datei noch offen
+  protected readonly offenAbgehakt = computed(() => AUFGABEN.filter((a) => !a.erledigt && this.lokal().includes(a.id)).map((a) => a.id));
+  protected readonly meldung = signal('');
+
+  // aktuelle aufgaben.ts von GitHub holen, abgehakte Aufgaben als erledigt markieren und in die Zwischenablage legen
+  protected async erzeugen(): Promise<void> {
+    try {
+      const res = await fetch(`${RAW_URL}?t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      const { text, missing } = markErledigt(await res.text(), this.offenAbgehakt());
+      await navigator.clipboard.writeText(text);
+      this.meldung.set(
+        'Kopiert ✓ – jetzt die Datei auf GitHub öffnen und den Inhalt ersetzen.' +
+          (missing.length ? ` Nicht mehr in der Datei: ${missing.join(', ')}.` : ''),
+      );
+    } catch {
+      this.meldung.set(navigator.onLine ? 'Die Datei ließ sich nicht laden oder kopieren – bitte später noch einmal versuchen.' : 'Offline – dafür braucht es Internet.');
+    }
+  }
+
+  protected zuruecksetzen(): void {
+    this.lokal.set([]);
+    this.meldung.set('');
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ohne Speicher nichts zu tun
+    }
+  }
 
   protected fertig(a: Aufgabe): boolean {
     return !!a.erledigt || this.lokal().includes(a.id);
