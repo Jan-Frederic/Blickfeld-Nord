@@ -302,7 +302,7 @@ test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   return p;
 });
 
-test('Backstage: Setlist mit Spieldauer, Vorlage, Laufzettel', async () => {
+test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async () => {
   const p = await page();
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -314,6 +314,11 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Laufzettel', async () => {
   expect((await p.locator('app-setlist .pause-label').innerText()).includes('Set davor'), 'Pause ohne Set-Dauer');
   await p.locator('app-setlist-vorlagen button', { hasText: 'Als Vorlage speichern' }).click();
   await until(async () => (await p.locator('app-setlist-vorlagen option').count()) === 1, 'Vorlage nicht gespeichert');
+  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
+  await p.getByRole('button', { name: '4 Sterne' }).click();
+  await p.keyboard.press('Escape');
+  await p.go('/backstage/zahlen');
+  await until(async () => (await p.locator('app-song-rangliste .top li').count()) === 1, 'Sterne aus dem Bühnen-Modus fehlen in der Rangliste');
   await p.go(`/backstage/${id}`);
   const [win] = await Promise.all([p.context().waitForEvent('page'), p.locator('button', { hasText: 'Laufzettel' }).click()]);
   await win.waitForLoadState();

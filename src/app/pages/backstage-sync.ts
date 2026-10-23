@@ -1,11 +1,11 @@
 import { Component, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
-// Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung) liegen nur im Browser des jeweiligen Geräts.
+// Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung, Song-Sterne) liegen nur im Browser des jeweiligen Geräts.
 // Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
 // und auf dem anderen Gerät importieren. Ohne Server – die Datei geht direkt von Gerät zu Gerät.
 
-const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-'];
+const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-'];
 const APP = 'blickfeld-nord-backstage';
 
 interface Backup {
@@ -100,7 +100,11 @@ export class BackstageSync {
       const entries = Object.entries(backup.data).filter(([k]) => PREFIXES.some((p) => k.startsWith(p)));
       if (!entries.length) throw new Error();
       if (!confirm(`${entries.length} ${entries.length === 1 ? 'Liste' : 'Listen'} übernehmen? Vorhandene Einträge für dieselben Auftritte werden ersetzt.`)) return;
-      for (const [k, v] of entries) localStorage.setItem(k, JSON.stringify(v));
+      for (const [k, v] of entries) {
+        // Sterne mehrerer Geräte zusammenführen statt ersetzen – bei demselben Song gilt die importierte Bewertung
+        const alt = k.startsWith('bn-bewertung-') ? JSON.parse(localStorage.getItem(k) ?? '{}') : {};
+        localStorage.setItem(k, JSON.stringify(k.startsWith('bn-bewertung-') ? { ...alt, ...(v as object) } : v));
+      }
       this.message.set({ text: 'Übernommen – Seite wird neu geladen …' });
       setTimeout(() => location.reload(), 600);
     } catch {

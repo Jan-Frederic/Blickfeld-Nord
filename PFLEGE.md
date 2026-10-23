@@ -96,6 +96,8 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 - Titel und Interpret genau wie im Repertoire schreiben (am besten von `/repertoire` kopieren).
 - Tonart: Dur als Großbuchstabe (`C`, `F#`, `Bb`), Moll mit kleinem `m` (`Am`, `C#m`). Alles ist optional.
 - Im Bühnen-Modus blinkt **Klick** im Tempo und piept leise – praktisch zum Einzählen.
+- Im Bühnen-Modus unter jedem Song 1–5 **Sterne** antippen (oder Taste 1–5), wie er an dem Abend lief. Die
+  **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über „Datei importieren“ dazu.
 
 ## Foto in die Galerie
 

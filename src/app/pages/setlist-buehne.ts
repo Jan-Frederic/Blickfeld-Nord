@@ -1,12 +1,14 @@
-import { Component, DestroyRef, ElementRef, computed, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { songInfo } from '../data/songinfo';
+import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/bewertung';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
 // die Uhr zeigt, wie lange das Set schon läuft und wie lange es laut Spotify-Längen noch dauert.
 // Tonart und Tempo aus songinfo.ts stehen unter dem Titel; „Klick“ blinkt (und piept auf Wunsch) im Tempo.
+// Sterne (oder Tasten 1–5) bewerten, wie der Song an diesem Abend lief – Rangliste unter Backstage → Zahlen.
 @Component({
   selector: 'app-setlist-buehne',
   imports: [MatIconModule],
@@ -40,6 +42,15 @@ import { songInfo } from '../data/songinfo';
                   </button>
                 }
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
+              </p>
+            }
+            @if (show()) {
+              <p class="stars" role="group" aria-label="Wie lief der Song heute?">
+                @for (n of [1, 2, 3, 4, 5]; track n) {
+                  <button type="button" [class.on]="n <= sterne()" [attr.aria-pressed]="n === sterne()" [attr.aria-label]="n + (n === 1 ? ' Stern' : ' Sterne')" (click)="bewerte(n, $event)">
+                    <mat-icon>{{ n <= sterne() ? 'star' : 'star_border' }}</mat-icon>
+                  </button>
+                }
               </p>
             }
           }
@@ -81,6 +92,10 @@ import { songInfo } from '../data/songinfo';
     .bpm.on { border-color: #e8a46a; }
     .bpm.on.beat { background: #e8a46a; color: #000; }
     .note { color: #b0b6bc; }
+    .stars { display: flex; justify-content: center; gap: 4px; margin: 14px 0 0; }
+    .stars button { display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: transparent; color: #555; cursor: pointer; }
+    .stars button.on { color: #e8a46a; }
+    .stars mat-icon { font-size: 40px; width: 40px; height: 40px; }
     .pause { display: flex; align-items: center; justify-content: center; gap: .3em; margin: 0; font-size: clamp(3rem, 12vw, 8rem); font-weight: 700; color: var(--bn-sunset); }
     .pause mat-icon { font-size: 1em; width: 1em; height: 1em; }
     .hint { color: #9aa0a6; font-size: clamp(1rem, 3vw, 1.6rem); }
@@ -93,6 +108,8 @@ import { songInfo } from '../data/songinfo';
 })
 export class SetlistBuehne {
   readonly entries = input.required<Entry[]>();
+  /** Auftritts-ID – nur damit gibt es Sterne */
+  readonly show = input<string>();
   readonly closed = output<void>();
 
   protected readonly isPause = isPause;
@@ -117,6 +134,26 @@ export class SetlistBuehne {
     const c = this.current();
     return c && !isPause(c) ? songInfo(c.title, c.artist) : undefined;
   });
+  // Sterne je Song für diesen Auftritt, sofort im Browser gespeichert
+  private readonly bewertungen = linkedSignal(() => (this.show() ? ladeBewertungen(this.show()!) : {}));
+  protected readonly sterne = computed(() => {
+    const c = this.current();
+    return c && !isPause(c) ? (this.bewertungen()[songKey(c)] ?? 0) : 0;
+  });
+
+  protected bewerte(n: number, e?: Event): void {
+    e?.stopPropagation();
+    const c = this.current();
+    const show = this.show();
+    if (!c || isPause(c) || !show) return;
+    this.bewertungen.update((b) => bewerten(b, songKey(c), n));
+    try {
+      localStorage.setItem(BEWERTUNG_PREFIX + show, JSON.stringify(this.bewertungen()));
+    } catch {
+      // ohne Speicher gilt die Bewertung nur bis zum Schließen
+    }
+  }
+
   // Klick: blinkt im Tempo des aktuellen Songs, kurzer Ton über Web Audio
   protected readonly klick = signal(false);
   protected readonly beat = signal(false);
@@ -213,6 +250,7 @@ export class SetlistBuehne {
     if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(e.key)) this.go(1);
     else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) this.go(-1);
     else if (e.key === 'Escape') this.closed.emit();
+    else if (/^[1-5]$/.test(e.key)) this.bewerte(Number(e.key));
     else return;
     e.preventDefault();
   }
