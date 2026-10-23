@@ -82,8 +82,11 @@ darunter einfügen:
 
 ## Tonart und Tempo der Songs
 
-Für Setlist, Bühnen-Modus und Laufzettel im Backstage. In
-[`src/app/data/songinfo.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts)
+Für Setlist, Bühnen-Modus und Laufzettel im Backstage. Am einfachsten im Backstage unter **Songs**: Tonart, bpm und
+Notiz direkt beim Song eintragen (bleibt als Entwurf auf dem Gerät), dann **Datei für GitHub erzeugen**,
+„songinfo.ts auf GitHub öffnen“, mit Strg+A alles markieren, einfügen und „Commit changes“.
+
+Von Hand: in [`src/app/data/songinfo.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts)
 unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 ```ts

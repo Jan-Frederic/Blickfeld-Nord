@@ -238,7 +238,7 @@ export class BackstageAufgaben {
 
     const ohneInfo = repertoire.tracks.filter((t) => !SONGINFO.some((s) => s.title === t.title && s.artist === t.artist && (s.tonart || s.bpm))).length;
     if (ohneInfo)
-      out.push({ text: `Optional: Tonart und Tempo für ${ohneInfo} von ${repertoire.tracks.length} Songs eintragen`, details: ['src/app/data/songinfo.ts – erscheint in Setlist, Bühnen-Modus und Laufzettel'], link: '/repertoire', icon: 'music_note' });
+      out.push({ text: `Optional: Tonart und Tempo für ${ohneInfo} von ${repertoire.tracks.length} Songs eintragen`, details: ['Im Backstage unter „Songs“ – erscheint in Setlist, Bühnen-Modus und Laufzettel'], link: '/backstage/songs', icon: 'music_note' });
 
     if (!this.band.instagramPosts.length)
       out.push({ text: 'Optional: Instagram-Beiträge für die Startseite eintragen', details: ['instagramPosts in src/app/data/band.service.ts'], link: '/', icon: 'photo_camera' });

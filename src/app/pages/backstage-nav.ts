@@ -7,6 +7,7 @@ export const BACKSTAGE_BEREICHE = [
   { path: '/backstage', label: 'Übersicht', icon: 'dashboard', text: 'Kennzahlen und die nächsten Termine' },
   { path: '/backstage/termine', label: 'Termine', icon: 'event', text: 'Auftritte und Proben, Kalender-Abo, neuen Termin eintragen' },
   { path: '/backstage/zahlen', label: 'Zahlen', icon: 'insights', text: 'Besucher der Website und Setlist-Statistik' },
+  { path: '/backstage/songs', label: 'Songs', icon: 'library_music', text: 'Tonart, Tempo und Notizen für Setlist und Bühnen-Modus' },
   { path: '/backstage/uebersetzungen', label: 'Übersetzungen', icon: 'translate', text: 'Stand der englischen und niederländischen Texte, gegenlesen' },
   { path: '/backstage/material', label: 'Material', icon: 'print', text: 'Schilder, Karten, Rider und Pressekit zum Drucken und Verschicken' },
   { path: '/backstage/buehnenplan', label: 'Bühnenplan', icon: 'grid_view', text: 'Geräte im Bühnenplan verschieben und für GitHub übernehmen' },

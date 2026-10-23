@@ -1,0 +1,32 @@
+import { patchSongInfo } from './songinfo-patch';
+
+const SOURCE = `// Kommentar bleibt
+export interface SongInfo { title: string }
+
+export const SONGINFO: SongInfo[] = [];
+
+export function songInfo() {}
+`;
+
+describe('patchSongInfo', () => {
+  it('schreibt die Liste mit einer Zeile je Song und lässt den Rest unverändert', () => {
+    const text = patchSongInfo(SOURCE, [
+      { title: '80 Millionen', artist: 'Max Giesinger', tonart: 'G', bpm: 120, notiz: 'Capo 2' },
+      { title: 'Song’s „Titel“', artist: "O'Brien", bpm: 96 },
+      { title: 'Leer', artist: 'Niemand' },
+    ])!;
+    expect(text).toContain("export const SONGINFO: SongInfo[] = [\n  { title: '80 Millionen', artist: 'Max Giesinger', tonart: 'G', bpm: 120, notiz: 'Capo 2' },\n");
+    expect(text).toContain("artist: 'O\\'Brien', bpm: 96 },\n];");
+    expect(text).not.toContain('Leer');
+    expect(text.startsWith('// Kommentar bleibt')).toBe(true);
+    expect(text.endsWith('export function songInfo() {}\n')).toBe(true);
+  });
+
+  it('ergibt wieder die leere Liste, wenn nichts eingetragen ist', () => {
+    expect(patchSongInfo(SOURCE, [])).toBe(SOURCE);
+  });
+
+  it('meldet null, wenn die Liste fehlt', () => {
+    expect(patchSongInfo('// nichts', [])).toBeNull();
+  });
+});

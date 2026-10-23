@@ -20,7 +20,7 @@ const pages = [...new Set([...sitemap.matchAll(/<loc>https:\/\/blickfeld-nord\.d
 const firstShow = pages.find((p) => p.startsWith('/konzerte/'))?.split('/')[2];
 // erste eingetragene Probe (für die Seite „Probe planen“)
 const firstProbe = readFileSync(join(ROOT, 'src', 'app', 'data', 'band.service.ts'), 'utf8').match(/readonly rehearsals: Rehearsal\[\] = \[\s*\{ date: '([\d-]+)'/)?.[1];
-pages.push('/backstage/', '/backstage/termine/', '/backstage/zahlen/', '/backstage/uebersetzungen/', '/backstage/material/', '/backstage/abgleich/', '/backstage/aufgaben/', '/backstage/buehnenplan/', ...(firstProbe ? [`/backstage/probe/${firstProbe}`] : []), ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), '/wunsch', '/gibt-es-nicht');
+pages.push('/backstage/', '/backstage/termine/', '/backstage/zahlen/', '/backstage/uebersetzungen/', '/backstage/material/', '/backstage/abgleich/', '/backstage/aufgaben/', '/backstage/buehnenplan/', '/backstage/songs/', ...(firstProbe ? [`/backstage/probe/${firstProbe}`] : []), ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), '/wunsch', '/gibt-es-nicht');
 
 const browser = await chromium.launch();
 // bypassCSP: axe wird als Skript in die Seite gelegt – das blockt die Content-Security-Policy der Seite sonst (zu Recht)

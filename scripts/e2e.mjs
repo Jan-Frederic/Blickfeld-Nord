@@ -253,6 +253,21 @@ test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', 
   return p;
 });
 
+test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
+  const zeile = p.locator('app-backstage-songs .list li').first();
+  await zeile.locator('select').selectOption('G');
+  await zeile.locator('input[type=number]').fill('120');
+  await zeile.locator('input[type=number]').blur();
+  await until(async () => (await p.locator('app-backstage-songs .apply').innerText()).includes('1 Song geändert'), 'Änderung wird nicht gezählt');
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
+  await until(async () => (await p.locator('app-backstage-songs .list li select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
+  return p;
+});
+
 test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   const p = await page();
   await p.go('/backstage/termine/');
