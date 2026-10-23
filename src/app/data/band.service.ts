@@ -174,9 +174,9 @@ export class BandService {
   readonly members: Member[] = [
     { slug: 'david-broeker', name: 'David Bröker', role: 'Gesang & Gitarre', initials: 'DB', bio: 'Seit 2019 an Bord und vorne am Mikro: Mit Stimme und Gitarre holt David das Publikum vom ersten Ton an ab.',
       photo: {
-        src: 'band/david-broeker.webp',
+        src: 'band/david-broeker-live.webp',
         avatar: 'band/david-broeker-avatar.webp',
-        alt: 'David Bröker singt und spielt Akustikgitarre, im karierten Hemd vor einer Backsteinmauer',
+        alt: 'David Bröker singt ins Mikrofon und spielt Akustikgitarre, mit Brille und kariertem Hemd vor Sprossenfenstern im bunten Bühnenlicht',
       },
     },
     {

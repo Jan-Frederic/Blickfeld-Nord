@@ -51,6 +51,11 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
+    de: 'David Bröker singt ins Mikrofon und spielt Akustikgitarre, mit Brille und kariertem Hemd vor Sprossenfenstern im bunten Bühnenlicht',
+    en: 'David Bröker singing into the microphone and playing acoustic guitar, with glasses and a checked shirt in front of mullioned windows in colourful stage light',
+    nl: 'David Bröker zingt in de microfoon en speelt akoestische gitaar, met bril en geruit overhemd voor roedenramen in kleurrijk podiumlicht',
+  },
+  {
     de: 'David Bröker singt und spielt Akustikgitarre, im karierten Hemd vor einer Backsteinmauer',
     en: 'David Bröker singing and playing acoustic guitar, in a checked shirt in front of a brick wall',
     nl: 'David Bröker zingt en speelt akoestische gitaar, in een geruit overhemd voor een bakstenen muur',
