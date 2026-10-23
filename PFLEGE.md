@@ -121,6 +121,10 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 ## Rückblick schreiben (Historie)
 
+Am einfachsten im Backstage auf der Seite des Auftritts (nach dem Auftritt): **Rückblick schreiben** aufklappen,
+Überschrift, Text und Fotos eintragen, **Block kopieren** und wie unten beschrieben einfügen. Die Fotos vorher wie
+oben unter „Foto in die Galerie“ (Schritt 1–3) in `public/historie` hochladen. Von Hand geht es so:
+
 Nach `readonly history: HistoryEntry[] = [` suchen und **direkt darunter** einen neuen Block einfügen.
 Neueste Einträge kommen nach oben:
 

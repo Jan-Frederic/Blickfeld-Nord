@@ -10,6 +10,7 @@ import { PosterFormat, postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
 import { printMixerZettel } from './mixer-zettel';
+import { RueckblickFormular } from './rueckblick-formular';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
 
@@ -19,7 +20,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -91,7 +92,7 @@ const DAY = 24 * 60 * 60 * 1000;
           }
         </div>
 
-        @if (!past()) { <app-wetter [show]="s" /> }
+        @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
           @for (t of tools; track t.path) {

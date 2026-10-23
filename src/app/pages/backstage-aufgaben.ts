@@ -201,8 +201,8 @@ export class BackstageAufgaben {
     if (ohneRueckblick.length)
       out.push({
         text: `Rückblick fehlt für ${ohneRueckblick.length} ${ohneRueckblick.length === 1 ? 'Auftritt' : 'Auftritte'}`,
-        details: ohneRueckblick.map((s) => `${datum(s.date)} – ${s.private ? s.publicName ?? 'Private Feier' : s.venue}`),
-        link: '/historie',
+        details: ohneRueckblick.map((s) => `${datum(s.date)} – ${s.private ? s.publicName ?? 'Private Feier' : s.venue}`).concat('Auf der Seite des Auftritts: „Rückblick schreiben“'),
+        link: `/backstage/${this.band.showId(ohneRueckblick[0])}`,
         icon: 'history_edu',
       });
 

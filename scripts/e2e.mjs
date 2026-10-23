@@ -268,6 +268,21 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   return p;
 });
 
+test('Backstage: Rückblick-Formular erzeugt den Historie-Block', async () => {
+  const p = await page();
+  const vergangen = concerts.map((c) => c.split('/')[2]).filter((id) => id < new Date().toISOString().slice(0, 10))[0];
+  await p.go(`/backstage/${vergangen}/`);
+  await p.locator('app-rueckblick-formular summary').click();
+  await p.locator('app-rueckblick-formular input[maxlength="100"]').fill("Ein Abend im Café");
+  await p.locator('app-rueckblick-formular textarea').fill("Erster Absatz mit Matthias' Solo.\n\nZweiter Absatz.");
+  await p.locator('app-rueckblick-formular button', { hasText: 'Foto hinzufügen' }).click();
+  await p.locator('app-rueckblick-formular .foto input').nth(0).fill('2026-04-30-cafe.webp');
+  await p.locator('app-rueckblick-formular .foto input').nth(1).fill('Die Band im Café');
+  const code = await p.locator('app-rueckblick-formular pre.code').innerText();
+  expect(code.includes(`date: '${vergangen}'`) && code.includes("Matthias’ Solo") && code.includes("src: 'historie/2026-04-30-cafe.webp'"), 'Block unvollständig: ' + code);
+  return p;
+});
+
 test('Backstage: Filter kombinieren, sortieren, Auftritt öffnen', async () => {
   const p = await page();
   await p.go('/backstage/termine/');
