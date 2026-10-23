@@ -1,6 +1,6 @@
 {
   "status": "Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.",
-  "stand": "2026-10-22",
+  "stand": "2026-10-23",
   "buehne": { "breite": 4, "tiefe": 3 },
   "aufbau": [
     { "id": "drums", "typ": "drums", "label": "Schlagzeug", "x": 2, "y": 0.85, "b": 1.5, "t": 1.2, "hw": "schlagzeug", "musiker": "matthias" },
@@ -32,7 +32,8 @@
     { "kanal": 5, "quelle": "Akustikgitarre", "art": "DI", "geraet": null, "stativ": null, "phantom": false, "musiker": "david" },
     { "kanal": 6, "quelle": "Gesang David", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false, "musiker": "david" },
     { "kanal": 7, "quelle": "Gesang Fred", "art": "Mikro", "geraet": "Shure SM58", "stativ": "groß", "phantom": false, "musiker": "fred" },
-    { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false, "musiker": "matthias" }
+    { "kanal": 8, "quelle": "Gesang Matthias", "art": "Mikro", "geraet": null, "stativ": "Galgen", "phantom": false, "musiker": "matthias" },
+    { "kanal": 9, "quelle": "Multi-Effekt David", "art": "DI", "geraet": null, "stativ": null, "phantom": false, "musiker": "david" }
   ],
   "monitore": [
     {
@@ -149,7 +150,7 @@
     "multifx-david": {
       "kategorie": "Multi-Effekt",
       "modell": "Harley Benton DNAfx GiT",
-      "beschreibung": "Davids Bodeneffektgerät: Amp-Modeling und Multi-Effekt.",
+      "beschreibung": "Davids Bodeneffektgerät: Amp-Modeling und Multi-Effekt mit eigenem Ausgang zum Mischpult (Kanal 9), Strom von Steckdose 1.",
       "details": [
         ["Multi-Effekt", "Harley Benton DNAfx GiT"]
       ]
@@ -182,7 +183,7 @@
     }
   },
   "strom": [
-    { "id": "strom-1", "verbraucher": ["PA links und rechts", "Mischpult"] },
+    { "id": "strom-1", "verbraucher": ["PA links und rechts", "Mischpult", "Multi-Effekt David"] },
     { "id": "strom-2", "verbraucher": ["Licht", "Bassverstärker", "Monitore", "Nebelmaschine"] }
   ]
 }

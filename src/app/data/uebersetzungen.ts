@@ -872,9 +872,14 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true, nl: true },
   },
   {
-    de: 'Davids Bodeneffektgerät: Amp-Modeling und Multi-Effekt.',
-    en: 'David’s floor effects unit: amp modelling and multi-effects.',
-    nl: 'De vloereffectunit van David: ampmodeling en multi-effect.',
+    de: 'Davids Bodeneffektgerät: Amp-Modeling und Multi-Effekt mit eigenem Ausgang zum Mischpult (Kanal 9), Strom von Steckdose 1.',
+    en: 'David’s floor effects unit: amp modelling and multi-effects with its own output to the mixing desk (channel 9), powered from socket 1.',
+    nl: 'De vloereffectunit van David: ampmodeling en multi-effect met een eigen uitgang naar het mengpaneel (kanaal 9), stroom via stopcontact 1.',
+  },
+  {
+    de: 'Multi-Effekt David',
+    en: 'Multi-effects David',
+    nl: 'Multi-effect David',
   },
   {
     de: 'Freds Platz vorne rechts (vom Publikum aus gesehen): E-Bass mit Pedalboard, Bassverstärker und Gesang.',
