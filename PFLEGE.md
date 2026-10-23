@@ -65,8 +65,10 @@ dann auf der Technik-Seite, im Technik-Rider und im Bühnenplan-PDF – die PDFs
 
 ## Abwesenheit eintragen
 
-Wenn jemand an bestimmten Tagen nicht spielen kann (Urlaub, Schicht, Familienfeier), nach
-`readonly abwesenheiten: Abwesenheit[] = [` suchen und darunter einfügen:
+Wenn jemand an bestimmten Tagen nicht spielen kann (Urlaub, Schicht, Familienfeier): am einfachsten im Backstage unter
+**Termine → Neuen Termin eintragen → Abwesenheit**. Das Formular warnt, wenn im Zeitraum schon ein Auftritt oder eine
+Probe steht, und liefert die fertige Zeile. Von Hand: nach `readonly abwesenheiten: Abwesenheit[] = [` suchen und
+darunter einfügen:
 
 ```ts
     { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' },

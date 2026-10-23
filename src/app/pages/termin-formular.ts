@@ -19,15 +19,29 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
       <div class="art" role="radiogroup" aria-label="Art des Termins">
         <button type="button" [class.on]="art() === 'auftritt'" (click)="art.set('auftritt')"><mat-icon>celebration</mat-icon> Auftritt</button>
         <button type="button" [class.on]="art() === 'probe'" (click)="probe()"><mat-icon>music_note</mat-icon> Probe</button>
+        <button type="button" [class.on]="art() === 'abwesenheit'" (click)="art.set('abwesenheit')"><mat-icon>event_busy</mat-icon> Abwesenheit</button>
       </div>
 
       <div class="grid">
-        <label>Datum *<input type="date" [value]="f().date" (input)="set('date', $event)" /></label>
+        <label>{{ art() === 'abwesenheit' ? 'von *' : 'Datum *' }}<input type="date" [value]="f().date" (input)="set('date', $event)" /></label>
+        @if (art() === 'abwesenheit') {
+          <label>bis (leer = ein Tag)<input type="date" [value]="f().endDate" (input)="set('endDate', $event)" /></label>
+          <label>Wer *
+            <select (change)="set('wer', $event)">
+              <option value="" [selected]="!f().wer">bitte wählen</option>
+              @for (n of namen; track n) { <option [value]="n" [selected]="f().wer === n">{{ n }}</option> }
+            </select>
+          </label>
+          <label>Stichwort<input [value]="f().grund" (input)="set('grund', $event)" placeholder="z. B. Urlaub (öffentlich im Repo – keine Details)" maxlength="40" /></label>
+        }
         @if (art() === 'auftritt') {
           <label>bis (bei mehreren Tagen)<input type="date" [value]="f().endDate" (input)="set('endDate', $event)" /></label>
         }
-        <label>Beginn<input type="time" [value]="f().time" (input)="set('time', $event)" /></label>
-        @if (art() === 'probe') {
+        @if (art() !== 'abwesenheit') {
+          <label>Beginn<input type="time" [value]="f().time" (input)="set('time', $event)" /></label>
+        }
+        @if (art() === 'abwesenheit') {
+        } @else if (art() === 'probe') {
           <label>Ende<input type="time" [value]="f().endTime" (input)="set('endTime', $event)" /></label>
           <label class="wide">Ort<input [value]="f().place" (input)="set('place', $event)" placeholder="z. B. Dingden" maxlength="80" /></label>
           <label class="wide">Notiz<input [value]="f().note" (input)="set('note', $event)" placeholder="z. B. neue Songs fürs Weihnachtsset" maxlength="120" /></label>
@@ -57,8 +71,12 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
       @if (problem(); as p) {
         <p class="problem"><mat-icon>info</mat-icon> {{ p }}</p>
       } @else {
-        <p class="label">Fertige Zeile – unter <code>{{ art() === 'probe' ? 'readonly rehearsals' : 'readonly shows' }}</code> einfügen:</p>
-        @if (taken(); as t) {
+        <p class="label">Fertige Zeile – unter <code>{{ liste() }}</code> einfügen:</p>
+        @if (art() === 'abwesenheit') {
+          @if (kollision().length) {
+            <p class="problem"><mat-icon>warning</mat-icon> In diesem Zeitraum steht schon: {{ kollision().join(', ') }}</p>
+          }
+        } @else if (taken(); as t) {
           <p class="problem"><mat-icon>warning</mat-icon> An diesem Tag steht schon: {{ t }} – Doppelung?</p>
         }
         @if (abwesend(); as a) {
@@ -70,7 +88,7 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
           <a class="btn" [href]="editUrl" target="_blank" rel="noopener"><mat-icon>edit</mat-icon> Datei auf GitHub öffnen</a>
           <a class="btn" href="https://github.com/Jan-Frederic/Blickfeld-Nord/blob/main/PFLEGE.md" target="_blank" rel="noopener"><mat-icon>help</mat-icon> Anleitung</a>
         </div>
-        <p class="hint">Auf GitHub mit Strg+F nach „{{ art() === 'probe' ? 'readonly rehearsals' : 'readonly shows' }}“ suchen, Zeile darunter einfügen, unten „Commit changes“ – nach wenigen Minuten ist der Termin online.</p>
+        <p class="hint">Auf GitHub mit Strg+F nach „{{ liste() }}“ suchen, Zeile darunter einfügen, unten „Commit changes“ – nach wenigen Minuten ist der Termin online.</p>
       }
     </details>
   `,
@@ -106,10 +124,14 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
 })
 export class TerminFormular {
   protected readonly open = signal(false);
-  protected readonly art = signal<'auftritt' | 'probe'>('auftritt');
+  protected readonly art = signal<'auftritt' | 'probe' | 'abwesenheit'>('auftritt');
+  // wer abwesend sein kann: Vor- bzw. Spitznamen der Bandmitglieder oder die ganze Band
+  protected readonly namen = [...inject(BandService).members.map((m) => m.nickname ?? m.name.split(' ')[0]), 'Band'];
+  // unter dieser Zeile in band.service.ts einfügen
+  protected readonly liste = computed(() => ({ auftritt: 'readonly shows', probe: 'readonly rehearsals', abwesenheit: 'readonly abwesenheiten' })[this.art()]);
   protected readonly f = signal({
     date: '', endDate: '', time: '', endTime: '', place: '', note: '', venue: '', city: '', organizer: '',
-    price: '', amount: '', private: false, confirmed: false, publicName: '', comment: '',
+    price: '', amount: '', private: false, confirmed: false, publicName: '', comment: '', wer: '', grund: '',
   });
   protected readonly copied = signal(false);
   private readonly band = inject(BandService);
@@ -126,6 +148,15 @@ export class TerminFormular {
     const date = this.f().date;
     const weg = this.band.abwesenheiten.filter((a) => a.von <= date && date <= (a.bis ?? a.von));
     return weg.length ? weg.map((a) => a.wer + (a.grund ? ` (${a.grund})` : '')).join(', ') : null;
+  });
+  // Auftritte und Proben im Zeitraum einer neuen Abwesenheit
+  protected readonly kollision = computed(() => {
+    const f = this.f();
+    const bis = f.endDate || f.date;
+    return [
+      ...this.band.shows.filter((s) => s.date <= bis && f.date <= (s.endDate ?? s.date)).map((s) => `${s.venue} (${s.date})`),
+      ...this.band.rehearsals.filter((r) => f.date <= r.date && r.date <= bis).map((r) => `Probe (${r.date})`),
+    ];
   });
   protected readonly editUrl = EDIT_URL;
 
@@ -148,6 +179,7 @@ export class TerminFormular {
     const f = this.f();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date)) return 'Bitte ein Datum wählen.';
     if (this.art() === 'auftritt' && !f.venue.trim()) return 'Bitte die Location angeben.';
+    if (this.art() === 'abwesenheit' && !f.wer) return 'Bitte auswählen, wer nicht da ist.';
     if (f.endDate && f.endDate < f.date) return '„bis“ liegt vor dem Startdatum.';
     if (this.art() === 'auftritt' && f.price === 'pay' && !(Number(f.amount) > 0)) return 'Bitte den Eintritt in Euro angeben.';
     return null;
@@ -156,6 +188,12 @@ export class TerminFormular {
   // Zeile im selben Stil wie die vorhandenen Einträge
   protected readonly line = computed(() => {
     const f = this.f();
+    if (this.art() === 'abwesenheit') {
+      const a = [`wer: ${q(f.wer)}`, `von: ${q(f.date)}`];
+      if (f.endDate && f.endDate !== f.date) a.push(`bis: ${q(f.endDate)}`);
+      if (f.grund.trim()) a.push(`grund: ${q(f.grund)}`);
+      return `{ ${a.join(', ')} },`;
+    }
     const parts: string[] = [`date: ${q(f.date)}`];
     if (this.art() === 'probe') {
       if (f.time) parts.push(`time: ${q(f.time)}`);
