@@ -205,8 +205,9 @@ PR-Titel prüft die CI mit commitlint (`commitlint.config.mjs`), Dependabot schr
 ### Ladezeit-Wächter und Updates
 
 - **Lighthouse:** Nach jedem Deploy prüft der Job `lighthouse` die Live-Seite (Start, Booking, Historie; Handy-Profil).
-  Grenzwerte in `lighthouserc.json`: Leistung ≥ 75, Barrierefreiheit und SEO ≥ 95. Ein Fehlschlag stoppt nichts,
-  meldet sich aber per E-Mail; die Berichte liegen im jeweiligen Actions-Lauf unter „Artifacts“.
+  Grenzwerte in `lighthouserc.json`: Leistung ≥ 85 (Startseite wegen des großen Startbilds vorerst ≥ 75),
+  Barrierefreiheit und SEO ≥ 95. Die Werte stehen als Tabelle in der Zusammenfassung des Laufs. Ein Fehlschlag
+  stoppt nichts, meldet sich aber per E-Mail; die Berichte liegen im jeweiligen Actions-Lauf unter „Artifacts“.
 - **Dependabot** (`.github/dependabot.yml`) schlägt monatlich Updates als Pull Request vor (Angular-Pakete gebündelt,
   keine großen Versionssprünge). Jeder Pull Request wird von `.github/workflows/ci.yml` geprüft (Tests, Build,
   Linkcheck) – grün = gefahrlos mergen.
