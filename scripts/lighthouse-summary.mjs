@@ -18,5 +18,23 @@ const zeilen = urls.map((url) => {
   return [new URL(url).pathname, ...KAT.map(([k]) => median(r.map((x) => x.summary[k])).toFixed(2))];
 });
 const md = [`| Seite | ${KAT.map(([, n]) => n).join(' | ')} |`, `|---|${KAT.map(() => '---:').join('|')}|`, ...zeilen.map((z) => `| ${z.join(' | ')} |`)].join('\n');
+// Kennzahlen des repräsentativen Laufs je Seite: wo die Zeit bis zum größten Inhalt (LCP) hingeht
+const ms = (v) => (v == null ? '–' : `${(v / 1000).toFixed(1)} s`);
+const details = urls.map((url) => {
+  const run = runs.find((x) => x.url === url && x.isRepresentativeRun) ?? runs.find((x) => x.url === url);
+  let r;
+  try {
+    r = JSON.parse(readFileSync(run.jsonPath, 'utf8'));
+  } catch {
+    return `| ${new URL(url).pathname} | – | – | – | – |`;
+  }
+  const a = r.audits;
+  // simulierte Aufteilung (Handy-Profil), auf der auch die Bewertung beruht
+  const tabelle = (a['largest-contentful-paint-element']?.details?.items ?? []).find((t) => t.items?.[0]?.phase);
+  const phasen = (tabelle?.items ?? []).map((p) => `${p.phase} ${ms(p.timing)}`).join(', ');
+  return `| ${new URL(url).pathname} | ${ms(a['first-contentful-paint']?.numericValue)} | ${ms(a['largest-contentful-paint']?.numericValue)} | ${Math.round(a['total-blocking-time']?.numericValue ?? 0)} ms | ${phasen || '–'} |`;
+});
+const md2 = ['| Seite | Erster Inhalt | LCP | Blockierzeit | LCP-Aufteilung |', '|---|---:|---:|---:|---|', ...details].join('\n');
 console.log(md);
-if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Lighthouse (Median aus ${runs.length / urls.length} Läufen)\n\n${md}\n`);
+console.log(md2);
+if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Lighthouse (Median aus ${runs.length / urls.length} Läufen)\n\n${md}\n\n${md2}\n`);
