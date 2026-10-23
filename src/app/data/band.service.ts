@@ -398,7 +398,7 @@ export class BandService {
     },
     {
       name: 'F.C. Grün Weiß Lankern 1975 e.V.',
-      description: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Grün-weißer Herzensverein unseres Gitarristen.',
+      description: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Herzensverein unseres Gitarristen.',
       url: 'https://lankern.de/',
       icon: 'football',
     },

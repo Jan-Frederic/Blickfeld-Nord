@@ -515,10 +515,9 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Grün-weißer Herzensverein unseres Gitarristen.',
-    en: 'The family club – where community is lived and solidarity between young & old really matters. The green-and-white club close to our guitarist’s heart.',
-    nl: 'De familieclub – hier wordt gemeenschap geleefd en staat saamhorigheid tussen jong & oud hoog in het vaandel. De groen-witte club van het hart van onze gitarist.',
-    geprueft: { en: true },
+    de: 'Der Familienverein – hier wird Gemeinschaft gelebt und Zusammenhalt zwischen Jung & Alt großgeschrieben. Herzensverein unseres Gitarristen.',
+    en: 'The family club – where community is lived and solidarity between young & old really matters. The club close to our guitarist’s heart.',
+    nl: 'De familieclub – hier wordt gemeenschap geleefd en staat saamhorigheid tussen jong & oud hoog in het vaandel. De club van het hart van onze gitarist.',
   },
   {
     de: 'DJ – auch bekannt als Dr. Beat. Was er auflegt und wo er als Nächstes spielt, gibt es auf Instagram.',
