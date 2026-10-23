@@ -57,7 +57,10 @@ const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands'
   imports: [LDatePipe],
   template: `
     @if (nextShow; as s) {
-      <p class="claim">{{ t().next }} <strong>{{ s.date | ldate: 'short' }}@if (s.time) {, {{ s.time }}{{ t().oclock }}}</strong> · {{ s.venue }} {{ s.city ?? '' }}@if (s.price === 0) { · {{ t().free }}}</p>
+      <p class="claim">
+        <span>{{ t().next }} <strong>{{ s.date | ldate: 'short' }}@if (s.time) {, {{ s.time }}{{ t().oclock }}}</strong></span>
+        <span>{{ s.venue }} {{ s.city ?? '' }}@if (s.price === 0) { · {{ t().free }}}</span>
+      </p>
       <!-- Countdown: Platz ist immer reserviert (kein Layout-Sprung), Zahlen erscheinen erst im Browser -->
       <div class="countdown" aria-live="off">
         @if (left(); as l) {
@@ -76,8 +79,8 @@ const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands'
     :host { display: block; }
     .claim {
       font-family: 'Montserrat', sans-serif; font-weight: 300; text-transform: uppercase;
-      letter-spacing: .28em; font-size: clamp(.75rem, 1.6vw, 1rem);
-      margin: 0 0 12px; text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
+      letter-spacing: .22em; font-size: clamp(.75rem, 1.4vw, .95rem); line-height: 1.7;
+      display: flex; flex-direction: column; gap: 2px; margin: 0 auto 12px; text-shadow: 0 1px 3px #000, 0 2px 12px rgba(0, 0, 0, .9);
     }
     .claim strong { font-weight: 400; color: var(--bn-sunset); }
     .countdown { display: flex; justify-content: center; gap: 10px; height: 58px; margin-bottom: 20px; }
@@ -95,6 +98,7 @@ const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands'
     }
     @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(232, 164, 106, .25); } }
     @media (prefers-reduced-motion: reduce) { .live { animation: none; } }
+    @media (max-width: 720px) { .claim { letter-spacing: .14em; } }
   `,
 })
 export class NextShow {
@@ -152,6 +156,7 @@ export class NextShow {
         [alt]="t().alt"
       />
       <div class="hero-content">
+        <div class="inner">
         <!-- im Browser neu berechnet: das beim Build vorgerenderte Datum kann inzwischen veraltet sein -->
         <app-next-show ngSkipHydration />
         <div class="actions">
@@ -170,24 +175,34 @@ export class NextShow {
             @if (!last) { <span aria-hidden="true">·</span> }
           }
         </p>
+        </div>
       </div>
     </section>
   `,
   styles: `
-    .hero { position: relative; padding-top: 64px; }
+    /* Bild und Inhalt liegen im selben Rasterfeld. Der Inhalt beginnt erst unter dem Logo im Bild (Logo endet bei
+       ca. 66 % der Bildhöhe, Bild im Format 16:9 → Prozent-Abstand bezieht sich auf die Breite). Reicht der Platz
+       darunter nicht, wächst der Bereich nach unten statt Text über das Logo zu legen. */
+    .hero { position: relative; display: grid; padding-top: 64px; }
     @media (max-width: 599px) { .hero { padding-top: 56px; } }
+    img, .hero-content { grid-area: 1 / 1; }
     img {
-      display: block; width: 100%; height: auto; max-height: calc(100svh - 64px);
-      object-fit: cover; object-position: center 30%;
+      display: block; width: 100%; height: auto;
+      mask-image: linear-gradient(to bottom, #000 78%, transparent);
     }
     .hero-content {
-      position: absolute; inset: auto 0 0 0; padding: 0 16px clamp(24px, 6vw, 72px);
-      text-align: center;
+      position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+      padding: calc(56.25% * .66) 16px clamp(16px, 3vw, 40px); text-align: center;
+    }
+    /* dunkler Schleier hinter Text und Countdown – lesbar auch vor der hellen Sonne rechts */
+    .inner {
+      margin: 0 auto; padding: 14px clamp(14px, 3vw, 36px); border-radius: 18px;
+      background: rgba(20, 22, 25, .62); backdrop-filter: blur(6px);
     }
     .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .actions button { letter-spacing: .12em; text-transform: uppercase; }
     .langs {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 16px 0 0;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 12px 0 0;
       font-size: .85rem; color: var(--bn-fog); text-shadow: 0 1px 8px rgba(0, 0, 0, .8);
     }
     .langs mat-icon { font-size: 16px; width: 16px; height: 16px; }
@@ -197,9 +212,10 @@ export class NextShow {
     .visually-hidden {
       position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
     }
-    /* Auf schmalen Screens bleibt das Logo vollständig sichtbar, der Inhalt folgt darunter */
+    /* Auf schmalen Screens folgt der Inhalt unter dem Bild */
     @media (max-width: 720px) {
-      .hero-content { position: static; padding: 24px 16px 8px; }
+      .hero-content { grid-area: 2 / 1; padding: 8px 16px; }
+      .inner { padding: 0; background: none; backdrop-filter: none; }
     }
   `,
 })
