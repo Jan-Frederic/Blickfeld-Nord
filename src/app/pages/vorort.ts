@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { DEFAULT_START, arrivalTime, departureTime, routeUrl } from '../data/trip';
+import { AufbauZeitplan } from './aufbau-zeitplan';
 
 // Checkliste „Vor Ort“ je Auftritt (Backstage): Ansprechpartner, Ankunft, Parkplatz, Strom usw.
 // Gespeichert nur im Browser dieses Geräts (localStorage, je Auftritt) – private Kontaktdaten landen so nie im öffentlichen Repo.
@@ -30,7 +31,7 @@ export function loadVorOrt(key: string): Record<string, string | undefined> {
 
 @Component({
   selector: 'app-vorort',
-  imports: [MatIconModule],
+  imports: [MatIconModule, AufbauZeitplan],
   template: `
     <section class="vorort" aria-labelledby="vorort-title">
       <div class="head">
@@ -77,6 +78,7 @@ export function loadVorOrt(key: string): Record<string, string | undefined> {
           }
         </p>
       </div>
+      <app-aufbau-zeitplan [beginn]="beginn()" [values]="values()" />
       <p class="hint">Wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert – nicht auf der Website.</p>
     </section>
   `,
@@ -136,6 +138,7 @@ export class VorOrt {
   protected readonly route = computed(() => routeUrl(this.band.showById(this.show()), this.values()));
   protected readonly arrival = computed(() => arrivalTime(this.values()));
   protected readonly departure = computed(() => departureTime(this.values()));
+  protected readonly beginn = computed(() => this.band.showById(this.show())?.time);
 
   constructor() {
     // beim Wechsel zu einem anderen Auftritt dessen Angaben laden

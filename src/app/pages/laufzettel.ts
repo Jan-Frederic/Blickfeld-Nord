@@ -2,6 +2,7 @@ import { Show } from '../data/band.service';
 import { loadSetlist, setLength, setTime, setsOf } from '../data/setlist-data';
 import { arrivalTime, departureTime, DEFAULT_START } from '../data/trip';
 import { songInfoText } from '../data/songinfo';
+import { aufbauPlan } from '../data/zeitplan';
 import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
 import { FIELDS, VORORT_PREFIX, loadVorOrt } from './vorort';
 
@@ -25,6 +26,8 @@ export function printLaufzettel(show: Show, id: string): void {
     row('Soundcheck', val('soundcheck')),
     row('Beginn', show.time ? `${show.time} Uhr` : ''),
   ].join('');
+  // Richtwerte für den Aufbau zwischen Ankunft und Beginn (src/app/data/zeitplan.ts)
+  const aufbau = aufbauPlan(show.time).slice(1, -1).map((s) => row(`ca. ${s.zeit} Uhr`, s.was)).join('');
   const vorOrt = FIELDS.filter((f) => !['ankunft', 'soundcheck'].includes(f.key)).map((f) => row(f.label, val(f.key))).join('');
 
   let n = 0;
@@ -78,7 +81,7 @@ export function printLaufzettel(show: Show, id: string): void {
 <h1>${esc(show.venue)}</h1>
 <p class="when">${de(show.date)}${show.endDate ? ' – ' + de(show.endDate) : ''}${show.time ? ', ' + show.time + ' Uhr' : ''}${show.city ? ' · ' + esc(show.city) : ''}</p>
 <div class="cols">
-  <div><h2>Zeitplan</h2><table>${plan}</table></div>
+  <div><h2>Zeitplan</h2><table>${plan}${aufbau}</table></div>
   <div><h2>Vor Ort</h2><table>${vorOrt}${show.comment ? row('Kommentar', show.comment) : ''}</table></div>
 </div>
 <h2>Setlist</h2><div class="sets">${setlist}</div>

@@ -162,9 +162,9 @@ export async function renderPoster(s: Show, format: PosterFormat = 'feed'): Prom
     ctx.fillText(s.city, cx, y);
   }
 
-  // Story: genug Platz für „Eintritt frei“ als Hinweis
-  if (format === 'story' && s.price === 0) {
-    y += 120;
+  // „Eintritt frei“ als Hinweis, wenn über der Fußzeile noch Platz ist
+  if (s.price === 0 && y + (format === 'story' ? 120 : 78) + 20 < H - footer - 30) {
+    y += format === 'story' ? 120 : 78;
     ctx.font = '400 30px Montserrat';
     const label = 'EINTRITT FREI';
     const w = [...label].reduce((a, ch) => a + ctx.measureText(ch).width, 0) + 8 * (label.length - 1) + 64;

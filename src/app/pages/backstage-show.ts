@@ -10,6 +10,7 @@ import { PosterFormat, postText, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
 import { printMixerZettel } from './mixer-zettel';
+import { printKabelEtiketten } from './kabel-etiketten';
 import { RueckblickFormular } from './rueckblick-formular';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
@@ -77,6 +78,7 @@ const DAY = 24 * 60 * 60 * 1000;
           <button mat-stroked-button (click)="calendar()"><mat-icon>event_available</mat-icon> In den Kalender</button>
           <button mat-stroked-button (click)="laufzettel()"><mat-icon>assignment</mat-icon> Laufzettel</button>
           <button mat-stroked-button (click)="mixerZettel()"><mat-icon>tune</mat-icon> Mixer-Zettel</button>
+          <button mat-stroked-button (click)="etiketten()"><mat-icon>label</mat-icon> Kabel-Etiketten</button>
           @if (posterAllowed()) {
             <button mat-stroked-button (click)="poster()"><mat-icon>image</mat-icon> Plakat</button>
             <button mat-stroked-button (click)="poster('story')"><mat-icon>smartphone</mat-icon> Story</button>
@@ -266,6 +268,11 @@ export class BackstageShow implements OnDestroy {
   // Kanalliste mit Monitormischungen und Strom auf einem Blatt zum Aufbauen
   protected mixerZettel(): void {
     printMixerZettel(this.show()!);
+  }
+
+  // Etiketten für Kabel und Stagebox, Farbe nach Musiker
+  protected etiketten(): void {
+    printKabelEtiketten();
   }
 
   // Einzeltermin mit Status und Kommentar für den eigenen Kalender
