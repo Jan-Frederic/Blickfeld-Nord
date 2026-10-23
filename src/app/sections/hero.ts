@@ -181,7 +181,7 @@ export class NextShow {
   `,
   styles: `
     /* Bild und Inhalt liegen im selben Rasterfeld. Der Inhalt beginnt erst unter dem Logo im Bild (Logo endet bei
-       ca. 66 % der Bildhöhe, Bild im Format 16:9 → Prozent-Abstand bezieht sich auf die Breite). Reicht der Platz
+       ca. 66 % der Bildhöhe, plus etwas Luft, Bild im Format 16:9 → Prozent-Abstand bezieht sich auf die Breite). Reicht der Platz
        darunter nicht, wächst der Bereich nach unten statt Text über das Logo zu legen. */
     .hero { position: relative; display: grid; padding-top: 64px; }
     @media (max-width: 599px) { .hero { padding-top: 56px; } }
@@ -192,12 +192,12 @@ export class NextShow {
     }
     .hero-content {
       position: relative; display: flex; flex-direction: column; justify-content: flex-end;
-      padding: calc(56.25% * .66) 16px clamp(16px, 3vw, 40px); text-align: center;
+      padding: calc(56.25% * .73) 16px clamp(16px, 3vw, 40px); text-align: center;
     }
     /* dunkler Schleier hinter Text und Countdown – lesbar auch vor der hellen Sonne rechts */
     .inner {
       margin: 0 auto; padding: 14px clamp(14px, 3vw, 36px); border-radius: 18px;
-      background: rgba(20, 22, 25, .62); backdrop-filter: blur(6px);
+      background: rgba(20, 22, 25, .5); backdrop-filter: blur(5px);
     }
     .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .actions button { letter-spacing: .12em; text-transform: uppercase; }
