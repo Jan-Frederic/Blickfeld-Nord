@@ -52,7 +52,7 @@ const TEXT = tr(
           <mat-card appearance="outlined">
             <mat-card-header>
               @if (m.photo) {
-                <img mat-card-avatar class="avatar photo" [src]="m.photo.avatar" width="40" height="40" alt="" />
+                <img mat-card-avatar class="avatar photo" [src]="m.photo.avatar" width="40" height="40" alt="" loading="lazy" decoding="async" />
               } @else {
                 <div mat-card-avatar class="avatar">{{ m.initials }}</div>
               }
