@@ -2,9 +2,10 @@
 // Linkcheck für den fertigen Build (nach `ng build`):
 //  - interne Links, Bilder und Downloads in allen HTML-Seiten müssen existieren (Fehler → Abbruch)
 //  - Bilder aus band.service.ts (Historie, Galerie) müssen im Build liegen (Fehler → Abbruch)
-//  - externe Links werden mit --extern zusätzlich aufgerufen (nur Warnung: manche Seiten blocken Bots)
+//  - externe Links werden mit --extern zusätzlich aufgerufen (nur Warnung: manche Seiten blocken Bots);
+//    mit --bericht <datei> landen tote Links als Markdown-Liste in der Datei (für das wöchentliche Issue)
 import { build } from 'esbuild';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -13,6 +14,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
 const SITE = 'https://blickfeld-nord.de';
 const checkExternal = process.argv.includes('--extern');
+const bericht = process.argv.includes('--bericht') ? process.argv[process.argv.indexOf('--bericht') + 1] : null;
 const errors = [];
 const external = new Map();
 
@@ -79,16 +81,24 @@ if (checkExternal) {
   const warnings = [];
   await Promise.all(
     [...external].map(async ([url, page]) => {
-      try {
-        const res = await fetch(url, { method: 'GET', redirect: 'follow', signal: AbortSignal.timeout(15000) });
-        if (res.status >= 400 && ![403, 429, 999].includes(res.status)) warnings.push(`${page}: ${url} → HTTP ${res.status}`);
-      } catch (err) {
-        warnings.push(`${page}: ${url} → ${err.cause?.code ?? err.message}`);
+      // ein zweiter Versuch nach kurzer Pause, damit ein einzelner Aussetzer nicht als toter Link zählt
+      let problem = '';
+      for (let versuch = 0; versuch < 2; versuch++) {
+        try {
+          const res = await fetch(url, { method: 'GET', redirect: 'follow', signal: AbortSignal.timeout(15000) });
+          problem = res.status >= 400 && ![403, 429, 999].includes(res.status) ? `HTTP ${res.status}` : '';
+        } catch (err) {
+          problem = err.cause?.code ?? err.message;
+        }
+        if (!problem) break;
+        await new Promise((r) => setTimeout(r, 3000));
       }
+      if (problem) warnings.push(`${page}: ${url} → ${problem}`);
     }),
   );
   for (const w of warnings) console.log(`::warning::Externer Link: ${w}`);
   console.log(`${external.size} externe Links geprüft, ${warnings.length} Warnungen`);
+  if (bericht) writeFileSync(bericht, warnings.sort().map((w) => `- ${w}`).join('\n'));
 }
 
 if (errors.length) {

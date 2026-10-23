@@ -210,5 +210,9 @@ Bevor etwas online geht, prüft GitHub unter anderem:
   screenshot-vergleich**. War die Änderung gewollt, z. B. ein neuer Text auf der Technik-Seite: unter Actions
   **„Screenshots aktualisieren“** starten (*Run workflow*). Danach geht die Seite automatisch neu online.
 
+**Tote Links:** Einmal pro Woche (montags) prüft GitHub alle externen Links, etwa zu Freunden, Instagram oder Spotify.
+Ist einer nicht mehr erreichbar, erscheint unter **Issues** „Tote Links auf der Website“ mit der Liste. Das Issue
+schließt sich von selbst, sobald alle Links wieder gehen.
+
 Nicht weiterkommen? Einfach Fred fragen. Über **History** (Uhr-Symbol oben in der Datei) seht ihr jede frühere
 Fassung und könnt den alten Text von dort zurückkopieren.

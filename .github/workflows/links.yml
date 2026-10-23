@@ -1,0 +1,57 @@
+# Prüft einmal pro Woche alle externen Links der Website (Freunde, Instagram, Spotify, Karten …).
+# Tote Links landen in einem GitHub-Issue „Tote Links auf der Website“: Es wird angelegt bzw. aktualisiert und
+# schließt sich von selbst, sobald alle Links wieder erreichbar sind. Von Hand: Actions → Linkcheck → Run workflow.
+name: Linkcheck (extern)
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    env:
+      TITEL: Tote Links auf der Website
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Website bauen
+        uses: ./.github/actions/build-site
+
+      - name: Externe Links prüfen
+        run: node scripts/check-links.mjs --extern --bericht linkbericht.md
+
+      - name: Issue anlegen, aktualisieren oder schließen
+        run: |
+          nummer=$(gh issue list --state open --search "\"$TITEL\" in:title" --json number --jq '.[0].number')
+          if [ -s linkbericht.md ]; then
+            {
+              echo "Der wöchentliche Linkcheck hat Links gefunden, die nicht mehr erreichbar sind:"
+              echo
+              cat linkbericht.md
+              echo
+              echo "Bitte in \`src/app/data/band.service.ts\` (bzw. der genannten Seite) korrigieren oder entfernen."
+              echo "Das Issue schließt sich von selbst, sobald alle Links wieder gehen. – [Lauf ansehen]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            } > text.md
+            if [ -n "$nummer" ]; then gh issue edit "$nummer" --body-file text.md; else gh issue create --title "$TITEL" --body-file text.md; fi
+          elif [ -n "$nummer" ]; then
+            gh issue close "$nummer" --comment "Alle externen Links sind wieder erreichbar ✓"
+          fi
