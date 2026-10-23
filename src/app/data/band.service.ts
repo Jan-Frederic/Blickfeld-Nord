@@ -52,6 +52,10 @@ export interface HistoryEntry {
   links?: HistoryLink[];
   // Instagram-Reel-Kennung aus der URL (instagram.com/reel/<id>/), wird per Zwei-Klick-Lösung eingebettet
   reel?: string;
+  // Setlist des Abends (Backstage → „Rückblick schreiben“ übernimmt sie vom Gerät), ohne Pausen
+  setlist?: { title: string; artist: string }[];
+  // „Song des Abends“ – Titel aus der Setlist, z. B. der mit den meisten Sternen im Bühnen-Modus
+  highlight?: string;
   // markiert erfundene Beispiel-Einträge sichtbar auf der Seite
   example?: boolean;
 }

@@ -57,3 +57,18 @@ export function rangliste(alle: Bewertungen[], max = 100): Platz[] {
     .sort((a, b) => b.wert - a.wert || b.anzahl - a.anzahl || a.title.localeCompare(b.title, 'de'))
     .slice(0, max);
 }
+
+/** Alle gespeicherten Sterne dieses Geräts, je Auftritt (`behalten` filtert z. B. gelöschte Auftritte heraus) */
+export function alleBewertungen(behalten: (show: string) => boolean = () => true): Bewertungen[] {
+  const alle: Bewertungen[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(BEWERTUNG_PREFIX) || !behalten(key.slice(BEWERTUNG_PREFIX.length))) continue;
+      alle.push(JSON.parse(localStorage.getItem(key) ?? '{}') as Bewertungen);
+    }
+  } catch {
+    // kein Zugriff auf localStorage – dann eben ohne Sterne
+  }
+  return alle;
+}

@@ -29,6 +29,8 @@ const TEXT = tr(
     remindHint: '„Erinnere mich“ lädt einen Kalendereintrag mit Erinnerung am Vortag herunter.',
     photo: 'Foto',
     readAll: 'Ganzen Rückblick lesen',
+    played: 'Gespielt an diesem Abend',
+    highlight: 'Song des Abends',
     video: 'Video auf Instagram',
     more: 'Ihr wollt uns auch bei euch haben?',
     booking: 'Booking & Anfrage',
@@ -60,6 +62,8 @@ const TEXT = tr(
     remindHint: '“Remind me” downloads a calendar entry with a reminder the day before.',
     photo: 'Photo',
     readAll: 'Read the full story',
+    played: 'Played that night',
+    highlight: 'Song of the night',
     video: 'Video on Instagram',
     more: 'Want us to play for you too?',
     booking: 'Booking & enquiries',
@@ -91,6 +95,8 @@ const TEXT = tr(
     remindHint: '„Herinner me” downloadt een agenda-item met een herinnering de dag ervoor.',
     photo: 'Foto',
     readAll: 'Lees de hele terugblik',
+    played: 'Gespeeld die avond',
+    highlight: 'Nummer van de avond',
     video: 'Video op Instagram',
     more: 'Willen jullie ons ook bij jullie?',
     booking: 'Boeken & aanvraag',
@@ -171,6 +177,13 @@ const TEXT = tr(
             }
             <p>{{ content.t(h.text[0]) }}</p>
             <app-uebersetzung-hinweis [status]="content.status(h.title, h.text[0])" />
+            @if (h.highlight) { <p class="top"><mat-icon>star</mat-icon> {{ t().highlight }}: <strong>{{ h.highlight }}</strong></p> }
+            @if (h.setlist?.length) {
+              <details class="played">
+                <summary>{{ t().played }} ({{ h.setlist!.length }})</summary>
+                <ol>@for (x of h.setlist; track $index) { <li>{{ x.title }} <small>{{ x.artist }}</small></li> }</ol>
+              </details>
+            }
             <div class="recap-links">
               <a class="btn" [routerLink]="'/historie' | loc" [fragment]="'e-' + s.date"><mat-icon>history_edu</mat-icon> {{ t().readAll }}</a>
               @if (h.reel) {
@@ -223,6 +236,9 @@ const TEXT = tr(
     .recap img { display: block; width: 100%; max-height: 520px; object-fit: cover; border-radius: 10px; }
     .recap figcaption { margin-top: 6px; font-size: .78rem; color: var(--bn-fog); }
     .recap p:not(.kicker) { margin: 0 0 16px; max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); }
+    .recap .top { display: flex; align-items: center; gap: 6px; } .top mat-icon { color: var(--bn-sunset); }
+    .played { margin: 0 0 16px; } .played summary { cursor: pointer; color: var(--bn-sunset); }
+    .played ol { columns: 2 220px; margin: 10px 0 0; padding-left: 22px; line-height: 1.7; } .played small { color: var(--bn-fog); }
     .recap-links { display: flex; flex-wrap: wrap; gap: 10px; }
     .more { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--bn-line); }
     .more p { margin: 0 0 12px; color: rgba(236, 233, 228, .86); }

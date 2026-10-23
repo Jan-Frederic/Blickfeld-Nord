@@ -272,6 +272,11 @@ test('Backstage: Rückblick-Formular erzeugt den Historie-Block', async () => {
   const p = await page();
   const vergangen = concerts.map((c) => c.split('/')[2]).filter((id) => id < new Date().toISOString().slice(0, 10))[0];
   await p.go(`/backstage/${vergangen}/`);
+  await p.evaluate((id) => {
+    localStorage.setItem('bn-setlist-' + id, JSON.stringify([{ title: 'Angels', artist: 'Robbie Williams' }, { pause: true }, { title: "Blowin' in the Wind", artist: 'Bob Dylan' }]));
+    localStorage.setItem('bn-bewertung-' + id, JSON.stringify({ "Blowin' in the Wind|Bob Dylan": 5, 'Angels|Robbie Williams': 3 }));
+  }, vergangen);
+  await p.reload();
   await p.locator('app-rueckblick-formular summary').click();
   await p.locator('app-rueckblick-formular input[maxlength="100"]').fill("Ein Abend im Café");
   await p.locator('app-rueckblick-formular textarea').fill("Erster Absatz mit Matthias' Solo.\n\nZweiter Absatz.");
@@ -280,6 +285,7 @@ test('Backstage: Rückblick-Formular erzeugt den Historie-Block', async () => {
   await p.locator('app-rueckblick-formular .foto input').nth(1).fill('Die Band im Café');
   const code = await p.locator('app-rueckblick-formular pre.code').innerText();
   expect(code.includes(`date: '${vergangen}'`) && code.includes("Matthias’ Solo") && code.includes("src: 'historie/2026-04-30-cafe.webp'"), 'Block unvollständig: ' + code);
+  expect(code.includes("{ title: 'Angels', artist: 'Robbie Williams' },") && code.includes("highlight: 'Blowin\\' in the Wind'"), 'Setlist oder Song des Abends fehlen: ' + code);
   return p;
 });
 
@@ -314,6 +320,8 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   expect((await p.locator('app-setlist .pause-label').innerText()).includes('Set davor'), 'Pause ohne Set-Dauer');
   await p.locator('app-setlist-vorlagen button', { hasText: 'Als Vorlage speichern' }).click();
   await until(async () => (await p.locator('app-setlist-vorlagen option').count()) === 1, 'Vorlage nicht gespeichert');
+  await p.locator('app-setlist-vorschlag button').click();
+  await until(async () => (await p.locator('app-setlist .pause-label').count()) === 1 && (await p.locator('app-setlist .list li .no').count()) > 10, 'Setlist-Vorschlag ohne zwei Sets');
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await p.getByRole('button', { name: '4 Sterne' }).click();
   await p.keyboard.press('Escape');

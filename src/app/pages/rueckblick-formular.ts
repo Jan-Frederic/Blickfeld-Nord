@@ -1,6 +1,8 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
+import { isPause, loadSetlist } from '../data/setlist-data';
+import { ladeBewertungen, songKey } from '../data/bewertung';
 
 // „Rückblick schreiben“ auf der Backstage-Seite eines vergangenen Auftritts: Formular → fertiger Block für
 // history in src/app/data/band.service.ts (wie das Termin-Formular). Fotos lädt man vorher in public/historie hoch.
@@ -9,6 +11,8 @@ const UPLOAD_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/upload/main/p
 
 // Apostroph als ’, damit der Text die Anführungszeichen im Code nicht beendet (wie in PFLEGE.md beschrieben)
 const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, '’')}'`;
+// Songtitel exakt wie im Repertoire (Apostroph maskiert statt ersetzt)
+const qs = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 
 interface Foto {
   datei: string;
@@ -49,6 +53,21 @@ interface Foto {
         <a class="btn" [href]="uploadUrl" target="_blank" rel="noopener"><mat-icon>upload</mat-icon> Fotos auf GitHub hochladen</a>
       </div>
 
+      @if (songs().length) {
+        <p class="label">Setlist <small>(von diesem Gerät, {{ songs().length }} Songs)</small></p>
+        <div class="grid">
+          <label class="check"><input type="checkbox" [checked]="mitSetlist()" (change)="mitSetlist.set($any($event.target).checked)" /> „Gespielt an diesem Abend“ auf der Konzertseite zeigen</label>
+          @if (mitSetlist()) {
+            <label>Song des Abends <small>(vorbelegt: meiste Sterne)</small>
+              <select (change)="highlight.set($any($event.target).value)">
+                <option value="" [selected]="!highlight()">– keiner –</option>
+                @for (s of songs(); track $index) { <option [value]="s.title" [selected]="s.title === highlight()">{{ s.title }}</option> }
+              </select>
+            </label>
+          }
+        </div>
+      }
+
       @if (problem(); as p) {
         <p class="problem"><mat-icon>info</mat-icon> {{ p }}</p>
       } @else {
@@ -72,7 +91,9 @@ interface Foto {
     .grid.foto .wide { grid-column: auto; }
     label { display: grid; gap: 4px; font-size: .85rem; color: var(--bn-fog); }
     small { font-size: .78rem; }
-    input, textarea { padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; box-sizing: border-box; width: 100%; }
+    .check { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--bn-ink); }
+    .check input { width: auto; }
+    input, textarea, select { padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; box-sizing: border-box; width: 100%; }
     textarea { resize: vertical; }
     .label { margin: 18px 0 6px; font-size: .85rem; color: var(--bn-fog); }
     .code { margin: 0; padding: 12px; border-radius: 8px; background: #111316; overflow-x: auto; font-size: .8rem; line-height: 1.5; white-space: pre; }
@@ -102,6 +123,20 @@ export class RueckblickFormular {
   protected readonly fotos = signal<Foto[]>([]);
   protected readonly copied = signal(false);
 
+  // Setlist und Sterne dieses Auftritts aus dem Browser
+  private readonly id = computed(() => this.band.showId(this.show()));
+  protected readonly songs = computed(() => loadSetlist(this.id()).filter((e) => !isPause(e)) as { title: string; artist: string }[]);
+  protected readonly mitSetlist = signal(true);
+  protected readonly highlight = linkedSignal(() => {
+    const sterne = ladeBewertungen(this.id());
+    let best: { title: string; n: number } | null = null;
+    for (const s of this.songs()) {
+      const n = sterne[songKey(s)] ?? 0;
+      if (n && (!best || n > best.n)) best = { title: s.title, n };
+    }
+    return best?.title ?? '';
+  });
+
   protected readonly vorhanden = computed(() => this.band.history.find((h) => h.date === this.show().date && !h.example)?.title ?? null);
   private readonly absaetze = computed(() => this.text().split(/\n\s*\n/).map((a) => a.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean));
   // Reel-Kennung aus einem kompletten Link oder direkt eingegeben
@@ -129,6 +164,12 @@ export class RueckblickFormular {
       zeilen.push('      ],');
     }
     if (this.reelId()) zeilen.push(`      reel: ${q(this.reelId())},`);
+    if (this.mitSetlist() && this.songs().length) {
+      zeilen.push('      setlist: [');
+      for (const s of this.songs()) zeilen.push(`        { title: ${qs(s.title)}, artist: ${qs(s.artist)} },`);
+      zeilen.push('      ],');
+      if (this.highlight()) zeilen.push(`      highlight: ${qs(this.highlight())},`);
+    }
     zeilen.push('    },');
     return zeilen.join('\n');
   });

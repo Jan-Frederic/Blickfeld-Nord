@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
-import { BEWERTUNG_PREFIX, Bewertungen, rangliste } from '../data/bewertung';
+import { alleBewertungen, rangliste } from '../data/bewertung';
 
 // Backstage → Zahlen: Top 100 aus den Sternen im Bühnen-Modus (localStorage „bn-bewertung-<Auftritt>“).
 // Bewertungen anderer Geräte kommen über „Datei importieren“ dazu und werden dabei zusammengeführt.
@@ -83,26 +83,12 @@ export class SongRangliste {
   protected readonly anfang = ANFANG;
   protected readonly alle = signal(false);
   // nur Bewertungen zu Auftritten, die es (noch) gibt
-  private readonly je = signal(this.lesen());
+  private readonly je = signal(alleBewertungen((show) => !!this.band.showById(show)));
   protected readonly auftritte = computed(() => this.je().filter((b) => Object.keys(b).length).length);
   protected readonly plaetze = computed(() => rangliste(this.je()));
   protected readonly gezeigt = computed(() => (this.alle() ? this.plaetze() : this.plaetze().slice(0, ANFANG)));
 
   protected komma(n: number): string {
     return n.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  }
-
-  private lesen(): Bewertungen[] {
-    const alle: Bewertungen[] = [];
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key?.startsWith(BEWERTUNG_PREFIX) || !this.band.showById(key.slice(BEWERTUNG_PREFIX.length))) continue;
-        alle.push(JSON.parse(localStorage.getItem(key) ?? '{}') as Bewertungen);
-      }
-    } catch {
-      // kein Zugriff auf localStorage – dann eben keine Rangliste
-    }
-    return alle;
   }
 }

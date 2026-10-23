@@ -2,6 +2,7 @@ import { Component, computed, effect, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { SetlistVorlagen } from './setlist-vorlagen';
+import { SetlistVorschlag } from './setlist-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { songInfoText } from '../data/songinfo';
@@ -15,7 +16,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-setlist',
-  imports: [MatIconModule, SetlistVorlagen, SetlistBuehne],
+  imports: [MatIconModule, SetlistVorlagen, SetlistVorschlag, SetlistBuehne],
   template: `
     <section class="setlist" aria-labelledby="setlist-title">
       <div class="head">
@@ -81,6 +82,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           }
         </ol>
       </div>
+      <app-setlist-vorschlag [entries]="entries()" (apply)="replace($event)" />
       <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
       @if (stage()) { <app-setlist-buehne [entries]="entries()" [show]="show()" (closed)="stage.set(false)" /> }
       <p class="hint">Die Setlist wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>

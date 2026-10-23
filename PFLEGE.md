@@ -98,6 +98,10 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 - Im Bühnen-Modus blinkt **Klick** im Tempo und piept leise – praktisch zum Einzählen.
 - Im Bühnen-Modus unter jedem Song 1–5 **Sterne** antippen (oder Taste 1–5), wie er an dem Abend lief. Die
   **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über „Datei importieren“ dazu.
+- **Setlist vorschlagen** (unter der Setlist): Anzahl Sets und Minuten wählen – die Songs mit den meisten Sternen
+  kommen zuerst, der beste ans Set-Ende.
+- Nach dem Auftritt übernimmt **Rückblick schreiben** die Setlist und den „Song des Abends“ (meiste Sterne) – sie
+  erscheinen dann auf der Konzertseite.
 
 ## Foto in die Galerie
 
