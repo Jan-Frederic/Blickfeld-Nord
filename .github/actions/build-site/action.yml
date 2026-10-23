@@ -57,3 +57,7 @@ runs:
         # Backstage-Unterseiten (/backstage/<id>[/<teil>]) haben keine eigene Datei: Die Fehlerseite leitet sie
         # zur Backstage-Shell weiter (/backstage/?auftritt=<id>[&teil=<teil>]), die dann zur Unterseite navigiert.
         sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2]+(p[3]?"\\x26teil="+p[3]:""))</script>#' 404.html
+
+    - name: Content-Security-Policy (Hashes der Inline-Skripte je Seite)
+      shell: bash
+      run: node scripts/csp.mjs

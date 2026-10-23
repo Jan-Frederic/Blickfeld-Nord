@@ -84,7 +84,9 @@ export function printLaufzettel(show: Show, id: string): void {
 <h2>Setlist</h2><div class="sets">${setlist}</div>
 <h2>Packliste</h2><div class="packs">${packliste}</div>
 <footer>Stand ${new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })} · leere Felder zum Ausfüllen vor Ort</footer>
-<script>window.onload = () => { window.print(); };</script>
 </body></html>`);
   win.document.close();
+  // Drucken von hier aus starten – ein Skript im Fenster würde die Content-Security-Policy brauchen
+  win.focus();
+  win.print();
 }

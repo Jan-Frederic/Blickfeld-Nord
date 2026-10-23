@@ -80,7 +80,9 @@ export function printMixerZettel(show: Show): void {
   <div><h2>Strom</h2><ul>${strom}</ul></div>
 </div>
 <footer>Stand Technik ${new Date(`${technik.stand}T12:00:00`).toLocaleDateString('de-DE')} · Main L/R → PA · Pegel: laut / mittel / leise, „–“ = nicht im Monitor</footer>
-<script>window.onload = () => { window.print(); };</script>
 </body></html>`);
   win.document.close();
+  // Drucken von hier aus starten – ein Skript im Fenster würde die Content-Security-Policy brauchen
+  win.focus();
+  win.print();
 }

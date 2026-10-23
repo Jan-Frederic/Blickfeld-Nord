@@ -500,6 +500,12 @@ Alle Browser-Prüfungen nutzen denselben kleinen Testserver (`scripts/lib/static
 Die Datenschutzerklärung (`src/app/pages/datenschutz.ts`) beschreibt GoatCounter, Instagram-Einbettungen und den
 Offline-Speicher der App. Schriften und Icons werden selbst gehostet, es gibt keine Google-Fonts-Abfragen.
 
+**Content-Security-Policy:** `scripts/csp.mjs` setzt am Ende jedes Builds eine Policy als `<meta>` in jede Seite
+(GitHub Pages erlaubt keine eigenen Header). Erlaubt sind nur eigene Dateien und genau die Dienste aus der Tabelle
+oben (GoatCounter, Open-Meteo, Instagram-Einbettungen, GitHub-Rohdateien für das Backstage). Inline-Skripte laufen
+nur mit Prüfsumme; jede Seite bekommt die Hashes ihrer eigenen Skripte. Kommt ein neuer Dienst dazu, muss er in
+`csp.mjs` ergänzt werden – sonst blockt ihn der Browser, und die Klicktests schlagen Alarm.
+
 ## 13. Pflege-Workflow
 
 ```mermaid

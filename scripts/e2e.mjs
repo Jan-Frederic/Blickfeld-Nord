@@ -37,6 +37,8 @@ async function page(options = {}) {
   p.on('dialog', (d) => (d.type() === 'prompt' ? d.accept('Testvorlage') : d.accept()));
   const errors = [];
   p.on('pageerror', (e) => errors.push(e.message));
+  // von der Content-Security-Policy blockierte Skripte, Styles oder Verbindungen sind ebenfalls Fehler
+  p.on('console', (m) => m.type() === 'error' && /Content Security Policy/i.test(m.text()) && errors.push(m.text()));
   p.go = async (path) => {
     await p.goto(BASE + path, { waitUntil: 'networkidle' });
     await p.waitForTimeout(300);

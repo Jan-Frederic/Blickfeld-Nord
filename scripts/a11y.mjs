@@ -23,7 +23,8 @@ const firstProbe = readFileSync(join(ROOT, 'src', 'app', 'data', 'band.service.t
 pages.push('/backstage/', '/backstage/termine/', '/backstage/zahlen/', '/backstage/uebersetzungen/', '/backstage/material/', '/backstage/abgleich/', '/backstage/aufgaben/', '/backstage/buehnenplan/', ...(firstProbe ? [`/backstage/probe/${firstProbe}`] : []), ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), '/wunsch', '/gibt-es-nicht');
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'de-DE' });
+// bypassCSP: axe wird als Skript in die Seite gelegt – das blockt die Content-Security-Policy der Seite sonst (zu Recht)
+const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'de-DE', bypassCSP: true });
 // Zählpixel und externe Einbettungen spielen für den Check keine Rolle
 await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 const page = await context.newPage();
@@ -55,7 +56,7 @@ for (const path of pages) {
 // Handy-Breite: nichts darf über den rechten Rand ragen – auch nicht bei 15 % größerer Schrift (Textgröße im
 // Handy-Browser) und mit aufgeklappten Listen. Gemessen wird am Element, weil html/body überstehendes ohnehin abschneiden.
 // niederländischer Browser: deutsche Seiten zeigen dabei den Sprachhinweis – der darf auch nicht überstehen
-const phone = await browser.newPage({ viewport: { width: 360, height: 780 }, locale: 'nl-NL' });
+const phone = await browser.newPage({ viewport: { width: 360, height: 780 }, locale: 'nl-NL', bypassCSP: true });
 await phone.context().route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 for (const path of pages) {
   await phone.goto(BASE + path, { waitUntil: 'networkidle' });
