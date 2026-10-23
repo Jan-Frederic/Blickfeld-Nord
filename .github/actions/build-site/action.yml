@@ -1,4 +1,4 @@
-# Baut die Website wie beim Deploy: Schriften, Fotos, Version, Angular-Build, strukturierte Daten, Fehlerseite.
+# Baut die Website wie beim Deploy: Schriften, Fotos, Technik-PDFs, Version, Angular-Build, strukturierte Daten, Fehlerseite.
 # Genutzt von deploy-pages.yml und screenshots.yml – so entstehen Referenzbilder und Prüfung aus demselben Build.
 # Voraussetzung: Checkout (mit Tags), Node und `npm ci` sind bereits gelaufen.
 name: Website bauen
@@ -23,6 +23,14 @@ runs:
       run: |
         pip install --quiet pillow
         python scripts/bilder.py
+
+    # Technik-Rider und Bühnenplan aus src/app/data/technik.json – so sind die PDFs auch nach Änderungen im
+    # Bühnenplan-Editor (Backstage) aktuell, ohne dass jemand sie von Hand neu erzeugen muss
+    - name: Technik-Rider und Bühnenplan (PDF) neu erzeugen
+      shell: bash
+      run: |
+        pip install --quiet reportlab pillow fonttools
+        python scripts/build-rider.py
 
     - name: Version (letzter Release-Tag) für den Footer
       shell: bash

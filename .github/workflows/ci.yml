@@ -59,6 +59,11 @@ jobs:
           pip install --quiet pillow
           python scripts/bilder.py
 
+      - name: Technik-Rider und Bühnenplan (PDF) neu erzeugen
+        run: |
+          pip install --quiet reportlab pillow fonttools
+          python scripts/build-rider.py
+
       - name: Build
         run: npx ng build --base-href /
 

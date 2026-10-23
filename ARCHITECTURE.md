@@ -282,7 +282,7 @@ flowchart TD
 | Datei | Inhalt | Entsteht durch |
 |---|---|---|
 | `src/app/data/repertoire.json` | Songs mit Interpret, Jahr und Dauer | `scripts/sync-repertoire.mjs` (Spotify, wöchentlich) |
-| `src/app/data/technik.json` | Bühnenplan, Kanäle, Geräte, Strom | von Hand; daraus entstehen auch Seite und Rider-PDF |
+| `src/app/data/technik.json` | Bühnenplan, Kanäle, Geräte, Strom | von Hand oder per Bühnenplan-Editor im Backstage; daraus entstehen Seite, Rider- und Bühnenplan-PDF (bei jedem Deploy neu) |
 | `src/app/data/faq.ts` | Häufige Fragen in DE, EN und NL | von Hand; auch als FAQPage-JSON-LD ausgegeben |
 | `src/app/data/version.json` | Versionsnummer im Footer | `scripts/write-version.mjs` aus dem letzten Release-Tag |
 | `public/data/orte.json` | Orte, Postleitzahlen, Ortsteile, ferne Städte | GeoNames (CC BY 4.0) plus Handpflege; wird erst beim Tippen geladen |
@@ -543,7 +543,7 @@ Die ausführliche Anleitung mit Beispielen steht in [PFLEGE.md](PFLEGE.md).
 | Backstage nur clientseitig, ohne Login | Kein Server für Authentifizierung; private Daten nicht als HTML indexieren | Kein echter Zugriffsschutz – nichts Vertrauliches eintragen |
 | Mehrsprachigkeit über Wörterbücher in einer Anwendung (statt `@angular/localize`) | Eine Ausgabe für Fotos, PDFs, Service Worker und Prüfungen; fehlende Übersetzungen fallen beim Build auf | Alle drei Sprachen stecken im JavaScript (wenige KB) |
 | Gerätedaten in `localStorage` plus Export/Import | Funktioniert offline auf dem Gig, ohne Konto | Keine automatische Synchronisierung zwischen Band-Mitgliedern |
-| Generierte Assets (PDFs, Vorschaubilder) teils eingecheckt, teils beim Build | PDFs ändern sich selten; Vorschaubilder sollen der Band keine Arbeit machen | Python-Skripte müssen bei Änderungen an PDFs lokal laufen |
+| Generierte Assets (PDFs, Vorschaubilder) teils eingecheckt, teils beim Build | Vorschaubilder sowie Technik-Rider und Bühnenplan (aus `technik.json`) sollen der Band keine Arbeit machen und entstehen bei jedem Deploy neu; Pressekit, QR-Karte und Wunschbox-Schild ändern sich selten | Für Pressekit, QR-Karte und Wunschbox-Schild müssen die Python-Skripte bei Änderungen lokal laufen |
 | Prüfungen als Deploy-Bremse | Pflege durch Nicht-Entwickler ohne Risiko | Ein Fehler hält den Deploy an, bis er behoben ist |
 
 ## 16. Grenzen und bekannte Einschränkungen

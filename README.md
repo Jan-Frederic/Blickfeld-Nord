@@ -19,7 +19,7 @@ Architektur mit Diagrammen: [ARCHITECTURE.md](ARCHITECTURE.md) · Inhalte pflege
   was wir brauchen (Platz, Strom), Zeitplan, Technik-Rider und Bühnenplan einzeln als PDF
   Darunter der **technische Aufbau** aus `src/app/data/technik.json`: Bühnenplan (Draufsicht, Positionen in Metern),
   Kanalliste, Signalfluss, Monitore und Strom – dieselbe Datei erzeugt Seite 2 des Technik-Riders
-  (`python3 scripts/build-rider.py`). `null` bedeutet „noch offen“. Jedes Gerät mit `hw` ist im Bühnenplan und in der
+  (`python3 scripts/build-rider.py`, läuft auch bei jedem Deploy). `null` bedeutet „noch offen“. Jedes Gerät mit `hw` ist im Bühnenplan und in der
   Geräteliste anklickbar und öffnet einen Dialog mit Beschreibung und technischen Daten (Abschnitt `hardware`).
   Ein Klick auf einen Musiker (oder sein Mikro) zeigt sein Setup: Die Beschreibung steht unter `setup-<name>`, Kanäle,
   Geräte und Monitor kommen automatisch dazu – alles, was in `technik.json` mit `"musiker": "<name>"` markiert ist.
@@ -95,8 +95,9 @@ python3 scripts/build-pressekit.py
 
 Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
 
-Den Technik-Rider (`blickfeld-nord-technik-rider.pdf`: Platz, Strom, Zeitplan, Anfahrt, Vorlauf) erzeugt
-`python3 scripts/build-rider.py`. Dieselben Angaben stehen als FAQ im Booking-Bereich
+Den Technik-Rider (`blickfeld-nord-technik-rider.pdf`: Platz, Strom, Zeitplan, Anfahrt, Vorlauf) und den
+Bühnenplan einzeln (`blickfeld-nord-buehnenplan.pdf`) erzeugt `python3 scripts/build-rider.py` – bei jedem Deploy
+automatisch, damit Änderungen an `technik.json` sofort in den PDFs stehen. Dieselben Angaben stehen als FAQ im Booking-Bereich
 (`src/app/sections/booking.ts`) – bei Änderungen beides anpassen.
 
 Die QR-Code-Karte (`blickfeld-nord-qr-karte.pdf`: A4-Schild für Bühne/Theke plus vier A6-Karten zum

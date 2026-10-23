@@ -61,7 +61,7 @@ an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 Im Backstage unter **Bühnenplan** (`/backstage/buehnenplan`) Geräte und Musiker an ihren Platz ziehen –
 feiner geht es mit den Pfeiltasten (5 cm, mit Umschalt 25 cm). Danach **Datei für GitHub erzeugen**,
 „technik.json auf GitHub öffnen“, mit Strg+A alles markieren, einfügen und „Commit changes“. Der neue Plan erscheint
-dann auf der Technik-Seite. Technik-Rider und Bühnenplan-PDF zieht Fred mit `python3 scripts/build-rider.py` nach.
+dann auf der Technik-Seite, im Technik-Rider und im Bühnenplan-PDF – die PDFs entstehen bei jedem Deploy neu.
 
 ## Abwesenheit eintragen
 
