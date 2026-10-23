@@ -24,13 +24,15 @@ runs:
         pip install --quiet pillow
         python scripts/bilder.py
 
-    # Technik-Rider und Bühnenplan aus src/app/data/technik.json – so sind die PDFs auch nach Änderungen im
-    # Bühnenplan-Editor (Backstage) aktuell, ohne dass jemand sie von Hand neu erzeugen muss
-    - name: Technik-Rider und Bühnenplan (PDF) neu erzeugen
+    # Alle Downloads in public/presse/ neu erzeugen: Pressekit (PDF/ZIP), Technik-Rider, Bühnenplan, QR-Karte und
+    # Wunschbox-Schild – so sind sie nach jeder Änderung an Texten, technik.json oder Fotos aktuell, ohne Handarbeit
+    - name: PDFs neu erzeugen (Pressekit, Technik-Rider, Bühnenplan, QR-Karte, Wunschbox)
       shell: bash
       run: |
-        pip install --quiet reportlab pillow fonttools
+        pip install --quiet reportlab pillow fonttools segno
+        python scripts/build-pressekit.py
         python scripts/build-rider.py
+        python scripts/build-qr-karte.py
 
     - name: Version (letzter Release-Tag) für den Footer
       shell: bash

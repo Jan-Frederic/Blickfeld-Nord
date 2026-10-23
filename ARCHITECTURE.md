@@ -543,7 +543,7 @@ Die ausführliche Anleitung mit Beispielen steht in [PFLEGE.md](PFLEGE.md).
 | Backstage nur clientseitig, ohne Login | Kein Server für Authentifizierung; private Daten nicht als HTML indexieren | Kein echter Zugriffsschutz – nichts Vertrauliches eintragen |
 | Mehrsprachigkeit über Wörterbücher in einer Anwendung (statt `@angular/localize`) | Eine Ausgabe für Fotos, PDFs, Service Worker und Prüfungen; fehlende Übersetzungen fallen beim Build auf | Alle drei Sprachen stecken im JavaScript (wenige KB) |
 | Gerätedaten in `localStorage` plus Export/Import | Funktioniert offline auf dem Gig, ohne Konto | Keine automatische Synchronisierung zwischen Band-Mitgliedern |
-| Generierte Assets (PDFs, Vorschaubilder) teils eingecheckt, teils beim Build | Vorschaubilder sowie Technik-Rider und Bühnenplan (aus `technik.json`) sollen der Band keine Arbeit machen und entstehen bei jedem Deploy neu; Pressekit, QR-Karte und Wunschbox-Schild ändern sich selten | Für Pressekit, QR-Karte und Wunschbox-Schild müssen die Python-Skripte bei Änderungen lokal laufen |
+| Generierte Assets (PDFs, Vorschaubilder) beim Build erzeugt | Vorschaubilder und alle PDFs (Pressekit, Rider, Bühnenplan, QR-Karte, Wunschbox) sollen der Band keine Arbeit machen und entstehen bei jedem Deploy neu | Deploy braucht Python und ein paar Sekunden mehr; die eingecheckten PDFs sind nur der Stand für lokales Arbeiten |
 | Prüfungen als Deploy-Bremse | Pflege durch Nicht-Entwickler ohne Risiko | Ein Fehler hält den Deploy an, bis er behoben ist |
 
 ## 16. Grenzen und bekannte Einschränkungen

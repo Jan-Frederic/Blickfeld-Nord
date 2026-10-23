@@ -3,8 +3,8 @@
 und den Bühnenplan einzeln (eine Seite quer, zum Weiterleiten an die Technik): blickfeld-nord-buehnenplan(-en|-nl).pdf
 
 Aufruf (im Repo-Root, nach `npm ci`):  python3 scripts/build-rider.py
-Läuft auch bei jedem Deploy (.github/actions/build-site) und in der PR-Prüfung – Änderungen an technik.json
-landen so automatisch in den PDFs.
+Läuft wie alle PDF-Skripte bei jedem Deploy (.github/actions/build-site) und in der PR-Prüfung – Änderungen an
+technik.json landen so automatisch in den PDFs.
 Benötigt: pillow, reportlab, fonttools
 Angaben je Sprache stehen in scripts/pdf_texte.py (RIDER) – bei Änderungen auch die FAQ in src/app/data/faq.ts (DE/EN/NL) und die Technik-Seite src/app/pages/technik.ts anpassen.
 Seite 2 (Bühnenplan, Kanalliste, Monitore, Strom) kommt aus src/app/data/technik.json – derselben Datei wie auf /technik.

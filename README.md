@@ -86,7 +86,7 @@ Die Dateien in `public/presse/` (PDF, ZIP, Logos, Fotos, Pressetext) erzeugt
 Pressekit, Technik-Rider, QR-Code-Karte und Wunschbox-Schild entstehen auf Deutsch (ohne Zusatz), Englisch (`-en`) und
 Niederländisch (`-nl`). Die Texte stehen in `scripts/pdf_texte.py`, die Technik-Angaben werden mit
 `src/app/data/uebersetzungen.ts` übersetzt. Die Website verlinkt automatisch die Fassung der jeweiligen Sprache.
-Neu bauen (nach `npm ci`):
+Der Deploy baut alle PDFs bei jedem Lauf neu. Lokal geht es so (nach `npm ci`):
 
 ```bash
 pip install pillow reportlab fonttools
@@ -96,8 +96,9 @@ python3 scripts/build-pressekit.py
 Pressetext und Bildliste der Webseite stehen in `src/app/pages/presse.ts`.
 
 Den Technik-Rider (`blickfeld-nord-technik-rider.pdf`: Platz, Strom, Zeitplan, Anfahrt, Vorlauf) und den
-Bühnenplan einzeln (`blickfeld-nord-buehnenplan.pdf`) erzeugt `python3 scripts/build-rider.py` – bei jedem Deploy
-automatisch, damit Änderungen an `technik.json` sofort in den PDFs stehen. Dieselben Angaben stehen als FAQ im Booking-Bereich
+Bühnenplan einzeln (`blickfeld-nord-buehnenplan.pdf`) erzeugt `python3 scripts/build-rider.py`. Wie Pressekit,
+QR-Karte und Wunschbox-Schild entsteht er bei jedem Deploy automatisch neu – Änderungen an Texten oder `technik.json`
+stehen so sofort in den PDFs. Dieselben Angaben stehen als FAQ im Booking-Bereich
 (`src/app/sections/booking.ts`) – bei Änderungen beides anpassen.
 
 Die QR-Code-Karte (`blickfeld-nord-qr-karte.pdf`: A4-Schild für Bühne/Theke plus vier A6-Karten zum

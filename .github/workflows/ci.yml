@@ -59,10 +59,12 @@ jobs:
           pip install --quiet pillow
           python scripts/bilder.py
 
-      - name: Technik-Rider und Bühnenplan (PDF) neu erzeugen
+      - name: PDFs neu erzeugen (Pressekit, Technik-Rider, Bühnenplan, QR-Karte, Wunschbox)
         run: |
-          pip install --quiet reportlab pillow fonttools
+          pip install --quiet reportlab pillow fonttools segno
+          python scripts/build-pressekit.py
           python scripts/build-rider.py
+          python scripts/build-qr-karte.py
 
       - name: Build
         run: npx ng build --base-href /
