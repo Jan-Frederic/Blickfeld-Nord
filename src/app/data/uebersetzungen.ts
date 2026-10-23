@@ -45,10 +45,9 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck.',
-    en: 'Fred joined in October 2025 and turned the duo into a trio – with bass, voice and plenty of punch.',
-    nl: 'Fred is er sinds oktober 2025 bij en maakte van het duo een trio – met bas, stem en een flinke dosis power.',
-    geprueft: { en: true },
+    de: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck. Nebenbei ist er der bandeigene IT-ler – diese Website hat er gleich selbst gebaut.',
+    en: 'Fred joined in October 2025 and turned the duo into a trio – with bass, voice and plenty of punch. On the side he’s the band’s in-house IT guy – and built this website himself.',
+    nl: 'Fred is er sinds oktober 2025 bij en maakte van het duo een trio – met bas, stem en een flinke dosis power. Daarnaast is hij de huis-IT’er van de band – deze website bouwde hij meteen zelf.',
   },
   {
     de: 'David Bröker singt ins Mikrofon und spielt Akustikgitarre, mit Brille und kariertem Hemd vor Sprossenfenstern im bunten Bühnenlicht',

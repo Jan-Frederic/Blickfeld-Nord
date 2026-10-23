@@ -103,6 +103,7 @@
     <p class="install-hint">{{ t().iosHint }} <mat-icon>ios_share</mat-icon> {{ t().iosShare }}</p>
   }
   <p>© {{ year }} Blickfeld Nord · {{ t().rights }}</p>
+  <p class="version credit">{{ t().credit }} <a [routerLink]="'/band/jan-frederic-overbeck' | loc">Jan-Frederic Overbeck</a></p>
   @if (version) {
     <p class="version"><a [href]="releaseUrl" target="_blank" rel="noopener" [title]="t().whatsNew">{{ t().version }} {{ version }}</a></p>
   }
