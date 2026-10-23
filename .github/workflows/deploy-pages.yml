@@ -142,6 +142,10 @@ jobs:
       - name: Lighthouse
         run: npx --yes @lhci/cli@0.14.0 autorun --config=./lighthouserc.json
 
+      - name: Werte zusammenfassen (Median je Seite)
+        if: always()
+        run: node scripts/lighthouse-summary.mjs
+
       - name: Berichte speichern
         if: always()
         uses: actions/upload-artifact@v7
