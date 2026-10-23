@@ -75,7 +75,7 @@ Wenn jemand an bestimmten Tagen nicht spielen kann (Urlaub, Schicht, Familienfei
 - `wer`: David, Matthias, Fred oder `'Band'`. `bis` weglassen, wenn es nur ein Tag ist.
 - Im Verfügbarkeitskalender beim Booking erscheinen die Tage als **belegt** – ohne Namen und Grund.
 - Das Termin-Formular im Backstage warnt, wenn ein neuer Termin auf so einen Tag fällt, und die Aufgaben-Seite
-  meldet Auftritte, die in eine Abwesenheit fallen.
+  meldet Auftritte und Proben, die in eine Abwesenheit fallen.
 - Das Repo ist öffentlich: als Grund nur ein Stichwort, keine Details.
 
 ## Tonart und Tempo der Songs

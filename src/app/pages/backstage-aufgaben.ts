@@ -174,6 +174,15 @@ export class BackstageAufgaben {
     if (konflikte.length)
       out.push({ text: `${konflikte.length} ${konflikte.length === 1 ? 'Auftritt fällt' : 'Auftritte fallen'} in eine Abwesenheit`, details: konflikte, link: '/backstage/termine', icon: 'event_busy' });
 
+    // Proben, zu denen jemand nicht da ist – verschieben oder bewusst zu zweit proben
+    const probenWeg = this.band.rehearsals.flatMap((r) =>
+      this.band.abwesenheiten
+        .filter((a) => r.date >= this.heute && a.von <= r.date && r.date <= (a.bis ?? a.von))
+        .map((a) => `${datum(r.date)}: ${a.wer} ist nicht da`),
+    );
+    if (probenWeg.length)
+      out.push({ text: `${probenWeg.length} ${probenWeg.length === 1 ? 'Probe fällt' : 'Proben fallen'} in eine Abwesenheit`, details: probenWeg, link: '/backstage/termine', icon: 'music_off' });
+
     // Werbung: öffentliche, geklärte Auftritte in den nächsten 4 Wochen
     const bald = new Date(Date.now() + 28 * 864e5).toISOString().slice(0, 10);
     for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute && x.date <= bald))
