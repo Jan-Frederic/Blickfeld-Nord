@@ -88,4 +88,28 @@ export const AUFGABEN: Aufgabe[] = [
     art: 'muss',
     link: '/freunde',
   },
+  {
+    id: 'monitor-kanal9',
+    bereich: 'Technik',
+    text: 'Kanal 9 (Davids Multi-Effekt) in den Monitormischungen festlegen',
+    art: 'muss',
+    hinweis: 'Wie laut in Monitor 1 (David), 2 (Fred) und 3 (Matthias)? Bisher überall „–“; Eintrag in src/app/data/technik.json unter „monitore“.',
+    link: '/technik',
+  },
+  {
+    id: 'hoerprobe',
+    bereich: 'Inhalte',
+    text: 'Hörprobe: kurzen Live-Mitschnitt (1–2 Minuten) für Startseite und Pressekit aufnehmen',
+    art: 'kann',
+    hinweis: 'Veranstalter fragen fast immer danach. Nur mit Einverständnis aller, die zu hören oder zu sehen sind; Rechte am Song beachten.',
+    link: '/presse',
+  },
+  {
+    id: 'galerie-david',
+    bereich: 'Inhalte',
+    text: 'Entscheiden, ob Davids neues Bühnenfoto auch in die Galerie soll',
+    art: 'kann',
+    hinweis: 'Das Foto ist seit Oktober 2026 Davids Bio-Foto; in der Galerie steht noch das bisherige Porträt.',
+    link: '/galerie',
+  },
 ];
