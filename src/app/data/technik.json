@@ -9,6 +9,7 @@
     { "id": "fred", "typ": "person", "label": "Fred", "rolle": "Bass & Gesang", "x": 3, "y": 2.1, "hw": "setup-fred" },
     { "id": "bassamp", "typ": "amp", "label": "Bassverstärker", "x": 3.45, "y": 1.35, "b": 0.6, "t": 0.4, "hw": "bassamp", "musiker": "fred" },
     { "id": "pedalboard", "typ": "pedalboard", "label": "Pedalboard", "x": 3.55, "y": 1.86, "b": 0.44, "t": 0.2, "hw": "pedalboard", "musiker": "fred" },
+    { "id": "multifx-david", "typ": "pedalboard", "label": "Multi-Effekt", "x": 0.45, "y": 1.86, "b": 0.4, "t": 0.2, "hw": "multifx-david", "musiker": "david" },
     { "id": "mixer", "typ": "mixer", "label": "Mischpult", "x": 0.55, "y": 1.3, "b": 0.7, "t": 0.5, "hw": "mischpult" },
     { "id": "mic-david", "typ": "mikro", "label": "Mikro David", "x": 1.42, "y": 2.62, "hw": "setup-david" },
     { "id": "mic-fred", "typ": "mikro", "label": "Mikro Fred", "x": 2.58, "y": 2.62, "hw": "setup-fred" },
@@ -75,7 +76,7 @@
     "setup-david": {
       "kategorie": "Setup",
       "modell": "David",
-      "beschreibung": "Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre.",
+      "beschreibung": "Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre mit Multi-Effekt am Boden.",
       "details": []
     },
     "setup-fred": {
@@ -143,6 +144,14 @@
         ["Stimmgerät", "Harley Benton CPT-20"],
         ["Blätterpedal", "LEKATO Wireless Page Turner"],
         ["Netzteil", "LEKATO MPP-10, 10 isolierte Ausgänge (9/12/18 V)"]
+      ]
+    },
+    "multifx-david": {
+      "kategorie": "Multi-Effekt",
+      "modell": "Harley Benton DNAfx GiT",
+      "beschreibung": "Davids Bodeneffektgerät: Amp-Modeling und Multi-Effekt.",
+      "details": [
+        ["Multi-Effekt", "Harley Benton DNAfx GiT"]
       ]
     },
     "bassamp": {

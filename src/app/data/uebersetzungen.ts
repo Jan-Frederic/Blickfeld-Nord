@@ -861,10 +861,20 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre.',
-    en: 'David’s spot at the front left (as seen from the audience): vocals and acoustic guitar.',
-    nl: 'De plek van David vooraan links (gezien vanuit het publiek): zang en akoestische gitaar.',
-    geprueft: { en: true },
+    de: 'Davids Platz vorne links (vom Publikum aus gesehen): Gesang und Akustikgitarre mit Multi-Effekt am Boden.',
+    en: 'David’s spot at the front left (as seen from the audience): vocals and acoustic guitar with a floor multi-effects unit.',
+    nl: 'De plek van David vooraan links (gezien vanuit het publiek): zang en akoestische gitaar met multi-effect op de vloer.',
+  },
+  {
+    de: 'Harley Benton DNAfx GiT',
+    en: 'Harley Benton DNAfx GiT',
+    nl: 'Harley Benton DNAfx GiT',
+    geprueft: { en: true, nl: true },
+  },
+  {
+    de: 'Davids Bodeneffektgerät: Amp-Modeling und Multi-Effekt.',
+    en: 'David’s floor effects unit: amp modelling and multi-effects.',
+    nl: 'De vloereffectunit van David: ampmodeling en multi-effect.',
   },
   {
     de: 'Freds Platz vorne rechts (vom Publikum aus gesehen): E-Bass mit Pedalboard, Bassverstärker und Gesang.',
