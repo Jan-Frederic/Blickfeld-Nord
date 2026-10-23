@@ -47,7 +47,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
             @for (t of available(); track t.title + t.artist) {
               <li>
                 <button type="button" (click)="add(t)" [attr.aria-label]="t.title + ' zur Setlist hinzufügen'">
-                  <span class="t">{{ t.title }}</span><span class="a">{{ t.artist }}</span><mat-icon>add</mat-icon>
+                  <span class="song"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}</span></span><mat-icon>add</mat-icon>
                 </button>
               </li>
             } @empty {
@@ -63,7 +63,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="t">{{ $any(e).title }}</span><span class="a">{{ $any(e).artist }}</span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span></span>
                 @if (info($any(e)); as i) { <span class="dur">{{ i }}</span> }
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
@@ -107,7 +107,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .tools button:disabled { opacity: .4; cursor: default; }
     .tools mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .cols { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
-    @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } .tools { margin-left: 0; } }
+    @media (max-width: 760px) { .cols { grid-template-columns: minmax(0, 1fr); } .tools { margin-left: 0; } }
     .search { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bn-line); }
     .search:focus-within { border-color: var(--bn-sunset); }
     .search mat-icon { color: var(--bn-fog); font-size: 20px; width: 20px; height: 20px; }
@@ -121,9 +121,12 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .songs button:hover, .songs button:focus-visible { color: var(--bn-sunset); }
     .songs mat-icon { margin-left: auto; font-size: 18px; width: 18px; height: 18px; align-self: center; color: var(--bn-fog); }
     .t { font-weight: 500; }
+    /* lange Titel und Interpreten umbrechen statt aus der Box zu laufen */
+    .t, .a { min-width: 0; overflow-wrap: anywhere; }
     .a { color: var(--bn-fog); font-size: .88rem; }
     .list { border: 1px solid var(--bn-line); border-radius: 10px; padding: 4px 12px; min-height: 120px; }
     .list li { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bn-line); }
+    .song { flex: 1; min-width: 0; }
     .list li:last-child { border-bottom: 0; }
     .no { min-width: 1.8em; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
     .pause-label { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); font-family: var(--bn-wide); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; }
