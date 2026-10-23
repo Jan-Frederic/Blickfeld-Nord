@@ -434,7 +434,7 @@ export class BandService {
   // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
   // Beispiel: { date: '2026-11-05', time: '19:30', endTime: '22:00', place: 'Proberaum', note: 'Weihnachtsmarkt-Set' }
   readonly rehearsals: Rehearsal[] = [
-    { date: '2026-10-23', time: '18:00', endTime: '21:00', place: 'Dingden' },
+    { date: '2026-10-23', time: '20:00', endTime: '22:00', place: 'Dingden' },
     { date: '2026-11-20', time: '18:00', endTime: '21:00', place: 'Dingden' },
     { date: '2026-12-11', time: '18:00', endTime: '21:00', place: 'Dingden' },
     { date: '2027-01-15', time: '18:00', endTime: '21:00', place: 'Dingden' },
