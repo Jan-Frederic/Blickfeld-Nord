@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageNav } from './backstage-nav';
-import { BandService } from '../data/band.service';
+import { BandService, Show } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
@@ -207,11 +207,14 @@ export class BackstageAufgaben {
         icon: 'history_edu',
       });
 
-    // Wieder anfragen: Auftritte vor 9 bis 14 Monaten, ohne neueren Termin am selben Ort – rechtzeitig fürs nächste Jahr
+    // Wieder anfragen: Auftritte vor 9 bis 14 Monaten, ohne neueren Termin am selben Ort – rechtzeitig fürs nächste Jahr.
+    // Gleicher Ort auch bei Varianten wie „Café Lotti – Tanz in den Mai“ oder „Café Lotti mit Pro Campesinos“
+    const basis = (v: string) => v.toLocaleLowerCase('de').split(/\s+[–—-]\s+|\s+mit\s+|,|\(/)[0].trim();
+    const gleicherOrt = (a: Show, b: Show) => a.city === b.city && (basis(a.venue).startsWith(basis(b.venue)) || basis(b.venue).startsWith(basis(a.venue)));
     const vor9 = new Date(Date.now() - 274 * 864e5).toISOString().slice(0, 10);
     const vor14 = new Date(Date.now() - 426 * 864e5).toISOString().slice(0, 10);
     const wieder = this.band.shows.filter(
-      (s) => s.confirmed && s.date <= vor9 && s.date >= vor14 && !this.band.shows.some((x) => x !== s && x.date > s.date && x.venue === s.venue && x.city === s.city),
+      (s) => s.confirmed && s.date <= vor9 && s.date >= vor14 && !this.band.shows.some((x) => x !== s && x.date > s.date && gleicherOrt(x, s)),
     );
     for (const s of wieder)
       out.push({

@@ -135,8 +135,7 @@ Met vriendelijke groet
         }
       </ul>
 
-      <app-faq />
-
+      <!-- Reihenfolge: was wir bieten → wo wir schon gespielt haben → kommen wir zu euch? → freie Tage → Anfrage → Fragen -->
       <app-angebot />
       <app-referenzen />
 
@@ -190,6 +189,8 @@ Met vriendelijke groet
           </div>
         </div>
       </div>
+
+      <app-faq />
     </section>
   `,
   styles: `
