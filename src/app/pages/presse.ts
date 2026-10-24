@@ -40,6 +40,8 @@ const FILES: Omit<Asset, 'title' | 'info'>[] = [
   { file: 'blickfeld-nord-kompass-logo-dunkel.svg', preview: 'presse/blickfeld-nord-kompass-logo-dunkel.svg', light: true },
   { file: 'blickfeld-nord-logo-freigestellt-hell.png', preview: 'presse/blickfeld-nord-logo-freigestellt-hell-vorschau.webp', dark: true, contain: true },
   { file: 'blickfeld-nord-logo-freigestellt-hell-klein.png', preview: 'presse/blickfeld-nord-logo-freigestellt-hell-vorschau.webp', dark: true, contain: true },
+  { file: 'blickfeld-nord-logo.svg', preview: 'presse/blickfeld-nord-logo.svg', dark: true, contain: true },
+  { file: 'blickfeld-nord-logo-clean.svg', preview: 'presse/blickfeld-nord-logo-clean.svg', dark: true, contain: true },
 ];
 
 const TEXT = tr(
@@ -68,6 +70,8 @@ const TEXT = tr(
       { title: 'Kompass-Logo freigestellt, dunkel', info: 'SVG · Vektor · für helle Untergründe' },
       { title: 'Logo mit Schriftzug freigestellt, hell (groß)', info: 'PNG transparent · 4056 × 1866 px · für dunkle Untergründe und Druck' },
       { title: 'Logo mit Schriftzug freigestellt, hell (klein)', info: 'PNG transparent · 1352 × 622 px · für dunkle Untergründe, Web und Social Media' },
+      { title: 'Logo mit Schriftzug, hell, mit Struktur', info: 'SVG · Vektor · für dunkle Untergründe' },
+      { title: 'Logo mit Schriftzug, hell, ohne Struktur', info: 'SVG · Vektor, klare Flächen · für dunkle Untergründe, Folie und Stickerei' },
     ],
   },
   {
@@ -95,6 +99,8 @@ const TEXT = tr(
       { title: 'Compass logo, cut out, dark', info: 'SVG · vector · for light backgrounds' },
       { title: 'Logo with lettering, cut out, light (large)', info: 'PNG transparent · 4056 × 1866 px · for dark backgrounds and print' },
       { title: 'Logo with lettering, cut out, light (small)', info: 'PNG transparent · 1352 × 622 px · for dark backgrounds, web and social media' },
+      { title: 'Logo with lettering, light, textured', info: 'SVG · vector · for dark backgrounds' },
+      { title: 'Logo with lettering, light, clean', info: 'SVG · vector, solid shapes · for dark backgrounds, vinyl and embroidery' },
     ],
   },
   {
@@ -122,6 +128,8 @@ const TEXT = tr(
       { title: 'Kompaslogo vrijstaand, donker', info: 'SVG · vector · voor lichte achtergronden' },
       { title: 'Logo met tekst vrijstaand, licht (groot)', info: 'PNG transparant · 4056 × 1866 px · voor donkere achtergronden en druk' },
       { title: 'Logo met tekst vrijstaand, licht (klein)', info: 'PNG transparant · 1352 × 622 px · voor donkere achtergronden, web en social media' },
+      { title: 'Logo met tekst, licht, met structuur', info: 'SVG · vector · voor donkere achtergronden' },
+      { title: 'Logo met tekst, licht, zonder structuur', info: 'SVG · vector, egale vlakken · voor donkere achtergronden, folie en borduurwerk' },
     ],
   },
 );

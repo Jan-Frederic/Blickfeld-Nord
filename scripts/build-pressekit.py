@@ -96,6 +96,8 @@ FILES = {
     'foto2': 'blickfeld-nord-bandfoto-2.jpg',
     'logo_schrift_hell_png': 'blickfeld-nord-logo-freigestellt-hell.png',
     'logo_schrift_hell_klein_png': 'blickfeld-nord-logo-freigestellt-hell-klein.png',
+    'logo_svg': 'blickfeld-nord-logo.svg',
+    'logo_clean_svg': 'blickfeld-nord-logo-clean.svg',
 }
 
 
@@ -350,7 +352,7 @@ def build_zip(lang):
     files = {**FILES, **lang_files(lang)}
     with zipfile.ZipFile(os.path.join(OUT, files['zip']), 'w', zipfile.ZIP_DEFLATED) as z:
         for key in ['pdf', 'text', 'logo', 'kompass_png', 'kompass_svg', 'logo_hell_png', 'logo_hell_svg',
-                    'logo_dunkel_png', 'logo_dunkel_svg', 'logo_schrift_hell_png', 'logo_schrift_hell_klein_png', 'foto1', 'foto2']:
+                    'logo_dunkel_png', 'logo_dunkel_svg', 'logo_schrift_hell_png', 'logo_schrift_hell_klein_png', 'logo_svg', 'logo_clean_svg', 'foto1', 'foto2']:
             z.write(os.path.join(OUT, files[key]), 'blickfeld-nord-pressekit/' + files[key])
 
 
