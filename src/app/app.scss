@@ -1,6 +1,8 @@
 .topbar {
   position: fixed; top: 0; z-index: 10;
-  background: rgba(20, 22, 25, .78); backdrop-filter: blur(10px);
+  // deckend statt durchscheinend: Safari (ab iOS 26 / macOS 26) färbt die Statusleiste und den Bereich über der
+  // Leiste nur bei einer deckenden festen Kopfleiste passend ein – sonst scheint dort die Seite unscharf durch
+  background: var(--bn-night);
   border-bottom: 1px solid var(--bn-line);
 }
 .logo {
