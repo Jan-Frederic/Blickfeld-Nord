@@ -41,7 +41,8 @@ html {
   ));
 }
 
-html, body { height: 100%; }
+// Kein „height: 100%“ auf html/body: zusammen mit „overflow-x: clip“ zeichnet Safari (WebKit) lange Seiten
+// nach etwa einer Bildschirmhöhe Scrollen nicht mehr – der Text bricht ab (z. B. Bio von Matthias)
 html { scroll-behavior: smooth; }
 // Sicherheitsnetz: nichts darf die Seite seitlich verbreitern (z. B. bei vergrößerter Schrift im Handy-Browser).
 // clip statt hidden – erzeugt keinen eigenen Scrollbereich, „sticky“ und Sprungmarken funktionieren weiter.
