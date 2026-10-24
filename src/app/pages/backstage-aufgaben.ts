@@ -8,6 +8,7 @@ import { AUFGABEN, Aufgabe } from '../data/aufgaben';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
+import { tageSeitSicherung } from './backstage-sync';
 import repertoire from '../data/repertoire.json';
 import technik from '../data/technik.json';
 
@@ -204,6 +205,30 @@ export class BackstageAufgaben {
         details: ohneRueckblick.map((s) => `${datum(s.date)} – ${s.private ? s.publicName ?? 'Private Feier' : s.venue}`).concat('Auf der Seite des Auftritts: „Rückblick schreiben“'),
         link: `/backstage/${this.band.showId(ohneRueckblick[0])}`,
         icon: 'history_edu',
+      });
+
+    // Wieder anfragen: Auftritte vor 9 bis 14 Monaten, ohne neueren Termin am selben Ort – rechtzeitig fürs nächste Jahr
+    const vor9 = new Date(Date.now() - 274 * 864e5).toISOString().slice(0, 10);
+    const vor14 = new Date(Date.now() - 426 * 864e5).toISOString().slice(0, 10);
+    const wieder = this.band.shows.filter(
+      (s) => s.confirmed && s.date <= vor9 && s.date >= vor14 && !this.band.shows.some((x) => x !== s && x.date > s.date && x.venue === s.venue && x.city === s.city),
+    );
+    for (const s of wieder)
+      out.push({
+        text: `Fürs nächste Jahr anfragen: ${s.private ? s.publicName ?? 'Private Feier' : s.venue} (${datum(s.date)})`,
+        details: ['Ein Jahr ist bald um – beim Veranstalter melden, ob es wieder klappt. Zusage dann als neuen Termin eintragen.'],
+        link: `/backstage/${this.band.showId(s)}`,
+        icon: 'event_repeat',
+      });
+
+    // Backstage-Daten liegen nur auf dem Gerät – regelmäßig an die Band schicken (= Sicherung)
+    const tage = tageSeitSicherung();
+    if (tage === null || (tage !== undefined && tage >= 30))
+      out.push({
+        text: tage === null ? 'Backstage-Daten auf diesem Gerät noch nie gesichert' : `Backstage-Daten seit ${tage} Tagen nicht gesichert`,
+        details: ['Setlists, Sterne und Vor-Ort-Angaben liegen nur in diesem Browser – unter „Abgleich“ „Alles an die Band schicken“'],
+        link: '/backstage/abgleich',
+        icon: 'sync',
       });
 
     // Fotos ohne Fotografen-Angabe (Galerie und Historie)

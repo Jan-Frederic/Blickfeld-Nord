@@ -5,6 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { downloadIcs } from '../data/calendar';
 import { TerminFormular } from './termin-formular';
+import { Terminabfrage } from './terminabfrage';
 import { AboButton } from '../sections/abo-button';
 import { BackstageNav } from './backstage-nav';
 import { BandService, Rehearsal, Show } from '../data/band.service';
@@ -37,7 +38,7 @@ function loadFilters(): Set<FilterKey> {
 // Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage-termine',
-  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, AboButton, TerminFormular, BackstageNav],
+  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, AboButton, TerminFormular, BackstageNav, Terminabfrage],
   template: `
     <section class="section">
       <app-backstage-nav />
@@ -135,6 +136,7 @@ function loadFilters(): Set<FilterKey> {
       }
 
       <app-termin-formular />
+      <app-terminabfrage />
     </section>
   `,
   styles: `

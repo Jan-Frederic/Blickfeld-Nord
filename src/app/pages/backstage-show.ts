@@ -11,6 +11,7 @@ import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
 import { printMixerZettel } from './mixer-zettel';
 import { printKabelEtiketten } from './kabel-etiketten';
+import { dankeText } from '../data/danke';
 import { RueckblickFormular } from './rueckblick-formular';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
@@ -94,6 +95,11 @@ const DAY = 24 * 60 * 60 * 1000;
           }
         </div>
 
+        @if (past()) {
+          <div class="actions">
+            <button mat-stroked-button (click)="danke()"><mat-icon>{{ dankeKopiert() ? 'check' : 'mail' }}</mat-icon> {{ dankeKopiert() ? 'Kopiert!' : 'Danke an den Veranstalter' }}</button>
+          </div>
+        }
         @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
@@ -268,6 +274,20 @@ export class BackstageShow implements OnDestroy {
   // Kanalliste mit Monitormischungen und Strom auf einem Blatt zum Aufbauen
   protected mixerZettel(): void {
     printMixerZettel(this.show()!);
+  }
+
+  // Danke-Nachricht nach dem Auftritt in die Zwischenablage (Link zum Rückblick, Bitte um Fotos und Empfehlung)
+  protected readonly dankeKopiert = signal(false);
+  protected async danke(): Promise<void> {
+    const s = this.show()!;
+    const text = dankeText(s, this.id(), this.band.history.some((h) => h.date === s.date && !h.example));
+    try {
+      await navigator.clipboard.writeText(text);
+      this.dankeKopiert.set(true);
+      setTimeout(() => this.dankeKopiert.set(false), 2000);
+    } catch {
+      window.prompt('Text kopieren:', text);
+    }
   }
 
   // Etiketten für Kabel und Stagebox, Farbe nach Musiker

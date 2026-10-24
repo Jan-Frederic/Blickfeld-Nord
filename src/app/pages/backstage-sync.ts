@@ -5,7 +5,29 @@ import { MatIconModule } from '@angular/material/icon';
 // Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
 // und auf dem anderen Gerät importieren. Ohne Server – die Datei geht direkt von Gerät zu Gerät.
 
-const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-'];
+export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-'];
+// Zeitpunkt der letzten vollständigen Sicherung („Alles an die Band schicken“) – für den Hinweis unter Aufgaben
+export const GESICHERT_KEY = 'bn-gesichert';
+
+/** Tage seit der letzten vollständigen Sicherung; null = noch nie; undefined = nichts zu sichern */
+export function tageSeitSicherung(): number | null | undefined {
+  try {
+    if (!Object.keys(collect()).length) return undefined;
+    const zuletzt = Number(localStorage.getItem(GESICHERT_KEY));
+    return zuletzt ? Math.floor((Date.now() - zuletzt) / 864e5) : null;
+  } catch {
+    return undefined;
+  }
+}
+
+function merken(show?: string): void {
+  if (show) return;
+  try {
+    localStorage.setItem(GESICHERT_KEY, String(Date.now()));
+  } catch {
+    // ohne Speicher eben ohne Erinnerung
+  }
+}
 const APP = 'blickfeld-nord-backstage';
 
 interface Backup {
@@ -76,6 +98,7 @@ export class BackstageSync {
       try {
         await navigator.share({ files: [file], title: 'Blickfeld Nord – Backstage', text: 'Backstage-Daten zum Importieren (Backstage → Datei importieren)' });
         this.message.set({ text: `${count} ${count === 1 ? 'Liste' : 'Listen'} geteilt.` });
+        merken(this.show());
         return;
       } catch (e) {
         if ((e as Error).name === 'AbortError') return;
@@ -85,6 +108,7 @@ export class BackstageSync {
     const a = Object.assign(document.createElement('a'), { href: url, download: name });
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    merken(this.show());
     this.message.set({ text: `${count} ${count === 1 ? 'Liste' : 'Listen'} als Datei gespeichert – jetzt an die Band schicken.` });
   }
 

@@ -6,6 +6,7 @@ import { BandService } from '../data/band.service';
 import { songInfoText } from '../data/songinfo';
 import data from '../data/repertoire.json';
 import { BackstageSync } from './backstage-sync';
+import { ProbeVorschlag } from './probe-vorschlag';
 
 // Backstage → Probe planen (/backstage/probe/<datum>): welche Songs geübt werden, Notizen und offene Punkte.
 // Gespeichert im Browser (bn-probe-<datum>) und wie Setlists über „An die Band schicken“ teilbar.
@@ -31,7 +32,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
 
 @Component({
   selector: 'app-backstage-probe',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -57,6 +58,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
         } @else {
           <p class="empty">Noch keine Songs ausgewählt.</p>
         }
+        <app-probe-vorschlag [drin]="plan().songs" (add)="addSong($event)" />
         <label class="search">
           <mat-icon>search</mat-icon>
           <input type="search" placeholder="Song aus dem Repertoire hinzufügen …" [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Song suchen" />
