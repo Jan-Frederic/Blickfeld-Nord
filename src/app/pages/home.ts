@@ -7,6 +7,7 @@ import { Tour } from '../sections/tour';
 import { BookingTeaser } from '../sections/booking-teaser';
 import { LastLive } from '../sections/last-live';
 import { InstagramFeed } from '../sections/instagram-feed';
+import { SaisonHinweis } from '../sections/saison-hinweis';
 import { scrollToSection } from '../scroll';
 
 // Abschnitte unterhalb des Startbilds sind vorgerendert (sichtbar und für Google lesbar),
@@ -14,7 +15,7 @@ import { scrollToSection } from '../scroll';
 // Bei Navigation innerhalb der Seite werden sie sofort geladen.
 @Component({
   selector: 'app-home',
-  imports: [Hero, Band, Tour, LastLive, InstagramFeed, BookingTeaser],
+  imports: [Hero, Band, Tour, LastLive, InstagramFeed, BookingTeaser, SaisonHinweis],
   template: `
     <app-hero (navigate)="scrollTo($event)" />
     @defer (on immediate; hydrate on viewport) {
@@ -23,6 +24,10 @@ import { scrollToSection } from '../scroll';
     @defer (on immediate; hydrate on viewport) {
       <!-- im Browser neu berechnet: welche Termine schon vorbei sind, hängt vom Besuchstag ab, nicht vom Build-Tag -->
       <app-tour ngSkipHydration />
+    }
+    @defer (on immediate; hydrate on viewport) {
+      <!-- abhängig vom Besuchstag (Saison, freie Wochenenden) – im Browser neu berechnet -->
+      <app-saison-hinweis ngSkipHydration />
     }
     @defer (on immediate; hydrate on viewport) {
       <app-last-live />

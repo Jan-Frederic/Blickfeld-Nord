@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
-import { PosterFormat, postText, sharePoster } from '../data/poster';
+import { PosterFormat, postText, renderDanke, shareImage, sharePoster } from '../data/poster';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
 import { printMixerZettel } from './mixer-zettel';
@@ -98,6 +98,7 @@ const DAY = 24 * 60 * 60 * 1000;
         @if (past()) {
           <div class="actions">
             <button mat-stroked-button (click)="danke()"><mat-icon>{{ dankeKopiert() ? 'check' : 'mail' }}</mat-icon> {{ dankeKopiert() ? 'Kopiert!' : 'Danke an den Veranstalter' }}</button>
+            <button mat-stroked-button (click)="dankeStory()"><mat-icon>smartphone</mat-icon> Danke-Story</button>
           </div>
         }
         @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
@@ -249,7 +250,8 @@ export class BackstageShow implements OnDestroy {
 
   // Plakat als Instagram-Beitrag (4:5) oder als Story / WhatsApp-Status (9:16)
   protected poster(format: PosterFormat = 'feed'): void {
-    sharePoster(this.show()!, format).catch((err) => console.error(err));
+    // QR-Code unten rechts führt zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung, Songwunsch)
+    sharePoster(this.show()!, format, `https://blickfeld-nord.de/konzerte/${this.id()}/`).catch((err) => console.error(err));
   }
 
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage
@@ -288,6 +290,14 @@ export class BackstageShow implements OnDestroy {
     } catch {
       window.prompt('Text kopieren:', text);
     }
+  }
+
+  // „Danke, Rhede!“-Story: Song des Abends und erstes Foto aus dem Rückblick, falls vorhanden
+  protected async dankeStory(): Promise<void> {
+    const s = this.show()!;
+    const h = this.band.history.find((x) => x.date === s.date && !x.example);
+    const blob = await renderDanke(s, this.band.publicVenue(s), h?.highlight, h?.images?.[0]?.src);
+    await shareImage(blob, `blickfeld-nord-danke-${this.id()}.png`, 'Danke! – Blickfeld Nord');
   }
 
   // Etiketten für Kabel und Stagebox, Farbe nach Musiker

@@ -41,6 +41,42 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pdf_texte  # noqa: E402
 
 
+REFERENZEN_TITEL = {'de': 'Bisher live bei', 'en': 'We have played at', 'nl': 'Eerder live bij'}
+
+
+def referenzen(lang):
+    """Vergangene, geklärte Auftritte aus band.service.ts wie auf der Website („Bisher live bei“): je Ort einmal,
+    neueste zuerst; private Feiern nur mit öffentlichem Namen bzw. „Private Feier“ (übersetzt wie auf der Website)."""
+    import re
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    src = open(os.path.join(root, 'src/app/data/band.service.ts'), encoding='utf-8').read()
+    block = src[src.index('readonly shows: Show[] = ['):]
+    block = block[:block.index('\n  ];')]
+    feld = lambda zeile, k: (m.group(1) if (m := re.search(rf"\b{k}: '((?:[^'\\]|\\.)*)'", zeile)) else None)
+    uebersetzt = {}
+    if lang != 'de':
+        u = open(os.path.join(root, 'src/app/data/uebersetzungen.ts'), encoding='utf-8').read()
+        for m in re.finditer(rf"de: '((?:[^'\\]|\\.)*)',\s*(?:en: '((?:[^'\\]|\\.)*)',\s*)?(?:nl: '((?:[^'\\]|\\.)*)',)?", u):
+            wert = m.group(2) if lang == 'en' else m.group(3)
+            if wert:
+                uebersetzt[m.group(1)] = wert
+    heute = date.today().isoformat()
+    orte = {}
+    for zeile in block.splitlines():
+        datum = feld(zeile, 'date')
+        if not datum or 'confirmed: true' not in zeile or (feld(zeile, 'endDate') or datum) >= heute:
+            continue
+        privat = 'private: true' in zeile
+        name = (feld(zeile, 'publicName') or 'Private Feier') if privat else feld(zeile, 'venue')
+        name = uebersetzt.get(name, name).replace("\\'", "'")
+        stadt = feld(zeile, 'city') or ''
+        o = orte.setdefault((name, stadt), {'jahre': set(), 'letzte': ''})
+        o['jahre'].add(datum[:4])
+        o['letzte'] = max(o['letzte'], datum)
+    liste = sorted(orte.items(), key=lambda kv: kv[1]['letzte'], reverse=True)
+    return [f"{name}{' (' + stadt + ')' if stadt else ''} {', '.join(sorted(o['jahre']))}" for (name, stadt), o in liste]
+
+
 def texts(lang):
     return {**pdf_texte.PRESSEKIT[lang], 'contact': pdf_texte.contact(lang)}
 
@@ -254,6 +290,13 @@ def build_pdf(tmp, lang):
     c.linkURL(spotify, (m, y - 3, m + 70 * mm, y + 11), relative=0)
     y -= 16
     y -= 12 * mm
+
+    refs = referenzen(lang)
+    if refs:
+        heading(c, REFERENZEN_TITEL[lang], m, y, size=13)
+        y -= 9 * mm
+        y = paragraph(c, ' · '.join(refs), m, y, w - 2 * m, size=9.5, leading=14)
+        y -= 10 * mm
 
     heading(c, t['contact_label'], m, y, size=13)
     y -= 10 * mm

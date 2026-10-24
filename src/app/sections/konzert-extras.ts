@@ -6,7 +6,8 @@ import { BandService, Show } from '../data/band.service';
 import { Content } from '../content';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 
-// Konzertseite, unten: Songwunsch für genau diesen Abend (vor dem Konzert) und weitere anstehende Konzerte –
+// Konzertseite, unten: Songwunsch für genau diesen Abend (vor dem Konzert), Fotos einsenden (danach) und weitere
+// anstehende Konzerte –
 // am selben Ort zuerst. Kein Server: der Wunsch öffnet eine fertig ausgefüllte E-Mail wie im Songwunsch-Formular.
 const MAIL = 'Matthiaswigger@me.com';
 
@@ -22,6 +23,11 @@ const TEXT = tr(
     body: (song: string, when: string, venue: string, name: string) => `Hallo Blickfeld Nord,\n\nfür euren Auftritt am ${when} (${venue}) wünsche ich mir:\n${song}\n\nViele Grüße\n${name}`,
     next: 'Weitere Konzerte',
     same: 'auch hier',
+    photos: 'Ihr habt Fotos oder Videos gemacht?',
+    photosText: 'Schickt sie uns gern – mit eurem Namen zeigen wir die schönsten im Rückblick. Bitte nur, wenn alle Abgebildeten einverstanden sind.',
+    photosSend: 'Fotos schicken',
+    photosSubject: (when: string, venue: string) => `Fotos vom ${when} – ${venue}`,
+    photosBody: (when: string, venue: string) => `Hallo Blickfeld Nord,\n\nhier sind meine Fotos/Videos vom ${when} (${venue}).\nIhr dürft sie auf eurer Website und bei Instagram zeigen – bitte mit diesem Namen: \n\nViele Grüße`,
   },
   {
     wish: 'Your song request for this night',
@@ -34,6 +40,11 @@ const TEXT = tr(
     body: (song: string, when: string, venue: string, name: string) => `Hello Blickfeld Nord,\n\nfor your show on ${when} (${venue}) I'd love to hear:\n${song}\n\nBest regards\n${name}`,
     next: 'More shows',
     same: 'same place',
+    photos: 'Did you take photos or videos?',
+    photosText: "Feel free to send them to us – we'll show the best ones in our look-back, with your name. Only if everyone in them is OK with it.",
+    photosSend: 'Send photos',
+    photosSubject: (when: string, venue: string) => `Photos from ${when} – ${venue}`,
+    photosBody: (when: string, venue: string) => `Hello Blickfeld Nord,\n\nhere are my photos/videos from ${when} (${venue}).\nYou may show them on your website and on Instagram – please credit this name: \n\nBest regards`,
   },
   {
     wish: 'Jullie verzoeknummer voor deze avond',
@@ -46,6 +57,11 @@ const TEXT = tr(
     body: (song: string, when: string, venue: string, name: string) => `Hallo Blickfeld Nord,\n\nvoor jullie optreden op ${when} (${venue}) zou ik graag horen:\n${song}\n\nGroeten\n${name}`,
     next: 'Meer optredens',
     same: 'ook hier',
+    photos: "Hebben jullie foto's of video's gemaakt?",
+    photosText: "Stuur ze ons gerust – de mooiste laten we met jullie naam zien in onze terugblik. Alleen als iedereen erop het goed vindt.",
+    photosSend: "Foto's sturen",
+    photosSubject: (when: string, venue: string) => `Foto's van ${when} – ${venue}`,
+    photosBody: (when: string, venue: string) => `Hallo Blickfeld Nord,\n\nhier zijn mijn foto's/video's van ${when} (${venue}).\nJullie mogen ze op jullie website en op Instagram laten zien – graag met deze naam: \n\nGroeten`,
   },
 );
 
@@ -66,6 +82,13 @@ const TEXT = tr(
           <a class="btn primary" [class.off]="!song().trim()" [attr.aria-disabled]="!song().trim()" [href]="mailto()"><mat-icon>send</mat-icon> {{ t().send }}</a>
         </div>
         <p class="hint">{{ t().hint }}</p>
+      </section>
+    }
+    @if (past()) {
+      <section class="box" aria-labelledby="photo-title">
+        <h3 id="photo-title"><mat-icon>photo_camera</mat-icon> {{ t().photos }}</h3>
+        <p>{{ t().photosText }}</p>
+        <a class="btn primary" [href]="fotoMail()"><mat-icon>send</mat-icon> {{ t().photosSend }}</a>
       </section>
     }
     @if (weitere().length) {
@@ -112,12 +135,15 @@ export class KonzertExtras {
   protected readonly song = signal('');
   protected readonly name = signal('');
 
+  private readonly wann = computed(() => new Date(`${this.show().date}T12:00:00`).toLocaleDateString({ de: 'de-DE', en: 'en-GB', nl: 'nl-NL' }[this.i18n.lang()]));
+  private readonly wo = computed(() => this.content.t(this.band.publicVenue(this.show())));
   protected readonly mailto = computed(() => {
-    const s = this.show();
-    const when = new Date(`${s.date}T12:00:00`).toLocaleDateString(this.i18n.lang() === 'de' ? 'de-DE' : this.i18n.lang() === 'nl' ? 'nl-NL' : 'en-GB');
-    const venue = this.content.t(this.band.publicVenue(s));
     const t = this.t();
-    return `mailto:${MAIL}?subject=${encodeURIComponent(t.subject(when, venue))}&body=${encodeURIComponent(t.body(this.song().trim(), when, venue, this.name().trim()))}`;
+    return `mailto:${MAIL}?subject=${encodeURIComponent(t.subject(this.wann(), this.wo()))}&body=${encodeURIComponent(t.body(this.song().trim(), this.wann(), this.wo(), this.name().trim()))}`;
+  });
+  protected readonly fotoMail = computed(() => {
+    const t = this.t();
+    return `mailto:${MAIL}?subject=${encodeURIComponent(t.photosSubject(this.wann(), this.wo()))}&body=${encodeURIComponent(t.photosBody(this.wann(), this.wo()))}`;
   });
 
   // bis zu drei anstehende öffentliche Konzerte, am selben Ort zuerst
