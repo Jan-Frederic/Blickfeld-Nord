@@ -335,7 +335,8 @@ function hashtag(text: string): string {
 }
 
 /** Fertiger Instagram-Text zum Plakat: Datum, Uhrzeit, Ort, Eintritt und Hashtags */
-export function postText(s: Show): string {
+/** Beitragstext; mit `link` (Konzertseite mit Herkunft und Kampagne) zusätzlich ein Link zum Auftritt */
+export function postText(s: Show, link?: string): string {
   const { weekday, day } = formatDate(s.date);
   const end = s.endDate ? formatDate(s.endDate) : null;
   const when = end ? `${weekday}, ${day} bis ${end.weekday}, ${end.day}` : `${weekday}, ${day}`;
@@ -360,6 +361,7 @@ export function postText(s: Show): string {
     '',
     'Kommt vorbei, singt mit und feiert mit uns – wir freuen uns auf euch! 🍻',
     '',
+    ...(link ? [`👉 Infos & Erinnerung: ${link}`] : []),
     'Alle Termine: blickfeld-nord.de',
     '',
     [...new Set(tags.filter(Boolean))].map((t) => '#' + t).join(' '),

@@ -224,12 +224,13 @@ Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an di
 „Referrers“; im Backstage unter **Besucher** steht „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
 verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht mitzählen.
 
-- **Erlaubte Vermerke:** `plakat`, `story`, `qr-karte`, `banner`, `geteilt` – Liste in `src/app/analytics.ts`
+- **Erlaubte Vermerke:** `plakat`, `story`, `qr-karte`, `banner`, `geteilt`, `text` – Liste in `src/app/analytics.ts`
   (`HERKUNFT`). Andere Werte werden nicht gezählt.
-- **Kampagne je Konzert:** Plakat, Story und der Teilen-Button der Konzertseite hängen zusätzlich
+- **Kampagne je Konzert:** Plakat, Story, der kopierte Beitragstext („Text kopieren“) und der Teilen-Button der
+  Konzertseite hängen zusätzlich
   `utm_campaign=konzert-<ID>` an (z. B. `konzert-2026-12-04`). GoatCounter listet sie unter „Campaigns“; im Backstage
   zeigt die Seite des Auftritts unter „Kampagne“, wie oft die Konzertseite aufgerufen wurde und wie viele über Plakat,
-  Story oder einen geteilten Link kamen (12 Monate). Plakat und Story deshalb immer frisch im Backstage erzeugen.
+  Story, den Beitragstext oder einen geteilten Link kamen (12 Monate). Plakat und Story deshalb immer frisch im Backstage erzeugen.
 - **Banner mit QR-Code** (Pressekit): führt auf `https://blickfeld-nord.de/?ref=banner`. Für weitere eigene
   Druckstücke einen der erlaubten Vermerke verwenden oder die Liste ergänzen.
 

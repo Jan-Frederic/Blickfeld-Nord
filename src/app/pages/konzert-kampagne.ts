@@ -8,6 +8,7 @@ import { GC, kampagne, zaehler } from '../data/goatcounter';
 const WEGE = [
   { ref: 'plakat', label: 'Plakat (QR-Code)' },
   { ref: 'story', label: 'Story / Status (QR-Code)' },
+  { ref: 'text', label: 'Link im Beitragstext' },
   { ref: 'geteilt', label: 'Geteilter Link' },
 ];
 
@@ -32,7 +33,7 @@ type State = 'loading' | 'ok' | 'aus';
         }
       }
       <p class="foot">
-        Plakat, Story und „Teilen“ auf der Konzertseite tragen die Kampagne im Link · 12 Monate, aktualisiert alle paar
+        Plakat, Story, kopierter Beitragstext und „Teilen“ auf der Konzertseite tragen die Kampagne im Link · 12 Monate, aktualisiert alle paar
         Stunden · <a [href]="gc + '/campaigns'" target="_blank" rel="noopener">alle Kampagnen in GoatCounter</a>
       </p>
     </section>

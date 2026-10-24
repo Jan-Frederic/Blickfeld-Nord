@@ -261,7 +261,8 @@ export class BackstageShow implements OnDestroy {
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage
   protected readonly copied = signal(false);
   protected async copyText(): Promise<void> {
-    const text = postText(this.show()!);
+    // Link zur Konzertseite mit Herkunft „text“ und Kampagne – zählt in der Kachel „Kampagne“
+    const text = postText(this.show()!, kampagnenLink(this.id(), 'text'));
     try {
       await navigator.clipboard.writeText(text);
       this.copied.set(true);

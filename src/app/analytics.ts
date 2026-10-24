@@ -11,7 +11,7 @@ import { KAMPAGNE } from './data/goatcounter';
 // Herkunft: QR-Codes auf Plakat, Story und QR-Karte hängen ?ref=… an (siehe HERKUNFT). GoatCounter zeigt den Wert
 // selbst unter „Referrers“; zusätzlich zählt hier ein Ereignis „von-…“, das der Backstage über den öffentlichen
 // Zähler abfragen kann. Danach verschwindet der Vermerk aus der Adresse – geteilte Links zählen nicht doppelt.
-// Kampagne: Plakat, Story und „Teilen“ eines Auftritts tragen zusätzlich utm_campaign=konzert-<ID> (GoatCounter:
+// Kampagne: Plakat, Story, Beitragstext und „Teilen“ eines Auftritts tragen zusätzlich utm_campaign=konzert-<ID> (GoatCounter:
 // „Campaigns“); dazu zählt ein Ereignis „kampagne-konzert-<ID>-<Herkunft>“ für den Backstage des Auftritts.
 declare global {
   interface Window {
@@ -26,6 +26,7 @@ export const HERKUNFT = [
   { ref: 'qr-karte', label: 'QR-Karte & Flyer' },
   { ref: 'banner', label: 'Banner' },
   { ref: 'geteilt', label: 'Geteilter Konzert-Link' },
+  { ref: 'text', label: 'Link im Beitragstext' },
 ] as const;
 
 function herkunft(): string | undefined {
