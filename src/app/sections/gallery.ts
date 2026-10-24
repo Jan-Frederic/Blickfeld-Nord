@@ -2,7 +2,7 @@ import { Component, HostListener, computed, inject, signal } from '@angular/core
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { BandService } from '../data/band.service';
+import { BandService, Photo } from '../data/band.service';
 import { I18n, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
 
@@ -17,6 +17,8 @@ const TEXT = tr(
     prev: 'Vorheriges Bild',
     next: 'Nächstes Bild',
     close: 'Schließen',
+    live: 'Live',
+    band: 'Band & Porträts',
   },
   {
     kicker: 'Moments',
@@ -28,6 +30,8 @@ const TEXT = tr(
     prev: 'Previous photo',
     next: 'Next photo',
     close: 'Close',
+    live: 'Live',
+    band: 'Band & portraits',
   },
   {
     kicker: 'Momenten',
@@ -39,6 +43,8 @@ const TEXT = tr(
     prev: 'Vorige foto',
     next: 'Volgende foto',
     close: 'Sluiten',
+    live: 'Live',
+    band: 'Band & portretten',
   },
 );
 
@@ -50,15 +56,18 @@ const TEXT = tr(
       <p class="kicker">{{ t().kicker }}</p>
       <h2>{{ t().title }}</h2>
       <p class="lead">{{ t().lead }}</p>
-      <div class="grid">
-        @for (p of band.photos; track p.src; let i = $index) {
-          <button class="tile" [class.wide]="i % 5 === 0 && !p.tall" (click)="open(i)" [attr.aria-label]="t().enlarge + content.t(p.alt)">
-            <!-- Vorschau in drei Größen (480/720/900 px) – jedes Gerät lädt nur, was es für ein scharfes Bild braucht -->
-            <img [src]="p.thumb" [attr.srcset]="srcset(p.thumb)" [attr.sizes]="i % 5 === 0 && !p.tall ? wideSizes : sizes" [alt]="content.t(p.alt)" loading="lazy" decoding="async" />
-            @if (entries.has(p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
-          </button>
-        }
-      </div>
+      @for (g of gruppen; track g.jahr) {
+        <h3 class="group">{{ g.jahr ? t().live + ' ' + g.jahr : t().band }}</h3>
+        <div class="grid">
+          @for (e of g.fotos; track e.p.src; let i = $index) {
+            <button class="tile" [class.wide]="i % 5 === 0 && !e.p.tall" (click)="open(e.i)" [attr.aria-label]="t().enlarge + content.t(e.p.alt)">
+              <!-- Vorschau in drei Größen (480/720/900 px) – jedes Gerät lädt nur, was es für ein scharfes Bild braucht -->
+              <img [src]="e.p.thumb" [attr.srcset]="srcset(e.p.thumb)" [attr.sizes]="i % 5 === 0 && !e.p.tall ? wideSizes : sizes" [alt]="content.t(e.p.alt)" loading="lazy" decoding="async" />
+              @if (entries.has(e.p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
+            </button>
+          }
+        </div>
+      }
     </section>
 
     @if (current(); as p) {
@@ -71,7 +80,7 @@ const TEXT = tr(
               @if (entries.get(p.src); as date) {
                 <a class="entry" [routerLink]="'/historie' | loc" [fragment]="'e-' + date" (click)="close()">{{ t().toShow }} <mat-icon>arrow_forward</mat-icon></a>
               }
-              <span class="count">{{ index()! + 1 }} / {{ band.photos.length }}</span>
+              <span class="count">{{ index()! + 1 }} / {{ fotos.length }}</span>
             </span>
           </figcaption>
         </figure>
@@ -82,6 +91,10 @@ const TEXT = tr(
     }
   `,
   styles: `
+    .group {
+      margin: 28px 0 12px; font-family: var(--bn-wide); font-weight: 400; font-size: .8rem; letter-spacing: .25em;
+      text-transform: uppercase; color: var(--bn-fog);
+    }
     .grid {
       display: grid; gap: 12px;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -146,9 +159,22 @@ export class Gallery {
   protected readonly entries = new Map(
     this.band.history.flatMap((h) => (h.images ?? []).map((img) => [img.src, h.date] as const)),
   );
+  // Gruppen: Live-Fotos nach Jahr des Auftritts (neueste zuerst), danach Band und Porträts – Reihenfolge innerhalb
+  // wie in band.service.ts. Vollbild blättert in derselben Reihenfolge durch alle Fotos.
+  protected readonly gruppen: { jahr: string; fotos: { p: Photo; i: number }[] }[] = (() => {
+    const jahre = new Map<string, Photo[]>();
+    for (const p of this.band.photos) {
+      const jahr = this.entries.get(p.src)?.slice(0, 4) ?? '';
+      jahre.set(jahr, [...(jahre.get(jahr) ?? []), p]);
+    }
+    const sortiert = [...jahre].sort(([a], [b]) => (a && b ? b.localeCompare(a) : a ? -1 : 1));
+    let i = 0;
+    return sortiert.map(([jahr, fotos]) => ({ jahr, fotos: fotos.map((p) => ({ p, i: i++ })) }));
+  })();
+  protected readonly fotos: Photo[] = this.gruppen.flatMap((g) => g.fotos.map((e) => e.p));
   protected readonly current = computed(() => {
     const i = this.index();
-    return i === null ? null : this.band.photos[i];
+    return i === null ? null : this.fotos[i];
   });
 
   protected open(i: number): void {
@@ -161,7 +187,7 @@ export class Gallery {
 
   protected step(dir: number, event?: Event): void {
     event?.stopPropagation();
-    const n = this.band.photos.length;
+    const n = this.fotos.length;
     this.index.update((i) => (i === null ? null : (i + dir + n) % n));
   }
 
