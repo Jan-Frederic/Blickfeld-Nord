@@ -14,7 +14,7 @@ const TEXT = tr(
     audience: 'PUBLIKUM',
     details: 'technische Details anzeigen',
     bassAmp: 'Bass-Amp',
-    legend: { musician: 'Musiker', monitor: 'Monitor', mic: 'Mikroständer', pa: 'PA', light: 'Licht', socket: 'Steckdose' },
+    legend: { musician: 'Musiker', monitor: 'Monitor', mic: 'Mikroständer', pa: 'PA', light: 'Licht', socket: 'Steckdose', banner: 'Banner (Ösen)' },
     caption: 'Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte und Musiker antippen für Details',
     channels: 'Kanalliste',
     head: { channel: 'Kanal', source: 'Quelle', type: 'Art', device: 'Gerät', stand: 'Stativ' },
@@ -45,7 +45,7 @@ const TEXT = tr(
     audience: 'AUDIENCE',
     details: 'show technical details',
     bassAmp: 'Bass amp',
-    legend: { musician: 'Musician', monitor: 'Monitor', mic: 'Mic stand', pa: 'PA', light: 'Lights', socket: 'Power socket' },
+    legend: { musician: 'Musician', monitor: 'Monitor', mic: 'Mic stand', pa: 'PA', light: 'Lights', socket: 'Power socket', banner: 'Banner (eyelets)' },
     caption: 'Top view, audience at the bottom · 1 square = 1 m · tap equipment or musicians for details',
     channels: 'Channel list',
     head: { channel: 'Channel', source: 'Source', type: 'Type', device: 'Device', stand: 'Stand' },
@@ -76,7 +76,7 @@ const TEXT = tr(
     audience: 'PUBLIEK',
     details: 'technische details tonen',
     bassAmp: 'Basversterker',
-    legend: { musician: 'Muzikant', monitor: 'Monitor', mic: 'Microfoonstandaard', pa: 'PA', light: 'Licht', socket: 'Stopcontact' },
+    legend: { musician: 'Muzikant', monitor: 'Monitor', mic: 'Microfoonstandaard', pa: 'PA', light: 'Licht', socket: 'Stopcontact', banner: 'Banner (ogen)' },
     caption: 'Bovenaanzicht, publiek onderaan · 1 vakje = 1 m · tik op apparatuur of muzikanten voor details',
     channels: 'Kanalenlijst',
     head: { channel: 'Kanaal', source: 'Bron', type: 'Soort', device: 'Apparaat', stand: 'Statief' },
@@ -111,7 +111,7 @@ const TEXT = tr(
 
 export interface Item {
   id: string;
-  typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom' | 'mikro' | 'pedalboard';
+  typ: 'drums' | 'person' | 'amp' | 'mixer' | 'monitor' | 'pa' | 'licht' | 'strom' | 'mikro' | 'pedalboard' | 'banner';
   label: string;
   rolle?: string;
   x: number;
@@ -250,6 +250,14 @@ const py = (m: number) => PAD_TOP + m * M;
               <circle class="light" [attr.cx]="px(it.x)" [attr.cy]="py(it.y)" r="14" />
               <circle class="light-core" [attr.cx]="px(it.x)" [attr.cy]="py(it.y)" r="6" />
             }
+            @case ('banner') {
+              <!-- Banner hinter der Band, an der Bühnenrückseite: schmale Bahn mit Ösen -->
+              <rect fill="transparent" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y) - 16" [attr.width]="it.b! * M" height="14" />
+              <rect class="banner" fill="#c27a3e" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y) - 11" [attr.width]="it.b! * M" height="5" rx="2" />
+              @for (o of oesen(it); track o) {
+                <circle fill="#141619" [attr.cx]="px(o)" [attr.cy]="py(it.y) - 8.5" r="2" />
+              }
+            }
             @case ('strom') {
               <rect class="power" [attr.x]="px(it.x) - 15" [attr.y]="py(it.y) - 12" width="30" height="24" rx="4" />
               <text class="power-sym" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 6" text-anchor="middle">⚡</text>
@@ -266,6 +274,7 @@ const py = (m: number) => PAD_TOP + m * M;
         <span><i class="key pa"></i> {{ t().legend.pa }}</span>
         <span><i class="key light"></i> {{ t().legend.light }}</span>
         <span><i class="key power"></i> {{ t().legend.socket }}</span>
+        <span><i class="key" style="height: 5px; background: #c27a3e"></i> {{ t().legend.banner }}</span>
         <span>{{ t().caption }}</span>
       </figcaption>
     </figure>
@@ -466,6 +475,12 @@ export class TechnikAufbau {
   private readonly plan = viewChild.required<ElementRef<SVGSVGElement>>('plan');
   protected readonly kanaele = data.kanaele;
   protected readonly monitore = data.monitore as Monitor[];
+  // Ösen des Banners: an beiden Enden und etwa jeden Meter
+  protected oesen(it: Item): number[] {
+    const b = it.b ?? 0;
+    const n = Math.max(1, Math.round(b));
+    return Array.from({ length: n + 1 }, (_, i) => it.x - b / 2 + 0.06 + (i * (b - 0.12)) / n);
+  }
   protected readonly strom = data.strom;
   protected readonly hardware = HARDWARE;
 

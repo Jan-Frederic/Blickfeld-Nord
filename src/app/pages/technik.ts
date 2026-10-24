@@ -22,6 +22,8 @@ const TEXT = tr(
     areaValue: 'ca. 4 × 3 Meter',
     power: 'Strom',
     powerValue: '2 Steckdosen in der Nähe der Spielfläche',
+    banner: 'Banner',
+    bannerValue: '4 × 2 m mit Ösen – zum Aufhängen hinter der Bühne (Wand, Zaun oder Traverse)',
     schedule: 'Zeitplan',
     timeline: [
       { time: 'ca. 3 Std. vorher', text: 'Ankunft und Aufbau' },
@@ -50,6 +52,8 @@ const TEXT = tr(
     areaValue: 'approx. 4 × 3 metres',
     power: 'Power',
     powerValue: '2 power sockets near the stage area',
+    banner: 'Banner',
+    bannerValue: '4 × 2 m with eyelets – hung behind the stage (wall, fence or truss)',
     schedule: 'Schedule',
     timeline: [
       { time: 'approx. 3 hrs before', text: 'Arrival and set-up' },
@@ -78,6 +82,8 @@ const TEXT = tr(
     areaValue: 'ca. 4 × 3 meter',
     power: 'Stroom',
     powerValue: '2 stopcontacten in de buurt van het speelvlak',
+    banner: 'Banner',
+    bannerValue: '4 × 2 m met ogen – opgehangen achter het podium (muur, hek of truss)',
     schedule: 'Tijdschema',
     timeline: [
       { time: 'ca. 3 uur vooraf', text: 'Aankomst en opbouw' },
@@ -137,6 +143,11 @@ const TEXT = tr(
           <mat-icon>power</mat-icon>
           <span class="label">{{ t().power }}</span>
           <span class="value">{{ t().powerValue }}</span>
+        </li>
+        <li>
+          <mat-icon>flag</mat-icon>
+          <span class="label">{{ t().banner }}</span>
+          <span class="value">{{ t().bannerValue }}</span>
         </li>
       </ul>
 

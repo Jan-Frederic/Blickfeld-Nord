@@ -22,7 +22,8 @@
     { "id": "licht-l", "typ": "licht", "label": "Licht links", "x": 0.25, "y": 0.25, "hw": "licht" },
     { "id": "licht-r", "typ": "licht", "label": "Licht rechts", "x": 3.75, "y": 0.25, "hw": "licht" },
     { "id": "strom-1", "typ": "strom", "label": "Steckdose 1", "x": 0.6, "y": 0, "hw": "strom" },
-    { "id": "strom-2", "typ": "strom", "label": "Steckdose 2", "x": 3.4, "y": 0, "hw": "strom" }
+    { "id": "strom-2", "typ": "strom", "label": "Steckdose 2", "x": 3.4, "y": 0, "hw": "strom" },
+    { "id": "banner", "typ": "banner", "label": "Banner 4 × 2 m", "x": 2, "y": 0, "b": 4, "hw": "banner" }
   ],
   "kanaele": [
     { "kanal": 1, "quelle": "Bassdrum", "art": "Mikro", "geraet": null, "stativ": "kurz", "phantom": false, "musiker": "matthias" },
@@ -130,6 +131,15 @@
       "details": [
         ["Scheinwerfer", "PAR-Scheinwerfer auf Stativ bzw. Lichtbrücke"],
         ["Effekte", "Nebelmaschine (nach Absprache)"]
+      ]
+    },
+    "banner": {
+      "kategorie": "Banner",
+      "modell": "Bühnenbanner mit Logo",
+      "beschreibung": "Bühnenbanner mit unserem Logo, hängt hinter der Band. Bitte eine Möglichkeit zum Aufhängen hinter der Bühne vorsehen – z. B. Wand, Zaun oder Traverse.",
+      "details": [
+        ["Größe", "4 × 2 m"],
+        ["Befestigung", "Ösen"]
       ]
     },
     "pedalboard": {

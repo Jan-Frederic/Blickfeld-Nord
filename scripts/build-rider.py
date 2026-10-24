@@ -129,11 +129,23 @@ def stage_plot(c, x0, top, width, lang):
         elif t == 'licht':
             c.circle(x, y, 2.6 * mm, stroke=1, fill=0)
             c.circle(x, y, 1 * mm, stroke=0, fill=1)
+        elif t == 'banner':
+            # Banner hinter der Band: schmale Bahn hinter der Bühnenkante mit Ösen
+            w = it['b'] * m
+            c.setFillColor(HexColor('#c27a3e'))
+            c.rect(x - w / 2, y + 6.2 * mm, w, 1.4 * mm, stroke=0, fill=1)
+            c.setFillColor(HexColor('#ffffff'))
+            n = max(1, round(it['b']))
+            for i in range(n + 1):
+                c.circle(x - w / 2 + 0.06 * m + i * (w - 0.12 * m) / n, y + 6.9 * mm, 0.45 * mm, stroke=0, fill=1)
+            c.setFont('Inter', 6)
+            c.setFillColor(pk.TEXT_MID)
+            c.drawString(x - w / 2, y + 8.6 * mm, tx(it['label'], lang) + ' · ' + T.RIDER[lang]['eyelets'])
         elif t == 'strom':
             c.setStrokeColor(HexColor('#3f8f63'))
             c.rect(x - 3 * mm, y - 2.2 * mm, 6 * mm, 4.4 * mm, stroke=1, fill=0)
             label(tx(it['label'], lang), x, y + 3.6 * mm)
-    label(f"{T.RIDER[lang]['stage']} {bw} × {bd} M", px(bw / 2), py(0) + 9 * mm, 7.5, pk.TEXT_MID, 'Montserrat')
+    label(f"{T.RIDER[lang]['stage']} {bw} × {bd} M", px(bw / 2), py(0) + 12 * mm, 7.5, pk.TEXT_MID, 'Montserrat')
     label(T.RIDER[lang]['audience'], px(bw / 2), py(bd) - 7 * mm, 8, HexColor('#c27a3e'), 'Montserrat')
     return py(bd) - 16 * mm
 

@@ -193,6 +193,7 @@ RIDER = {
             ('Platz, Strom & Technik', [
                 ('Spielfläche', 'ca. 4 × 3 m'),
                 ('Strom', '2 Steckdosen in der Nähe der Spielfläche'),
+                ('Banner', '4 × 2 m mit Ösen, Aufhängung hinter der Bühne'),
                 ('PA & Licht', 'bringen wir selbst mit'),
             ]),
             ('Zeitplan', [
@@ -213,6 +214,7 @@ RIDER = {
         'hw': [('Mischpult', 'mischpult'), ('PA', 'pa'), ('Monitore', 'monitore'), ('Licht', 'licht')],
         'open': 'offen',
         'stage': 'SPIELFLÄCHE',
+        'eyelets': 'mit Ösen',
         'audience': 'P U B L I K U M',
         'cols': ['Kanal', 'Quelle', 'Art', 'Gerät', 'Stativ', '48 V'],
         'yes': 'ja',
@@ -231,6 +233,7 @@ RIDER = {
             ('Space, power & equipment', [
                 ('Stage area', 'approx. 4 × 3 m'),
                 ('Power', '2 power sockets near the stage area'),
+                ('Banner', '4 × 2 m with eyelets, hung behind the stage'),
                 ('PA & lights', 'we bring our own'),
             ]),
             ('Schedule', [
@@ -251,6 +254,7 @@ RIDER = {
         'hw': [('Mixer', 'mischpult'), ('PA', 'pa'), ('Monitors', 'monitore'), ('Lights', 'licht')],
         'open': 'tbc',
         'stage': 'STAGE AREA',
+        'eyelets': 'with eyelets',
         'audience': 'A U D I E N C E',
         'cols': ['Ch.', 'Source', 'Type', 'Device', 'Stand', '48 V'],
         'yes': 'yes',
@@ -269,6 +273,7 @@ RIDER = {
             ('Ruimte, stroom & techniek', [
                 ('Speelvlak', 'ca. 4 × 3 m'),
                 ('Stroom', '2 stopcontacten in de buurt van het speelvlak'),
+                ('Banner', '4 × 2 m met ogen, opgehangen achter het podium'),
                 ('PA & licht', 'nemen we zelf mee'),
             ]),
             ('Tijdschema', [
@@ -289,6 +294,7 @@ RIDER = {
         'hw': [('Mengpaneel', 'mischpult'), ('PA', 'pa'), ('Monitoren', 'monitore'), ('Licht', 'licht')],
         'open': 'n.n.b.',
         'stage': 'SPEELVLAK',
+        'eyelets': 'met ogen',
         'audience': 'P U B L I E K',
         'cols': ['Kanaal', 'Bron', 'Type', 'Apparaat', 'Statief', '48 V'],
         'yes': 'ja',

@@ -638,6 +638,36 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
+    de: 'Banner 4 × 2 m',
+    en: 'Banner 4 × 2 m',
+    nl: 'Banner 4 × 2 m',
+  },
+  {
+    de: 'Bühnenbanner mit unserem Logo, hängt hinter der Band. Bitte eine Möglichkeit zum Aufhängen hinter der Bühne vorsehen – z. B. Wand, Zaun oder Traverse.',
+    en: 'Stage banner with our logo, hung behind the band. Please provide a way to hang it behind the stage – e.g. a wall, fence or truss.',
+    nl: 'Podiumbanner met ons logo, hangt achter de band. Zorg alsjeblieft voor een mogelijkheid om het achter het podium op te hangen – bijv. een muur, hek of truss.',
+  },
+  {
+    de: 'Bühnenbanner mit Logo',
+    en: 'Stage banner with logo',
+    nl: 'Podiumbanner met logo',
+  },
+  {
+    de: 'Größe',
+    en: 'Size',
+    nl: 'Afmeting',
+  },
+  {
+    de: 'Befestigung',
+    en: 'Mounting',
+    nl: 'Bevestiging',
+  },
+  {
+    de: 'Ösen',
+    en: 'Eyelets',
+    nl: 'Ogen',
+  },
+  {
     de: 'Steckdose 1',
     en: 'Socket 1',
     nl: 'Stopcontact 1',
