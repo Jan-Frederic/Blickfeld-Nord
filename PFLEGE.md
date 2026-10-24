@@ -219,8 +219,8 @@ verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht m
 
 - **Erlaubte Vermerke:** `plakat`, `story`, `qr-karte`, `banner` – Liste in `src/app/analytics.ts` (`HERKUNFT`).
   Andere Werte werden nicht gezählt.
-- **Eigene Druckstücke** (z. B. ein neues Banner): als QR-Inhalt `https://blickfeld-nord.de/?ref=banner` verwenden.
-  Das bisherige Banner mit QR-Code zeigt ohne Vermerk auf die Startseite und wird nicht getrennt gezählt.
+- **Banner mit QR-Code** (Pressekit): führt auf `https://blickfeld-nord.de/?ref=banner`. Für weitere eigene
+  Druckstücke einen der erlaubten Vermerke verwenden oder die Liste ergänzen.
 
 ## Was die automatischen Prüfungen abfangen
 
