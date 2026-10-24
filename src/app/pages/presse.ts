@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { I18n, tr } from '../i18n';
+import { Referenzen } from '../sections/referenzen';
 
 // Dateien werden von scripts/build-pressekit.py nach public/presse/ erzeugt
 interface Asset {
@@ -119,7 +120,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-presse',
-  imports: [MatIconModule],
+  imports: [MatIconModule, Referenzen],
   template: `
     <section class="section presse">
       <p class="kicker">{{ t().kicker }}</p>
@@ -153,6 +154,8 @@ const TEXT = tr(
           </a>
         </div>
       </div>
+
+      <app-referenzen />
 
       <h3>{{ t().logos }}</h3>
       <div class="assets">

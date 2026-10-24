@@ -8,6 +8,7 @@ import { shareShow } from '../data/share';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
 import { UebersetzungHinweis } from '../sections/uebersetzung-hinweis';
+import { KonzertExtras } from '../sections/konzert-extras';
 
 const TEXT = tr(
   {
@@ -117,7 +118,7 @@ const TEXT = tr(
   selector: 'app-konzert',
   // „vorbei“ hängt vom Besuchstag ab, nicht vom Build-Tag – im Browser komplett neu aufbauen
   host: { ngSkipHydration: 'true' },
-  imports: [RouterLink, MatIconModule, LDatePipe, LocPipe, UebersetzungHinweis],
+  imports: [RouterLink, MatIconModule, LDatePipe, LocPipe, UebersetzungHinweis, KonzertExtras],
   template: `
     <section class="section">
       <a class="back" [routerLink]="'/' | loc" fragment="tour"><mat-icon>arrow_back</mat-icon> {{ t().back }}</a>
@@ -192,6 +193,8 @@ const TEXT = tr(
             </div>
           </section>
         }
+
+        <app-konzert-extras [show]="s" [past]="past()" />
 
         <div class="more">
           <p>{{ t().more }}</p>

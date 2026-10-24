@@ -6,6 +6,7 @@ import { Anfrage } from './anfrage';
 import { Faq } from './faq';
 import { Angebot } from './angebot';
 import { Entfernung } from './entfernung';
+import { Referenzen } from './referenzen';
 import { scrollToSection } from '../scroll';
 import { I18n, LocPipe, tr } from '../i18n';
 
@@ -117,7 +118,7 @@ Met vriendelijke groet
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Faq, Angebot, Entfernung],
+  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Faq, Angebot, Entfernung, Referenzen],
   template: `
     <section class="section">
       <p class="kicker">{{ t().kicker }}</p>
@@ -137,6 +138,7 @@ Met vriendelijke groet
       <app-faq />
 
       <app-angebot />
+      <app-referenzen />
 
       <app-entfernung />
 
