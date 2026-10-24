@@ -6,7 +6,7 @@
         "https://blickfeld-nord.de/booking/",
         "https://blickfeld-nord.de/historie/"
       ],
-      "numberOfRuns": 3,
+      "numberOfRuns": 5,
       "settings": {
         "blockedUrlPatterns": [
           "*gc.zgo.at*",
