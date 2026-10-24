@@ -30,6 +30,12 @@ for (const lang of ['de', 'en', 'nl']) {
         }
         window.scrollTo(0, 0);
       });
+      // Fenster so hoch wie die Seite: Bereiche, die höher als der Bildschirm sind (Handy, „Die Band“), müssen
+      // sonst zum Aufnehmen gescrollt werden – dabei landeten feste Kopfleiste und Abdeckungen mitten im Bild
+      // und die Aufnahme wurde nie stabil
+      const size = page.viewportSize();
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      await page.setViewportSize({ width: size.width, height: Math.min(height, 12000) });
       await page.waitForLoadState('networkidle');
       await page.evaluate(() => document.fonts.ready);
       for (const area of areas) {
