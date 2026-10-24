@@ -435,6 +435,11 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
+    de: 'David Bröker live',
+    en: 'David Bröker live',
+    nl: 'David Bröker live',
+  },
+  {
     de: 'David Bröker – Gesang & Gitarre',
     en: 'David Bröker – vocals & guitar',
     nl: 'David Bröker – zang & gitaar',
