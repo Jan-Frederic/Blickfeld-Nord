@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { HERKUNFT } from '../analytics';
 
 // Besucherzahlen aus GoatCounter (öffentlicher Zähler, nur Summen – keine Daten über einzelne Besucher).
 // Voraussetzung: In GoatCounter unter Settings „Allow adding visitor counts on your website“ aktivieren, sonst
@@ -78,6 +79,20 @@ async function count(path: string, start: string): Promise<number> {
               </li>
             }
           </ol>
+          <h3>Gekommen über · 12 Monate</h3>
+          @if (herkunft().length) {
+            <ol class="pages">
+              @for (h of herkunft(); track h.ref) {
+                <li>
+                  <span class="name">{{ h.label }}</span>
+                  <span class="bar" aria-hidden="true"><span [style.width.%]="herkunftMax() ? (h.count / herkunftMax()) * 100 : 0"></span></span>
+                  <span class="num">{{ h.count | number: '1.0-0' }}</span>
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="note">Noch niemand über einen QR-Code gekommen.</p>
+          }
         }
       }
       <p class="foot">
@@ -97,7 +112,7 @@ async function count(path: string, start: string): Promise<number> {
     .value { font: 600 1.5rem/1.2 Inter, sans-serif; }
     .label { font-size: .8rem; color: var(--bn-fog); }
     .pages { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-    .pages li { display: grid; grid-template-columns: 7.5em 1fr 4em; align-items: center; gap: 10px; font-size: .88rem; }
+    .pages li { display: grid; grid-template-columns: minmax(7.5em, auto) 1fr 4em; align-items: center; gap: 10px; font-size: .88rem; }
     .bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .06); overflow: hidden; }
     .bar span { display: block; height: 100%; border-radius: 4px; background: #7fb3e0; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -113,6 +128,8 @@ export class BackstageBesucher implements OnInit {
   protected readonly totals = signal<{ label: string; count: number }[]>([]);
   protected readonly pages = signal<{ path: string; label: string; count: number }[]>([]);
   protected readonly max = signal(0);
+  protected readonly herkunft = signal<{ ref: string; label: string; count: number }[]>([]);
+  protected readonly herkunftMax = signal(0);
 
   async ngOnInit(): Promise<void> {
     try {
@@ -123,6 +140,11 @@ export class BackstageBesucher implements OnInit {
       this.pages.set(pages);
       this.max.set(pages[0]?.count ?? 0);
       this.state.set('ok');
+      // Herkunft aus QR-Codes (Ereignisse „von-…“, siehe analytics.ts) – Fehler hier lassen den Rest stehen
+      const herkunft = await Promise.all(HERKUNFT.map(async (h) => ({ ...h, count: await count(`von-${h.ref}`, 'year').catch(() => 0) })));
+      const besucht = herkunft.filter((h) => h.count > 0).sort((a, b) => b.count - a.count);
+      this.herkunft.set(besucht);
+      this.herkunftMax.set(besucht[0]?.count ?? 0);
     } catch {
       // GoatCounter schickt die Sperre (403) ohne CORS-Freigabe – der Browser meldet dann nur einen Netzwerkfehler
       this.state.set(navigator.onLine ? 'disabled' : 'offline');

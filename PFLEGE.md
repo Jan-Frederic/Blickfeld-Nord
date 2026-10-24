@@ -210,6 +210,18 @@ Was an der Website noch zu tun ist, steht im Backstage im Bereich **Aufgaben** (
   **Datei für GitHub erzeugen**, „Datei auf GitHub öffnen“, mit Strg+A alles markieren, einfügen und „Commit changes“.
   Danach die Häkchen zurücksetzen. Von Hand geht es auch: `erledigt: true` dazuschreiben oder die Aufgabe löschen.
 
+## Woher Besucher kommen (QR-Codes)
+
+Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an die Adresse, z. B.
+`https://blickfeld-nord.de/konzerte/2026-12-04/?ref=plakat`. GoatCounter zeigt den Wert im Dashboard unter
+„Referrers“; im Backstage unter **Besucher** steht „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
+verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht mitzählen.
+
+- **Erlaubte Vermerke:** `plakat`, `story`, `qr-karte`, `banner` – Liste in `src/app/analytics.ts` (`HERKUNFT`).
+  Andere Werte werden nicht gezählt.
+- **Eigene Druckstücke** (z. B. ein neues Banner): als QR-Inhalt `https://blickfeld-nord.de/?ref=banner` verwenden.
+  Das bisherige Banner mit QR-Code zeigt ohne Vermerk auf die Startseite und wird nicht getrennt gezählt.
+
 ## Was die automatischen Prüfungen abfangen
 
 Bevor etwas online geht, prüft GitHub unter anderem:

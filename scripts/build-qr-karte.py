@@ -34,7 +34,8 @@ def out(name, lang):
 
 
 def website(lang):
-    return ('Website', 'blickfeld-nord.de' + ('' if lang == 'de' else f'/{lang}'), T.site('/', lang))
+    # ?ref=qr-karte: GoatCounter zählt, wie viele über die Karte kommen (Backstage → Besucher)
+    return ('Website', 'blickfeld-nord.de' + ('' if lang == 'de' else f'/{lang}'), T.site('/', lang) + '?ref=qr-karte')
 
 
 def qr(c, url, x, y, size):

@@ -250,8 +250,9 @@ export class BackstageShow implements OnDestroy {
 
   // Plakat als Instagram-Beitrag (4:5) oder als Story / WhatsApp-Status (9:16)
   protected poster(format: PosterFormat = 'feed'): void {
-    // QR-Code unten rechts führt zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung, Songwunsch)
-    sharePoster(this.show()!, format, `https://blickfeld-nord.de/konzerte/${this.id()}/`).catch((err) => console.error(err));
+    // QR-Code unten rechts führt zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung, Songwunsch); ?ref= zählt die Herkunft
+    // (Backstage → Besucher)
+    sharePoster(this.show()!, format, `https://blickfeld-nord.de/konzerte/${this.id()}/?ref=${format === 'story' ? 'story' : 'plakat'}`).catch((err) => console.error(err));
   }
 
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage

@@ -62,6 +62,26 @@ test('Startseite: Konzertliste führt zur Konzertseite, Abo-Button vorhanden', a
   return p;
 });
 
+test('Herkunft: QR-Code-Vermerk ?ref= wird gezählt und aus der Adresse entfernt', async () => {
+  const p = await page();
+  // GoatCounter nachstellen: Aufrufe merken statt senden
+  await p.route('https://gc.zgo.at/count.js', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: 'window.goatcounter = { count: (v) => (window.__gc = window.__gc || []).push(v) };' }),
+  );
+  await p.go(`${concerts[0]}?ref=plakat`);
+  await until(async () => (await p.evaluate(() => (window.__gc || []).length)) >= 2, 'GoatCounter wurde nicht aufgerufen');
+  const calls = await p.evaluate(() => window.__gc);
+  expect(calls.some((c) => c.path === 'von-plakat' && c.event), `kein Herkunfts-Ereignis: ${JSON.stringify(calls)}`);
+  expect(!calls.some((c) => !c.event && c.path.includes('ref=')), 'Seitenaufruf mit Vermerk im Pfad gezählt');
+  await until(async () => !p.url().includes('ref='), `Vermerk bleibt in der Adresse: ${p.url()}`);
+  // unbekannter Vermerk: kein Ereignis, Adresse trotzdem bereinigt
+  await p.go('/?ref=irgendwas');
+  await until(async () => !p.url().includes('ref='), 'unbekannter Vermerk bleibt in der Adresse');
+  const nachher = await p.evaluate(() => window.__gc);
+  expect(!nachher.some((c) => c.path === 'von-irgendwas'), 'unbekannter Vermerk wurde gezählt');
+  return p;
+});
+
 test('Konzertseite: vergangenes Konzert zeigt Rückblick', async () => {
   const p = await page();
   for (const c of concerts) {
