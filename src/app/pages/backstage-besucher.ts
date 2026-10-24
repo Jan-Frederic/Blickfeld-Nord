@@ -2,11 +2,9 @@ import { Component, OnInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { HERKUNFT } from '../analytics';
+import { GC, zaehler as count } from '../data/goatcounter';
 
-// Besucherzahlen aus GoatCounter (öffentlicher Zähler, nur Summen – keine Daten über einzelne Besucher).
-// Voraussetzung: In GoatCounter unter Settings „Allow adding visitor counts on your website“ aktivieren, sonst
-// antwortet der Zähler mit 403. GoatCounter puffert die Zahlen bis zu einige Stunden.
-const GC = 'https://blickfeld-nord.goatcounter.com';
+// Besucherzahlen aus GoatCounter (öffentlicher Zähler, siehe data/goatcounter.ts)
 const DASHBOARD = GC;
 const PERIODS = [
   { key: 'week', label: '7 Tage' },
@@ -31,15 +29,6 @@ const PAGES = [
 ];
 
 type State = 'loading' | 'ok' | 'disabled' | 'offline';
-
-async function count(path: string, start: string): Promise<number> {
-  const url = `${GC}/counter/${encodeURIComponent(path)}.json${start ? '?start=' + start : ''}`;
-  const res = await fetch(url);
-  if (res.status === 404) return 0; // Seite noch nie aufgerufen
-  if (!res.ok) throw new Error(String(res.status));
-  // Zahl kommt formatiert („1.234“ / „1,234“ / „1 234“)
-  return Number(String((await res.json()).count).replace(/\D/g, '')) || 0;
-}
 
 @Component({
   selector: 'app-backstage-besucher',

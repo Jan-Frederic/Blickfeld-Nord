@@ -12,6 +12,8 @@ import { printLaufzettel } from './laufzettel';
 import { printMixerZettel } from './mixer-zettel';
 import { printKabelEtiketten } from './kabel-etiketten';
 import { dankeText } from '../data/danke';
+import { kampagnenLink } from '../data/goatcounter';
+import { KonzertKampagne } from './konzert-kampagne';
 import { RueckblickFormular } from './rueckblick-formular';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
@@ -22,7 +24,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, KonzertKampagne],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -101,6 +103,7 @@ const DAY = 24 * 60 * 60 * 1000;
             <button mat-stroked-button (click)="dankeStory()"><mat-icon>smartphone</mat-icon> Danke-Story</button>
           </div>
         }
+        @if (!s.private && s.confirmed) { <app-konzert-kampagne [id]="id()" /> }
         @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
@@ -252,7 +255,7 @@ export class BackstageShow implements OnDestroy {
   protected poster(format: PosterFormat = 'feed'): void {
     // QR-Code unten rechts führt zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung, Songwunsch); ?ref= zählt die Herkunft
     // (Backstage → Besucher)
-    sharePoster(this.show()!, format, `https://blickfeld-nord.de/konzerte/${this.id()}/?ref=${format === 'story' ? 'story' : 'plakat'}`).catch((err) => console.error(err));
+    sharePoster(this.show()!, format, kampagnenLink(this.id(), format === 'story' ? 'story' : 'plakat')).catch((err) => console.error(err));
   }
 
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage

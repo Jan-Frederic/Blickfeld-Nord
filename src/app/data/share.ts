@@ -1,5 +1,6 @@
 import { Show } from './band.service';
 import { Lang, localize } from '../i18n';
+import { kampagnenLink } from './goatcounter';
 
 const TEXT: Record<Lang, { weekdays: string[]; from: (t: string) => string; free: string; entry: string; date: (d: string) => string }> = {
   de: {
@@ -34,7 +35,8 @@ export function shareShow(s: Show, id: string, venue: string, lang: Lang = 'de')
   const where = [venue, s.city].filter(Boolean).join(', ');
   const entry = s.price === 0 ? ` · ${t.free}` : s.price ? ` · ${t.entry} ${s.price} €` : '';
   const text = `Blickfeld Nord live: ${when} – ${where}${entry}`;
-  const url = `https://blickfeld-nord.de${localize(`/konzerte/${id}`, lang)}`;
+  // mit Herkunft „geteilt“ und Kampagne des Auftritts (Backstage zeigt, wie viele darüber kommen)
+  const url = kampagnenLink(id, 'geteilt', localize(`/konzerte/${id}/`, lang));
   if (navigator.share) {
     navigator.share({ title: 'Blickfeld Nord live', text, url }).catch(() => undefined);
   } else {
