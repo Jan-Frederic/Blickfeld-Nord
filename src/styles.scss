@@ -52,14 +52,19 @@ body {
   background-color: var(--bn-night);
   font-family: Inter, Roboto, 'Helvetica Neue', sans-serif;
   color: var(--bn-ink);
-  background:
-    radial-gradient(ellipse 80% 40% at 85% 100%, rgba(232, 164, 106, .10), transparent 70%),
-    linear-gradient(180deg, #1c1f23 0%, var(--bn-night) 40%, #101215 100%) fixed;
+  background: radial-gradient(ellipse 80% 40% at 85% 100%, rgba(232, 164, 106, .10), transparent 70%);
 }
-// Feines Filmkorn über der ganzen Seite
+// Verlauf hinter der Seite als eigene feste Ebene statt „background-attachment: fixed“ –
+// Safari (Mac und iPhone) malt lange Seiten damit sonst nicht vollständig, Text bricht beim Scrollen ab
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, #1c1f23 0%, var(--bn-night) 40%, #101215 100%);
+}
+// Feines Filmkorn über der ganzen Seite – ohne Mischmodus (mix-blend-mode über der ganzen Seite führt in Safari
+// zu nicht neu gezeichneten Bereichen), dafür etwas schwächer
 body::after {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100;
-  background: var(--bn-grain); opacity: .07; mix-blend-mode: overlay;
+  background: var(--bn-grain); opacity: .035;
 }
 
 .section {
