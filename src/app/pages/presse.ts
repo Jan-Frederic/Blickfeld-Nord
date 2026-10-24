@@ -46,12 +46,17 @@ const FILES: Omit<Asset, 'title' | 'info'>[] = [
 
 // Druckdaten Banner 4 × 2 m (je ca. 10 MB, nicht im ZIP) – Titel und Beschreibung in TEXT.banners (gleiche Reihenfolge)
 const BANNER_LOGO = 'presse/blickfeld-nord-banner-logo-vorschau.webp';
+const BANNER_QR = 'presse/blickfeld-nord-banner-logo-qr-vorschau.webp';
 const BANNER_LAND = 'presse/blickfeld-nord-banner-landschaft-vorschau.webp';
 const BANNERS: Omit<Asset, 'title' | 'info'>[] = [
   { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo.pdf', preview: BANNER_LOGO },
   { file: 'blickfeld-nord-banner-4000x2000mm-logo.pdf', preview: BANNER_LOGO },
   { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo.jpg', preview: BANNER_LOGO },
   { file: 'blickfeld-nord-banner-4000x2000mm-logo.jpg', preview: BANNER_LOGO },
+  { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo-qr.pdf', preview: BANNER_QR },
+  { file: 'blickfeld-nord-banner-4000x2000mm-logo-qr.pdf', preview: BANNER_QR },
+  { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo-qr.jpg', preview: BANNER_QR },
+  { file: 'blickfeld-nord-banner-4000x2000mm-logo-qr.jpg', preview: BANNER_QR },
   { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-landschaft.pdf', preview: BANNER_LAND },
   { file: 'blickfeld-nord-banner-4000x2000mm-landschaft.pdf', preview: BANNER_LAND },
   { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-landschaft.jpg', preview: BANNER_LAND },
@@ -78,6 +83,10 @@ const TEXT = tr(
       { title: 'Banner 4 × 2 m mit Logo', info: 'PDF · 4000 × 2000 mm Endformat, ohne Beschnitt · ca. 11 MB' },
       { title: 'Banner 4 × 2 m mit Logo', info: 'JPG · 11396 × 5726 px · inkl. 10 mm Beschnitt · ca. 11 MB' },
       { title: 'Banner 4 × 2 m mit Logo', info: 'JPG · 11340 × 5670 px · Endformat, ohne Beschnitt · ca. 10 MB' },
+      { title: 'Banner 4 × 2 m mit Logo und QR-Code', info: 'PDF · 4020 × 2020 mm inkl. 10 mm Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m mit Logo und QR-Code', info: 'PDF · 4000 × 2000 mm Endformat, ohne Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m mit Logo und QR-Code', info: 'JPG · 11396 × 5726 px · inkl. 10 mm Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m mit Logo und QR-Code', info: 'JPG · 11340 × 5670 px · Endformat, ohne Beschnitt · ca. 10 MB' },
       { title: 'Banner 4 × 2 m, nur Landschaft', info: 'PDF · 4020 × 2020 mm inkl. 10 mm Beschnitt · ca. 11 MB' },
       { title: 'Banner 4 × 2 m, nur Landschaft', info: 'PDF · 4000 × 2000 mm Endformat, ohne Beschnitt · ca. 11 MB' },
       { title: 'Banner 4 × 2 m, nur Landschaft', info: 'JPG · 11396 × 5726 px · inkl. 10 mm Beschnitt · ca. 11 MB' },
@@ -119,6 +128,10 @@ const TEXT = tr(
       { title: 'Banner 4 × 2 m with logo', info: 'PDF · 4000 × 2000 mm final size, no bleed · approx. 11 MB' },
       { title: 'Banner 4 × 2 m with logo', info: 'JPG · 11396 × 5726 px · incl. 10 mm bleed · approx. 11 MB' },
       { title: 'Banner 4 × 2 m with logo', info: 'JPG · 11340 × 5670 px · final size, no bleed · approx. 10 MB' },
+      { title: 'Banner 4 × 2 m with logo and QR code', info: 'PDF · 4020 × 2020 mm incl. 10 mm bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m with logo and QR code', info: 'PDF · 4000 × 2000 mm final size, no bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m with logo and QR code', info: 'JPG · 11396 × 5726 px · incl. 10 mm bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m with logo and QR code', info: 'JPG · 11340 × 5670 px · final size, no bleed · approx. 10 MB' },
       { title: 'Banner 4 × 2 m, landscape only', info: 'PDF · 4020 × 2020 mm incl. 10 mm bleed · approx. 11 MB' },
       { title: 'Banner 4 × 2 m, landscape only', info: 'PDF · 4000 × 2000 mm final size, no bleed · approx. 11 MB' },
       { title: 'Banner 4 × 2 m, landscape only', info: 'JPG · 11396 × 5726 px · incl. 10 mm bleed · approx. 11 MB' },
@@ -160,6 +173,10 @@ const TEXT = tr(
       { title: 'Banner 4 × 2 m met logo', info: 'PDF · 4000 × 2000 mm eindformaat, zonder afloop · ca. 11 MB' },
       { title: 'Banner 4 × 2 m met logo', info: 'JPG · 11396 × 5726 px · incl. 10 mm afloop · ca. 11 MB' },
       { title: 'Banner 4 × 2 m met logo', info: 'JPG · 11340 × 5670 px · eindformaat, zonder afloop · ca. 10 MB' },
+      { title: 'Banner 4 × 2 m met logo en QR-code', info: 'PDF · 4020 × 2020 mm incl. 10 mm afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m met logo en QR-code', info: 'PDF · 4000 × 2000 mm eindformaat, zonder afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m met logo en QR-code', info: 'JPG · 11396 × 5726 px · incl. 10 mm afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m met logo en QR-code', info: 'JPG · 11340 × 5670 px · eindformaat, zonder afloop · ca. 10 MB' },
       { title: 'Banner 4 × 2 m, alleen landschap', info: 'PDF · 4020 × 2020 mm incl. 10 mm afloop · ca. 11 MB' },
       { title: 'Banner 4 × 2 m, alleen landschap', info: 'PDF · 4000 × 2000 mm eindformaat, zonder afloop · ca. 11 MB' },
       { title: 'Banner 4 × 2 m, alleen landschap', info: 'JPG · 11396 × 5726 px · incl. 10 mm afloop · ca. 11 MB' },
