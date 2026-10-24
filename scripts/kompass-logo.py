@@ -4,9 +4,15 @@ Nachbau des Kompasses aus dem Logo-Motiv (scripts/presse-quellen/kompass.jpg).
 Aufruf:  python3 scripts/kompass-logo.py
 Ausgabe: scripts/presse-quellen/kompass-logo-hell.svg  (für dunkle Hintergründe)
          scripts/presse-quellen/kompass-logo-dunkel.svg (für helle Hintergründe)
+Gradzahlen und Himmelsrichtungen werden als Pfade gezeichnet (Montserrat aus node_modules/@fontsource) – so sehen
+die SVGs in jedem Grafikprogramm gleich aus, auch ohne installierte Schrift. Benötigt fonttools.
 """
 import math
 import os
+
+from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.ttLib import TTFont
 
 SIZE = 1500
 C = SIZE / 2
@@ -21,6 +27,29 @@ def pol(r, deg):
 
 def f(v):
     return f'{v:.1f}'
+
+
+FONTS = os.path.join(os.path.dirname(__file__), '..', 'node_modules', '@fontsource', 'montserrat', 'files')
+_fonts = {}
+
+
+def text_path(text, x, y, size, weight, tracking=0.0):
+    """Text als Pfad: zentriert um x, senkrecht mittig um y (wie text-anchor=middle, dominant-baseline=central)."""
+    if weight not in _fonts:
+        _fonts[weight] = TTFont(os.path.join(FONTS, f'montserrat-latin-{weight}-normal.woff'))
+    font = _fonts[weight]
+    glyphs, cmap, upm = font.getGlyphSet(), font.getBestCmap(), font['head'].unitsPerEm
+    hhea = font['hhea']
+    scale = size / upm
+    width = sum(glyphs[cmap[ord(c)]].width * scale + tracking for c in text)
+    baseline = y + (hhea.ascent + hhea.descent) / 2 * scale
+    pen = SVGPathPen(glyphs, lambda v: f'{v:.2f}'.rstrip('0').rstrip('.'))
+    cx = x - width / 2
+    for c in text:
+        g = glyphs[cmap[ord(c)]]
+        g.draw(TransformPen(pen, (scale, 0, 0, -scale, cx, baseline)))
+        cx += g.width * scale + tracking
+    return pen.getCommands()
 
 
 def build(ink, shade, bg_cut):
@@ -58,17 +87,16 @@ def build(ink, shade, bg_cut):
     add('</g>')
 
     # Gradzahlen (010 … 350) tangential, Himmelsrichtungen N/O/S/W
-    add(f'<g fill="{ink}" font-family="Montserrat, Helvetica, Arial, sans-serif" text-anchor="middle">')
+    add(f'<g fill="{ink}">')
     for d in range(10, 360, 10):
         if d % 90 == 0:
             continue
         x, y = pol(580, d)
         rot = d + 180 if 90 < d < 270 else d  # untere Hälfte lesbar statt kopfüber
-        add(f'<text x="{f(x)}" y="{f(y)}" font-size="24" font-weight="500" letter-spacing="1" dominant-baseline="central" '
-            f'transform="rotate({rot} {f(x)} {f(y)})">{d:03d}</text>')
+        add(f'<path transform="rotate({rot} {f(x)} {f(y)})" d="{text_path(f"{d:03d}", x, y, 24, 500, 1)}"/>')
     for d, label in ((0, 'N'), (90, 'O'), (180, 'S'), (270, 'W')):
         x, y = pol(618, d)
-        add(f'<text x="{f(x)}" y="{f(y)}" font-size="36" font-weight="700" dominant-baseline="central">{label}</text>')
+        add(f'<path d="{text_path(label, x, y, 36, 700)}"/>')
     # Nordmarke
     add(f'<path d="M{C - 17} {C - 590}H{C + 17}L{C} {C - 556}Z"/>')
     # dekorative Peildreiecke
