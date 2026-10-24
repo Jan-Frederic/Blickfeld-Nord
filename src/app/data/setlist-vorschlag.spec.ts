@@ -1,4 +1,4 @@
-import { Kandidat, vorschlagen } from './setlist-vorschlag';
+import { Kandidat, adventszeit, vorschlagen } from './setlist-vorschlag';
 
 const s = (title: string, extra: Partial<Kandidat> = {}): Kandidat => ({ title, artist: 'X', dauer: 240, ...extra });
 
@@ -27,5 +27,15 @@ describe('vorschlagen', () => {
       20,
     );
     expect(liste.map((e) => ('title' in e ? e.title : ''))).toEqual(['B', 'D', 'C', 'E', 'A']);
+  });
+
+  it('schlägt Weihnachtslieder nur in der Adventszeit vor – dann weit vorne', () => {
+    const songs = [s('A', { wert: 4.8 }), s('B', { wert: 4 }), s('In der Weihnachtsbäckerei'), s('C', { wert: 3.5 })];
+    const titel = (datum?: string) => vorschlagen(songs, 1, 16, datum).map((e) => ('title' in e ? e.title : ''));
+    expect(titel('2026-06-20')).not.toContain('In der Weihnachtsbäckerei');
+    expect(titel('2026-12-04')[0]).toBe('In der Weihnachtsbäckerei');
+    expect(titel()).toContain('In der Weihnachtsbäckerei');
+    expect(adventszeit('2026-11-14')).toBe(false);
+    expect(adventszeit('2026-12-26')).toBe(true);
   });
 });

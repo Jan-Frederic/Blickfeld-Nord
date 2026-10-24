@@ -46,6 +46,8 @@ import { Kandidat, vorschlagen } from '../data/setlist-vorschlag';
 export class SetlistVorschlag {
   /** aktuelle Setlist – nur für die Rückfrage vor dem Ersetzen */
   readonly entries = input.required<Entry[]>();
+  /** Auftritts-ID (beginnt mit dem Datum) – für Weihnachtslieder in der Adventszeit */
+  readonly show = input('');
   readonly apply = output<Entry[]>();
   protected readonly sets = signal(2);
   protected readonly minuten = signal(45);
@@ -58,7 +60,7 @@ export class SetlistVorschlag {
       const info = songInfo(t.title, t.artist);
       return { title: t.title, artist: t.artist, dauer: durationOf(t), wert: wert.get(songKey(t)), gespielt: gespielt.get(songKey(t)), bpm: info?.bpm, tonart: info?.tonart };
     });
-    this.apply.emit(vorschlagen(kandidaten, this.sets(), this.minuten()));
+    this.apply.emit(vorschlagen(kandidaten, this.sets(), this.minuten(), /^\d{4}-\d{2}-\d{2}/.test(this.show()) ? this.show() : undefined));
   }
 
   // wie oft jeder Song auf den gespeicherten Setlists dieses Geräts steht

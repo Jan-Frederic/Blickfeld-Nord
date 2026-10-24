@@ -19,12 +19,30 @@ const OHNE_LAENGE = 210; // angenommene Länge in Sekunden für Songs ohne Spoti
 const LANGSAM = 95; // bpm – darunter gilt ein Song als langsam
 const NEUTRAL = 3; // so viel „wert“ hat ein Song ohne Sterne
 
+const ADVENT = 4.5; // so viel „wert“ bekommen Weihnachtslieder in der Adventszeit mindestens
+
 const laenge = (k: Kandidat) => k.dauer ?? OHNE_LAENGE;
+
+// Weihnachtslieder (am Titel erkannt) passen nur zu Auftritten zwischen 15.11. und 26.12.
+const WEIHNACHTEN = /weihnacht|advent|christmas|xmas|jingle bells|santa/i;
+export const istWeihnachtslied = (s: Song) => WEIHNACHTEN.test(s.title);
+export function adventszeit(datum: string): boolean {
+  const md = datum.slice(5, 10);
+  return md >= '11-15' && md <= '12-26';
+}
+
 const passtNicht = (a: Kandidat, b: Kandidat) =>
   (a.bpm !== undefined && b.bpm !== undefined && a.bpm < LANGSAM && b.bpm < LANGSAM) || (!!a.tonart && a.tonart === b.tonart);
 
-/** Sets mit je etwa `minuten` Spielzeit, getrennt durch Pausen */
-export function vorschlagen(kandidaten: Kandidat[], sets: number, minuten: number): Entry[] {
+/** Sets mit je etwa `minuten` Spielzeit, getrennt durch Pausen. Mit `datum` (JJJJ-MM-TT) des Auftritts: Weihnachtslieder
+ * in der Adventszeit weit vorne, sonst gar nicht. */
+export function vorschlagen(kandidaten: Kandidat[], sets: number, minuten: number, datum?: string): Entry[] {
+  if (datum) {
+    const advent = adventszeit(datum);
+    kandidaten = kandidaten
+      .filter((k) => advent || !istWeihnachtslied(k))
+      .map((k) => (advent && istWeihnachtslied(k) ? { ...k, wert: Math.max(k.wert ?? NEUTRAL, ADVENT) } : k));
+  }
   const rang = kandidaten
     .map((k, i) => ({ k, i }))
     .sort((a, b) => (b.k.wert ?? NEUTRAL) - (a.k.wert ?? NEUTRAL) || (b.k.gespielt ?? 0) - (a.k.gespielt ?? 0) || a.i - b.i)

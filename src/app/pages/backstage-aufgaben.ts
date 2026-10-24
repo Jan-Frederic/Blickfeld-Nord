@@ -187,13 +187,24 @@ export class BackstageAufgaben {
 
     // Werbung: öffentliche, geklärte Auftritte in den nächsten 4 Wochen
     const bald = new Date(Date.now() + 28 * 864e5).toISOString().slice(0, 10);
-    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute && x.date <= bald))
+    // – erst das Plakat, in der letzten Woche die Story bzw. der Status
+    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute && x.date <= bald)) {
+      const tage = Math.round((Date.parse(s.date) - Date.parse(this.heute)) / 864e5);
+      const letzteWoche = tage <= 7;
       out.push({
-        text: `Werbung: Plakat und Story für ${s.venue} (${datum(s.date)}) teilen`,
-        details: ['Erinnerung bis zum Auftritt – Plakat, Story und Instagram-Text auf der Seite des Auftritts'],
+        text: letzteWoche
+          ? `Werbung: Story bzw. Status für ${s.venue} (${datum(s.date)}) posten – ${tage === 0 ? 'heute' : tage === 1 ? 'morgen' : `noch ${tage} Tage`}`
+          : `Werbung: Plakat für ${s.venue} (${datum(s.date)}) teilen`,
+        details: [
+          letzteWoche
+            ? 'Letzte Woche vor dem Auftritt: Story mit QR-Code posten und das Plakat noch einmal teilen'
+            : `Noch ${tage} Tage – Plakat und Instagram-Text jetzt teilen, eine Woche vorher kommt die Story dran`,
+          'Plakat, Story und Instagram-Text auf der Seite des Auftritts',
+        ],
         link: `/backstage/${this.band.showId(s)}`,
         icon: 'campaign',
       });
+    }
 
     // Rückblick fehlt: geklärte Auftritte der letzten 12 Monate ohne Historie-Eintrag am selben Tag
     const vorEinemJahr = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
