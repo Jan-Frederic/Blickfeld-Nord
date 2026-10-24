@@ -121,4 +121,11 @@ export const AUFGABEN: Aufgabe[] = [
     hinweis: 'Zum Beispiel bei Café Lotti oder Gasthof Küpper nachfragen – mit Freigabe für die Website und Angabe, wie der Name erscheinen darf (z. B. „Café Lotti, Dingden“). Nur echte, freigegebene Zitate; bei privaten Feiern ohne Namen.',
     link: '/booking',
   },
+  {
+    id: 'fan-kanal',
+    bereich: 'Inhalte',
+    text: 'Klären, ob es einen „Nichts verpassen“-Kanal für Fans geben soll (z. B. WhatsApp-Kanal)',
+    art: 'kann',
+    hinweis: 'Wenn ja: Link durchgeben – dann bekommt der Kanal einen festen Platz auf der Startseite und den Konzertseiten.',
+  },
 ];
