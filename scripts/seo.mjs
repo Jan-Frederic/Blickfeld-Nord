@@ -3,7 +3,7 @@
 //  - strukturierte Daten (schema.org JSON-LD) für die Band und alle öffentlichen, geklärten Konzerte
 //  - je öffentlichem Konzert eine Seite /konzerte/<id> mit eigenem MusicEvent
 //  - Kalender-Abos: konzerte.ics (öffentliche Konzerte) und backstage/kalender.ics (alle Auftritte + Proben)
-//  - häufige Fragen (FAQPage) auf den Booking-Seiten in allen drei Sprachen
+//  - häufige Fragen (FAQPage) auf den FAQ-Seiten in allen drei Sprachen
 //  - sitemap.xml (alle Seiten auf Deutsch, Englisch und Niederländisch, gegenseitig verknüpft) und robots.txt
 //  - vorgerenderte Seiten ohne <link rel="modulepreload"> (das JavaScript bremst sonst Startbild und ersten Inhalt)
 // Öffentliche Seiten gibt es in drei Sprachen: / (de), /en/… und /nl/…; Inhalte übersetzt src/app/data/uebersetzungen.ts.
@@ -218,9 +218,9 @@ for (const lang of LANGS) {
     });
   }
 
-  // Booking-Seite: häufige Fragen als FAQPage in der jeweiligen Sprache
-  const booking = localUrl('/booking', lang);
-  inject(fileOf('/booking', lang), {
+  // FAQ-Seite: häufige Fragen als FAQPage in der jeweiligen Sprache
+  const booking = localUrl('/faq', lang);
+  inject(fileOf('/faq', lang), {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${booking}#faq`,
@@ -258,7 +258,7 @@ writeFileSync(
 
 // Sitemap (Backstage und Wunschbox bewusst nicht enthalten): jede Seite in allen drei Sprachen,
 // gegenseitig verknüpft wie die hreflang-Links im Seitenkopf
-const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
+const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', '/faq', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
 const alternates = (p) =>
   [...LANGS.map((l) => [l, localUrl(p, l)]), ['x-default', localUrl(p, 'de')]]
     .map(([l, href]) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`)

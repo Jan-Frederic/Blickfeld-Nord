@@ -101,7 +101,7 @@ test('Booking: freier Tag im Kalender → Anfrage-Assistent in 3 Schritten', asy
   return p;
 });
 
-test('Booking NL: Entfernungs-Check und niederländische Anfrage', async () => {
+test('Booking NL: Entfernungs-Check, niederländische Anfrage und FAQ-Seite', async () => {
   const p = await page();
   await p.go('/nl/booking/');
   await p.locator('app-entfernung input').fill('Winterswijk');
@@ -109,7 +109,8 @@ test('Booking NL: Entfernungs-Check und niederländische Anfrage', async () => {
   await p.locator('app-entfernung input').fill('7091');
   await until(async () => (await p.locator('app-entfernung .result').innerText()).includes('Postcode 7091'), 'Entfernungs-Check erkennt die Postcode 7091 nicht');
   expect((await p.locator('app-anfrage h3').innerText()).toLowerCase().includes('offerte'), 'Anfrage nicht auf Niederländisch');
-  expect((await p.locator('app-faq h3').innerText()).toLowerCase().includes('veelgestelde'), 'FAQ nicht auf Niederländisch');
+  await p.locator('app-booking .faq-hinweis a').click();
+  await until(async () => (await p.locator('app-faq-page h2').count()) && (await p.locator('app-faq-page h2').innerText()).toLowerCase().includes('veelgestelde'), 'FAQ-Seite nicht auf Niederländisch');
   return p;
 });
 

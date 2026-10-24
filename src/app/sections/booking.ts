@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Availability } from './availability';
 import { Anfrage } from './anfrage';
-import { Faq } from './faq';
 import { Angebot } from './angebot';
 import { Entfernung } from './entfernung';
 import { Referenzen } from './referenzen';
@@ -32,6 +31,7 @@ const TEXT = tr(
     direct: 'oder direkt an',
     repertoireText: 'Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen. Stöbert in unserer Songliste oder hört direkt rein.',
     toRepertoire: 'Zum Repertoire',
+    faq: 'Noch Fragen? Zu den häufigen Fragen von Veranstaltern',
     spotify: 'Playlist auf Spotify',
     subject: 'Booking-Anfrage Blickfeld Nord',
     body: `Hallo Blickfeld Nord,
@@ -65,6 +65,7 @@ Viele Grüße
     direct: 'or directly to',
     repertoireText: 'Pop, rock, German Schlager, dance and disco – played live with fills, jam sessions and spontaneous ideas. Browse our song list or have a listen.',
     toRepertoire: 'To the repertoire',
+    faq: 'Any questions? See the frequently asked questions',
     spotify: 'Playlist on Spotify',
     subject: 'Booking request Blickfeld Nord',
     body: `Hello Blickfeld Nord,
@@ -98,6 +99,7 @@ Best regards
     direct: 'of rechtstreeks naar',
     repertoireText: 'Pop, rock, schlagers, dance en disco – live aangekleed met fills, jamsessies en spontane ideeën. Snuffel in onze songlijst of luister meteen.',
     toRepertoire: 'Naar het repertoire',
+    faq: 'Nog vragen? Bekijk de veelgestelde vragen',
     spotify: 'Playlist op Spotify',
     subject: 'Boekingsaanvraag Blickfeld Nord',
     body: `Hallo Blickfeld Nord,
@@ -118,7 +120,7 @@ Met vriendelijke groet
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Faq, Angebot, Entfernung, Referenzen],
+  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Angebot, Entfernung, Referenzen],
   template: `
     <section class="section">
       <p class="kicker">{{ t().kicker }}</p>
@@ -135,7 +137,7 @@ Met vriendelijke groet
         }
       </ul>
 
-      <!-- Reihenfolge: was wir bieten → wo wir schon gespielt haben → kommen wir zu euch? → freie Tage → Anfrage → Fragen -->
+      <!-- Reihenfolge: was wir bieten → wo wir schon gespielt haben → kommen wir zu euch? → freie Tage → Anfrage → Kontakt; Fragen auf /faq -->
       <app-angebot />
       <app-referenzen />
 
@@ -190,7 +192,7 @@ Met vriendelijke groet
         </div>
       </div>
 
-      <app-faq />
+      <p class="faq-hinweis"><mat-icon>help</mat-icon> <a [routerLink]="'/faq' | loc">{{ t().faq }}</a></p>
     </section>
   `,
   styles: `
@@ -208,6 +210,7 @@ Met vriendelijke groet
       font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .16em; font-size: .7rem; color: var(--bn-fog);
     }
     .value { line-height: 1.5; }
+    .faq-hinweis { display: flex; align-items: center; gap: 8px; margin: 28px 0 0; } .faq-hinweis mat-icon { color: var(--bn-sunset); } .faq-hinweis a { color: var(--bn-ink); }
     .blocks { margin-top: 32px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     .block { padding: 24px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
     h3 {

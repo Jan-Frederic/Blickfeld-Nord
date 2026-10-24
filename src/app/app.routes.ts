@@ -110,6 +110,18 @@ const publicPages = (): Routes => [
     ),
   },
   {
+    path: 'faq',
+    loadComponent: () => import('./pages/faq').then((m) => m.FaqPage),
+    data: meta(
+      tr('Häufige Fragen – Blickfeld Nord', 'FAQ – Blickfeld Nord', 'Veelgestelde vragen – Blickfeld Nord'),
+      tr(
+        'Häufige Fragen von Veranstaltern an Blickfeld Nord: Anfahrt, Technik, Spieldauer, Repertoire, Songwünsche und Buchung.',
+        'Frequently asked questions from organisers to Blickfeld Nord: travel, tech, playing time, repertoire, song requests and booking.',
+        'Veelgestelde vragen van organisatoren aan Blickfeld Nord: reizen, techniek, speelduur, repertoire, verzoeknummers en boeken.',
+      ),
+    ),
+  },
+  {
     path: 'impressum',
     loadComponent: () => import('./pages/impressum').then((m) => m.Impressum),
     data: meta(

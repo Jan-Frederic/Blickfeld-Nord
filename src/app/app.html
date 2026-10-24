@@ -13,6 +13,7 @@
     }
     <a mat-button [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
     <a mat-button [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
+    <a mat-button [routerLink]="'/faq' | loc">{{ t().nav.faq }}</a>
   </nav>
   @if (showLanguages()) {
     <nav class="languages" [attr.aria-label]="t().language">
@@ -43,6 +44,7 @@
     }
     <a class="menu-item" [routerLink]="'/historie' | loc" (click)="menu.hidePopover()">{{ t().nav.history }}</a>
     <a class="menu-item" [routerLink]="'/freunde' | loc" (click)="menu.hidePopover()">{{ t().nav.friends }}</a>
+    <a class="menu-item" [routerLink]="'/faq' | loc" (click)="menu.hidePopover()">{{ t().nav.faq }}</a>
     @if (showLanguages()) {
       @for (l of languages(); track l.lang) {
         @if (!l.current) {

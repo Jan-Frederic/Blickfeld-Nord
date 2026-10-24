@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { FAQ } from '../data/faq';
@@ -10,7 +10,7 @@ import { I18n, LocPipe } from '../i18n';
   selector: 'app-faq',
   imports: [RouterLink, LocPipe, MatIconModule],
   template: `
-    <h3>{{ faq().title }}</h3>
+    @if (titel()) { <h3>{{ faq().title }}</h3> }
     @for (f of faq().items; track f.q) {
       <details>
         <summary>{{ f.q }}</summary>
@@ -43,6 +43,8 @@ import { I18n, LocPipe } from '../i18n';
   `,
 })
 export class Faq {
+  /** eigene Überschrift – auf der FAQ-Seite steht sie schon als h2 */
+  readonly titel = input(true);
   /** Sprache der Seite */
   // Sprache aus der Adresse (/, /en/…, /nl/…)
   protected readonly lang = inject(I18n).lang;

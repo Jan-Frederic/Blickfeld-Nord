@@ -114,34 +114,48 @@
  {
   "datei": "app.routes.ts",
   "key": "#17",
+  "de": "Häufige Fragen – Blickfeld Nord",
+  "en": "FAQ – Blickfeld Nord",
+  "nl": "Veelgestelde vragen – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#18",
+  "de": "Häufige Fragen von Veranstaltern an Blickfeld Nord: Anfahrt, Technik, Spieldauer, Repertoire, Songwünsche und Buchung.",
+  "en": "Frequently asked questions from organisers to Blickfeld Nord: travel, tech, playing time, repertoire, song requests and booking.",
+  "nl": "Veelgestelde vragen van organisatoren aan Blickfeld Nord: reizen, techniek, speelduur, repertoire, verzoeknummers en boeken."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#19",
   "de": "Impressum – Blickfeld Nord",
   "en": "Legal notice – Blickfeld Nord",
   "nl": "Colofon – Blickfeld Nord"
  },
  {
   "datei": "app.routes.ts",
-  "key": "#18",
+  "key": "#20",
   "de": "Impressum der Band Blickfeld Nord.",
   "en": "Legal notice (Impressum) of the band Blickfeld Nord.",
   "nl": "Colofon (Impressum) van de band Blickfeld Nord."
  },
  {
   "datei": "app.routes.ts",
-  "key": "#19",
+  "key": "#21",
   "de": "Datenschutzerklärung – Blickfeld Nord",
   "en": "Privacy policy – Blickfeld Nord",
   "nl": "Privacyverklaring – Blickfeld Nord"
  },
  {
   "datei": "app.routes.ts",
-  "key": "#20",
+  "key": "#22",
   "de": "Datenschutzerklärung der Website von Blickfeld Nord.",
   "en": "Privacy policy of the Blickfeld Nord website.",
   "nl": "Privacyverklaring van de website van Blickfeld Nord."
  },
  {
   "datei": "app.routes.ts",
-  "key": "#21",
+  "key": "#23",
   "de": "Seite nicht gefunden – Blickfeld Nord",
   "en": "Page not found – Blickfeld Nord",
   "nl": "Pagina niet gevonden – Blickfeld Nord"
@@ -334,6 +348,34 @@
   "de": "Hinweis schließen",
   "en": "Close notice",
   "nl": "Melding sluiten"
+ },
+ {
+  "datei": "pages/faq.ts",
+  "key": "kicker",
+  "de": "Für Veranstalter",
+  "en": "For organisers",
+  "nl": "Voor organisatoren"
+ },
+ {
+  "datei": "pages/faq.ts",
+  "key": "lead",
+  "de": "Antworten auf die Fragen, die uns am häufigsten gestellt werden.",
+  "en": "Answers to the questions we are asked most often.",
+  "nl": "Antwoorden op de vragen die ons het vaakst worden gesteld."
+ },
+ {
+  "datei": "pages/faq.ts",
+  "key": "more",
+  "de": "Eure Frage ist nicht dabei? Schreibt uns – oder schaut direkt nach freien Terminen.",
+  "en": "Your question isn't here? Write to us – or check our free dates right away.",
+  "nl": "Staat jullie vraag er niet bij? Schrijf ons – of bekijk meteen onze vrije data."
+ },
+ {
+  "datei": "pages/faq.ts",
+  "key": "booking",
+  "de": "Zum Booking",
+  "en": "Go to booking",
+  "nl": "Naar boeken"
  },
  {
   "datei": "pages/freunde.ts",
@@ -1468,6 +1510,13 @@
   "de": "Zum Repertoire",
   "en": "To the repertoire",
   "nl": "Naar het repertoire"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "faq",
+  "de": "Noch Fragen? Zu den häufigen Fragen von Veranstaltern",
+  "en": "Any questions? See the frequently asked questions",
+  "nl": "Nog vragen? Bekijk de veelgestelde vragen"
  },
  {
   "datei": "sections/booking.ts",

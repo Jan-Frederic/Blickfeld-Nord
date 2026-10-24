@@ -13,7 +13,7 @@ import { SprachHinweis } from './sections/sprach-hinweis';
 
 const TEXT = tr(
   {
-    nav: { band: 'Band', tour: 'Konzerte', booking: 'Booking', press: 'Pressekit', tech: 'Technik', repertoire: 'Repertoire', gallery: 'Galerie', history: 'Historie', friends: 'Freunde' },
+    nav: { tour: 'Konzerte', booking: 'Booking', press: 'Pressekit', tech: 'Technik', repertoire: 'Repertoire', gallery: 'Galerie', history: 'Historie', friends: 'Freunde', faq: 'FAQ' },
     footer: { press: 'Presse', tech: 'Technik', imprint: 'Impressum', privacy: 'Datenschutz' },
     toTop: 'Zum Seitenanfang',
     openMenu: 'Menü öffnen',
@@ -33,7 +33,7 @@ const TEXT = tr(
     closeHint: 'Hinweis schließen',
   },
   {
-    nav: { band: 'Band', tour: 'Shows', booking: 'Booking', press: 'Press kit', tech: 'Tech info', repertoire: 'Repertoire', gallery: 'Gallery', history: 'History', friends: 'Friends' },
+    nav: { tour: 'Shows', booking: 'Booking', press: 'Press kit', tech: 'Tech info', repertoire: 'Repertoire', gallery: 'Gallery', history: 'History', friends: 'Friends', faq: 'FAQ' },
     footer: { press: 'Press', tech: 'Technical info', imprint: 'Legal notice', privacy: 'Privacy' },
     toTop: 'Back to top',
     openMenu: 'Open menu',
@@ -53,7 +53,7 @@ const TEXT = tr(
     closeHint: 'Close notice',
   },
   {
-    nav: { band: 'Band', tour: 'Optredens', booking: 'Boeken', press: 'Perskit', tech: 'Techniek', repertoire: 'Repertoire', gallery: 'Galerij', history: 'Geschiedenis', friends: 'Vrienden' },
+    nav: { tour: 'Optredens', booking: 'Boeken', press: 'Perskit', tech: 'Techniek', repertoire: 'Repertoire', gallery: 'Galerij', history: 'Geschiedenis', friends: 'Vrienden', faq: 'FAQ' },
     footer: { press: 'Pers', tech: 'Techniek', imprint: 'Colofon', privacy: 'Privacy' },
     toTop: 'Naar boven',
     openMenu: 'Menu openen',
@@ -86,7 +86,6 @@ export class App {
   protected readonly nav = computed((): { id?: string; link?: string; label: string }[] => {
     const n = this.t().nav;
     return [
-      { id: 'band', label: n.band },
       { id: 'tour', label: n.tour },
       { link: '/booking', label: n.booking },
       { link: '/presse', label: n.press },
