@@ -98,7 +98,7 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
     summary { display: flex; align-items: center; gap: 8px; padding: 16px 0; cursor: pointer; font-weight: 500; list-style: none; }
     summary::-webkit-details-marker { display: none; }
     summary mat-icon { color: var(--bn-sunset); }
-    .art { display: flex; gap: 8px; margin-bottom: 16px; }
+    .art { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .art button, .actions button, .btn {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
       border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .88rem; text-decoration: none;
