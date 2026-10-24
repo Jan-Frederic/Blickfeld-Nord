@@ -33,8 +33,7 @@ const TEXT = tr(
           @for (o of orte(); track o.name + o.city) {
             <li>
               <mat-icon aria-hidden="true">place</mat-icon>
-              <strong>{{ content.t(o.name) }}</strong>
-              @if (o.city) { <small>{{ o.city }}</small> }
+              <span class="ort"><strong>{{ content.t(o.name) }}</strong>@if (o.city) {<small> · {{ o.city }}</small>}</span>
               <span class="jahr">{{ o.jahre }}@if (o.anzahl > 1) { · {{ t().times(o.anzahl) }}}</span>
             </li>
           }
@@ -50,18 +49,20 @@ const TEXT = tr(
     .nav button { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); cursor: pointer; }
     .nav button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     ul {
-      list-style: none; margin: 0; padding: 0 0 10px; display: flex; gap: 14px; overflow-x: auto;
+      list-style: none; margin: 0; padding: 0 0 10px; display: flex; gap: 24px; overflow-x: auto;
       scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: thin; overscroll-behavior-x: contain;
     }
     ul:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 4px; }
+    /* je Ort eine Zeile wie in einer Liste: Pin, Name · Ort, Jahr rechts, Linie darunter */
     li {
-      flex: 0 0 min(260px, 78vw); scroll-snap-align: start; display: flex; flex-direction: column; gap: 4px;
-      padding: 16px 18px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72);
+      flex: 0 0 min(320px, 80vw); scroll-snap-align: start; display: flex; align-items: baseline; gap: 8px;
+      padding: 10px 0; border-bottom: 1px solid var(--bn-line);
     }
-    mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--bn-sunset); }
-    strong { font-weight: 600; line-height: 1.35; }
+    mat-icon { flex: none; align-self: center; font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
+    .ort { flex: 1; min-width: 0; line-height: 1.4; }
+    strong { font-weight: 600; }
     small { color: var(--bn-fog); }
-    .jahr { margin-top: auto; padding-top: 8px; font-size: .82rem; color: var(--bn-fog); font-variant-numeric: tabular-nums; }
+    .jahr { flex: none; font-size: .82rem; color: var(--bn-fog); font-variant-numeric: tabular-nums; }
     @media (prefers-reduced-motion: reduce) { ul { scroll-behavior: auto; } }
   `,
 })
