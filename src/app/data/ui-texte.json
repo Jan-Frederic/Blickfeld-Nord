@@ -1,0 +1,2480 @@
+[
+ {
+  "datei": "app.routes.ts",
+  "key": "#1",
+  "de": "Blickfeld Nord – Offizielle Bandpage",
+  "en": "Blickfeld Nord – Official band website",
+  "nl": "Blickfeld Nord – Officiële bandwebsite"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#2",
+  "de": "Songwunsch – Blickfeld Nord",
+  "en": "Song request – Blickfeld Nord",
+  "nl": "Verzoeknummer – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#3",
+  "de": "Live-Wunschbox: Sucht euch einen Song von Blickfeld Nord aus und schickt uns euren Wunsch.",
+  "en": "Live request box: pick a song by Blickfeld Nord and send us your request.",
+  "nl": "Live-verzoekbox: kies een nummer van Blickfeld Nord en stuur ons je verzoek."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#4",
+  "de": "Booking – Blickfeld Nord",
+  "en": "Booking – Blickfeld Nord",
+  "nl": "Boeken – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#5",
+  "de": "Blickfeld Nord buchen: Partyband für Feste, private Feiern und Kneipen – Verfügbarkeit, Technik, Spielzeit, häufige Fragen und Kontakt.",
+  "en": "Book Blickfeld Nord: three-piece party and cover band from Hamminkeln near the Dutch border – festivals, private parties and pubs, own PA and lights.",
+  "nl": "Boek Blickfeld Nord: driekoppige party- en coverband uit Hamminkeln, vlak bij de Nederlandse grens – feesten, privéfeesten en cafés, met eigen geluid en licht."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#6",
+  "de": "Das Repertoire von Blickfeld Nord: durchsuchbare Songliste aus Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen.",
+  "en": "The repertoire of Blickfeld Nord: searchable song list of pop, rock, German Schlager, dance and disco – played live with fills, jam sessions and spontaneous ideas.",
+  "nl": "Het repertoire van Blickfeld Nord: doorzoekbare songlijst met pop, rock, schlagers, dance en disco – live aangekleed met fills, jamsessies en spontane ideeën."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#7",
+  "de": "Galerie – Blickfeld Nord",
+  "en": "Gallery – Blickfeld Nord",
+  "nl": "Galerij – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#8",
+  "de": "Fotos von Blickfeld Nord: Live-Momente von unseren Auftritten und Porträts der Band.",
+  "en": "Photos of Blickfeld Nord: live moments from our shows and portraits of the band.",
+  "nl": "Foto's van Blickfeld Nord: livemomenten van onze optredens en portretten van de band."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#9",
+  "de": "Historie – Blickfeld Nord",
+  "en": "History – Blickfeld Nord",
+  "nl": "Geschiedenis – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#10",
+  "de": "Unsere Geschichte in Momenten: Auftritte, Orte und Begegnungen von Blickfeld Nord – mit Fotos und Videos.",
+  "en": "Our story in moments: shows, places and encounters of Blickfeld Nord – with photos and videos.",
+  "nl": "Ons verhaal in momenten: optredens, plekken en ontmoetingen van Blickfeld Nord – met foto's en video's."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#11",
+  "de": "Pressekit – Blickfeld Nord",
+  "en": "Press kit – Blickfeld Nord",
+  "nl": "Perskit – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#12",
+  "de": "Pressetext, Logos und Fotos von Blickfeld Nord zum Download – für Veranstalter, Presse und Plakate.",
+  "en": "Press text, logos and photos of Blickfeld Nord to download – for organisers, press and posters.",
+  "nl": "Perstekst, logo's en foto's van Blickfeld Nord om te downloaden – voor organisatoren, pers en affiches."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#13",
+  "de": "Technik – Blickfeld Nord",
+  "en": "Technical info – Blickfeld Nord",
+  "nl": "Techniek – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#14",
+  "de": "Technik von Blickfeld Nord für Veranstalter: eigene PA und Licht, Platz- und Strombedarf, Zeitplan für Auf- und Abbau sowie der Technik-Rider als PDF.",
+  "en": "Technical info from Blickfeld Nord for organisers: own PA and lights, space and power requirements, set-up and tear-down times and the tech rider as a PDF.",
+  "nl": "Techniek van Blickfeld Nord voor organisatoren: eigen geluid en licht, benodigde ruimte en stroom, op- en afbouwtijden en de techniek-rider als pdf."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#15",
+  "de": "Freunde & Partner – Blickfeld Nord",
+  "en": "Friends & partners – Blickfeld Nord",
+  "nl": "Vrienden & partners – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#16",
+  "de": "Befreundete Bands, Locations und Vereine von Blickfeld Nord – vom Café Lotti bis zur Drum School.",
+  "en": "Friendly bands, venues and clubs of Blickfeld Nord – from Café Lotti to the drum school.",
+  "nl": "Bevriende bands, locaties en verenigingen van Blickfeld Nord – van Café Lotti tot de drumschool."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#17",
+  "de": "Impressum – Blickfeld Nord",
+  "en": "Legal notice – Blickfeld Nord",
+  "nl": "Colofon – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#18",
+  "de": "Impressum der Band Blickfeld Nord.",
+  "en": "Legal notice (Impressum) of the band Blickfeld Nord.",
+  "nl": "Colofon (Impressum) van de band Blickfeld Nord."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#19",
+  "de": "Datenschutzerklärung – Blickfeld Nord",
+  "en": "Privacy policy – Blickfeld Nord",
+  "nl": "Privacyverklaring – Blickfeld Nord"
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#20",
+  "de": "Datenschutzerklärung der Website von Blickfeld Nord.",
+  "en": "Privacy policy of the Blickfeld Nord website.",
+  "nl": "Privacyverklaring van de website van Blickfeld Nord."
+ },
+ {
+  "datei": "app.routes.ts",
+  "key": "#21",
+  "de": "Seite nicht gefunden – Blickfeld Nord",
+  "en": "Page not found – Blickfeld Nord",
+  "nl": "Pagina niet gevonden – Blickfeld Nord"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.tour",
+  "de": "Konzerte",
+  "en": "Shows",
+  "nl": "Optredens"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.booking",
+  "de": "Booking",
+  "en": "Booking",
+  "nl": "Boeken"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.press",
+  "de": "Pressekit",
+  "en": "Press kit",
+  "nl": "Perskit"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.tech",
+  "de": "Technik",
+  "en": "Tech info",
+  "nl": "Techniek"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.gallery",
+  "de": "Galerie",
+  "en": "Gallery",
+  "nl": "Galerij"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.history",
+  "de": "Historie",
+  "en": "History",
+  "nl": "Geschiedenis"
+ },
+ {
+  "datei": "app.ts",
+  "key": "nav.friends",
+  "de": "Freunde",
+  "en": "Friends",
+  "nl": "Vrienden"
+ },
+ {
+  "datei": "app.ts",
+  "key": "footer.press",
+  "de": "Presse",
+  "en": "Press",
+  "nl": "Pers"
+ },
+ {
+  "datei": "app.ts",
+  "key": "footer.tech",
+  "de": "Technik",
+  "en": "Technical info",
+  "nl": "Techniek"
+ },
+ {
+  "datei": "app.ts",
+  "key": "footer.imprint",
+  "de": "Impressum",
+  "en": "Legal notice",
+  "nl": "Colofon"
+ },
+ {
+  "datei": "app.ts",
+  "key": "footer.privacy",
+  "de": "Datenschutz",
+  "en": "Privacy",
+  "nl": "Privacy"
+ },
+ {
+  "datei": "app.ts",
+  "key": "toTop",
+  "de": "Zum Seitenanfang",
+  "en": "Back to top",
+  "nl": "Naar boven"
+ },
+ {
+  "datei": "app.ts",
+  "key": "openMenu",
+  "de": "Menü öffnen",
+  "en": "Open menu",
+  "nl": "Menu openen"
+ },
+ {
+  "datei": "app.ts",
+  "key": "language",
+  "de": "Sprache",
+  "en": "Language",
+  "nl": "Taal"
+ },
+ {
+  "datei": "app.ts",
+  "key": "instagram",
+  "de": "Blickfeld Nord auf Instagram",
+  "en": "Blickfeld Nord on Instagram",
+  "nl": "Blickfeld Nord op Instagram"
+ },
+ {
+  "datei": "app.ts",
+  "key": "facebook",
+  "de": "Blickfeld Nord auf Facebook",
+  "en": "Blickfeld Nord on Facebook",
+  "nl": "Blickfeld Nord op Facebook"
+ },
+ {
+  "datei": "app.ts",
+  "key": "mail",
+  "de": "E-Mail an Matthias Wigger",
+  "en": "E-mail Matthias Wigger",
+  "nl": "E-mail aan Matthias Wigger"
+ },
+ {
+  "datei": "app.ts",
+  "key": "install",
+  "de": "Als App installieren",
+  "en": "Install as app",
+  "nl": "Als app installeren"
+ },
+ {
+  "datei": "app.ts",
+  "key": "iosHint",
+  "de": "Als App nutzen:",
+  "en": "Use as an app:",
+  "nl": "Als app gebruiken:"
+ },
+ {
+  "datei": "app.ts",
+  "key": "iosShare",
+  "de": "Teilen → „Zum Home-Bildschirm“",
+  "en": "Share → “Add to Home Screen”",
+  "nl": "Delen → „Zet op beginscherm”"
+ },
+ {
+  "datei": "app.ts",
+  "key": "rights",
+  "de": "Alle Rechte vorbehalten",
+  "en": "All rights reserved",
+  "nl": "Alle rechten voorbehouden"
+ },
+ {
+  "datei": "app.ts",
+  "key": "credit",
+  "de": "Gestaltung und Umsetzung:",
+  "en": "Design and development:",
+  "nl": "Ontwerp en realisatie:"
+ },
+ {
+  "datei": "app.ts",
+  "key": "whatsNew",
+  "de": "Was ist neu?",
+  "en": "What's new?",
+  "nl": "Wat is er nieuw?"
+ },
+ {
+  "datei": "app.ts",
+  "key": "version",
+  "de": "Version",
+  "en": "Version",
+  "nl": "Versie"
+ },
+ {
+  "datei": "app.ts",
+  "key": "updateReady",
+  "de": "Neue Version verfügbar",
+  "en": "New version available",
+  "nl": "Nieuwe versie beschikbaar"
+ },
+ {
+  "datei": "app.ts",
+  "key": "reload",
+  "de": "Neu laden",
+  "en": "Reload",
+  "nl": "Opnieuw laden"
+ },
+ {
+  "datei": "app.ts",
+  "key": "closeHint",
+  "de": "Hinweis schließen",
+  "en": "Close notice",
+  "nl": "Melding sluiten"
+ },
+ {
+  "datei": "pages/freunde.ts",
+  "key": "kicker",
+  "de": "Verbunden",
+  "en": "Connected",
+  "nl": "Verbonden"
+ },
+ {
+  "datei": "pages/freunde.ts",
+  "key": "title",
+  "de": "Freunde & Partner",
+  "en": "Friends & partners",
+  "nl": "Vrienden & partners"
+ },
+ {
+  "datei": "pages/freunde.ts",
+  "key": "lead",
+  "de": "Menschen und Projekte, mit denen wir gern zusammenarbeiten – schaut mal vorbei!",
+  "en": "People and projects we love working with – go and have a look!",
+  "nl": "Mensen en projecten waarmee we graag samenwerken – neem gerust een kijkje!"
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "kicker",
+  "de": "Rückblick",
+  "en": "Looking back",
+  "nl": "Terugblik"
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "title",
+  "de": "Historie",
+  "en": "History",
+  "nl": "Geschiedenis"
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "lead",
+  "de": "Unsere Geschichte in Momenten – Auftritte, Orte, Begegnungen und alles, was uns unterwegs passiert.",
+  "en": "Our story in moments – shows, places, encounters and everything that happens to us along the way.",
+  "nl": "Ons verhaal in momenten – optredens, plekken, ontmoetingen en alles wat ons onderweg overkomt."
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "example",
+  "de": "Beispiel",
+  "en": "Example",
+  "nl": "Voorbeeld"
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "openImage",
+  "de": "Bild öffnen: ",
+  "en": "Open image: ",
+  "nl": "Afbeelding openen: "
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "photo",
+  "de": "Foto",
+  "en": "Photo",
+  "nl": "Foto"
+ },
+ {
+  "datei": "pages/historie.ts",
+  "key": "empty",
+  "de": "Hier entsteht bald unsere Chronik.",
+  "en": "Our chronicle is coming soon.",
+  "nl": "Hier verschijnt binnenkort onze kroniek."
+ },
+ {
+  "datei": "pages/instagram-reel.ts",
+  "key": "frameTitle",
+  "de": "Instagram-Reel von Blickfeld Nord",
+  "en": "Instagram reel by Blickfeld Nord",
+  "nl": "Instagram-reel van Blickfeld Nord"
+ },
+ {
+  "datei": "pages/instagram-reel.ts",
+  "key": "title",
+  "de": "Reel von Instagram",
+  "en": "Reel from Instagram",
+  "nl": "Reel van Instagram"
+ },
+ {
+  "datei": "pages/instagram-reel.ts",
+  "key": "note",
+  "de": "Mit Klick auf „Reel laden“ wird das Video von Instagram (Meta Platforms Ireland Ltd.) geladen. Dabei werden Daten wie Ihre IP-Adresse an Meta übertragen und ggf. Cookies gesetzt. Mehr dazu in der",
+  "en": "Clicking “Load reel” loads the video from Instagram (Meta Platforms Ireland Ltd.). Data such as your IP address is transferred to Meta and cookies may be set. More in our",
+  "nl": "Met een klik op „Reel laden” wordt de video van Instagram (Meta Platforms Ireland Ltd.) geladen. Daarbij worden gegevens zoals je IP-adres naar Meta verstuurd en worden mogelijk cookies geplaatst. Meer hierover in de"
+ },
+ {
+  "datei": "pages/instagram-reel.ts",
+  "key": "privacy",
+  "de": "Datenschutzerklärung",
+  "en": "privacy policy",
+  "nl": "privacyverklaring"
+ },
+ {
+  "datei": "pages/instagram-reel.ts",
+  "key": "load",
+  "de": "Reel laden",
+  "en": "Load reel",
+  "nl": "Reel laden"
+ },
+ {
+  "datei": "pages/instagram-reel.ts",
+  "key": "direct",
+  "de": "oder direkt auf Instagram ansehen",
+  "en": "or watch it directly on Instagram",
+  "nl": "of bekijk hem direct op Instagram"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "back",
+  "de": "Alle Konzerte",
+  "en": "All shows",
+  "nl": "Alle optredens"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "recap",
+  "de": "Rückblick",
+  "en": "Looking back",
+  "nl": "Terugblik"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "over",
+  "de": "Dieses Konzert ist schon vorbei – danke an alle, die dabei waren!",
+  "en": "This show is already over – thanks to everyone who was there!",
+  "nl": "Dit optreden is al voorbij – bedankt aan iedereen die erbij was!"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "date",
+  "de": "Datum",
+  "en": "Date",
+  "nl": "Datum"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "until",
+  "de": "bis",
+  "en": "until",
+  "nl": "tot"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "start",
+  "de": "Beginn",
+  "en": "Start",
+  "nl": "Aanvang"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "time",
+  "de": "{1} Uhr",
+  "en": "{1}",
+  "nl": "{1} uur"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "tba",
+  "de": "wird noch bekannt gegeben",
+  "en": "to be announced",
+  "nl": "wordt nog bekendgemaakt"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "place",
+  "de": "Ort",
+  "en": "Venue",
+  "nl": "Locatie"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "entry",
+  "de": "Eintritt",
+  "en": "Entry",
+  "nl": "Entree"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "free",
+  "de": "frei",
+  "en": "free",
+  "nl": "gratis"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "soon",
+  "de": "Infos folgen",
+  "en": "details to follow",
+  "nl": "info volgt"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "remind",
+  "de": "Erinnere mich",
+  "en": "Remind me",
+  "nl": "Herinner me"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "share",
+  "de": "Teilen",
+  "en": "Share",
+  "nl": "Delen"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "route",
+  "de": "Anfahrt",
+  "en": "Directions",
+  "nl": "Route"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "remindHint",
+  "de": "„Erinnere mich“ lädt einen Kalendereintrag mit Erinnerung am Vortag herunter.",
+  "en": "“Remind me” downloads a calendar entry with a reminder the day before.",
+  "nl": "„Herinner me” downloadt een agenda-item met een herinnering de dag ervoor."
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "photo",
+  "de": "Foto",
+  "en": "Photo",
+  "nl": "Foto"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "readAll",
+  "de": "Ganzen Rückblick lesen",
+  "en": "Read the full story",
+  "nl": "Lees de hele terugblik"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "played",
+  "de": "Gespielt an diesem Abend",
+  "en": "Played that night",
+  "nl": "Gespeeld die avond"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "highlight",
+  "de": "Song des Abends",
+  "en": "Song of the night",
+  "nl": "Nummer van de avond"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "video",
+  "de": "Video auf Instagram",
+  "en": "Video on Instagram",
+  "nl": "Video op Instagram"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "more",
+  "de": "Ihr wollt uns auch bei euch haben?",
+  "en": "Want us to play for you too?",
+  "nl": "Willen jullie ons ook bij jullie?"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "booking",
+  "de": "Booking & Anfrage",
+  "en": "Booking & enquiries",
+  "nl": "Boeken & aanvraag"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "notFound",
+  "de": "Konzert nicht gefunden",
+  "en": "Show not found",
+  "nl": "Optreden niet gevonden"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "notFoundText",
+  "de": "Diesen Termin gibt es nicht (mehr). Alle aktuellen Termine findet ihr in der",
+  "en": "This date doesn't exist (any more). You'll find all current dates in the",
+  "nl": "Deze datum bestaat niet (meer). Alle actuele data vinden jullie in de"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "list",
+  "de": "Konzertliste",
+  "en": "list of shows",
+  "nl": "lijst met optredens"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "metaFallback",
+  "de": "Konzert – Blickfeld Nord",
+  "en": "Show – Blickfeld Nord",
+  "nl": "Optreden – Blickfeld Nord"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "metaDescription",
+  "de": "Blickfeld Nord live am {1} ab {2} Uhr: {3} – Eintritt frei. Partymusik zum Mitsingen und Tanzen.",
+  "en": "Blickfeld Nord live on {1} from {2}: {3} – free entry. Party music to sing along and dance to.",
+  "nl": "Blickfeld Nord live op {1} vanaf {2} uur: {3} – gratis entree. Partymuziek om mee te zingen en op te dansen."
+ },
+ {
+  "datei": "pages/member.ts",
+  "key": "back",
+  "de": "Zur Band",
+  "en": "Back to the band",
+  "nl": "Terug naar de band"
+ },
+ {
+  "datei": "pages/member.ts",
+  "key": "soon",
+  "de": "Die ausführliche Bio folgt in Kürze.",
+  "en": "A longer bio is coming soon.",
+  "nl": "Een uitgebreide bio volgt binnenkort."
+ },
+ {
+  "datei": "pages/member.ts",
+  "key": "others",
+  "de": "Weitere Bandmitglieder",
+  "en": "More band members",
+  "nl": "Andere bandleden"
+ },
+ {
+  "datei": "pages/member.ts",
+  "key": "notFound",
+  "de": "Nicht gefunden",
+  "en": "Not found",
+  "nl": "Niet gevonden"
+ },
+ {
+  "datei": "pages/member.ts",
+  "key": "notFoundText",
+  "de": "Dieses Bandmitglied gibt es (noch) nicht.",
+  "en": "This band member doesn't exist (yet).",
+  "nl": "Dit bandlid bestaat (nog) niet."
+ },
+ {
+  "datei": "pages/member.ts",
+  "key": "at",
+  "de": "bei Blickfeld Nord.",
+  "en": "with Blickfeld Nord.",
+  "nl": "bij Blickfeld Nord."
+ },
+ {
+  "datei": "pages/not-found.ts",
+  "key": "kicker",
+  "de": "Fehler 404",
+  "en": "Error 404",
+  "nl": "Fout 404"
+ },
+ {
+  "datei": "pages/not-found.ts",
+  "key": "title",
+  "de": "Vom Kurs abgekommen",
+  "en": "Off course",
+  "nl": "Uit koers geraakt"
+ },
+ {
+  "datei": "pages/not-found.ts",
+  "key": "lead",
+  "de": "Diese Seite gibt es leider nicht – vielleicht ist der Link veraltet oder hat einen Tippfehler. Kein Problem: Der Kompass zeigt dich zurück auf die Bühne.",
+  "en": "Sorry, this page doesn't exist – maybe the link is out of date or has a typo. No problem: the compass will point you back to the stage.",
+  "nl": "Deze pagina bestaat helaas niet – misschien is de link verouderd of zit er een typfout in. Geen probleem: het kompas wijst je de weg terug naar het podium."
+ },
+ {
+  "datei": "pages/not-found.ts",
+  "key": "home",
+  "de": "Zur Startseite",
+  "en": "To the home page",
+  "nl": "Naar de startpagina"
+ },
+ {
+  "datei": "pages/not-found.ts",
+  "key": "concerts",
+  "de": "Konzerte",
+  "en": "Shows",
+  "nl": "Optredens"
+ },
+ {
+  "datei": "pages/not-found.ts",
+  "key": "history",
+  "de": "Historie",
+  "en": "History",
+  "nl": "Geschiedenis"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "kicker",
+  "de": "Was wir spielen",
+  "en": "What we play",
+  "nl": "Wat we spelen"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "lead",
+  "de": "Von Pop und Rock über Schlager bis Dance und Disco: Unsere Songs laden zum Mitsingen, Tanzen und Feiern ein. Doch die Setlist ist bei uns nur der Anfang – denn live spielen wir nichts einfach nach.",
+  "en": "From pop and rock to German Schlager, dance and disco: our songs get people singing, dancing and celebrating. But for us the setlist is just the beginning – because live, we never simply copy a song.",
+  "nl": "Van pop en rock tot schlagers, dance en disco: onze nummers nodigen uit om mee te zingen, te dansen en te feesten. Maar de setlist is bij ons pas het begin – want live spelen we niets zomaar na."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "liveTitle",
+  "de": "Live klingt's bei uns anders",
+  "en": "Live, we sound different",
+  "nl": "Live klinkt het bij ons anders"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "liveText",
+  "de": "Wir schmücken unsere Auftritte musikalisch aus: mit knackigen Fill-Ins, Jam-Sessions, spontanen Aktionen und kreativen Überlegungen. Wir hören aufeinander, schauen ins Publikum und lassen uns vom Abend tragen – so wird aus einem bekannten Song jedes Mal ein kleines bisschen etwas Neues.",
+  "en": "We dress up our shows musically: with punchy fills, jam sessions, spontaneous moments and creative ideas. We listen to each other, watch the crowd and let the evening carry us – so a well-known song turns into something a little bit new every time.",
+  "nl": "We kleden onze optredens muzikaal aan: met pittige fills, jamsessies, spontane acties en creatieve ideeën. We luisteren naar elkaar, kijken naar het publiek en laten ons door de avond meevoeren – zo wordt een bekend nummer elke keer weer een beetje iets nieuws."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.0.title",
+  "de": "Knackige Fill-Ins",
+  "en": "Punchy fills",
+  "nl": "Pittige fills"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.0.text",
+  "de": "Ein Trommelwirbel hier, ein Basslauf da: Kleine Fills, die Übergänge zünden lassen und jedem Song ordentlich Schwung geben.",
+  "en": "A drum roll here, a bass run there: little fills that make the transitions spark and give every song a proper lift.",
+  "nl": "Een roffel hier, een baslijntje daar: kleine fills die de overgangen laten vonken en elk nummer flink vaart geven."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.1.title",
+  "de": "Jam-Sessions",
+  "en": "Jam sessions",
+  "nl": "Jamsessies"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.1.text",
+  "de": "Wenn die Stimmung stimmt, lassen wir es laufen – der Groove wird länger, das Solo größer, und ein Song geht wie von selbst in den nächsten über.",
+  "en": "When the vibe is right, we let it flow – the groove gets longer, the solo bigger, and one song slides into the next as if by itself.",
+  "nl": "Als de sfeer goed is, laten we het lopen – de groove wordt langer, de solo groter, en het ene nummer gaat als vanzelf over in het volgende."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.2.title",
+  "de": "Spontane Aktionen",
+  "en": "Spontaneous moments",
+  "nl": "Spontane acties"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.2.text",
+  "de": "Ein Ständchen fürs Geburtstagskind, ein Refrain, den der ganze Saal übernimmt, oder ein Gast, der kurzerhand mit einsteigt: Wir spielen mit dem Moment.",
+  "en": "A serenade for the birthday boy or girl, a chorus the whole room takes over, or a guest who simply joins in: we play with the moment.",
+  "nl": "Een serenade voor de jarige, een refrein dat de hele zaal overneemt, of een gast die zomaar meedoet: we spelen met het moment."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.3.title",
+  "de": "Kreative Überlegungen",
+  "en": "Creative ideas",
+  "nl": "Creatieve ideeën"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cards.3.text",
+  "de": "Eigene Arrangements, überraschende Wendungen und bekannte Hits im neuen Gewand – mal ruhiger, mal schneller, immer mit unserer Handschrift.",
+  "en": "Our own arrangements, surprising twists and well-known hits in a new guise – sometimes calmer, sometimes faster, always with our own signature.",
+  "nl": "Eigen arrangementen, verrassende wendingen en bekende hits in een nieuw jasje – soms rustiger, soms sneller, altijd met ons eigen handschrift."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "claim",
+  "de": "Kein Auftritt gleicht dem anderen.",
+  "en": "No two shows are the same.",
+  "nl": "Geen optreden is hetzelfde."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "sub",
+  "de": "Darum lohnt es sich, öfter vorbeizukommen – und darum wird jede Feier mit uns zu eurer ganz eigenen.",
+  "en": "That's why it's worth coming back more often – and why every party with us becomes truly your own.",
+  "nl": "Daarom loont het om vaker langs te komen – en daarom wordt elk feest met ons echt het jouwe."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "cta",
+  "de": "Viele Wünsche erfüllen wir gern, manche sogar spontan am Abend.",
+  "en": "We're happy to fulfil lots of requests, some even spontaneously on the night.",
+  "nl": "Veel verzoeken vervullen we graag, sommige zelfs spontaan op de avond."
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "booking",
+  "de": "Booking & Anfrage",
+  "en": "Booking & enquiries",
+  "nl": "Boeken & aanvraag"
+ },
+ {
+  "datei": "pages/repertoire.ts",
+  "key": "spotify",
+  "de": "Playlist auf Spotify",
+  "en": "Playlist on Spotify",
+  "nl": "Playlist op Spotify"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "kicker",
+  "de": "Für Veranstalter",
+  "en": "For organisers",
+  "nl": "Voor organisatoren"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "title",
+  "de": "Technik",
+  "en": "Technical info",
+  "nl": "Techniek"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "lead",
+  "de": "Ihr kümmert euch um die Gäste, wir um den Sound: PA, Licht und Instrumente bringen wir selbst mit. Von euch brauchen wir nur ein bisschen Platz und Strom – hier sind alle Details auf einen Blick.",
+  "en": "You take care of the guests, we take care of the sound: we bring our own PA, lights and instruments. All we need from you is a little space and power – here are all the details at a glance.",
+  "nl": "Jullie zorgen voor de gasten, wij voor het geluid: geluid (PA), licht en instrumenten nemen we zelf mee. Van jullie hebben we alleen wat ruimte en stroom nodig – hier staan alle details op een rij."
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "rider",
+  "de": "Technik-Rider (PDF)",
+  "en": "Tech rider (PDF)",
+  "nl": "Techniek-rider (pdf)"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "plan",
+  "de": "Nur Bühnenplan (PDF)",
+  "en": "Stage plan only (PDF)",
+  "nl": "Alleen podiumplan (pdf)"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "bring",
+  "de": "Was wir mitbringen",
+  "en": "What we bring",
+  "nl": "Wat we meenemen"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.0.items.0",
+  "de": "Lautsprecher (Tops) und Subwoofer",
+  "en": "Speakers (tops) and subwoofer",
+  "nl": "Speakers (tops) en subwoofer"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.0.items.1",
+  "de": "Mischpult",
+  "en": "Mixing desk",
+  "nl": "Mengpaneel"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.0.items.2",
+  "de": "Drei Gesangsmikrofone und Drum-Mikrofone",
+  "en": "Three vocal mics and drum mics",
+  "nl": "Drie zangmicrofoons en drummicrofoons"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.0.items.3",
+  "de": "Monitorboxen",
+  "en": "Monitor speakers",
+  "nl": "Monitorspeakers"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.1.title",
+  "de": "Licht",
+  "en": "Lights",
+  "nl": "Licht"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.1.items.0",
+  "de": "PAR-Scheinwerfer",
+  "en": "PAR lights",
+  "nl": "PAR-spots"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.1.items.1",
+  "de": "Lichtstativ bzw. Lichtbrücke",
+  "en": "Lighting stand or truss",
+  "nl": "Lichtstatief of lichtbrug"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.1.items.2",
+  "de": "Lichtsteuerung",
+  "en": "Lighting control",
+  "nl": "Lichtsturing"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.1.items.3",
+  "de": "Nebelmaschine",
+  "en": "Fog machine",
+  "nl": "Rookmachine"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.2.title",
+  "de": "Instrumente",
+  "en": "Instruments",
+  "nl": "Instrumenten"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.2.items.0",
+  "de": "Akustikgitarre",
+  "en": "Acoustic guitar",
+  "nl": "Akoestische gitaar"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.2.items.1",
+  "de": "E-Bass mit Verstärker",
+  "en": "Electric bass with amp",
+  "nl": "Elektrische bas met versterker"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.2.items.2",
+  "de": "Schlagzeug",
+  "en": "Drum kit",
+  "nl": "Drumstel"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "cards.2.items.3",
+  "de": "Kabel, Ständer und Mehrfachsteckdosen",
+  "en": "Cables, stands and power strips",
+  "nl": "Kabels, statieven en stekkerdozen"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "need",
+  "de": "Was wir von euch brauchen",
+  "en": "What we need from you",
+  "nl": "Wat we van jullie nodig hebben"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "area",
+  "de": "Spielfläche",
+  "en": "Stage area",
+  "nl": "Speelvlak"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "areaValue",
+  "de": "ca. 4 × 3 Meter",
+  "en": "approx. 4 × 3 metres",
+  "nl": "ca. 4 × 3 meter"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "power",
+  "de": "Strom",
+  "en": "Power",
+  "nl": "Stroom"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "powerValue",
+  "de": "2 Steckdosen in der Nähe der Spielfläche",
+  "en": "2 power sockets near the stage area",
+  "nl": "2 stopcontacten in de buurt van het speelvlak"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "schedule",
+  "de": "Zeitplan",
+  "en": "Schedule",
+  "nl": "Tijdschema"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "timeline.0.time",
+  "de": "ca. 3 Std. vorher",
+  "en": "approx. 3 hrs before",
+  "nl": "ca. 3 uur vooraf"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "timeline.0.text",
+  "de": "Ankunft und Aufbau",
+  "en": "Arrival and set-up",
+  "nl": "Aankomst en opbouw"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "timeline.1.time",
+  "de": "3 bis 4 Std.",
+  "en": "3 to 4 hrs",
+  "nl": "3 tot 4 uur"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "timeline.1.text",
+  "de": "Spielzeit in Sets à 1 Stunde – Pausen nach Absprache oder spontan",
+  "en": "Playing time in sets of 1 hour – breaks as agreed or spontaneously",
+  "nl": "Speeltijd in sets van 1 uur – pauzes in overleg of spontaan"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "timeline.2.time",
+  "de": "ca. 1 Std.",
+  "en": "approx. 1 hr",
+  "nl": "ca. 1 uur"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "timeline.2.text",
+  "de": "Abbau nach dem letzten Song",
+  "en": "Tear-down after the last song",
+  "nl": "Afbouw na het laatste nummer"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "setup",
+  "de": "Technischer Aufbau",
+  "en": "Technical set-up",
+  "nl": "Technische opbouw"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "question",
+  "de": "Noch Fragen zur Technik oder besondere Gegebenheiten vor Ort? Meldet euch gern über die",
+  "en": "Any questions about the technical side or special conditions at your venue? Just get in touch via the",
+  "nl": "Nog vragen over de techniek of bijzondere omstandigheden ter plaatse? Neem gerust contact op via de"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "bookingLink",
+  "de": "Booking-Seite",
+  "en": "booking page",
+  "nl": "boekingspagina"
+ },
+ {
+  "datei": "pages/technik.ts",
+  "key": "questionEnd",
+  "de": " – wir finden eine Lösung.",
+  "en": " – we will find a solution.",
+  "nl": " – we vinden een oplossing."
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "kicker",
+  "de": "Live-Wunschbox",
+  "en": "Live request box",
+  "nl": "Live-verzoekbox"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "title",
+  "de": "Euer Song?",
+  "en": "Your song?",
+  "nl": "Jouw nummer?"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "lead",
+  "de": "Sucht euch einen Song aus unserem Repertoire aus – wir schauen, wann er am besten in den Abend passt.",
+  "en": "Pick a song from our repertoire – we'll see when it fits into the evening best.",
+  "nl": "Kies een nummer uit ons repertoire – wij kijken wanneer het het beste in de avond past."
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "placeholder",
+  "de": "Song oder Interpret …",
+  "en": "Song or artist …",
+  "nl": "Nummer of artiest …"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "search",
+  "de": "Song suchen",
+  "en": "Search songs",
+  "nl": "Nummer zoeken"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "none",
+  "de": "Nichts gefunden – ruft uns euren Wunsch einfach zwischen zwei Songs zu!",
+  "en": "Nothing found – just shout your request to us between two songs!",
+  "nl": "Niets gevonden – roep je verzoek gewoon tussen twee nummers naar ons!"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "change",
+  "de": "ändern",
+  "en": "change",
+  "nl": "wijzigen"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "name",
+  "de": "Euer Name (optional)",
+  "en": "Your name (optional)",
+  "nl": "Je naam (optioneel)"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "note",
+  "de": "Gruß oder Anlass (optional)",
+  "en": "Greeting or occasion (optional)",
+  "nl": "Groet of gelegenheid (optioneel)"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "notePlaceholder",
+  "de": "z. B. für Anna zum 30.!",
+  "en": "e.g. for Anna's 30th!",
+  "nl": "bijv. voor Anna, 30 jaar!"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "instagram",
+  "de": "Per Instagram senden",
+  "en": "Send via Instagram",
+  "nl": "Via Instagram sturen"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "mail",
+  "de": "Per E-Mail",
+  "en": "By e-mail",
+  "nl": "Per e-mail"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "ok",
+  "de": "Wunsch kopiert – in der Instagram-Nachricht einfach einfügen und abschicken. Danke!",
+  "en": "Request copied – just paste it into the Instagram message and send. Thanks!",
+  "nl": "Verzoek gekopieerd – plak het gewoon in het Instagram-bericht en verstuur het. Bedankt!"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "hint",
+  "de": "Bei Instagram wird euer Wunsch kopiert – im Chat dann nur noch einfügen.",
+  "en": "With Instagram, your request is copied – you then just paste it into the chat.",
+  "nl": "Bij Instagram wordt je verzoek gekopieerd – in de chat hoef je het alleen nog te plakken."
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "request",
+  "de": "Songwunsch",
+  "en": "Song request",
+  "nl": "Verzoeknummer"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "greeting",
+  "de": "Gruß",
+  "en": "Greeting",
+  "nl": "Groet"
+ },
+ {
+  "datei": "pages/wunsch.ts",
+  "key": "from",
+  "de": "von",
+  "en": "from",
+  "nl": "van"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "hint",
+  "de": "Neue Termine erscheinen automatisch in eurem Kalender",
+  "en": "New dates appear in your calendar automatically",
+  "nl": "Nieuwe data verschijnen automatisch in je agenda"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "subscribe",
+  "de": "Kalender abonnieren",
+  "en": "Subscribe to calendar",
+  "nl": "Agenda abonneren"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "copyHint",
+  "de": "Adresse zum Einfügen in Outlook oder andere Kalender-Apps",
+  "en": "Address to paste into Outlook or other calendar apps",
+  "nl": "Adres om in Outlook of andere agenda-apps te plakken"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "copied",
+  "de": "Adresse kopiert ✓",
+  "en": "Address copied ✓",
+  "nl": "Adres gekopieerd ✓"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "google",
+  "de": "Google Kalender",
+  "en": "Google Calendar",
+  "nl": "Google Agenda"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "copy",
+  "de": "Adresse kopieren",
+  "en": "Copy address",
+  "nl": "Adres kopiëren"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "download",
+  "de": "einmalig herunterladen",
+  "en": "download once",
+  "nl": "eenmalig downloaden"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "prompt",
+  "de": "Kalender-Adresse kopieren:",
+  "en": "Copy calendar address:",
+  "nl": "Agenda-adres kopiëren:"
+ },
+ {
+  "datei": "sections/abo-button.ts",
+  "key": "outlook",
+  "de": "Outlook zeigt abonnierte Termine nur bis ein Jahr im Voraus – spätere erscheinen automatisch, sobald sie näher rücken.",
+  "en": "Outlook only shows subscribed dates up to one year ahead – later ones appear automatically as they get closer.",
+  "nl": "Outlook toont geabonneerde data maar tot een jaar vooruit – latere verschijnen vanzelf zodra ze dichterbij komen."
+ },
+ {
+  "datei": "sections/band.ts",
+  "key": "kicker",
+  "de": "Wer wir sind",
+  "en": "Who we are",
+  "nl": "Wie we zijn"
+ },
+ {
+  "datei": "sections/band.ts",
+  "key": "title",
+  "de": "Die Band",
+  "en": "The band",
+  "nl": "De band"
+ },
+ {
+  "datei": "sections/band.ts",
+  "key": "lead1",
+  "de": "Was 2019 als Kombo von David und Matthias begann, ist heute ein echtes Power-Trio: Seit Oktober 2025 macht Fred am Bass die Runde komplett. Seitdem heißt es: drei Stimmen, ein Ziel – Party.",
+  "en": "What started in 2019 as a combo of David and Matthias is now a proper power trio: since October 2025, Fred on bass has completed the line-up. Ever since, it has been three voices, one goal – party.",
+  "nl": "Wat in 2019 begon als combo van David en Matthias, is nu een echt powertrio: sinds oktober 2025 maakt Fred op bas het geheel compleet. Sindsdien is het: drie stemmen, één doel – feest."
+ },
+ {
+  "datei": "sections/band.ts",
+  "key": "lead2",
+  "de": "Wir spielen Musik, die ins Bein geht und zum Mitsingen einlädt. Egal ob Weihnachtsmarkt, Stadtfest oder private Feier – wenn Blickfeld Nord auf der Bühne steht, bleibt keiner lange sitzen.",
+  "en": "We play music that gets your feet moving and makes you want to sing along. Whether it is a Christmas market, a town festival or a private party – when Blickfeld Nord is on stage, nobody stays seated for long.",
+  "nl": "We spelen muziek die in de benen gaat en uitnodigt om mee te zingen. Of het nu een kerstmarkt, een stadsfeest of een privéfeest is – als Blickfeld Nord op het podium staat, blijft niemand lang zitten."
+ },
+ {
+  "datei": "sections/band.ts",
+  "key": "more",
+  "de": "Mehr erfahren",
+  "en": "Find out more",
+  "nl": "Meer weten"
+ },
+ {
+  "datei": "sections/booking-teaser.ts",
+  "key": "kicker",
+  "de": "Für Veranstalter",
+  "en": "For organisers",
+  "nl": "Voor organisatoren"
+ },
+ {
+  "datei": "sections/booking-teaser.ts",
+  "key": "lead",
+  "de": "Ihr plant ein Fest, eine private Feier oder einen Abend in eurer Kneipe? Wir bringen PA und Licht mit und spielen 3 bis 4 Stunden Partymusik zum Mitsingen und Tanzen.",
+  "en": "Planning a festival, a private party or a night at your pub? We bring our own PA and lights and play 3 to 4 hours of party music to sing and dance along to.",
+  "nl": "Organiseren jullie een feest, een privéfeest of een avond in jullie café? Wij nemen geluid en licht mee en spelen 3 tot 4 uur partymuziek om mee te zingen en te dansen."
+ },
+ {
+  "datei": "sections/booking-teaser.ts",
+  "key": "all",
+  "de": "Alles zum Booking",
+  "en": "All about booking",
+  "nl": "Alles over boeken"
+ },
+ {
+  "datei": "sections/booking-teaser.ts",
+  "key": "dates",
+  "de": "Freie Termine ansehen",
+  "en": "See available dates",
+  "nl": "Vrije data bekijken"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "kicker",
+  "de": "Für Veranstalter",
+  "en": "For organisers",
+  "nl": "Voor organisatoren"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "lead",
+  "de": "Ihr plant ein Fest, eine private Feier oder einen Abend in eurer Kneipe und sucht eine Band, die für Stimmung sorgt? Dann seid ihr bei uns richtig – wir bringen alles mit, ihr bringt die Gäste.",
+  "en": "Planning a festival, a private party or a night at your pub and looking for a band that gets everyone singing and dancing? Blickfeld Nord is a three-piece party and cover band from Hamminkeln on the Lower Rhine, Germany – just a short drive from the Dutch border. We bring the sound and the lights, you bring the guests.",
+  "nl": "Organiseren jullie een feest, een privéfeest of een avond in jullie café en zoeken jullie een band die voor sfeer zorgt? Blickfeld Nord is een driekoppige party- en coverband uit Hamminkeln aan de Nederrijn (Duitsland) – op korte afstand van de Nederlandse grens. Wij nemen alles mee, jullie zorgen voor de gasten."
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.0.label",
+  "de": "Anlässe",
+  "en": "Occasions",
+  "nl": "Gelegenheden"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.0.value",
+  "de": "Feste, private Feiern und Kneipen",
+  "en": "Festivals, private parties and pubs",
+  "nl": "Feesten, privéfeesten en cafés"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.1.label",
+  "de": "Spielzeit",
+  "en": "Playing time",
+  "nl": "Speelduur"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.1.value",
+  "de": "3 bis 4 Stunden – in Sets à 1 Stunde",
+  "en": "3 to 4 hours – in sets of 1 hour",
+  "nl": "3 tot 4 uur – in sets van 1 uur"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.2.label",
+  "de": "Pausen",
+  "en": "Breaks",
+  "nl": "Pauzes"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.2.value",
+  "de": "Nach Absprache oder spontan, ganz wie es zur Stimmung passt",
+  "en": "As agreed or spontaneously, whatever suits the mood",
+  "nl": "In overleg of spontaan, precies zoals het bij de sfeer past"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.3.label",
+  "de": "Technik",
+  "en": "Equipment",
+  "nl": "Apparatuur"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facts.3.value",
+  "de": "Eigene PA und Licht bringen wir mit",
+  "en": "We bring our own PA and lights",
+  "nl": "Eigen geluid (PA) en licht nemen we zelf mee"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "request",
+  "de": "Anfragen",
+  "en": "Get in touch",
+  "nl": "Aanvragen"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "requestText",
+  "de": "Schreibt uns, wie es euch am liebsten ist – wir melden uns schnellstmöglich zurück.",
+  "en": "Write to us however suits you best – we will get back to you as soon as possible.",
+  "nl": "Schrijf ons zoals het jullie het beste uitkomt – we nemen zo snel mogelijk contact met jullie op."
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "offer",
+  "de": "Angebot anfragen",
+  "en": "Request a quote",
+  "nl": "Offerte aanvragen"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "instagram",
+  "de": "Nachricht über Instagram",
+  "en": "Message on Instagram",
+  "nl": "Bericht via Instagram"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "facebook",
+  "de": "Nachricht über Facebook",
+  "en": "Message on Facebook",
+  "nl": "Bericht via Facebook"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "direct",
+  "de": "oder direkt an",
+  "en": "or directly to",
+  "nl": "of rechtstreeks naar"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "repertoireText",
+  "de": "Pop, Rock, Schlager, Dance und Disco – live ausgeschmückt mit Fill-Ins, Jam-Sessions und spontanen Ideen. Stöbert in unserer Songliste oder hört direkt rein.",
+  "en": "Pop, rock, German Schlager, dance and disco – played live with fills, jam sessions and spontaneous ideas. Browse our song list or have a listen.",
+  "nl": "Pop, rock, schlagers, dance en disco – live aangekleed met fills, jamsessies en spontane ideeën. Snuffel in onze songlijst of luister meteen."
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "toRepertoire",
+  "de": "Zum Repertoire",
+  "en": "To the repertoire",
+  "nl": "Naar het repertoire"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "spotify",
+  "de": "Playlist auf Spotify",
+  "en": "Playlist on Spotify",
+  "nl": "Playlist op Spotify"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "subject",
+  "de": "Booking-Anfrage Blickfeld Nord",
+  "en": "Booking request Blickfeld Nord",
+  "nl": "Boekingsaanvraag Blickfeld Nord"
+ },
+ {
+  "datei": "sections/booking.ts",
+  "key": "body",
+  "de": "Hallo Blickfeld Nord,\n\nwir möchten euch gerne buchen:\n\nDatum:\nOrt / Location:\nAnlass (Fest, private Feier, Kneipe …):\nUngefähre Gästezahl:\nGewünschte Spielzeit (3–4 Stunden):\nAnsprechpartner & Telefon:\n\nViele Grüße\n",
+  "en": "Hello Blickfeld Nord,\n\nwe would like to book you:\n\nDate:\nVenue / location:\nOccasion (festival, private party, pub …):\nApprox. number of guests:\nPreferred playing time (3–4 hours):\nContact person & phone:\n\nBest regards\n",
+  "nl": "Hallo Blickfeld Nord,\n\nwe willen jullie graag boeken:\n\nDatum:\nLocatie:\nGelegenheid (feest, privéfeest, café …):\nAantal gasten (ca.):\nGewenste speelduur (3–4 uur):\nContactpersoon & telefoon:\n\nMet vriendelijke groet\n"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "kicker",
+  "de": "Momente",
+  "en": "Moments",
+  "nl": "Momenten"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "title",
+  "de": "Galerie",
+  "en": "Gallery",
+  "nl": "Galerij"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "lead",
+  "de": "Eindrücke von unseren Auftritten und von uns als Band – zum Vergrößern einfach antippen.",
+  "en": "Impressions from our shows and of us as a band – just tap to enlarge.",
+  "nl": "Indrukken van onze optredens en van ons als band – tik om te vergroten."
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "enlarge",
+  "de": "Bild vergrößern: ",
+  "en": "Enlarge photo: ",
+  "nl": "Foto vergroten: "
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "photo",
+  "de": "Foto",
+  "en": "Photo",
+  "nl": "Foto"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "toShow",
+  "de": "Zum Auftritt",
+  "en": "To the show",
+  "nl": "Naar het optreden"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "prev",
+  "de": "Vorheriges Bild",
+  "en": "Previous photo",
+  "nl": "Vorige foto"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "next",
+  "de": "Nächstes Bild",
+  "en": "Next photo",
+  "nl": "Volgende foto"
+ },
+ {
+  "datei": "sections/gallery.ts",
+  "key": "close",
+  "de": "Schließen",
+  "en": "Close",
+  "nl": "Sluiten"
+ },
+ {
+  "datei": "sections/hardware-dialog.ts",
+  "key": "close",
+  "de": "Schließen",
+  "en": "Close",
+  "nl": "Sluiten"
+ },
+ {
+  "datei": "sections/hardware-dialog.ts",
+  "key": "modelFollows",
+  "de": "Genaues Modell folgt",
+  "en": "Exact model to follow",
+  "nl": "Exact model volgt"
+ },
+ {
+  "datei": "sections/hardware-dialog.ts",
+  "key": "where",
+  "de": "Im Bühnenplan:",
+  "en": "On the stage plan:",
+  "nl": "Op het podiumplan:"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "next",
+  "de": "Nächstes Konzert:",
+  "en": "Next show:",
+  "nl": "Volgend optreden:"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "oclock",
+  "de": " Uhr",
+  "en": "",
+  "nl": ""
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "free",
+  "de": "Eintritt frei",
+  "en": "Free entry",
+  "nl": "Gratis entree"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "live",
+  "de": "Jetzt live!",
+  "en": "Live now!",
+  "nl": "Nu live!"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "day",
+  "de": "Tag",
+  "en": "Day",
+  "nl": "Dag"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "days",
+  "de": "Tage",
+  "en": "Days",
+  "nl": "Dagen"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "hours",
+  "de": "Std",
+  "en": "Hrs",
+  "nl": "Uur"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "alt",
+  "de": "Logo von Blickfeld Nord mit Kompass über einem nebligen See bei Sonnenuntergang",
+  "en": "Blickfeld Nord logo with a compass above a misty lake at sunset",
+  "nl": "Logo van Blickfeld Nord met een kompas boven een mistig meer bij zonsondergang"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "concerts",
+  "de": "Konzerte",
+  "en": "Shows",
+  "nl": "Optredens"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "band",
+  "de": "Die Band",
+  "en": "The band",
+  "nl": "De band"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "title",
+  "de": "Neu auf Instagram",
+  "en": "New on Instagram",
+  "nl": "Nieuw op Instagram"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "follow",
+  "de": "folgen",
+  "en": "follow",
+  "nl": "volgen"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "post",
+  "de": "Instagram-Beitrag von Blickfeld Nord",
+  "en": "Instagram post by Blickfeld Nord",
+  "nl": "Instagram-bericht van Blickfeld Nord"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "one",
+  "de": "Beitrag",
+  "en": "post",
+  "nl": "bericht"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "many",
+  "de": "Beiträge",
+  "en": "posts",
+  "nl": "berichten"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "fromIg",
+  "de": "von Instagram",
+  "en": "from Instagram",
+  "nl": "van Instagram"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "note1",
+  "de": "Mit Klick auf „Posts laden“ werden Inhalte von Instagram (Meta Platforms Ireland Ltd.) geladen. Dabei werden Daten wie Ihre IP-Adresse an Meta übertragen und ggf. Cookies gesetzt. Mehr dazu in der",
+  "en": "Clicking “Load posts” loads content from Instagram (Meta Platforms Ireland Ltd.). Data such as your IP address is sent to Meta and cookies may be set. More in our",
+  "nl": "Met een klik op „Berichten laden” wordt inhoud van Instagram (Meta Platforms Ireland Ltd.) geladen. Daarbij worden gegevens zoals je IP-adres naar Meta verstuurd en mogelijk cookies geplaatst. Meer hierover in de"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "privacy",
+  "de": "Datenschutzerklärung",
+  "en": "privacy policy",
+  "nl": "privacyverklaring"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "load",
+  "de": "Posts laden",
+  "en": "Load posts",
+  "nl": "Berichten laden"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "direct",
+  "de": "oder direkt auf Instagram ansehen",
+  "en": "or view them directly on Instagram",
+  "nl": "of bekijk ze direct op Instagram"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "empty",
+  "de": "Fotos, Videos und Neuigkeiten von unseren Auftritten gibt es auf Instagram –",
+  "en": "Photos, videos and news from our shows are on Instagram –",
+  "nl": "Foto's, video's en nieuws van onze optredens vind je op Instagram –"
+ },
+ {
+  "datei": "sections/instagram-feed.ts",
+  "key": "visit",
+  "de": "schaut vorbei",
+  "en": "come and have a look",
+  "nl": "kom eens kijken"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "wish",
+  "de": "Euer Wunschsong für diesen Abend",
+  "en": "Your song request for this night",
+  "nl": "Jullie verzoeknummer voor deze avond"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "wishIntro",
+  "de": "Sagt uns vorher, was ihr hören wollt – wir planen die Setlist mit euren Wünschen.",
+  "en": "Tell us in advance what you want to hear – we plan the setlist with your requests.",
+  "nl": "Laat ons van tevoren weten wat jullie willen horen – we plannen de setlist met jullie wensen."
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "song",
+  "de": "Song aus unserem Repertoire",
+  "en": "Song from our repertoire",
+  "nl": "Nummer uit ons repertoire"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "name",
+  "de": "Euer Name (optional)",
+  "en": "Your name (optional)",
+  "nl": "Je naam (optioneel)"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "send",
+  "de": "Wunsch senden",
+  "en": "Send request",
+  "nl": "Verzoek versturen"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "hint",
+  "de": "Öffnet euer E-Mail-Programm mit dem fertigen Text.",
+  "en": "Opens your e-mail program with the text ready to go.",
+  "nl": "Opent je e-mailprogramma met de tekst al ingevuld."
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "subject",
+  "de": "Songwunsch für {1} – {2}",
+  "en": "Song request for {1} – {2}",
+  "nl": "Verzoeknummer voor {1} – {2}"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "body",
+  "de": "Hallo Blickfeld Nord,\n\nfür euren Auftritt am {2} ({3}) wünsche ich mir:\n{1}\n\nViele Grüße\n{4}",
+  "en": "Hello Blickfeld Nord,\n\nfor your show on {2} ({3}) I'd love to hear:\n{1}\n\nBest regards\n{4}",
+  "nl": "Hallo Blickfeld Nord,\n\nvoor jullie optreden op {2} ({3}) zou ik graag horen:\n{1}\n\nGroeten\n{4}"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "next",
+  "de": "Weitere Konzerte",
+  "en": "More shows",
+  "nl": "Meer optredens"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "same",
+  "de": "auch hier",
+  "en": "same place",
+  "nl": "ook hier"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "photos",
+  "de": "Ihr habt Fotos oder Videos gemacht?",
+  "en": "Did you take photos or videos?",
+  "nl": "Hebben jullie foto's of video's gemaakt?"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "photosText",
+  "de": "Schickt sie uns gern – mit eurem Namen zeigen wir die schönsten im Rückblick. Bitte nur, wenn alle Abgebildeten einverstanden sind.",
+  "en": "Feel free to send them to us – we'll show the best ones in our look-back, with your name. Only if everyone in them is OK with it.",
+  "nl": "Stuur ze ons gerust – de mooiste laten we met jullie naam zien in onze terugblik. Alleen als iedereen erop het goed vindt."
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "photosSend",
+  "de": "Fotos schicken",
+  "en": "Send photos",
+  "nl": "Foto's sturen"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "photosSubject",
+  "de": "Fotos vom {1} – {2}",
+  "en": "Photos from {1} – {2}",
+  "nl": "Foto's van {1} – {2}"
+ },
+ {
+  "datei": "sections/konzert-extras.ts",
+  "key": "photosBody",
+  "de": "Hallo Blickfeld Nord,\n\nhier sind meine Fotos/Videos vom {1} ({2}).\nIhr dürft sie auf eurer Website und bei Instagram zeigen – bitte mit diesem Namen: \n\nViele Grüße",
+  "en": "Hello Blickfeld Nord,\n\nhere are my photos/videos from {1} ({2}).\nYou may show them on your website and on Instagram – please credit this name: \n\nBest regards",
+  "nl": "Hallo Blickfeld Nord,\n\nhier zijn mijn foto's/video's van {1} ({2}).\nJullie mogen ze op jullie website en op Instagram laten zien – graag met deze naam: \n\nGroeten"
+ },
+ {
+  "datei": "sections/last-live.ts",
+  "key": "kicker",
+  "de": "Zuletzt live",
+  "en": "Last seen live",
+  "nl": "Laatst live"
+ },
+ {
+  "datei": "sections/last-live.ts",
+  "key": "more",
+  "de": "Ganzen Rückblick lesen",
+  "en": "Read the full story",
+  "nl": "Lees de hele terugblik"
+ },
+ {
+  "datei": "sections/referenzen.ts",
+  "key": "kicker",
+  "de": "Referenzen",
+  "en": "References",
+  "nl": "Referenties"
+ },
+ {
+  "datei": "sections/referenzen.ts",
+  "key": "title",
+  "de": "Bisher live bei",
+  "en": "We have played at",
+  "nl": "Eerder live bij"
+ },
+ {
+  "datei": "sections/referenzen.ts",
+  "key": "prev",
+  "de": "Zurück",
+  "en": "Previous",
+  "nl": "Vorige"
+ },
+ {
+  "datei": "sections/referenzen.ts",
+  "key": "next",
+  "de": "Weiter",
+  "en": "Next",
+  "nl": "Volgende"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "title",
+  "de": "Unser Repertoire",
+  "en": "Our repertoire",
+  "nl": "Ons repertoire"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "songs",
+  "de": "Songs",
+  "en": "songs",
+  "nl": "nummers"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "placeholder",
+  "de": "Song oder Interpret suchen …",
+  "en": "Search song or artist …",
+  "nl": "Zoek nummer of artiest …"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "search",
+  "de": "Repertoire durchsuchen",
+  "en": "Search the repertoire",
+  "nl": "Repertoire doorzoeken"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "sort",
+  "de": "Sortierung",
+  "en": "Sort order",
+  "nl": "Sortering"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "byTitle",
+  "de": "Titel A–Z",
+  "en": "Title A–Z",
+  "nl": "Titel A–Z"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "byArtist",
+  "de": "Interpret A–Z",
+  "en": "Artist A–Z",
+  "nl": "Artiest A–Z"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "byYear",
+  "de": "Neueste zuerst",
+  "en": "Newest first",
+  "nl": "Nieuwste eerst"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "hits",
+  "de": "Treffer",
+  "en": "results",
+  "nl": "resultaten"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "listen",
+  "de": " auf Spotify anhören",
+  "en": " – listen on Spotify",
+  "nl": " beluisteren op Spotify"
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "none",
+  "de": "Nichts gefunden – fragt gern trotzdem, viele Wünsche erfüllen wir auch spontan.",
+  "en": "Nothing found – feel free to ask anyway, we often fulfil requests on the spot.",
+  "nl": "Niets gevonden – vraag het gerust toch, veel verzoeken vervullen we ook spontaan."
+ },
+ {
+  "datei": "sections/repertoire.ts",
+  "key": "updated",
+  "de": "Automatisch aus unserer Spotify-Playlist, Stand",
+  "en": "Automatically taken from our Spotify playlist, as of",
+  "nl": "Automatisch uit onze Spotify-playlist, stand"
+ },
+ {
+  "datei": "sections/saison-hinweis.ts",
+  "key": "winter.title",
+  "de": "Weihnachtsfeier geplant?",
+  "en": "Planning a Christmas party?",
+  "nl": "Kerstfeest gepland?"
+ },
+ {
+  "datei": "sections/saison-hinweis.ts",
+  "key": "winter.text",
+  "de": "Für Dezember sind noch Wochenenden frei – mit Live-Musik wird die Feier ein Abend, über den man noch lange spricht.",
+  "en": "There are still free weekends in December – live music turns your party into a night people talk about for ages.",
+  "nl": "In december zijn er nog weekenden vrij – met livemuziek wordt jullie feest een avond om nog lang over na te praten."
+ },
+ {
+  "datei": "sections/saison-hinweis.ts",
+  "key": "sommer.title",
+  "de": "Sommerfest, Stadtfest oder Hochzeit?",
+  "en": "Summer party, town festival or wedding?",
+  "nl": "Zomerfeest, stadsfeest of bruiloft?"
+ },
+ {
+  "datei": "sections/saison-hinweis.ts",
+  "key": "sommer.text",
+  "de": "Zwischen Mai und September sind noch Wochenenden frei – sichert euch euren Termin.",
+  "en": "There are still free weekends between May and September – secure your date.",
+  "nl": "Tussen mei en september zijn er nog weekenden vrij – leg jullie datum vast."
+ },
+ {
+  "datei": "sections/saison-hinweis.ts",
+  "key": "cta",
+  "de": "Freie Tage ansehen",
+  "en": "See free dates",
+  "nl": "Vrije data bekijken"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "title",
+  "de": "Songwunsch",
+  "en": "Song request",
+  "nl": "Verzoeknummer"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "intro",
+  "de": "Euer Lieblingssong fehlt? Schlagt ihn uns vor – wir schauen, ob er zu uns passt.",
+  "en": "Your favourite song is missing? Suggest it to us – we'll see if it suits us.",
+  "nl": "Mist je favoriete nummer? Stel het ons voor – we kijken of het bij ons past."
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "song",
+  "de": "Song *",
+  "en": "Song *",
+  "nl": "Nummer *"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "artist",
+  "de": "Interpret",
+  "en": "Artist",
+  "nl": "Artiest"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "name",
+  "de": "Euer Name",
+  "en": "Your name",
+  "nl": "Je naam"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "occasion",
+  "de": "Anlass oder Termin",
+  "en": "Occasion or date",
+  "nl": "Gelegenheid of datum"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "occasionPlaceholder",
+  "de": "z. B. Hochzeit am 12.06.",
+  "en": "e.g. wedding on 12 June",
+  "nl": "bijv. bruiloft op 12 juni"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "message",
+  "de": "Nachricht",
+  "en": "Message",
+  "nl": "Bericht"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "known",
+  "de": "„{1}“ von {2} spielen wir schon – sprecht uns am Abend einfach an!",
+  "en": "We already play “{1}” by {2} – just come and ask us on the night!",
+  "nl": "„{1}” van {2} spelen we al – spreek ons op de avond gewoon aan!"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "send",
+  "de": "Wunsch senden",
+  "en": "Send request",
+  "nl": "Verzoek versturen"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "hint",
+  "de": "Öffnet euer E-Mail-Programm mit dem fertigen Text.",
+  "en": "Opens your e-mail program with the text ready to go.",
+  "nl": "Opent je e-mailprogramma met de kant-en-klare tekst."
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.hello",
+  "de": "Hallo Blickfeld Nord,",
+  "en": "Hello Blickfeld Nord,",
+  "nl": "Hallo Blickfeld Nord,"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.wish",
+  "de": "ich hätte einen Songwunsch:",
+  "en": "I'd like to request a song:",
+  "nl": "ik heb een verzoeknummer:"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.song",
+  "de": "Song",
+  "en": "Song",
+  "nl": "Nummer"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.artist",
+  "de": "Interpret",
+  "en": "Artist",
+  "nl": "Artiest"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.occasion",
+  "de": "Anlass/Termin",
+  "en": "Occasion/date",
+  "nl": "Gelegenheid/datum"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.regards",
+  "de": "Viele Grüße",
+  "en": "Best regards",
+  "nl": "Met vriendelijke groet"
+ },
+ {
+  "datei": "sections/songwunsch.ts",
+  "key": "mail.subject",
+  "de": "Songwunsch",
+  "en": "Song request",
+  "nl": "Verzoeknummer"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "plan",
+  "de": "Bühnenplan",
+  "en": "Stage plan",
+  "nl": "Podiumplan"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "planTitle",
+  "de": "Bühnenplan von Blickfeld Nord, Draufsicht",
+  "en": "Stage plan of Blickfeld Nord, top view",
+  "nl": "Podiumplan van Blickfeld Nord, bovenaanzicht"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "area",
+  "de": "SPIELFLÄCHE",
+  "en": "STAGE AREA",
+  "nl": "SPEELVLAK"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "audience",
+  "de": "PUBLIKUM",
+  "en": "AUDIENCE",
+  "nl": "PUBLIEK"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "details",
+  "de": "technische Details anzeigen",
+  "en": "show technical details",
+  "nl": "technische details tonen"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "bassAmp",
+  "de": "Bass-Amp",
+  "en": "Bass amp",
+  "nl": "Basversterker"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "legend.musician",
+  "de": "Musiker",
+  "en": "Musician",
+  "nl": "Muzikant"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "legend.mic",
+  "de": "Mikroständer",
+  "en": "Mic stand",
+  "nl": "Microfoonstandaard"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "legend.light",
+  "de": "Licht",
+  "en": "Lights",
+  "nl": "Licht"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "legend.socket",
+  "de": "Steckdose",
+  "en": "Power socket",
+  "nl": "Stopcontact"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "caption",
+  "de": "Ansicht von oben, Publikum unten · 1 Kästchen = 1 m · Geräte und Musiker antippen für Details",
+  "en": "Top view, audience at the bottom · 1 square = 1 m · tap equipment or musicians for details",
+  "nl": "Bovenaanzicht, publiek onderaan · 1 vakje = 1 m · tik op apparatuur of muzikanten voor details"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "channels",
+  "de": "Kanalliste",
+  "en": "Channel list",
+  "nl": "Kanalenlijst"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "head.channel",
+  "de": "Kanal",
+  "en": "Channel",
+  "nl": "Kanaal"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "head.source",
+  "de": "Quelle",
+  "en": "Source",
+  "nl": "Bron"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "head.type",
+  "de": "Art",
+  "en": "Type",
+  "nl": "Soort"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "head.device",
+  "de": "Gerät",
+  "en": "Device",
+  "nl": "Apparaat"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "head.stand",
+  "de": "Stativ",
+  "en": "Stand",
+  "nl": "Statief"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "open",
+  "de": "offen",
+  "en": "open",
+  "nl": "open"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "yes",
+  "de": "ja",
+  "en": "yes",
+  "nl": "ja"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "flow",
+  "de": "Signalfluss",
+  "en": "Signal flow",
+  "nl": "Signaalroute"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "sources",
+  "de": "Quellen",
+  "en": "Sources",
+  "nl": "Bronnen"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "mixer",
+  "de": "Mischpult",
+  "en": "Mixing desk",
+  "nl": "Mengpaneel"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "modelOpen",
+  "de": "Modell offen",
+  "en": "Model to be confirmed",
+  "nl": "Model volgt nog"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "outputs",
+  "de": "Ausgänge",
+  "en": "Outputs",
+  "nl": "Uitgangen"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "main",
+  "de": "Main L/R → PA links und rechts",
+  "en": "Main L/R → PA left and right",
+  "nl": "Main L/R → PA links en rechts"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "devices",
+  "de": "Geräte",
+  "en": "Equipment",
+  "nl": "Apparatuur"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "modelFollows",
+  "de": "Modell folgt",
+  "en": "Model to follow",
+  "nl": "Model volgt"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "monitors",
+  "de": "Monitore",
+  "en": "Monitors",
+  "nl": "Monitors"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "for",
+  "de": "für",
+  "en": "for",
+  "nl": "voor"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "mixOpen",
+  "de": "Mischung offen",
+  "en": "Mix to be confirmed",
+  "nl": "Mix volgt nog"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "mixes",
+  "de": "Monitormischungen",
+  "en": "Monitor mixes",
+  "nl": "Monitormixen"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "mixIntro",
+  "de": "Was jeder auf seinem Monitor hört – laut, mittel oder leise; „–“ heißt: nicht im Monitor.",
+  "en": "What everyone hears on their monitor – loud, medium or low; “–” means: not in the monitor.",
+  "nl": "Wat iedereen op zijn monitor hoort – hard, middel of zacht; „–” betekent: niet in de monitor."
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "proposal",
+  "de": "Vorschlag",
+  "en": "Proposal",
+  "nl": "Voorstel"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "power",
+  "de": "Strom",
+  "en": "Power",
+  "nl": "Stroom"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "asOf",
+  "de": "Stand",
+  "en": "As of",
+  "nl": "Stand van"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "descArea",
+  "de": "Spielfläche",
+  "en": "Stage area",
+  "nl": "Speelvlak"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "title",
+  "de": "Tour und Konzerte",
+  "en": "Tour and shows",
+  "nl": "Tour en optredens"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "date",
+  "de": "Datum",
+  "en": "Date",
+  "nl": "Datum"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "city",
+  "de": "Ort",
+  "en": "Town",
+  "nl": "Plaats"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "venue",
+  "de": "Location",
+  "en": "Venue",
+  "nl": "Locatie"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "detailsLabel",
+  "de": "Details zum Konzert",
+  "en": "show details",
+  "nl": "details van het optreden"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "oclock",
+  "de": " Uhr",
+  "en": "",
+  "nl": ""
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "past",
+  "de": "Vergangene Auftritte",
+  "en": "Past shows",
+  "nl": "Eerdere optredens"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "private",
+  "de": "privat",
+  "en": "private",
+  "nl": "privé"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "recap",
+  "de": "Rückblick",
+  "en": "Look back",
+  "nl": "Terugblik"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "free",
+  "de": "Eintritt frei",
+  "en": "Free entry",
+  "nl": "Gratis entree"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "entry",
+  "de": "Eintritt",
+  "en": "Entry",
+  "nl": "Entree"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "toFriends",
+  "de": "Zu unseren Freunden",
+  "en": "To our friends",
+  "nl": "Naar onze vrienden"
+ },
+ {
+  "datei": "sections/tour.ts",
+  "key": "icsName",
+  "de": "Blickfeld Nord – Konzerte",
+  "en": "Blickfeld Nord – Shows",
+  "nl": "Blickfeld Nord – Optredens"
+ },
+ {
+  "datei": "sections/uebersetzung-hinweis.ts",
+  "key": "ungeprueft",
+  "de": "",
+  "en": "Translated from German – not yet proofread by the band.",
+  "nl": "Vertaald uit het Duits – nog niet nagelezen door de band."
+ },
+ {
+  "datei": "sections/uebersetzung-hinweis.ts",
+  "key": "fehlt",
+  "de": "",
+  "en": "This text is only available in German.",
+  "nl": "Deze tekst is alleen in het Duits beschikbaar."
+ }
+]

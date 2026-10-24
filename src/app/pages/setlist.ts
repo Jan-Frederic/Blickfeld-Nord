@@ -64,11 +64,14 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span></span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}</span>
                 @if (info($any(e)); as i) { <span class="dur">{{ i }}</span> }
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
+                @if (!isPause(e)) {
+                  <button type="button" (click)="wunsch(i)" [class.on]="$any(e).wunsch !== undefined" [attr.aria-pressed]="$any(e).wunsch !== undefined" aria-label="Als Wunsch markieren"><mat-icon>favorite</mat-icon></button>
+                }
                 <button type="button" (click)="move(i, -1)" [disabled]="first" aria-label="Nach oben"><mat-icon>arrow_upward</mat-icon></button>
                 <button type="button" (click)="move(i, 1)" [disabled]="last" aria-label="Nach unten"><mat-icon>arrow_downward</mat-icon></button>
                 <button type="button" (click)="remove(i)" aria-label="Entfernen"><mat-icon>close</mat-icon></button>
@@ -99,6 +102,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .set-time { font-size: .78rem; color: var(--bn-sunset); text-transform: none; letter-spacing: normal; }
     .set-end { justify-content: flex-end; border: 0 !important; }
     .dur + .row-tools { margin-left: 8px; }
+    .wunsch { color: #e57373; font-size: .8rem; white-space: nowrap; } .row-tools .on { color: #e57373; }
     .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
     .tools button {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
@@ -212,6 +216,18 @@ export class Setlist {
       [next[i], next[i + dir]] = [next[i + dir], next[i]];
       return next;
     });
+  }
+
+  // Herz: Wunsch mit Namen (Rückfrage) setzen oder wieder entfernen
+  protected wunsch(i: number): void {
+    const e = this.entries()[i] as { wunsch?: string };
+    let wunsch: string | undefined;
+    if (e.wunsch === undefined) {
+      const name = prompt('Wer hat sich den Song gewünscht? (leer lassen = ohne Namen)');
+      if (name === null) return;
+      wunsch = name.trim().slice(0, 40);
+    }
+    this.update((l) => l.map((x, j) => (j === i ? { ...(x as object), wunsch } : x)) as Entry[]);
   }
 
   protected remove(i: number): void {

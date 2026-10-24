@@ -38,6 +38,10 @@ runs:
       shell: bash
       run: node scripts/write-version.mjs
 
+    - name: Oberflächentexte für Backstage → Übersetzungen sammeln
+      shell: bash
+      run: node scripts/ui-texte.mjs
+
     - name: Build
       shell: bash
       run: npx ng build --base-href /

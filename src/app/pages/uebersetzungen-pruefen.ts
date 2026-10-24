@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageNav } from './backstage-nav';
 import { BackstageUebersetzungen } from './backstage-uebersetzungen';
+import { UiTextePruefen } from './ui-texte-pruefen';
 import { BandService } from '../data/band.service';
 import { UEBERSETZUNGEN, Uebersetzung } from '../data/uebersetzungen';
 import { Entscheidung, Pruefung, Sprache, patchSource } from '../data/uebersetzungen-patch';
@@ -26,7 +27,7 @@ function load(): Pruefung {
 
 @Component({
   selector: 'app-uebersetzungen-pruefen',
-  imports: [MatIconModule, BackstageNav, BackstageUebersetzungen],
+  imports: [MatIconModule, BackstageNav, BackstageUebersetzungen, UiTextePruefen],
   template: `
     <section class="section">
       <app-backstage-nav />
@@ -92,6 +93,7 @@ function load(): Pruefung {
           </ol>
         }
       </div>
+      <app-ui-texte-pruefen />
     </section>
   `,
   styles: `

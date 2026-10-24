@@ -33,6 +33,7 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
             <p class="no">{{ songNo() }}</p>
             <h1>{{ $any(c).title }}</h1>
             <p class="artist">{{ $any(c).artist }} @if (length(c)) { · {{ length(c) }} }</p>
+            @if ($any(c).wunsch !== undefined) { <p class="wunsch">♥ {{ $any(c).wunsch ? 'Wunsch von ' + $any(c).wunsch : 'Publikumswunsch' }}</p> }
             @if (info(); as i) {
               <p class="info">
                 @if (i.tonart) { <span class="key">{{ i.tonart }}</span> }
@@ -92,6 +93,7 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
     .bpm.on { border-color: #e8a46a; }
     .bpm.on.beat { background: #e8a46a; color: #000; }
     .note { color: #b0b6bc; }
+    .wunsch { margin: 12px 0 0; font-size: clamp(1.2rem, 4vw, 2.2rem); color: #ff8a80; }
     .stars { display: flex; justify-content: center; gap: 4px; margin: 14px 0 0; }
     .stars button { display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: transparent; color: #555; cursor: pointer; }
     .stars button.on { color: #e8a46a; }

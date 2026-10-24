@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 // Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
 // und auf dem anderen Gerät importieren. Ohne Server – die Datei geht direkt von Gerät zu Gerät.
 
-export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-'];
+export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft'];
 // Zeitpunkt der letzten vollständigen Sicherung („Alles an die Band schicken“) – für den Hinweis unter Aufgaben
 export const GESICHERT_KEY = 'bn-gesichert';
 
