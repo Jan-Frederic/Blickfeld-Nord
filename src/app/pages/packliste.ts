@@ -16,7 +16,7 @@ export const GROUPS: Group[] = [
   },
   { title: 'Kabel & Strom', items: ['XLR-Kabel', 'Klinkenkabel', 'Stromkabel', 'Mehrfachsteckdosen', 'Kabeltrommel', 'Gaffa-Tape'] },
   { title: 'Ständer', items: ['Mikrofonständer', 'Gitarrenständer', 'Bassständer', 'Notenständer'] },
-  { title: 'Sonstiges', items: ['Setlist / Noten', 'Bühnenteppich', 'Taschenlampe', 'QR-Code-Karte für die Theke'] },
+  { title: 'Sonstiges', items: ['Setlist / Noten', 'Bühnenteppich', 'Banner 4 × 2 m', 'Befestigung fürs Banner (Kabelbinder, Seil)', 'Taschenlampe', 'QR-Code-Karte für die Theke'] },
 ];
 
 // Pro Auftritt eine eigene Liste: bn-packliste-<Auftritts-ID>

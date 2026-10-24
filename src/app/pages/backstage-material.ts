@@ -19,6 +19,21 @@ const MATERIAL = [
   { file: 'blickfeld-nord-pressekit', ext: 'zip', icon: 'folder_zip', title: 'Pressekit komplett (ZIP)', text: 'PDF, Pressetext, Fotos und Logos in voller Auflösung.' },
 ];
 
+// Banner 4 × 2 m drucken lassen: Druckdaten im Pressekit (public/presse/), Angaben für die Druckerei
+const BANNER_DATEIEN = [
+  { titel: 'mit Logo', file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo.pdf' },
+  { titel: 'mit Logo und QR-Code', file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo-qr.pdf' },
+  { titel: 'nur Landschaft', file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-landschaft.pdf' },
+];
+const BANNER_CHECKLISTE = [
+  'Datei: PDF mit Beschnitt (4020 × 2020 mm) – Variante unten wählen; der QR-Code führt auf die Website und zählt als „Banner“ (Backstage → Besucher)',
+  'Endformat 4000 × 2000 mm, 10 mm Beschnitt umlaufend (im PDF als TrimBox gesetzt)',
+  'Konfektion: Ösen rundum, Abstand mit der Druckerei abstimmen (üblich etwa alle 50 cm), Saum verstärkt',
+  'Material: wetterfest für draußen; an Zäunen und bei Wind besser Mesh (luftdurchlässig) – bei der Druckerei nachfragen',
+  'Auflösung: 72 dpi in Endgröße – für Banner, die aus Abstand gesehen werden, üblich; von der Druckerei bestätigen lassen',
+  'Probeansicht (Proof) anfordern und Farben sowie QR-Code vor dem Druck prüfen',
+];
+
 @Component({
   selector: 'app-backstage-material',
   imports: [MatIconModule, BackstageNav],
@@ -44,6 +59,19 @@ const MATERIAL = [
           </li>
         }
       </ul>
+
+      <h3 class="sub"><mat-icon>flag</mat-icon> Banner 4 × 2 m drucken lassen</h3>
+      <ol class="check">
+        @for (c of bannerCheckliste; track c) {
+          <li>{{ c }}</li>
+        }
+      </ol>
+      <p class="files">
+        @for (d of bannerDateien; track d.file) {
+          <a [href]="'presse/' + d.file" download>{{ d.titel }}</a>
+        }
+      </p>
+      <p class="hint">Alle Druckdateien (auch ohne Beschnitt und als JPG) stehen im <a href="presse">Pressekit</a>. Banner und Befestigung stehen auf der Packliste jedes Auftritts.</p>
     </section>
   `,
   styles: `
@@ -61,6 +89,13 @@ const MATERIAL = [
       text-decoration: none; font-size: .8rem; letter-spacing: .08em;
     }
     .langs a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .sub { display: flex; align-items: center; gap: 8px; margin: 32px 0 10px; font-size: 1rem; }
+    .sub mat-icon { color: var(--bn-sunset); }
+    .check { margin: 0 0 12px; padding-left: 22px; display: grid; gap: 6px; line-height: 1.5; font-size: .92rem; }
+    .files { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+    .files a, .hint a { color: var(--bn-sunset); }
+    .files a { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); text-decoration: none; font-size: .85rem; }
+    .hint { margin: 0; font-size: .85rem; color: var(--bn-fog); }
     @media (max-width: 560px) {
       li { grid-template-columns: auto 1fr; }
       .langs { grid-column: 2; }
@@ -70,4 +105,6 @@ const MATERIAL = [
 export class BackstageMaterial {
   protected readonly material = MATERIAL;
   protected readonly sprachen = SPRACHEN;
+  protected readonly bannerDateien = BANNER_DATEIEN;
+  protected readonly bannerCheckliste = BANNER_CHECKLISTE;
 }

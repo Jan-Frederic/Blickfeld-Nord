@@ -2,7 +2,7 @@
 // Technik-Rider („Aufbau ca. 3 Stunden vor Beginn“); mit Fahrzeit kommt die Abfahrt dazu.
 export const AUFBAU = [
   { vor: 180, was: 'Ankunft und ausladen' },
-  { vor: 150, was: 'PA, Licht und Strom aufbauen' },
+  { vor: 150, was: 'Banner aufhängen, PA, Licht und Strom aufbauen' },
   { vor: 105, was: 'Instrumente, Mikros und Monitore verkabeln' },
   { vor: 60, was: 'Soundcheck' },
   { vor: 20, was: 'Bühne fertig – umziehen, durchatmen' },
