@@ -1,9 +1,6 @@
 import { Component, afterNextRender, computed, inject } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
@@ -76,7 +73,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, RouterOutlet, RouterLink, LocPipe, SprachHinweis],
+  imports: [RouterOutlet, RouterLink, LocPipe, SprachHinweis],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

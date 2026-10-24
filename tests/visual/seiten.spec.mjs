@@ -8,7 +8,7 @@ const NOW = new Date('2026-10-01T10:00:00+02:00');
 
 const PAGES = [
   // [Name, Pfad, Bereiche (Selektoren), abzudeckende Bereiche]
-  ['start', '/', ['mat-toolbar', 'app-hero', 'app-band', 'footer'], ['app-next-show', 'footer .version']],
+  ['start', '/', ['.topbar', 'app-hero', 'app-band', 'footer'], ['app-next-show', 'footer .version']],
   ['booking', '/booking', ['app-booking'], ['app-availability']],
   ['technik', '/technik', ['main'], []],
   ['presse', '/presse', ['main'], []],

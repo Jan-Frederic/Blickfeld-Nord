@@ -1,4 +1,6 @@
-<mat-toolbar class="topbar">
+<!-- Kopfleiste, Knöpfe und Symbole bewusst ohne Angular Material: der Seitenrahmen steht auf jeder Seite, und
+     Material-Buttons/-Icons kosten beim Start spürbar Rechenzeit (Lighthouse-Blockierzeit) -->
+<header class="topbar">
   <button class="logo" (click)="onLogoClick()" [title]="t().toTop">
     <span class="logo-main">Blickfeld</span> <span class="logo-sub">Nord</span>
   </button>
@@ -6,14 +8,14 @@
   <nav class="desktop-nav">
     @for (n of nav(); track n.label) {
       @if (n.link) {
-        <a mat-button [routerLink]="n.link | loc">{{ n.label }}</a>
+        <a class="bn-btn" [routerLink]="n.link | loc">{{ n.label }}</a>
       } @else {
-        <button mat-button (click)="scrollTo(n.id!)">{{ n.label }}</button>
+        <button type="button" class="bn-btn" (click)="scrollTo(n.id!)">{{ n.label }}</button>
       }
     }
-    <a mat-button [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
-    <a mat-button [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
-    <a mat-button [routerLink]="'/faq' | loc">{{ t().nav.faq }}</a>
+    <a class="bn-btn" [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
+    <a class="bn-btn" [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
+    <a class="bn-btn" [routerLink]="'/faq' | loc">{{ t().nav.faq }}</a>
   </nav>
   @if (showLanguages()) {
     <nav class="languages" [attr.aria-label]="t().language">
@@ -31,8 +33,8 @@
   }
   <!-- Handy-Menü als natives Popover: Esc, Klick daneben und aria-expanded übernimmt der Browser
        (spart gegenüber mat-menu rund 60 KB JavaScript auf jeder Seite) -->
-  <button mat-icon-button class="mobile-nav" popovertarget="hauptmenue" [attr.aria-label]="t().openMenu">
-    <mat-icon>menu</mat-icon>
+  <button type="button" class="bn-icon-btn mobile-nav" popovertarget="hauptmenue" [attr.aria-label]="t().openMenu">
+    <span class="material-icons" aria-hidden="true">menu</span>
   </button>
   <nav id="hauptmenue" class="menu-panel" popover #menu [attr.aria-label]="t().openMenu">
     @for (n of nav(); track n.label) {
@@ -48,12 +50,12 @@
     @if (showLanguages()) {
       @for (l of languages(); track l.lang) {
         @if (!l.current) {
-          <a class="menu-item" [routerLink]="l.link" (click)="remember(l.lang); menu.hidePopover()" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><mat-icon>translate</mat-icon> {{ l.name }}</a>
+          <a class="menu-item" [routerLink]="l.link" (click)="remember(l.lang); menu.hidePopover()" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><span class="material-icons" aria-hidden="true">translate</span> {{ l.name }}</a>
         }
       }
     }
   </nav>
-</mat-toolbar>
+</header>
 
 <main>
   <router-outlet />
@@ -64,21 +66,21 @@
 
 <footer>
   <div class="social">
-    <a mat-icon-button href="https://www.instagram.com/blickfeldnord/" target="_blank" rel="noopener" [attr.aria-label]="t().instagram">
+    <a class="bn-icon-btn" href="https://www.instagram.com/blickfeldnord/" target="_blank" rel="noopener" [attr.aria-label]="t().instagram">
       <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true">
         <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="none" stroke="currentColor" stroke-width="2" />
         <circle cx="12" cy="12" r="4.3" fill="none" stroke="currentColor" stroke-width="2" />
         <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor" />
       </svg>
     </a>
-    <a mat-icon-button href="https://www.facebook.com/share/1BBobZWfjG/" target="_blank" rel="noopener" [attr.aria-label]="t().facebook">
+    <a class="bn-icon-btn" href="https://www.facebook.com/share/1BBobZWfjG/" target="_blank" rel="noopener" [attr.aria-label]="t().facebook">
       <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="12" cy="12" r="9.5" />
         <path d="M13.2 21.4V10.2c0-1.8 1-2.8 2.8-2.8h1.2" />
         <path d="M10 13h6.2" />
       </svg>
     </a>
-    <a mat-icon-button href="mailto:Matthiaswigger@me.com" [attr.aria-label]="t().mail"><mat-icon>mail</mat-icon></a>
+    <a class="bn-icon-btn" href="mailto:Matthiaswigger@me.com" [attr.aria-label]="t().mail"><span class="material-icons" aria-hidden="true">mail</span></a>
   </div>
   <nav class="legal-links">
     <a [routerLink]="'/booking' | loc">{{ t().nav.booking }}</a>
@@ -93,16 +95,16 @@
   </nav>
   @if (showLanguages()) {
     <nav class="footer-languages" [attr.aria-label]="t().language">
-      <mat-icon>translate</mat-icon>
+      <span class="material-icons" aria-hidden="true">translate</span>
       @for (l of languages(); track l.lang) {
         <a [routerLink]="l.link" (click)="remember(l.lang)" [attr.lang]="l.lang" [attr.hreflang]="l.lang" [attr.aria-current]="l.current ? 'true' : null" [class.current]="l.current">{{ l.name }}</a>
       }
     </nav>
   }
   @if (installable()) {
-    <button type="button" class="install" (click)="install()"><mat-icon>install_mobile</mat-icon> {{ t().install }}</button>
+    <button type="button" class="install" (click)="install()"><span class="material-icons" aria-hidden="true">install_mobile</span> {{ t().install }}</button>
   } @else if (iosHint()) {
-    <p class="install-hint">{{ t().iosHint }} <mat-icon>ios_share</mat-icon> {{ t().iosShare }}</p>
+    <p class="install-hint">{{ t().iosHint }} <span class="material-icons" aria-hidden="true">ios_share</span> {{ t().iosShare }}</p>
   }
   <p>© {{ year }} Blickfeld Nord · {{ t().rights }}</p>
   <p class="version credit">{{ t().credit }} <a [routerLink]="'/band/jan-frederic-overbeck' | loc">Jan-Frederic Overbeck</a></p>
@@ -114,9 +116,9 @@
 <!-- neue Version während der Nutzung angekommen -->
 @if (updateReady()) {
   <div class="update" role="status">
-    <mat-icon>system_update</mat-icon>
+    <span class="material-icons" aria-hidden="true">system_update</span>
     <span>{{ t().updateReady }}</span>
     <button type="button" (click)="reload()">{{ t().reload }}</button>
-    <button type="button" class="close" (click)="updateReady.set(false)" [attr.aria-label]="t().closeHint"><mat-icon>close</mat-icon></button>
+    <button type="button" class="close" (click)="updateReady.set(false)" [attr.aria-label]="t().closeHint"><span class="material-icons" aria-hidden="true">close</span></button>
   </div>
 }

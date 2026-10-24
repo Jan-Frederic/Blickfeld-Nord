@@ -2,8 +2,6 @@ import { Component, DestroyRef, PLATFORM_ID, computed, inject, output, signal } 
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BandService, Show } from '../data/band.service';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { I18n, LANGS, LDatePipe, localize, tr } from '../i18n';
 
 const TEXT = tr(
@@ -141,7 +139,7 @@ export class NextShow {
 
 @Component({
   selector: 'app-hero',
-  imports: [NextShow, RouterLink, MatButtonModule, MatIconModule],
+  imports: [NextShow, RouterLink],
   template: `
     <section class="hero" id="home">
       <h1 class="visually-hidden">Blickfeld Nord</h1>
@@ -160,16 +158,16 @@ export class NextShow {
         <!-- im Browser neu berechnet: das beim Build vorgerenderte Datum kann inzwischen veraltet sein -->
         <app-next-show ngSkipHydration />
         <div class="actions">
-          <button mat-flat-button (click)="navigate.emit('tour')">
-            <mat-icon>explore</mat-icon> {{ t().concerts }}
+          <button type="button" class="bn-btn bn-btn-flat" (click)="navigate.emit('tour')">
+            <span class="material-icons" aria-hidden="true">explore</span> {{ t().concerts }}
           </button>
-          <button mat-stroked-button (click)="navigate.emit('band')">
-            <mat-icon>groups</mat-icon> {{ t().band }}
+          <button type="button" class="bn-btn bn-btn-stroked" (click)="navigate.emit('band')">
+            <span class="material-icons" aria-hidden="true">groups</span> {{ t().band }}
           </button>
         </div>
         <!-- Startseite in den anderen Sprachen – für Gäste und Veranstalter aus den Niederlanden und international -->
         <p class="langs">
-          <mat-icon>translate</mat-icon>
+          <span class="material-icons" aria-hidden="true">translate</span>
           @for (b of otherLanguages(); track b.lang; let last = $last) {
             <a [routerLink]="b.link" [attr.lang]="b.lang" [attr.hreflang]="b.lang">{{ b.label }}</a>
             @if (!last) { <span aria-hidden="true">·</span> }
@@ -205,10 +203,10 @@ export class NextShow {
       display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 12px 0 0;
       font-size: .85rem; color: var(--bn-fog); text-shadow: 0 1px 8px rgba(0, 0, 0, .8);
     }
-    .langs mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .langs .material-icons { font-size: 16px; width: 16px; height: 16px; }
     .langs a { color: var(--bn-ink); text-decoration: none; }
     .langs a:hover { color: var(--bn-sunset); }
-    [mat-stroked-button] { background: rgba(20, 22, 25, .45); backdrop-filter: blur(4px); }
+    .bn-btn-stroked { background: rgba(20, 22, 25, .45); backdrop-filter: blur(4px); }
     .visually-hidden {
       position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
     }

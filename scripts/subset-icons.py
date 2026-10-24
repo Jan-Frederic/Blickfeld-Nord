@@ -17,7 +17,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_FONT = os.path.join(ROOT, 'node_modules', 'material-icons', 'iconfont', 'material-icons.woff2')
 OUT_FONT = os.path.join(ROOT, 'public', 'fonts', 'material-icons-subset.woff2')
 
-ICON_TAG = re.compile(r'<mat-icon[^>]*>(.*?)</mat-icon>', re.S)
+# <mat-icon>name</mat-icon> oder ohne Material: <span class="material-icons" …>name</span>
+ICON_TAG = re.compile(r'<mat-icon[^>]*>(.*?)</mat-icon>|<span class="material-icons"[^>]*>(.*?)</span>', re.S)
 # Icon-Namen in Datenlisten, z. B. { icon: 'build', label: … } – angezeigt per <mat-icon>{{ f.icon }}</mat-icon>
 ICON_FIELD = re.compile(r"\bicon:\s*'([a-z][a-z0-9_]*)'")
 NAME = re.compile(r"[a-z][a-z0-9_]*")
@@ -32,8 +33,8 @@ def used_icons():
                 with open(os.path.join(base, f), encoding='utf-8') as fh:
                     text = fh.read()
                     optional.update(ICON_FIELD.findall(text))
-                    for content in ICON_TAG.findall(text):
-                        content = content.strip()
+                    for groups in ICON_TAG.findall(text):
+                        content = ''.join(groups).strip()
                         if '{{' in content:  # z. B. {{ ok ? 'check' : 'schedule' }}
                             names.update(re.findall(r"'([a-z][a-z0-9_]*)'", content))
                         elif NAME.fullmatch(content):
