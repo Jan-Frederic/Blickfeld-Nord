@@ -175,10 +175,11 @@ export class BackstageAufgaben {
     if (konflikte.length)
       out.push({ text: `${konflikte.length} ${konflikte.length === 1 ? 'Auftritt fällt' : 'Auftritte fallen'} in eine Abwesenheit`, details: konflikte, link: '/backstage/termine', icon: 'event_busy' });
 
-    // Proben, zu denen jemand nicht da ist – verschieben oder bewusst zu zweit proben
+    // Proben, zu denen jemand nicht da ist – verschieben oder bewusst zu zweit proben.
+    // Sperren für die ganze Band („Band“) gelten nur für Auftritte – geprobt wird trotzdem.
     const probenWeg = this.band.rehearsals.flatMap((r) =>
       this.band.abwesenheiten
-        .filter((a) => r.date >= this.heute && a.von <= r.date && r.date <= (a.bis ?? a.von))
+        .filter((a) => a.wer !== 'Band' && r.date >= this.heute && a.von <= r.date && r.date <= (a.bis ?? a.von))
         .map((a) => `${datum(r.date)}: ${a.wer} ist nicht da`),
     );
     if (probenWeg.length)

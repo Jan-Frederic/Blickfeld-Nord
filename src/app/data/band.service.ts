@@ -433,6 +433,7 @@ export class BandService {
 
   // Abwesenheiten: Tage, an denen jemand nicht spielen kann – im Booking-Kalender „belegt“, im Termin-Formular
   // mit Warnung. Beispiel: { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' }
+  // wer: 'Band' sperrt nur für Auftritte – Proben finden an solchen Tagen trotzdem statt.
   readonly abwesenheiten: Abwesenheit[] = [
     // Wochenenden (Fr–So) im November und Dezember 2026 – Freitag, 04.12. spielen wir in Rhede
     { wer: 'Band', von: '2026-11-01', grund: 'privat verhindert' },

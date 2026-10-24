@@ -146,7 +146,8 @@ export class TerminFormular {
   // Hinweis, wenn an dem Tag jemand abwesend ist (Abwesenheiten in band.service.ts)
   protected readonly abwesend = computed(() => {
     const date = this.f().date;
-    const weg = this.band.abwesenheiten.filter((a) => a.von <= date && date <= (a.bis ?? a.von));
+    // „Band“-Sperren gelten nur für Auftritte – Proben finden trotzdem statt
+    const weg = this.band.abwesenheiten.filter((a) => a.von <= date && date <= (a.bis ?? a.von) && !(this.art() === 'probe' && a.wer === 'Band'));
     return weg.length ? weg.map((a) => a.wer + (a.grund ? ` (${a.grund})` : '')).join(', ') : null;
   });
   // Auftritte und Proben im Zeitraum einer neuen Abwesenheit
@@ -155,7 +156,7 @@ export class TerminFormular {
     const bis = f.endDate || f.date;
     return [
       ...this.band.shows.filter((s) => s.date <= bis && f.date <= (s.endDate ?? s.date)).map((s) => `${s.venue} (${s.date})`),
-      ...this.band.rehearsals.filter((r) => f.date <= r.date && r.date <= bis).map((r) => `Probe (${r.date})`),
+      ...(f.wer === 'Band' ? [] : this.band.rehearsals.filter((r) => f.date <= r.date && r.date <= bis).map((r) => `Probe (${r.date})`)),
     ];
   });
   protected readonly editUrl = EDIT_URL;
