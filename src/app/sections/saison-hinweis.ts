@@ -9,18 +9,18 @@ import { I18n, LocPipe, tr } from '../i18n';
 // frei sind (ohne Auftritt, Anfrage oder Abwesenheit) – und führt direkt zu den freien Tagen im Booking.
 const TEXT = tr(
   {
-    winter: { title: 'Weihnachtsfeier geplant?', text: 'Für Dezember sind noch Wochenenden frei – mit Live-Musik wird die Feier ein Abend, über den man noch lange spricht.' },
-    sommer: { title: 'Sommerfest, Stadtfest oder Hochzeit?', text: 'Zwischen Mai und September sind noch Wochenenden frei – sichert euch euren Termin.' },
+    winter: { title: 'Weihnachtsfeier geplant?', text: 'Für Dezember sind noch Termine frei – mit Live-Musik wird die Feier ein Abend, über den man noch lange spricht.' },
+    sommer: { title: 'Sommerfest, Stadtfest oder Hochzeit?', text: 'Zwischen Mai und September sind noch Termine frei – sichert euch euren Termin.' },
     cta: 'Freie Tage ansehen',
   },
   {
-    winter: { title: 'Planning a Christmas party?', text: 'There are still free weekends in December – live music turns your party into a night people talk about for ages.' },
-    sommer: { title: 'Summer party, town festival or wedding?', text: 'There are still free weekends between May and September – secure your date.' },
+    winter: { title: 'Planning a Christmas party?', text: 'There are still free dates in December – live music turns your party into a night people talk about for ages.' },
+    sommer: { title: 'Summer party, town festival or wedding?', text: 'There are still free dates between May and September – secure your date.' },
     cta: 'See free dates',
   },
   {
-    winter: { title: 'Kerstfeest gepland?', text: 'In december zijn er nog weekenden vrij – met livemuziek wordt jullie feest een avond om nog lang over na te praten.' },
-    sommer: { title: 'Zomerfeest, stadsfeest of bruiloft?', text: 'Tussen mei en september zijn er nog weekenden vrij – leg jullie datum vast.' },
+    winter: { title: 'Kerstfeest gepland?', text: 'In december zijn er nog data vrij – met livemuziek wordt jullie feest een avond om nog lang over na te praten.' },
+    sommer: { title: 'Zomerfeest, stadsfeest of bruiloft?', text: 'Tussen mei en september zijn er nog data vrij – leg jullie datum vast.' },
     cta: 'Vrije data bekijken',
   },
 );

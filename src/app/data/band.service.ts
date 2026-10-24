@@ -433,7 +433,18 @@ export class BandService {
 
   // Abwesenheiten: Tage, an denen jemand nicht spielen kann – im Booking-Kalender „belegt“, im Termin-Formular
   // mit Warnung. Beispiel: { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' }
-  readonly abwesenheiten: Abwesenheit[] = [];
+  readonly abwesenheiten: Abwesenheit[] = [
+    // Wochenenden (Sa/So) im November und Dezember 2026
+    { wer: 'Band', von: '2026-11-01', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-11-07', bis: '2026-11-08', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-11-14', bis: '2026-11-15', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-11-21', bis: '2026-11-22', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-11-28', bis: '2026-11-29', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-12-05', bis: '2026-12-06', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-12-12', bis: '2026-12-13', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-12-19', bis: '2026-12-20', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-12-26', bis: '2026-12-27', grund: 'privat verhindert' },
+  ];
 
   // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
   // Beispiel: { date: '2026-11-05', time: '19:30', endTime: '22:00', place: 'Proberaum', note: 'Weihnachtsmarkt-Set' }
