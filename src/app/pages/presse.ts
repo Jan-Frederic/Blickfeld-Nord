@@ -44,6 +44,20 @@ const FILES: Omit<Asset, 'title' | 'info'>[] = [
   { file: 'blickfeld-nord-logo-clean.svg', preview: 'presse/blickfeld-nord-logo-clean.svg', dark: true, contain: true },
 ];
 
+// Druckdaten Banner 4 × 2 m (je ca. 10 MB, nicht im ZIP) – Titel und Beschreibung in TEXT.banners (gleiche Reihenfolge)
+const BANNER_LOGO = 'presse/blickfeld-nord-banner-logo-vorschau.webp';
+const BANNER_LAND = 'presse/blickfeld-nord-banner-landschaft-vorschau.webp';
+const BANNERS: Omit<Asset, 'title' | 'info'>[] = [
+  { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo.pdf', preview: BANNER_LOGO },
+  { file: 'blickfeld-nord-banner-4000x2000mm-logo.pdf', preview: BANNER_LOGO },
+  { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-logo.jpg', preview: BANNER_LOGO },
+  { file: 'blickfeld-nord-banner-4000x2000mm-logo.jpg', preview: BANNER_LOGO },
+  { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-landschaft.pdf', preview: BANNER_LAND },
+  { file: 'blickfeld-nord-banner-4000x2000mm-landschaft.pdf', preview: BANNER_LAND },
+  { file: 'blickfeld-nord-banner-4020x2020mm-beschnitt-landschaft.jpg', preview: BANNER_LAND },
+  { file: 'blickfeld-nord-banner-4000x2000mm-landschaft.jpg', preview: BANNER_LAND },
+];
+
 const TEXT = tr(
   {
     kicker: 'Für Presse & Veranstalter',
@@ -57,6 +71,18 @@ const TEXT = tr(
     copy: 'Text kopieren',
     txt: 'Als Textdatei',
     logos: 'Logos & Fotos',
+    banner: 'Banner 4 × 2 m (Druckdaten)',
+    bannerInfo: 'Druckfertige Dateien für ein Bühnen- oder Zaunbanner im Format 4 × 2 m, mit und ohne 10 mm Beschnitt (im PDF ist das Endformat als TrimBox gesetzt). Nicht im ZIP enthalten – je Datei rund 10 MB.',
+    banners: [
+      { title: 'Banner 4 × 2 m mit Logo', info: 'PDF · 4020 × 2020 mm inkl. 10 mm Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m mit Logo', info: 'PDF · 4000 × 2000 mm Endformat, ohne Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m mit Logo', info: 'JPG · 11396 × 5726 px · inkl. 10 mm Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m mit Logo', info: 'JPG · 11340 × 5670 px · Endformat, ohne Beschnitt · ca. 10 MB' },
+      { title: 'Banner 4 × 2 m, nur Landschaft', info: 'PDF · 4020 × 2020 mm inkl. 10 mm Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m, nur Landschaft', info: 'PDF · 4000 × 2000 mm Endformat, ohne Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m, nur Landschaft', info: 'JPG · 11396 × 5726 px · inkl. 10 mm Beschnitt · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m, nur Landschaft', info: 'JPG · 11340 × 5670 px · Endformat, ohne Beschnitt · ca. 10 MB' },
+    ],
     usage: 'Logos und Fotos dürfen für die Ankündigung von Auftritten sowie für die Berichterstattung über Blickfeld Nord honorarfrei verwendet werden. Bitte nicht verfremden. Bildnachweis: Blickfeld Nord.',
     assets: [
       { title: 'Bandfoto 1', info: 'JPG · 2000 × 1126 px' },
@@ -86,6 +112,18 @@ const TEXT = tr(
     copy: 'Copy text',
     txt: 'As text file',
     logos: 'Logos & photos',
+    banner: 'Banner 4 × 2 m (print files)',
+    bannerInfo: 'Print-ready files for a stage or fence banner measuring 4 × 2 m, with and without 10 mm bleed (the PDF has the final size set as TrimBox). Not included in the ZIP – about 10 MB per file.',
+    banners: [
+      { title: 'Banner 4 × 2 m with logo', info: 'PDF · 4020 × 2020 mm incl. 10 mm bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m with logo', info: 'PDF · 4000 × 2000 mm final size, no bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m with logo', info: 'JPG · 11396 × 5726 px · incl. 10 mm bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m with logo', info: 'JPG · 11340 × 5670 px · final size, no bleed · approx. 10 MB' },
+      { title: 'Banner 4 × 2 m, landscape only', info: 'PDF · 4020 × 2020 mm incl. 10 mm bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m, landscape only', info: 'PDF · 4000 × 2000 mm final size, no bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m, landscape only', info: 'JPG · 11396 × 5726 px · incl. 10 mm bleed · approx. 11 MB' },
+      { title: 'Banner 4 × 2 m, landscape only', info: 'JPG · 11340 × 5670 px · final size, no bleed · approx. 10 MB' },
+    ],
     usage: 'Logos and photos may be used free of charge to announce shows and for reporting on Blickfeld Nord. Please do not alter them. Photo credit: Blickfeld Nord.',
     assets: [
       { title: 'Band photo 1', info: 'JPG · 2000 × 1126 px' },
@@ -115,6 +153,18 @@ const TEXT = tr(
     copy: 'Tekst kopiëren',
     txt: 'Als tekstbestand',
     logos: "Logo's & foto's",
+    banner: 'Banner 4 × 2 m (drukbestanden)',
+    bannerInfo: 'Drukklare bestanden voor een podium- of hekbanner van 4 × 2 m, met en zonder 10 mm afloop (in de pdf is het eindformaat als TrimBox ingesteld). Niet in de zip – ongeveer 10 MB per bestand.',
+    banners: [
+      { title: 'Banner 4 × 2 m met logo', info: 'PDF · 4020 × 2020 mm incl. 10 mm afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m met logo', info: 'PDF · 4000 × 2000 mm eindformaat, zonder afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m met logo', info: 'JPG · 11396 × 5726 px · incl. 10 mm afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m met logo', info: 'JPG · 11340 × 5670 px · eindformaat, zonder afloop · ca. 10 MB' },
+      { title: 'Banner 4 × 2 m, alleen landschap', info: 'PDF · 4020 × 2020 mm incl. 10 mm afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m, alleen landschap', info: 'PDF · 4000 × 2000 mm eindformaat, zonder afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m, alleen landschap', info: 'JPG · 11396 × 5726 px · incl. 10 mm afloop · ca. 11 MB' },
+      { title: 'Banner 4 × 2 m, alleen landschap', info: 'JPG · 11340 × 5670 px · eindformaat, zonder afloop · ca. 10 MB' },
+    ],
     usage: "Logo's en foto's mogen kosteloos worden gebruikt om optredens aan te kondigen en voor berichtgeving over Blickfeld Nord. Graag niet bewerken. Fotocredit: Blickfeld Nord.",
     assets: [
       { title: 'Bandfoto 1', info: 'JPG · 2000 × 1126 px' },
@@ -187,6 +237,21 @@ const TEXT = tr(
         }
       </div>
 
+      <h3>{{ t().banner }}</h3>
+      <p class="banner-info">{{ t().bannerInfo }}</p>
+      <div class="assets">
+        @for (a of banners(); track a.file) {
+          <a class="asset" [href]="'presse/' + a.file" download>
+            <span class="preview"><img [src]="a.preview" [alt]="a.title" loading="lazy" /></span>
+            <span class="meta">
+              <span class="title">{{ a.title }}</span>
+              <span class="info">{{ a.info }}</span>
+            </span>
+            <mat-icon class="dl">download</mat-icon>
+          </a>
+        }
+      </div>
+
       <p class="usage">
         <mat-icon>info</mat-icon>
         {{ t().usage }}
@@ -234,6 +299,7 @@ const TEXT = tr(
     .title { font-weight: 600; }
     .info { font-size: .8rem; color: var(--bn-fog); }
     .dl { position: absolute; right: 12px; bottom: 16px; color: var(--bn-sunset); }
+    .banner-info { margin: -6px 0 14px; color: var(--bn-fog); font-size: .9rem; line-height: 1.6; }
     .usage {
       display: flex; gap: 10px; align-items: flex-start; margin-top: 28px; font-size: .9rem; line-height: 1.6;
       color: var(--bn-fog);
@@ -249,6 +315,7 @@ export class Presse {
   protected readonly paragraphs = computed(() => this.t().text.split('\n\n'));
   protected readonly copied = signal(false);
   protected readonly assets = computed((): Asset[] => FILES.map((f, i) => ({ ...f, ...this.t().assets[i] })));
+  protected readonly banners = computed((): Asset[] => BANNERS.map((f, i) => ({ ...f, ...this.t().banners[i] })));
 
   protected async copy(): Promise<void> {
     try {
