@@ -413,6 +413,12 @@ export class BandService {
       aliases: ['Dr. Beat', 'DJ Hendrik Pols', 'Hendrik Pols'],
       icon: 'dj',
     },
+    {
+      name: 'DVM Pfostentechnik',
+      description: 'Spezialist aus Rhede für Zaunpfostensysteme – für Doppelstabmatten, Standard- und Ballfangpfosten sowie Sonderkonstruktionen. Made in Germany seit 1998.',
+      url: 'https://www.instagram.com/dvm_pfostentechnik/',
+      icon: 'instagram',
+    },
   ];
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen

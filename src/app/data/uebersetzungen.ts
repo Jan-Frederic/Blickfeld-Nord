@@ -502,6 +502,11 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
+    de: 'Spezialist aus Rhede für Zaunpfostensysteme – für Doppelstabmatten, Standard- und Ballfangpfosten sowie Sonderkonstruktionen. Made in Germany seit 1998.',
+    en: 'Specialist from Rhede for fence post systems – for twin-wire mesh panels, standard and ball-stop posts as well as custom constructions. Made in Germany since 1998.',
+    nl: 'Specialist uit Rhede voor hekpaalsystemen – voor dubbelstaafmatten, standaard- en ballenvangerpalen en maatwerkconstructies. Made in Germany sinds 1998.',
+  },
+  {
     de: 'Ehrenamtlich im Einsatz für Dingden und Umgebung – rund um die Uhr, wenn es darauf ankommt.',
     en: 'Volunteers serving Dingden and the surrounding area – around the clock, when it matters.',
     nl: 'Als vrijwilligers in actie voor Dingden en omgeving – de klok rond, als het erop aankomt.',
