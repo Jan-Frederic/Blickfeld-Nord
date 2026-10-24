@@ -1,4 +1,4 @@
-import { Component, afterNextRender, computed, inject } from '@angular/core';
+import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { scrollToSection } from './scroll';
@@ -18,6 +18,8 @@ const TEXT = tr(
     instagram: 'Blickfeld Nord auf Instagram',
     facebook: 'Blickfeld Nord auf Facebook',
     mail: 'E-Mail an Matthias Wigger',
+    share: 'Seite teilen',
+    copied: 'Link kopiert',
     install: 'Als App installieren',
     iosHint: 'Als App nutzen:',
     iosShare: 'Teilen → „Zum Home-Bildschirm“',
@@ -38,6 +40,8 @@ const TEXT = tr(
     instagram: 'Blickfeld Nord on Instagram',
     facebook: 'Blickfeld Nord on Facebook',
     mail: 'E-mail Matthias Wigger',
+    share: 'Share this page',
+    copied: 'Link copied',
     install: 'Install as app',
     iosHint: 'Use as an app:',
     iosShare: 'Share → “Add to Home Screen”',
@@ -58,6 +62,8 @@ const TEXT = tr(
     instagram: 'Blickfeld Nord op Instagram',
     facebook: 'Blickfeld Nord op Facebook',
     mail: 'E-mail aan Matthias Wigger',
+    share: 'Pagina delen',
+    copied: 'Link gekopieerd',
     install: 'Als app installeren',
     iosHint: 'Als app gebruiken:',
     iosShare: 'Delen → „Zet op beginscherm”',
@@ -110,6 +116,24 @@ export class App {
   protected readonly iosHint = iosHint;
   protected readonly install = install;
   protected readonly updateReady = updateReady;
+  // Seite teilen (Fußzeile): Teilen-Menü des Geräts mit Titel und Adresse der Seite, sonst Link kopieren
+  protected readonly kopiert = signal(false);
+  protected async share(): Promise<void> {
+    // Canonical-Adresse der Seite (ohne Herkunftsvermerk o. Ä.), sonst die aktuelle Adresse
+    const url = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href || location.origin + location.pathname;
+    if (navigator.share) {
+      await navigator.share({ title: document.title, url }).catch(() => undefined);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      this.kopiert.set(true);
+      setTimeout(() => this.kopiert.set(false), 2000);
+    } catch {
+      window.prompt(this.t().share, url);
+    }
+  }
+
   protected reload(): void {
     location.reload();
   }

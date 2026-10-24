@@ -81,6 +81,11 @@
       </svg>
     </a>
     <a class="bn-icon-btn" href="mailto:Matthiaswigger@me.com" [attr.aria-label]="t().mail"><span class="material-icons" aria-hidden="true">mail</span></a>
+    <!-- Seite teilen: Teilen-Menü des Geräts, sonst Link in die Zwischenablage -->
+    <button type="button" class="bn-icon-btn" (click)="share()" [attr.aria-label]="kopiert() ? t().copied : t().share" [title]="kopiert() ? t().copied : t().share">
+      <span class="material-icons" aria-hidden="true">{{ kopiert() ? 'check' : 'share' }}</span>
+    </button>
+    <span class="sr-only" aria-live="polite">{{ kopiert() ? t().copied : '' }}</span>
   </div>
   <nav class="legal-links">
     <a [routerLink]="'/booking' | loc">{{ t().nav.booking }}</a>
