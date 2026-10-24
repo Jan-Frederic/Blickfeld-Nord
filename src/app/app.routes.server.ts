@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { RenderMode, ServerRoute } from '@angular/ssr';
 import { BandService } from './data/band.service';
+import { rueckblickJahre } from './data/jahresrueckblick';
 
 // Beim Build werden alle öffentlichen Seiten als fertiges HTML erzeugt (schneller sichtbar, besser für Google).
 // Backstage bleibt bewusst rein clientseitig – private Termine sollen nicht als statisches HTML entstehen.
@@ -23,6 +24,13 @@ export const serverRoutes: ServerRoute[] = [
         const band = inject(BandService);
         return band.publicShows.map((s) => ({ id: band.showId(s) }));
       },
+    },
+    {
+      // Jahresrückblick: das laufende Jahr erst ab dem 15.12. (Deploy an dem Tag: deploy-pages.yml, „schedule“)
+      path: `${prefix}jahr/:jahr`,
+      renderMode: RenderMode.Prerender,
+      getPrerenderParams: async () =>
+        rueckblickJahre(inject(BandService).shows, new Date().toISOString().slice(0, 10)).map((j) => ({ jahr: String(j) })),
     },
   ]),
   { path: '**', renderMode: RenderMode.Prerender },

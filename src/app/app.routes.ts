@@ -24,6 +24,7 @@ const publicPages = (): Routes => [
     ),
   },
   { path: 'konzerte/:id', loadComponent: () => import('./pages/konzert').then((m) => m.KonzertPage) },
+  { path: 'jahr/:jahr', loadComponent: () => import('./pages/jahr').then((m) => m.JahrPage) },
   { path: 'band/:slug', loadComponent: () => import('./pages/member').then((m) => m.MemberPage) },
   {
     path: 'booking',

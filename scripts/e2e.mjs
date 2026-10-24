@@ -82,6 +82,19 @@ test('Herkunft: QR-Code-Vermerk ?ref= wird gezählt und aus der Adresse entfernt
   return p;
 });
 
+test('Jahresrückblick: Zahlen und Stationen, private Feiern nur mit öffentlichem Namen', async () => {
+  const p = await page();
+  await p.clock.setFixedTime(new Date('2026-12-20T12:00:00+01:00'));
+  await p.go('/jahr/2026');
+  await p.locator('app-jahr h2').waitFor();
+  expect((await p.locator('app-jahr h2').innerText()).includes('2026'), 'Überschrift ohne Jahr');
+  expect((await p.locator('app-jahr .zahlen li').count()) >= 3, 'Zahlen fehlen');
+  const stationen = await p.locator('app-jahr .stationen').innerText();
+  expect(stationen.includes('Weihnachtsmarkt'), 'öffentlicher Auftritt fehlt in den Stationen');
+  expect((await p.locator('app-jahr .stationen a').count()) > 0, 'keine Links zu Konzertseiten');
+  return p;
+});
+
 test('Konzertseite: vergangenes Konzert zeigt Rückblick', async () => {
   const p = await page();
   for (const c of concerts) {

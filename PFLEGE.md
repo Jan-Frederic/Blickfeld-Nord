@@ -210,6 +210,13 @@ Was an der Website noch zu tun ist, steht im Backstage im Bereich **Aufgaben** (
   **Datei für GitHub erzeugen**, „Datei auf GitHub öffnen“, mit Strg+A alles markieren, einfügen und „Commit changes“.
   Danach die Häkchen zurücksetzen. Von Hand geht es auch: `erledigt: true` dazuschreiben oder die Aufgabe löschen.
 
+## Jahresrückblick
+
+Unter `/jahr/<Jahr>` (z. B. `/jahr/2026`) steht ein öffentlicher Rückblick: Zahlen, alle gespielten Auftritte und die
+Momente aus der Historie. Er entsteht automatisch aus den Auftritten und Rückblicken in `band.service.ts` – private
+Feiern erscheinen nur mit ihrem öffentlichen Namen (sonst „Private Feier“) und ohne Ort. Den Rückblick aufs laufende
+Jahr gibt es ab dem **15.12.**; an dem Tag baut GitHub die Seite von selbst neu. Der Link steht oben auf der Historie.
+
 ## Woher Besucher kommen (QR-Codes)
 
 Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an die Adresse, z. B.

@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # 15.12.: Jahresrückblick aufs laufende Jahr erscheint (/jahr/<Jahr>, src/app/data/jahresrueckblick.ts)
+  schedule:
+    - cron: '17 5 15 12 *'
 
 permissions:
   contents: read

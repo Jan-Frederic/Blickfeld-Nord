@@ -1,11 +1,12 @@
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { scrollToSection } from '../scroll';
 import { MatIconModule } from '@angular/material/icon';
+import { rueckblickJahre } from '../data/jahresrueckblick';
 import { BandService } from '../data/band.service';
 import { InstagramReel } from './instagram-reel';
-import { I18n, LDatePipe, tr } from '../i18n';
+import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
 import { UebersetzungHinweis } from '../sections/uebersetzung-hinweis';
 
@@ -14,6 +15,7 @@ const TEXT = tr(
     kicker: 'Rückblick',
     title: 'Historie',
     lead: 'Unsere Geschichte in Momenten – Auftritte, Orte, Begegnungen und alles, was uns unterwegs passiert.',
+    year: (j: number) => `Unser Jahr ${j} in Zahlen`,
     example: 'Beispiel',
     openImage: 'Bild öffnen: ',
     photo: 'Foto',
@@ -23,6 +25,7 @@ const TEXT = tr(
     kicker: 'Looking back',
     title: 'History',
     lead: 'Our story in moments – shows, places, encounters and everything that happens to us along the way.',
+    year: (j: number) => `Our year ${j} in numbers`,
     example: 'Example',
     openImage: 'Open image: ',
     photo: 'Photo',
@@ -32,6 +35,7 @@ const TEXT = tr(
     kicker: 'Terugblik',
     title: 'Geschiedenis',
     lead: 'Ons verhaal in momenten – optredens, plekken, ontmoetingen en alles wat ons onderweg overkomt.',
+    year: (j: number) => `Ons jaar ${j} in cijfers`,
     example: 'Voorbeeld',
     openImage: 'Afbeelding openen: ',
     photo: 'Foto',
@@ -41,12 +45,19 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-historie',
-  imports: [MatIconModule, InstagramReel, LDatePipe, UebersetzungHinweis],
+  imports: [MatIconModule, InstagramReel, LDatePipe, LocPipe, RouterLink, UebersetzungHinweis],
   template: `
     <section class="section historie">
       <p class="kicker">{{ t().kicker }}</p>
       <h2>{{ t().title }}</h2>
       <p class="lead">{{ t().lead }}</p>
+      @if (jahre.length) {
+        <p class="jahre">
+          @for (j of jahre; track j) {
+            <a [routerLink]="'/jahr/' + j | loc">{{ t().year(j) }} →</a>
+          }
+        </p>
+      }
 
       <ol class="timeline">
         @for (e of entries; track e.date + e.title) {
@@ -111,6 +122,8 @@ const TEXT = tr(
     </section>
   `,
   styles: `
+    .jahre { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: -8px 0 24px; }
+    .jahre a { color: var(--bn-sunset); }
     .historie { max-width: 900px; }
     .timeline { list-style: none; margin: 0; padding: 0 0 0 28px; position: relative; }
     .timeline::before {
@@ -161,6 +174,8 @@ export class Historie implements OnInit {
   protected readonly content = inject(Content);
   protected readonly t = inject(I18n).t(TEXT);
   protected readonly entries = [...inject(BandService).history].sort((a, b) => b.date.localeCompare(a.date));
+  // Jahresrückblicke (/jahr/<Jahr>) – das laufende Jahr ab dem 15.12.
+  protected readonly jahre = rueckblickJahre(inject(BandService).shows, new Date().toISOString().slice(0, 10));
   private readonly route = inject(ActivatedRoute);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 

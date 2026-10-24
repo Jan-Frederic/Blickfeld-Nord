@@ -32,7 +32,7 @@ await build({
   tsconfig: join(ROOT, 'tsconfig.json'),
   logLevel: 'warning',
 });
-const { members, publicShows, allShows, rehearsals, history, FAQ, buildIcs, showId, UEBERSETZUNGEN } = await import(pathToFileURL(bundle).href);
+const { members, publicShows, allShows, rehearsals, history, FAQ, buildIcs, showId, UEBERSETZUNGEN, rueckblickJahre } = await import(pathToFileURL(bundle).href);
 rmSync(tmp, { recursive: true, force: true });
 
 // Ortszeit Europe/Berlin → ISO 8601 mit korrektem Offset (Winter +01:00, Sommer +02:00)
@@ -258,7 +258,7 @@ writeFileSync(
 
 // Sitemap (Backstage und Wunschbox bewusst nicht enthalten): jede Seite in allen drei Sprachen,
 // gegenseitig verknüpft wie die hreflang-Links im Seitenkopf
-const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/repertoire', '/galerie', '/historie', '/presse', '/technik', '/freunde', '/faq', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
+const pages = ['/', ...publicShows.map((s) => `/konzerte/${showId(s)}`), '/booking', '/repertoire', '/galerie', '/historie', ...rueckblickJahre(allShows, new Date().toISOString().slice(0, 10)).map((j) => `/jahr/${j}`), '/presse', '/technik', '/freunde', '/faq', ...members.map((m) => `/band/${m.slug}`), '/impressum', '/datenschutz'];
 const alternates = (p) =>
   [...LANGS.map((l) => [l, localUrl(p, l)]), ['x-default', localUrl(p, 'de')]]
     .map(([l, href]) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`)
