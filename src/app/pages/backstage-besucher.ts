@@ -109,8 +109,8 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
                   @for (k of kampagnen(); track k.id) {
                     <tr>
                       <th scope="row"><a [routerLink]="['/backstage', k.id]">{{ k.datum }} · {{ k.name }}</a></th>
-                      <td>{{ k.seite | number: '1.0-0' }}</td>
-                      @for (c of k.wege; track $index) { <td [class.null]="!c">{{ c | number: '1.0-0' }}</td> }
+                      <td data-label="Seite">{{ k.seite | number: '1.0-0' }}</td>
+                      @for (c of k.wege; track $index) { <td [attr.data-label]="wege[$index].kurz" [class.null]="!c">{{ c | number: '1.0-0' }}</td> }
                     </tr>
                   }
                 </tbody>
@@ -120,7 +120,7 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
               Beitragstext und geteilte Links mit der Kampagne des Konzerts.</p>
           }
           <h3>Fehlerseite · 12 Monate</h3>
-          <p class="note">{{ fehler() | number: '1.0-0' }}× aufgerufen – welche Adressen, steht in
+          <p class="text">{{ fehler() | number: '1.0-0' }}× aufgerufen – welche Adressen, steht in
             <a [href]="dashboard" target="_blank" rel="noopener">GoatCounter</a> unter den Ereignissen „404:…“. Viele Aufrufe
             deuten auf einen alten oder falschen Link hin, z. B. auf einem Plakat.</p>
         }
@@ -146,12 +146,22 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
     .kampagnen th, .kampagnen td { padding: 6px 8px; border-bottom: 1px solid var(--bn-line); text-align: right; white-space: nowrap; }
     .kampagnen th[scope=row], .kampagnen thead th:first-child { text-align: left; }
     .kampagnen td.null { color: var(--bn-fog); }
+    .table-wrap { overflow-x: auto; }
+    /* Handy: je Konzert eine Karte – Name oben, Zahlen mit Beschriftung darunter */
+    @media (max-width: 600px) {
+      .kampagnen thead { display: none; }
+      .kampagnen tr { display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; border-bottom: 1px solid var(--bn-line); }
+      .kampagnen th[scope=row] { grid-column: 1 / -1; white-space: normal; padding: 0 0 6px; border: 0; }
+      .kampagnen td { display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; font-variant-numeric: tabular-nums; }
+      .kampagnen td::before { content: attr(data-label); font-size: .7rem; color: var(--bn-fog); }
+    }
     .pages li { display: grid; grid-template-columns: minmax(7.5em, auto) 1fr 4em; align-items: center; gap: 10px; font-size: .88rem; }
     .bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .06); overflow: hidden; }
     .bar span { display: block; height: 100%; border-radius: 4px; background: #7fb3e0; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .note { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--bn-fog); }
     .note mat-icon { color: #e0b25a; }
+    .text { margin: 0; color: var(--bn-fog); }
     .foot { margin: 16px 0 0; font-size: .78rem; color: var(--bn-fog); }
     a { color: var(--bn-sunset); }
   `,
