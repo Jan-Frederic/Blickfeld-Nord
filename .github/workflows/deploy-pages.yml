@@ -146,7 +146,7 @@ jobs:
         run: sleep 60
 
       - name: Lighthouse
-        run: npx --yes @lhci/cli@0.14.0 autorun --config=./lighthouserc.json
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.json
 
       - name: Werte zusammenfassen (Median je Seite)
         if: always()

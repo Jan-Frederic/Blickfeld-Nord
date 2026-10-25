@@ -19,7 +19,10 @@ const zeilen = urls.map((url) => {
 });
 const md = [`| Seite | ${KAT.map(([, n]) => n).join(' | ')} |`, `|---|${KAT.map(() => '---:').join('|')}|`, ...zeilen.map((z) => `| ${z.join(' | ')} |`)].join('\n');
 // Kennzahlen des repräsentativen Laufs je Seite: wo die Zeit bis zum größten Inhalt (LCP) hingeht
-const TEIL = { timeToFirstByte: 'Server', resourceLoadDelay: 'Warten aufs Bild', resourceLoadDuration: 'Bild laden', elementRenderDelay: 'Anzeigen' };
+const TEIL = {
+  timeToFirstByte: 'Server', resourceLoadDelay: 'Warten aufs Bild', resourceLoadDuration: 'Bild laden', elementRenderDelay: 'Anzeigen',
+  TTFB: 'Server', 'Load Delay': 'Warten aufs Bild', 'Load Time': 'Bild laden', 'Render Delay': 'Anzeigen',
+};
 const ms = (v) => (v == null ? '–' : `${(v / 1000).toFixed(1)} s`);
 const details = urls.map((url) => {
   const run = runs.find((x) => x.url === url && x.isRepresentativeRun) ?? runs.find((x) => x.url === url);
@@ -36,7 +39,7 @@ const details = urls.map((url) => {
   const alt = (a['largest-contentful-paint-element']?.details?.items ?? []).find((t) => t.items?.[0]?.phase);
   const phasen = neu
     ? neu.items.map((p) => `${TEIL[p.subpart] ?? p.label} ${Math.round(p.duration)} ms`).join(', ')
-    : (alt?.items ?? []).map((p) => `${p.phase} ${ms(p.timing)}`).join(', ');
+    : (alt?.items ?? []).map((p) => `${TEIL[p.phase] ?? p.phase} ${ms(p.timing)}`).join(', ');
   // Tempo des GitHub-Rechners (Lighthouse-BenchmarkIndex, höher = schneller): erklärt große Schwankungen bei gleichem Code
   const tempo = Math.round(r.environment?.benchmarkIndex ?? 0) || '–';
   return `| ${new URL(url).pathname} | ${ms(a['first-contentful-paint']?.numericValue)} | ${ms(a['largest-contentful-paint']?.numericValue)} | ${Math.round(a['total-blocking-time']?.numericValue ?? 0)} ms | ${tempo} | ${phasen || '–'} |`;
