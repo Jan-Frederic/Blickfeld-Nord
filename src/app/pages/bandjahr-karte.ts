@@ -31,7 +31,8 @@ import { renderJahr, shareImage } from '../data/poster';
   `,
   styles: `
     .stats { margin-top: 40px; padding: 24px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
-    .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
+    .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 16px; margin-bottom: 16px; }
+    .head > div { min-width: 0; }
     .kicker { margin-bottom: 4px; }
     h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
     select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--bn-line); background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
