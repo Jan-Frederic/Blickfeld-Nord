@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { VORLAGEN, Vorlage, antwort } from '../data/antworten';
+import { Sprache, VORLAGEN, Vorlage, antwort } from '../data/antworten';
 
 // Backstage → Material: Antwort auf eine Booking-Anfrage – Vorlage wählen, Name/Anlass/Datum eintragen, Text
 // prüfen und kopieren. Gage und Adressen bewusst nicht in der Vorlage (siehe data/antworten.ts).
@@ -13,6 +13,12 @@ import { VORLAGEN, Vorlage, antwort } from '../data/antworten';
       @for (v of vorlagen; track v.id) {
         <button type="button" role="radio" [attr.aria-checked]="vorlage() === v.id" [class.on]="vorlage() === v.id" (click)="vorlage.set(v.id)" [title]="v.text">{{ v.label }}</button>
       }
+    </div>
+    <div class="wahl" role="radiogroup" aria-label="Sprache">
+      @for (l of sprachen; track l.id) {
+        <button type="button" role="radio" [attr.aria-checked]="sprache() === l.id" [class.on]="sprache() === l.id" (click)="sprache.set(l.id)">{{ l.label }}</button>
+      }
+      @if (sprache() !== 'de') { <span class="hint">Übersetzung vor dem ersten Einsatz gegenlesen</span> }
     </div>
     <div class="felder">
       <label>Name <input [value]="name()" (input)="name.set($any($event.target).value)" placeholder="z. B. Anna" /></label>
@@ -30,7 +36,7 @@ import { VORLAGEN, Vorlage, antwort } from '../data/antworten';
     :host { display: block; margin-top: 40px; }
     .sub { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 1rem; }
     .sub mat-icon { color: var(--bn-sunset); }
-    .wahl { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .wahl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
     .wahl button, .kopieren {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bn-line);
       background: none; color: var(--bn-ink); font: inherit; font-size: .88rem; cursor: pointer;
@@ -52,13 +58,15 @@ import { VORLAGEN, Vorlage, antwort } from '../data/antworten';
 export class Antwortvorlagen {
   protected readonly vorlagen = VORLAGEN;
   protected readonly vorlage = signal<Vorlage>('zusage');
+  protected readonly sprachen: { id: Sprache; label: string }[] = [{ id: 'de', label: 'Deutsch' }, { id: 'en', label: 'English' }, { id: 'nl', label: 'Nederlands' }];
+  protected readonly sprache = signal<Sprache>('de');
   protected readonly name = signal('');
   protected readonly anlass = signal('');
   protected readonly datum = signal('');
   protected readonly absender = signal('');
   protected readonly kopiert = signal(false);
   protected readonly text = computed(() =>
-    antwort(this.vorlage(), { name: this.name(), anlass: this.anlass(), datum: this.datum(), absender: this.absender() }),
+    antwort(this.vorlage(), { name: this.name(), anlass: this.anlass(), datum: this.datum(), absender: this.absender() }, this.sprache()),
   );
 
   protected async kopieren(): Promise<void> {

@@ -15,3 +15,18 @@ describe('antwort', () => {
     expect(t).toContain('/booking#verfuegbarkeit');
   });
 });
+
+describe('antwort – Sprachen', () => {
+  it('Englisch mit englischen Links', () => {
+    const t = antwort('zusage', { name: 'Tom', datum: '2027-06-12' }, 'en');
+    expect(t).toContain('Hi Tom,');
+    expect(t).toContain('on Saturday, 12/06/2027');
+    expect(t).toContain('https://blickfeld-nord.de/en/technik');
+  });
+  it('Niederländisch mit niederländischen Links', () => {
+    const t = antwort('absage', { name: 'Sanne' }, 'nl');
+    expect(t).toContain('Hallo Sanne,');
+    expect(t).toContain('al geboekt');
+    expect(t).toContain('https://blickfeld-nord.de/nl/booking#verfuegbarkeit');
+  });
+});
