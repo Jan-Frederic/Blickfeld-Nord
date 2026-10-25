@@ -105,7 +105,7 @@ const DAY = 24 * 60 * 60 * 1000;
           </div>
         }
         @if (!s.private && s.confirmed) {
-          @if (s.date >= heute) { <app-werbeplan [datum]="s.date" /> }
+          @if (s.date >= heute) { <app-werbeplan [show]="s" [id]="id()" /> }
           <app-konzert-kampagne [id]="id()" />
         }
         @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }

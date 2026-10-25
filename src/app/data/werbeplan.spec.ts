@@ -1,4 +1,4 @@
-import { faelligerSchritt, werbeplan } from './werbeplan';
+import { faelligerSchritt, schrittText, werbeplan } from './werbeplan';
 
 describe('werbeplan', () => {
   it('rechnet die Schritte rückwärts vom Auftritt', () => {
@@ -19,5 +19,19 @@ describe('werbeplan', () => {
   it('am Auftrittstag ist der letzte Schritt dran, danach nichts mehr', () => {
     expect(faelligerSchritt('2026-12-04', '2026-12-04')?.schritt.id).toBe('heute');
     expect(faelligerSchritt('2026-12-04', '2026-12-05')).toBeUndefined();
+  });
+});
+
+describe('werbeplan – Texte', () => {
+  const show = { date: '2026-12-04', venue: 'Weihnachtsmarkt', city: 'Rhede', time: '18:00', price: 0, confirmed: true } as never;
+  it('nennt Ort, Uhrzeit und den Link', () => {
+    const t = schrittText('morgen', show, 'https://blickfeld-nord.de/konzerte/2026-12-04/?ref=text');
+    expect(t).toContain('Morgen spielen wir');
+    expect(t).toContain('Weihnachtsmarkt, Rhede · ab 18:00 Uhr');
+    expect(t).toContain('Eintritt frei');
+    expect(t).toContain('?ref=text');
+  });
+  it('zwei Wochen vorher mit Wochentag und Datum', () => {
+    expect(schrittText('story-1', show, 'x')).toContain('Freitag, 04.12.2026');
   });
 });

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
-import { werbeplan } from '../data/werbeplan';
+import { erledigteSchritte, werbeplan } from '../data/werbeplan';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
@@ -188,7 +188,8 @@ export class BackstageAufgaben {
     for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute)) {
       const plan = werbeplan(s.date, this.heute);
       const jetzt = plan.find((x) => x.status === 'jetzt');
-      if (!jetzt) continue;
+      // abgehakt (auf der Seite des Auftritts) → nicht mehr als Aufgabe
+      if (!jetzt || erledigteSchritte(this.band.showId(s)).includes(jetzt.schritt.id)) continue;
       const naechster = plan.find((x) => x.status === 'kommt');
       out.push({
         text: `Werbung für ${s.venue} (${datum(s.date)}): ${jetzt.schritt.titel}`,
