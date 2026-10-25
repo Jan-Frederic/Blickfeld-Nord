@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { Antwortvorlagen } from './antwortvorlagen';
 
 // Backstage → Material: Druckvorlagen und Unterlagen für Veranstalter – je Sprache (scripts/build-*.py, public/presse/).
 // Plakate und Laufzettel entstehen pro Auftritt auf dessen Unterseite.
@@ -35,7 +36,7 @@ const BANNER_CHECKLISTE = [
 
 @Component({
   selector: 'app-backstage-material',
-  imports: [MatIconModule],
+  imports: [MatIconModule, Antwortvorlagen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -70,6 +71,8 @@ const BANNER_CHECKLISTE = [
         }
       </p>
       <p class="hint">Alle Druckdateien (auch ohne Beschnitt und als JPG) stehen im <a href="presse">Pressekit</a>. Banner und Befestigung stehen auf der Packliste jedes Auftritts.</p>
+
+      <app-antwortvorlagen />
     </section>
   `,
   styles: `
