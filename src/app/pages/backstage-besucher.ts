@@ -61,6 +61,14 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
               <li><span class="value">{{ p.count | number: '1.0-0' }}</span><span class="label">{{ p.label }}</span></li>
             }
           </ul>
+          @if (trend(); as tr) {
+            <p class="trend" [class.hoch]="tr.diff > 0" [class.runter]="tr.diff < 0">
+              <mat-icon>{{ tr.diff > 0 ? 'arrow_upward' : tr.diff < 0 ? 'arrow_downward' : 'arrow_forward' }}</mat-icon>
+              <span>Letzte 7 Tage: <strong>{{ tr.jetzt | number: '1.0-0' }}</strong> {{ tr.jetzt === 1 ? 'Aufruf' : 'Aufrufe' }} ·
+                @if (tr.vorher) { {{ tr.diff > 0 ? '+' : tr.diff < 0 ? '−' : '±' }}{{ tr.prozent < 0 ? -tr.prozent : tr.prozent }} % } @else { neu }
+                gegenüber den 7 Tagen davor ({{ tr.vorher | number: '1.0-0' }})</span>
+            </p>
+          }
           <h3>Beliebteste Seiten · 30 Tage</h3>
           <ol class="pages">
             @for (p of pages(); track p.path) {
@@ -179,6 +187,10 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .note { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--bn-fog); }
     .note mat-icon { color: #e0b25a; }
+    .trend { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: .9rem; color: var(--bn-fog); }
+    .trend strong { color: var(--bn-ink); }
+    .trend.hoch mat-icon { color: #7fc99a; }
+    .trend.runter mat-icon { color: #e0b25a; }
     .text { margin: 0 0 10px; font-size: .9rem; color: var(--bn-fog); }
     .foot { margin: 16px 0 0; font-size: .78rem; color: var(--bn-fog); }
     a { color: var(--bn-sunset); }
@@ -197,6 +209,8 @@ export class BackstageBesucher implements OnInit {
   protected readonly herkunftMax = signal(0);
   private readonly band = inject(BandService);
   protected readonly wege = WEGE.map((w) => ({ ...w, kurz: { plakat: 'Plakat', story: 'Story', text: 'Text', geteilt: 'Geteilt' }[w.ref] ?? w.ref }));
+  // Wochentrend: letzte 7 Tage (inkl. heute) gegen die 7 Tage davor
+  protected readonly trend = signal<{ jetzt: number; vorher: number; diff: number; prozent: number } | null>(null);
   protected readonly kampagnen = signal<{ id: string; datum: string; name: string; seite: number; wege: number[] }[]>([]);
   // Werbewege über alle Konzerte zusammengezählt – Anteil in Prozent, sortiert nach Besuchern
   protected readonly wirkung = computed(() => {
@@ -219,6 +233,12 @@ export class BackstageBesucher implements OnInit {
       this.pages.set(pages);
       this.max.set(pages[0]?.count ?? 0);
       this.state.set('ok');
+      const tag = (n: number) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+      const [jetzt, vorher] = await Promise.all([count('TOTAL', tag(6), tag(0)), count('TOTAL', tag(13), tag(7))]).catch(() => [0, 0]);
+      if (jetzt || vorher) {
+        const diff = jetzt - vorher;
+        this.trend.set({ jetzt, vorher, diff, prozent: vorher ? Math.round((diff / vorher) * 100) : 0 });
+      }
       // Herkunft aus QR-Codes (Ereignisse „von-…“, siehe analytics.ts) – Fehler hier lassen den Rest stehen
       const herkunft = await Promise.all(HERKUNFT.map(async (h) => ({ ...h, count: await count(`von-${h.ref}`, 'year').catch(() => 0) })));
       const besucht = herkunft.filter((h) => h.count > 0).sort((a, b) => b.count - a.count);

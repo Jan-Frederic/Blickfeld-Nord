@@ -3,9 +3,11 @@
 // website“ aktivieren, sonst antwortet der Zähler mit 403. GoatCounter puffert die Zahlen bis zu einige Stunden.
 export const GC = 'https://blickfeld-nord.goatcounter.com';
 
-/** Aufrufe einer Seite bzw. eines Ereignisses; `start`: 'week', 'month', 'year' oder '' (insgesamt) */
-export async function zaehler(path: string, start: string): Promise<number> {
-  const url = `${GC}/counter/${encodeURIComponent(path)}.json${start ? '?start=' + start : ''}`;
+/** Aufrufe einer Seite bzw. eines Ereignisses; `start`: 'week', 'month', 'year', ein Datum (JJJJ-MM-TT) oder ''
+ *  (insgesamt); `end`: optionales Enddatum (JJJJ-MM-TT, einschließlich) */
+export async function zaehler(path: string, start: string, end?: string): Promise<number> {
+  const q = [start && 'start=' + start, end && 'end=' + end].filter(Boolean).join('&');
+  const url = `${GC}/counter/${encodeURIComponent(path)}.json${q ? '?' + q : ''}`;
   const res = await fetch(url);
   if (res.status === 404) return 0; // Seite noch nie aufgerufen
   if (!res.ok) throw new Error(String(res.status));
