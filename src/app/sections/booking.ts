@@ -6,6 +6,7 @@ import { Anfrage } from './anfrage';
 import { Angebot } from './angebot';
 import { Entfernung } from './entfernung';
 import { Referenzen } from './referenzen';
+import { Stimmen } from './stimmen';
 import { scrollToSection } from '../scroll';
 import { zaehleAnfrage } from '../analytics';
 import { I18n, LocPipe, tr } from '../i18n';
@@ -121,7 +122,7 @@ Met vriendelijke groet
 
 @Component({
   selector: 'app-booking',
-  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Angebot, Entfernung, Referenzen],
+  imports: [RouterLink, LocPipe, MatIconModule, Availability, Anfrage, Angebot, Entfernung, Referenzen, Stimmen],
   template: `
     <section class="section">
       <p class="kicker">{{ t().kicker }}</p>
@@ -141,6 +142,7 @@ Met vriendelijke groet
       <!-- Reihenfolge: was wir bieten → wo wir schon gespielt haben → kommen wir zu euch? → freie Tage → Anfrage → Kontakt; Fragen auf /faq -->
       <app-angebot />
       <app-referenzen />
+      <app-stimmen />
 
       <app-entfernung />
 

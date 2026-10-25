@@ -217,6 +217,12 @@ Momente aus der Historie. Er entsteht automatisch aus den Auftritten und Rückbl
 Feiern erscheinen nur mit ihrem öffentlichen Namen (sonst „Private Feier“) und ohne Ort. Den Rückblick aufs laufende
 Jahr gibt es ab dem **15.12.**; GitHub baut die Seite jeden Morgen von selbst neu. Der Link steht oben auf der Historie.
 
+## Stimmen von Veranstaltern
+
+Freigegebene Zitate in `src/app/data/stimmen.ts` eintragen (Wortlaut, wer, optional Anlass). Sobald dort ein Eintrag
+steht, erscheint im Booking und im Pressekit der Bereich „Das sagen Veranstalter“ – vorher ist er unsichtbar. Nur echte
+Zitate mit Freigabe; bei privaten Feiern ohne Namen der Gastgeber.
+
 ## Woher Besucher kommen (QR-Codes)
 
 Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an die Adresse, z. B.

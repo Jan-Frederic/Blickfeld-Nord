@@ -118,7 +118,7 @@ export const AUFGABEN: Aufgabe[] = [
     bereich: 'Inhalte',
     text: 'Stimmen von Veranstaltern für das Booking sammeln (2–3 kurze Zitate)',
     art: 'kann',
-    hinweis: 'Zum Beispiel bei Café Lotti oder Gasthof Küpper nachfragen – mit Freigabe für die Website und Angabe, wie der Name erscheinen darf (z. B. „Café Lotti, Dingden“). Nur echte, freigegebene Zitate; bei privaten Feiern ohne Namen.',
+    hinweis: 'Zum Beispiel bei Café Lotti oder Gasthof Küpper nachfragen – mit Freigabe für die Website und Angabe, wie der Name erscheinen darf (z. B. „Café Lotti, Dingden“). Nur echte, freigegebene Zitate; bei privaten Feiern ohne Namen. Eintragen in src/app/data/stimmen.ts – dann erscheinen sie automatisch im Booking und im Pressekit.',
     link: '/booking',
   },
   {
@@ -126,6 +126,6 @@ export const AUFGABEN: Aufgabe[] = [
     bereich: 'Inhalte',
     text: 'Klären, ob es einen „Nichts verpassen“-Kanal für Fans geben soll (z. B. WhatsApp-Kanal)',
     art: 'kann',
-    hinweis: 'Wenn ja: Link durchgeben – dann bekommt der Kanal einen festen Platz auf der Startseite und den Konzertseiten.',
+    hinweis: 'Wenn ja: Link durchgeben – dann kommt der Kanal in die Fußzeile (neben Instagram, Facebook und Mail) und als „Erinnerung bekommen“ auf die Konzertseiten.',
   },
 ];
