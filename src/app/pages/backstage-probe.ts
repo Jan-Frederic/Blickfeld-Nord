@@ -113,6 +113,8 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .icon { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: var(--bn-fog); cursor: pointer; }
     .icon:hover { color: var(--bn-sunset); }
     .search, .add { display: flex; gap: 8px; align-items: center; }
+    .add { flex-wrap: wrap; }
+    .add input { min-width: min(100%, 220px); }
     .search { padding: 0 12px; border: 1px solid var(--bn-line); border-radius: 10px; }
     .search mat-icon { color: var(--bn-fog); }
     input:not([type=checkbox]), textarea {

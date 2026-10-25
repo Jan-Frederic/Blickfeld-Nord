@@ -43,7 +43,8 @@ const TEXT = tr(
   `,
   styles: `
     .referenzen { margin-top: 40px; }
-    .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; margin-bottom: 14px; }
+    .head > div { min-width: 0; }
     h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
     .nav { display: flex; gap: 8px; }
     .nav button { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); cursor: pointer; }

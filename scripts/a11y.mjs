@@ -58,6 +58,11 @@ for (const path of pages) {
 // niederländischer Browser: deutsche Seiten zeigen dabei den Sprachhinweis – der darf auch nicht überstehen
 const phone = await browser.newPage({ viewport: { width: 360, height: 780 }, locale: 'nl-NL', bypassCSP: true });
 await phone.context().route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+// GoatCounter-Zähler mit Beispielzahlen beantworten – sonst bleiben Besucher- und Kampagnen-Tabellen im Backstage leer
+// und werden nie bei Handy-Breite geprüft
+await phone.context().route(/goatcounter\.com\/counter\//, (route) =>
+  route.fulfill({ contentType: 'application/json', body: JSON.stringify({ count: '1.234' }) }),
+);
 for (const path of pages) {
   await phone.goto(BASE + path, { waitUntil: 'networkidle' });
   await phone.evaluate(async () => {
@@ -80,7 +85,9 @@ for (const path of pages) {
       return false;
     };
     return els
-      .filter((el) => !el.children.length && el.getBoundingClientRect().right > vw + 1 && !clippedInside(el))
+      // „Blätter“ (ohne Kind-Elemente) und Bedienelemente wie Auswahllisten, deren Kinder (option) nicht gezeichnet werden
+      .filter((el) => (!el.children.length || ['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA'].includes(el.tagName)))
+      .filter((el) => el.getBoundingClientRect().right > vw + 1 && !clippedInside(el))
       .slice(0, 3)
       .map((el) => `${el.tagName.toLowerCase()} „${el.textContent.trim().slice(0, 30)}“ bis ${Math.round(el.getBoundingClientRect().right)} px`);
   });
