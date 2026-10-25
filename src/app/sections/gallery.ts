@@ -62,7 +62,7 @@ const TEXT = tr(
           @for (e of g.fotos; track e.p.src; let i = $index) {
             <button class="tile" [class.wide]="i % 5 === 0 && !e.p.tall" (click)="open(e.i)" [attr.aria-label]="t().enlarge + content.t(e.p.alt)">
               <!-- Vorschau in drei Größen (480/720/900 px) – jedes Gerät lädt nur, was es für ein scharfes Bild braucht -->
-              <img [src]="e.p.thumb" [attr.srcset]="srcset(e.p.thumb)" [attr.sizes]="i % 5 === 0 && !e.p.tall ? wideSizes : sizes" [alt]="content.t(e.p.alt)" [style.object-position]="e.p.focus" loading="lazy" decoding="async" />
+              <img [src]="e.p.thumb" [attr.srcset]="srcset(e.p.thumb)" [attr.sizes]="i % 5 === 0 && !e.p.tall ? wideSizes : sizes" [alt]="content.t(e.p.alt)" [style.object-position]="e.p.focus" [class.contain]="e.p.contain" loading="lazy" decoding="async" />
               @if (entries.has(e.p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
             </button>
           }
@@ -110,6 +110,7 @@ const TEXT = tr(
       width: 100%; height: 100%; object-fit: cover; display: block;
       filter: saturate(.85); transition: transform .5s ease, filter .5s ease;
     }
+    .tile img.contain { object-fit: contain; background: #0f1113; }
     .tile:hover img, .tile:focus-visible img { transform: scale(1.04); filter: saturate(1); }
     .tile:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; }
 
