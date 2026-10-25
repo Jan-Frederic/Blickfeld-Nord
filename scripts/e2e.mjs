@@ -86,6 +86,10 @@ test('Herkunft: QR-Code-Vermerk ?ref= und Kampagne werden gezählt und aus der A
   await p.locator('app-booking p.mail a').click();
   await until(async () => (await p.evaluate(() => window.__gc)).some((c) => c.path === 'anfrage-mail'), 'Anfrage nicht gezählt');
   expect((await p.evaluate(() => window.__gc)).some((c) => c.path === 'anfrage-von-plakat'), 'Anfrage ohne Herkunft gezählt');
+  // Fehlerseite zählt – gesamt und mit der aufgerufenen Adresse
+  await p.go('/gibt-es-nicht');
+  await until(async () => (await p.evaluate(() => window.__gc)).some((c) => c.path === '404:/gibt-es-nicht'), 'Fehlerseite nicht gezählt');
+  expect((await p.evaluate(() => window.__gc)).some((c) => c.path === 'fehlerseite'), 'Fehlerseite ohne Summe gezählt');
   return p;
 });
 

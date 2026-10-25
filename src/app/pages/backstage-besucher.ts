@@ -119,6 +119,10 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
             <p class="foot">Seite = Aufrufe der Konzertseite (DE/EN/NL); die übrigen Spalten zählen Besucher über Plakat, Story,
               Beitragstext und geteilte Links mit der Kampagne des Konzerts.</p>
           }
+          <h3>Fehlerseite · 12 Monate</h3>
+          <p class="note">{{ fehler() | number: '1.0-0' }}× aufgerufen – welche Adressen, steht in
+            <a [href]="dashboard" target="_blank" rel="noopener">GoatCounter</a> unter den Ereignissen „404:…“. Viele Aufrufe
+            deuten auf einen alten oder falschen Link hin, z. B. auf einem Plakat.</p>
         }
       }
       <p class="foot">
@@ -160,6 +164,7 @@ export class BackstageBesucher implements OnInit {
   protected readonly max = signal(0);
   protected readonly herkunft = signal<{ ref: string; label: string; count: number }[]>([]);
   protected readonly anfragen = signal<{ label: string; count: number }[]>([]);
+  protected readonly fehler = signal(0);
   protected readonly anfrageHerkunft = signal<{ ref: string; label: string; count: number }[]>([]);
   protected readonly herkunftMax = signal(0);
   private readonly band = inject(BandService);
@@ -182,7 +187,8 @@ export class BackstageBesucher implements OnInit {
       this.herkunftMax.set(besucht[0]?.count ?? 0);
       // Booking-Anfragen (Ereignisse aus analytics.ts → zaehleAnfrage)
       const n = (path: string) => count(path, 'year').catch(() => 0);
-      const [assistent, mail] = await Promise.all([n('anfrage-assistent'), n('anfrage-mail')]);
+      const [assistent, mail, fehler] = await Promise.all([n('anfrage-assistent'), n('anfrage-mail'), n('fehlerseite')]);
+      this.fehler.set(fehler);
       this.anfragen.set([
         { label: 'Anfragen gesamt', count: assistent + mail },
         { label: 'über den Anfrage-Assistenten', count: assistent },

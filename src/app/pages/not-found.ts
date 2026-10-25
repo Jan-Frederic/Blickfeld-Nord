@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { I18n, LocPipe, tr } from '../i18n';
+import { zaehleEreignis } from '../analytics';
 
 const TEXT = tr(
   {
@@ -62,4 +64,12 @@ const TEXT = tr(
 })
 export class NotFound {
   protected readonly t = inject(I18n).t(TEXT);
+
+  constructor() {
+    // Aufrufe der Fehlerseite zählen: „fehlerseite“ (Summe, Backstage → Besucher) und „404:<Adresse>“ (im
+    // GoatCounter-Dashboard unter Ereignisse) – so fallen alte oder falsche Links auf, z. B. auf gedruckten Plakaten
+    if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+    zaehleEreignis('fehlerseite', 'Fehlerseite (404)');
+    zaehleEreignis(`404:${location.pathname}`, `404: ${location.pathname}`);
+  }
 }

@@ -51,8 +51,11 @@ let ersterAufruf = true;
 const SITZUNG = 'bn-herkunft';
 
 /** GoatCounter-Ereignis zählen (z. B. eine Booking-Anfrage) – still, wenn GoatCounter fehlt (Werbeblocker, Backstage) */
-export function zaehleEreignis(path: string, title: string): void {
-  window.goatcounter?.count?.({ path, title, event: true });
+export function zaehleEreignis(path: string, title: string, versuche = 40): void {
+  const counter = window.goatcounter?.count;
+  if (counter) counter({ path, title, event: true });
+  // Skript lädt asynchron (z. B. direkt nach dem Aufruf der Fehlerseite) – kurz warten, max. ~4 s
+  else if (versuche > 0 && typeof window !== 'undefined') setTimeout(() => zaehleEreignis(path, title, versuche - 1), 100);
 }
 
 /** Booking-Anfrage zählen – gesamt und nach Herkunft dieses Besuchs (QR-Code, Plakat …, sonst „direkt“) */
