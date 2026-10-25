@@ -243,6 +243,20 @@ export class BackstageAufgaben {
         icon: 'sync',
       });
 
+    // Monatlicher Wartungs-Check – erscheint in der ersten Woche jedes Monats
+    if (Number(this.heute.slice(8, 10)) <= 7)
+      out.push({
+        text: `Wartungs-Check für ${new Date(`${this.heute}T12:00:00`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}`,
+        details: [
+          'GitHub → Pull requests: offene Dependabot-Updates (Angular, Lighthouse, Playwright …) prüfen und zusammenführen, wenn die Prüfung grün ist',
+          'GitHub → Actions → letzter Deploy → Linkcheck: Warnungen zu externen Links ansehen (z. B. umgezogene Seiten von Veranstaltern)',
+          'GitHub → Actions → letzter Deploy → Lighthouse: Werte und Rechner-Tempo kurz ansehen',
+          'Backstage-Daten sichern: unter „Abgleich“ „Alles an die Band schicken“',
+        ],
+        link: '/backstage/abgleich',
+        icon: 'build',
+      });
+
     // Fotos ohne Fotografen-Angabe (Galerie und Historie)
     const ohneCredit = [...new Set([
       ...this.band.photos.filter((p) => !p.credit).map((p) => p.caption ?? p.alt),

@@ -129,6 +129,13 @@ export const AUFGABEN: Aufgabe[] = [
     hinweis: 'Wenn ja: Link durchgeben – dann kommt der Kanal in die Fußzeile (neben Instagram, Facebook und Mail) und als „Erinnerung bekommen“ auf die Konzertseiten.',
   },
   {
+    id: 'werbeplan-kalender',
+    bereich: 'Website',
+    text: 'Optional: Werbeplan-Termine ins Kalender-Abo des Backstage übernehmen',
+    art: 'kann',
+    hinweis: 'Plakat, Storys, „Morgen“ und „Heute“ je öffentlichem Auftritt als Termine im bestehenden Band-Kalender – das Handy erinnert dann, ohne dass jemand den Backstage öffnet. Erledigte Schritte kennt der Kalender allerdings nicht.',
+  },
+  {
     id: 'desktop-symbole',
     bereich: 'Website',
     text: 'Optional: Symbole auch in der Desktop-Kopfleiste (Website und Backstage) wie im Handy-Menü',
