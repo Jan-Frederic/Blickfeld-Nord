@@ -13,6 +13,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
@@ -288,3 +289,33 @@ for (const file of readdirSync(DIST, { recursive: true })) {
 }
 
 console.log(`SEO: ${upcoming.length} kommende(s) Konzert(e) als strukturierte Daten, ${publicShows.length} im Kalender-Abo, ${pages.length * LANGS.length} Seiten in der Sitemap (${pages.length} je Sprache), ${preloadPages} Seiten ohne modulepreload.`);
+
+// Link-Vorschau je Konzert und Sprache (og/konzert-<ID>[-en|-nl].jpg, 1200 × 630) – die Konzertseite trägt sie als
+// og:image ein (src/app/pages/konzert.ts). Gezeichnet von scripts/og-konzerte.py; ohne Python/Pillow bleibt es beim
+// allgemeinen Vorschaubild.
+const OG_TEXT = {
+  de: { kicker: 'Blickfeld Nord live', days: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'], date: (d) => d.split('-').reverse().join('.'), time: (t) => ` · ${t} Uhr`, free: 'Eintritt frei', entry: (p) => `Eintritt ${p} €` },
+  en: { kicker: 'Blickfeld Nord live', days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], date: (d) => d.split('-').reverse().join('/'), time: (t) => ` · ${t}`, free: 'Free entry', entry: (p) => `Entry €${p}` },
+  nl: { kicker: 'Blickfeld Nord live', days: ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'], date: (d) => d.split('-').reverse().join('-'), time: (t) => ` · ${t} uur`, free: 'Gratis entree', entry: (p) => `Entree € ${p}` },
+};
+const ogEntries = publicShows.flatMap((s) =>
+  LANGS.map((lang) => {
+    const t = OG_TEXT[lang];
+    const day = (d) => `${t.days[new Date(`${d}T12:00:00`).getDay()]}, ${t.date(d)}`;
+    return {
+      file: `og/konzert-${showId(s)}${lang === 'de' ? '' : '-' + lang}.jpg`,
+      kicker: t.kicker,
+      datum: `${day(s.date)}${s.endDate ? ' – ' + day(s.endDate) : ''}${s.time ? t.time(s.time) : ''}`,
+      ort: tx(s.venue, lang),
+      stadt: s.city ?? '',
+      extra: s.price === 0 ? t.free : s.price ? t.entry(s.price) : '',
+    };
+  }),
+);
+const ogJson = join(tmpdir(), 'bn-og-konzerte.json');
+writeFileSync(ogJson, JSON.stringify(ogEntries));
+try {
+  execFileSync(process.env.PYTHON ?? 'python3', [join(ROOT, 'scripts', 'og-konzerte.py'), ogJson], { stdio: 'inherit' });
+} catch (err) {
+  console.warn('Link-Vorschau je Konzert nicht erzeugt (Python/Pillow fehlt?):', err.message);
+}

@@ -19,6 +19,8 @@ export interface PageMeta {
   robots?: string;
   /** nur Deutsch (Backstage) – ohne Verweise auf andere Sprachfassungen */
   germanOnly?: boolean;
+  /** eigenes Vorschaubild (absolute Adresse, 1200 × 630 JPG) mit Beschreibung – sonst das Logo-Motiv */
+  image?: { url: string; alt: string };
 }
 
 export type { Lang };
@@ -53,7 +55,9 @@ export class PageMetaService {
     this.meta.updateTag({ name: 'twitter:description', content: description });
     this.document.documentElement.lang = lang;
     this.meta.updateTag({ property: 'og:locale', content: LOCALE[lang] });
-    this.meta.updateTag({ property: 'og:image:alt', content: IMAGE_ALT[lang] });
+    this.meta.updateTag({ property: 'og:image', content: page.image?.url ?? `${SITE_URL}/og-image.jpg` });
+    this.meta.updateTag({ name: 'twitter:image', content: page.image?.url ?? `${SITE_URL}/og-image.jpg` });
+    this.meta.updateTag({ property: 'og:image:alt', content: page.image?.alt ?? IMAGE_ALT[lang] });
     if (page.robots) {
       this.meta.updateTag({ name: 'robots', content: page.robots });
     } else {

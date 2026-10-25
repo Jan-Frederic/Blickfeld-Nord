@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { downloadIcs, icsFileName } from '../data/calendar';
-import { PageMetaService } from '../page-meta';
+import { PageMetaService, SITE_URL } from '../page-meta';
 import { shareShow } from '../data/share';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
@@ -271,6 +271,13 @@ export class KonzertPage {
         title: s ? `${s.venue}${s.city ? ', ' + s.city : ''} – ${when} – Blickfeld Nord live` : t.metaFallback,
         description: s ? t.metaDescription(when, s.time, `${s.venue}${s.city ? t.in + s.city : ''}`, s.price === 0) : undefined,
         path: this.i18n.link(`/konzerte/${this.id()}`).slice(1),
+        // Link-Vorschau mit Datum und Ort (beim Build von scripts/og-konzerte.py erzeugt)
+        image: s
+          ? {
+              url: `${SITE_URL}/og/konzert-${this.id()}${this.i18n.lang() === 'de' ? '' : '-' + this.i18n.lang()}.jpg`,
+              alt: `Blickfeld Nord live – ${when}, ${s.venue}${s.city ? ', ' + s.city : ''}`,
+            }
+          : undefined,
       });
     });
   }
