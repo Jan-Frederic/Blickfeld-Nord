@@ -15,7 +15,7 @@ import { KAMPAGNE } from './data/goatcounter';
 // „Campaigns“); dazu zählt ein Ereignis „kampagne-konzert-<ID>-<Herkunft>“ für den Backstage des Auftritts.
 declare global {
   interface Window {
-    goatcounter?: { count?: (vars: { path: string; title?: string; event?: boolean }) => void };
+    goatcounter?: { count?: (vars: { path: string; title?: string; event?: boolean; referrer?: string }) => void };
   }
 }
 
@@ -73,10 +73,12 @@ export function zaehleAnfrage(art: 'assistent' | 'mail'): void {
 function count(path: string, attempts = 40): void {
   const counter = window.goatcounter?.count;
   if (counter) {
-    counter({ path });
+    const ref = ersterAufruf ? herkunft() : undefined;
+    // Herkunft zusätzlich als Verweis übergeben – erscheint so sicher unter „Referrers“ (z. B. „plakat“), auch wenn
+    // GoatCounter den Parameter in der Adresse nicht auswertet
+    counter(ref ? { path, referrer: kampagne() ? `${ref} · ${kampagne()}` : ref } : { path });
     if (ersterAufruf) {
       ersterAufruf = false;
-      const ref = herkunft();
       const k = kampagne();
       if (ref) counter({ path: `von-${ref}`, title: `Herkunft: ${ref}`, event: true });
       if (ref) {

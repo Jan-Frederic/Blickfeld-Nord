@@ -73,6 +73,7 @@ test('Herkunft: QR-Code-Vermerk ?ref= und Kampagne werden gezählt und aus der A
   await until(async () => (await p.evaluate(() => (window.__gc || []).length)) >= 2, 'GoatCounter wurde nicht aufgerufen');
   const calls = await p.evaluate(() => window.__gc);
   expect(calls.some((c) => c.path === 'von-plakat' && c.event), `kein Herkunfts-Ereignis: ${JSON.stringify(calls)}`);
+  expect(calls.some((c) => !c.event && c.referrer?.startsWith('plakat')), `Seitenaufruf ohne Verweis „plakat“: ${JSON.stringify(calls)}`);
   expect(calls.some((c) => c.path === `kampagne-konzert-${id}-plakat` && c.event), `kein Kampagnen-Ereignis: ${JSON.stringify(calls)}`);
   expect(!calls.some((c) => !c.event && c.path.includes('ref=')), 'Seitenaufruf mit Vermerk im Pfad gezählt');
   await until(async () => !p.url().includes('ref=') && !p.url().includes('utm_campaign'), `Vermerk bleibt in der Adresse: ${p.url()}`);
