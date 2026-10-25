@@ -1,16 +1,14 @@
 import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { BackstageNav } from './backstage-nav';
 import { BackstageSync } from './backstage-sync';
 import { offlineReady } from '../pwa';
 
 // Backstage → Abgleich: Gerätedaten (Setlists, Packlisten, Vor-Ort-Angaben) als Datei mit der Band teilen
 @Component({
   selector: 'app-backstage-abgleich',
-  imports: [MatIconModule, BackstageNav, BackstageSync],
+  imports: [MatIconModule, BackstageSync],
   template: `
     <section class="section">
-      <app-backstage-nav />
       <p class="kicker">Backstage</p>
       <h2>Abgleich</h2>
       <div class="exchange">

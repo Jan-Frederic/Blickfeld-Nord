@@ -1,6 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { BackstageNav } from './backstage-nav';
 import data from '../data/repertoire.json';
 import { SONGINFO, SongInfo } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
@@ -26,10 +25,9 @@ function ladeEntwurf(): Record<string, Werte> {
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [MatIconModule, BackstageNav],
+  imports: [MatIconModule],
   template: `
     <section class="section">
-      <app-backstage-nav />
       <p class="kicker">Backstage</p>
       <h2>Songs</h2>
       <p class="lead">

@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { BackstageNav } from './backstage-nav';
 import { BandService, Show } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
@@ -30,10 +29,9 @@ interface AutoAufgabe {
 
 @Component({
   selector: 'app-backstage-aufgaben',
-  imports: [RouterLink, MatIconModule, BackstageNav],
+  imports: [RouterLink, MatIconModule],
   template: `
     <section class="section">
-      <app-backstage-nav />
       <p class="kicker">Backstage</p>
       <h2>Aufgaben</h2>
       <p class="lead">Was an der Website noch zu tun ist – {{ offen() }} offen.</p>

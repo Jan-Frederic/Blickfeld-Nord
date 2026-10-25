@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { BackstageNav } from './backstage-nav';
 
 // Backstage → Material: Druckvorlagen und Unterlagen für Veranstalter – je Sprache (scripts/build-*.py, public/presse/).
 // Plakate und Laufzettel entstehen pro Auftritt auf dessen Unterseite.
@@ -36,10 +35,9 @@ const BANNER_CHECKLISTE = [
 
 @Component({
   selector: 'app-backstage-material',
-  imports: [MatIconModule, BackstageNav],
+  imports: [MatIconModule],
   template: `
     <section class="section">
-      <app-backstage-nav />
       <p class="kicker">Backstage</p>
       <h2>Material</h2>
       <p class="lead">Zum Drucken und Verschicken – jeweils auf Deutsch, Englisch und Niederländisch. Plakat, Story und Laufzettel gibt es auf der Seite des jeweiligen Auftritts.</p>

@@ -1,6 +1,5 @@
 import { Component, computed, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { BackstageNav } from './backstage-nav';
 import { Item, TechnikAufbau } from '../sections/technik-aufbau';
 import { patchAufbau } from '../data/technik-patch';
 import data from '../data/technik.json';
@@ -12,10 +11,9 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
 
 @Component({
   selector: 'app-backstage-buehnenplan',
-  imports: [MatIconModule, BackstageNav, TechnikAufbau],
+  imports: [MatIconModule, TechnikAufbau],
   template: `
     <section class="section">
-      <app-backstage-nav />
       <p class="kicker">Backstage</p>
       <h2>Bühnenplan</h2>
       <p class="lead">

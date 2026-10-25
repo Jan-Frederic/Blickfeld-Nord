@@ -5,7 +5,12 @@
     <span class="logo-main">Blickfeld</span> <span class="logo-sub">Nord</span>
   </button>
   <span class="spacer"></span>
-  <nav class="desktop-nav">
+  <nav class="desktop-nav" [attr.aria-label]="imBackstage() ? 'Backstage-Bereiche' : null">
+    @if (imBackstage()) {
+      @for (b of backstage; track b.path) {
+        <a class="bn-btn" [routerLink]="b.path" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">{{ b.label }}</a>
+      }
+    } @else {
     @for (n of nav(); track n.label) {
       @if (n.link) {
         <a class="bn-btn" [routerLink]="n.link | loc">{{ n.label }}</a>
@@ -16,6 +21,7 @@
     <a class="bn-btn" [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
     <a class="bn-btn" [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
     <a class="bn-btn" [routerLink]="'/faq' | loc">{{ t().nav.faq }}</a>
+    }
   </nav>
   @if (showLanguages()) {
     <nav class="languages" [attr.aria-label]="t().language">
@@ -37,6 +43,12 @@
     <span class="material-icons" aria-hidden="true">menu</span>
   </button>
   <nav id="hauptmenue" class="menu-panel" popover #menu [attr.aria-label]="t().openMenu">
+    @if (imBackstage()) {
+      @for (b of backstage; track b.path) {
+        <a class="menu-item" [routerLink]="b.path" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">{{ b.icon }}</span> {{ b.label }}</a>
+      }
+      <a class="menu-item" [routerLink]="'/'" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">home</span> Zur Website</a>
+    } @else {
     @for (n of nav(); track n.label) {
       @if (n.link) {
         <a class="menu-item" [routerLink]="n.link | loc" (click)="menu.hidePopover()">{{ n.label }}</a>
@@ -47,6 +59,7 @@
     <a class="menu-item" [routerLink]="'/historie' | loc" (click)="menu.hidePopover()">{{ t().nav.history }}</a>
     <a class="menu-item" [routerLink]="'/freunde' | loc" (click)="menu.hidePopover()">{{ t().nav.friends }}</a>
     <a class="menu-item" [routerLink]="'/faq' | loc" (click)="menu.hidePopover()">{{ t().nav.faq }}</a>
+    }
     @if (showLanguages()) {
       @for (l of languages(); track l.lang) {
         @if (!l.current) {

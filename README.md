@@ -37,7 +37,7 @@ Architektur mit Diagrammen: [ARCHITECTURE.md](ARCHITECTURE.md) · Inhalte pflege
 - **Pressekit** (`/presse`) – Pressetext, Logos, Fotos, PDF und ZIP zum Download
 - **Freunde & Partner** (`/freunde`) – Links zu befreundeten Seiten. Steckt der Name eines Freundes im Location-Namen
   eines Auftritts, verlinkt die Konzertliste automatisch auf dessen Karte (`/freunde#cafe-lotti`), die dort kurz aufleuchtet
-- **Backstage** (`/backstage`, versteckt) – in Bereiche gegliedert, gemeinsame Navigation `backstage-nav.ts`:
+- **Backstage** (`/backstage`, versteckt) – in Bereiche gegliedert, die die Kopfleiste im Backstage statt der Website-Abschnitte zeigt (`data/backstage-bereiche.ts`):
   **Übersicht** (Kennzahlen, nächste Termine, Kacheln), **Termine** (`/backstage/termine`: alle Auftritte inkl. privater
   mit Status und Kommentar sowie Proben, Filter, Sortierung, Bandkalender-Abo, neuen Termin eintragen), **Zahlen**
   (Besucher, Setlist-Statistik), **Übersetzungen** (Stand und Gegenlesen), **Material** (Wunschbox-Schild, QR-Karte,

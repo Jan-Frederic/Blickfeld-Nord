@@ -1,11 +1,12 @@
 import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
 import { enableOffline, install, installable, iosHint, setupPwa, updateReady } from './pwa';
 import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
+import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
 import { SprachHinweis } from './sections/sprach-hinweis';
 
 const TEXT = tr(
@@ -79,7 +80,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, LocPipe, SprachHinweis],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -106,6 +107,9 @@ export class App {
     rememberLanguage(lang);
   }
   protected readonly showLanguages = computed(() => !this.i18n.path().startsWith('/backstage'));
+  // Im Backstage listet die Kopfleiste dessen Bereiche statt der Abschnitte der Website (Logo führt zurück)
+  protected readonly imBackstage = computed(() => this.i18n.path().startsWith('/backstage'));
+  protected readonly backstage = BACKSTAGE_BEREICHE;
   protected readonly year = new Date().getFullYear();
   // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)
   protected readonly version = release.version;

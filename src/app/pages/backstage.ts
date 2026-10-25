@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageStats } from './backstage-stats';
-import { BACKSTAGE_BEREICHE, BackstageNav } from './backstage-nav';
+import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
@@ -11,10 +11,9 @@ import { BandService } from '../data/band.service';
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, BackstageNav],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats],
   template: `
     <section class="section">
-      <app-backstage-nav />
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>

@@ -121,6 +121,8 @@ mat-icon, .material-icons { flex-shrink: 0; }
 @media (max-width: 599px) {
   .topbar { height: 56px; }
 }
+// aktiver Backstage-Bereich in Kopfleiste und Menü (app.html)
+.topbar .desktop-nav .on, .topbar .menu-item.on { color: var(--bn-sunset); }
 
 // Schlanke Knöpfe im Stil von Material (Text-, gefüllter, umrandeter und Symbol-Knopf) – für Seitenrahmen und
 // Startbild, die ohne Angular Material auskommen (siehe app.html)
