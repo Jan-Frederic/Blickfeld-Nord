@@ -59,6 +59,9 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
           @if (f().price === 'pay') {
             <label>Betrag in €<input type="number" min="1" max="200" [value]="f().amount" (input)="set('amount', $event)" /></label>
           }
+          @if (!f().private) {
+            <label class="wide">Anfahrt & Parken (öffentlich)<input [value]="f().anfahrt" (input)="set('anfahrt', $event)" placeholder="z. B. Parkplätze hinter dem Saal, Eingang über den Biergarten" maxlength="140" /></label>
+          }
           <label class="check"><input type="checkbox" [checked]="f().private" (change)="toggle('private', $event)" /> privat (nicht öffentlich gelistet)</label>
           <label class="check"><input type="checkbox" [checked]="f().confirmed" (change)="toggle('confirmed', $event)" /> geklärt (fest zugesagt)</label>
           @if (f().private) {
@@ -131,7 +134,7 @@ export class TerminFormular {
   protected readonly liste = computed(() => ({ auftritt: 'readonly shows', probe: 'readonly rehearsals', abwesenheit: 'readonly abwesenheiten' })[this.art()]);
   protected readonly f = signal({
     date: '', endDate: '', time: '', endTime: '', place: '', note: '', venue: '', city: '', organizer: '',
-    price: '', amount: '', private: false, confirmed: false, publicName: '', comment: '', wer: '', grund: '',
+    price: '', amount: '', anfahrt: '', private: false, confirmed: false, publicName: '', comment: '', wer: '', grund: '',
   });
   protected readonly copied = signal(false);
   private readonly band = inject(BandService);
@@ -218,6 +221,7 @@ export class TerminFormular {
     if (f.price === '0') parts.push('price: 0');
     if (f.price === 'pay') parts.push(`price: ${Number(f.amount)}`);
     if (f.organizer.trim()) parts.push(`organizer: ${q(f.organizer)}`);
+    if (!f.private && f.anfahrt.trim()) parts.push(`anfahrt: ${q(f.anfahrt)}`);
     if (f.comment.trim()) parts.push(`comment: ${q(f.comment)}`);
     return `{ ${parts.join(', ')} },`;
   });

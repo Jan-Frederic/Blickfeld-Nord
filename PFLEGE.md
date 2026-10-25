@@ -42,6 +42,7 @@ Was die Angaben bewirken:
 | **geklärt** (`confirmed: true`) | Nur geklärte Termine erscheinen öffentlich. Offene stehen im Backstage und im Verfügbarkeitskalender als „reserviert“. |
 | **privat** (`private: true`) | Erscheint nie öffentlich, nur im Backstage. Nach dem Auftritt steht er im Rückblick als „Private Feier“ oder unter dem öffentlichen Namen, den ihr angebt. |
 | **Eintritt** (`price`) | `0` = Eintritt frei, z. B. `8` = 8 €. Leer = keine Angabe. |
+| **Anfahrt & Parken** (`anfahrt`) | Optionaler Hinweis auf der Konzertseite, z. B. „Parkplätze hinter dem Saal“. Nur öffentliche Angaben, keine Privatadressen; Übersetzung über „Englisch und Niederländisch“. |
 | **Kommentar** (`comment`) | Notiz, die nur im Backstage erscheint. Trotzdem öffentlich im Repo lesbar, siehe oben. |
 
 **Termin ändern oder absagen:** Nach dem Datum suchen (z. B. `2026-12-04`), die Zeile anpassen oder ganz löschen.

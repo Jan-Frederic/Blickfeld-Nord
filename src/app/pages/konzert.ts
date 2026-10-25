@@ -27,6 +27,7 @@ const TEXT = tr(
     remind: 'Erinnere mich',
     share: 'Teilen',
     route: 'Anfahrt',
+    arrival: 'Anfahrt & Parken',
     remindHint: '„Erinnere mich“ lädt einen Kalendereintrag mit Erinnerung am Vortag herunter.',
     photo: 'Foto',
     readAll: 'Ganzen Rückblick lesen',
@@ -60,6 +61,7 @@ const TEXT = tr(
     remind: 'Remind me',
     share: 'Share',
     route: 'Directions',
+    arrival: 'Getting there & parking',
     remindHint: '“Remind me” downloads a calendar entry with a reminder the day before.',
     photo: 'Photo',
     readAll: 'Read the full story',
@@ -93,6 +95,7 @@ const TEXT = tr(
     remind: 'Herinner me',
     share: 'Delen',
     route: 'Route',
+    arrival: 'Bereikbaarheid & parkeren',
     remindHint: '„Herinner me” downloadt een agenda-item met een herinnering de dag ervoor.',
     photo: 'Foto',
     readAll: 'Lees de hele terugblik',
@@ -151,6 +154,10 @@ const TEXT = tr(
             <dd>{{ s.price === 0 ? t().free : s.price ? s.price + ' €' : past() ? '–' : t().soon }}</dd>
           </div>
         </dl>
+        @if (s.anfahrt && !past()) {
+          <p class="anfahrt"><mat-icon>local_parking</mat-icon><span><strong>{{ t().arrival }}:</strong> {{ content.t(s.anfahrt) }}</span></p>
+          <app-uebersetzung-hinweis [status]="content.status(s.anfahrt)" />
+        }
 
         <div class="actions">
           @if (!past()) {
@@ -210,7 +217,7 @@ const TEXT = tr(
     .back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; color: var(--bn-fog); text-decoration: none; font-size: .9rem; }
     .back:hover { color: var(--bn-sunset); }
     .back mat-icon, .past mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    h2 { overflow-wrap: anywhere; }
+    h2 { overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto; }
     .past { display: flex; align-items: center; gap: 8px; margin: -8px 0 20px; color: var(--bn-fog); }
     .facts {
       display: grid; margin: 0; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -223,6 +230,9 @@ const TEXT = tr(
     }
     dt mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--bn-sunset); }
     dd { margin: 0; line-height: 1.55; }
+    .anfahrt { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0 0; line-height: 1.55; }
+    .anfahrt mat-icon { flex: none; font-size: 20px; width: 20px; height: 20px; color: var(--bn-sunset); }
+    .anfahrt strong { font-weight: 600; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px; cursor: pointer;

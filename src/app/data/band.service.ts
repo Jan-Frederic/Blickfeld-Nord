@@ -95,6 +95,9 @@ export interface Show {
   // optional für Google (strukturierte Daten): Eintritt in Euro (0 = Eintritt frei) und Veranstalter
   price?: number;
   organizer?: string;
+  // optional, öffentlich auf der Konzertseite: Hinweis zu Anfahrt, Parken oder Eingang, z. B. „Parkplätze hinter dem
+  // Saal, Eingang über den Biergarten“ (EN/NL über uebersetzungen.ts). Keine privaten Adressen!
+  anfahrt?: string;
 }
 
 // Probetermin (nur Backstage und Backstage-Kalender, nie öffentlich)
