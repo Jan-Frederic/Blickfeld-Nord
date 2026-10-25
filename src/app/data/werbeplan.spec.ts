@@ -2,7 +2,9 @@ import { faelligerSchritt, schrittText, werbeplan } from './werbeplan';
 
 describe('werbeplan', () => {
   it('rechnet die Schritte rückwärts vom Auftritt', () => {
-    expect(werbeplan('2026-12-04', '2026-10-01').map((x) => x.datum)).toEqual(['2026-11-06', '2026-11-20', '2026-11-27', '2026-12-03', '2026-12-04']);
+    expect(werbeplan('2026-12-04', '2026-10-01').map((x) => x.datum)).toEqual([
+      '2026-11-06', '2026-11-20', '2026-11-27', '2026-12-03', '2026-12-04', '2026-12-05', '2026-12-07', '2026-12-11',
+    ]);
   });
 
   it('vor Beginn ist noch nichts fällig', () => {
@@ -12,13 +14,21 @@ describe('werbeplan', () => {
 
   it('der jüngste fällige Schritt ist „jetzt“, frühere sind vorbei', () => {
     const plan = werbeplan('2026-12-04', '2026-11-22');
-    expect(plan.map((x) => x.status)).toEqual(['vorbei', 'jetzt', 'kommt', 'kommt', 'kommt']);
+    expect(plan.map((x) => x.status)).toEqual(['vorbei', 'jetzt', 'kommt', 'kommt', 'kommt', 'kommt', 'kommt', 'kommt']);
     expect(faelligerSchritt('2026-12-04', '2026-11-22')?.schritt.id).toBe('story-1');
   });
 
-  it('am Auftrittstag ist der letzte Schritt dran, danach nichts mehr', () => {
+  it('nach dem Auftritt folgt die Nachbereitung, eine Woche nach dem Rückblick ist Schluss', () => {
     expect(faelligerSchritt('2026-12-04', '2026-12-04')?.schritt.id).toBe('heute');
-    expect(faelligerSchritt('2026-12-04', '2026-12-05')).toBeUndefined();
+    expect(faelligerSchritt('2026-12-04', '2026-12-05')?.schritt.id).toBe('danke');
+    expect(faelligerSchritt('2026-12-04', '2026-12-08')?.schritt.id).toBe('fotos');
+    expect(faelligerSchritt('2026-12-04', '2026-12-18')?.schritt.id).toBe('rueckblick');
+    expect(faelligerSchritt('2026-12-04', '2026-12-19')).toBeUndefined();
+  });
+
+  it('mehrtägige Auftritte: Nachbereitung ab dem letzten Tag', () => {
+    expect(faelligerSchritt('2026-12-04', '2026-12-05', '2026-12-06')?.schritt.id).toBe('heute');
+    expect(faelligerSchritt('2026-12-04', '2026-12-07', '2026-12-06')?.schritt.id).toBe('danke');
   });
 });
 

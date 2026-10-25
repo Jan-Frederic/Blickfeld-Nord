@@ -4,7 +4,8 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
-import { erledigteSchritte, werbeplan } from '../data/werbeplan';
+import { erledigteSchritte, werbeplan, werbeplanAktiv } from '../data/werbeplan';
+import { RUECKBLICK_AB, rueckblickJahre } from '../data/jahresrueckblick';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
@@ -185,14 +186,16 @@ export class BackstageAufgaben {
       out.push({ text: `${probenWeg.length} ${probenWeg.length === 1 ? 'Probe fällt' : 'Proben fallen'} in eine Abwesenheit`, details: probenWeg, link: '/backstage/termine', icon: 'music_off' });
 
     // Werbung: öffentliche, geklärte Auftritte – fälliger Schritt aus dem Werbeplan (4 Wochen vorher bis zum Auftrittstag)
-    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute)) {
-      const plan = werbeplan(s.date, this.heute);
+    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && werbeplanAktiv(x.date, this.heute, x.endDate))) {
+      const plan = werbeplan(s.date, this.heute, s.endDate);
       const jetzt = plan.find((x) => x.status === 'jetzt');
       // abgehakt (auf der Seite des Auftritts) → nicht mehr als Aufgabe
       if (!jetzt || erledigteSchritte(this.band.showId(s)).includes(jetzt.schritt.id)) continue;
+      // den Rückblick meldet schon „Rückblick fehlt“ (unten)
+      if (jetzt.schritt.id === 'rueckblick') continue;
       const naechster = plan.find((x) => x.status === 'kommt');
       out.push({
-        text: `Werbung für ${s.venue} (${datum(s.date)}): ${jetzt.schritt.titel}`,
+        text: `${jetzt.schritt.vorher < 0 ? 'Nachbereitung' : 'Werbung für'} ${s.venue} (${datum(s.date)}): ${jetzt.schritt.titel}`,
         details: [
           jetzt.schritt.text,
           naechster ? `Danach: ${naechster.schritt.titel} am ${datum(naechster.datum)}` : 'Letzter Schritt des Werbeplans',
@@ -242,6 +245,23 @@ export class BackstageAufgaben {
         link: '/backstage/abgleich',
         icon: 'sync',
       });
+
+    // Jahresrückblick teilen: vom 15.12. (dann ist /jahr/<Jahr> online) bis 10.01.
+    const md = this.heute.slice(5);
+    if (md >= RUECKBLICK_AB || md <= '01-10') {
+      const jahr = +this.heute.slice(0, 4) - (md <= '01-10' ? 1 : 0);
+      if (rueckblickJahre(this.band.shows, this.heute).includes(jahr))
+        out.push({
+          text: `Jahresrückblick ${jahr} teilen`,
+          details: [
+            `Seite: https://blickfeld-nord.de/jahr/${jahr}/?ref=text`,
+            'Story-Bild: Backstage → Zahlen → „Bandjahr in Zahlen“ → „Als Story-Bild teilen“',
+            `Text-Vorschlag: „Danke für ein tolles Jahr ${jahr}! 🎶 Alle Auftritte, Orte und Highlights auf einen Blick – schaut mal rein: blickfeld-nord.de/jahr/${jahr}“`,
+          ],
+          link: '/backstage/zahlen',
+          icon: 'celebration',
+        });
+    }
 
     // Monatlicher Wartungs-Check – erscheint in der ersten Woche jedes Monats
     if (Number(this.heute.slice(8, 10)) <= 7)

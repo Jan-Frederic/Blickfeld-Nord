@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { kampagnenLink } from '../data/goatcounter';
-import { erledigteSchritte, schrittText, setzeSchritt, werbeplan } from '../data/werbeplan';
+import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
 // Backstage-Übersicht, ganz oben: was heute dran ist – Auftritt und Probe von heute sowie fällige, noch nicht
 // abgehakte Schritte aus dem Werbeplan (mit Haken und „Text kopieren“). Ohne Einträge unsichtbar.
@@ -12,7 +12,8 @@ interface Werbung {
   id: string;
   schritt: string;
   titel: string;
-  heute: boolean;
+  /** seit so vielen Tagen fällig (0 = heute) */
+  tage: number;
 }
 
 @Component({
@@ -30,10 +31,10 @@ interface Werbung {
             </li>
           }
           @for (w of werbung(); track w.id + w.schritt) {
-            <li [class.spaet]="!w.heute">
+            <li [class.spaet]="w.tage > 0">
               <input type="checkbox" [id]="'heute-' + w.id + w.schritt" (change)="haken(w)" [attr.aria-label]="'Erledigt: ' + w.titel" />
               <label [for]="'heute-' + w.id + w.schritt">
-                <a [routerLink]="['/backstage', w.id]">{{ w.show.venue }}</a>: {{ w.titel }}@if (!w.heute) { <span class="hinweis"> · seit ein paar Tagen fällig</span> }
+                <a [routerLink]="['/backstage', w.id]">{{ w.show.venue }}</a>: {{ w.titel }}@if (w.tage > 0) { <span class="hinweis"> · seit {{ w.tage === 1 ? 'gestern' : w.tage + ' Tagen' }} fällig</span> }
               </label>
               <button type="button" (click)="kopieren(w)" [attr.aria-label]="'Text für „' + w.titel + '“ kopieren'">
                 <mat-icon>{{ kopiert() === w.id + w.schritt ? 'check' : 'content_copy' }}</mat-icon>
@@ -79,12 +80,15 @@ export class HeuteFaellig {
   protected readonly werbung = computed<Werbung[]>(() => {
     this.stand();
     return this.band.shows
-      .filter((s) => s.confirmed && !s.private && s.date >= this.heute)
+      .filter((s) => s.confirmed && !s.private && werbeplanAktiv(s.date, this.heute, s.endDate))
       .flatMap((show) => {
         const id = this.band.showId(show);
-        const jetzt = werbeplan(show.date, this.heute).find((x) => x.status === 'jetzt');
+        const jetzt = werbeplan(show.date, this.heute, show.endDate).find((x) => x.status === 'jetzt');
         if (!jetzt || erledigteSchritte(id).includes(jetzt.schritt.id)) return [];
-        return [{ show, id, schritt: jetzt.schritt.id, titel: jetzt.schritt.titel, heute: jetzt.datum === this.heute }];
+        // Rückblick schon geschrieben → erledigt
+        if (jetzt.schritt.id === 'rueckblick' && this.band.history.some((h) => h.date === show.date && !h.example)) return [];
+        const tage = Math.round((Date.parse(this.heute) - Date.parse(jetzt.datum)) / 864e5);
+        return [{ show, id, schritt: jetzt.schritt.id, titel: jetzt.schritt.titel, tage }];
       });
   });
 

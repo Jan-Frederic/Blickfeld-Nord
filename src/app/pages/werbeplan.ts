@@ -4,7 +4,7 @@ import { Show } from '../data/band.service';
 import { kampagnenLink } from '../data/goatcounter';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan } from '../data/werbeplan';
 
-// Backstage eines öffentlichen Auftritts: Werbeplan mit festen Terminen (4 Wochen vorher bis zum Auftrittstag).
+// Backstage eines öffentlichen Auftritts: Werbeplan mit festen Terminen (4 Wochen vorher bis eine Woche danach).
 // Je Schritt ein fertiger Text zum Kopieren (Link mit Herkunft „text“ und Kampagne) und ein Haken – der fällige,
 // noch nicht abgehakte Schritt erscheint zusätzlich unter Aufgaben.
 @Component({
@@ -58,7 +58,7 @@ export class Werbeplan {
   readonly show = input.required<Show>();
   /** Auftritts-ID (Datum, ggf. mit laufender Nummer) */
   readonly id = input.required<string>();
-  protected readonly schritte = computed(() => werbeplan(this.show().date, new Date().toISOString().slice(0, 10)));
+  protected readonly schritte = computed(() => werbeplan(this.show().date, new Date().toISOString().slice(0, 10), this.show().endDate));
   protected readonly erledigt = linkedSignal(() => erledigteSchritte(this.id()));
   protected readonly kopiert = signal<string | null>(null);
 

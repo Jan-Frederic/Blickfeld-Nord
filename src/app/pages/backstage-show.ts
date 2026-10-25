@@ -15,6 +15,7 @@ import { dankeText } from '../data/danke';
 import { kampagnenLink } from '../data/goatcounter';
 import { KonzertKampagne } from './konzert-kampagne';
 import { Werbeplan } from './werbeplan';
+import { werbeplanAktiv } from '../data/werbeplan';
 import { RueckblickFormular } from './rueckblick-formular';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
@@ -105,7 +106,7 @@ const DAY = 24 * 60 * 60 * 1000;
           </div>
         }
         @if (!s.private && s.confirmed) {
-          @if (s.date >= heute) { <app-werbeplan [show]="s" [id]="id()" /> }
+          @if (werbeplanAktiv(s.date, heute, s.endDate)) { <app-werbeplan [show]="s" [id]="id()" /> }
           <app-konzert-kampagne [id]="id()" />
         }
         @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
@@ -199,8 +200,9 @@ const DAY = 24 * 60 * 60 * 1000;
   `,
 })
 export class BackstageShow implements OnDestroy {
-  // Werbeplan nur für kommende Auftritte
+  // Werbeplan von 4 Wochen vorher bis eine Woche nach der Nachbereitung
   protected readonly heute = new Date().toISOString().slice(0, 10);
+  protected readonly werbeplanAktiv = werbeplanAktiv;
   /** Auftritts-ID aus der URL (/backstage/:id) */
   readonly id = input.required<string>();
 
