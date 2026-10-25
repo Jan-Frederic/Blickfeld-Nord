@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
+import { werbeplan } from '../data/werbeplan';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
@@ -183,21 +184,18 @@ export class BackstageAufgaben {
     if (probenWeg.length)
       out.push({ text: `${probenWeg.length} ${probenWeg.length === 1 ? 'Probe fällt' : 'Proben fallen'} in eine Abwesenheit`, details: probenWeg, link: '/backstage/termine', icon: 'music_off' });
 
-    // Werbung: öffentliche, geklärte Auftritte in den nächsten 4 Wochen
-    const bald = new Date(Date.now() + 28 * 864e5).toISOString().slice(0, 10);
-    // – erst das Plakat, in der letzten Woche die Story bzw. der Status
-    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute && x.date <= bald)) {
-      const tage = Math.round((Date.parse(s.date) - Date.parse(this.heute)) / 864e5);
-      const letzteWoche = tage <= 7;
+    // Werbung: öffentliche, geklärte Auftritte – fälliger Schritt aus dem Werbeplan (4 Wochen vorher bis zum Auftrittstag)
+    for (const s of this.band.shows.filter((x) => x.confirmed && !x.private && x.date >= this.heute)) {
+      const plan = werbeplan(s.date, this.heute);
+      const jetzt = plan.find((x) => x.status === 'jetzt');
+      if (!jetzt) continue;
+      const naechster = plan.find((x) => x.status === 'kommt');
       out.push({
-        text: letzteWoche
-          ? `Werbung: Story bzw. Status für ${s.venue} (${datum(s.date)}) posten – ${tage === 0 ? 'heute' : tage === 1 ? 'morgen' : `noch ${tage} Tage`}`
-          : `Werbung: Plakat für ${s.venue} (${datum(s.date)}) teilen`,
+        text: `Werbung für ${s.venue} (${datum(s.date)}): ${jetzt.schritt.titel}`,
         details: [
-          letzteWoche
-            ? 'Letzte Woche vor dem Auftritt: Story mit QR-Code posten und das Plakat noch einmal teilen'
-            : `Noch ${tage} Tage – Plakat und Instagram-Text jetzt teilen, eine Woche vorher kommt die Story dran`,
-          'Plakat, Story und Instagram-Text auf der Seite des Auftritts',
+          jetzt.schritt.text,
+          naechster ? `Danach: ${naechster.schritt.titel} am ${datum(naechster.datum)}` : 'Letzter Schritt des Werbeplans',
+          'Plakat, Story und Instagram-Text auf der Seite des Auftritts – dort steht auch der ganze Werbeplan',
         ],
         link: `/backstage/${this.band.showId(s)}`,
         icon: 'campaign',

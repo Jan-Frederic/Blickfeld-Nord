@@ -14,6 +14,7 @@ import { printKabelEtiketten } from './kabel-etiketten';
 import { dankeText } from '../data/danke';
 import { kampagnenLink } from '../data/goatcounter';
 import { KonzertKampagne } from './konzert-kampagne';
+import { Werbeplan } from './werbeplan';
 import { RueckblickFormular } from './rueckblick-formular';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
@@ -24,7 +25,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, KonzertKampagne],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, KonzertKampagne, Werbeplan],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -103,7 +104,10 @@ const DAY = 24 * 60 * 60 * 1000;
             <button mat-stroked-button (click)="dankeStory()"><mat-icon>smartphone</mat-icon> Danke-Story</button>
           </div>
         }
-        @if (!s.private && s.confirmed) { <app-konzert-kampagne [id]="id()" /> }
+        @if (!s.private && s.confirmed) {
+          @if (s.date >= heute) { <app-werbeplan [datum]="s.date" /> }
+          <app-konzert-kampagne [id]="id()" />
+        }
         @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
@@ -195,6 +199,8 @@ const DAY = 24 * 60 * 60 * 1000;
   `,
 })
 export class BackstageShow implements OnDestroy {
+  // Werbeplan nur für kommende Auftritte
+  protected readonly heute = new Date().toISOString().slice(0, 10);
   /** Auftritts-ID aus der URL (/backstage/:id) */
   readonly id = input.required<string>();
 
