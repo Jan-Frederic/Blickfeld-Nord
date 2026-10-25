@@ -1,7 +1,5 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { BandService, Photo } from '../data/band.service';
 import { I18n, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
@@ -50,20 +48,21 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-gallery',
-  imports: [RouterLink, LocPipe, MatButtonModule, MatIconModule],
+  imports: [RouterLink, LocPipe],
   template: `
     <section id="galerie" class="section">
       <p class="kicker">{{ t().kicker }}</p>
       <h2>{{ t().title }}</h2>
       <p class="lead">{{ t().lead }}</p>
-      @for (g of gruppen; track g.jahr) {
+      @for (g of gruppen; track g.jahr; let gi = $index) {
         <h3 class="group">{{ g.jahr ? t().live + ' ' + g.jahr : t().band }}</h3>
         <div class="grid">
           @for (e of g.fotos; track e.p.src; let i = $index) {
             <button class="tile" [class.wide]="i % 5 === 0 && !e.p.tall" (click)="open(e.i)" [attr.aria-label]="t().enlarge + content.t(e.p.alt)">
               <!-- Vorschau in drei Größen (480/720/900 px) – jedes Gerät lädt nur, was es für ein scharfes Bild braucht -->
-              <img [src]="e.p.thumb" [attr.srcset]="srcset(e.p.thumb)" [attr.sizes]="i % 5 === 0 && !e.p.tall ? wideSizes : sizes" [alt]="content.t(e.p.alt)" [style.object-position]="e.p.focus" [class.contain]="e.p.contain" loading="lazy" decoding="async" />
-              @if (entries.has(e.p.src)) { <span class="badge" aria-hidden="true"><mat-icon>history_edu</mat-icon></span> }
+              <img [src]="e.p.thumb" [attr.srcset]="srcset(e.p.thumb)" [attr.sizes]="i % 5 === 0 && !e.p.tall ? wideSizes : sizes" [alt]="content.t(e.p.alt)" [style.object-position]="e.p.focus" [class.contain]="e.p.contain"
+                [attr.loading]="gi === 0 && i < 2 ? 'eager' : 'lazy'" [attr.fetchpriority]="gi === 0 && i === 0 ? 'high' : null" decoding="async" />
+              @if (entries.has(e.p.src)) { <span class="badge" aria-hidden="true"><span class="material-icons">history_edu</span></span> }
             </button>
           }
         </div>
@@ -78,15 +77,15 @@ const TEXT = tr(
             <span>{{ content.t(p.caption) ?? '' }}@if (p.credit) {<span class="credit"> · {{ t().photo }}: {{ p.credit }}</span>}</span>
             <span class="right">
               @if (entries.get(p.src); as date) {
-                <a class="entry" [routerLink]="'/historie' | loc" [fragment]="'e-' + date" (click)="close()">{{ t().toShow }} <mat-icon>arrow_forward</mat-icon></a>
+                <a class="entry" [routerLink]="'/historie' | loc" [fragment]="'e-' + date" (click)="close()">{{ t().toShow }} <span class="material-icons" aria-hidden="true">arrow_forward</span></a>
               }
               <span class="count">{{ index()! + 1 }} / {{ fotos.length }}</span>
             </span>
           </figcaption>
         </figure>
-        <button mat-icon-button class="nav prev" (click)="step(-1, $event)" [attr.aria-label]="t().prev"><mat-icon>chevron_left</mat-icon></button>
-        <button mat-icon-button class="nav next" (click)="step(1, $event)" [attr.aria-label]="t().next"><mat-icon>chevron_right</mat-icon></button>
-        <button mat-icon-button class="close" (click)="close()" [attr.aria-label]="t().close"><mat-icon>close</mat-icon></button>
+        <button type="button" class="bn-icon-btn nav prev" (click)="step(-1, $event)" [attr.aria-label]="t().prev"><span class="material-icons" aria-hidden="true">chevron_left</span></button>
+        <button type="button" class="bn-icon-btn nav next" (click)="step(1, $event)" [attr.aria-label]="t().next"><span class="material-icons" aria-hidden="true">chevron_right</span></button>
+        <button type="button" class="bn-icon-btn close" (click)="close()" [attr.aria-label]="t().close"><span class="material-icons" aria-hidden="true">close</span></button>
       </div>
     }
   `,
@@ -125,13 +124,13 @@ const TEXT = tr(
       position: absolute; right: 8px; bottom: 8px; display: grid; place-items: center; width: 30px; height: 30px;
       border-radius: 50%; background: rgba(20, 22, 25, .75); color: var(--bn-sunset);
     }
-    .badge mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .badge .material-icons { font-size: 18px; width: 18px; height: 18px; }
     .right { display: inline-flex; align-items: center; gap: 18px; flex: none; }
     .entry { display: inline-flex; align-items: center; gap: 4px; color: var(--bn-sunset); text-decoration: none; }
     .entry:hover { color: var(--bn-ink); }
-    .entry mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .entry .material-icons { font-size: 16px; width: 16px; height: 16px; }
     figcaption {
-      display: flex; justify-content: space-between; gap: 16px; margin-top: 12px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-top: 12px;
       font-family: var(--bn-wide); font-weight: 300; text-transform: uppercase; letter-spacing: .2em; font-size: .75rem;
       color: var(--bn-fog);
     }
