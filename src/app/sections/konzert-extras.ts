@@ -120,7 +120,7 @@ const TEXT = tr(
     .hint { margin: 10px 0 0; font-size: .8rem; color: var(--bn-fog); }
     ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
     li a { color: var(--bn-ink); text-decoration: none; } li a:hover { color: var(--bn-sunset); }
-    .tag { margin-left: 8px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--bn-sunset); color: var(--bn-sunset); font-size: .72rem; }
+    .tag { display: inline-block; white-space: nowrap; margin-left: 8px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--bn-sunset); color: var(--bn-sunset); font-size: .72rem; }
     @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
   `,
 })
