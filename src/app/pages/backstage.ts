@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageStats } from './backstage-stats';
+import { HeuteFaellig } from './heute-faellig';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 
@@ -11,12 +12,14 @@ import { BandService } from '../data/band.service';
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
+
+      <app-heute-faellig />
 
       <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
 
