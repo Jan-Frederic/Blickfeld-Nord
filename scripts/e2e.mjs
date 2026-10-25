@@ -273,6 +273,30 @@ test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neulad
   return p;
 });
 
+test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne, Abhaken gilt überall', async () => {
+  // Uhr auf 14 Tage vor ein öffentliches Konzert stellen: dann ist „Erste Story“ fällig
+  const id = concerts[0].split('/').filter(Boolean).pop();
+  const tag = new Date(`${id.slice(0, 10)}T10:00:00`);
+  tag.setDate(tag.getDate() - 14);
+  const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });
+  await p.clock.setFixedTime(tag);
+  await p.go('/backstage/');
+  const eintrag = p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).first();
+  await eintrag.waitFor();
+  await eintrag.locator('button').click();
+  await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('In zwei Wochen'), 'Story-Text nicht kopiert');
+  const text = await p.evaluate(() => navigator.clipboard.readText());
+  expect(text.includes(`utm_campaign=konzert-${id}`) && text.includes('ref=text'), `Link ohne Herkunft/Kampagne: ${text}`);
+  await eintrag.locator('input[type=checkbox]').check();
+  await until(async () => (await p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).count()) === 0, 'Schritt bleibt nach dem Abhaken in „Heute fällig“');
+  await p.go(`/backstage/${id}/`);
+  await until(async () => await p.locator('#wp-story-1').isChecked(), 'Haken fehlt im Werbeplan des Auftritts');
+  await p.go('/backstage/aufgaben/');
+  await p.locator('app-backstage-aufgaben .item').first().waitFor();
+  expect(!(await p.locator('app-backstage-aufgaben').innerText()).includes('Erste Story'), 'abgehakter Schritt steht noch unter Aufgaben');
+  return p;
+});
+
 test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', async () => {
   const p = await page();
   await p.go('/backstage/termine/');
