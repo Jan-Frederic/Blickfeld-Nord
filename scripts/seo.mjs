@@ -276,12 +276,18 @@ writeFileSync(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /bac
 // Chunks (~120 KB komprimiert) mit hoher Priorität und nehmen dem Startbild auf dem Handy die Bandbreite –
 // ohne sie lädt der Browser die Chunks direkt nach main.js. Die Backstage-Shell (index.csr.html) rendert
 // erst im Browser und behält ihre Preloads.
+// Dafür wird die Display-Schrift Michroma (Überschriften, Logo) vorab geladen: Sonst zeichnet der Browser die
+// Überschrift erst in der Ersatzschrift und nach dem Nachladen breiter neu – Lighthouse zählt dann erst diesen
+// zweiten Zeitpunkt als „größtes Element sichtbar“ (LCP), auf der Konzertseite ~0,7 s später.
+const michroma = readdirSync(join(DIST, 'media')).find((f) => /^michroma-400-.*\.woff2$/.test(f));
+const fontPreload = michroma ? `<link rel="preload" href="media/${michroma}" as="font" type="font/woff2" crossorigin>` : '';
 let preloadPages = 0;
 for (const file of readdirSync(DIST, { recursive: true })) {
   if (!file.endsWith('index.html')) continue;
   const path = join(DIST, file);
   const html = readFileSync(path, 'utf8');
-  const stripped = html.replace(/<link rel="modulepreload" href="[^"]*">/g, '');
+  let stripped = html.replace(/<link rel="modulepreload" href="[^"]*">/g, '');
+  if (fontPreload && !stripped.includes(fontPreload)) stripped = stripped.replace(/(<link rel="preload"[^>]*as="font"[^>]*>)/, `$1${fontPreload}`);
   if (stripped !== html) {
     writeFileSync(path, stripped);
     preloadPages++;
