@@ -64,8 +64,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}</span>
-                @if (info($any(e)); as i) { <span class="dur">{{ i }}</span> }
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}</span>
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
@@ -133,6 +132,8 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .list { border: 1px solid var(--bn-line); border-radius: 10px; padding: 4px 12px; min-height: 120px; }
     .list li { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bn-line); }
     .song { flex: 1; min-width: 0; }
+    /* Tonart · Tempo · Notiz als eigene Zeile unter dem Titel – neben dem Titel quetscht sie ihn auf dem Handy zusammen */
+    .song .info { display: block; margin-top: 2px; font-size: .78rem; color: var(--bn-sunset); }
     .list li:last-child { border-bottom: 0; }
     .no { min-width: 1.8em; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
     .pause-label { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); font-family: var(--bn-wide); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; }
@@ -140,6 +141,12 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .row-tools { margin-left: auto; display: inline-flex; gap: 2px; align-self: center; }
     .row-tools button { display: grid; place-items: center; padding: 3px; border: 0; background: transparent; color: var(--bn-fog); cursor: pointer; }
     .row-tools button:hover:not(:disabled) { color: var(--bn-sunset); }
+    /* schmale Handys: Knöpfe in eine eigene Zeile unter den Song, damit Titel und Interpret die Breite bekommen */
+    @media (max-width: 520px) {
+      .list li { flex-wrap: wrap; row-gap: 0; }
+      .list li .song { flex-basis: calc(100% - 90px); }
+      .list li .row-tools, .dur + .row-tools { flex-basis: 100%; justify-content: flex-end; margin: -4px 0 0; }
+    }
     .row-tools button:disabled { opacity: .3; cursor: default; }
     .row-tools mat-icon { font-size: 17px; width: 17px; height: 17px; }
     .empty, .none { color: var(--bn-fog); font-size: .9rem; padding: 12px 0; }

@@ -344,6 +344,12 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.go(`/backstage/${id}/setlist`);
   await p.locator('app-setlist .pick input[type=search]').fill('Millionen');
   await p.locator('app-setlist .pick li button').first().click();
+  // auf dem Handy darf die Zeile mit Tonart/Tempo den Titel nicht zusammenquetschen
+  await p.setViewportSize({ width: 360, height: 780 });
+  await until(async () => (await p.locator('app-setlist .list li .info').innerText().catch(() => '')).includes('120 bpm'), 'Tonart/Tempo fehlen in der Setlist');
+  const breite = (await p.locator('app-setlist .list li .song').first().boundingBox())?.width ?? 0;
+  expect(breite > 120, `Titelspalte der Setlist auf ${Math.round(breite)} px zusammengequetscht`);
+  await p.setViewportSize({ width: 1280, height: 900 });
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await until(async () => (await p.locator('app-setlist-buehne .key').innerText().catch(() => '')) === 'G', 'Tonart aus dem Entwurf fehlt im Bühnen-Modus');
   expect((await p.locator('app-setlist-buehne .bpm').innerText()).includes('120 bpm'), 'Tempo aus dem Entwurf fehlt im Bühnen-Modus');
