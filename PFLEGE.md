@@ -215,7 +215,7 @@ Was an der Website noch zu tun ist, steht im Backstage im Bereich **Aufgaben** (
 Unter `/jahr/<Jahr>` (z. B. `/jahr/2026`) steht ein öffentlicher Rückblick: Zahlen, alle gespielten Auftritte und die
 Momente aus der Historie. Er entsteht automatisch aus den Auftritten und Rückblicken in `band.service.ts` – private
 Feiern erscheinen nur mit ihrem öffentlichen Namen (sonst „Private Feier“) und ohne Ort. Den Rückblick aufs laufende
-Jahr gibt es ab dem **15.12.**; an dem Tag baut GitHub die Seite von selbst neu. Der Link steht oben auf der Historie.
+Jahr gibt es ab dem **15.12.**; GitHub baut die Seite jeden Morgen von selbst neu. Der Link steht oben auf der Historie.
 
 ## Woher Besucher kommen (QR-Codes)
 

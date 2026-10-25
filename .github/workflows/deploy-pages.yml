@@ -5,9 +5,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # 15.12.: Jahresrückblick aufs laufende Jahr erscheint (/jahr/<Jahr>, src/app/data/jahresrueckblick.ts)
+  # Täglich neu bauen, auch ohne Änderung: vorgerenderte Seiten (vergangene Konzerte → Rückblick, Sitemap,
+  # Jahresrückblick ab dem 15.12.) bleiben aktuell. Hinweis: GitHub pausiert Zeitpläne nach 60 Tagen ohne Commits.
   schedule:
-    - cron: '17 5 15 12 *'
+    - cron: '17 4 * * *'
 
 permissions:
   contents: read
@@ -124,8 +125,10 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
 
-  # Ladezeit-Wächter: prüft die Live-Seite nach jedem Deploy mit Lighthouse (Handy-Profil, je 3 Durchläufe).
-  # Schlägt fehl (rotes X + E-Mail), wenn Leistung < 75, Barrierefreiheit oder SEO < 95 – die Seite bleibt trotzdem online.
+  # Ladezeit-Wächter: prüft die Live-Seite nach jedem Deploy mit Lighthouse (Handy-Profil, je 5 Durchläufe, Median):
+  # Startseite, Booking, Historie, Galerie und eine Konzertseite (lighthouserc.json).
+  # Schlägt fehl (rotes X + E-Mail), wenn Leistung < 85 (Start, Booking, Historie), Barrierefreiheit oder SEO < 95 –
+  # Galerie und Konzertseite werden bei der Leistung nur gemeldet (Warnung). Die Seite bleibt in jedem Fall online.
   # Berichte zum Nachlesen: Actions → Lauf → Artifacts → lighthouse-berichte
   lighthouse:
     needs: deploy
