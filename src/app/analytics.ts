@@ -8,8 +8,9 @@ import { KAMPAGNE } from './data/goatcounter';
 // Die Seite wechselt Unterseiten ohne Neuladen – daher wird jeder Seitenwechsel hier selbst gezählt.
 // Backstage wird nicht gezählt.
 //
-// Herkunft: QR-Codes auf Plakat, Story und QR-Karte hängen ?ref=… an (siehe HERKUNFT). GoatCounter zeigt den Wert
-// selbst unter „Referrers“; zusätzlich zählt hier ein Ereignis „von-…“, das der Backstage über den öffentlichen
+// Herkunft: QR-Codes auf Plakat, Story und QR-Karte hängen ?ref=… an (siehe HERKUNFT). count.js schickt die Adresse
+// beim Zählen mit, GoatCounter wertet ref und utm_campaign selbst aus („Referrers“ bzw. „Campaigns“ – nur beim ersten
+// Aufruf einer Seite je Besuch, Wiederholungen vom selben Gerät zählen dort nicht). Zusätzlich zählt hier ein Ereignis „von-…“, das der Backstage über den öffentlichen
 // Zähler abfragen kann. Danach verschwindet der Vermerk aus der Adresse – geteilte Links zählen nicht doppelt.
 // Kampagne: Plakat, Story, Beitragstext und „Teilen“ eines Auftritts tragen zusätzlich utm_campaign=konzert-<ID> (GoatCounter:
 // „Campaigns“); dazu zählt ein Ereignis „kampagne-konzert-<ID>-<Herkunft>“ für den Backstage des Auftritts.
@@ -73,12 +74,11 @@ export function zaehleAnfrage(art: 'assistent' | 'mail'): void {
 function count(path: string, attempts = 40): void {
   const counter = window.goatcounter?.count;
   if (counter) {
-    const ref = ersterAufruf ? herkunft() : undefined;
-    // Herkunft zusätzlich als Verweis übergeben – erscheint so sicher unter „Referrers“ (z. B. „plakat“), auch wenn
-    // GoatCounter den Parameter in der Adresse nicht auswertet
-    counter(ref ? { path, referrer: kampagne() ? `${ref} · ${kampagne()}` : ref } : { path });
+    // Adresse noch mit ?ref=…&utm_campaign=… – count.js liest sie jetzt aus, erst danach wird sie bereinigt
+    counter({ path });
     if (ersterAufruf) {
       ersterAufruf = false;
+      const ref = herkunft();
       const k = kampagne();
       if (ref) counter({ path: `von-${ref}`, title: `Herkunft: ${ref}`, event: true });
       if (ref) {

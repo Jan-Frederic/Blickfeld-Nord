@@ -224,6 +224,12 @@ Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an di
 „Referrers“; im Backstage unter **Besucher** steht „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
 verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht mitzählen.
 
+> **Selbst testen:** GoatCounter wertet `ref` und `utm_campaign` selbst aus, zählt sie aber nur beim **ersten Aufruf
+> einer Seite je Besuch** (Gerät + Netz, einige Stunden). Wer die Seite vorher schon offen hatte, taucht unter
+> „Referrers“/„Campaigns“ nicht auf. Zum Testen ein anderes Gerät bzw. Mobilfunk statt WLAN nehmen, privates
+> Fenster reicht meist nicht. Unter Settings → „Ignore IPs“ eingetragene Adressen zählen gar nicht. Die Zahlen
+> erscheinen mit einigen Minuten Verzögerung.
+
 - **Erlaubte Vermerke:** `plakat`, `story`, `qr-karte`, `banner`, `geteilt`, `text` – Liste in `src/app/analytics.ts`
   (`HERKUNFT`). Andere Werte werden nicht gezählt.
 - **Kampagne je Konzert:** Plakat, Story, der kopierte Beitragstext („Text kopieren“) und der Teilen-Button der

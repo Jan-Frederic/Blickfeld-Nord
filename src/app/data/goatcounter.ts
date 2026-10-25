@@ -7,8 +7,6 @@ export const GC = 'https://blickfeld-nord.goatcounter.com';
 export async function zaehler(path: string, start: string): Promise<number> {
   const url = `${GC}/counter/${encodeURIComponent(path)}.json${start ? '?start=' + start : ''}`;
   const res = await fetch(url);
-  // Ereignisse (ohne „/“) legt GoatCounter je nach Version mit oder ohne führenden „/“ ab – beide Schreibweisen prüfen
-  if (res.status === 404 && !path.startsWith('/')) return zaehler('/' + path, start);
   if (res.status === 404) return 0; // Seite noch nie aufgerufen
   if (!res.ok) throw new Error(String(res.status));
   // Zahl kommt formatiert („1.234“ / „1,234“ / „1 234“)

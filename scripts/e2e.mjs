@@ -64,16 +64,20 @@ test('Startseite: Konzertliste führt zur Konzertseite, Abo-Button vorhanden', a
 
 test('Herkunft: QR-Code-Vermerk ?ref= und Kampagne werden gezählt und aus der Adresse entfernt', async () => {
   const p = await page();
-  // GoatCounter nachstellen: Aufrufe merken statt senden
+  // GoatCounter nachstellen: Aufrufe samt Adresse merken statt senden (count.js schickt location.search als „q“ mit –
+  // daraus liest GoatCounter ref und utm_campaign)
   await p.route('https://gc.zgo.at/count.js', (route) =>
-    route.fulfill({ contentType: 'text/javascript', body: 'window.goatcounter = { count: (v) => (window.__gc = window.__gc || []).push(v) };' }),
+    route.fulfill({ contentType: 'text/javascript', body: 'window.goatcounter = { count: (v) => (window.__gc = window.__gc || []).push({ ...v, q: location.search }) };' }),
   );
   const id = concerts[0].split('/').filter(Boolean).pop();
   await p.go(`${concerts[0]}?ref=plakat&utm_campaign=konzert-${id}`);
   await until(async () => (await p.evaluate(() => (window.__gc || []).length)) >= 2, 'GoatCounter wurde nicht aufgerufen');
   const calls = await p.evaluate(() => window.__gc);
   expect(calls.some((c) => c.path === 'von-plakat' && c.event), `kein Herkunfts-Ereignis: ${JSON.stringify(calls)}`);
-  expect(calls.some((c) => !c.event && c.referrer?.startsWith('plakat')), `Seitenaufruf ohne Verweis „plakat“: ${JSON.stringify(calls)}`);
+  expect(
+    calls.some((c) => !c.event && c.q.includes('ref=plakat') && c.q.includes(`utm_campaign=konzert-${id}`)),
+    `Seitenaufruf ohne ref/utm_campaign in der Adresse: ${JSON.stringify(calls)}`,
+  );
   expect(calls.some((c) => c.path === `kampagne-konzert-${id}-plakat` && c.event), `kein Kampagnen-Ereignis: ${JSON.stringify(calls)}`);
   expect(!calls.some((c) => !c.event && c.path.includes('ref=')), 'Seitenaufruf mit Vermerk im Pfad gezählt');
   await until(async () => !p.url().includes('ref=') && !p.url().includes('utm_campaign'), `Vermerk bleibt in der Adresse: ${p.url()}`);
