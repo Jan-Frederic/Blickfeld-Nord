@@ -5,7 +5,7 @@ import { GC, kampagne, zaehler } from '../data/goatcounter';
 
 // Backstage eines öffentlichen Auftritts: Wie viele sind über Plakat, Story oder einen geteilten Link zur Konzertseite
 // gekommen? Ereignisse „kampagne-konzert-<ID>-<Herkunft>“ aus analytics.ts, dazu die Aufrufe der Konzertseite.
-const WEGE = [
+export const WEGE = [
   { ref: 'plakat', label: 'Plakat (QR-Code)' },
   { ref: 'story', label: 'Story / Status (QR-Code)' },
   { ref: 'text', label: 'Link im Beitragstext' },

@@ -1,8 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { HERKUNFT } from '../analytics';
-import { GC, zaehler as count } from '../data/goatcounter';
+import { GC, kampagne, zaehler as count } from '../data/goatcounter';
+import { BandService } from '../data/band.service';
+import { WEGE } from './konzert-kampagne';
 
 // Besucherzahlen aus GoatCounter (öffentlicher Zähler, siehe data/goatcounter.ts)
 const DASHBOARD = GC;
@@ -32,7 +35,7 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
 
 @Component({
   selector: 'app-backstage-besucher',
-  imports: [DecimalPipe, MatIconModule],
+  imports: [DecimalPipe, MatIconModule, RouterLink],
   template: `
     <section class="besucher" aria-labelledby="besucher-titel">
       <h2 id="besucher-titel"><mat-icon>insights</mat-icon> Besucher der Webseite</h2>
@@ -75,7 +78,7 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
             }
           </ul>
           @if (anfrageHerkunft().length) {
-            <p class="foot">davon über: @for (h of anfrageHerkunft(); track h.ref; let last = $last) { <span>{{ h.label }} {{ h.count }}@if (!last) {,}</span> }</p>
+            <p class="foot">davon über: @for (h of anfrageHerkunft(); track h.ref; let last = $last) { <span>{{ h.label }} {{ h.count }}{{ last ? '' : ', ' }}</span> }</p>
           }
           <p class="foot">Gezählt, wenn jemand im Booking die Anfrage abschickt bzw. auf die Mail-Adresse tippt – ob die Mail
           wirklich rausgeht, sieht GoatCounter nicht.</p>
@@ -92,6 +95,29 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
             </ol>
           } @else {
             <p class="note">Noch niemand über einen QR-Code gekommen.</p>
+          }
+          @if (kampagnen().length) {
+            <h3>Kampagnen der Konzerte · 12 Monate</h3>
+            <div class="table-wrap">
+              <table class="kampagnen">
+                <thead>
+                  <tr><th scope="col">Konzert</th><th scope="col">Seite</th>
+                    @for (w of wege; track w.ref) { <th scope="col">{{ w.kurz }}</th> }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (k of kampagnen(); track k.id) {
+                    <tr>
+                      <th scope="row"><a [routerLink]="['/backstage', k.id]">{{ k.datum }} · {{ k.name }}</a></th>
+                      <td>{{ k.seite | number: '1.0-0' }}</td>
+                      @for (c of k.wege; track $index) { <td [class.null]="!c">{{ c | number: '1.0-0' }}</td> }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="foot">Seite = Aufrufe der Konzertseite (DE/EN/NL); die übrigen Spalten zählen Besucher über Plakat, Story,
+              Beitragstext und geteilte Links mit der Kampagne des Konzerts.</p>
           }
         }
       }
@@ -112,6 +138,10 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
     .value { font: 600 1.5rem/1.2 Inter, sans-serif; }
     .label { font-size: .8rem; color: var(--bn-fog); }
     .pages { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+    .kampagnen { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .kampagnen th, .kampagnen td { padding: 6px 8px; border-bottom: 1px solid var(--bn-line); text-align: right; white-space: nowrap; }
+    .kampagnen th[scope=row], .kampagnen thead th:first-child { text-align: left; }
+    .kampagnen td.null { color: var(--bn-fog); }
     .pages li { display: grid; grid-template-columns: minmax(7.5em, auto) 1fr 4em; align-items: center; gap: 10px; font-size: .88rem; }
     .bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .06); overflow: hidden; }
     .bar span { display: block; height: 100%; border-radius: 4px; background: #7fb3e0; }
@@ -132,6 +162,9 @@ export class BackstageBesucher implements OnInit {
   protected readonly anfragen = signal<{ label: string; count: number }[]>([]);
   protected readonly anfrageHerkunft = signal<{ ref: string; label: string; count: number }[]>([]);
   protected readonly herkunftMax = signal(0);
+  private readonly band = inject(BandService);
+  protected readonly wege = WEGE.map((w) => ({ ...w, kurz: { plakat: 'Plakat', story: 'Story', text: 'Text', geteilt: 'Geteilt' }[w.ref] ?? w.ref }));
+  protected readonly kampagnen = signal<{ id: string; datum: string; name: string; seite: number; wege: number[] }[]>([]);
 
   async ngOnInit(): Promise<void> {
     try {
@@ -157,6 +190,19 @@ export class BackstageBesucher implements OnInit {
       ]);
       const ah = await Promise.all(HERKUNFT.map(async (h) => ({ ...h, count: await n(`anfrage-von-${h.ref}`) })));
       this.anfrageHerkunft.set(ah.filter((h) => h.count > 0).sort((a, b) => b.count - a.count));
+      // Kampagnen: öffentliche Konzerte der letzten 12 Monate und alle kommenden, neueste zuerst
+      const seit = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+      const konzerte = this.band.publicShows.filter((s) => s.date >= seit).reverse();
+      this.kampagnen.set(
+        await Promise.all(
+          konzerte.map(async (s) => {
+            const id = this.band.showId(s);
+            const seiten = await Promise.all(['', '/en', '/nl'].map((l) => n(`${l}/konzerte/${id}`)));
+            const wege = await Promise.all(WEGE.map((w) => n(`kampagne-${kampagne(id)}-${w.ref}`)));
+            return { id, datum: s.date.split('-').reverse().join('.'), name: s.venue, seite: seiten.reduce((a, b) => a + b, 0), wege };
+          }),
+        ),
+      );
     } catch {
       // GoatCounter schickt die Sperre (403) ohne CORS-Freigabe – der Browser meldet dann nur einen Netzwerkfehler
       this.state.set(navigator.onLine ? 'disabled' : 'offline');
