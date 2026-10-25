@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -118,6 +118,24 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
             </div>
             <p class="foot">Seite = Aufrufe der Konzertseite (DE/EN/NL); die übrigen Spalten zählen Besucher über Plakat, Story,
               Beitragstext und geteilte Links mit der Kampagne des Konzerts.</p>
+            @if (wirkung().gesamt) {
+              <h3>Was wirkt am besten · alle Konzerte</h3>
+              <p class="text">
+                Am meisten Besucher kamen über <strong>{{ wirkung().wege[0].label }}</strong>
+                ({{ wirkung().wege[0].anteil }} % von {{ wirkung().gesamt | number: '1.0-0' }}){{ wirkung().vorne > 1 ? ' – bei ' + wirkung().vorne + ' Konzerten der stärkste Weg' : '' }}.
+              </p>
+              <ol class="pages">
+                @for (w of wirkung().wege; track w.ref) {
+                  <li>
+                    <span class="name">{{ w.label }}</span>
+                    <span class="bar" aria-hidden="true"><span [style.width.%]="(w.count / wirkung().wege[0].count) * 100"></span></span>
+                    <span class="num">{{ w.anteil }} %</span>
+                  </li>
+                }
+              </ol>
+              <p class="foot">Summe der Kampagnen-Spalten oben. „Stärkster Weg“ zählt die Konzerte, bei denen dieser Weg die meisten
+                Besucher gebracht hat.</p>
+            }
           }
           <h3>Fehlerseite · 12 Monate</h3>
           <p class="text">{{ fehler() | number: '1.0-0' }}× aufgerufen – welche Adressen, steht in
@@ -161,7 +179,7 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .note { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--bn-fog); }
     .note mat-icon { color: #e0b25a; }
-    .text { margin: 0; color: var(--bn-fog); }
+    .text { margin: 0 0 10px; font-size: .9rem; color: var(--bn-fog); }
     .foot { margin: 16px 0 0; font-size: .78rem; color: var(--bn-fog); }
     a { color: var(--bn-sunset); }
   `,
@@ -180,6 +198,17 @@ export class BackstageBesucher implements OnInit {
   private readonly band = inject(BandService);
   protected readonly wege = WEGE.map((w) => ({ ...w, kurz: { plakat: 'Plakat', story: 'Story', text: 'Text', geteilt: 'Geteilt' }[w.ref] ?? w.ref }));
   protected readonly kampagnen = signal<{ id: string; datum: string; name: string; seite: number; wege: number[] }[]>([]);
+  // Werbewege über alle Konzerte zusammengezählt – Anteil in Prozent, sortiert nach Besuchern
+  protected readonly wirkung = computed(() => {
+    const ks = this.kampagnen();
+    const summen = this.wege.map((w, i) => ({ ref: w.ref, label: w.label, count: ks.reduce((a, k) => a + k.wege[i], 0) }));
+    const gesamt = summen.reduce((a, w) => a + w.count, 0);
+    const wege = summen.map((w) => ({ ...w, anteil: gesamt ? Math.round((w.count / gesamt) * 100) : 0 })).sort((a, b) => b.count - a.count);
+    // Konzerte, bei denen der stärkste Weg insgesamt auch dort vorne lag
+    const top = this.wege.findIndex((w) => w.ref === wege[0]?.ref);
+    const vorne = ks.filter((k) => k.wege[top] > 0 && k.wege[top] === Math.max(...k.wege)).length;
+    return { gesamt, wege, vorne };
+  });
 
   async ngOnInit(): Promise<void> {
     try {
