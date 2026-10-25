@@ -87,15 +87,16 @@ const TEXT = tr(
 export class App {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t(TEXT);
-  protected readonly nav = computed((): { id?: string; link?: string; label: string }[] => {
+  // Symbole erscheinen nur im Handy-Menü (wie im Backstage), die Desktop-Leiste bleibt reine Schrift
+  protected readonly nav = computed((): { id?: string; link?: string; label: string; icon: string }[] => {
     const n = this.t().nav;
     return [
-      { id: 'tour', label: n.tour },
-      { link: '/booking', label: n.booking },
-      { link: '/presse', label: n.press },
-      { link: '/technik', label: n.tech },
-      { link: '/repertoire', label: n.repertoire },
-      { link: '/galerie', label: n.gallery },
+      { id: 'tour', label: n.tour, icon: 'event' },
+      { link: '/booking', label: n.booking, icon: 'event_available' },
+      { link: '/presse', label: n.press, icon: 'newspaper' },
+      { link: '/technik', label: n.tech, icon: 'tune' },
+      { link: '/repertoire', label: n.repertoire, icon: 'library_music' },
+      { link: '/galerie', label: n.gallery, icon: 'photo_camera' },
     ];
   });
   // Sprachumschalter: dieselbe Seite in den anderen Sprachen (nicht im Backstage – der ist nur deutsch)

@@ -51,14 +51,14 @@
     } @else {
     @for (n of nav(); track n.label) {
       @if (n.link) {
-        <a class="menu-item" [routerLink]="n.link | loc" (click)="menu.hidePopover()">{{ n.label }}</a>
+        <a class="menu-item" [routerLink]="n.link | loc" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">{{ n.icon }}</span> {{ n.label }}</a>
       } @else {
-        <button type="button" class="menu-item" (click)="menu.hidePopover(); scrollTo(n.id!)">{{ n.label }}</button>
+        <button type="button" class="menu-item" (click)="menu.hidePopover(); scrollTo(n.id!)"><span class="material-icons" aria-hidden="true">{{ n.icon }}</span> {{ n.label }}</button>
       }
     }
-    <a class="menu-item" [routerLink]="'/historie' | loc" (click)="menu.hidePopover()">{{ t().nav.history }}</a>
-    <a class="menu-item" [routerLink]="'/freunde' | loc" (click)="menu.hidePopover()">{{ t().nav.friends }}</a>
-    <a class="menu-item" [routerLink]="'/faq' | loc" (click)="menu.hidePopover()">{{ t().nav.faq }}</a>
+    <a class="menu-item" [routerLink]="'/historie' | loc" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">history</span> {{ t().nav.history }}</a>
+    <a class="menu-item" [routerLink]="'/freunde' | loc" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">groups</span> {{ t().nav.friends }}</a>
+    <a class="menu-item" [routerLink]="'/faq' | loc" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">help</span> {{ t().nav.faq }}</a>
     }
     @if (showLanguages()) {
       @for (l of languages(); track l.lang) {
