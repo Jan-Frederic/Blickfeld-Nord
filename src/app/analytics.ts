@@ -48,6 +48,24 @@ function ohneHerkunft(): void {
 }
 
 let ersterAufruf = true;
+const SITZUNG = 'bn-herkunft';
+
+/** GoatCounter-Ereignis zählen (z. B. eine Booking-Anfrage) – still, wenn GoatCounter fehlt (Werbeblocker, Backstage) */
+export function zaehleEreignis(path: string, title: string): void {
+  window.goatcounter?.count?.({ path, title, event: true });
+}
+
+/** Booking-Anfrage zählen – gesamt und nach Herkunft dieses Besuchs (QR-Code, Plakat …, sonst „direkt“) */
+export function zaehleAnfrage(art: 'assistent' | 'mail'): void {
+  let ref = 'direkt';
+  try {
+    ref = sessionStorage.getItem(SITZUNG) ?? 'direkt';
+  } catch {
+    // ohne Speicher eben „direkt“
+  }
+  zaehleEreignis(`anfrage-${art}`, `Booking-Anfrage (${art})`);
+  zaehleEreignis(`anfrage-von-${ref}`, `Booking-Anfrage über ${ref}`);
+}
 
 function count(path: string, attempts = 40): void {
   const counter = window.goatcounter?.count;
@@ -58,6 +76,13 @@ function count(path: string, attempts = 40): void {
       const ref = herkunft();
       const k = kampagne();
       if (ref) counter({ path: `von-${ref}`, title: `Herkunft: ${ref}`, event: true });
+      if (ref) {
+        try {
+          sessionStorage.setItem(SITZUNG, ref); // für zaehleAnfrage()
+        } catch {
+          // privater Modus o. Ä.
+        }
+      }
       if (k) counter({ path: `kampagne-${k}-${ref ?? 'direkt'}`, title: `Kampagne ${k} (${ref ?? 'direkt'})`, event: true });
       const q = new URLSearchParams(location.search);
       if (q.has('ref') || q.has('utm_campaign')) ohneHerkunft();

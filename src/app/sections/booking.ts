@@ -7,6 +7,7 @@ import { Angebot } from './angebot';
 import { Entfernung } from './entfernung';
 import { Referenzen } from './referenzen';
 import { scrollToSection } from '../scroll';
+import { zaehleAnfrage } from '../analytics';
 import { I18n, LocPipe, tr } from '../i18n';
 
 // Booking-Infos für Veranstalter. Kontakt läuft über Meta (Instagram/Facebook-Nachrichten) oder E-Mail.
@@ -173,7 +174,7 @@ Met vriendelijke groet
               {{ t().facebook }}
             </a>
           </div>
-          <p class="mail">{{ t().direct }} <a [href]="mailto()">{{ mail }}</a></p>
+          <p class="mail">{{ t().direct }} <a [href]="mailto()" (click)="mailAnfrage()">{{ mail }}</a></p>
         </div>
 
         <div class="block">
@@ -249,6 +250,9 @@ export class Booking {
 
   protected readonly t = inject(I18n).t(TEXT);
   protected readonly mail = BOOKING_MAIL;
+  protected mailAnfrage(): void {
+    zaehleAnfrage('mail');
+  }
   protected readonly mailto = computed(
     () => `mailto:${BOOKING_MAIL}?subject=${encodeURIComponent(this.t().subject)}&body=${encodeURIComponent(this.t().body)}`,
   );

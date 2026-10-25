@@ -68,6 +68,17 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
               </li>
             }
           </ol>
+          <h3>Booking-Anfragen · 12 Monate</h3>
+          <ul class="totals">
+            @for (a of anfragen(); track a.label) {
+              <li><span class="value">{{ a.count | number: '1.0-0' }}</span><span class="label">{{ a.label }}</span></li>
+            }
+          </ul>
+          @if (anfrageHerkunft().length) {
+            <p class="foot">davon über: @for (h of anfrageHerkunft(); track h.ref; let last = $last) { <span>{{ h.label }} {{ h.count }}@if (!last) {,}</span> }</p>
+          }
+          <p class="foot">Gezählt, wenn jemand im Booking die Anfrage abschickt bzw. auf die Mail-Adresse tippt – ob die Mail
+          wirklich rausgeht, sieht GoatCounter nicht.</p>
           <h3>Gekommen über · 12 Monate</h3>
           @if (herkunft().length) {
             <ol class="pages">
@@ -118,6 +129,8 @@ export class BackstageBesucher implements OnInit {
   protected readonly pages = signal<{ path: string; label: string; count: number }[]>([]);
   protected readonly max = signal(0);
   protected readonly herkunft = signal<{ ref: string; label: string; count: number }[]>([]);
+  protected readonly anfragen = signal<{ label: string; count: number }[]>([]);
+  protected readonly anfrageHerkunft = signal<{ ref: string; label: string; count: number }[]>([]);
   protected readonly herkunftMax = signal(0);
 
   async ngOnInit(): Promise<void> {
@@ -134,6 +147,16 @@ export class BackstageBesucher implements OnInit {
       const besucht = herkunft.filter((h) => h.count > 0).sort((a, b) => b.count - a.count);
       this.herkunft.set(besucht);
       this.herkunftMax.set(besucht[0]?.count ?? 0);
+      // Booking-Anfragen (Ereignisse aus analytics.ts → zaehleAnfrage)
+      const n = (path: string) => count(path, 'year').catch(() => 0);
+      const [assistent, mail] = await Promise.all([n('anfrage-assistent'), n('anfrage-mail')]);
+      this.anfragen.set([
+        { label: 'Anfragen gesamt', count: assistent + mail },
+        { label: 'über den Anfrage-Assistenten', count: assistent },
+        { label: 'per Mail-Link', count: mail },
+      ]);
+      const ah = await Promise.all(HERKUNFT.map(async (h) => ({ ...h, count: await n(`anfrage-von-${h.ref}`) })));
+      this.anfrageHerkunft.set(ah.filter((h) => h.count > 0).sort((a, b) => b.count - a.count));
     } catch {
       // GoatCounter schickt die Sperre (403) ohne CORS-Freigabe – der Browser meldet dann nur einen Netzwerkfehler
       this.state.set(navigator.onLine ? 'disabled' : 'offline');

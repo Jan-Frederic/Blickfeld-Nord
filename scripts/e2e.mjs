@@ -81,6 +81,11 @@ test('Herkunft: QR-Code-Vermerk ?ref= und Kampagne werden gezählt und aus der A
   await until(async () => !p.url().includes('ref='), 'unbekannter Vermerk bleibt in der Adresse');
   const nachher = await p.evaluate(() => window.__gc);
   expect(!nachher.some((c) => c.path === 'von-irgendwas'), 'unbekannter Vermerk wurde gezählt');
+  // Booking-Anfrage per Mail-Link zählt – mit der Herkunft dieses Besuchs (Plakat)
+  await p.go('/booking');
+  await p.locator('app-booking p.mail a').click();
+  await until(async () => (await p.evaluate(() => window.__gc)).some((c) => c.path === 'anfrage-mail'), 'Anfrage nicht gezählt');
+  expect((await p.evaluate(() => window.__gc)).some((c) => c.path === 'anfrage-von-plakat'), 'Anfrage ohne Herkunft gezählt');
   return p;
 });
 

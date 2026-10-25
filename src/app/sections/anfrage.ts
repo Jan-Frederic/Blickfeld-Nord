@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { I18n } from '../i18n';
+import { zaehleAnfrage } from '../analytics';
 
 // „Angebot anfragen“ in drei Schritten (Termin → Anlass → Kontakt), auf Deutsch, Englisch und Niederländisch.
 // Die Seite ist statisch, daher entsteht am Ende eine vollständig ausgefüllte E-Mail im Mailprogramm –
@@ -258,6 +259,7 @@ export class Anfrage {
     e.preventDefault();
     if (!this.valid()) return;
     const subject = this.t().subject(this.occasion(), this.t().formatDate(this.date()));
+    zaehleAnfrage('assistent');
     window.location.href = `mailto:${MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(this.body())}`;
   }
 }
