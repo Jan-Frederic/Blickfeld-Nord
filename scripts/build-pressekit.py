@@ -77,6 +77,25 @@ def referenzen(lang):
     return [f"{name}{' (' + stadt + ')' if stadt else ''} {', '.join(sorted(o['jahre']))}" for (name, stadt), o in liste]
 
 
+STIMMEN_TITEL = {'de': 'Das sagen Veranstalter', 'en': 'What hosts say', 'nl': 'Wat organisatoren zeggen'}
+
+
+def stimmen():
+    """Freigegebene Zitate aus src/app/data/stimmen.ts (wie im Booking und auf der Pressekit-Seite) – höchstens zwei,
+    damit Seite 3 nicht überläuft. Zitate bleiben im Wortlaut (Deutsch)."""
+    import re
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    src = open(os.path.join(root, 'src/app/data/stimmen.ts'), encoding='utf-8').read()
+    liste = src[src.index('export const STIMMEN'):]
+    feld = lambda block, k: (m.group(1).replace("\\'", "'") if (m := re.search(rf"\b{k}: '((?:[^'\\]|\\.)*)'", block)) else None)
+    out = []
+    for block in re.findall(r'\{[^{}]*\}', liste):
+        zitat, wer = feld(block, 'zitat'), feld(block, 'wer')
+        if zitat and wer:
+            out.append((zitat, wer + (f" · {feld(block, 'anlass')}" if feld(block, 'anlass') else '')))
+    return out[:2]
+
+
 def texts(lang):
     return {**pdf_texte.PRESSEKIT[lang], 'contact': pdf_texte.contact(lang)}
 
@@ -342,7 +361,20 @@ def build_pdf(tmp, lang):
     y = paragraph(c, t['full_res'], m, y, full, font='Inter-SemiBold', size=10.5)
     c.linkURL(pdf_texte.site('/presse', lang), (m, y + 2, m + full, y + 18), relative=0)
     y -= 4
-    paragraph(c, t['usage'], m, y, full, size=9.5, leading=14, color=TEXT_MID)
+    y = paragraph(c, t['usage'], m, y, full, size=9.5, leading=14, color=TEXT_MID)
+
+    # Stimmen von Veranstaltern (nur wenn in stimmen.ts eingetragen) – unten auf Seite 3, dort ist Platz
+    zitate = stimmen()
+    if zitate:
+        y -= 10 * mm
+        heading(c, STIMMEN_TITEL[lang], m, y, size=13)
+        y -= 9 * mm
+        for zitat, wer in zitate:
+            y = paragraph(c, f'„{zitat}“', m, y, full, size=10, leading=14.5)
+            c.setFont('Inter', 8.5)
+            c.setFillColor(TEXT_MID)
+            c.drawString(m, y + 2, f'– {wer}')
+            y -= 8 * mm
     footer(c, 3, label=t['footer'])
     c.showPage()
     c.save()

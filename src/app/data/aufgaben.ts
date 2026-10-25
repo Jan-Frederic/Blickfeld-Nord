@@ -128,4 +128,11 @@ export const AUFGABEN: Aufgabe[] = [
     art: 'kann',
     hinweis: 'Wenn ja: Link durchgeben – dann kommt der Kanal in die Fußzeile (neben Instagram, Facebook und Mail) und als „Erinnerung bekommen“ auf die Konzertseiten.',
   },
+  {
+    id: 'desktop-symbole',
+    bereich: 'Website',
+    text: 'Optional: Symbole auch in der Desktop-Kopfleiste (Website und Backstage) wie im Handy-Menü',
+    art: 'kann',
+    hinweis: 'Die Leiste wird dadurch breiter – das Handy-Menü greift dann schon bei breiteren Fenstern (heute unter 1366 px). Vorher als Entwurf ansehen und entscheiden.',
+  },
 ];
