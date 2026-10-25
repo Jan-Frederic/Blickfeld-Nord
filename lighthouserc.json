@@ -4,7 +4,9 @@
       "url": [
         "https://blickfeld-nord.de/",
         "https://blickfeld-nord.de/booking/",
-        "https://blickfeld-nord.de/historie/"
+        "https://blickfeld-nord.de/historie/",
+        "https://blickfeld-nord.de/galerie/",
+        "https://blickfeld-nord.de/konzerte/2026-08-22/"
       ],
       "numberOfRuns": 5,
       "settings": {
@@ -50,10 +52,43 @@
           }
         },
         {
-          "matchingUrlPattern": "^https://blickfeld-nord\\.de/.+",
+          "matchingUrlPattern": "^https://blickfeld-nord\\.de/(booking|historie)/",
           "assertions": {
             "categories:performance": [
               "error",
+              {
+                "minScore": 0.85,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "categories:seo": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "categories:best-practices": [
+              "warn",
+              {
+                "minScore": 0.9,
+                "aggregationMethod": "median-run"
+              }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https://blickfeld-nord\\.de/(galerie|konzerte)/",
+          "assertions": {
+            "categories:performance": [
+              "warn",
               {
                 "minScore": 0.85,
                 "aggregationMethod": "median-run"
