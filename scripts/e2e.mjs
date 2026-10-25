@@ -339,6 +339,14 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
   await until(async () => (await p.locator('app-backstage-songs .list li select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
+  // der Entwurf gilt auf diesem Gerät sofort im Bühnen-Modus
+  const id = concerts[concerts.length - 1].split('/')[2];
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .pick input[type=search]').fill('Millionen');
+  await p.locator('app-setlist .pick li button').first().click();
+  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
+  await until(async () => (await p.locator('app-setlist-buehne .key').innerText().catch(() => '')) === 'G', 'Tonart aus dem Entwurf fehlt im Bühnen-Modus');
+  expect((await p.locator('app-setlist-buehne .bpm').innerText()).includes('120 bpm'), 'Tempo aus dem Entwurf fehlt im Bühnen-Modus');
   return p;
 });
 

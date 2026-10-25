@@ -36,7 +36,7 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
             @if ($any(c).wunsch !== undefined) { <p class="wunsch">♥ {{ $any(c).wunsch ? 'Wunsch von ' + $any(c).wunsch : 'Publikumswunsch' }}</p> }
             @if (info(); as i) {
               <p class="info">
-                @if (i.tonart) { <span class="key">{{ i.tonart }}</span> }
+                @if (i.tonart) { <span class="key" title="Tonart">{{ i.tonart }}</span> }
                 @if (i.bpm) {
                   <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
                     {{ i.bpm }} bpm · Klick
@@ -63,7 +63,7 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
       <footer>
         @if (next(); as n) {
           <span class="label">Als Nächstes</span>
-          <span class="next">{{ isPause(n) ? 'Pause' : $any(n).title }}</span>
+          <span class="next">{{ isPause(n) ? 'Pause' : $any(n).title }}@if (nextInfo(); as ni) { <span class="next-info"> · {{ ni }}</span> }</span>
         } @else if (current()) {
           <span class="label">Letzter Song</span>
         }
@@ -93,6 +93,7 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
     .bpm.on { border-color: #e8a46a; }
     .bpm.on.beat { background: #e8a46a; color: #000; }
     .note { color: #b0b6bc; }
+    .next-info { color: #e8a46a; }
     .wunsch { margin: 12px 0 0; font-size: clamp(1.2rem, 4vw, 2.2rem); color: #ff8a80; }
     .stars { display: flex; justify-content: center; gap: 4px; margin: 14px 0 0; }
     .stars button { display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: transparent; color: #555; cursor: pointer; }
@@ -135,6 +136,12 @@ export class SetlistBuehne {
   protected readonly info = computed(() => {
     const c = this.current();
     return c && !isPause(c) ? songInfo(c.title, c.artist) : undefined;
+  });
+  // Tonart und Tempo des nächsten Songs – zum Umstimmen bzw. Einzählen schon vorher sichtbar
+  protected readonly nextInfo = computed(() => {
+    const n = this.next();
+    const i = n && !isPause(n) ? songInfo(n.title, n.artist) : undefined;
+    return i ? [i.tonart, i.bpm && `${i.bpm} bpm`].filter(Boolean).join(' · ') : '';
   });
   // Sterne je Song für diesen Auftritt, sofort im Browser gespeichert
   private readonly bewertungen = linkedSignal(() => (this.show() ? ladeBewertungen(this.show()!) : {}));

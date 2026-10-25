@@ -15,8 +15,25 @@ export interface SongInfo {
 
 export const SONGINFO: SongInfo[] = [];
 
+/** Entwurf aus Backstage → Songs auf diesem Gerät (noch nicht in songinfo.ts übernommen), Schlüssel „Titel|Interpret“ */
+export const SONGINFO_ENTWURF_KEY = 'bn-songinfo-entwurf';
+
+function entwurf(): Record<string, Pick<SongInfo, 'tonart' | 'bpm' | 'notiz'>> {
+  try {
+    return typeof localStorage === 'undefined' ? {} : JSON.parse(localStorage.getItem(SONGINFO_ENTWURF_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+/** Tonart, Tempo und Notiz eines Songs – der Entwurf auf diesem Gerät hat Vorrang vor songinfo.ts, damit Einträge
+ *  aus Backstage → Songs sofort in Setlist und Bühnen-Modus erscheinen */
 export function songInfo(title: string, artist: string): SongInfo | undefined {
-  return SONGINFO.find((s) => s.title === title && s.artist === artist);
+  const e = entwurf()[`${title}|${artist}`];
+  const gespeichert = SONGINFO.find((s) => s.title === title && s.artist === artist);
+  if (!e) return gespeichert;
+  const s = { title, artist, ...e };
+  return s.tonart || s.bpm || s.notiz ? s : undefined;
 }
 
 /** z. B. „G · 120 bpm · Capo 2“ – leer, wenn nichts eingetragen ist */

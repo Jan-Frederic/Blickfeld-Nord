@@ -1,12 +1,12 @@
 import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
-import { SONGINFO, SongInfo } from '../data/songinfo';
+import { SONGINFO, SONGINFO_ENTWURF_KEY, SongInfo } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 
 // Backstage → Songs: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // Der Entwurf bleibt auf dem Gerät (bn-songinfo-entwurf), bis die fertige Datei auf GitHub eingefügt ist.
-const ENTWURF_KEY = 'bn-songinfo-entwurf';
+const ENTWURF_KEY = SONGINFO_ENTWURF_KEY;
 const RAW_URL = 'https://raw.githubusercontent.com/Jan-Frederic/Blickfeld-Nord/main/src/app/data/songinfo.ts';
 const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts';
 const TONARTEN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
@@ -32,7 +32,8 @@ function ladeEntwurf(): Record<string, Werte> {
       <h2>Songs</h2>
       <p class="lead">
         Tonart, Tempo und eine kurze Notiz je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel.
-        Angaben bisher bei {{ ausgefuellt() }} von {{ songs.length }} Songs.
+        Angaben bisher bei {{ ausgefuellt() }} von {{ songs.length }} Songs. Auf diesem Gerät gelten Änderungen sofort;
+        auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
       </p>
 
       <label class="search">
