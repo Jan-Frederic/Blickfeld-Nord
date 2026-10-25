@@ -69,6 +69,8 @@ export interface Photo {
   credit?: string;
   // Hochformat: wird in der Galerie nie als breite Kachel gezeigt
   tall?: boolean;
+  // Bildausschnitt der Vorschau (CSS object-position), z. B. '50% 15%' = Gesicht oben im Bild – sonst mittig
+  focus?: string;
 }
 
 export interface Show {
@@ -431,7 +433,7 @@ export class BandService {
     { src: 'historie/2025-10-02-cafe-lotti.webp', thumb: 'galerie/live-cafe-lotti-2025-thumb.webp', alt: 'Erster Auftritt als Trio im Café Lotti unter rotem Licht, Gäste um eine Feuerschale', caption: 'Erster Auftritt als Trio, Café Lotti, 02.10.2025' },
     { src: 'galerie/band-2.webp', thumb: 'galerie/band-2-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord lachen gut gelaunt vor Backsteinwand, Gitarren und Schlagzeug', caption: 'Blickfeld Nord' },
     { src: 'galerie/band-1.webp', thumb: 'galerie/band-1-thumb.webp', alt: 'Die drei Musiker von Blickfeld Nord knien lachend zwischen Mikrofonständern und Schlagzeug', caption: 'Blickfeld Nord' },
-    { src: 'band/david-broeker-live.webp', thumb: 'galerie/live-david-broeker-thumb.webp', tall: true, alt: 'David Bröker singt ins Mikrofon und spielt Akustikgitarre, mit Brille und kariertem Hemd vor Sprossenfenstern im bunten Bühnenlicht', caption: 'David Bröker live' },
+    { src: 'band/david-broeker-live.webp', thumb: 'galerie/live-david-broeker-thumb.webp', tall: true, focus: '50% 12%', alt: 'David Bröker singt ins Mikrofon und spielt Akustikgitarre, mit Brille und kariertem Hemd vor Sprossenfenstern im bunten Bühnenlicht', caption: 'David Bröker live' },
     { src: 'band/david-broeker.webp', thumb: 'galerie/portrait-david-broeker-thumb.webp', tall: true, alt: 'David Bröker singt und spielt Akustikgitarre, im karierten Hemd vor einer Backsteinmauer', caption: 'David Bröker – Gesang & Gitarre' },
     { src: 'band/matthias-wigger.webp', thumb: 'galerie/portrait-matthias-wigger-thumb.webp', tall: true, alt: 'Matthias Wigger lacht hinter seinem Schlagzeug, vor einer Backsteinmauer mit Bühnenlicht', caption: 'Matthias Wigger – Schlagzeug & Gesang' },
     { src: 'band/jan-frederic-overbeck.webp', thumb: 'galerie/portrait-jan-frederic-overbeck-thumb.webp', tall: true, alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer', caption: 'Jan-Frederic „Fred“ Overbeck – Bass & Gesang' },
