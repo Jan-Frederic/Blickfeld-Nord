@@ -262,6 +262,9 @@ Bevor etwas online geht, prüft GitHub unter anderem:
   screenshot-vergleich**. War die Änderung gewollt, z. B. ein neuer Text auf der Technik-Seite: unter Actions
   **„Screenshots aktualisieren“** starten (*Run workflow*). Danach geht die Seite automatisch neu online.
 
+**Auf dem eigenen Rechner prüfen** (für Entwickler): `npm run pruefen` baut die Seite genau wie GitHub (inklusive
+Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Linkcheck und Tests aus.
+
 **Tote Links:** Einmal pro Woche (montags) prüft GitHub alle externen Links, etwa zu Freunden, Instagram oder Spotify.
 Ist einer nicht mehr erreichbar, erscheint unter **Issues** „Tote Links auf der Website“ mit der Liste. Das Issue
 schließt sich von selbst, sobald alle Links wieder gehen.

@@ -52,15 +52,8 @@ runs:
 
     - name: SPA fallback for client-only routes
       shell: bash
-      run: |
-        cd dist/blickfeld-nord/browser
-        # Öffentliche Seiten sind vorgerendert (eigene index.html je Route).
-        # Unbekannte Pfade bekommen die vorgerenderte Fehlerseite, Backstage die clientseitige Shell.
-        cp 404/index.html 404.html
-        mkdir -p backstage && cp index.csr.html backstage/index.html
-        # Backstage-Unterseiten (/backstage/<id>[/<teil>]) haben keine eigene Datei: Die Fehlerseite leitet sie
-        # zur Backstage-Shell weiter (/backstage/?auftritt=<id>[&teil=<teil>], „#…“ bleibt erhalten), die dann zur Unterseite navigiert.
-        sed -i 's#<head>#<head><script>var p=location.pathname.split("/");if(p[1]=="backstage")if(p[2])location.replace("/backstage/?auftritt="+p[2]+(p[3]?"\\x26teil="+p[3]:"")+location.hash)</script>#' 404.html
+      # Fehlerseite, Backstage-Shell und Weiterleitung der Backstage-Unterseiten – dasselbe Skript wie bei der lokalen Prüfung
+      run: node scripts/spa-fallback.mjs
 
     - name: Content-Security-Policy (Hashes der Inline-Skripte je Seite)
       shell: bash

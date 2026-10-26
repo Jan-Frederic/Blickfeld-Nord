@@ -9,7 +9,9 @@
     "test": "ng test",
     "check:links": "node scripts/check-links.mjs",
     "a11y": "node scripts/a11y.mjs",
-    "e2e": "node scripts/e2e.mjs"
+    "e2e": "node scripts/e2e.mjs",
+    "build:site": "ng build --base-href / && node scripts/seo.mjs && node scripts/spa-fallback.mjs && node scripts/csp.mjs && node scripts/build-sw.mjs",
+    "pruefen": "npm run build:site && npm run e2e && npm run a11y && npm run check:links && ng test --watch=false"
   },
   "private": true,
   "packageManager": "npm@10.9.4",
