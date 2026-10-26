@@ -418,7 +418,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await zeile.locator('select').nth(1).selectOption('E');
   await zeile.locator('button.noten').click();
   // Pressekit (mehrseitig) als Notenblatt, davon Seite 2–3
-  await zeile.locator('app-noten-editor input[type=file]').setInputFiles({ name: 'songbook.pdf', mimeType: 'application/pdf', buffer: readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf')) });
+  await zeile.locator('app-noten-editor input[type=file][accept*=pdf]').setInputFiles({ name: 'songbook.pdf', mimeType: 'application/pdf', buffer: readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf')) });
   await until(async () => (await zeile.locator('app-noten-editor .meldung').innerText().catch(() => '')).includes('songbook.pdf'), 'PDF wird nicht gespeichert');
   await zeile.locator('app-noten-editor input[type=number]').first().fill('2');
   await zeile.locator('app-noten-editor input[type=number]').first().blur();
@@ -461,9 +461,24 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   const datei = readFileSync(await download.path());
   const q = await page();
   await q.go('/backstage/songs/');
-  await q.locator('app-noten-verwaltung input[type=file]').setInputFiles({ name: 'noten.json', mimeType: 'application/json', buffer: datei });
+  await q.locator('app-noten-verwaltung input[type=file][accept*=json]').setInputFiles({ name: 'noten.json', mimeType: 'application/json', buffer: datei });
   await until(async () => (await q.locator('app-noten-verwaltung .meldung').innerText().catch(() => '')).includes('1 Song'), 'Import auf dem zweiten Gerät klappt nicht');
   expect((await q.locator('app-noten-verwaltung li').innerText()).includes('songbook.pdf'), 'PDF fehlt nach dem Import');
+  // .pro-Dateien gesammelt einlesen: Zuordnung über {title:}, Unbekanntes wird gemeldet
+  await q.locator('app-noten-verwaltung input[type=file][multiple]').setInputFiles([
+    { name: 'angels.pro', mimeType: 'text/plain', buffer: Buffer.from('{title: Angels}\n{artist: Robbie Williams}\n{key: E}\n[E]I sit and wait') },
+    { name: 'gibt-es-nicht.pro', mimeType: 'text/plain', buffer: Buffer.from('{title: Gibt es nicht}\n[C]x') },
+  ]);
+  await until(async () => (await q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '')).includes('1 Akkordblatt eingelesen'), '.pro-Dateien werden nicht eingelesen');
+  expect((await q.locator('app-noten-verwaltung').innerText()).includes('gibt-es-nicht.pro'), 'Nicht zugeordnete Datei wird nicht gemeldet');
+  // einzelne Datei beim Song, ältere Windows-Kodierung mit Umlaut
+  await q.locator('app-backstage-songs input[type=search]').fill('Angels');
+  const engel = q.locator('app-backstage-songs .list li').first();
+  await until(async () => (await engel.locator('button.noten').innerText()).includes('✓'), 'Sammel-Import kennzeichnet den Song nicht');
+  await engel.locator('button.noten').click();
+  await until(async () => (await engel.locator('app-noten-editor textarea').inputValue()).includes('I sit and wait'), 'Akkordblatt aus der .pro-Datei fehlt beim Song');
+  await engel.locator('app-noten-editor input[type=file][accept*=".pro"]').setInputFiles({ name: 'angels.cho', mimeType: 'text/plain', buffer: Buffer.from('{title: Angels}\n[E]Grüße', 'latin1') });
+  await until(async () => (await engel.locator('app-noten-editor textarea').inputValue()).includes('Grüße'), 'Einzelne .pro-Datei (Windows-Kodierung) wird nicht übernommen');
   for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
   return q;
 });

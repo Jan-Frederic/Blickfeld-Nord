@@ -4,7 +4,7 @@ import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
 import { SongNoten, notenDatei, songNoten } from '../data/noten';
 import { PdfDokument, pdfOeffnen, seiteZeichnen } from '../data/pdf';
-import { Akkordblatt, blattTransponieren, chordproLesen, griffbild } from '../data/chordpro';
+import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVerschieben } from '../data/chordpro';
 
 // Notenblatt im Bühnen-Modus: PDF-Seiten (ggf. nur der Bereich des Songs im Songbook) oder das Akkordblatt
 // (ChordPro, in die Tonart der Band transponiert – mit Capo als Griffbild). Geblättert wird vom Bühnen-Modus aus
@@ -120,16 +120,20 @@ export class NotenAnzeige {
   // Akkordblatt: in die Tonart der Band (mit Capo als Griffbild), dazu Halbtöne von Hand
   protected readonly extra = signal(0);
   private readonly roh = computed<Akkordblatt | null>(() => (this.noten()?.chordpro ? chordproLesen(this.noten()!.chordpro!) : null));
+  // Tonart der Griffe im Blatt: {key: …}, sonst die Originaltonart – bei {capo: n} in der Datei n Halbtöne darunter
+  private readonly geschrieben = computed(() => {
+    const b = this.roh();
+    const original = this.info()?.tonart;
+    return b?.tonart ?? (original ? tonartVerschieben(original, -(b?.capo ?? 0)) : undefined);
+  });
   private readonly griff = computed(() => {
     const i = this.info();
-    const b = this.roh();
-    return griffbild(b?.tonart ?? i?.tonart, gespielteTonart(i), i?.capo ?? 0);
+    return griffbild(this.geschrieben(), gespielteTonart(i), i?.capo ?? 0);
   });
   protected readonly blatt = computed(() => {
     const b = this.roh();
     if (!b) return null;
-    const mitTonart = b.tonart ? b : { ...b, tonart: this.info()?.tonart };
-    return blattTransponieren(mitTonart, this.griff().schritte + this.extra());
+    return blattTransponieren({ ...b, tonart: this.geschrieben() }, this.griff().schritte + this.extra());
   });
   protected readonly griffText = computed(() => {
     const b = this.blatt();

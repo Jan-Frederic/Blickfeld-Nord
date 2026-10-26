@@ -1,7 +1,9 @@
 // Akkordblätter im ChordPro-Format (Text mit Akkorden in eckigen Klammern, z. B. „[G]Einer von [D]80 Millionen“)
 // für den Bühnen-Modus: einlesen und in die Tonart der Band transponieren – mit Capo als Griffbild.
-// Unterstützt: {title:} {key:} {comment:}/{c:}, Abschnitte {start_of_chorus}/{soc}, {start_of_verse}/{sov},
-// {start_of_bridge}/{sob} sowie Kommentarzeilen mit #. Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
+// Unterstützt: {title:}/{t:} {artist:}/{subtitle:}/{st:} {key:} {capo:} {comment:}/{c:}, Abschnitte
+// {start_of_chorus}/{soc}, {start_of_verse}/{sov}, {start_of_bridge}/{sob} sowie Kommentarzeilen mit #.
+// .pro-Dateien (auch .cho, .chopro, .chordpro, .crd) lassen sich direkt einlesen – siehe dateiText() und songZuordnen().
+// Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
 import { BE, KREUZ, quintPosition } from './tonart-uebergang';
 
 export interface Teil {
@@ -16,8 +18,12 @@ export type Zeile =
 
 export interface Akkordblatt {
   titel?: string;
+  /** Interpret ({artist: …}, ersatzweise {subtitle: …}) */
+  interpret?: string;
   /** Tonart, in der das Blatt geschrieben ist ({key: …}) */
   tonart?: string;
+  /** Capo laut Datei ({capo: …}) – die Akkorde sind dann Griffe, es klingt um so viele Halbtöne höher */
+  capo?: number;
   zeilen: Zeile[];
 }
 
@@ -37,7 +43,10 @@ export function chordproLesen(quelle: string): Akkordblatt {
       const [, name, wert = ''] = direktive;
       const n = name.toLowerCase();
       if (n === 'title' || n === 't') blatt.titel = wert;
-      else if (n === 'key') blatt.tonart = wert;
+      else if (n === 'artist' || n === 'a') blatt.interpret = wert;
+      else if ((n === 'subtitle' || n === 'st' || n === 'su') && !blatt.interpret) blatt.interpret = wert;
+      else if (n === 'key' || n === 'k') blatt.tonart = wert;
+      else if (n === 'capo') blatt.capo = Number(wert) > 0 && Number(wert) < 12 ? Math.round(Number(wert)) : undefined;
       else if (n === 'comment' || n === 'c' || n === 'comment_italic' || n === 'ci') blatt.zeilen.push({ art: 'kommentar', text: wert });
       else if (ABSCHNITTE[n]) blatt.zeilen.push({ art: 'abschnitt', text: wert || ABSCHNITTE[n] });
       continue;
@@ -123,4 +132,50 @@ export function blattTransponieren(blatt: Akkordblatt, schritte: number): Akkord
       z.art === 'text' ? { art: 'text', teile: z.teile.map((t) => (t.akkord ? { ...t, akkord: akkordTransponieren(t.akkord, schritte, mitBe) } : t)) } : z,
     ),
   };
+}
+
+// ---- .pro-Dateien einlesen ---------------------------------------------------------------------------------
+
+/** Dateiendungen von ChordPro-Dateien */
+export const CHORDPRO_ENDUNGEN = '.pro,.cho,.chopro,.chordpro,.crd,.txt';
+
+/** Dateiinhalt als Text – UTF-8, ältere Dateien aus Windows-Programmen (Umlaute) als Windows-1252 */
+export function dateiText(daten: ArrayBuffer): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(daten).replace(/^\uFEFF/, '');
+  } catch {
+    return new TextDecoder('windows-1252').decode(daten);
+  }
+}
+
+// für den Vergleich: klein, ohne Akzente, ohne Zusätze wie „ - Remastered 2009“ oder „(Live)“, nur Buchstaben/Ziffern
+const vergleich = (s: string) =>
+  s
+    .toLocaleLowerCase('de')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+const kern = (titel: string) => vergleich(titel.split(' - ')[0].replace(/\([^)]*\)/g, ''));
+
+/**
+ * Zu welchem Song im Repertoire gehört eine ChordPro-Datei? Erst über {title:} (und {artist:}, wenn mehrere Songs
+ * gleich heißen), sonst über den Dateinamen – auch in der Form „Interpret - Titel.pro“ oder „Titel - Interpret.pro“.
+ */
+export function songZuordnen<T extends { title: string; artist: string }>(dateiname: string, blatt: Akkordblatt, songs: T[]): T | undefined {
+  const passend = (titel: string, interpret?: string) => {
+    const k = kern(titel);
+    if (!k) return undefined;
+    const treffer = songs.filter((s) => kern(s.title) === k || vergleich(s.title) === vergleich(titel));
+    if (treffer.length <= 1 || !interpret) return treffer[0];
+    return treffer.find((s) => vergleich(s.artist).includes(vergleich(interpret)) || vergleich(interpret).includes(vergleich(s.artist))) ?? treffer[0];
+  };
+  if (blatt.titel) {
+    const s = passend(blatt.titel, blatt.interpret);
+    if (s) return s;
+  }
+  const name = dateiname.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+  const teile = name.split(/\s+-\s+/);
+  return passend(name) ?? (teile.length === 2 ? (passend(teile[1], teile[0]) ?? passend(teile[0], teile[1])) : undefined);
 }

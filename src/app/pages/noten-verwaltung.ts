@@ -1,9 +1,12 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren } from '../data/noten';
+import data from '../data/repertoire.json';
+import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText, songZuordnen } from '../data/chordpro';
+import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren, songNoten, songNotenSetzen } from '../data/noten';
 
-// Notenblätter auf diesem Gerät (Backstage → Songs, unten): gespeicherte PDFs mit Größe, Löschen, und der Austausch
-// in der Band als Datei – sie geht direkt von Gerät zu Gerät (Teilen-Menü, z. B. AirDrop oder Messenger).
+// Notenblätter auf diesem Gerät (Backstage → Songs, unten): gespeicherte PDFs mit Größe, Löschen, ChordPro-Dateien
+// (.pro & Co.) gesammelt einlesen – jede wird über {title:}/{artist:} oder den Dateinamen ihrem Song zugeordnet –
+// und der Austausch in der Band als Datei, die direkt von Gerät zu Gerät geht (Teilen-Menü, z. B. AirDrop oder Messenger).
 @Component({
   selector: 'app-noten-verwaltung',
   imports: [MatIconModule],
@@ -28,8 +31,15 @@ import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren 
         <label class="knopf"><mat-icon>file_open</mat-icon> Notenblätter importieren
           <input type="file" accept=".json,application/json" (change)="importieren($event)" />
         </label>
+        <label class="knopf"><mat-icon>description</mat-icon> Akkordblätter (.pro) einlesen
+          <input type="file" multiple [accept]="endungen" (change)="proEinlesen($event)" />
+        </label>
       </div>
       @if (meldung(); as m) { <p class="meldung" [class.fehler]="m.fehler" role="status">{{ m.text }}</p> }
+      @if (ohneSong().length) {
+        <p class="meldung fehler">Keinem Song zugeordnet (Titel nicht im Repertoire): {{ ohneSong().join(', ') }} – diese beim Song
+          unter „Noten → .pro-Datei laden“ einzeln einlesen.</p>
+      }
       <p class="hinweis">Tipp für iPhone und iPad: die Backstage-Seite zum Home-Bildschirm hinzufügen – sonst darf Safari gespeicherte
         Daten nach 7 Tagen ohne Besuch löschen.</p>
     </section>
@@ -63,6 +73,8 @@ export class NotenVerwaltung {
   readonly songs = input.required<number>();
   readonly geaendert = output<void>();
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
+  protected readonly endungen = CHORDPRO_ENDUNGEN;
+  protected readonly ohneSong = signal<string[]>([]);
   protected readonly mb = computed(() => this.groesse(this.dateien().reduce((s, d) => s + d.groesse, 0)));
 
   protected groesse(bytes: number): string {
@@ -91,6 +103,33 @@ export class NotenVerwaltung {
     Object.assign(document.createElement('a'), { href: url, download: datei.name }).click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     this.meldung.set({ text: `Als „${datei.name}“ gespeichert – jetzt an die Band schicken.` });
+  }
+
+  // mehrere ChordPro-Dateien auf einmal: jede ihrem Song zuordnen und als Akkordblatt speichern (ersetzt ein vorhandenes)
+  protected async proEinlesen(e: Event): Promise<void> {
+    const feld = e.target as HTMLInputElement;
+    const dateien = [...(feld.files ?? [])];
+    feld.value = '';
+    if (!dateien.length) return;
+    const ohne: string[] = [];
+    let neu = 0;
+    let ersetzt = 0;
+    for (const datei of dateien) {
+      const text = dateiText(await datei.arrayBuffer());
+      const song = songZuordnen(datei.name, chordproLesen(text), data.tracks);
+      if (!song) {
+        ohne.push(datei.name);
+        continue;
+      }
+      const key = `${song.title}|${song.artist}`;
+      const vorher = (await songNoten(key)) ?? {};
+      vorher.chordpro?.trim() ? ersetzt++ : neu++;
+      await songNotenSetzen(key, { ...vorher, chordpro: text });
+    }
+    this.ohneSong.set(ohne);
+    const n = neu + ersetzt;
+    this.meldung.set(n ? { text: `${n} ${n === 1 ? 'Akkordblatt' : 'Akkordblätter'} eingelesen ✓${ersetzt ? ` (${ersetzt} ersetzt)` : ''}` } : { text: 'Keine Datei ließ sich einem Song zuordnen.', fehler: true });
+    if (n) this.geaendert.emit();
   }
 
   protected async importieren(e: Event): Promise<void> {

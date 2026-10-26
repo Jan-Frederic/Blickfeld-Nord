@@ -130,6 +130,11 @@ Im Backstage unter **Songs** beim Song auf **Noten** tippen:
   `{key: G}` steht da, in welcher Tonart es geschrieben ist (sonst gilt die Originaltonart), `{soc}`/`{eoc}` umschließen den
   Refrain, `{c: Intro 2x}` ist ein Hinweis. Im Bühnen-Modus erscheinen die Akkorde automatisch in **eurer** Tonart –
   mit Capo als Griffbild (z. B. „Wir spielen E, Capo 2“ → Griffe in D). Mit − und + lässt es sich von Hand verschieben.
+- **.pro-Dateien** (ChordPro, auch `.cho`, `.chopro`, `.chordpro`, `.crd`) direkt einlesen: beim Song **.pro-Datei
+  laden**, oder unten unter „Notenblätter auf diesem Gerät“ **Akkordblätter (.pro) einlesen** und gleich viele Dateien
+  auf einmal wählen. Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
+  über den Dateinamen (auch „Interpret - Titel.pro“). Was sich nicht zuordnen lässt, wird genannt. Ältere Dateien mit
+  Umlauten aus Windows-Programmen werden richtig gelesen; `{capo: 2}` in der Datei wird beim Transponieren berücksichtigt.
 
 Im **Bühnen-Modus** oben auf das Noten-Symbol tippen. Weiter blättern wie gewohnt – Tippen rechts, Wischen, Pfeiltaste
 oder **Bluetooth-Fußpedal** (die senden Pfeiltasten): erst durch die Seiten, am Ende zum nächsten Song, dessen Noten

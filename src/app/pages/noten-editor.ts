@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { NotenDateiInfo, SongNoten, notenDateiSpeichern, pdfjsVorladen, songNoten, songNotenSetzen } from '../data/noten';
-import { chordproLesen } from '../data/chordpro';
+import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText } from '../data/chordpro';
 
 // Noten eines Songs bearbeiten (Backstage → Songs): PDF wählen oder hochladen, Seitenbereich im Songbook, Akkordblatt
 // im ChordPro-Format. Alles bleibt auf diesem Gerät (IndexedDB) – siehe data/noten.ts.
@@ -38,7 +38,14 @@ const BEISPIEL = `{key: C}
           </label>
         }
       </div>
-      <label class="akkorde">Akkordblatt (ChordPro) – Akkorde in [ ], Tonart mit {{ '{' }}key: …{{ '}' }}
+      <div class="akkorde-kopf">
+        <span>Akkordblatt (ChordPro) – Akkorde in [ ], Tonart mit {{ '{' }}key: …{{ '}' }}</span>
+        <label class="hochladen">
+          <mat-icon>description</mat-icon> .pro-Datei laden
+          <input type="file" [accept]="endungen" (change)="proLaden($event)" />
+        </label>
+      </div>
+      <label class="akkorde"><span class="unsichtbar">Akkordblatt</span>
         <textarea rows="7" spellcheck="false" [placeholder]="beispiel" [value]="noten().chordpro ?? ''" (change)="akkorde($any($event.target).value)"></textarea>
       </label>
       @if (pruefung(); as p) { <p class="pruefung">{{ p }}</p> }
@@ -56,6 +63,8 @@ const BEISPIEL = `{key: C}
     .pdf { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
     .pdf > label:first-child { flex: 1 1 220px; }
     .zahl { width: 90px; }
+    .akkorde-kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
+    .unsichtbar { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .hochladen {
       display: inline-flex !important; flex-direction: row; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px;
       border: 1px solid var(--bn-line); cursor: pointer; text-transform: none !important; letter-spacing: 0 !important; font-size: .85rem !important; color: var(--bn-ink) !important;
@@ -77,6 +86,7 @@ export class NotenEditor {
   readonly geaendert = output<void>();
 
   protected readonly beispiel = BEISPIEL;
+  protected readonly endungen = CHORDPRO_ENDUNGEN;
   protected readonly noten = signal<SongNoten>({});
   protected readonly meldung = signal('');
   protected readonly pruefung = computed(() => {
@@ -84,7 +94,7 @@ export class NotenEditor {
     if (!t?.trim()) return '';
     const b = chordproLesen(t);
     const akkorde = b.zeilen.reduce((n, z) => n + (z.art === 'text' ? z.teile.filter((x) => x.akkord).length : 0), 0);
-    return `${akkorde} Akkorde erkannt${b.tonart ? ` · geschrieben in ${b.tonart}` : ' · ohne {key: …} gilt die Originaltonart'}`;
+    return `${akkorde} ${akkorde === 1 ? 'Akkord' : 'Akkorde'} erkannt${b.capo ? ` · Capo ${b.capo} laut Datei` : ''}${b.tonart ? ` · geschrieben in ${b.tonart}` : ' · ohne {key: …} gilt die Originaltonart'}`;
   });
 
   ngOnInit(): void {
@@ -123,6 +133,19 @@ export class NotenEditor {
     if (!pdf) return;
     const n = Math.round(Number(roh));
     void this.speichern({ ...this.noten(), pdf: { ...pdf, [feld]: n >= 1 ? n : undefined } });
+  }
+
+  // ChordPro-Datei (.pro, .cho, .chopro …) als Akkordblatt übernehmen
+  protected async proLaden(e: Event): Promise<void> {
+    const feld = e.target as HTMLInputElement;
+    const datei = feld.files?.[0];
+    feld.value = '';
+    if (!datei) return;
+    const text = dateiText(await datei.arrayBuffer());
+    if (this.noten().chordpro?.trim() && !confirm('Das vorhandene Akkordblatt durch die Datei ersetzen?')) return;
+    const titel = chordproLesen(text).titel;
+    const anderer = titel && !this.songKey().toLocaleLowerCase('de').startsWith(titel.toLocaleLowerCase('de').slice(0, 4));
+    await this.speichern({ ...this.noten(), chordpro: text }, `„${datei.name}“ übernommen ✓${anderer ? ` – Achtung, in der Datei steht „${titel}“` : ''}`);
   }
 
   protected akkorde(text: string): void {
