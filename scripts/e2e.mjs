@@ -375,10 +375,22 @@ test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async 
   const q = await page();
   const konsole = [];
   q.on('console', (m) => konsole.push(`${m.type()}: ${m.text().slice(0, 160)}`));
+  // jede Adressänderung mit Aufrufstelle mitschreiben – zeigt, wer den Teil hinter „#“ entfernt
+  await q.addInitScript(() => {
+    const log = (window.__adressen = [`start ${location.pathname}${location.hash}`]);
+    for (const fn of ['pushState', 'replaceState']) {
+      const orig = history[fn].bind(history);
+      history[fn] = (s, t, u) => {
+        log.push(`${fn} ${u} ← ${(new Error().stack ?? '').split('\n').slice(2, 5).map((z) => z.trim().replace(/https?:\/\/[^/]+\//, '')).join(' | ')}`);
+        return orig(s, t, u);
+      };
+    }
+    addEventListener('hashchange', () => log.push(`hashchange ${location.hash}`));
+  });
   await q.go(link);
   await until(async () => (await songs(q)) === 4, async () =>
     `Setlist aus dem Link nicht übernommen (${await songs(q)} Songs, Link ${link}, jetzt ${q.url()}, gespeichert ${await q.evaluate((k) => localStorage.getItem(k), 'bn-setlist-' + id)}, ` +
-    `Fehler ${JSON.stringify(q.errors)}, Konsole ${JSON.stringify(konsole)}, Seite „${(await q.locator('main').innerText()).slice(0, 300).replace(/\s+/g, ' ')}“)`);
+    `Fehler ${JSON.stringify(q.errors)}, Konsole ${JSON.stringify(konsole)}, Adressen ${JSON.stringify(await q.evaluate(() => window.__adressen))}, Seite „${(await q.locator('main').innerText()).slice(0, 300).replace(/\s+/g, ' ')}“)`);
   expect((await q.locator('app-setlist .pause-label').count()) === 1, 'Pause fehlt');
   expect(!q.url().includes('#liste='), 'Liste bleibt in der Adresse stehen');
   return q;
