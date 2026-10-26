@@ -4,6 +4,7 @@ import data from '../data/repertoire.json';
 import { SetlistVorlagen } from './setlist-vorlagen';
 import { SetlistVorschlag } from './setlist-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
+import { TempoVerlauf } from './tempo-verlauf';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { songInfoText } from '../data/songinfo';
 
@@ -16,7 +17,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-setlist',
-  imports: [MatIconModule, SetlistVorlagen, SetlistVorschlag, SetlistBuehne],
+  imports: [MatIconModule, SetlistVorlagen, SetlistVorschlag, SetlistBuehne, TempoVerlauf],
   template: `
     <section class="setlist" aria-labelledby="setlist-title">
       <div class="head">
@@ -84,6 +85,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           }
         </ol>
       </div>
+      <app-tempo-verlauf [sets]="sets()" />
       <app-setlist-vorschlag [entries]="entries()" [show]="show()" (apply)="replace($event)" />
       <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
       @if (stage()) { <app-setlist-buehne [entries]="entries()" [show]="show()" (closed)="stage.set(false)" /> }
