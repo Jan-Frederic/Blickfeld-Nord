@@ -374,7 +374,9 @@ test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async 
   // zweites Gerät: frischer Browser ohne gespeicherte Setlist
   const q = await page();
   await q.go(link);
-  await until(async () => (await songs(q)) === 4, async () => `Setlist aus dem Link nicht übernommen (${await songs(q)} Songs, Link ${link}, jetzt ${q.url()})`);
+  await until(async () => (await songs(q)) === 4, async () =>
+    `Setlist aus dem Link nicht übernommen (${await songs(q)} Songs, Link ${link}, jetzt ${q.url()}, gespeichert ${await q.evaluate((k) => localStorage.getItem(k), 'bn-setlist-' + id)}, ` +
+    `Fehler ${JSON.stringify(q.errors)}, Seite „${(await q.locator('main').innerText()).slice(0, 300).replace(/\s+/g, ' ')}“)`);
   expect((await q.locator('app-setlist .pause-label').count()) === 1, 'Pause fehlt');
   expect(!q.url().includes('#liste='), 'Liste bleibt in der Adresse stehen');
   return q;
