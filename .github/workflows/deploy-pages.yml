@@ -76,10 +76,11 @@ jobs:
       - name: Website bauen (Schriften, Fotos, Build, strukturierte Daten, Fehlerseite)
         uses: ./.github/actions/build-site
 
+      - name: Chromium für die Prüfungen
+        uses: ./.github/actions/playwright
+
       - name: Barrierefreiheit (WCAG 2.1 AA, axe-core) – schwere Verstöße stoppen den Deploy
-        run: |
-          npx playwright install --with-deps chromium
-          node scripts/a11y.mjs
+        run: node scripts/a11y.mjs
 
       - name: Service Worker für den Offline-Backstage
         run: node scripts/build-sw.mjs

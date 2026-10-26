@@ -1,0 +1,23 @@
+name: Chromium für Playwright
+description: >-
+  Lädt Chromium für die Prüfungen (Barrierefreiheit, Klicktests, Screenshots) und installiert nur die Systempakete
+  (Bibliotheken und Schriften), die auf dem Runner noch fehlen. „--with-deps“ installiert sonst jedes Mal alle per apt –
+  das dauert je nach Paketserver bis zu 15 Minuten. Mit denselben Paketen wie vorher bleibt das Rendering gleich.
+runs:
+  using: composite
+  steps:
+    - name: Chromium laden
+      shell: bash
+      run: npx playwright install chromium
+
+    - name: Fehlende Systempakete nachinstallieren
+      shell: bash
+      run: |
+        alle=$(npx playwright install-deps --dry-run chromium | grep -o 'no-install-recommends .*' | cut -d' ' -f2- | tr -d '"')
+        fehlend=$(for p in $alle; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || echo "$p"; done)
+        if [ -z "$fehlend" ]; then
+          echo "Alle $(echo $alle | wc -w) Systempakete sind schon da."
+        else
+          echo "::notice::Installiere fehlende Pakete: $(echo $fehlend)"
+          sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends $fehlend
+        fi

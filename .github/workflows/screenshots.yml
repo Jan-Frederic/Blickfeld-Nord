@@ -36,9 +36,11 @@ jobs:
       - name: Website bauen
         uses: ./.github/actions/build-site
 
+      - name: Chromium für die Aufnahmen
+        uses: ./.github/actions/playwright
+
       - name: Referenzbilder aufnehmen
         run: |
-          npx playwright install --with-deps chromium
           rm -rf tests/visual/referenz
           npx playwright test --update-snapshots
 
