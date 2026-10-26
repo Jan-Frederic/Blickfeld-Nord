@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SongInfo } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
+import { SETLIST_PREFIX } from '../data/setlist-data';
 
 // Backstage → Songs: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // Der Entwurf bleibt auf dem Gerät (bn-songinfo-entwurf), bis die fertige Datei auf GitHub eingefügt ist.
@@ -36,6 +37,19 @@ function ladeEntwurf(): Record<string, Werte> {
         auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
       </p>
 
+      <div class="fortschritt" role="progressbar" [attr.aria-valuenow]="ausgefuellt()" aria-valuemin="0" [attr.aria-valuemax]="songs.length" aria-label="Songs mit Tonart oder Tempo">
+        <span [style.width.%]="(ausgefuellt() / songs.length) * 100"></span>
+      </div>
+      <div class="filter">
+        <label class="check"><input type="checkbox" [checked]="nurLuecken()" (change)="nurLuecken.set($any($event.target).checked)" /> nur Songs ohne Tonart oder Tempo</label>
+        <label>Reihenfolge
+          <select (change)="sortierung.set($any($event.target).value)">
+            <option value="repertoire">wie im Repertoire</option>
+            <option value="haeufig">oft in Setlists zuerst</option>
+          </select>
+        </label>
+      </div>
+
       <label class="search">
         <mat-icon>search</mat-icon>
         <input type="search" placeholder="Song oder Interpret suchen …" [value]="suche()" (input)="suche.set($any($event.target).value)" aria-label="Songs durchsuchen" />
@@ -44,7 +58,7 @@ function ladeEntwurf(): Record<string, Werte> {
       <ul class="list">
         @for (s of gefiltert(); track s.key) {
           <li [class.changed]="geaendert().includes(s.key)">
-            <span class="song"><strong>{{ s.title }}</strong><span class="a">{{ s.artist }}</span></span>
+            <span class="song"><strong>{{ s.title }}</strong><span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span></span>
             <label>Tonart
               <select (change)="setzen(s.key, 'tonart', $any($event.target).value)">
                 <option value="" [selected]="!wert(s.key).tonart">–</option>
@@ -79,6 +93,12 @@ function ladeEntwurf(): Record<string, Werte> {
     </section>
   `,
   styles: `
+    .fortschritt { height: 6px; margin: 0 0 14px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+    .fortschritt span { display: block; height: 100%; background: var(--bn-sunset); }
+    .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-bottom: 12px; font-size: .88rem; color: var(--bn-fog); }
+    .filter label { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: normal; font-size: .88rem; color: var(--bn-fog); }
+    .filter input[type=checkbox] { flex: none; width: auto; margin: 0; padding: 0; accent-color: var(--bn-sunset); }
+    .filter select { padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
     .search { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; border: 1px solid var(--bn-line); border-radius: 10px; }
     .search mat-icon { color: var(--bn-fog); }
     .search input { flex: 1; padding: 10px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
@@ -115,9 +135,31 @@ export class BackstageSongs {
   protected readonly suche = signal('');
   protected readonly meldung = signal('');
 
+  // Lücken finden: nur Songs ohne Tonart oder Tempo, wahlweise die oft gespielten zuerst
+  protected readonly nurLuecken = signal(false);
+  protected readonly sortierung = signal<'repertoire' | 'haeufig'>('repertoire');
+  /** in wie vielen Setlists auf diesem Gerät der Song steht */
+  protected readonly haeufigkeit = computed(() => {
+    const n = new Map<string, number>();
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)!;
+        if (!k.startsWith(SETLIST_PREFIX)) continue;
+        const liste = JSON.parse(localStorage.getItem(k) ?? '[]') as { title?: string; artist?: string }[];
+        for (const s of new Set(liste.filter((e) => e.title).map((e) => key(e as { title: string; artist: string })))) n.set(s, (n.get(s) ?? 0) + 1);
+      }
+    } catch {
+      // ohne Speicher keine Häufigkeit
+    }
+    return n;
+  });
+
   protected readonly gefiltert = computed(() => {
     const q = norm(this.suche().trim());
-    return q ? this.songs.filter((s) => norm(`${s.title} ${s.artist}`).includes(q)) : this.songs;
+    let liste = q ? this.songs.filter((s) => norm(`${s.title} ${s.artist}`).includes(q)) : this.songs;
+    if (this.nurLuecken()) liste = liste.filter((s) => { const w = this.wert(s.key); return !w.tonart || !w.bpm; });
+    if (this.sortierung() === 'haeufig') liste = [...liste].sort((a, b) => (this.haeufigkeit().get(b.key) ?? 0) - (this.haeufigkeit().get(a.key) ?? 0));
+    return liste;
   });
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
   protected readonly ausgefuellt = computed(() => this.songs.filter((s) => { const w = this.wert(s.key); return w.tonart || w.bpm || w.notiz; }).length);
