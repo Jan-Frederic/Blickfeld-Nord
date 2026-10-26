@@ -15,9 +15,11 @@ permissions:
   pages: write
   id-token: write
 
+# Ein neuer Push bricht einen laufenden Deploy ab (die neue Version zählt). Der tägliche oder manuelle Lauf wartet
+# dagegen, bis der laufende fertig ist – sonst bräche er dessen Lighthouse-Messung ab und es fehlten Werte.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   # Neue Version per semantic-release: wertet die Conventional Commits seit dem letzten Tag aus

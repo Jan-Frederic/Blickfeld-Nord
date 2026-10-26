@@ -23,54 +23,71 @@ const firstProbe = readFileSync(join(ROOT, 'src', 'app', 'data', 'band.service.t
 pages.push('/backstage/', '/backstage/termine/', '/backstage/zahlen/', '/backstage/uebersetzungen/', '/backstage/material/', '/backstage/abgleich/', '/backstage/aufgaben/', '/backstage/buehnenplan/', '/backstage/songs/', ...(firstProbe ? [`/backstage/probe/${firstProbe}`] : []), ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), '/wunsch', '/gibt-es-nicht');
 
 const browser = await chromium.launch();
-// bypassCSP: axe wird als Skript in die Seite gelegt – das blockt die Content-Security-Policy der Seite sonst (zu Recht)
-const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'de-DE', bypassCSP: true });
-// Zählpixel und externe Einbettungen spielen für den Check keine Rolle
-await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
-const page = await context.newPage();
+// Die Prüfung wartet fast nur (Laden, Scrollen) – mehrere Tabs gleichzeitig verkürzen sie deutlich.
+const TABS = 4;
 
-let serious = 0;
-let minor = 0;
-for (const path of pages) {
-  await page.goto(BASE + path, { waitUntil: 'networkidle' });
+/** jede Seite einmal durch `pruefe` schicken, mit TABS Tabs parallel; Ergebnisse in Seitenreihenfolge */
+async function parallel(neuerTab, pruefe) {
+  const ergebnis = new Array(pages.length);
+  let naechste = 0;
+  await Promise.all(
+    Array.from({ length: TABS }, async () => {
+      const tab = await neuerTab();
+      while (naechste < pages.length) {
+        const i = naechste++;
+        ergebnis[i] = await pruefe(tab, pages[i]);
+      }
+    }),
+  );
+  return ergebnis;
+}
+
+async function scrollen(tab, pause) {
   // nach unten scrollen, damit per @defer nachgeladene Abschnitte erscheinen
-  await page.evaluate(async () => {
+  await tab.evaluate(async (pause) => {
     for (let y = 0; y < document.body.scrollHeight; y += 600) {
       window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 60));
+      await new Promise((r) => setTimeout(r, pause));
     }
-  });
+  }, pause);
+}
+
+// bypassCSP: axe wird als Skript in die Seite gelegt – das blockt die Content-Security-Policy der Seite sonst (zu Recht)
+const desktop = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'de-DE', bypassCSP: true });
+// Zählpixel und externe Einbettungen spielen für den Check keine Rolle
+await desktop.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+
+// WCAG-Prüfung mit axe-core
+async function axePruefung(page, path) {
+  await page.goto(BASE + path, { waitUntil: 'networkidle' });
+  await scrollen(page, 60);
   await page.waitForTimeout(400);
   await page.addScriptTag({ content: AXE });
   const result = await page.evaluate(() =>
     // eslint-disable-next-line no-undef
     axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } }),
   );
-  for (const v of result.violations) {
+  return result.violations.map((v) => {
     const bad = v.impact === 'serious' || v.impact === 'critical';
-    bad ? serious++ : minor++;
     const where = v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ');
-    console.log(`${bad ? '::error::' : '::warning::'}${path}: [${v.impact}] ${v.id} – ${v.help} (${v.nodes.length}×: ${where})`);
-  }
+    return { bad, text: `${bad ? '::error::' : '::warning::'}${path}: [${v.impact}] ${v.id} – ${v.help} (${v.nodes.length}×: ${where})` };
+  });
 }
+
 // Handy-Breite: nichts darf über den rechten Rand ragen – auch nicht bei 15 % größerer Schrift (Textgröße im
 // Handy-Browser) und mit aufgeklappten Listen. Gemessen wird am Element, weil html/body überstehendes ohnehin abschneiden.
 // niederländischer Browser: deutsche Seiten zeigen dabei den Sprachhinweis – der darf auch nicht überstehen
-const phone = await browser.newPage({ viewport: { width: 360, height: 780 }, locale: 'nl-NL', bypassCSP: true });
-await phone.context().route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+const handy = await browser.newContext({ viewport: { width: 360, height: 780 }, locale: 'nl-NL', bypassCSP: true });
+await handy.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 // GoatCounter-Zähler mit Beispielzahlen beantworten – sonst bleiben Besucher- und Kampagnen-Tabellen im Backstage leer
 // und werden nie bei Handy-Breite geprüft
-await phone.context().route(/goatcounter\.com\/counter\//, (route) =>
+await handy.route(/goatcounter\.com\/counter\//, (route) =>
   route.fulfill({ contentType: 'application/json', body: JSON.stringify({ count: '1.234' }) }),
 );
-for (const path of pages) {
+
+async function handyPruefung(phone, path) {
   await phone.goto(BASE + path, { waitUntil: 'networkidle' });
-  await phone.evaluate(async () => {
-    for (let y = 0; y < document.body.scrollHeight; y += 600) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 40));
-    }
-  });
+  await scrollen(phone, 40);
   await phone.waitForTimeout(300);
   const offenders = await phone.evaluate(() => {
     document.querySelectorAll('details').forEach((d) => (d.open = true));
@@ -91,11 +108,18 @@ for (const path of pages) {
       .slice(0, 3)
       .map((el) => `${el.tagName.toLowerCase()} „${el.textContent.trim().slice(0, 30)}“ bis ${Math.round(el.getBoundingClientRect().right)} px`);
   });
-  if (offenders.length) {
-    serious++;
-    console.log(`::error::${path}: ragt auf dem Handy (360 px, Schrift +15 %) über den Rand: ${offenders.join(' | ')}`);
-  }
+  return offenders.length ? [{ bad: true, text: `::error::${path}: ragt auf dem Handy (360 px, Schrift +15 %) über den Rand: ${offenders.join(' | ')}` }] : [];
 }
+
+// Desktop- und Handy-Prüfung laufen gleichzeitig
+const [axeMeldungen, handyMeldungen] = await Promise.all([
+  parallel(() => desktop.newPage(), axePruefung),
+  parallel(() => handy.newPage(), handyPruefung),
+]);
+const meldungen = [...axeMeldungen.flat(), ...handyMeldungen.flat()];
+for (const m of meldungen) console.log(m.text);
+const serious = meldungen.filter((m) => m.bad).length;
+const minor = meldungen.length - serious;
 
 await browser.close();
 close();
