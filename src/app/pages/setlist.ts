@@ -7,7 +7,7 @@ import { SetlistBuehne } from './setlist-buehne';
 import { TempoVerlauf } from './tempo-verlauf';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { gespielteTonart, songInfo, songInfoText } from '../data/songinfo';
-import { glaetten, istSprung, spruenge } from '../data/tonart-uebergang';
+import { glaetten, sprungHinweis, spruenge } from '../data/tonart-uebergang';
 import { setlistAusHash, setlistLink } from '../data/setlist-link';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
@@ -69,7 +69,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung einplanen oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
@@ -244,9 +244,7 @@ export class Setlist {
     const a = this.entries()[i - 1];
     const b = this.entries()[i];
     if (!a || !b || isPause(a) || isPause(b)) return null;
-    const ta = this.tonartVon(a);
-    const tb = this.tonartVon(b);
-    return istSprung(ta, tb) ? `${ta} → ${tb}` : null;
+    return sprungHinweis(this.tonartVon(a), this.tonartVon(b));
   }
   protected readonly sprungZahl = computed(() => spruenge(this.entries(), this.tonartVon));
   protected readonly glattMeldung = signal('');
@@ -350,12 +348,21 @@ export class Setlist {
   }
 
   // Druckansicht in neuem Fenster: groß, schwarz auf weiß, ein Set pro Spalte – „Als PDF speichern“ im Druckdialog
+  // Kleingedrucktes unter dem Titel auf dem Bühnen-Ausdruck: Tonart der Band mit Capo, bei einem Sprung die Überleitung
+  private druckInfo(vorher: { title: string; artist: string } | undefined, s: { title: string; artist: string }): string {
+    const i = songInfo(s.title, s.artist);
+    const teile = [gespielteTonart(i), i?.capo && `Capo ${i.capo}`].filter(Boolean);
+    const sprung = vorher ? sprungHinweis(this.tonartVon(vorher), this.tonartVon(s)) : null;
+    if (sprung) teile.push(`⚡ ${sprung.split(' · ')[1]}`);
+    return teile.length ? `<small>${esc(teile.join(' · '))}</small>` : '';
+  }
+
   protected print(): void {
     const win = window.open('', '_blank');
     if (!win) return;
     let n = 0;
     const sets = this.sets()
-      .map((set, i) => `<section><h2>Set ${i + 1}${setLength(set).seconds ? ` <small>${setTime(setLength(set).seconds)}</small>` : ''}</h2><ol>${set.map((t) => `<li value="${++n}">${esc(t.title)}</li>`).join('')}</ol></section>`)
+      .map((set, i) => `<section><h2>Set ${i + 1}${setLength(set).seconds ? ` <small>${setTime(setLength(set).seconds)}</small>` : ''}</h2><ol>${set.map((t, j) => `<li value="${++n}">${esc(t.title)}${this.druckInfo(set[j - 1], t)}</li>`).join('')}</ol></section>`)
       .join('');
     win.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Setlist – ${esc(this.title())}</title>
 <style>
@@ -371,6 +378,7 @@ export class Setlist {
   ol { margin: 0; padding-left: 12mm; }
   li { font-size: 22pt; font-weight: bold; line-height: 1.35; }
   li::marker { font-size: 14pt; font-weight: normal; }
+  li small { display: block; font-size: 11pt; font-weight: normal; line-height: 1.2; margin-bottom: 1.5mm; }
 </style></head><body>
 <header><b>BLICKFELD NORD</b><span>${esc(this.title())}</span></header>
 <main>${sets}</main>

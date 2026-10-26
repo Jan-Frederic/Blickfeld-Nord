@@ -1,7 +1,8 @@
 import { Show } from '../data/band.service';
 import { loadSetlist, setLength, setTime, setsOf } from '../data/setlist-data';
 import { arrivalTime, departureTime, DEFAULT_START } from '../data/trip';
-import { songInfoText } from '../data/songinfo';
+import { gespielteTonart, songInfo, songInfoText } from '../data/songinfo';
+import { sprungHinweis } from '../data/tonart-uebergang';
 import { aufbauPlan } from '../data/zeitplan';
 import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
 import { FIELDS, VORORT_PREFIX, loadVorOrt } from './vorort';
@@ -35,7 +36,14 @@ export function printLaufzettel(show: Show, id: string): void {
     ? sets
         .map((set, i) => {
           const sec = setLength(set).seconds;
-          return `<section class="set"><h3>Set ${i + 1}${sec ? ` · ${setTime(sec)}` : ''}</h3><ol>${set.map((t) => `<li value="${++n}">${esc(t.title)} <small>${esc(t.artist)}${songInfoText(t.title, t.artist) ? ' · ' + esc(songInfoText(t.title, t.artist)) : ''}</small></li>`).join('')}</ol></section>`;
+          // Tonart · Capo · Tempo hinter dem Interpreten, bei einem Tonartsprung zum vorigen Song die Überleitung
+          const tonart = (s: { title: string; artist: string }) => gespielteTonart(songInfo(s.title, s.artist));
+          const zeile = (t: (typeof set)[number], j: number) => {
+            const info = songInfoText(t.title, t.artist);
+            const sprung = j ? sprungHinweis(tonart(set[j - 1]), tonart(t)) : null;
+            return `<li value="${++n}">${esc(t.title)} <small>${esc(t.artist)}${info ? ' · ' + esc(info) : ''}</small>${sprung ? `<small class="sprung">⚡ ${esc(sprung)}</small>` : ''}</li>`;
+          };
+          return `<section class="set"><h3>Set ${i + 1}${sec ? ` · ${setTime(sec)}` : ''}</h3><ol>${set.map(zeile).join('')}</ol></section>`;
         })
         .join('')
     : '<p class="note">Noch keine Setlist angelegt.</p>';
@@ -68,6 +76,7 @@ export function printLaufzettel(show: Show, id: string): void {
   ol { margin: 0; padding-left: 7mm; }
   ol li { font-weight: bold; }
   small { font-weight: normal; color: #555; }
+  small.sprung { display: block; color: #000; }
   .packs { columns: 4; column-gap: 5mm; font-size: 9pt; line-height: 1.3; }
   .group { break-inside: avoid; margin-bottom: 6px; }
   ul { list-style: none; margin: 0; padding: 0; }

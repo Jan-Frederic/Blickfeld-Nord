@@ -1,4 +1,4 @@
-import { Kandidat, adventszeit, vorschlagen } from './setlist-vorschlag';
+import { Kandidat, adventszeit, auffuellen, vorschlagen } from './setlist-vorschlag';
 
 const s = (title: string, extra: Partial<Kandidat> = {}): Kandidat => ({ title, artist: 'X', dauer: 240, ...extra });
 
@@ -37,5 +37,28 @@ describe('vorschlagen', () => {
     expect(titel()).toContain('In der Weihnachtsbäckerei');
     expect(adventszeit('2026-11-14')).toBe(false);
     expect(adventszeit('2026-12-26')).toBe(true);
+  });
+});
+
+describe('auffuellen', () => {
+  const titel = (l: { title?: string; pause?: true }[]) => l.map((e) => e.title ?? '|');
+
+  it('ergänzt nur das letzte Set bis zur Ziellänge, ohne doppelte Songs', () => {
+    const kandidaten = Array.from({ length: 10 }, (_, i) => s(`S${i}`));
+    const liste = auffuellen([{ title: 'S0', artist: 'X' }, { pause: true }, { title: 'S1', artist: 'X' }], kandidaten, 16);
+    // 16 min = 960 s, S1 hat 240 s → noch 3 Songs
+    expect(titel(liste)).toEqual(['S0', '|', 'S1', 'S2', 'S3', 'S4']);
+  });
+
+  it('nimmt unter den bestplatzierten den Song mit passender Tonart', () => {
+    const kandidaten = [s('Start', { tonart: 'C' }), s('Fern', { wert: 5, tonart: 'F#' }), s('Nah', { wert: 4.9, tonart: 'G' })];
+    const liste = auffuellen([{ title: 'Start', artist: 'X' }], kandidaten, 9);
+    expect(titel(liste)).toEqual(['Start', 'Nah']);
+  });
+
+  it('nimmt in der Adventszeit Weihnachtslieder vorrangig, sonst gar nicht', () => {
+    const kandidaten = [s('Rock', { wert: 4 }), s('Weihnacht, was bist du')];
+    expect(titel(auffuellen([], kandidaten, 4, '2026-12-04'))).toEqual(['Weihnacht, was bist du']);
+    expect(titel(auffuellen([], kandidaten, 8, '2026-06-01'))).toEqual(['Rock']);
   });
 });

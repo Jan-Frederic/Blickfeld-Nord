@@ -2,7 +2,9 @@
 // meisten Sternen aus dem Bühnen-Modus zuerst, ohne Sterne die am häufigsten gespielten. Jedes Set beginnt mit dem
 // zweitbesten und endet mit dem besten Song; zwei langsame Songs oder zweimal dieselbe Tonart hintereinander werden
 // nach Möglichkeit vermieden. Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
-import type { Entry, Song } from './setlist-data';
+import { isPause, type Entry, type Song } from './setlist-data';
+import { quintAbstand } from './tonart-uebergang';
+import { adventszeit, istWeihnachtslied } from './weihnachten';
 
 export interface Kandidat extends Song {
   /** Länge in Sekunden (Spotify) */
@@ -24,29 +26,58 @@ const ADVENT = 4.5; // so viel „wert“ bekommen Weihnachtslieder in der Adven
 const laenge = (k: Kandidat) => k.dauer ?? OHNE_LAENGE;
 
 // Weihnachtslieder (am Titel erkannt) passen nur zu Auftritten zwischen 15.11. und 26.12.
-const WEIHNACHTEN = /weihnacht|advent|christmas|xmas|jingle bells|santa/i;
-export const istWeihnachtslied = (s: Song) => WEIHNACHTEN.test(s.title);
-export function adventszeit(datum: string): boolean {
-  const md = datum.slice(5, 10);
-  return md >= '11-15' && md <= '12-26';
-}
+export { adventszeit, istWeihnachtslied } from './weihnachten';
 
 const passtNicht = (a: Kandidat, b: Kandidat) =>
   (a.bpm !== undefined && b.bpm !== undefined && a.bpm < LANGSAM && b.bpm < LANGSAM) || (!!a.tonart && a.tonart === b.tonart);
 
-/** Sets mit je etwa `minuten` Spielzeit, getrennt durch Pausen. Mit `datum` (JJJJ-MM-TT) des Auftritts: Weihnachtslieder
- * in der Adventszeit weit vorne, sonst gar nicht. */
-export function vorschlagen(kandidaten: Kandidat[], sets: number, minuten: number, datum?: string): Entry[] {
+// Kandidaten nach Wert (Sterne, sonst neutral), dann Spielhäufigkeit; mit Datum Weihnachtslieder nur in der Adventszeit
+function rangfolge(kandidaten: Kandidat[], datum?: string): Kandidat[] {
   if (datum) {
     const advent = adventszeit(datum);
     kandidaten = kandidaten
       .filter((k) => advent || !istWeihnachtslied(k))
       .map((k) => (advent && istWeihnachtslied(k) ? { ...k, wert: Math.max(k.wert ?? NEUTRAL, ADVENT) } : k));
   }
-  const rang = kandidaten
+  return kandidaten
     .map((k, i) => ({ k, i }))
     .sort((a, b) => (b.k.wert ?? NEUTRAL) - (a.k.wert ?? NEUTRAL) || (b.k.gespielt ?? 0) - (a.k.gespielt ?? 0) || a.i - b.i)
     .map((x) => x.k);
+}
+
+const AUSWAHL = 4; // beim Auffüllen: unter so vielen der bestplatzierten Songs den mit der passendsten Tonart nehmen
+
+/**
+ * Letztes Set auf etwa `minuten` Spielzeit auffüllen: Songs, die noch nicht auf der Setlist stehen, in der Rangfolge
+ * des Vorschlags – unter den nächsten AUSWAHL jeweils der mit der nächstgelegenen Tonart zum vorigen Song (Quintenzirkel),
+ * damit keine Tonartsprünge entstehen. Die bisherigen Einträge bleiben unverändert.
+ */
+export function auffuellen(entries: Entry[], kandidaten: Kandidat[], minuten: number, datum?: string): Entry[] {
+  const drin = new Set(entries.filter((e) => !isPause(e)).map((e) => `${(e as Song).title}|${(e as Song).artist}`));
+  const info = new Map(kandidaten.map((k) => [`${k.title}|${k.artist}`, k]));
+  const rest = rangfolge(kandidaten, datum).filter((k) => !drin.has(`${k.title}|${k.artist}`));
+  const letzteStart = entries.map((e) => isPause(e)).lastIndexOf(true) + 1;
+  const letztes = entries.slice(letzteStart) as Song[];
+  let summe = letztes.reduce((s, e) => s + laenge(info.get(`${e.title}|${e.artist}`) ?? e), 0);
+  let vorher = letztes.length ? info.get(`${letztes[letztes.length - 1].title}|${letztes[letztes.length - 1].artist}`) : undefined;
+  const neu: Song[] = [];
+  const ziel = minuten * 60;
+  while (rest.length) {
+    const auswahl = rest.slice(0, AUSWAHL).filter((k) => summe + laenge(k) / 2 < ziel);
+    if (!auswahl.length) break;
+    const k = auswahl.reduce((a, b) => ((quintAbstand(vorher?.tonart, b.tonart) ?? 2) < (quintAbstand(vorher?.tonart, a.tonart) ?? 2) ? b : a));
+    rest.splice(rest.indexOf(k), 1);
+    neu.push(song(k));
+    summe += laenge(k);
+    vorher = k;
+  }
+  return [...entries, ...neu];
+}
+
+/** Sets mit je etwa `minuten` Spielzeit, getrennt durch Pausen. Mit `datum` (JJJJ-MM-TT) des Auftritts: Weihnachtslieder
+ * in der Adventszeit weit vorne, sonst gar nicht. */
+export function vorschlagen(kandidaten: Kandidat[], sets: number, minuten: number, datum?: string): Entry[] {
+  const rang = rangfolge(kandidaten, datum);
   const ziel = minuten * 60;
   const gruppen: Kandidat[][] = Array.from({ length: sets }, () => []);
   const summe = (g: Kandidat[]) => g.reduce((s, k) => s + laenge(k), 0);

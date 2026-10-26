@@ -355,9 +355,12 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   expect((await p.locator('app-setlist-buehne .bpm').innerText()).includes('120 bpm'), 'Tempo aus dem Entwurf fehlt im Bühnen-Modus');
   // Klick blinkt zunächst ohne Ton; der Ton ist eigens zuschaltbar
   await p.locator('app-setlist-buehne .bpm').click();
-  await until(async () => (await p.locator('app-setlist-buehne .ton').getAttribute('aria-pressed').catch(() => null)) === 'false', 'Klick startet nicht stumm');
-  await p.locator('app-setlist-buehne .ton').click();
-  await until(async () => (await p.locator('app-setlist-buehne .ton').getAttribute('aria-pressed')) === 'true', 'Ton lässt sich nicht zuschalten');
+  await until(async () => (await p.locator('app-setlist-buehne .ton[aria-pressed]').getAttribute('aria-pressed').catch(() => null)) === 'false', 'Klick startet nicht stumm');
+  await p.locator('app-setlist-buehne .ton[aria-pressed]').click();
+  await until(async () => (await p.locator('app-setlist-buehne .ton[aria-pressed]').getAttribute('aria-pressed')) === 'true', 'Ton lässt sich nicht zuschalten');
+  // Tempo-Trainer: 100 → 90 % macht aus 120 bpm 108 bpm
+  await p.locator('app-setlist-buehne .tempo').click();
+  await until(async () => (await p.locator('app-setlist-buehne .bpm').innerText()).includes('108 bpm'), 'Übungstempo 90 % wird nicht übernommen');
   return p;
 });
 
@@ -388,6 +391,7 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   for (const t of ['Hey Jude', 'Perfect', 'Chasing Cars', 'Angels', 'Let It Be', 'Iris']) await hinzu(t);
   await until(async () => (await p.locator('app-setlist .list li .info').last().innerText()).startsWith('C · Capo 2'), 'Band-Tonart mit Capo fehlt in der Setlist');
   await until(async () => (await p.locator('app-setlist .sprung').count()) >= 2, 'Tonartsprünge werden nicht markiert');
+  expect(/Überleitung [A-H][#b]?7/.test(await p.locator('app-setlist .sprung').first().innerText()), 'Überleitungsakkord fehlt beim Tonartsprung');
   const vorher = await p.locator('app-setlist .sprung').count();
   await p.locator('app-setlist .uebergaenge button').click();
   await until(async () => (await p.locator('app-setlist .sprung').count()) < vorher, 'Glätten verringert die Tonartsprünge nicht');
@@ -399,6 +403,10 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   });
   await p.locator('app-setlist-vorlagen button', { hasText: 'Übernehmen' }).click();
   await until(async () => (await p.locator('app-setlist .list li .t').allInnerTexts()).join('|') === 'In der Weihnachtsbäckerei|Kleine Kinder, große Kinder (Das Adventskalenderlied)|Weihnacht, was bist du', 'Vorlage „Weihnachtslieder“ fehlt');
+  // „Letztes Set auffüllen“ ergänzt bis zur gewählten Länge (45 min), die Vorlage bleibt vorn
+  await p.locator('app-setlist-vorschlag button', { hasText: 'auffüllen' }).click();
+  await until(async () => (await p.locator('app-setlist .list li .no').count()) >= 8, 'Auffüllen ergänzt das Set nicht');
+  expect((await p.locator('app-setlist .list li .t').first().innerText()) === 'In der Weihnachtsbäckerei', 'Auffüllen hat die vorhandenen Songs verändert');
   return p;
 });
 
@@ -494,7 +502,7 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   expect((await p.locator('app-setlist .pause-label').innerText()).includes('Set davor'), 'Pause ohne Set-Dauer');
   await p.locator('app-setlist-vorlagen button', { hasText: 'Als Vorlage speichern' }).click();
   await until(async () => (await p.locator('app-setlist-vorlagen option').count()) === 1, 'Vorlage nicht gespeichert');
-  await p.locator('app-setlist-vorschlag button').click();
+  await p.locator('app-setlist-vorschlag button', { hasText: 'vorschlagen' }).click();
   await until(async () => (await p.locator('app-setlist .pause-label').count()) === 1 && (await p.locator('app-setlist .list li .no').count()) > 10, 'Setlist-Vorschlag ohne zwei Sets');
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await p.getByRole('button', { name: '4 Sterne' }).click();

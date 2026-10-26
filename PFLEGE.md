@@ -102,12 +102,17 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 - Titel und Interpret genau wie im Repertoire schreiben (am besten von `/repertoire` kopieren).
 - Tonart: Dur als Großbuchstabe (`C`, `F#`, `Bb`), Moll mit kleinem `m` (`Am`, `C#m`). Alles ist optional.
-- Im Bühnen-Modus blinkt **Klick** im Tempo – praktisch zum Einzählen. Daneben schaltet 🔈 einen leisen Ton dazu.
+- Im Bühnen-Modus blinkt **Klick** im Tempo – praktisch zum Einzählen. Daneben schaltet 🔈 einen leisen Ton dazu,
+  und **100 %** stellt das Übungstempo auf 90, 80 oder 70 % (zum langsamen Einüben in der Probe).
 - **Tonartsprünge:** Liegen zwei Songs in einem Set im Quintenzirkel weit auseinander (z. B. Ab → E), markiert die
-  Setlist das mit ⚡. **Übergänge glätten** ordnet die Songs innerhalb der Sets so, dass es möglichst wenige Sprünge
-  gibt – erster und letzter Song je Set bleiben.
+  Setlist das mit ⚡ und nennt eine **Überleitung** (den Dominantseptakkord der neuen Tonart, z. B. H7 vor E) – auch
+  auf Laufzettel und Bühnen-Ausdruck. **Übergänge glätten** ordnet die Songs innerhalb der Sets so, dass es möglichst
+  wenige Sprünge gibt – erster und letzter Song je Set bleiben.
+- **Letztes Set auffüllen** (unter der Setlist, Länge links wählen): ergänzt das letzte Set bis zur gewählten Länge –
+  die besten Songs zuerst, in der Tonart passend zum vorigen; die bisherigen Songs bleiben.
 - **Vorlage „Weihnachtslieder“** (unter der Setlist, fest auf jedem Gerät): die drei Zuckowski-Lieder als Grundstock
-  für den Weihnachtsmarkt – übernehmen und mit weiteren Songs ergänzen.
+  für den Weihnachtsmarkt – übernehmen und mit weiteren Songs ergänzen. Auf der öffentlichen Repertoire- und
+  Songwunsch-Seite stehen die Weihnachtslieder vom 1. bis 24. Dezember automatisch oben.
 - Im Bühnen-Modus unter jedem Song 1–5 **Sterne** antippen (oder Taste 1–5), wie er an dem Abend lief. Die
   **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über „Datei importieren“ dazu.
 - **Setlist vorschlagen** (unter der Setlist): Anzahl Sets und Minuten wählen – die Songs mit den meisten Sternen

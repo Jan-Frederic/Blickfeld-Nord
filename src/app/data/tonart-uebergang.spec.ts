@@ -1,5 +1,5 @@
 import { Entry } from './setlist-data';
-import { glaetten, istSprung, quintAbstand, quintPosition, spruenge } from './tonart-uebergang';
+import { glaetten, istSprung, quintAbstand, quintPosition, spruenge, ueberleitung } from './tonart-uebergang';
 
 const tonarten: Record<string, string> = { A: 'C', B: 'F#', C: 'G', D: 'Am', E: 'Ab', F: 'E' };
 const song = (title: string) => ({ title, artist: 'X' });
@@ -26,6 +26,19 @@ describe('Tonart-Übergänge', () => {
     expect(quintAbstand('C', undefined)).toBeUndefined();
     expect(istSprung('Ab', 'E')).toBe(true);
     expect(istSprung('G', 'D')).toBe(false);
+  });
+
+  it('schlägt den Dominantseptakkord der Zieltonart als Überleitung vor', () => {
+    expect(ueberleitung('E')).toBe('H7');
+    expect(ueberleitung('C')).toBe('G7');
+    expect(ueberleitung('Am')).toBe('E7');
+    expect(ueberleitung('Ab')).toBe('Eb7');
+    expect(ueberleitung('F')).toBe('C7');
+    expect(ueberleitung('F#m')).toBe('C#7');
+    expect(ueberleitung('Gb')).toBe('Db7');
+    expect(ueberleitung('C#m')).toBe('G#7');
+    expect(ueberleitung('Hm')).toBe('F#7');
+    expect(ueberleitung('X')).toBeUndefined();
   });
 
   it('zählt Sprünge nur innerhalb eines Sets', () => {

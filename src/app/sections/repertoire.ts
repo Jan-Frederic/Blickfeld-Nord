@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { weihnachtenZuerst } from '../data/weihnachten';
 import { I18n, LDatePipe, tr } from '../i18n';
 
 const TEXT = tr(
@@ -154,10 +155,12 @@ export class Repertoire {
     const q = norm(this.query().trim());
     const found = q ? tracks.filter((t) => norm(`${t.title} ${t.artist}`).includes(q)) : tracks;
     const by = this.sort();
-    return [...found].sort((a, b) =>
+    const sortiert = [...found].sort((a, b) =>
       by === 'year'
         ? (b.year ?? 0) - (a.year ?? 0)
         : (by === 'artist' ? a.artist : a.title).localeCompare(by === 'artist' ? b.artist : b.title, 'de'),
     );
+    // in der Adventszeit (1.–24.12.) die Weihnachtslieder oben – beim Suchen zählt nur der Treffer
+    return q ? sortiert : weihnachtenZuerst(sortiert);
   });
 }

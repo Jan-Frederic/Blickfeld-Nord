@@ -31,6 +31,25 @@ export function istSprung(a: string | undefined, b: string | undefined): boolean
   return (quintAbstand(a, b) ?? 0) >= SPRUNG_AB;
 }
 
+const KREUZ = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'H'];
+const BE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
+
+/**
+ * Überleitung in eine Tonart: ihr Dominantseptakkord (eine Quinte über dem Grundton, in Dur wie in Moll), z. B.
+ * E → „H7“, Am → „E7“, Ab → „Eb7“. Kreuz- oder b-Schreibweise wie die Zieltonart; undefined, wenn sie nicht lesbar ist.
+ */
+export function ueberleitung(nach: string | undefined): string | undefined {
+  const m = /^([A-H])([#b]?)(m?)$/.exec(nach?.trim() ?? '');
+  if (!m) return undefined;
+  const ton = (GRUNDTON[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 7 + 12) % 12;
+  return (m[2] === '#' ? KREUZ : BE)[ton] + '7';
+}
+
+/** Hinweis für einen Tonartsprung zwischen zwei aufeinanderfolgenden Songs, z. B. „Ab → E · Überleitung H7“ */
+export function sprungHinweis(von: string | undefined, nach: string | undefined): string | null {
+  return istSprung(von, nach) ? `${von} → ${nach} · Überleitung ${ueberleitung(nach)}` : null;
+}
+
 type Song = { title: string; artist: string };
 
 /** Zahl der Tonartsprünge innerhalb der Sets (über eine Pause hinweg zählt kein Wechsel) */

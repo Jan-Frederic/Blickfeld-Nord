@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
+import { weihnachtenZuerst } from '../data/weihnachten';
 import { I18n, tr } from '../i18n';
 
 // Live-Wunschbox (/wunsch): Gäste scannen am Abend den QR-Code auf der Bühne, suchen einen Song aus unserem
@@ -161,7 +162,8 @@ export class WunschPage {
   protected readonly list = computed(() => {
     const q = norm(this.query().trim());
     const tracks = data.tracks as Track[];
-    return q ? tracks.filter((t) => norm(`${t.title} ${t.artist}`).includes(q)) : tracks;
+    // in der Adventszeit (1.–24.12.) die Weihnachtslieder oben – beim Suchen zählt nur der Treffer
+    return q ? tracks.filter((t) => norm(`${t.title} ${t.artist}`).includes(q)) : weihnachtenZuerst(tracks);
   });
 
   protected readonly text = computed(() => {

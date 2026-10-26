@@ -63,9 +63,10 @@ function ladeZoom(): number {
                 @if (i.capo) { <span class="capo">Capo {{ i.capo }}</span> }
                 @if (i.bpm) {
                   <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
-                    {{ i.bpm }} bpm · Klick
+                    {{ klickBpm() }} bpm · Klick
                   </button>
                   @if (klick()) {
+                    <button type="button" class="ton tempo" [class.on]="faktor() < 1" (click)="langsamer($event)" [attr.aria-label]="'Übungstempo ' + faktorText() + ', antippen für langsamer'" title="Zum Üben langsamer: 100 → 90 → 80 → 70 %">{{ faktorText() }}</button>
                     <button type="button" class="ton" [class.on]="ton()" (click)="toggleTon($event)" [attr.aria-pressed]="ton()" [attr.aria-label]="ton() ? 'Ton aus' : 'Ton an'">
                       <mat-icon>{{ ton() ? 'volume_up' : 'volume_off' }}</mat-icon>
                     </button>
@@ -281,9 +282,21 @@ export class SetlistBuehne {
     }
   }
 
+  // Tempo-Trainer: Klick zum Üben auf 90, 80 oder 70 % – gilt bis zum Schließen, nicht für den nächsten Auftritt
+  private static readonly FAKTOREN = [1, 0.9, 0.8, 0.7];
+  protected readonly faktor = signal(1);
+  protected readonly faktorText = computed(() => `${Math.round(this.faktor() * 100)} %`);
+  protected readonly klickBpm = computed(() => Math.round((this.info()?.bpm ?? 0) * (this.klick() ? this.faktor() : 1)));
+  protected langsamer(e: Event): void {
+    e.stopPropagation();
+    const f = SetlistBuehne.FAKTOREN;
+    this.faktor.set(f[(f.indexOf(this.faktor()) + 1) % f.length]);
+    this.startKlick();
+  }
+
   private startKlick(): void {
     this.stopKlick();
-    const bpm = this.info()?.bpm;
+    const bpm = this.klickBpm();
     if (!this.klick() || !bpm) return;
     this.klickTimer = setInterval(() => {
       this.beat.set(true);

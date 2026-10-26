@@ -3,8 +3,8 @@ import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { Entry, SETLIST_PREFIX, durationOf, isPause } from '../data/setlist-data';
 import { alleBewertungen, rangliste, songKey } from '../data/bewertung';
-import { songInfo } from '../data/songinfo';
-import { Kandidat, vorschlagen } from '../data/setlist-vorschlag';
+import { gespielteTonart, songInfo } from '../data/songinfo';
+import { Kandidat, auffuellen, vorschlagen } from '../data/setlist-vorschlag';
 
 // „Setlist vorschlagen“ (Backstage): Sets in gewünschter Länge aus Sternen, Spielhäufigkeit, Tempo und Tonart –
 // die Logik steht in data/setlist-vorschlag.ts. Ersetzt nach Rückfrage die aktuelle Setlist.
@@ -26,7 +26,9 @@ import { Kandidat, vorschlagen } from '../data/setlist-vorschlag';
         </select>
       </label>
       <button type="button" (click)="vorschlagen()"><mat-icon>queue_music</mat-icon> Setlist vorschlagen</button>
-      <span class="none">Beste Sterne zuerst, sonst die meistgespielten Songs; bester Song ans Set-Ende.</span>
+      <button type="button" (click)="auffuellen()" [disabled]="!entries().length"><mat-icon>add</mat-icon> Letztes Set auffüllen</button>
+      <span class="none">Beste Sterne zuerst, sonst die meistgespielten Songs; bester Song ans Set-Ende. „Auffüllen“ ergänzt das
+        letzte Set bis zur gewählten Länge – passend in der Tonart, die bisherigen Songs bleiben.</span>
     </div>
   `,
   styles: `
@@ -39,7 +41,8 @@ import { Kandidat, vorschlagen } from '../data/setlist-vorschlag';
       display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; cursor: pointer;
       border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .85rem;
     }
-    button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    button:disabled { opacity: .4; cursor: default; }
     .none { flex-basis: 100%; font-size: .8rem; color: var(--bn-fog); }
   `,
 })
@@ -54,13 +57,25 @@ export class SetlistVorschlag {
 
   protected vorschlagen(): void {
     if (this.entries().length && !confirm('Aktuelle Setlist durch einen Vorschlag ersetzen?')) return;
+    this.apply.emit(vorschlagen(this.kandidaten(), this.sets(), this.minuten(), this.datum()));
+  }
+
+  // letztes Set bis zur gewählten Minutenzahl ergänzen – die Setlist bleibt sonst wie sie ist
+  protected auffuellen(): void {
+    this.apply.emit(auffuellen(this.entries(), this.kandidaten(), this.minuten(), this.datum()));
+  }
+
+  private datum(): string | undefined {
+    return /^\d{4}-\d{2}-\d{2}/.test(this.show()) ? this.show() : undefined;
+  }
+
+  private kandidaten(): Kandidat[] {
     const wert = new Map(rangliste(alleBewertungen(), Infinity).map((p) => [songKey(p), p.wert]));
     const gespielt = this.gespielt();
-    const kandidaten: Kandidat[] = data.tracks.map((t) => {
+    return data.tracks.map((t) => {
       const info = songInfo(t.title, t.artist);
-      return { title: t.title, artist: t.artist, dauer: durationOf(t), wert: wert.get(songKey(t)), gespielt: gespielt.get(songKey(t)), bpm: info?.bpm, tonart: info?.tonart };
+      return { title: t.title, artist: t.artist, dauer: durationOf(t), wert: wert.get(songKey(t)), gespielt: gespielt.get(songKey(t)), bpm: info?.bpm, tonart: gespielteTonart(info) };
     });
-    this.apply.emit(vorschlagen(kandidaten, this.sets(), this.minuten(), /^\d{4}-\d{2}-\d{2}/.test(this.show()) ? this.show() : undefined));
   }
 
   // wie oft jeder Song auf den gespeicherten Setlists dieses Geräts steht
