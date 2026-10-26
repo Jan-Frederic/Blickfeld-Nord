@@ -26,7 +26,7 @@ async function until(check, message) {
     if (await check()) return;
     await new Promise((r) => setTimeout(r, 100));
   }
-  throw new Error(message);
+  throw new Error(typeof message === 'function' ? await message() : message);
 }
 
 async function page(options = {}) {
@@ -361,16 +361,20 @@ test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async 
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });
   await p.go(`/backstage/${id}/setlist`);
   const add = p.locator('app-setlist .pick li button');
-  for (let i = 0; i < 3; i++) await add.first().click();
-  await p.locator('app-setlist button', { hasText: 'Pause' }).click();
-  await add.first().click();
+  const songs = (x) => x.locator('app-setlist .list li .no').count();
+  // nach jedem Klick warten, bis die Liste nachgezogen hat – sonst trifft der nächste Klick denselben Song
+  for (let i = 1; i <= 4; i++) {
+    if (i === 4) await p.locator('app-setlist button', { hasText: 'Pause' }).click();
+    await add.first().click();
+    await until(async () => (await songs(p)) === i, `Song ${i} nicht hinzugefügt`);
+  }
   await p.locator('app-setlist button', { hasText: 'Als Link' }).click();
   await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('#liste='), 'kein Link kopiert');
   const link = (await p.evaluate(() => navigator.clipboard.readText())).replace(/^https?:\/\/[^/]+/, '');
   // zweites Gerät: frischer Browser ohne gespeicherte Setlist
   const q = await page();
   await q.go(link);
-  await until(async () => (await q.locator('app-setlist .list li .no').count()) === 4, 'Setlist aus dem Link nicht übernommen');
+  await until(async () => (await songs(q)) === 4, async () => `Setlist aus dem Link nicht übernommen (${await songs(q)} Songs, Link ${link}, jetzt ${q.url()})`);
   expect((await q.locator('app-setlist .pause-label').count()) === 1, 'Pause fehlt');
   expect(!q.url().includes('#liste='), 'Liste bleibt in der Adresse stehen');
   return q;
