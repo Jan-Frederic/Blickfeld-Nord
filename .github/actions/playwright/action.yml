@@ -1,8 +1,9 @@
 name: Chromium für Playwright
 description: >-
   Lädt Chromium für die Prüfungen (Barrierefreiheit, Klicktests, Screenshots) und installiert nur die Systempakete
-  (Bibliotheken und Schriften), die auf dem Runner noch fehlen. „--with-deps“ installiert sonst jedes Mal alle per apt –
-  das dauert je nach Paketserver bis zu 15 Minuten. Mit denselben Paketen wie vorher bleibt das Rendering gleich.
+  (Bibliotheken und Schriften), die auf dem Runner noch fehlen – aus einem Cache, denn der Ubuntu-Paketserver liefert
+  oft nur wenige kB/s (21 MB Schriften dauerten so 7 Minuten). Mit denselben Paketen wie vorher bleibt das Rendering
+  der Screenshots gleich.
 runs:
   using: composite
   steps:
@@ -10,14 +11,37 @@ runs:
       shell: bash
       run: npx playwright install chromium
 
-    - name: Fehlende Systempakete nachinstallieren
+    - name: Fehlende Systempakete ermitteln
+      id: pakete
       shell: bash
       run: |
         alle=$(npx playwright install-deps --dry-run chromium | grep -o 'no-install-recommends .*' | cut -d' ' -f2- | tr -d '"')
-        fehlend=$(for p in $alle; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || echo "$p"; done)
-        if [ -z "$fehlend" ]; then
-          echo "Alle $(echo $alle | wc -w) Systempakete sind schon da."
-        else
-          echo "::notice::Installiere fehlende Pakete: $(echo $fehlend)"
-          sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends $fehlend
+        fehlend=$(for p in $alle; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || echo "$p"; done | xargs)
+        echo "Fehlend: ${fehlend:-keine}"
+        echo "liste=$fehlend" >> "$GITHUB_OUTPUT"
+        echo "schluessel=$(echo "$fehlend $(lsb_release -rs)" | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+    - name: Pakete aus dem Cache
+      if: steps.pakete.outputs.liste != ''
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/playwright-debs
+        key: playwright-debs-${{ steps.pakete.outputs.schluessel }}
+
+    - name: Pakete installieren
+      if: steps.pakete.outputs.liste != ''
+      shell: bash
+      env:
+        LISTE: ${{ steps.pakete.outputs.liste }}
+        TREFFER: ${{ steps.cache.outputs.cache-hit }}
+      run: |
+        ordner=~/.cache/playwright-debs
+        if [ "$TREFFER" != 'true' ] || [ -z "$(ls "$ordner"/*.deb 2>/dev/null)" ]; then
+          echo "::notice::Lade Pakete (einmalig, danach aus dem Cache): $LISTE"
+          sudo apt-get update -q
+          sudo apt-get clean
+          sudo apt-get install -y -q --download-only --no-install-recommends $LISTE
+          mkdir -p "$ordner" && cp /var/cache/apt/archives/*.deb "$ordner"/
         fi
+        sudo dpkg -i "$ordner"/*.deb
