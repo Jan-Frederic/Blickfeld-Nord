@@ -4,6 +4,9 @@
 const VERSION = '__VERSION__';
 const CACHE = `bn-${VERSION}`;
 const PRECACHE = __FILES__;
+// PDF-Anzeige (pdf.js) für Notenblätter im Backstage: eigener Speicher je pdf.js-Version, der Deploys übersteht –
+// sonst wären die Noten nach jedem Update erst wieder mit Netz lesbar. Geladen wird pdf.js nur, wenn jemand Noten nutzt.
+const PDFJS_CACHE = 'noten-pdfjs-__PDFJS__';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
@@ -12,7 +15,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('bn-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) =>
+        Promise.all(keys.filter((k) => (k.startsWith('bn-') && k !== CACHE) || (k.startsWith('noten-pdfjs-') && k !== PDFJS_CACHE)).map((k) => caches.delete(k))),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -43,6 +48,20 @@ self.addEventListener('fetch', (event) => {
             (await cache.match('/'))
           );
         }),
+    );
+    return;
+  }
+
+  // pdf.js: aus dem eigenen Speicher, sonst laden und merken (die Dateien ändern sich nur mit der pdf.js-Version)
+  if (url.pathname.startsWith('/pdfjs/')) {
+    event.respondWith(
+      caches.open(PDFJS_CACHE).then(async (cache) => {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+        const res = await fetch(req);
+        if (res.ok && !res.redirected) cache.put(req, res.clone());
+        return res;
+      }),
     );
     return;
   }

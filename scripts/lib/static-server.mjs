@@ -5,7 +5,7 @@ import { extname, join } from 'node:path';
 
 const TYPES = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json',
-  '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ics': 'text/calendar', '.pdf': 'application/pdf',
+  '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ics': 'text/calendar', '.pdf': 'application/pdf', '.mjs': 'text/javascript', '.wasm': 'application/wasm',
 };
 
 export function serve(dir, port = 0) {

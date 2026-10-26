@@ -410,6 +410,64 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   return p;
 });
 
+test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modus, Weitergabe an ein zweites Gerät', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs input[type=search]').fill('Iris');
+  const zeile = p.locator('app-backstage-songs .list li').first();
+  await zeile.locator('select').nth(1).selectOption('E');
+  await zeile.locator('button.noten').click();
+  // Pressekit (mehrseitig) als Notenblatt, davon Seite 2–3
+  await zeile.locator('app-noten-editor input[type=file]').setInputFiles({ name: 'songbook.pdf', mimeType: 'application/pdf', buffer: readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf')) });
+  await until(async () => (await zeile.locator('app-noten-editor .meldung').innerText().catch(() => '')).includes('songbook.pdf'), 'PDF wird nicht gespeichert');
+  await zeile.locator('app-noten-editor input[type=number]').first().fill('2');
+  await zeile.locator('app-noten-editor input[type=number]').first().blur();
+  await zeile.locator('app-noten-editor input[type=number]').nth(1).fill('3');
+  await zeile.locator('app-noten-editor input[type=number]').nth(1).blur();
+  await zeile.locator('app-noten-editor textarea').fill('{key: D}\n[D]Iris [G/H]Text');
+  await zeile.locator('app-noten-editor textarea').blur();
+  await until(async () => (await zeile.locator('app-noten-editor .pruefung').innerText().catch(() => '')).includes('2 Akkorde'), 'Akkordblatt wird nicht erkannt');
+  expect((await zeile.locator('button.noten').innerText()).includes('✓'), 'Song zeigt keine Noten an');
+
+  const id = concerts[concerts.length - 1].split('/')[2];
+  await p.go(`/backstage/${id}/setlist`);
+  for (const t of ['Iris', 'Angels']) {
+    await p.locator('app-setlist .pick input[type=search]').fill(t);
+    await p.locator('app-setlist .pick li button').first().click();
+  }
+  await until(async () => (await p.locator('app-setlist .list li .no').count()) === 2, 'Songs nicht in der Setlist');
+  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
+  await p.locator('app-setlist-buehne .noten-knopf').click();
+  const kopf = p.locator('app-noten-anzeige header');
+  await until(async () => (await kopf.innerText()).includes('Seite 1 / 2'), 'PDF-Seitenbereich wird nicht angezeigt');
+  await until(async () => ((await p.locator('app-noten-anzeige canvas').boundingBox())?.width ?? 0) > 100, 'PDF-Seite wird nicht gezeichnet');
+  // Pedal/Pfeiltaste: erst die zweite Seite, dann der nächste Song (ohne Noten)
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await kopf.innerText()).includes('Seite 2 / 2'), 'Blättern zur zweiten Seite klappt nicht');
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await kopf.innerText()).includes('Angels'), 'Am Ende des Blatts geht es nicht zum nächsten Song');
+  await p.keyboard.press('ArrowLeft');
+  await until(async () => (await kopf.innerText()).includes('Seite 2 / 2'), 'Zurück landet nicht auf der letzten Seite des vorigen Songs');
+  // Akkordblatt: geschrieben in D, die Band spielt in E → zwei Halbtöne höher
+  await kopf.locator('button', { hasText: 'Akkorde' }).click();
+  await until(async () => (await p.locator('app-noten-anzeige .teil b').allInnerTexts()).join(' ') === 'E A/C#', 'Akkorde werden nicht in die Band-Tonart transponiert');
+  expect((await kopf.innerText()).includes('Griffe in E'), 'Griffbild fehlt');
+  await p.keyboard.press('Escape');
+  await until(async () => (await p.locator('app-noten-anzeige').count()) === 0, 'Escape schließt die Noten nicht');
+
+  // Weitergabe: Datei exportieren und auf einem zweiten Gerät importieren
+  await p.go('/backstage/songs/');
+  const [download] = await Promise.all([p.waitForEvent('download'), p.locator('app-noten-verwaltung button', { hasText: 'an die Band' }).click()]);
+  const datei = readFileSync(await download.path());
+  const q = await page();
+  await q.go('/backstage/songs/');
+  await q.locator('app-noten-verwaltung input[type=file]').setInputFiles({ name: 'noten.json', mimeType: 'application/json', buffer: datei });
+  await until(async () => (await q.locator('app-noten-verwaltung .meldung').innerText().catch(() => '')).includes('1 Song'), 'Import auf dem zweiten Gerät klappt nicht');
+  expect((await q.locator('app-noten-verwaltung li').innerText()).includes('songbook.pdf'), 'PDF fehlt nach dem Import');
+  for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
+  return q;
+});
+
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });

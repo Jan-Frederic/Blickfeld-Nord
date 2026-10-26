@@ -3,6 +3,9 @@ import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
+import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
+import { NotenEditor } from './noten-editor';
+import { NotenVerwaltung } from './noten-verwaltung';
 import { SETLIST_PREFIX } from '../data/setlist-data';
 
 // Backstage → Songs: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
@@ -28,7 +31,7 @@ function ladeEntwurf(): Record<string, Werte> {
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [MatIconModule],
+  imports: [MatIconModule, NotenEditor, NotenVerwaltung],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -62,7 +65,9 @@ function ladeEntwurf(): Record<string, Werte> {
       <ul class="list">
         @for (s of gefiltert(); track s.key) {
           <li [class.changed]="geaendert().includes(s.key)">
-            <span class="song"><strong>{{ s.title }}</strong><span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span></span>
+            <span class="song"><strong>{{ s.title }}</strong><span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span>
+              <button type="button" class="noten" [class.hat]="mitNoten().has(s.key)" (click)="notenOffen.set(notenOffen() === s.key ? null : s.key)" [attr.aria-expanded]="notenOffen() === s.key">
+                <mat-icon>library_music</mat-icon> {{ mitNoten().has(s.key) ? 'Noten ✓' : 'Noten' }}</button></span>
             <label>Original
               <select (change)="setzen(s.key, 'tonart', $any($event.target).value)">
                 <option value="" [selected]="!wert(s.key).tonart">–</option>
@@ -93,11 +98,14 @@ function ladeEntwurf(): Record<string, Werte> {
               <input maxlength="40" placeholder="z. B. Intro Gitarre" [value]="wert(s.key).notiz ?? ''" (change)="setzen(s.key, 'notiz', $any($event.target).value)" />
             </label>
             @if (quelle(s.key); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
+            @if (notenOffen() === s.key) { <app-noten-editor [songKey]="s.key" [dateien]="notenDateien()" (geaendert)="notenLaden()" /> }
           </li>
         } @empty {
           <li class="empty">Kein Song gefunden.</li>
         }
       </ul>
+
+      <app-noten-verwaltung [dateien]="notenDateien()" [songs]="mitNoten().size" (geaendert)="notenLaden()" />
 
       <div class="apply">
         @if (geaendert().length) {
@@ -139,6 +147,9 @@ function ladeEntwurf(): Record<string, Werte> {
     }
     .tap:hover, .tap.aktiv { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .tap mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .noten { justify-self: start; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .75rem; cursor: pointer; }
+    .noten.hat { color: var(--bn-sunset); }
+    .noten mat-icon { font-size: 14px; width: 14px; height: 14px; }
     .quelle { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin: 0; font-size: .75rem; color: var(--bn-fog); }
     .quelle mat-icon { flex: none; font-size: 14px; width: 14px; height: 14px; }
     mat-icon.inline { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; }
@@ -204,6 +215,18 @@ export class BackstageSongs {
 
   protected wert(k: string): Werte {
     return this.entwurf()[k] ?? this.gespeichert[k] ?? {};
+  }
+
+  // Noten (PDF/Akkordblatt) je Song – nur auf diesem Gerät, siehe data/noten.ts
+  protected readonly notenOffen = signal<string | null>(null);
+  protected readonly mitNoten = signal(new Set<string>());
+  protected readonly notenDateien = signal<NotenDateiInfo[]>([]);
+  constructor() {
+    this.notenLaden();
+  }
+  protected notenLaden(): void {
+    alleSongNoten().then((n) => this.mitNoten.set(new Set(Object.keys(n)))).catch(() => undefined);
+    notenDateien().then((d) => this.notenDateien.set(d)).catch(() => undefined);
   }
 
   protected quelle(k: string): string | undefined {

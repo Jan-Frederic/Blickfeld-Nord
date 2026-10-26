@@ -26,8 +26,12 @@ const version = hash.digest('hex').slice(0, 12);
 const html = readFileSync(join(DIST, 'backstage', 'index.html'), 'utf8');
 const versioned = [...html.matchAll(/(?:href|src)="\/?(fonts\/[^"?]+\?v=[^"]+)"/g)].map((m) => `/${m[1]}`);
 
+// pdf.js-Version für den eigenen Notenblatt-Speicher (siehe sw-template.js)
+const pdfjs = JSON.parse(readFileSync(join(ROOT, 'node_modules', 'pdfjs-dist', 'package.json'), 'utf8')).version;
+
 const sw = readFileSync(join(ROOT, 'scripts', 'sw', 'sw-template.js'), 'utf8')
   .replace('__VERSION__', version)
+  .replace('__PDFJS__', pdfjs)
   .replace('__FILES__', JSON.stringify([...new Set([...files, ...versioned])]));
 writeFileSync(join(DIST, 'sw.js'), sw);
 console.log(`Service Worker ${version}: ${files.length + versioned.length} Dateien vorab gespeichert, Seiten und Bilder beim Aufruf.`);

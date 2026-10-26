@@ -31,8 +31,8 @@ export function istSprung(a: string | undefined, b: string | undefined): boolean
   return (quintAbstand(a, b) ?? 0) >= SPRUNG_AB;
 }
 
-const KREUZ = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'H'];
-const BE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
+export const KREUZ = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'H'];
+export const BE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
 
 /**
  * Überleitung in eine Tonart: ihr Dominantseptakkord (eine Quinte über dem Grundton, in Dur wie in Moll), z. B.

@@ -1,5 +1,6 @@
 import { Component, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { NOTEN_APP, notenImportieren } from '../data/noten';
 
 // Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung, Song-Sterne) liegen nur im Browser des jeweiligen Geräts.
 // Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
@@ -119,8 +120,15 @@ export class BackstageSync {
     inputEl.value = '';
     if (!file) return;
     try {
-      const backup = JSON.parse(await file.text()) as Partial<Backup>;
-      if (backup.app !== APP || !backup.data) throw new Error();
+      const text = await file.text();
+      const backup = JSON.parse(text) as Partial<Backup> | { app: typeof NOTEN_APP };
+      // Notenblatt-Datei (Backstage → Songs → „Notenblätter an die Band“) auch hier annehmen
+      if (backup.app === NOTEN_APP) {
+        const n = await notenImportieren(text);
+        this.message.set({ text: `Noten für ${n} ${n === 1 ? 'Song' : 'Songs'} übernommen ✓` });
+        return;
+      }
+      if (backup.app !== APP || !('data' in backup) || !backup.data) throw new Error();
       const entries = Object.entries(backup.data).filter(([k]) => PREFIXES.some((p) => k.startsWith(p)));
       if (!entries.length) throw new Error();
       if (!confirm(`${entries.length} ${entries.length === 1 ? 'Liste' : 'Listen'} übernehmen? Vorhandene Einträge für dieselben Auftritte werden ersetzt.`)) return;

@@ -120,6 +120,29 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 - Nach dem Auftritt übernimmt **Rückblick schreiben** die Setlist und den „Song des Abends“ (meiste Sterne) – sie
   erscheinen dann auf der Konzertseite.
 
+## Notenblätter und Akkordblätter im Bühnen-Modus
+
+Im Backstage unter **Songs** beim Song auf **Noten** tippen:
+
+- **PDF hochladen** (oder ein schon hochgeladenes wählen). Bei einem Songbook mit vielen Songs unter **Seite von/bis**
+  die Seiten dieses Songs angeben – dieselbe PDF kann für viele Songs dienen.
+- **Akkordblatt (ChordPro):** Text mit Akkorden in eckigen Klammern, z. B. `[G]Einer von [D]80 Millionen`. Mit
+  `{key: G}` steht da, in welcher Tonart es geschrieben ist (sonst gilt die Originaltonart), `{soc}`/`{eoc}` umschließen den
+  Refrain, `{c: Intro 2x}` ist ein Hinweis. Im Bühnen-Modus erscheinen die Akkorde automatisch in **eurer** Tonart –
+  mit Capo als Griffbild (z. B. „Wir spielen E, Capo 2“ → Griffe in D). Mit − und + lässt es sich von Hand verschieben.
+
+Im **Bühnen-Modus** oben auf das Noten-Symbol tippen. Weiter blättern wie gewohnt – Tippen rechts, Wischen, Pfeiltaste
+oder **Bluetooth-Fußpedal** (die senden Pfeiltasten): erst durch die Seiten, am Ende zum nächsten Song, dessen Noten
+dann gleich erscheinen. Zurück landet auf der letzten Seite des vorigen Songs. Lange Seiten oder **volle Breite**
+(Symbol oben) werden erst gescrollt, dann umgeblättert. **Mitscrollen** lässt ein Akkordblatt in der Länge des Songs
+durchlaufen.
+
+**Wichtig:** Noten bleiben nur auf dem jeweiligen Gerät und gehen nie an GitHub – Notenblätter und Liedtexte sind
+urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unten unter Songs mit **Notenblätter an die
+Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätter importieren**. Auf iPhone und iPad die
+Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
+löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
+
 ## Foto in die Galerie
 
 1. **Standort entfernen.** Handyfotos enthalten oft den GPS-Ort, und der wäre sonst öffentlich. Ihr könnt beim

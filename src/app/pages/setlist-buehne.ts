@@ -1,7 +1,9 @@
-import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
+import { alleSongNoten, pdfjsVorladen } from '../data/noten';
+import { NotenAnzeige } from './noten-anzeige';
 import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/bewertung';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
@@ -30,7 +32,7 @@ function ladeZoom(): number {
 
 @Component({
   selector: 'app-setlist-buehne',
-  imports: [MatIconModule],
+  imports: [MatIconModule, NotenAnzeige],
   host: { tabindex: '-1', '(keydown)': 'key($event)' },
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
@@ -44,6 +46,11 @@ function ladeZoom(): number {
           <button type="button" (click)="zoomen(-1)" [disabled]="zoom() <= ZOOM_MIN" aria-label="Schrift kleiner">A−</button>
           <button type="button" (click)="zoomen(1)" [disabled]="zoom() >= ZOOM_MAX" aria-label="Schrift größer">A+</button>
         </span>
+        @if (notenSongs().size) {
+          <button type="button" class="noten-knopf" (click)="notenUmschalten($event)" [attr.aria-pressed]="notenOffen()" aria-label="Noten anzeigen">
+            <mat-icon>library_music</mat-icon>
+          </button>
+        }
         <button type="button" class="close" (click)="end($event)" aria-label="Bühnen-Modus beenden"><mat-icon>close</mat-icon></button>
       </header>
 
@@ -99,6 +106,7 @@ function ladeZoom(): number {
         }
         <span class="progress"><span [style.width.%]="progress()"></span></span>
       </footer>
+      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" (schliessen)="notenOffen.set(false)" /> }
     </div>
   `,
   styles: `
@@ -121,6 +129,8 @@ function ladeZoom(): number {
       .clock { order: 5; flex-basis: 100%; margin-left: 0; }
     }
     .zoom { display: inline-flex; gap: 6px; }
+    .noten-knopf { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 24px; border: 1px solid #333; background: transparent; color: #fff; cursor: pointer; }
+    .noten-knopf[aria-pressed=true] { border-color: #e8a46a; color: #e8a46a; }
     .zoom button { min-width: 48px; height: 48px; border-radius: 24px; border: 1px solid #333; background: transparent; color: #fff; font: 600 1rem Inter, sans-serif; cursor: pointer; }
     .zoom button:disabled { opacity: .35; cursor: default; }
     .close { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px solid #333; background: transparent; color: #fff; cursor: pointer; }
@@ -192,6 +202,20 @@ export class SetlistBuehne {
   protected readonly plannedText = computed(() => setTime(this.planned()));
   protected readonly remaining = computed(() => this.planned() - this.elapsed());
 
+  protected readonly aktuellerSong = computed(() => {
+    const c = this.current();
+    return c && !isPause(c) ? c : undefined;
+  });
+
+  // Noten (PDF/Akkordblatt) aus Backstage → Songs: Knopf oben, sobald auf diesem Gerät welche hinterlegt sind
+  protected readonly notenSongs = signal(new Set<string>());
+  protected readonly notenOffen = signal(false);
+  private readonly anzeige = viewChild(NotenAnzeige);
+  protected notenUmschalten(e: Event): void {
+    e.stopPropagation();
+    this.notenOffen.update((o) => !o);
+  }
+
   protected readonly info = computed(() => {
     const c = this.current();
     return c && !isPause(c) ? songInfo(c.title, c.artist) : undefined;
@@ -233,8 +257,15 @@ export class SetlistBuehne {
 
   private wakeLock: { release(): Promise<void> } | null = null;
   private startX = 0;
+  private startY = 0;
 
   constructor() {
+    alleSongNoten()
+      .then((n) => {
+        this.notenSongs.set(new Set(Object.keys(n)));
+        if (Object.keys(n).length) pdfjsVorladen();
+      })
+      .catch(() => undefined);
     const timer = setInterval(() => this.now.set(Date.now()), 1000);
     const lock = () =>
       (navigator as unknown as { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }).wakeLock
@@ -320,6 +351,8 @@ export class SetlistBuehne {
   }
 
   protected go(step: number): void {
+    // Noten offen: erst innerhalb des Blatts blättern, am Ende bzw. Anfang weiter zum nächsten bzw. vorigen Song
+    if (this.notenOffen() && this.anzeige()?.blaettern(step)) return;
     const before = this.setNo();
     const target = Math.min(this.entries().length, Math.max(0, this.index() + step));
     this.index.set(target);
@@ -332,10 +365,13 @@ export class SetlistBuehne {
   // Tippen: rechte zwei Drittel weiter, linkes Drittel zurück; Wischen nach links/rechts ebenso
   protected down(e: PointerEvent): void {
     this.startX = e.clientX;
+    this.startY = e.clientY;
   }
   protected up(e: PointerEvent): void {
     if ((e.target as HTMLElement).closest('button')) return;
     const dx = e.clientX - this.startX;
+    // senkrecht gewischt = im Notenblatt gescrollt, kein Blättern
+    if (Math.abs(e.clientY - this.startY) > 30 && Math.abs(e.clientY - this.startY) > Math.abs(dx)) return;
     if (Math.abs(dx) > 50) this.go(dx < 0 ? 1 : -1);
     else this.go(e.clientX < window.innerWidth / 3 ? -1 : 1);
   }
@@ -343,7 +379,7 @@ export class SetlistBuehne {
   protected key(e: KeyboardEvent): void {
     if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(e.key)) this.go(1);
     else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) this.go(-1);
-    else if (e.key === 'Escape') this.closed.emit();
+    else if (e.key === 'Escape') this.notenOffen() ? this.notenOffen.set(false) : this.closed.emit();
     else if (/^[1-5]$/.test(e.key)) this.bewerte(Number(e.key));
     else return;
     e.preventDefault();
