@@ -6,7 +6,8 @@ import { SetlistVorschlag } from './setlist-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
 import { TempoVerlauf } from './tempo-verlauf';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
-import { songInfoText } from '../data/songinfo';
+import { gespielteTonart, songInfo, songInfoText } from '../data/songinfo';
+import { glaetten, istSprung, spruenge } from '../data/tonart-uebergang';
 import { setlistAusHash, setlistLink } from '../data/setlist-link';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
@@ -68,7 +69,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}</span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung einplanen oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
@@ -88,6 +89,13 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           }
         </ol>
       </div>
+      @if (sprungZahl(); as n) {
+        <div class="tools uebergaenge">
+          ⚡ {{ n }} {{ n === 1 ? 'Tonartsprung' : 'Tonartsprünge' }} innerhalb der Sets
+          <button type="button" (click)="glaetten()"><mat-icon>auto_fix_high</mat-icon> Übergänge glätten</button>
+          @if (glattMeldung(); as m) { <span role="status">{{ m }}</span> }
+        </div>
+      }
       <app-tempo-verlauf [sets]="sets()" />
       <app-setlist-vorschlag [entries]="entries()" [show]="show()" (apply)="replace($event)" />
       <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
@@ -107,7 +115,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .set-time { font-size: .78rem; color: var(--bn-sunset); text-transform: none; letter-spacing: normal; }
     .set-end { justify-content: flex-end; border: 0 !important; }
     .dur + .row-tools { margin-left: 8px; }
-    .wunsch { color: #e57373; font-size: .8rem; white-space: nowrap; } .row-tools .on { color: #e57373; }
+    .wunsch { color: #e57373; font-size: .8rem; white-space: nowrap; } .row-tools .on, .sprung, .uebergaenge { color: #e57373; }
     .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
     .tools button {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
@@ -139,7 +147,8 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .list li { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bn-line); }
     .song { flex: 1; min-width: 0; }
     /* Tonart · Tempo · Notiz als eigene Zeile unter dem Titel – neben dem Titel quetscht sie ihn auf dem Handy zusammen */
-    .song .info { display: block; margin-top: 2px; font-size: .78rem; color: var(--bn-sunset); }
+    .song .info, .sprung { display: block; margin-top: 2px; font-size: .78rem; color: var(--bn-sunset); }
+    .uebergaenge { margin: 14px 0 0; font-size: .85rem; }
     .list li:last-child { border-bottom: 0; }
     .no { min-width: 1.8em; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
     .pause-label { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); font-family: var(--bn-wide); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; }
@@ -227,6 +236,31 @@ export class Setlist {
   // Tonart · Tempo · Notiz aus songinfo.ts
   protected info(s: { title: string; artist: string }): string {
     return songInfoText(s.title, s.artist);
+  }
+
+  // Tonart-Übergänge: großer Sprung im Quintenzirkel zum vorigen Song desselben Sets (z. B. „Ab → E“)
+  private readonly tonartVon = (s: { title: string; artist: string }) => gespielteTonart(songInfo(s.title, s.artist));
+  protected sprung(i: number): string | null {
+    const a = this.entries()[i - 1];
+    const b = this.entries()[i];
+    if (!a || !b || isPause(a) || isPause(b)) return null;
+    const ta = this.tonartVon(a);
+    const tb = this.tonartVon(b);
+    return istSprung(ta, tb) ? `${ta} → ${tb}` : null;
+  }
+  protected readonly sprungZahl = computed(() => spruenge(this.entries(), this.tonartVon));
+  protected readonly glattMeldung = signal('');
+  protected glaetten(): void {
+    const neu = glaetten(this.entries(), this.tonartVon);
+    const vorher = this.sprungZahl();
+    const nachher = spruenge(neu, this.tonartVon);
+    if (nachher >= vorher) {
+      this.glattMeldung.set('Besser geht es mit diesen Songs nicht – ggf. eine Überleitung einplanen.');
+      return;
+    }
+    if (!confirm(`Reihenfolge innerhalb der Sets nach Tonart ordnen? Tonartsprünge: ${vorher} → ${nachher}. Erster und letzter Song je Set bleiben.`)) return;
+    this.glattMeldung.set('');
+    this.replace(neu);
   }
 
   protected length(s: { title: string; artist: string }): string | null {

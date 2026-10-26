@@ -22,6 +22,15 @@ describe('patchSongInfo', () => {
     expect(text.endsWith('export function songInfo() {}\n')).toBe(true);
   });
 
+  it('schreibt Band-Tonart, Capo und Quelle mit', () => {
+    const text = patchSongInfo(SOURCE, [{ title: 'Iris', artist: 'The Goo Goo Dolls', tonart: 'D', spielTonart: 'C', capo: 2, bpm: 155, quelle: "Musicnotes 'Original' D" }])!;
+    expect(text).toContain("{ title: 'Iris', artist: 'The Goo Goo Dolls', tonart: 'D', spielTonart: 'C', capo: 2, bpm: 155, quelle: 'Musicnotes \\'Original\\' D' },");
+  });
+
+  it('lässt Songs weg, die nur eine Quelle, aber keine Angaben haben', () => {
+    expect(patchSongInfo(SOURCE, [{ title: 'Leer', artist: 'Niemand', quelle: 'nichts gefunden' }])).toBe(SOURCE);
+  });
+
   it('ergibt wieder die leere Liste, wenn nichts eingetragen ist', () => {
     expect(patchSongInfo(SOURCE, [])).toBe(SOURCE);
   });

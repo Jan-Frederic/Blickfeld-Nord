@@ -8,7 +8,23 @@ interface Vorlage {
   name: string;
   entries: Entry[];
   saved: string;
+  /** feste Vorlage aus dem Code – erscheint auf jedem Gerät, lässt sich nicht löschen */
+  fest?: boolean;
 }
+
+// Feste Vorlagen: Ausgangspunkt für wiederkehrende Anlässe, z. B. den Weihnachtsmarkt – übernehmen und ergänzen
+const FESTE: Vorlage[] = [
+  {
+    name: 'Weihnachtslieder',
+    fest: true,
+    saved: '2026-10-26',
+    entries: [
+      { title: 'In der Weihnachtsbäckerei', artist: 'Rolf Zuckowski' },
+      { title: 'Kleine Kinder, große Kinder (Das Adventskalenderlied)', artist: 'Rolf Zuckowski' },
+      { title: 'Weihnacht, was bist du', artist: 'Rolf Zuckowski' },
+    ],
+  },
+];
 
 const KEY = SETLIST_PREFIX + 'vorlagen';
 
@@ -29,11 +45,11 @@ function load(): Vorlage[] {
       @if (list().length) {
         <select [value]="selected()" (change)="selected.set(+$any($event.target).value)" aria-label="Vorlage wählen">
           @for (v of list(); track v.name; let i = $index) {
-            <option [value]="i">{{ v.name }} · {{ info(v) }}</option>
+            <option [value]="i">{{ v.name }}{{ v.fest ? ' (fest)' : '' }} · {{ info(v) }}</option>
           }
         </select>
         <button type="button" (click)="use()"><mat-icon>playlist_add_check</mat-icon> Übernehmen</button>
-        <button type="button" class="icon" (click)="remove()" aria-label="Vorlage löschen" title="Vorlage löschen"><mat-icon>delete</mat-icon></button>
+        <button type="button" class="icon" (click)="remove()" [disabled]="list()[selected()]?.fest" aria-label="Vorlage löschen" title="Vorlage löschen"><mat-icon>delete</mat-icon></button>
       } @else {
         <span class="none">Noch keine – eine fertige Setlist hier als Vorlage speichern.</span>
       }
@@ -65,7 +81,9 @@ export class SetlistVorlagen {
   /** Vorlage soll die aktuelle Setlist ersetzen */
   readonly apply = output<Entry[]>();
 
-  protected readonly list = signal<Vorlage[]>(load());
+  /** eigene Vorlagen dieses Geräts */
+  private readonly eigene = signal<Vorlage[]>(load());
+  protected readonly list = computed(() => [...FESTE, ...this.eigene()]);
   protected readonly selected = signal(0);
   protected readonly songCount = computed(() => this.entries().filter((e) => !isPause(e)).length);
 
@@ -78,12 +96,16 @@ export class SetlistVorlagen {
   protected save(): void {
     const name = prompt('Name der Vorlage (z. B. „Kneipe 3 Sets“):')?.trim();
     if (!name) return;
-    const existing = this.list().findIndex((v) => v.name === name);
+    if (FESTE.some((v) => v.name === name)) {
+      alert(`„${name}“ ist eine feste Vorlage – bitte einen anderen Namen wählen.`);
+      return;
+    }
+    const existing = this.eigene().findIndex((v) => v.name === name);
     if (existing >= 0 && !confirm(`Vorlage „${name}“ gibt es schon – überschreiben?`)) return;
     const vorlage: Vorlage = { name, entries: this.entries(), saved: new Date().toISOString() };
-    const next = existing >= 0 ? this.list().map((v, i) => (i === existing ? vorlage : v)) : [...this.list(), vorlage];
+    const next = existing >= 0 ? this.eigene().map((v, i) => (i === existing ? vorlage : v)) : [...this.eigene(), vorlage];
     this.store(next.sort((a, b) => a.name.localeCompare(b.name, 'de')));
-    this.selected.set(next.findIndex((v) => v.name === name));
+    this.selected.set(this.list().findIndex((v) => v.name === name));
   }
 
   protected use(): void {
@@ -95,13 +117,13 @@ export class SetlistVorlagen {
 
   protected remove(): void {
     const v = this.list()[this.selected()];
-    if (!v || !confirm(`Vorlage „${v.name}“ löschen?`)) return;
-    this.store(this.list().filter((x) => x !== v));
+    if (!v || v.fest || !confirm(`Vorlage „${v.name}“ löschen?`)) return;
+    this.store(this.eigene().filter((x) => x !== v));
     this.selected.set(0);
   }
 
   private store(list: Vorlage[]): void {
-    this.list.set(list);
+    this.eigene.set(list);
     try {
       localStorage.setItem(KEY, JSON.stringify(list));
     } catch {

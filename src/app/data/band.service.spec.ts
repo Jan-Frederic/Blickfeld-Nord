@@ -69,6 +69,8 @@ describe('Tonart und Tempo (songinfo.ts)', () => {
     for (const s of SONGINFO) {
       expect(repertoire.tracks.some((t) => t.title === s.title && t.artist === s.artist), `${s.title} – ${s.artist} nicht im Repertoire`).toBe(true);
       if (s.tonart) expect(s.tonart).toMatch(/^[A-H][#b]?m?$/);
+      if (s.spielTonart) expect(s.spielTonart).toMatch(/^[A-H][#b]?m?$/);
+      if (s.capo) expect(Number.isInteger(s.capo) && s.capo >= 1 && s.capo <= 12).toBe(true);
       if (s.bpm) expect(s.bpm >= 40 && s.bpm <= 240).toBe(true);
     }
   });

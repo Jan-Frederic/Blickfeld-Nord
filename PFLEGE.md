@@ -83,20 +83,31 @@ darunter einfügen:
 
 ## Tonart und Tempo der Songs
 
-Für Setlist, Bühnen-Modus und Laufzettel im Backstage. Am einfachsten im Backstage unter **Songs**: Tonart, bpm und
-Notiz direkt beim Song eintragen (bleibt als Entwurf auf dem Gerät), dann **Datei für GitHub erzeugen**,
-„songinfo.ts auf GitHub öffnen“, mit Strg+A alles markieren, einfügen und „Commit changes“.
+Für Setlist, Bühnen-Modus und Laufzettel im Backstage. Für 33 Songs sind die Werte der **Originalaufnahme** schon
+recherchiert – die Quelle steht unter dem Song. Am einfachsten im Backstage unter **Songs** eintragen (bleibt als
+Entwurf auf dem Gerät), dann **Datei für GitHub erzeugen**, „songinfo.ts auf GitHub öffnen“, mit Strg+A alles
+markieren, einfügen und „Commit changes“.
+
+- **Original** ist die Tonart der Aufnahme. Spielt ihr den Song anders, unter **Wir spielen** eure Tonart und ggf.
+  **Capo** wählen – Setlist und Bühnen-Modus zeigen dann eure Version (z. B. „C · Capo 2“).
+- **Tempo per Tippen:** In der Probe beim Song auf <kbd>👆</kbd> mindestens viermal im Takt tippen – das Tempo wird
+  übernommen. Mehr als zwei Sekunden Pause fängt neu an.
 
 Von Hand: in [`src/app/data/songinfo.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts)
 unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 ```ts
-  { title: '80 Millionen', artist: 'Max Giesinger', tonart: 'G', bpm: 120, notiz: 'Capo 2' },
+  { title: '80 Millionen', artist: 'Max Giesinger', tonart: 'C', spielTonart: 'D', capo: 2, bpm: 120, notiz: 'Intro Gitarre' },
 ```
 
 - Titel und Interpret genau wie im Repertoire schreiben (am besten von `/repertoire` kopieren).
 - Tonart: Dur als Großbuchstabe (`C`, `F#`, `Bb`), Moll mit kleinem `m` (`Am`, `C#m`). Alles ist optional.
-- Im Bühnen-Modus blinkt **Klick** im Tempo und piept leise – praktisch zum Einzählen.
+- Im Bühnen-Modus blinkt **Klick** im Tempo – praktisch zum Einzählen. Daneben schaltet 🔈 einen leisen Ton dazu.
+- **Tonartsprünge:** Liegen zwei Songs in einem Set im Quintenzirkel weit auseinander (z. B. Ab → E), markiert die
+  Setlist das mit ⚡. **Übergänge glätten** ordnet die Songs innerhalb der Sets so, dass es möglichst wenige Sprünge
+  gibt – erster und letzter Song je Set bleiben.
+- **Vorlage „Weihnachtslieder“** (unter der Setlist, fest auf jedem Gerät): die drei Zuckowski-Lieder als Grundstock
+  für den Weihnachtsmarkt – übernehmen und mit weiteren Songs ergänzen.
 - Im Bühnen-Modus unter jedem Song 1–5 **Sterne** antippen (oder Taste 1–5), wie er an dem Abend lief. Die
   **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über „Datei importieren“ dazu.
 - **Setlist vorschlagen** (unter der Setlist): Anzahl Sets und Minuten wählen – die Songs mit den meisten Sternen

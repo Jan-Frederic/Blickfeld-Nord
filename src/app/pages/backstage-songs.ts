@@ -1,18 +1,20 @@
 import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
-import { SONGINFO, SONGINFO_ENTWURF_KEY, SongInfo } from '../data/songinfo';
+import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 import { SETLIST_PREFIX } from '../data/setlist-data';
 
 // Backstage → Songs: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
+// „Original“ ist die Tonart der Aufnahme, „wir spielen“ und Capo die Band-Version; das Tempo lässt sich im Proberaum
+// per „Tippen“ im Takt ermitteln. Unter jedem Song steht, woher recherchierte Werte stammen (quelle in songinfo.ts).
 // Der Entwurf bleibt auf dem Gerät (bn-songinfo-entwurf), bis die fertige Datei auf GitHub eingefügt ist.
 const ENTWURF_KEY = SONGINFO_ENTWURF_KEY;
 const RAW_URL = 'https://raw.githubusercontent.com/Jan-Frederic/Blickfeld-Nord/main/src/app/data/songinfo.ts';
 const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts';
 const TONARTEN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
 
-type Werte = Pick<SongInfo, 'tonart' | 'bpm' | 'notiz'>;
+type Werte = SongWerte;
 const key = (t: { title: string; artist: string }) => `${t.title}|${t.artist}`;
 const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
@@ -32,7 +34,9 @@ function ladeEntwurf(): Record<string, Werte> {
       <p class="kicker">Backstage</p>
       <h2>Songs</h2>
       <p class="lead">
-        Tonart, Tempo und eine kurze Notiz je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel.
+        Tonart, Tempo und eine kurze Notiz je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel. Spielt ihr
+        einen Song anders als im Original, unter „Wir spielen“ und „Capo“ eintragen; das Tempo im Proberaum mit
+        <mat-icon class="inline">touch_app</mat-icon> mindestens viermal im Takt tippen.
         Angaben bisher bei {{ ausgefuellt() }} von {{ songs.length }} Songs. Auf diesem Gerät gelten Änderungen sofort;
         auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
       </p>
@@ -59,18 +63,36 @@ function ladeEntwurf(): Record<string, Werte> {
         @for (s of gefiltert(); track s.key) {
           <li [class.changed]="geaendert().includes(s.key)">
             <span class="song"><strong>{{ s.title }}</strong><span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span></span>
-            <label>Tonart
+            <label>Original
               <select (change)="setzen(s.key, 'tonart', $any($event.target).value)">
                 <option value="" [selected]="!wert(s.key).tonart">–</option>
                 @for (t of tonarten; track t) { <option [value]="t" [selected]="wert(s.key).tonart === t">{{ t }}</option> }
               </select>
             </label>
-            <label>bpm
-              <input type="number" min="40" max="240" inputmode="numeric" [value]="wert(s.key).bpm ?? ''" (change)="setzen(s.key, 'bpm', $any($event.target).value)" />
+            <label>Wir spielen
+              <select (change)="setzen(s.key, 'spielTonart', $any($event.target).value)">
+                <option value="" [selected]="!wert(s.key).spielTonart">wie Original</option>
+                @for (t of tonarten; track t) { <option [value]="t" [selected]="wert(s.key).spielTonart === t">{{ t }}</option> }
+              </select>
+            </label>
+            <label>Capo
+              <select (change)="setzen(s.key, 'capo', $any($event.target).value)">
+                <option value="" [selected]="!wert(s.key).capo">–</option>
+                @for (c of capos; track c) { <option [value]="c" [selected]="wert(s.key).capo === c">{{ c }}</option> }
+              </select>
+            </label>
+            <label class="tempo">bpm
+              <span class="tempo-feld">
+                <input type="number" min="40" max="240" inputmode="numeric" [value]="wert(s.key).bpm ?? ''" (change)="setzen(s.key, 'bpm', $any($event.target).value)" />
+                <button type="button" class="tap" [class.aktiv]="tapKey() === s.key" (click)="tippen(s.key)" [attr.aria-label]="'Tempo für ' + s.title + ' im Takt tippen'" title="Mindestens 4-mal im Takt tippen">
+                  @if (tapKey() === s.key) { {{ tapBpm() ?? tapZahl() + '/4' }} } @else { <mat-icon>touch_app</mat-icon> }
+                </button>
+              </span>
             </label>
             <label class="notiz">Notiz
-              <input maxlength="40" placeholder="z. B. Capo 2" [value]="wert(s.key).notiz ?? ''" (change)="setzen(s.key, 'notiz', $any($event.target).value)" />
+              <input maxlength="40" placeholder="z. B. Intro Gitarre" [value]="wert(s.key).notiz ?? ''" (change)="setzen(s.key, 'notiz', $any($event.target).value)" />
             </label>
+            @if (quelle(s.key); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
           </li>
         } @empty {
           <li class="empty">Kein Song gefunden.</li>
@@ -87,7 +109,8 @@ function ladeEntwurf(): Record<string, Werte> {
           </ol>
           @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
         } @else {
-          <p>Noch nichts geändert. Tonart als Grundton (Moll mit „m“), Tempo in Schlägen pro Minute.</p>
+          <p>Noch nichts geändert. Tonart als Grundton (Moll mit „m“), Tempo in Schlägen pro Minute. Recherchierte Werte
+            gelten für die Originalaufnahme – die Quelle steht unter dem Song.</p>
         }
       </div>
     </section>
@@ -104,10 +127,21 @@ function ladeEntwurf(): Record<string, Werte> {
     .search input { flex: 1; padding: 10px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
     .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     .list li {
-      display: grid; grid-template-columns: 1fr 90px 90px 160px; gap: 10px; align-items: end;
+      display: grid; grid-template-columns: minmax(0, 1fr) 76px 118px 62px 116px 150px; gap: 10px; align-items: end;
       padding: 10px 14px; border: 1px solid var(--bn-line); border-radius: 10px;
     }
     .list li.changed { border-color: var(--bn-sunset); }
+    .tempo-feld { display: flex; gap: 4px; }
+    .tempo-feld input { min-width: 0; }
+    .tap {
+      flex: none; display: grid; place-items: center; min-width: 40px; padding: 0 6px; border: 1px solid var(--bn-line); border-radius: 8px;
+      background: none; color: var(--bn-fog); font: inherit; font-size: .8rem; text-transform: none; letter-spacing: 0; cursor: pointer;
+    }
+    .tap:hover, .tap.aktiv { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .tap mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .quelle { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin: 0; font-size: .75rem; color: var(--bn-fog); }
+    .quelle mat-icon { flex: none; font-size: 14px; width: 14px; height: 14px; }
+    mat-icon.inline { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; }
     .song { display: grid; align-self: center; line-height: 1.4; min-width: 0; }
     .a { color: var(--bn-fog); font-size: .85rem; }
     label { display: grid; gap: 2px; min-width: 0; font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
@@ -129,8 +163,12 @@ function ladeEntwurf(): Record<string, Werte> {
 export class BackstageSongs {
   protected readonly editUrl = EDIT_URL;
   protected readonly tonarten = [...TONARTEN, ...TONARTEN.map((t) => t + 'm')];
+  protected readonly capos = Array.from({ length: 9 }, (_, i) => i + 1);
   protected readonly songs = data.tracks.map((t) => ({ title: t.title, artist: t.artist, key: key(t) }));
-  private readonly gespeichert: Record<string, Werte> = Object.fromEntries(SONGINFO.map((s) => [key(s), { tonart: s.tonart, bpm: s.bpm, notiz: s.notiz }]));
+  private readonly gespeichert: Record<string, Werte> = Object.fromEntries(
+    SONGINFO.map((s) => [key(s), Object.fromEntries(SONG_FELDER.filter((f) => s[f] !== undefined).map((f) => [f, s[f]])) as Werte]),
+  );
+  private readonly quellen = new Map(SONGINFO.filter((s) => s.quelle).map((s) => [key(s), s.quelle!]));
   protected readonly entwurf = signal<Record<string, Werte>>(ladeEntwurf());
   protected readonly suche = signal('');
   protected readonly meldung = signal('');
@@ -168,12 +206,43 @@ export class BackstageSongs {
     return this.entwurf()[k] ?? this.gespeichert[k] ?? {};
   }
 
+  protected quelle(k: string): string | undefined {
+    return this.quellen.get(k);
+  }
+
+  // Tap-Tempo: im Takt tippen, ab dem 4. Tippen wird das Tempo aus den letzten (bis zu 8) Abständen übernommen;
+  // mehr als 2 Sekunden Pause oder ein anderer Song beginnt neu
+  protected readonly tapKey = signal<string | null>(null);
+  protected readonly tapZahl = signal(0);
+  protected readonly tapBpm = signal<number | null>(null);
+  private tapZeiten: number[] = [];
+
+  protected tippen(k: string): void {
+    const jetzt = performance.now();
+    if (this.tapKey() !== k || jetzt - (this.tapZeiten.at(-1) ?? 0) > 2000) {
+      this.tapKey.set(k);
+      this.tapZeiten = [];
+      this.tapBpm.set(null);
+    }
+    this.tapZeiten = [...this.tapZeiten, jetzt].slice(-9);
+    this.tapZahl.set(this.tapZeiten.length);
+    if (this.tapZeiten.length < 4) return;
+    const schnitt = (this.tapZeiten.at(-1)! - this.tapZeiten[0]) / (this.tapZeiten.length - 1);
+    const bpm = Math.round(60000 / schnitt);
+    if (bpm < 40 || bpm > 240) return;
+    this.tapBpm.set(bpm);
+    this.setzen(k, 'bpm', String(bpm));
+  }
+
   protected setzen(k: string, feld: keyof Werte, roh: string): void {
     const neu: Werte = { ...this.wert(k) };
     if (feld === 'bpm') neu.bpm = Number(roh) >= 40 && Number(roh) <= 240 ? Math.round(Number(roh)) : undefined;
+    else if (feld === 'capo') neu.capo = Number(roh) >= 1 && Number(roh) <= 12 ? Number(roh) : undefined;
     else neu[feld] = roh.trim() || undefined;
+    // „wir spielen“ gleich dem Original ist keine Abweichung
+    if (neu.spielTonart && neu.spielTonart === neu.tonart) neu.spielTonart = undefined;
     const alt = this.gespeichert[k] ?? {};
-    const gleich = (['tonart', 'bpm', 'notiz'] as const).every((f) => (alt[f] ?? undefined) === (neu[f] ?? undefined));
+    const gleich = SONG_FELDER.every((f) => (alt[f] ?? undefined) === (neu[f] ?? undefined));
     this.entwurf.update((e) => {
       const { [k]: _, ...rest } = e;
       return gleich ? rest : { ...rest, [k]: neu };
@@ -197,7 +266,7 @@ export class BackstageSongs {
 
   // aktuelle songinfo.ts holen, Liste mit allen Angaben (gespeichert + Entwurf) ersetzen, in die Zwischenablage
   protected async erzeugen(): Promise<void> {
-    const liste: SongInfo[] = this.songs.map((s) => ({ title: s.title, artist: s.artist, ...this.wert(s.key) }));
+    const liste: SongInfo[] = this.songs.map((s) => ({ title: s.title, artist: s.artist, ...this.wert(s.key), quelle: this.quelle(s.key) }));
     try {
       const res = await fetch(`${RAW_URL}?t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error(String(res.status));

@@ -1,15 +1,24 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
-import { songInfo } from '../data/songinfo';
+import { gespielteTonart, songInfo } from '../data/songinfo';
 import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/bewertung';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
 // die Uhr zeigt, wie lange das Set schon läuft und wie lange es laut Spotify-Längen noch dauert.
-// Tonart und Tempo aus songinfo.ts stehen unter dem Titel; „Klick“ blinkt (und piept auf Wunsch) im Tempo.
+// Tonart (die der Band, mit Capo) und Tempo aus songinfo.ts stehen unter dem Titel; „Klick“ blinkt im Tempo,
+// der Ton dazu ist eigens zuschaltbar (bn-buehne-ton) – auf der Bühne reicht meist das Blinken.
 // Sterne (oder Tasten 1–5) bewerten, wie der Song an diesem Abend lief – Rangliste unter Backstage → Zahlen.
 const ZOOM_KEY = 'bn-buehne-zoom';
+const TON_KEY = 'bn-buehne-ton';
+function ladeTon(): boolean {
+  try {
+    return localStorage.getItem(TON_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 function ladeZoom(): number {
   try {
     const z = Number(localStorage.getItem(ZOOM_KEY));
@@ -50,11 +59,17 @@ function ladeZoom(): number {
             @if ($any(c).wunsch !== undefined) { <p class="wunsch">♥ {{ $any(c).wunsch ? 'Wunsch von ' + $any(c).wunsch : 'Publikumswunsch' }}</p> }
             @if (info(); as i) {
               <p class="info">
-                @if (i.tonart) { <span class="key" title="Tonart">{{ i.tonart }}</span> }
+                @if (tonart(i); as t) { <span class="key" title="Tonart">{{ t }}</span> }
+                @if (i.capo) { <span class="capo">Capo {{ i.capo }}</span> }
                 @if (i.bpm) {
                   <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
                     {{ i.bpm }} bpm · Klick
                   </button>
+                  @if (klick()) {
+                    <button type="button" class="ton" [class.on]="ton()" (click)="toggleTon($event)" [attr.aria-pressed]="ton()" [attr.aria-label]="ton() ? 'Ton aus' : 'Ton an'">
+                      <mat-icon>{{ ton() ? 'volume_up' : 'volume_off' }}</mat-icon>
+                    </button>
+                  }
                 }
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
@@ -119,6 +134,9 @@ function ladeZoom(): number {
     .bpm { padding: 4px 14px; border-radius: 8px; border: 1px solid #555; background: transparent; color: #fff; font: inherit; cursor: pointer; }
     .bpm.on { border-color: #e8a46a; }
     .bpm.on.beat { background: #e8a46a; color: #000; }
+    .capo { padding: 4px 14px; border-radius: 8px; border: 1px solid #e8a46a; color: #e8a46a; }
+    .ton { display: grid; place-items: center; padding: 4px 10px; border-radius: 8px; border: 1px solid #555; background: transparent; color: #9aa0a6; cursor: pointer; }
+    .ton.on { border-color: #e8a46a; color: #e8a46a; }
     .note { color: #b0b6bc; }
     .next-info { color: #e8a46a; }
     .wunsch { margin: 12px 0 0; font-size: clamp(1.2rem, 4vw, 2.2rem); color: #ff8a80; }
@@ -181,7 +199,7 @@ export class SetlistBuehne {
   protected readonly nextInfo = computed(() => {
     const n = this.next();
     const i = n && !isPause(n) ? songInfo(n.title, n.artist) : undefined;
-    return i ? [i.tonart, i.bpm && `${i.bpm} bpm`].filter(Boolean).join(' · ') : '';
+    return i ? [gespielteTonart(i), i.capo && `Capo ${i.capo}`, i.bpm && `${i.bpm} bpm`].filter(Boolean).join(' · ') : '';
   });
   // Sterne je Song für diesen Auftritt, sofort im Browser gespeichert
   private readonly bewertungen = linkedSignal(() => (this.show() ? ladeBewertungen(this.show()!) : {}));
@@ -203,8 +221,11 @@ export class SetlistBuehne {
     }
   }
 
-  // Klick: blinkt im Tempo des aktuellen Songs, kurzer Ton über Web Audio
+  protected readonly tonart = gespielteTonart;
+
+  // Klick: blinkt im Tempo des aktuellen Songs, auf Wunsch mit kurzem Ton über Web Audio
   protected readonly klick = signal(false);
+  protected readonly ton = signal(ladeTon());
   protected readonly beat = signal(false);
   private klickTimer: ReturnType<typeof setInterval> | undefined;
   private audio: AudioContext | undefined;
@@ -250,14 +271,25 @@ export class SetlistBuehne {
     this.startKlick();
   }
 
+  protected toggleTon(e: Event): void {
+    e.stopPropagation();
+    this.ton.update((t) => !t);
+    try {
+      localStorage.setItem(TON_KEY, this.ton() ? '1' : '0');
+    } catch {
+      // ohne Speicher gilt die Wahl bis zum Schließen
+    }
+  }
+
   private startKlick(): void {
     this.stopKlick();
     const bpm = this.info()?.bpm;
     if (!this.klick() || !bpm) return;
-    this.audio ??= new AudioContext();
     this.klickTimer = setInterval(() => {
       this.beat.set(true);
       setTimeout(() => this.beat.set(false), 90);
+      if (!this.ton()) return;
+      this.audio ??= new AudioContext();
       const osc = this.audio!.createOscillator();
       const gain = this.audio!.createGain();
       osc.frequency.value = 1000;

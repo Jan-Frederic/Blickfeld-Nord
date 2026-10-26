@@ -21,5 +21,6 @@ mkdirSync(join(DIST, 'backstage'), { recursive: true });
 copyFileSync(join(DIST, 'index.csr.html'), join(DIST, 'backstage', 'index.html'));
 
 const datei = join(DIST, '404.html');
-writeFileSync(datei, readFileSync(datei, 'utf8').replace('<head>', '<head>' + WEITERLEITUNG));
+const html = readFileSync(datei, 'utf8');
+if (!html.includes(WEITERLEITUNG)) writeFileSync(datei, html.replace('<head>', '<head>' + WEITERLEITUNG));
 console.log('SPA-Fallback: 404.html mit Backstage-Weiterleitung, backstage/index.html als Shell.');

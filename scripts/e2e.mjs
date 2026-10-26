@@ -332,7 +332,7 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
   const zeile = p.locator('app-backstage-songs .list li').first();
-  await zeile.locator('select').selectOption('G');
+  await zeile.locator('select').first().selectOption('G');
   await zeile.locator('input[type=number]').fill('120');
   await zeile.locator('input[type=number]').blur();
   await until(async () => (await p.locator('app-backstage-songs .apply').innerText()).includes('1 Song geändert'), 'Änderung wird nicht gezählt');
@@ -353,6 +353,52 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await until(async () => (await p.locator('app-setlist-buehne .key').innerText().catch(() => '')) === 'G', 'Tonart aus dem Entwurf fehlt im Bühnen-Modus');
   expect((await p.locator('app-setlist-buehne .bpm').innerText()).includes('120 bpm'), 'Tempo aus dem Entwurf fehlt im Bühnen-Modus');
+  // Klick blinkt zunächst ohne Ton; der Ton ist eigens zuschaltbar
+  await p.locator('app-setlist-buehne .bpm').click();
+  await until(async () => (await p.locator('app-setlist-buehne .ton').getAttribute('aria-pressed').catch(() => null)) === 'false', 'Klick startet nicht stumm');
+  await p.locator('app-setlist-buehne .ton').click();
+  await until(async () => (await p.locator('app-setlist-buehne .ton').getAttribute('aria-pressed')) === 'true', 'Ton lässt sich nicht zuschalten');
+  return p;
+});
+
+test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Tonartsprünge, feste Vorlage', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs input[type=search]').fill('Iris');
+  const zeile = p.locator('app-backstage-songs .list li').first();
+  expect((await zeile.innerText()).includes('Recherche:'), 'Quelle der recherchierten Werte fehlt');
+  await zeile.locator('select').nth(1).selectOption('C');
+  await zeile.locator('select').nth(2).selectOption('2');
+  // fünfmal im Abstand von 500 ms tippen = 120 bpm
+  for (let i = 0; i < 5; i++) {
+    await zeile.locator('button.tap').click();
+    await p.waitForTimeout(500);
+  }
+  const bpm = Number(await zeile.locator('input[type=number]').inputValue());
+  expect(bpm >= 105 && bpm <= 135, `Tap-Tempo ergibt ${bpm} statt etwa 120 bpm`);
+
+  const id = concerts[concerts.length - 1].split('/')[2];
+  await p.go(`/backstage/${id}/setlist`);
+  const hinzu = async (titel) => {
+    await p.locator('app-setlist .pick input[type=search]').fill(titel);
+    const vorher = await p.locator('app-setlist .list li .no').count();
+    await p.locator('app-setlist .pick li button').first().click();
+    await until(async () => (await p.locator('app-setlist .list li .no').count()) === vorher + 1, `${titel} nicht hinzugefügt`);
+  };
+  for (const t of ['Hey Jude', 'Perfect', 'Chasing Cars', 'Angels', 'Let It Be', 'Iris']) await hinzu(t);
+  await until(async () => (await p.locator('app-setlist .list li .info').last().innerText()).startsWith('C · Capo 2'), 'Band-Tonart mit Capo fehlt in der Setlist');
+  await until(async () => (await p.locator('app-setlist .sprung').count()) >= 2, 'Tonartsprünge werden nicht markiert');
+  const vorher = await p.locator('app-setlist .sprung').count();
+  await p.locator('app-setlist .uebergaenge button').click();
+  await until(async () => (await p.locator('app-setlist .sprung').count()) < vorher, 'Glätten verringert die Tonartsprünge nicht');
+  expect((await p.locator('app-setlist .list li .t').first().innerText()) === 'Hey Jude', 'Opener wurde beim Glätten verschoben');
+  // feste Vorlage „Weihnachtslieder“ ist auf jedem Gerät da
+  await p.locator('app-setlist-vorlagen select').selectOption({ label: /Weihnachtslieder \(fest\)/ }).catch(async () => {
+    const i = await p.locator('app-setlist-vorlagen option').evaluateAll((o) => o.findIndex((x) => x.textContent.includes('Weihnachtslieder')));
+    await p.locator('app-setlist-vorlagen select').selectOption(String(i));
+  });
+  await p.locator('app-setlist-vorlagen button', { hasText: 'Übernehmen' }).click();
+  await until(async () => (await p.locator('app-setlist .list li .t').allInnerTexts()).join('|') === 'In der Weihnachtsbäckerei|Kleine Kinder, große Kinder (Das Adventskalenderlied)|Weihnacht, was bist du', 'Vorlage „Weihnachtslieder“ fehlt');
   return p;
 });
 
