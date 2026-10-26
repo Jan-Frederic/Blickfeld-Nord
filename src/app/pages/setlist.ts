@@ -170,6 +170,9 @@ export class Setlist {
   protected readonly entries = signal<Entry[]>([]);
   private readonly key = computed(() => SETLIST_PREFIX + this.show());
 
+  // Setlist aus einem geteilten Link (#liste=…) – gleich beim Erzeugen gelesen, bevor die Adresse sich ändern kann
+  private linkListe = typeof location === 'undefined' ? null : setlistAusHash(location.hash, data.tracks);
+
   constructor() {
     effect(() => {
       this.entries.set(loadSetlist(this.show()));
@@ -177,12 +180,12 @@ export class Setlist {
     });
   }
 
-  // Setlist aus einem geteilten Link (#liste=…) übernehmen – vorhandene Setlist nur nach Rückfrage ersetzen
+  // Setlist aus dem Link übernehmen – vorhandene Setlist nur nach Rückfrage ersetzen
   private ausLink(): void {
-    if (typeof location === 'undefined') return;
-    const liste = setlistAusHash(location.hash, data.tracks);
+    const liste = this.linkListe;
+    this.linkListe = null;
     if (!liste?.length) return;
-    history.replaceState(history.state, '', location.pathname + location.search);
+    if (/[#&]liste=/.test(location.hash)) history.replaceState(history.state, '', location.pathname + location.search);
     const vorhanden = untracked(() => this.entries()).length;
     if (vorhanden && !confirm(`Setlist aus dem Link übernehmen (${liste.filter((e) => !this.isPause(e)).length} Songs)? Die bisherige Setlist auf diesem Gerät wird ersetzt.`)) return;
     untracked(() => this.replace(liste));
