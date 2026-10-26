@@ -111,10 +111,11 @@ export class Backstage {
 
   constructor() {
     // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id>[/<teil>] über die Fehlerseite
-    // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter.
+    // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter
+    // (der Teil hinter „#“, z. B. eine geteilte Setlist, kommt mit).
     const query = inject(ActivatedRoute).snapshot.queryParamMap;
     const id = query.get('auftritt');
     const teil = query.get('teil');
-    if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true });
+    if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true, preserveFragment: true });
   }
 }
