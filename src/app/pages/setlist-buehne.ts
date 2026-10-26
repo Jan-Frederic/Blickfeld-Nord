@@ -9,17 +9,31 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
 // die Uhr zeigt, wie lange das Set schon läuft und wie lange es laut Spotify-Längen noch dauert.
 // Tonart und Tempo aus songinfo.ts stehen unter dem Titel; „Klick“ blinkt (und piept auf Wunsch) im Tempo.
 // Sterne (oder Tasten 1–5) bewerten, wie der Song an diesem Abend lief – Rangliste unter Backstage → Zahlen.
+const ZOOM_KEY = 'bn-buehne-zoom';
+function ladeZoom(): number {
+  try {
+    const z = Number(localStorage.getItem(ZOOM_KEY));
+    return z >= 0.7 && z <= 1.6 ? z : 1;
+  } catch {
+    return 1;
+  }
+}
+
 @Component({
   selector: 'app-setlist-buehne',
   imports: [MatIconModule],
   host: { tabindex: '-1', '(keydown)': 'key($event)' },
   template: `
-    <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)">
+    <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
       <header>
         <span class="set">Set {{ setNo() }} / {{ sets().length }}</span>
         <span class="clock" [class.over]="remaining() < 0">
           <mat-icon>timer</mat-icon> {{ fmt(elapsed()) }}
           @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + fmt(remaining()) }}</small> }
+        </span>
+        <span class="zoom" role="group" aria-label="Schriftgröße">
+          <button type="button" (click)="zoomen(-1)" [disabled]="zoom() <= ZOOM_MIN" aria-label="Schrift kleiner">A−</button>
+          <button type="button" (click)="zoomen(1)" [disabled]="zoom() >= ZOOM_MAX" aria-label="Schrift größer">A+</button>
         </span>
         <button type="button" class="close" (click)="end($event)" aria-label="Bühnen-Modus beenden"><mat-icon>close</mat-icon></button>
       </header>
@@ -82,8 +96,21 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
     .clock { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-variant-numeric: tabular-nums; color: #fff; }
     .clock small { color: #9aa0a6; font-size: .8em; }
     .clock.over, .clock.over small { color: #ff8a65; }
+    /* Schriftgröße für Song und „Als Nächstes“ (A−/A+), je Gerät gemerkt – z. B. größer fürs Tablet am Schlagzeug */
+    .no, h1, .artist, .info, .wunsch, .pause, .hint, footer { zoom: var(--zoom, 1); }
+    .set { white-space: nowrap; }
+    @media (max-width: 480px) {
+      header { flex-wrap: wrap; row-gap: 6px; }
+      .zoom { margin-left: auto; }
+      .clock { order: 5; flex-basis: 100%; margin-left: 0; }
+    }
+    .zoom { display: inline-flex; gap: 6px; }
+    .zoom button { min-width: 48px; height: 48px; border-radius: 24px; border: 1px solid #333; background: transparent; color: #fff; font: 600 1rem Inter, sans-serif; cursor: pointer; }
+    .zoom button:disabled { opacity: .35; cursor: default; }
     .close { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px solid #333; background: transparent; color: #fff; cursor: pointer; }
-    main { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; min-height: 0; }
+    /* safe center: wird es (große Schrift) zu hoch, läuft es nach unten über statt über die Kopfzeile */
+    main { flex: 1; display: flex; flex-direction: column; justify-content: safe center; text-align: center; min-height: 0; overflow-y: auto; }
+    header { position: relative; z-index: 1; }
     .no { margin: 0; font-size: clamp(1.5rem, 5vw, 3rem); color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
     h1 { margin: .1em 0; font-size: clamp(2.6rem, 11vw, 7.5rem); line-height: 1.05; font-weight: 700; overflow-wrap: anywhere; }
     .artist { margin: 0; font-size: clamp(1.1rem, 4vw, 2.2rem); color: #b0b6bc; }
@@ -116,6 +143,19 @@ export class SetlistBuehne {
   readonly closed = output<void>();
 
   protected readonly isPause = isPause;
+  // Schriftgröße (Faktor), je Gerät gespeichert
+  protected readonly ZOOM_MIN = 0.7;
+  protected readonly ZOOM_MAX = 1.6;
+  protected readonly zoom = signal(ladeZoom());
+  protected zoomen(richtung: number): void {
+    const z = Math.round(Math.min(this.ZOOM_MAX, Math.max(this.ZOOM_MIN, this.zoom() + richtung * 0.15)) * 100) / 100;
+    this.zoom.set(z);
+    try {
+      localStorage.setItem(ZOOM_KEY, String(z));
+    } catch {
+      // ohne Speicher gilt die Größe bis zum Schließen
+    }
+  }
   protected readonly index = signal(0);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly now = signal(Date.now());
