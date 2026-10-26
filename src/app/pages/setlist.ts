@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, signal } from '@angular/core';
+import { Component, computed, effect, input, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { SetlistVorlagen } from './setlist-vorlagen';
@@ -7,6 +7,7 @@ import { SetlistBuehne } from './setlist-buehne';
 import { TempoVerlauf } from './tempo-verlauf';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { songInfoText } from '../data/songinfo';
+import { setlistAusHash, setlistLink } from '../data/setlist-link';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
 // den Sets einfügen und als großformatige Bühnen-Setlist drucken bzw. als PDF speichern.
@@ -34,10 +35,12 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           <button type="button" (click)="addPause()" [disabled]="!entries().length"><mat-icon>coffee</mat-icon> Pause einfügen</button>
           <button type="button" (click)="print()" [disabled]="!songCount()"><mat-icon>print</mat-icon> Drucken / PDF</button>
           <button type="button" (click)="share()" [disabled]="!songCount()"><mat-icon>{{ copied() ? 'check' : 'send' }}</mat-icon> {{ copied() ? 'Kopiert!' : 'An die Band' }}</button>
+          <button type="button" (click)="linkTeilen()" [disabled]="!songCount()"><mat-icon>{{ linkKopiert() ? 'check' : 'link' }}</mat-icon> {{ linkKopiert() ? 'Link kopiert!' : 'Als Link' }}</button>
           <button type="button" (click)="clear()" [disabled]="!entries().length"><mat-icon>delete_sweep</mat-icon> Leeren</button>
         </div>
       </div>
 
+      @if (importiert()) { <p class="importiert"><mat-icon>check_circle</mat-icon> Setlist aus dem Link übernommen.</p> }
       <div class="cols">
         <div class="pick">
           <label class="search">
@@ -98,6 +101,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .head .kicker { margin-bottom: 4px; }
     h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
     .count { font-size: .85rem; color: var(--bn-fog); }
+    .importiert { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; color: #5fb88a; font-size: .9rem; }
     .count strong { color: var(--bn-sunset); font-weight: 600; }
     .dur { margin-left: auto; font-size: .78rem; color: var(--bn-fog); font-variant-numeric: tabular-nums; }
     .set-time { font-size: .78rem; color: var(--bn-sunset); text-transform: none; letter-spacing: normal; }
@@ -167,7 +171,40 @@ export class Setlist {
   private readonly key = computed(() => SETLIST_PREFIX + this.show());
 
   constructor() {
-    effect(() => this.entries.set(loadSetlist(this.show())));
+    effect(() => {
+      this.entries.set(loadSetlist(this.show()));
+      this.ausLink();
+    });
+  }
+
+  // Setlist aus einem geteilten Link (#liste=…) übernehmen – vorhandene Setlist nur nach Rückfrage ersetzen
+  private ausLink(): void {
+    if (typeof location === 'undefined') return;
+    const liste = setlistAusHash(location.hash, data.tracks);
+    if (!liste?.length) return;
+    history.replaceState(history.state, '', location.pathname + location.search);
+    const vorhanden = untracked(() => this.entries()).length;
+    if (vorhanden && !confirm(`Setlist aus dem Link übernehmen (${liste.filter((e) => !this.isPause(e)).length} Songs)? Die bisherige Setlist auf diesem Gerät wird ersetzt.`)) return;
+    untracked(() => this.replace(liste));
+    this.importiert.set(true);
+  }
+  protected readonly importiert = signal(false);
+
+  // Link mit der Setlist für die Band – öffnet diese Seite und übernimmt die Liste auf dem Gerät
+  protected readonly linkKopiert = signal(false);
+  protected async linkTeilen(): Promise<void> {
+    const url = setlistLink(location.origin, this.show(), this.entries(), data.tracks);
+    if (navigator.share) {
+      navigator.share({ title: `Setlist – ${this.title()}`, url }).catch(() => undefined);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      this.linkKopiert.set(true);
+      setTimeout(() => this.linkKopiert.set(false), 2000);
+    } catch {
+      window.prompt('Link kopieren:', url);
+    }
   }
 
   protected readonly songCount = computed(() => this.entries().filter((e) => !this.isPause(e)).length);

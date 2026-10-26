@@ -356,6 +356,26 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   return p;
 });
 
+test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
+  const id = concerts[concerts.length - 1].split('/')[2];
+  const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });
+  await p.go(`/backstage/${id}/setlist`);
+  const add = p.locator('app-setlist .pick li button');
+  for (let i = 0; i < 3; i++) await add.first().click();
+  await p.locator('app-setlist button', { hasText: 'Pause' }).click();
+  await add.first().click();
+  await p.locator('app-setlist button', { hasText: 'Als Link' }).click();
+  await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('#liste='), 'kein Link kopiert');
+  const link = (await p.evaluate(() => navigator.clipboard.readText())).replace(/^https?:\/\/[^/]+/, '');
+  // zweites Gerät: frischer Browser ohne gespeicherte Setlist
+  const q = await page();
+  await q.go(link);
+  await until(async () => (await q.locator('app-setlist .list li .no').count()) === 4, 'Setlist aus dem Link nicht übernommen');
+  expect((await q.locator('app-setlist .pause-label').count()) === 1, 'Pause fehlt');
+  expect(!q.url().includes('#liste='), 'Liste bleibt in der Adresse stehen');
+  return q;
+});
+
 test('Backstage: Rückblick-Formular erzeugt den Historie-Block', async () => {
   const p = await page();
   const vergangen = concerts.map((c) => c.split('/')[2]).filter((id) => id < new Date().toISOString().slice(0, 10))[0];
