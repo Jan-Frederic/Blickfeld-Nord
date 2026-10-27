@@ -10,7 +10,10 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
 
-const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.js');
+// ohne die Microsoft-Anmeldebibliothek (OneDrive im Backstage): rund 300 kB, nur mit Netz sinnvoll – wird beim
+// ersten Verbinden geladen und dann wie andere Dateien mit Hash gemerkt
+const msal = (f) => f.endsWith('.js') && readFileSync(join(DIST, f), 'utf8').includes('msal.js.browser');
+const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.js' && !msal(f));
 const fonts = readdirSync(join(DIST, 'fonts')).map((f) => `fonts/${f}`);
 // Textschriften (von Angular mit Hash nach media/ kopiert)
 const media = readdirSync(join(DIST, 'media')).filter((f) => f.endsWith('.woff2')).map((f) => `media/${f}`);

@@ -10,7 +10,7 @@
     "check:links": "node scripts/check-links.mjs",
     "a11y": "node scripts/a11y.mjs",
     "e2e": "node scripts/e2e.mjs",
-    "build:site": "ng build --base-href / && node scripts/seo.mjs && node scripts/spa-fallback.mjs && node scripts/csp.mjs && node scripts/build-sw.mjs",
+    "build:site": "ng build --base-href / && node scripts/seo.mjs && node scripts/spa-fallback.mjs && node scripts/auth-seite.mjs && node scripts/csp.mjs && node scripts/build-sw.mjs",
     "pruefen": "npm run build:site && npm run e2e && npm run a11y && npm run check:links && ng test --watch=false"
   },
   "private": true,
@@ -26,6 +26,7 @@
     "@angular/platform-server": "^21.2.0",
     "@angular/router": "^21.2.0",
     "@angular/ssr": "^21.2.26",
+    "@azure/msal-browser": "5.25.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/michroma": "^5.3.0",
     "@fontsource/montserrat": "^5.3.0",

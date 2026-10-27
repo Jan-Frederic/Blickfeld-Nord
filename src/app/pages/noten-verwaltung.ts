@@ -1,8 +1,8 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import data from '../data/repertoire.json';
-import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText, dateinameZuordnen, songZuordnen } from '../data/chordpro';
-import { NotenDateiInfo, notenDateiLoeschen, notenDateiSpeichern, notenExportieren, notenImportieren, songNoten, songNotenSetzen } from '../data/noten';
+import { CHORDPRO_ENDUNGEN } from '../data/chordpro';
+import { notenEinlesen, notenErgebnisText } from '../data/noten-import';
+import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren } from '../data/noten';
 
 // Notenblätter auf diesem Gerät (Backstage → Songs → Noten): gespeicherte PDFs mit Größe, Löschen, viele Dateien oder
 // ganze Ordner (PDF und ChordPro) einlesen – jede wird über den Dateinamen bzw. {title:} ihrem Song zugeordnet –
@@ -108,73 +108,20 @@ export class NotenVerwaltung {
     this.meldung.set({ text: `Als „${datei.name}“ gespeichert – jetzt an die Band schicken.` });
   }
 
-  // viele Dateien oder ein ganzer Ordner: PDFs und ChordPro-Dateien (.pro & Co.) ihrem Song zuordnen. PDFs über den
-  // Dateinamen (Titel und Interpret, der Rest ist die Fassung wie „Bass“) – kommen als weiteres PDF zum Song dazu,
-  // dieselbe Datei nicht doppelt. Akkordblätter über {title:}/{artist:} oder den Dateinamen (ersetzt ein vorhandenes).
+  // viele Dateien oder ein ganzer Ordner: siehe data/noten-import.ts
   protected async einlesen(e: Event): Promise<void> {
     const feld = e.target as HTMLInputElement;
-    const dateien = [...(feld.files ?? [])].filter((d) => !d.name.startsWith('.'));
+    const dateien = [...(feld.files ?? [])];
     feld.value = '';
     if (!dateien.length) return;
-    const pro = new Set(CHORDPRO_ENDUNGEN.split(','));
-    const bekannt = [...this.dateien()];
-    const ohne: string[] = [];
-    let pdfs = 0;
-    let doppelt = 0;
-    let blaetter = 0;
-    let ersetzt = 0;
-    let andere = 0;
     this.meldung.set({ text: `${dateien.length} Dateien werden gelesen …` });
-    for (const datei of dateien) {
-      const pfad = (datei as File & { webkitRelativePath?: string }).webkitRelativePath || datei.name;
-      const endung = datei.name.slice(datei.name.lastIndexOf('.')).toLowerCase();
-      if (endung === '.pdf') {
-        // erst der Dateiname, sonst mit Ordnern („Goo Goo Dolls/Iris - Bass.pdf“)
-        const z = dateinameZuordnen(datei.name, data.tracks) ?? dateinameZuordnen(pfad, data.tracks);
-        if (!z) {
-          ohne.push(datei.name);
-          continue;
-        }
-        const key = `${z.song.title}|${z.song.artist}`;
-        const vorher = (await songNoten(key)) ?? {};
-        let id = bekannt.find((d) => d.name === datei.name && d.groesse === datei.size)?.id;
-        if (!id) {
-          id = await notenDateiSpeichern(datei.name, await datei.arrayBuffer());
-          bekannt.push({ id, name: datei.name, groesse: datei.size, hinzugefuegt: '' });
-        }
-        if (vorher.pdfs?.some((p) => p.datei === id)) {
-          doppelt++;
-          continue;
-        }
-        await songNotenSetzen(key, { ...vorher, pdfs: [...(vorher.pdfs ?? []), { datei: id, name: z.fassung || undefined }] });
-        pdfs++;
-      } else if (pro.has(endung)) {
-        const text = dateiText(await datei.arrayBuffer());
-        const blatt = chordproLesen(text);
-        const song = songZuordnen(datei.name, blatt, data.tracks) ?? dateinameZuordnen(pfad, data.tracks)?.song;
-        if (!song) {
-          ohne.push(datei.name);
-          continue;
-        }
-        const key = `${song.title}|${song.artist}`;
-        const vorher = (await songNoten(key)) ?? {};
-        if (vorher.chordpro?.trim()) ersetzt++;
-        await songNotenSetzen(key, { ...vorher, chordpro: text });
-        blaetter++;
-      } else andere++;
-    }
-    this.ohneSong.set(ohne);
-    const teile = [
-      pdfs && `${pdfs} ${pdfs === 1 ? 'PDF' : 'PDFs'}`,
-      blaetter && `${blaetter} ${blaetter === 1 ? 'Akkordblatt' : 'Akkordblätter'}${ersetzt ? ` (${ersetzt} ersetzt)` : ''}`,
-    ].filter(Boolean);
-    const rest = [doppelt && `${doppelt} schon vorhanden`, andere && `${andere} andere Dateien übersprungen`].filter(Boolean).join(', ');
-    this.meldung.set(
-      teile.length
-        ? { text: `${teile.join(' und ')} eingelesen ✓${rest ? ` – ${rest}` : ''}` }
-        : { text: `Keine Datei ließ sich einem Song zuordnen${rest ? ` (${rest})` : ''}.`, fehler: !doppelt },
+    const r = await notenEinlesen(
+      dateien.map((d) => ({ name: d.name, pfad: (d as File & { webkitRelativePath?: string }).webkitRelativePath || d.name, groesse: d.size, daten: () => d.arrayBuffer() })),
+      this.dateien(),
     );
-    if (teile.length) this.geaendert.emit();
+    this.ohneSong.set(r.ohne);
+    this.meldung.set(notenErgebnisText(r));
+    if (r.pdfs || r.blaetter) this.geaendert.emit();
   }
 
   protected async importieren(e: Event): Promise<void> {

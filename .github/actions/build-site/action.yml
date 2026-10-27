@@ -55,6 +55,10 @@ runs:
       # Fehlerseite, Backstage-Shell und Weiterleitung der Backstage-Unterseiten – dasselbe Skript wie bei der lokalen Prüfung
       run: node scripts/spa-fallback.mjs
 
+    - name: Antwortseite der Microsoft-Anmeldung (OneDrive im Backstage)
+      shell: bash
+      run: node scripts/auth-seite.mjs
+
     - name: Content-Security-Policy (Hashes der Inline-Skripte je Seite)
       shell: bash
       run: node scripts/csp.mjs

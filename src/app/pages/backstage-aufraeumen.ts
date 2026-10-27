@@ -4,7 +4,7 @@ import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
 import { BEREICHE, alleSchluessel, cacheLeeren, entfernen, mb, uebersicht, vergangene, verwaist } from '../data/aufraeumen';
 import { alleSongNoten, notenAllesLoeschen, notenDateien, notenEntfernen, notenVerwaist } from '../data/noten';
-import { PREFIXES, backupEintraege } from './backstage-sync';
+import { PREFIXES, backstageImportieren, backupEintraege } from './backstage-sync';
 
 // Backstage → Abgleich → Aufräumen: was liegt auf diesem Gerät, je Bereich löschen; vergangene Auftritte und
 // verwaiste Einträge entfernen; den Stand der Band übernehmen (ersetzt statt ergänzt); alles zurücksetzen.
@@ -215,17 +215,18 @@ export class BackstageAufraeumen {
     const datei = feld.files?.[0];
     feld.value = '';
     if (!datei) return;
-    let eintraege: [string, unknown][];
+    let text = '';
+    let neu = 0;
     try {
-      eintraege = backupEintraege(await datei.text());
+      text = await datei.text();
+      neu = backupEintraege(text).length;
     } catch {
       this.meldung.set('Das ist keine Backstage-Datei von Blickfeld Nord.');
       return;
     }
     const alt = alleSchluessel().filter((k) => PREFIXES.some((p) => k.startsWith(p)));
-    if (!confirm(`${alt.length} vorhandene Einträge löschen und durch ${eintraege.length} aus der Datei ersetzen?`)) return;
-    entfernen(alt);
-    for (const [k, v] of eintraege) localStorage.setItem(k, JSON.stringify(v));
+    if (!confirm(`${alt.length} vorhandene Einträge löschen und durch ${neu} aus der Datei ersetzen?`)) return;
+    backstageImportieren(text, true);
     this.meldung.set('Stand übernommen – Seite wird neu geladen …');
     setTimeout(() => location.reload(), 600);
   }

@@ -26,6 +26,8 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
+  // Antwortseite der Microsoft-Anmeldung nie aus dem Speicher (die Antwort steht in der Adresse)
+  if (url.pathname.startsWith('/auth/')) return;
 
   // Seitenaufrufe: immer erst das Netz (aktuelle Inhalte), offline die gespeicherte Fassung –
   // Backstage-Unterseiten bekommen die Backstage-Shell, die dann selbst zur Unterseite navigiert

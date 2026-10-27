@@ -557,6 +557,8 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   }, alt);
   await p.reload({ waitUntil: 'networkidle' });
   // Daten auf diesem Gerät: Einträge verständlich benannt, ändern im Editor, Auswahl löschen
+  // OneDrive ohne App-Registrierung: Hinweis statt Anmelde-Knopf
+  expect((await p.locator('app-backstage-onedrive').innerText()).includes('noch nicht eingerichtet'), 'OneDrive-Hinweis fehlt');
   const daten = p.locator('app-backstage-daten');
   await daten.locator('input[type=search]').fill('vor ort');
   await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');

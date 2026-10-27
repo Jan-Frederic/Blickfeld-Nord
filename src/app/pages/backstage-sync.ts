@@ -64,6 +64,36 @@ export function backupEintraege(text: string): [string, unknown][] {
   return Object.entries(backup.data).filter(([k]) => PREFIXES.some((p) => k.startsWith(p)));
 }
 
+/**
+ * Backstage-Datei übernehmen: ergänzen (gleiche Einträge werden ersetzt, Sterne zusammengeführt) oder mit
+ * ersetzen=true alle bisherigen Backstage-Einträge vorher löschen. Anzahl übernommener Einträge.
+ */
+export function backstageImportieren(text: string, ersetzen = false): number {
+  const eintraege = backupEintraege(text);
+  if (ersetzen) {
+    const alt = Object.keys(localStorage).filter((k) => PREFIXES.some((p) => k.startsWith(p)));
+    for (const k of alt) localStorage.removeItem(k);
+  }
+  for (const [k, v] of eintraege) {
+    // Sterne mehrerer Geräte zusammenführen statt ersetzen – bei demselben Song gilt die importierte Bewertung
+    const alt = !ersetzen && k.startsWith('bn-bewertung-') ? JSON.parse(localStorage.getItem(k) ?? '{}') : {};
+    localStorage.setItem(k, JSON.stringify(k.startsWith('bn-bewertung-') ? { ...alt, ...(v as object) } : v));
+  }
+  return eintraege.length;
+}
+
+/** alle Backstage-Einträge dieses Geräts als Datei-Inhalt (für OneDrive) */
+export function backstageDatei(): { name: string; text: string; anzahl: number } {
+  const data = collect();
+  const backup: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
+  return { name: `blickfeld-nord-backstage-alle-${new Date().toISOString().slice(0, 10)}.json`, text: JSON.stringify(backup, null, 1), anzahl: Object.keys(data).length };
+}
+
+/** nach einer Sicherung (Teilen, OneDrive) merken – für den Hinweis unter Aufgaben */
+export function gesichert(): void {
+  merken();
+}
+
 function collect(show?: string): Record<string, unknown> {
   const data: Record<string, unknown> = {};
   for (let i = 0; i < localStorage.length; i++) {
@@ -143,15 +173,10 @@ export class BackstageSync {
         this.message.set({ text: `Noten für ${n} ${n === 1 ? 'Song' : 'Songs'} übernommen ✓` });
         return;
       }
-      if (backup.app !== APP || !('data' in backup) || !backup.data) throw new Error();
-      const entries = Object.entries(backup.data).filter(([k]) => PREFIXES.some((p) => k.startsWith(p)));
-      if (!entries.length) throw new Error();
-      if (!confirm(`${entries.length} ${entries.length === 1 ? 'Liste' : 'Listen'} übernehmen? Vorhandene Einträge für dieselben Auftritte werden ersetzt.`)) return;
-      for (const [k, v] of entries) {
-        // Sterne mehrerer Geräte zusammenführen statt ersetzen – bei demselben Song gilt die importierte Bewertung
-        const alt = k.startsWith('bn-bewertung-') ? JSON.parse(localStorage.getItem(k) ?? '{}') : {};
-        localStorage.setItem(k, JSON.stringify(k.startsWith('bn-bewertung-') ? { ...alt, ...(v as object) } : v));
-      }
+      const anzahl = backupEintraege(text).length;
+      if (!anzahl) throw new Error();
+      if (!confirm(`${anzahl} ${anzahl === 1 ? 'Liste' : 'Listen'} übernehmen? Vorhandene Einträge für dieselben Auftritte werden ersetzt.`)) return;
+      backstageImportieren(text);
       this.message.set({ text: 'Übernommen – Seite wird neu geladen …' });
       setTimeout(() => location.reload(), 600);
     } catch {

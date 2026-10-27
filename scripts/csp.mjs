@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Content-Security-Policy für alle Seiten des Builds (als <meta>, GitHub Pages erlaubt keine eigenen Header).
 // Erlaubt nur, was die Seite wirklich braucht: eigene Dateien, GoatCounter (Statistik), open-meteo (Wetter im
-// Backstage), Instagram (eingebettete Beiträge/Reels, erst nach Klick) und GitHub-Rohdateien (Backstage erzeugt
-// Dateien für GitHub). Inline-Skripte nur mit Prüfsumme – jede Seite bekommt genau die Hashes ihrer eigenen Skripte.
+// Backstage), Instagram (eingebettete Beiträge/Reels, erst nach Klick), GitHub-Rohdateien (Backstage erzeugt
+// Dateien für GitHub) sowie Microsoft-Anmeldung und OneDrive (Backstage → Abgleich, src/app/data/onedrive.ts). Inline-Skripte nur mit Prüfsumme – jede Seite bekommt genau die Hashes ihrer eigenen Skripte.
 // Aufruf ganz am Ende des Builds (nach seo.mjs und SPA-Fallback):  node scripts/csp.mjs
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -32,8 +32,9 @@ for (const file of files(DIST)) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://gc.zgo.at https://blickfeld-nord.goatcounter.com",
     "font-src 'self' data:",
-    "connect-src 'self' https://blickfeld-nord.goatcounter.com https://api.open-meteo.com https://raw.githubusercontent.com",
-    'frame-src https://www.instagram.com',
+    "connect-src 'self' https://blickfeld-nord.goatcounter.com https://api.open-meteo.com https://raw.githubusercontent.com" +
+      ' https://login.microsoftonline.com https://graph.microsoft.com https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com',
+    'frame-src https://www.instagram.com https://login.microsoftonline.com https://login.live.com',
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",
