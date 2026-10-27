@@ -12,11 +12,31 @@ export interface NotenDatei {
 }
 export type NotenDateiInfo = Omit<NotenDatei, 'daten'>;
 
-/** Noten eines Songs: PDF (ggf. nur bestimmte Seiten) und/oder Akkordblatt */
-export interface SongNoten {
-  pdf?: { datei: string; von?: number; bis?: number };
-  chordpro?: string;
+/** ein PDF eines Songs (ggf. nur bestimmte Seiten eines Songbooks), name = Fassung, z. B. „Bass“ oder „Gitarre v2“ */
+export interface NotenPdf {
+  datei: string;
+  von?: number;
+  bis?: number;
+  name?: string;
 }
+
+/** Noten eines Songs: beliebig viele PDFs (Bass, Gitarre, Fassungen) und/oder ein Akkordblatt */
+export interface SongNoten {
+  pdfs?: NotenPdf[];
+  chordpro?: string;
+  /** frühere Form mit nur einem PDF – wird beim Lesen zu pdfs */
+  pdf?: NotenPdf;
+}
+
+/** frühere Einträge ({pdf}) in die heutige Form ({pdfs}) bringen */
+export function notenNormal(n: SongNoten): SongNoten {
+  const { pdf, pdfs, ...rest } = n;
+  const liste = pdfs ?? (pdf ? [pdf] : []);
+  return liste.length ? { ...rest, pdfs: liste } : rest;
+}
+
+/** Anzeigename eines PDFs: Fassung, sonst Nummer */
+export const pdfName = (p: NotenPdf, i: number, alle: NotenPdf[]) => p.name?.trim() || (alle.length > 1 ? `PDF ${i + 1}` : 'PDF');
 
 const DB = 'bn-noten';
 const DATEIEN = 'dateien';
@@ -69,17 +89,21 @@ export async function notenDateiSpeichern(name: string, daten: ArrayBuffer, id: 
 export async function notenDateiLoeschen(id: string): Promise<void> {
   await anfrage(DATEIEN, 'readwrite', (s) => s.delete(id));
   const songs = await alleSongNoten();
-  for (const [key, n] of Object.entries(songs)) if (n.pdf?.datei === id) await songNotenSetzen(key, { ...n, pdf: undefined });
+  for (const [key, n] of Object.entries(songs)) {
+    if (n.pdfs?.some((p) => p.datei === id)) await songNotenSetzen(key, { ...n, pdfs: n.pdfs.filter((p) => p.datei !== id) });
+  }
 }
 
 export async function songNoten(key: string): Promise<SongNoten | undefined> {
-  return anfrage<SongNoten | undefined>(SONGS, 'readonly', (s) => s.get(key));
+  const n = await anfrage<SongNoten | undefined>(SONGS, 'readonly', (s) => s.get(key));
+  return n && notenNormal(n);
 }
 
 /** Noten eines Songs setzen; ohne PDF und Akkordblatt wird der Eintrag entfernt */
 export async function songNotenSetzen(key: string, noten: SongNoten): Promise<void> {
-  const leer = !noten.pdf && !noten.chordpro?.trim();
-  await anfrage(SONGS, 'readwrite', (s) => (leer ? s.delete(key) : s.put(noten, key)));
+  const n = notenNormal(noten);
+  const leer = !n.pdfs?.length && !n.chordpro?.trim();
+  await anfrage(SONGS, 'readwrite', (s) => (leer ? s.delete(key) : s.put(n, key)));
 }
 
 /** alle Songs mit Noten, Schlüssel „Titel|Interpret“ */
@@ -91,7 +115,7 @@ export async function alleSongNoten(): Promise<Record<string, SongNoten>> {
     req.onsuccess = () => {
       const c = req.result;
       if (!c) return ok(out);
-      out[String(c.key)] = c.value as SongNoten;
+      out[String(c.key)] = notenNormal(c.value as SongNoten);
       c.continue();
     };
     req.onerror = () => fehler(req.error);
@@ -122,10 +146,10 @@ const ausBase64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0)
 export async function notenExportieren(): Promise<File | null> {
   const songs = await alleSongNoten();
   if (!Object.keys(songs).length) return null;
-  const genutzt = new Set(Object.values(songs).map((n) => n.pdf?.datei).filter(Boolean));
+  const genutzt = new Set(Object.values(songs).flatMap((n) => (n.pdfs ?? []).map((p) => p.datei)));
   const dateien: NotenPaket['dateien'] = [];
   for (const id of genutzt) {
-    const d = await notenDatei(id!);
+    const d = await notenDatei(id);
     if (d) dateien.push({ id: d.id, name: d.name, base64: zuBase64(d.daten) });
   }
   const paket: NotenPaket = { app: NOTEN_APP, version: 1, exportiert: new Date().toISOString(), dateien, songs };

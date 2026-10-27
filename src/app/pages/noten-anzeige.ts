@@ -2,7 +2,7 @@ import { Component, DestroyRef, ElementRef, computed, effect, inject, input, out
 import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
-import { SongNoten, notenDatei, songNoten } from '../data/noten';
+import { NotenPdf, SongNoten, notenDatei, pdfName, songNoten } from '../data/noten';
 import { PdfDokument, pdfOeffnen, seiteZeichnen } from '../data/pdf';
 import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVerschieben } from '../data/chordpro';
 
@@ -10,8 +10,17 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 // (ChordPro, in die Tonart der Band transponiert – mit Capo als Griffbild). Geblättert wird vom Bühnen-Modus aus
 // (Tippen, Wischen, Pfeiltasten, Bluetooth-Pedal): erst innerhalb des Blatts, am Ende weiter zum nächsten Song.
 const BREITE_KEY = 'bn-noten-breite';
-// gewählte Ansicht (PDF oder Akkorde) für Songs, die beides haben – bleibt beim Blättern und auf dem Gerät erhalten
-const ANSICHT_KEY = 'bn-noten-ansicht';
+// gewählte Fassung (ein PDF wie „Bass“ oder das Akkordblatt): je Song gemerkt, dazu die zuletzt gewählte Art und
+// Fassung als Vorliebe für Songs ohne eigene Wahl – bleibt beim Blättern (auch zurück) und auf dem Gerät erhalten
+const WAHL_KEY = 'bn-noten-wahl';
+const ANSICHT_ALT_KEY = 'bn-noten-ansicht';
+interface Wahl {
+  songs: Record<string, string>;
+  art: 'pdf' | 'akkorde';
+  name?: string;
+}
+const pdfId = (p: NotenPdf) => `pdf:${p.datei}:${p.von ?? ''}`;
+const namensVergleich = (s?: string) => (s ?? '').trim().toLocaleLowerCase('de');
 
 @Component({
   selector: 'app-noten-anzeige',
@@ -21,8 +30,11 @@ const ANSICHT_KEY = 'bn-noten-ansicht';
       <header>
         <span class="titel">{{ song()?.title ?? 'Pause' }}</span>
         @if (ansicht() === 'pdf' && seiten().length) { <span class="seite">Seite {{ index() + 1 }} / {{ seiten().length }}</span> }
-        @if (noten()?.pdf && noten()?.chordpro) {
-          <button type="button" (click)="umschalten($event)">{{ ansicht() === 'pdf' ? 'Akkorde' : 'PDF' }}</button>
+        @if (optionen().length > 1) {
+          <select class="wahl" aria-label="Fassung wählen" (change)="waehlen($any($event.target).value); $any($event.target).blur()"
+            (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+            @for (o of optionen(); track o.id) { <option [value]="o.id" [selected]="o.id === wahl()">{{ o.label }}</option> }
+          </select>
         }
         @if (ansicht() === 'pdf' && seiten().length) {
           <button type="button" (click)="breiteUmschalten($event)" [attr.aria-pressed]="nurBreite()" title="Ganze Seite oder volle Breite">
@@ -76,6 +88,7 @@ const ANSICHT_KEY = 'bn-noten-ansicht';
       border-radius: 20px; border: 1px solid #444; background: transparent; color: #fff; font: inherit; cursor: pointer;
     }
     header button[aria-pressed=true] { border-color: #e8a46a; color: #e8a46a; }
+    .wahl { min-height: 40px; max-width: 46vw; padding: 0 10px; border-radius: 20px; border: 1px solid #e8a46a; background: #000; color: #e8a46a; font: inherit; color-scheme: dark; }
     header mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .flaeche { flex: 1; min-height: 0; overflow: auto; display: grid; place-items: center; touch-action: pan-y; }
     .flaeche.breit { place-items: start center; }
@@ -102,8 +115,17 @@ export class NotenAnzeige {
   protected readonly noten = signal<SongNoten | undefined>(undefined);
   protected readonly laden = signal(false);
   protected readonly fehler = signal('');
-  protected readonly ansicht = signal<'pdf' | 'akkorde'>('pdf');
-  private bevorzugt = ladeAnsicht();
+  /** gewählte Fassung: 'akkorde' oder pdfId(…) */
+  protected readonly wahl = signal('');
+  protected readonly ansicht = computed(() => (this.wahl() === 'akkorde' ? 'akkorde' : 'pdf'));
+  protected readonly aktivPdf = computed(() => this.noten()?.pdfs?.find((p) => pdfId(p) === this.wahl()));
+  protected readonly optionen = computed(() => {
+    const n = this.noten();
+    const pdfs = n?.pdfs ?? [];
+    return [...pdfs.map((p, i) => ({ id: pdfId(p), label: pdfName(p, i, pdfs) })), ...(n?.chordpro ? [{ id: 'akkorde', label: 'Akkorde' }] : [])];
+  });
+  private gemerkt = ladeWahl();
+  private vonHinten = false;
   protected readonly nurBreite = signal(ladeBreite());
   private readonly doc = signal<PdfDokument | null>(null);
   protected readonly index = signal(0);
@@ -113,7 +135,7 @@ export class NotenAnzeige {
   /** Seiten des Songs im PDF (1-basiert) */
   protected readonly seiten = computed(() => {
     const d = this.doc();
-    const p = this.noten()?.pdf;
+    const p = this.aktivPdf();
     if (!d || !p) return [];
     const von = Math.min(Math.max(1, p.von ?? 1), d.numPages);
     const bis = Math.min(Math.max(von, p.bis ?? d.numPages), d.numPages);
@@ -154,7 +176,12 @@ export class NotenAnzeige {
       const s = this.song();
       untracked(() => this.stoppen());
       this.extra.set(0);
-      void this.ladeSong(s, pdfs);
+      void this.ladeSong(s);
+    });
+    // Fassung gewechselt (Song oder Auswahl) → das PDF dazu öffnen
+    effect(() => {
+      const p = this.aktivPdf();
+      untracked(() => void this.ladePdf(p, pdfs));
     });
     // Seite zeichnen, sobald Leinwand, Dokument, Seite und Größe feststehen
     effect(() => {
@@ -179,38 +206,65 @@ export class NotenAnzeige {
     });
   }
 
-  private async ladeSong(s: Song | undefined, pdfs: Map<string, PdfDokument>): Promise<void> {
+  private async ladeSong(s: Song | undefined): Promise<void> {
     this.fehler.set('');
-    this.doc.set(null);
-    this.index.set(0);
-    const vonHinten = this.amEnde;
+    this.vonHinten = this.amEnde;
     this.amEnde = false;
-    if (!s) return this.noten.set(undefined);
+    if (!s) {
+      this.noten.set(undefined);
+      return this.wahl.set('');
+    }
     this.laden.set(true);
     try {
       const n = await songNoten(`${s.title}|${s.artist}`);
       if (this.song() !== s) return;
       this.noten.set(n);
-      // beides da → die zuletzt gewählte Ansicht, sonst die vorhandene (ohne die Wahl zu ändern)
-      this.ansicht.set(n?.pdf && n.chordpro ? this.bevorzugt : n?.chordpro ? 'akkorde' : 'pdf');
+      this.wahl.set(n ? this.auswahl(n, `${s.title}|${s.artist}`) : '');
       // zurückgeblättert ins Akkordblatt: am Ende einsteigen
-      if (vonHinten && this.ansicht() === 'akkorde') requestAnimationFrame(() => requestAnimationFrame(() => this.flaeche()?.nativeElement.scrollTo(0, 1e6)));
-      if (n?.pdf) {
-        let d = pdfs.get(n.pdf.datei);
-        if (!d) {
-          const datei = await notenDatei(n.pdf.datei);
-          if (!datei) throw new Error('PDF fehlt auf diesem Gerät');
-          d = await pdfOeffnen(datei.daten);
-          pdfs.set(n.pdf.datei, d);
-        }
-        if (this.song() !== s) return;
-        this.doc.set(d);
-        if (vonHinten) this.index.set(this.seiten().length - 1);
+      if (this.vonHinten && this.ansicht() === 'akkorde') {
+        this.vonHinten = false;
+        requestAnimationFrame(() => requestAnimationFrame(() => this.flaeche()?.nativeElement.scrollTo(0, 1e6)));
       }
     } catch (e) {
       this.fehler.set(`Noten lassen sich nicht öffnen: ${(e as Error).message || 'unbekannter Fehler'}`);
     } finally {
-      if (this.song() === s) this.laden.set(false);
+      if (this.song() === s && !this.aktivPdf()) this.laden.set(false);
+    }
+  }
+
+  // Fassung für einen Song: eigene Wahl → zuletzt Akkorde gewählt → PDF mit dem zuletzt gewählten Namen („Bass“) → erstes PDF
+  private auswahl(n: SongNoten, key: string): string {
+    const ids = [...(n.pdfs ?? []).map(pdfId), ...(n.chordpro ? ['akkorde'] : [])];
+    const eigen = this.gemerkt.songs[key];
+    if (eigen && ids.includes(eigen)) return eigen;
+    if (this.gemerkt.art === 'akkorde' && n.chordpro) return 'akkorde';
+    const pdfs = n.pdfs ?? [];
+    const name = namensVergleich(this.gemerkt.name);
+    const p = (name && (pdfs.find((x) => namensVergleich(x.name) === name) ?? pdfs.find((x) => namensVergleich(x.name).includes(name)))) || pdfs[0];
+    return p ? pdfId(p) : n.chordpro ? 'akkorde' : '';
+  }
+
+  private async ladePdf(p: NotenPdf | undefined, pdfs: Map<string, PdfDokument>): Promise<void> {
+    this.doc.set(null);
+    this.index.set(0);
+    if (!p) return;
+    this.laden.set(true);
+    try {
+      let d = pdfs.get(p.datei);
+      if (!d) {
+        const datei = await notenDatei(p.datei);
+        if (!datei) throw new Error('PDF fehlt auf diesem Gerät');
+        d = await pdfOeffnen(datei.daten);
+        pdfs.set(p.datei, d);
+      }
+      if (this.aktivPdf() !== p) return;
+      this.doc.set(d);
+      if (this.vonHinten) this.index.set(this.seiten().length - 1);
+      this.vonHinten = false;
+    } catch (e) {
+      this.fehler.set(`Noten lassen sich nicht öffnen: ${(e as Error).message || 'unbekannter Fehler'}`);
+    } finally {
+      if (this.aktivPdf() === p) this.laden.set(false);
     }
   }
 
@@ -241,13 +295,15 @@ export class NotenAnzeige {
     return false;
   }
 
-  protected umschalten(e: Event): void {
-    e.stopPropagation();
+  protected waehlen(id: string): void {
+    const s = this.song();
+    if (!s) return;
     this.stoppen();
-    this.ansicht.update((a) => (a === 'pdf' ? 'akkorde' : 'pdf'));
-    this.bevorzugt = this.ansicht();
+    this.vonHinten = false;
+    this.wahl.set(id);
+    this.gemerkt = { songs: { ...this.gemerkt.songs, [`${s.title}|${s.artist}`]: id }, art: this.ansicht(), name: this.aktivPdf()?.name ?? this.gemerkt.name };
     try {
-      localStorage.setItem(ANSICHT_KEY, this.bevorzugt);
+      localStorage.setItem(WAHL_KEY, JSON.stringify(this.gemerkt));
     } catch {
       // ohne Speicher gilt die Wahl bis zum Schließen
     }
@@ -309,10 +365,12 @@ function ladeBreite(): boolean {
   }
 }
 
-function ladeAnsicht(): 'pdf' | 'akkorde' {
+function ladeWahl(): Wahl {
   try {
-    return localStorage.getItem(ANSICHT_KEY) === 'akkorde' ? 'akkorde' : 'pdf';
+    const w = JSON.parse(localStorage.getItem(WAHL_KEY) ?? 'null') as Wahl | null;
+    if (w?.songs) return w;
+    return { songs: {}, art: localStorage.getItem(ANSICHT_ALT_KEY) === 'akkorde' ? 'akkorde' : 'pdf' };
   } catch {
-    return 'pdf';
+    return { songs: {}, art: 'pdf' };
   }
 }

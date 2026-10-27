@@ -372,7 +372,7 @@ export class SetlistBuehne {
     this.startY = e.clientY;
   }
   protected up(e: PointerEvent): void {
-    if ((e.target as HTMLElement).closest('button')) return;
+    if ((e.target as HTMLElement).closest('button, select')) return;
     const dx = e.clientX - this.startX;
     // senkrecht gewischt = im Notenblatt gescrollt, kein Blättern
     if (Math.abs(e.clientY - this.startY) > 30 && Math.abs(e.clientY - this.startY) > Math.abs(dx)) return;

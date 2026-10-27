@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { NotenDateiInfo, SongNoten, notenDateiSpeichern, pdfjsVorladen, songNoten, songNotenSetzen } from '../data/noten';
-import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText } from '../data/chordpro';
+import { NotenDateiInfo, NotenPdf, SongNoten, notenDateiSpeichern, pdfjsVorladen, songNoten, songNotenSetzen } from '../data/noten';
+import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText, dateinameZuordnen } from '../data/chordpro';
 
 // Noten eines Songs bearbeiten (Backstage → Songs): PDF wählen oder hochladen, Seitenbereich im Songbook, Akkordblatt
 // im ChordPro-Format. Alles bleibt auf diesem Gerät (IndexedDB) – siehe data/noten.ts.
@@ -18,25 +18,35 @@ const BEISPIEL = `{key: C}
   imports: [MatIconModule],
   template: `
     <div class="editor">
-      <div class="pdf">
-        <label>PDF
-          <select (change)="pdfWaehlen($any($event.target).value)">
-            <option value="" [selected]="!noten().pdf">– kein PDF –</option>
-            @for (d of dateien(); track d.id) { <option [value]="d.id" [selected]="noten().pdf?.datei === d.id">{{ d.name }}</option> }
-          </select>
-        </label>
-        <label class="hochladen">
-          <mat-icon>upload</mat-icon> PDF hochladen
-          <input type="file" accept="application/pdf,.pdf" (change)="hochladen($event)" />
-        </label>
-        @if (noten().pdf) {
-          <label class="zahl">Seite von
-            <input type="number" min="1" inputmode="numeric" placeholder="1" [value]="noten().pdf?.von ?? ''" (change)="seiten('von', $any($event.target).value)" />
-          </label>
-          <label class="zahl">bis
-            <input type="number" min="1" inputmode="numeric" placeholder="Ende" [value]="noten().pdf?.bis ?? ''" (change)="seiten('bis', $any($event.target).value)" />
-          </label>
+      <div class="pdfs">
+        <span class="kopf">PDFs – eins je Fassung, z. B. Bass, Gitarre, Version 2</span>
+        @for (p of noten().pdfs ?? []; track $index; let i = $index) {
+          <div class="pdf">
+            <label class="name">Fassung
+              <input maxlength="30" placeholder="z. B. Bass" [value]="p.name ?? ''" (change)="pdfAendern(i, { name: $any($event.target).value.trim() || undefined })" />
+            </label>
+            <label class="zahl">Seite von
+              <input type="number" min="1" inputmode="numeric" placeholder="1" [value]="p.von ?? ''" (change)="pdfAendern(i, { von: seite($any($event.target).value) })" />
+            </label>
+            <label class="zahl">bis
+              <input type="number" min="1" inputmode="numeric" placeholder="Ende" [value]="p.bis ?? ''" (change)="pdfAendern(i, { bis: seite($any($event.target).value) })" />
+            </label>
+            <button type="button" class="weg" (click)="pdfEntfernen(i)" [attr.aria-label]="'PDF ' + (p.name || i + 1) + ' entfernen'"><mat-icon>delete</mat-icon></button>
+            <small class="datei">{{ dateiName(p.datei) }}</small>
+          </div>
         }
+        <div class="pdf">
+          <label class="name">PDF hinzufügen
+            <select (change)="pdfHinzu($any($event.target).value); $any($event.target).value = ''">
+              <option value="">– schon gespeichertes wählen –</option>
+              @for (d of dateien(); track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+            </select>
+          </label>
+          <label class="hochladen">
+            <mat-icon>upload</mat-icon> PDF hochladen
+            <input type="file" multiple accept="application/pdf,.pdf" (change)="hochladen($event)" />
+          </label>
+        </div>
       </div>
       <div class="akkorde-kopf">
         <span>Akkordblatt (ChordPro) – Akkorde in [ ], Tonart mit {{ '{' }}key: …{{ '}' }}</span>
@@ -56,14 +66,21 @@ const BEISPIEL = `{key: C}
     :host { grid-column: 1 / -1; min-width: 0; }
     .editor { display: grid; gap: 10px; padding: 10px 0 4px; border-top: 1px dashed var(--bn-line); }
     label { display: grid; gap: 2px; min-width: 0; font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
-    select, input[type=number] {
+    select, input {
       width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22;
       color: var(--bn-ink); font: inherit; font-size: .9rem; text-transform: none; letter-spacing: 0; color-scheme: dark;
     }
-    .pdf { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
-    .pdf > label:first-child { flex: 1 1 220px; }
-    .zahl { width: 90px; }
-    .akkorde-kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
+    .pdfs { display: grid; gap: 8px; }
+    .kopf, .akkorde-kopf { font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
+    .pdf { display: flex; flex-wrap: wrap; align-items: end; gap: 6px 10px; }
+    .name { flex: 1 1 160px; }
+    .zahl { width: 80px; }
+    @media (max-width: 520px) { .name { flex-basis: 100%; } }
+    .datei { flex-basis: 100%; color: var(--bn-fog); font-size: .75rem; overflow-wrap: anywhere; }
+    .weg { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--bn-line); border-radius: 8px; background: none; color: var(--bn-fog); cursor: pointer; }
+    .weg:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .weg mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .akkorde-kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
     .unsichtbar { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .hochladen {
       display: inline-flex !important; flex-direction: row; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px;
@@ -110,29 +127,57 @@ export class NotenEditor {
     this.geaendert.emit();
   }
 
-  protected pdfWaehlen(id: string): void {
-    void this.speichern({ ...this.noten(), pdf: id ? { datei: id } : undefined });
+  protected dateiName(id: string): string {
+    return this.dateien().find((d) => d.id === id)?.name ?? 'Datei fehlt auf diesem Gerät';
+  }
+
+  protected seite(roh: string): number | undefined {
+    const n = Math.round(Number(roh));
+    return n >= 1 ? n : undefined;
+  }
+
+  private pdfsSetzen(pdfs: NotenPdf[], text?: string): Promise<void> {
+    return this.speichern({ ...this.noten(), pdfs }, text);
+  }
+
+  protected pdfAendern(i: number, teil: Partial<NotenPdf>): void {
+    void this.pdfsSetzen((this.noten().pdfs ?? []).map((p, j) => (j === i ? { ...p, ...teil } : p)));
+  }
+
+  protected pdfEntfernen(i: number): void {
+    void this.pdfsSetzen((this.noten().pdfs ?? []).filter((_, j) => j !== i), 'PDF entfernt (die Datei bleibt gespeichert)');
+  }
+
+  protected pdfHinzu(id: string): void {
+    const d = this.dateien().find((x) => x.id === id);
+    if (d) void this.pdfsSetzen([...(this.noten().pdfs ?? []), { datei: id, name: this.fassung(d.name) }]);
+  }
+
+  // Fassung aus dem Dateinamen: was neben Titel und Interpret darin steht („Iris - Goo Goo Dolls - Bass.pdf“ → Bass)
+  private fassung(dateiname: string): string | undefined {
+    const [title, artist] = this.songKey().split('|');
+    const z = dateinameZuordnen(dateiname, [{ title, artist }]);
+    return (z ? z.fassung : dateiname.replace(/\.[^.]+$/, '')).trim() || undefined;
   }
 
   protected async hochladen(e: Event): Promise<void> {
     const feld = e.target as HTMLInputElement;
-    const datei = feld.files?.[0];
+    const dateien = [...(feld.files ?? [])];
     feld.value = '';
-    if (!datei) return;
-    if (datei.type && datei.type !== 'application/pdf') {
-      this.meldung.set('Bitte eine PDF-Datei wählen.');
-      return;
+    const pdfs = [...(this.noten().pdfs ?? [])];
+    for (const datei of dateien) {
+      if (datei.type && datei.type !== 'application/pdf') {
+        this.meldung.set('Bitte PDF-Dateien wählen.');
+        return;
+      }
+      // dieselbe Datei nicht doppelt speichern
+      const da = this.dateien().find((d) => d.name === datei.name && d.groesse === datei.size);
+      const id = da?.id ?? (await notenDateiSpeichern(datei.name, await datei.arrayBuffer()));
+      if (!pdfs.some((p) => p.datei === id)) pdfs.push({ datei: id, name: this.fassung(datei.name) });
     }
-    const id = await notenDateiSpeichern(datei.name, await datei.arrayBuffer());
+    if (!dateien.length) return;
     pdfjsVorladen();
-    await this.speichern({ ...this.noten(), pdf: { datei: id } }, `„${datei.name}“ gespeichert ✓ (nur auf diesem Gerät)`);
-  }
-
-  protected seiten(feld: 'von' | 'bis', roh: string): void {
-    const pdf = this.noten().pdf;
-    if (!pdf) return;
-    const n = Math.round(Number(roh));
-    void this.speichern({ ...this.noten(), pdf: { ...pdf, [feld]: n >= 1 ? n : undefined } });
+    await this.pdfsSetzen(pdfs, dateien.length === 1 ? `„${dateien[0].name}“ gespeichert ✓ (nur auf diesem Gerät)` : `${dateien.length} PDFs gespeichert ✓ (nur auf diesem Gerät)`);
   }
 
   // ChordPro-Datei (.pro, .cho, .chopro …) als Akkordblatt übernehmen

@@ -123,17 +123,22 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 ## Notenblätter und Akkordblätter im Bühnen-Modus
 
-Im Backstage unter **Songs** die Zeile des Songs antippen – im Dialog unten:
+Der Bereich **Songs** im Backstage hat drei Unterseiten: **Liste** (Tonart, Tempo, Noten je Song), **Setlists** (die
+Setlists aller Auftritte auf diesem Gerät – kommende zuerst, mit Tonart/Tempo, Link zur Setlist und Bühnen-Modus) und
+**Noten** (alle PDFs auf dem Gerät, Einlesen und Weitergabe).
 
-- **PDF hochladen** (oder ein schon hochgeladenes wählen). Bei einem Songbook mit vielen Songs unter **Seite von/bis**
-  die Seiten dieses Songs angeben – dieselbe PDF kann für viele Songs dienen.
+Unter **Songs → Liste** die Zeile des Songs antippen – im Dialog unten:
+
+- **PDF hochladen** (auch mehrere) oder ein schon gespeichertes wählen. Ein Song kann **beliebig viele PDFs** haben, z. B.
+  Bass- und Gitarrennoten oder verschiedene Versionen – jedes bekommt einen Namen unter **Fassung** (wird aus dem
+  Dateinamen vorgeschlagen). Bei einem Songbook mit vielen Songs unter **Seite von/bis** die Seiten dieses Songs angeben
+  – dieselbe PDF kann für viele Songs dienen.
 - **Akkordblatt (ChordPro):** Text mit Akkorden in eckigen Klammern, z. B. `[G]Einer von [D]80 Millionen`. Mit
   `{key: G}` steht da, in welcher Tonart es geschrieben ist (sonst gilt die Originaltonart), `{soc}`/`{eoc}` umschließen den
   Refrain, `{c: Intro 2x}` ist ein Hinweis. Im Bühnen-Modus erscheinen die Akkorde automatisch in **eurer** Tonart –
   mit Capo als Griffbild (z. B. „Wir spielen E, Capo 2“ → Griffe in D). Mit − und + lässt es sich von Hand verschieben.
 - **.pro-Dateien** (ChordPro, auch `.cho`, `.chopro`, `.chordpro`, `.crd`) direkt einlesen: beim Song **.pro-Datei
-  laden** im Dialog, oder unten unter „Notenblätter auf diesem Gerät“ **Akkordblätter (.pro) einlesen** und gleich viele Dateien
-  auf einmal wählen. Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
+  laden** im Dialog, oder viele auf einmal unter **Songs → Noten** (siehe unten). Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
   über den Dateinamen (auch „Interpret - Titel.pro“). Was sich nicht zuordnen lässt, wird genannt. Ältere Dateien mit
   Umlauten aus Windows-Programmen werden richtig gelesen; `{capo: 2}` in der Datei wird beim Transponieren berücksichtigt.
 
@@ -141,15 +146,23 @@ Im **Bühnen-Modus** oben auf das Noten-Symbol tippen. Weiter blättern wie gewo
 oder **Bluetooth-Fußpedal** (die senden Pfeiltasten): erst durch die Seiten, am Ende zum nächsten Song, dessen Noten
 dann gleich erscheinen. Zurück landet auf der letzten Seite des vorigen Songs. Lange Seiten oder **volle Breite**
 (Symbol oben) werden erst gescrollt, dann umgeblättert. **Mitscrollen** lässt ein Akkordblatt in der Länge des Songs
-durchlaufen. Hat ein Song PDF **und** Akkordblatt, bleibt die zuletzt gewählte Ansicht (PDF oder Akkorde) eingestellt –
-auch beim nächsten Song und beim Zurückblättern; Songs mit nur einem von beiden zeigen dieses.
+durchlaufen. Hat ein Song mehrere Fassungen (mehrere PDFs und/oder Akkorde), steht oben ein **Auswahlfeld**. Die Wahl
+wird je Song gemerkt und gilt auch als Vorliebe für die anderen Songs: wer „Bass“ wählt, bekommt bei jedem Song mit
+einem PDF namens „Bass“ dieses, wer „Akkorde“ wählt, die Akkordblätter – auch beim Zurückblättern.
+
+**Viele Dateien oder ganze Ordner einlesen:** unter **Songs → Noten** auf **Dateien einlesen (PDF, .pro)** oder
+**Ganzen Ordner einlesen** (am Computer; auf iPhone/iPad Dateien wählen). Jede Datei landet beim passenden Song – über
+Titel und Interpret im **Dateinamen**, in beliebiger Reihenfolge und Schreibweise, z. B. `Iris - Goo Goo Dolls - Bass.pdf`
+oder `GooGooDolls_Iris_(Gitarre v2).pdf`. Was sonst im Namen steht („Bass“, „Gitarre v2“), wird die Fassung. PDFs
+kommen als weitere Fassung dazu (dieselbe Datei nicht doppelt), Akkordblätter ersetzen ein vorhandenes. Was sich nicht
+zuordnen lässt, wird genannt – dann die Datei umbenennen oder im Song-Dialog einzeln laden.
 
 **Zur Kontrolle** ohne Setlist: unter **Songs** auf ▶ in einer Zeile tippen – der Bühnen-Modus startet bei diesem Song
 mit offenen Noten und blättert ab da durch die Liste (wie gerade gefiltert), Tippen, Wischen, Pedal und Klick wie auf
 der Bühne. Im Song-Dialog geht das mit **Im Bühnen-Modus ansehen**; beim Schließen geht es zurück in den Dialog.
 
 **Wichtig:** Noten bleiben nur auf dem jeweiligen Gerät und gehen nie an GitHub – Notenblätter und Liedtexte sind
-urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unten unter Songs mit **Notenblätter an die
+urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unter **Songs → Noten** mit **Notenblätter an die
 Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätter importieren**. Auf iPhone und iPad die
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.

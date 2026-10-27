@@ -1,4 +1,4 @@
-import { akkordTransponieren, blattTransponieren, chordproLesen, dateiText, griffbild, halbtoene, songZuordnen, tonartVerschieben } from './chordpro';
+import { akkordTransponieren, blattTransponieren, chordproLesen, dateiText, dateinameZuordnen, griffbild, halbtoene, songZuordnen, tonartVerschieben } from './chordpro';
 
 const BLATT = `{title: 80 Millionen}
 {key: C}
@@ -92,6 +92,20 @@ describe('.pro-Dateien', () => {
     expect(songZuordnen('Max Giesinger - 80 Millionen.cho', chordproLesen(''), songs)?.title).toBe('80 Millionen');
     expect(songZuordnen('80 Millionen - Max Giesinger.chopro', chordproLesen(''), songs)?.title).toBe('80 Millionen');
     expect(songZuordnen('Unbekannt.pro', chordproLesen('{title: Gibt es nicht}'), songs)).toBeUndefined();
+  });
+
+  it('findet Song und Fassung im Dateinamen (Titel und Interpret in beliebiger Form)', () => {
+    const z = (n: string) => {
+      const r = dateinameZuordnen(n, songs);
+      return r && `${r.song.title}|${r.fassung}`;
+    };
+    expect(z('Max Giesinger - 80 Millionen - Bass.pdf')).toBe('80 Millionen|Bass');
+    expect(z('80_Millionen_MaxGiesinger_(Gitarre v2).pdf')).toBe('80 Millionen|Gitarre v2');
+    expect(z('Noten/Band/80 Millionen Max Giesinger.pdf')).toBe('80 Millionen|');
+    expect(z('Hallelujah - Jeff Buckley - Bass.pdf')?.startsWith('Hallelujah|Bass')).toBe(true);
+    expect(dateinameZuordnen('Hallelujah - Jeff Buckley.pdf', songs)?.song.artist).toBe('Jeff Buckley');
+    expect(z('Let It Be - Beatles.pdf')).toBe('Let It Be - Remastered 2009|');
+    expect(z('Gibt es nicht.pdf')).toBeUndefined();
   });
 
   it('liest UTF-8 und ältere Windows-Dateien mit Umlauten', () => {

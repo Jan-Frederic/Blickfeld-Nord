@@ -175,7 +175,56 @@ export function songZuordnen<T extends { title: string; artist: string }>(datein
     const s = passend(blatt.titel, blatt.interpret);
     if (s) return s;
   }
+  const ausName = dateinameZuordnen(dateiname, songs);
+  if (ausName) return ausName.song;
   const name = dateiname.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
   const teile = name.split(/\s+-\s+/);
   return passend(name) ?? (teile.length === 2 ? (passend(teile[1], teile[0]) ?? passend(teile[0], teile[1])) : undefined);
+}
+
+// Dateiname in Wörter zerlegen (Trenner: Leerzeichen, _ - / Klammern …), jedes Wort klein und ohne Sonderzeichen
+const WORTTRENNER = /[\s_\-–—/()[\]{},.+]+/;
+const woerter = (s: string) => s.split(WORTTRENNER).filter(Boolean);
+const wort = (w: string) => vergleich(w).replace(/ /g, '');
+
+/**
+ * Song aus einem Dateinamen, in dem Titel und Interpret stecken – in beliebiger Reihenfolge und mit Zusätzen wie
+ * „Iris - Goo Goo Dolls - Bass v2.pdf“ oder „GooGooDolls_Iris_(Gitarre).pdf“. Was übrig bleibt, ist die Fassung
+ * („Bass v2“, „Gitarre“). Bei mehreren passenden Titeln gewinnt der mit Interpret, dann der längste.
+ */
+export function dateinameZuordnen<T extends { title: string; artist: string }>(dateiname: string, songs: T[]): { song: T; fassung: string } | undefined {
+  const basis = dateiname.replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '');
+  const roh = woerter(basis);
+  const w = roh.map(wort);
+  // Wortfolge im Dateinamen finden – auch zusammengeschrieben („GooGooDolls“); gibt die Positionen zurück
+  const finden = (folge: string[], belegt: Set<number>): number[] | undefined => {
+    if (!folge.length) return undefined;
+    for (let i = 0; i < w.length; i++) {
+      if (belegt.has(i)) continue;
+      if (folge.every((f, j) => w[i + j] === f && !belegt.has(i + j))) return folge.map((_, j) => i + j);
+      if (folge.length > 1 && w[i] === folge.join('')) return [i];
+    }
+    return undefined;
+  };
+  let best: { song: T; punkte: number; weg: Set<number> } | undefined;
+  let gleichauf = false;
+  for (const song of songs) {
+    const titel = woerter(song.title.split(' - ')[0].replace(/\([^)]*\)/g, '')).map(wort).filter(Boolean);
+    const t = finden(titel, new Set());
+    if (!t) continue;
+    const weg = new Set(t);
+    const artist = woerter(song.artist).map(wort).filter(Boolean);
+    // Interpret auch ohne Artikel („Goo Goo Dolls“ für „The Goo Goo Dolls“)
+    const a = finden(artist, weg) ?? (['the', 'die', 'der', 'das'].includes(artist[0]) ? finden(artist.slice(1), weg) : undefined);
+    a?.forEach((i) => weg.add(i));
+    const punkte = (a ? 1000 : 0) + titel.length;
+    if (best && punkte === best.punkte) gleichauf = true;
+    if (!best || punkte > best.punkte) {
+      best = { song, punkte, weg };
+      gleichauf = false;
+    }
+  }
+  if (!best || gleichauf) return undefined;
+  const fassung = roh.filter((_, i) => !best!.weg.has(i)).join(' ');
+  return { song: best.song, fassung };
 }

@@ -2,7 +2,8 @@
 // Automatische Klicktests vor jedem Deploy: wichtige Abläufe wie ein echter Besucher durchklicken.
 // Jeder Test läuft in einem frischen Browser (leerer Speicher). Ein Fehler stoppt den Deploy.
 // Aufruf nach Build, seo.mjs, SPA-Fallback und build-sw.mjs:  node scripts/e2e.mjs
-import { readFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
@@ -365,6 +366,10 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   // Tempo-Trainer: 100 → 90 % macht aus 120 bpm 108 bpm
   await p.locator('app-setlist-buehne .tempo').click();
   await until(async () => (await p.locator('app-setlist-buehne .bpm').innerText()).includes('108 bpm'), 'Übungstempo 90 % wird nicht übernommen');
+  // Songs → Setlists listet die Setlist dieses Auftritts mit Tonart und Tempo
+  await p.keyboard.press('Escape');
+  await p.go('/backstage/songs/setlists/');
+  await until(async () => (await p.locator('app-songs-setlists article').first().innerText().catch(() => '')).includes('G · 120 bpm'), 'Setlist fehlt unter Songs → Setlists');
   return p;
 });
 
@@ -461,7 +466,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await p.keyboard.press('ArrowLeft');
   await until(async () => (await kopf.innerText()).includes('Seite 2 / 2'), 'Zurück landet nicht auf der letzten Seite des vorigen Songs');
   // Akkordblatt: geschrieben in D, die Band spielt in E → zwei Halbtöne höher
-  await kopf.locator('button', { hasText: 'Akkorde' }).click();
+  await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
   await until(async () => (await p.locator('app-noten-anzeige .teil b').allInnerTexts()).join(' ') === 'E A/C#', 'Akkorde werden nicht in die Band-Tonart transponiert');
   expect((await kopf.innerText()).includes('Griffe in E'), 'Griffbild fehlt');
   await p.keyboard.press('Escape');
@@ -482,21 +487,53 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'Bühnen-Modus lässt sich nicht schließen');
 
   // Weitergabe: Datei exportieren und auf einem zweiten Gerät importieren
-  await p.go('/backstage/songs/');
+  await p.go('/backstage/songs/noten/');
   const [download] = await Promise.all([p.waitForEvent('download'), p.locator('app-noten-verwaltung button', { hasText: 'an die Band' }).click()]);
   const datei = readFileSync(await download.path());
   const q = await page();
-  await q.go('/backstage/songs/');
+  await q.go('/backstage/songs/noten/');
   await q.locator('app-noten-verwaltung input[type=file][accept*=json]').setInputFiles({ name: 'noten.json', mimeType: 'application/json', buffer: datei });
   await until(async () => (await q.locator('app-noten-verwaltung .meldung').innerText().catch(() => '')).includes('1 Song'), 'Import auf dem zweiten Gerät klappt nicht');
   expect((await q.locator('app-noten-verwaltung li').innerText()).includes('songbook.pdf'), 'PDF fehlt nach dem Import');
   // .pro-Dateien gesammelt einlesen: Zuordnung über {title:}, Unbekanntes wird gemeldet
-  await q.locator('app-noten-verwaltung input[type=file][multiple]').setInputFiles([
+  await q.locator('app-noten-verwaltung input.dateien').setInputFiles([
     { name: 'angels.pro', mimeType: 'text/plain', buffer: Buffer.from('{title: Angels}\n{artist: Robbie Williams}\n{key: E}\n[E]I sit and wait') },
     { name: 'gibt-es-nicht.pro', mimeType: 'text/plain', buffer: Buffer.from('{title: Gibt es nicht}\n[C]x') },
   ]);
   await until(async () => (await q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '')).includes('1 Akkordblatt eingelesen'), '.pro-Dateien werden nicht eingelesen');
   expect((await q.locator('app-noten-verwaltung').innerText()).includes('gibt-es-nicht.pro'), 'Nicht zugeordnete Datei wird nicht gemeldet');
+  // ganzer Ordner: PDFs je Fassung über Titel und Interpret im Dateinamen, Unterordner, Fremdes wird übersprungen
+  const ordner = mkdtempSync(join(tmpdir(), 'noten-'));
+  mkdirSync(join(ordner, 'Goo Goo Dolls'));
+  const pdf = join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf');
+  copyFileSync(pdf, join(ordner, 'Iris - The Goo Goo Dolls - Bass.pdf'));
+  copyFileSync(pdf, join(ordner, 'Goo Goo Dolls', 'Iris_GooGooDolls_(Gitarre v2).pdf'));
+  writeFileSync(join(ordner, 'liesmich.md'), 'x');
+  await q.locator('app-noten-verwaltung input.ordner').setInputFiles(ordner);
+  await until(async () => (await q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '')).includes('2 PDFs eingelesen'), async () => 'Ordner wird nicht eingelesen: ' + (await q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '')));
+  // Setlists aller Auftritte als eigene Unterseite
+  await q.locator('app-backstage-songs nav a', { hasText: 'Setlists' }).click();
+  await until(async () => (await q.locator('app-songs-setlists').count()) === 1, 'Unterseite Setlists fehlt');
+  await q.locator('app-backstage-songs nav a', { hasText: 'Liste' }).click();
+  // drei PDFs bei Iris; im Bühnen-Modus die Fassung „Bass“ wählen – bleibt beim Weiter- und Zurückblättern
+  await q.locator('app-backstage-songs input[type=search]').fill('Iris');
+  await until(async () => (await q.locator('app-backstage-songs tbody tr .noten .tag').first().innerText().catch(() => '')) === '3 PDFs', 'Mehrere PDFs werden in der Tabelle nicht gezählt');
+  await q.locator('app-backstage-songs input[type=search]').fill('');
+  await q.locator('app-backstage-songs tbody tr', { hasText: 'Iris' }).locator('.start button').click();
+  const wahl = q.locator('app-noten-anzeige select.wahl');
+  await until(async () => (await wahl.locator('option').allInnerTexts()).join('|') === 'songbook|Bass|Gitarre v2|Akkorde', async () => 'Fassungen fehlen: ' + (await wahl.locator('option').allInnerTexts().catch(() => [])).join('|'));
+  await wahl.selectOption({ label: 'Bass' });
+  await until(async () => (await q.locator('app-noten-anzeige header').innerText()).includes('Seite 1 /'), 'Fassung „Bass“ (ganzes PDF) wird nicht angezeigt');
+  // durch alle Seiten der Fassung bis zum nächsten Song
+  for (let i = 0; i < 20 && (await q.locator('app-noten-anzeige header').innerText()).includes('Iris'); i++) {
+    await q.keyboard.press('ArrowRight');
+    await q.waitForTimeout(250);
+  }
+  expect(!(await q.locator('app-noten-anzeige header').innerText()).includes('Iris'), 'Pfeiltaste blättert nicht zum nächsten Song (Auswahlfeld behält den Fokus?)');
+  await q.keyboard.press('ArrowLeft');
+  await until(async () => (await wahl.inputValue().catch(() => '')) !== '' && (await wahl.locator('option:checked').innerText()) === 'Bass', 'Gewählte Fassung geht beim Zurückblättern verloren');
+  await q.keyboard.press('Escape');
+  await q.keyboard.press('Escape');
   // einzelne Datei beim Song, ältere Windows-Kodierung mit Umlaut
   await q.locator('app-backstage-songs input[type=search]').fill('Angels');
   await until(async () => (await q.locator('app-backstage-songs tbody tr .noten').first().innerText()).includes('Akkorde'), 'Sammel-Import kennzeichnet den Song nicht');
