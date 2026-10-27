@@ -5,6 +5,7 @@ import { notenExportieren } from '../data/noten';
 import { OrdnerHandle, dateienAlsQuellen, gemerkterOrdner, ordnerDateien, ordnerErlaubnis, ordnerSchreiben, ordnerTrennen, ordnerVerbinden, ordnerVerbindbar } from '../data/ordner';
 import { backstageDatei, backupTeilen, gesichert } from './backstage-sync';
 import { FundeListe } from './funde-liste';
+import { Fortschritt, Stand } from './fortschritt';
 
 // Backstage → Abgleich → Ordner auf dem Gerät: z. B. der OneDrive-Ordner (Windows-Explorer, Finder, „Dateien“-App
 // am iPhone) – die OneDrive-App gleicht ihn ab, eine Anmeldung bei Microsoft ist hier nicht nötig.
@@ -12,7 +13,7 @@ import { FundeListe } from './funde-liste';
 // Dateien wählen und einlesen; gesichert wird über Teilen/Speichern (dort den OneDrive-Ordner wählen).
 @Component({
   selector: 'app-backstage-ordner',
-  imports: [MatIconModule, FundeListe],
+  imports: [MatIconModule, FundeListe, Fortschritt],
   template: `
     <div class="box">
       <h3><mat-icon>folder_shared</mat-icon> Ordner auf dem Gerät (z. B. OneDrive)</h3>
@@ -43,6 +44,7 @@ import { FundeListe } from './funde-liste';
         <p class="hinweis">Am iPhone/iPad in der Auswahl links „OneDrive“ antippen; beim Sichern „In Dateien sichern“ → OneDrive.</p>
       }
       @if (funde(); as f) { <app-funde-liste [funde]="f" (geaendert)="geaendert.emit()" /> }
+      @if (stand(); as s) { <app-fortschritt [stand]="s" /> }
       @if (meldung(); as m) { <p class="meldung" [class.fehler]="m.fehler" role="status">{{ m.text }}</p> }
     </div>
   `,
@@ -72,6 +74,7 @@ export class BackstageOrdner {
   protected readonly ordner = signal<OrdnerHandle | null>(null);
   protected readonly funde = signal<Fund[] | null>(null);
   protected readonly laeuft = signal(false);
+  protected readonly stand = signal<Stand | null>(null);
   protected readonly mitNoten = signal(false);
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
 
@@ -87,6 +90,7 @@ export class BackstageOrdner {
       if ((e as Error).name !== 'AbortError') this.meldung.set({ text: `Ordner: ${(e as Error).message || 'unbekannter Fehler'}`, fehler: true });
     } finally {
       this.laeuft.set(false);
+      this.stand.set(null);
     }
   }
 
@@ -110,9 +114,11 @@ export class BackstageOrdner {
     return this.tun(async () => {
       const h = this.ordner()!;
       if (!(await ordnerErlaubnis(h))) throw new Error('Kein Zugriff erlaubt.');
-      this.meldung.set({ text: `„${h.name}“ wird durchsucht …` });
-      this.funde.set(await sichten(await ordnerDateien(h)));
       this.meldung.set(null);
+      this.funde.set(null);
+      const melden = (s: Stand) => this.stand.set(s);
+      const dateien = await ordnerDateien(h, (n, ordner) => melden({ text: `Durchsuchen: ${ordner} – ${n} ${n === 1 ? 'Datei' : 'Dateien'} gefunden` }));
+      this.funde.set(await sichten(dateien, melden));
     });
   }
 
@@ -122,8 +128,9 @@ export class BackstageOrdner {
     feld.value = '';
     return this.tun(async () => {
       if (!dateien.length) return;
-      this.funde.set(await sichten(dateienAlsQuellen(dateien)));
       this.meldung.set(null);
+      this.funde.set(null);
+      this.funde.set(await sichten(dateienAlsQuellen(dateien), (s) => this.stand.set(s)));
     });
   }
 
@@ -131,6 +138,7 @@ export class BackstageOrdner {
   protected sichern(): Promise<void> {
     return this.tun(async () => {
       const b = backstageDatei();
+      if (this.mitNoten()) this.stand.set({ text: 'Notenblätter werden zusammengestellt …' });
       const n = this.mitNoten() ? await notenExportieren() : null;
       if (!b.anzahl && !n) {
         this.meldung.set({ text: 'Noch nichts gespeichert, was sich sichern ließe.', fehler: true });
@@ -139,8 +147,13 @@ export class BackstageOrdner {
       const h = this.ordner();
       if (h) {
         if (!(await ordnerErlaubnis(h, true))) throw new Error('Schreiben nicht erlaubt.');
+        const gesamt = (b.anzahl ? 1 : 0) + (n ? 1 : 0);
+        this.stand.set({ text: `Sichern: ${b.anzahl ? b.name : n!.name}`, fertig: 0, gesamt });
         if (b.anzahl) await ordnerSchreiben(h, 'Backstage', b.name, new Blob([b.text], { type: 'application/json' }));
-        if (n) await ordnerSchreiben(h, 'Backstage', n.name, n);
+        if (n) {
+          this.stand.set({ text: `Sichern: ${n.name}`, fertig: b.anzahl ? 1 : 0, gesamt });
+          await ordnerSchreiben(h, 'Backstage', n.name, n);
+        }
         gesichert();
         this.meldung.set({ text: `In „${h.name}/Backstage“ gesichert ✓${n ? ' (mit Notenblättern)' : ''}` });
         return;

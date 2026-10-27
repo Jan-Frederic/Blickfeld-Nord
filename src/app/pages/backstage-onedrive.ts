@@ -5,6 +5,7 @@ import { notenExportieren } from '../data/noten';
 import { oneDriveAbmelden, oneDriveAnmelden, oneDriveDateien, oneDriveEingerichtet, oneDriveKonto, oneDriveLaden, oneDriveSpeichern } from '../data/onedrive';
 import { backstageDatei, gesichert } from './backstage-sync';
 import { FundeListe } from './funde-liste';
+import { Fortschritt, Stand } from './fortschritt';
 
 // Backstage → Abgleich → OneDrive: alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien (Setlists,
 // Packlisten …), Notenpakete, PDFs und Akkordblätter (auch in Unterordnern, Zuordnung über den Dateinamen) – und den
@@ -13,7 +14,7 @@ const ORDNER_KEY = 'bn-onedrive-ordner';
 
 @Component({
   selector: 'app-backstage-onedrive',
-  imports: [MatIconModule, FundeListe],
+  imports: [MatIconModule, FundeListe, Fortschritt],
   template: `
     <div class="box">
       <h3><mat-icon>cloud</mat-icon> OneDrive</h3>
@@ -39,6 +40,7 @@ const ORDNER_KEY = 'bn-onedrive-ordner';
           <button type="button" class="primaer" (click)="verbinden()" [disabled]="laeuft()"><mat-icon>login</mat-icon> Mit OneDrive verbinden</button>
         }
       }
+      @if (stand(); as s) { <app-fortschritt [stand]="s" /> }
       @if (meldung(); as m) { <p class="meldung" [class.fehler]="m.fehler" role="status">{{ m.text }}</p> }
     </div>
   `,
@@ -68,6 +70,7 @@ export class BackstageOnedrive {
   protected readonly konto = signal<string | null>(null);
   protected readonly ordner = signal(lade(ORDNER_KEY) || 'Blickfeld Nord');
   protected readonly laeuft = signal(false);
+  protected readonly stand = signal<Stand | null>(null);
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
   protected readonly mitNoten = signal(false);
   protected readonly funde = signal<Fund[] | null>(null);
@@ -96,6 +99,7 @@ export class BackstageOnedrive {
       this.meldung.set({ text: text === 'nicht gefunden' ? `Den Ordner „${this.ordner()}“ gibt es in deinem OneDrive nicht.` : `OneDrive: ${text || 'unbekannter Fehler'}`, fehler: true });
     } finally {
       this.laeuft.set(false);
+      this.stand.set(null);
     }
   }
 
@@ -119,10 +123,11 @@ export class BackstageOnedrive {
 
   protected durchsuchen(): Promise<void> {
     return this.tun(async () => {
-      this.meldung.set({ text: `„${this.ordner()}“ wird durchsucht …` });
-      const dateien = await oneDriveDateien(this.ordner());
-      this.funde.set(await sichten(dateien.map((d) => ({ name: d.name, pfad: d.pfad, groesse: d.groesse, geaendert: d.geaendert, laden: () => oneDriveLaden(d) }))));
       this.meldung.set(null);
+      this.funde.set(null);
+      const melden = (s: Stand) => this.stand.set(s);
+      const dateien = await oneDriveDateien(this.ordner(), (n, ordner) => melden({ text: `Durchsuchen: ${ordner} – ${n} ${n === 1 ? 'Datei' : 'Dateien'} gefunden` }));
+      this.funde.set(await sichten(dateien.map((d) => ({ name: d.name, pfad: d.pfad, groesse: d.groesse, geaendert: d.geaendert, laden: () => oneDriveLaden(d) })), melden));
     });
   }
 
@@ -130,9 +135,12 @@ export class BackstageOnedrive {
     return this.tun(async () => {
       const ziel = [this.ordner(), 'Backstage'].filter(Boolean).join('/');
       const b = backstageDatei();
+      const gesamt = (b.anzahl ? 1 : 0) + (this.mitNoten() ? 1 : 0);
+      this.stand.set({ text: `Hochladen: ${b.name}`, fertig: 0, gesamt });
       if (b.anzahl) await oneDriveSpeichern(ziel, b.name, new Blob([b.text], { type: 'application/json' }));
       let noten = '';
       if (this.mitNoten()) {
+        this.stand.set({ text: 'Notenblätter werden zusammengestellt und hochgeladen …', fertig: b.anzahl ? 1 : 0, gesamt });
         const n = await notenExportieren();
         if (n) {
           await oneDriveSpeichern(ziel, n.name, n);

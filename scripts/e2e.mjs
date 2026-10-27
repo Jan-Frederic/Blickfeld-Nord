@@ -618,12 +618,21 @@ test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, 
     await schreiben(await wurzel.getDirectoryHandle('Goo Goo Dolls', { create: true }), 'Iris - Bass.pdf', new Uint8Array(pdf));
   }, { backstage, pdf: [...pdf] });
   const box = p.locator('app-backstage-ordner');
+  // Fortschrittsanzeige: merken, ob ein Balken mit „x / y“ erschienen ist (die Abläufe sind hier sehr schnell)
+  await p.evaluate(() => {
+    window.__balken = [];
+    new MutationObserver(() => {
+      for (const f of document.querySelectorAll('app-fortschritt')) if (f.querySelector('progress[max]')) window.__balken.push(f.textContent.trim());
+    }).observe(document.body, { subtree: true, childList: true, characterData: true });
+  });
   await box.locator('button', { hasText: 'Ordner verbinden' }).click();
   await box.locator('button', { hasText: 'Ordner durchsuchen' }).click();
   await until(async () => (await box.locator('app-funde-liste').innerText().catch(() => '')).includes('1 PDF'), 'Ordner wird nicht durchsucht');
   await box.locator('app-funde-liste button', { hasText: 'Einlesen' }).click();
   await until(async () => (await box.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('1 PDF eingelesen'), async () => 'Einlesen aus dem Ordner klappt nicht: ' + (await box.locator('app-funde-liste').innerText()));
   expect((await p.evaluate(() => localStorage.getItem('bn-probe-2099-03-03'))).includes('aus OneDrive'), 'Backstage-Datei aus dem Ordner fehlt');
+  const balken = await p.evaluate(() => window.__balken);
+  expect(balken.some((t) => t.startsWith('Sichten:')) && balken.some((t) => /^Noten: Iris - Bass\.pdf.*1 \/ 1|^Noten: .*0 \/ 1/.test(t)), 'Fortschrittsanzeige erscheint nicht: ' + [...new Set(balken)].join(' | '));
   // gemerkt nach dem Neuladen, Sichern schreibt nach Backstage/
   await p.reload({ waitUntil: 'networkidle' });
   await box.locator('button', { hasText: 'Stand dort sichern' }).click();

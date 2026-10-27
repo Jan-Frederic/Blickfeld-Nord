@@ -75,7 +75,7 @@ export async function ordnerErlaubnis(h: OrdnerHandle, schreiben = false): Promi
 }
 
 /** alle Dateien im Ordner und seinen Unterordnern (bis 4 Ebenen, höchstens 3000) */
-export async function ordnerDateien(h: OrdnerHandle): Promise<Quelle[]> {
+export async function ordnerDateien(h: OrdnerHandle, gefunden?: (anzahl: number, ordner: string) => void): Promise<Quelle[]> {
   const out: Quelle[] = [];
   const lesen = async (ordner: OrdnerHandle, praefix: string, tiefe: number): Promise<void> => {
     for await (const e of ordner.values()) {
@@ -84,6 +84,7 @@ export async function ordnerDateien(h: OrdnerHandle): Promise<Quelle[]> {
       else if (e.kind === 'file') {
         const datei = await (e as DateiHandle).getFile();
         out.push({ name: e.name, pfad: praefix + e.name, groesse: datei.size, geaendert: new Date(datei.lastModified).toISOString(), laden: () => datei.arrayBuffer() });
+        gefunden?.(out.length, praefix || h.name);
       }
     }
   };

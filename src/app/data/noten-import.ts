@@ -27,10 +27,16 @@ export interface NotenErgebnis {
 export const istPdf = (name: string) => name.toLowerCase().endsWith('.pdf');
 export const istAkkordblatt = (name: string) => CHORDPRO_ENDUNGEN.split(',').includes(name.slice(name.lastIndexOf('.')).toLowerCase());
 
-export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiInfo[]): Promise<NotenErgebnis> {
+/** Fortschritt: fertig von gesamt, gerade bearbeitete Datei */
+export type NotenFortschritt = (fertig: number, gesamt: number, name: string) => void;
+
+export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiInfo[], fortschritt?: NotenFortschritt): Promise<NotenErgebnis> {
   const r: NotenErgebnis = { pdfs: 0, blaetter: 0, ersetzt: 0, doppelt: 0, andere: 0, ohne: [] };
   const vorhanden = [...bekannt];
-  for (const datei of dateien.filter((d) => !d.name.startsWith('.'))) {
+  const liste = dateien.filter((d) => !d.name.startsWith('.'));
+  let fertig = 0;
+  for (const datei of liste) {
+    fortschritt?.(fertig++, liste.length, datei.name);
     if (istPdf(datei.name)) {
       const z = dateinameZuordnen(datei.name, data.tracks) ?? dateinameZuordnen(datei.pfad, data.tracks);
       if (!z) {
@@ -64,6 +70,7 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
       r.blaetter++;
     } else r.andere++;
   }
+  fortschritt?.(liste.length, liste.length, '');
   return r;
 }
 

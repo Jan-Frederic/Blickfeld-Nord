@@ -97,7 +97,7 @@ interface GraphItem {
 }
 
 /** alle Dateien im Ordner und seinen Unterordnern (bis 4 Ebenen, höchstens 3000 Dateien) */
-export async function oneDriveDateien(ordner: string): Promise<OneDriveDatei[]> {
+export async function oneDriveDateien(ordner: string, gefunden?: (anzahl: number, ordner: string) => void): Promise<OneDriveDatei[]> {
   const out: OneDriveDatei[] = [];
   const basis = pfadKodieren(ordner);
   const lesen = async (url: string, praefix: string, tiefe: number): Promise<void> => {
@@ -109,6 +109,7 @@ export async function oneDriveDateien(ordner: string): Promise<OneDriveDatei[]> 
         else if (i.file)
           out.push({ id: i.id, name: i.name, pfad: praefix + i.name, groesse: i.size ?? 0, geaendert: i.lastModifiedDateTime ?? '', downloadUrl: i['@microsoft.graph.downloadUrl'] });
       }
+      gefunden?.(out.length, praefix || ordner);
       naechste = seite['@odata.nextLink'];
     }
   };

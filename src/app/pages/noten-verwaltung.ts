@@ -118,6 +118,7 @@ export class NotenVerwaltung {
     const r = await notenEinlesen(
       dateien.map((d) => ({ name: d.name, pfad: (d as File & { webkitRelativePath?: string }).webkitRelativePath || d.name, groesse: d.size, daten: () => d.arrayBuffer() })),
       this.dateien(),
+      (fertig, gesamt, name) => this.meldung.set({ text: name ? `${fertig + 1} / ${gesamt}: ${name}` : 'Fertig' }),
     );
     this.ohneSong.set(r.ohne);
     this.meldung.set(notenErgebnisText(r));

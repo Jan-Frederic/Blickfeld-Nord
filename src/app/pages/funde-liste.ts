@@ -1,12 +1,13 @@
 import { Component, computed, effect, input, output, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Fund, uebernehmen } from '../data/einlesen';
+import { Fortschritt, Stand } from './fortschritt';
 
 // Was in einem Ordner gefunden wurde (Abgleich → Ordner auf dem Gerät bzw. OneDrive): Backstage-Dateien und
 // Notenpakete einzeln wählbar (die neuesten vorausgewählt), Noten-Dateien gesammelt; dann einlesen.
 @Component({
   selector: 'app-funde-liste',
-  imports: [MatIconModule],
+  imports: [MatIconModule, Fortschritt],
   template: `
     <div class="funde">
       @if (!funde().length) { <p>Hier ist nichts, was sich einlesen ließe (Backstage-Dateien, Notenpakete, PDFs, .pro).</p> }
@@ -23,6 +24,7 @@ import { Fund, uebernehmen } from '../data/einlesen';
       @if (funde().length) {
         <button type="button" class="primaer" (click)="einlesen()" [disabled]="laeuft() || !anzahl()"><mat-icon>download</mat-icon> Einlesen</button>
       }
+      @if (stand(); as s) { <app-fortschritt [stand]="s" /> }
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
       @if (ohne().length) { <p class="fehler">Nicht zugeordnet (Titel und Interpret nicht im Dateinamen erkannt): {{ ohne().join(', ') }}</p> }
     </div>
@@ -48,6 +50,7 @@ export class FundeListe {
   protected readonly ersetzen = signal(false);
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
+  protected readonly stand = signal<Stand | null>(null);
   protected readonly ohne = signal<string[]>([]);
 
   protected readonly einzeln = computed(() => this.funde().filter((d) => d.art === 'backstage' || d.art === 'noten'));
@@ -66,6 +69,7 @@ export class FundeListe {
       untracked(() => {
         this.gewaehlt.set(new Set([f.find((d) => d.art === 'backstage')?.pfad, f.find((d) => d.art === 'noten')?.pfad].filter((x): x is string => !!x)));
         this.meldung.set('');
+        this.stand.set(null);
         this.ohne.set([]);
       });
     });
@@ -88,7 +92,9 @@ export class FundeListe {
     if (backstage && this.ersetzen() && !confirm('Alle Backstage-Daten dieses Geräts durch die gewählten Dateien ersetzen?')) return;
     this.laeuft.set(true);
     try {
-      const r = await uebernehmen(this.funde(), { dateien: this.gewaehlt(), noten: this.notenAn(), ersetzen: this.ersetzen() }, (t) => this.meldung.set(t));
+      this.meldung.set('');
+      this.stand.set({ text: 'Einlesen …' });
+      const r = await uebernehmen(this.funde(), { dateien: this.gewaehlt(), noten: this.notenAn(), ersetzen: this.ersetzen() }, (s) => this.stand.set(s));
       this.meldung.set(r.text);
       this.ohne.set(r.ohne);
       this.geaendert.emit();
@@ -96,6 +102,7 @@ export class FundeListe {
       this.meldung.set(`Einlesen fehlgeschlagen: ${(e as Error).message || 'unbekannter Fehler'}`);
     } finally {
       this.laeuft.set(false);
+      this.stand.set(null);
     }
   }
 }
