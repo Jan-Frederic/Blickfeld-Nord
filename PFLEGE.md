@@ -199,20 +199,21 @@ Vorher sichern: **Alles an die Band schicken** (oben) und für Noten **Songs →
 Im Backstage unter **Abgleich → OneDrive** lassen sich alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien
 (Setlists, Packlisten …), Notenpakete, PDFs und Akkordblätter (.pro), auch aus Unterordnern; Noten werden über Titel
 und Interpret im Dateinamen zugeordnet – und der Stand des Geräts dort sichern (Ordner `Backstage`, wahlweise mit
-Notenblättern). Ist der Browser schon bei Microsoft angemeldet (z. B. Windows mit Edge und Firmenkonto, oder Office im
-Browser offen), verbindet es sich ohne Passwort (Single Sign-On); sonst einmal im Popup anmelden.
+Notenblättern). Gedacht für ein **privates Microsoft-Konto** (Outlook.com, Hotmail, Live – privates OneDrive). Ist der
+Browser schon bei Microsoft angemeldet (z. B. onedrive.live.com oder Outlook im Browser offen, Edge mit Microsoft-Konto),
+verbindet es sich ohne Passwort (Single Sign-On); sonst einmal im Popup anmelden. Danach bleibt das Gerät verbunden.
+Blockiert der Browser Drittanbieter-Cookies (Safari, Firefox), klappt das stille Anmelden nicht – dann eben das Popup.
 
 Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
 
 1. [entra.microsoft.com](https://entra.microsoft.com) → **App-Registrierungen** → **Neue Registrierung**
    (mit privatem Microsoft-Konto braucht es dafür ein kostenloses Azure-Konto).
-2. Name: „Blickfeld Nord Backstage“. Unterstützte Kontotypen: **Konten in allen Organisationsverzeichnissen und
-   persönliche Microsoft-Konten**.
+2. Name: „Blickfeld Nord Backstage“. Unterstützte Kontotypen: **Nur persönliche Microsoft-Konten**.
 3. Umleitungs-URI: Plattform **Single-Page-Anwendung (SPA)**, Adresse `https://blickfeld-nord.de/auth/`.
 4. Unter **API-Berechtigungen** → Microsoft Graph → Delegiert: `Files.ReadWrite` hinzufügen (`User.Read` ist schon da).
-   Bei einem Firmenkonto muss ggf. die IT einmal zustimmen.
+   Beim ersten Verbinden fragt Microsoft einmal, ob die App auf OneDrive zugreifen darf.
 5. Die **Anwendungs-ID (Client-ID)** in `src/app/data/onedrive-config.ts` bei `clientId` eintragen (oder an Claude
-   schicken). Sie ist kein Geheimnis. Nur ein bestimmtes Firmenkonto: bei `tenant` dessen Verzeichnis-ID statt `common`.
+   schicken). Sie ist kein Geheimnis. (`tenant: 'consumers'` = private Konten; für Firmenkonten wäre es `common`.)
 
 Die Daten gehen direkt vom Browser zu OneDrive, nicht über GitHub. Noten bleiben damit weiterhin aus dem öffentlichen
 Repository heraus.
