@@ -32,10 +32,10 @@ export class SyncService {
   }
 
   /** die lokale Seite laut Einstellungen (ohne nach Erlaubnis zu fragen) – zum Ansehen und Einlesen */
-  async lokal(): Promise<SyncOrdner | null> {
+  async lokal(schreiben = false): Promise<SyncOrdner | null> {
     if (syncEinstellungen().lokal === 'app') return appOrdner;
     const h = await lokalerOrdnerHandle();
-    return h && (await ordnerErlaubnis(h)) ? festplattenOrdner(h) : null;
+    return h && (await ordnerErlaubnis(h, schreiben)) ? festplattenOrdner(h) : null;
   }
 
   /** automatische Synchronisation starten (mehrfacher Aufruf schadet nicht) */

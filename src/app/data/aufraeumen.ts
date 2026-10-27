@@ -128,7 +128,6 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-sprache': 'Gewählte Sprache',
   'bn-gesichert': 'Letzte Sicherung',
   'bn-chunk-reload': 'Neuladen nach Update',
-  'bn-onedrive-ordner': 'OneDrive-Ordner',
   'bn-onedrive-client': 'OneDrive: App-ID',
   'bn-sync-einstellungen': 'Synchronisation: Einstellungen',
   'bn-sync-letzter': 'Synchronisation: letzter Abgleich',

@@ -3,7 +3,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { BackstageSync } from './backstage-sync';
 import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { BackstageDaten } from './backstage-daten';
-import { BackstageOnedrive } from './backstage-onedrive';
 import { BackstageOrdner } from './backstage-ordner';
 import { SyncStatus } from './sync-status';
 import { offlineReady } from '../pwa';
@@ -12,7 +11,7 @@ import { offlineReady } from '../pwa';
 // darunter alle Daten des Geräts verwalten (backstage-daten.ts) und aufräumen (backstage-aufraeumen.ts)
 @Component({
   selector: 'app-backstage-abgleich',
-  imports: [MatIconModule, BackstageSync, BackstageAufraeumen, BackstageDaten, BackstageOnedrive, BackstageOrdner, SyncStatus],
+  imports: [MatIconModule, BackstageSync, BackstageAufraeumen, BackstageDaten, BackstageOrdner, SyncStatus],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -28,7 +27,6 @@ import { offlineReady } from '../pwa';
       </div>
       <app-sync-status (geaendert)="version.set(version() + 1)" />
       <app-backstage-ordner (geaendert)="version.set(version() + 1)" />
-      <app-backstage-onedrive (geaendert)="version.set(version() + 1)" />
       <app-backstage-daten [version]="version()" (geaendert)="version.set(version() + 1)" />
       <app-backstage-aufraeumen [version]="version()" (geaendert)="version.set(version() + 1)" />
     </section>

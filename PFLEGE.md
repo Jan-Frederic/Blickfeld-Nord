@@ -229,17 +229,16 @@ Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf
 neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten. Würden auf einmal viele Dateien gelöscht,
 wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
-**Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro).
+**Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro) und **Stand sichern**: legt die
+Backstage-Sicherung (wahlweise mit Notenblättern) in den Unterordner `Backstage` des Sync-Ordners und gleicht gleich ab.
 
-## OneDrive einrichten (Abgleich)
+## OneDrive einrichten (für die Synchronisation)
 
-Alternative mit Anmeldung bei Microsoft (für Geräte ohne OneDrive-App): Im Backstage unter **Abgleich → OneDrive** lassen sich alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien
-(Setlists, Packlisten …), Notenpakete, PDFs und Akkordblätter (.pro), auch aus Unterordnern; Noten werden über Titel
-und Interpret im Dateinamen zugeordnet – und der Stand des Geräts dort sichern (Ordner `Backstage`, wahlweise mit
-Notenblättern). Gedacht für ein **privates Microsoft-Konto** (Outlook.com, Hotmail, Live – privates OneDrive). Ist der
-Browser schon bei Microsoft angemeldet (z. B. onedrive.live.com oder Outlook im Browser offen, Edge mit Microsoft-Konto),
-verbindet es sich ohne Passwort (Single Sign-On); sonst einmal im Popup anmelden. Danach bleibt das Gerät verbunden.
-Blockiert der Browser Drittanbieter-Cookies (Safari, Firefox), klappt das stille Anmelden nicht – dann eben das Popup.
+Die Synchronisation (siehe oben) ist für ein **privates Microsoft-Konto** gedacht (Outlook.com, Hotmail, Live – privates
+OneDrive). Ist der Browser schon bei Microsoft angemeldet (z. B. onedrive.live.com oder Outlook im Browser offen, Edge
+mit Microsoft-Konto), verbindet es sich ohne Passwort (Single Sign-On); sonst einmal im Popup anmelden. Danach bleibt
+das Gerät verbunden. Blockiert der Browser Drittanbieter-Cookies (Safari, Firefox), klappt das stille Anmelden nicht –
+dann eben das Popup. Ganz ohne Registrierung geht nur „Ordner auf dem Gerät“ (siehe oben).
 
 Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
 

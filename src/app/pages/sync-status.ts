@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Fund, sichten } from '../data/einlesen';
 import { mb } from '../data/aufraeumen';
+import { notenExportieren } from '../data/noten';
+import { backstageDatei, gesichert } from './backstage-sync';
 import { SyncDatei } from '../data/sync';
 import { SyncService } from '../data/sync.service';
 import { syncEinstellungen } from '../data/sync-ordner';
@@ -11,7 +13,8 @@ import { FundeListe } from './funde-liste';
 
 // Backstage → Abgleich → Synchronisation: Stand des letzten Abgleichs OneDrive ↔ lokal, „Jetzt synchronisieren“
 // mit Fortschritt, die lokalen Dateien (zum Öffnen, auch offline) und das Einlesen der synchronisierten Dateien
-// (Backstage-Dateien, Notenpakete, PDFs, .pro). Eingerichtet wird unter Backstage → Einstellungen.
+// (Backstage-Dateien, Notenpakete, PDFs, .pro) sowie „Stand sichern“ in den Sync-Ordner. Eingerichtet wird unter
+// Backstage → Einstellungen.
 @Component({
   selector: 'app-sync-status',
   imports: [RouterLink, MatIconModule, Fortschritt, FundeListe],
@@ -30,6 +33,8 @@ import { FundeListe } from './funde-liste';
           <button type="button" class="primaer" (click)="sync.jetzt()" [disabled]="sync.laeuft()"><mat-icon>sync</mat-icon> Jetzt synchronisieren</button>
           <button type="button" (click)="dateienZeigen()" [disabled]="sync.laeuft()"><mat-icon>folder_open</mat-icon> Lokale Dateien</button>
           <button type="button" (click)="einlesen()" [disabled]="sync.laeuft()"><mat-icon>download</mat-icon> Synchronisierte Dateien einlesen</button>
+          <button type="button" (click)="sichern()" [disabled]="sync.laeuft()"><mat-icon>cloud_upload</mat-icon> Stand sichern</button>
+          <label class="check"><input type="checkbox" [checked]="mitNoten()" (change)="mitNoten.set($any($event.target).checked)" /> mit Notenblättern</label>
         </div>
         @if (sync.stand(); as s) { <app-fortschritt [stand]="s" /> }
         @if (dateien(); as d) {
@@ -40,7 +45,7 @@ import { FundeListe } from './funde-liste';
           </ul>
         }
         @if (funde(); as f) { <app-funde-liste [funde]="f" (geaendert)="geaendert.emit()" /> }
-        @if (meldung(); as m) { <p class="fehler">{{ m }}</p> }
+        @if (meldung(); as m) { <p [class.fehler]="m.fehler" [class.letzter]="!m.fehler" role="status">{{ m.text }}</p> }
       }
     </div>
   `,
@@ -51,7 +56,9 @@ import { FundeListe } from './funde-liste';
     a { color: var(--bn-sunset); }
     .letzter { color: #5fb88a; }
     .fehler { color: #e07a5a; }
-    .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+    .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .check { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; }
+    .check input { accent-color: var(--bn-sunset); }
     button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .86rem; cursor: pointer; }
     button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     button:disabled { opacity: .4; cursor: default; }
@@ -69,7 +76,8 @@ export class SyncStatus {
   protected readonly mb = mb;
   protected readonly dateien = signal<SyncDatei[] | null>(null);
   protected readonly funde = signal<Fund[] | null>(null);
-  protected readonly meldung = signal('');
+  protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
+  protected readonly mitNoten = signal(false);
 
   constructor() {
     this.sync.automatisch();
@@ -79,8 +87,8 @@ export class SyncStatus {
     return new Date(iso).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
   }
 
-  private async lokal() {
-    const o = await this.sync.lokal();
+  private async lokal(schreiben = false) {
+    const o = await this.sync.lokal(schreiben);
     if (!o) throw new Error('Kein Zugriff auf den lokalen Ordner – in den Einstellungen wählen.');
     return o;
   }
@@ -89,7 +97,7 @@ export class SyncStatus {
     try {
       this.dateien.set((await (await this.lokal()).liste()).sort((a, b) => a.pfad.localeCompare(b.pfad, 'de')));
     } catch (err) {
-      this.meldung.set((err as Error).message);
+      this.meldung.set({ text: (err as Error).message, fehler: true });
     }
   }
 
@@ -112,8 +120,32 @@ export class SyncStatus {
         ),
       );
     } catch (err) {
-      this.meldung.set((err as Error).message);
+      this.meldung.set({ text: (err as Error).message, fehler: true });
     } finally {
+      this.sync.stand.set(null);
+    }
+  }
+
+  // Stand sichern: Backstage-Sicherung (und wahlweise das Notenpaket) in den Unterordner „Backstage“ des lokalen
+  // Sync-Ordners legen, dann gleich abgleichen – so landet beides in OneDrive
+  protected async sichern(): Promise<void> {
+    try {
+      const o = await this.lokal(true);
+      const b = backstageDatei();
+      if (this.mitNoten()) this.sync.stand.set({ text: 'Notenblätter werden zusammengestellt …' });
+      const n = this.mitNoten() ? await notenExportieren() : null;
+      if (!b.anzahl && !n) {
+        this.meldung.set({ text: 'Noch nichts gespeichert, was sich sichern ließe.', fehler: true });
+        return;
+      }
+      if (b.anzahl) await o.schreiben(`Backstage/${b.name}`, new Blob([b.text], { type: 'application/json' }));
+      if (n) await o.schreiben(`Backstage/${n.name}`, n);
+      gesichert();
+      this.meldung.set({ text: `In „Backstage“ gesichert${n ? ' (mit Notenblättern)' : ''} – wird jetzt mit OneDrive abgeglichen.` });
+      this.sync.stand.set(null);
+      await this.sync.jetzt();
+    } catch (err) {
+      this.meldung.set({ text: (err as Error).message, fehler: true });
       this.sync.stand.set(null);
     }
   }

@@ -88,16 +88,6 @@ async function graph(pfad: string, init: RequestInit = {}): Promise<Response> {
 /** Pfad im OneDrive („Blickfeld Nord/Noten“) für Graph-Adressen kodieren */
 export const pfadKodieren = (pfad: string) => pfad.split('/').map((t) => t.trim()).filter(Boolean).map(encodeURIComponent).join('/');
 
-export interface OneDriveDatei {
-  id: string;
-  name: string;
-  /** Pfad ab dem gewählten Ordner, z. B. „Goo Goo Dolls/Iris - Bass.pdf“ */
-  pfad: string;
-  groesse: number;
-  geaendert: string;
-  downloadUrl?: string;
-}
-
 interface GraphItem {
   id: string;
   name: string;
@@ -106,42 +96,6 @@ interface GraphItem {
   folder?: unknown;
   file?: unknown;
   '@microsoft.graph.downloadUrl'?: string;
-}
-
-/** alle Dateien im Ordner und seinen Unterordnern (bis 4 Ebenen, höchstens 3000 Dateien) */
-export async function oneDriveDateien(ordner: string, gefunden?: (anzahl: number, ordner: string) => void): Promise<OneDriveDatei[]> {
-  const out: OneDriveDatei[] = [];
-  const basis = pfadKodieren(ordner);
-  const lesen = async (url: string, praefix: string, tiefe: number): Promise<void> => {
-    let naechste: string | undefined = url;
-    while (naechste && out.length < 3000) {
-      const seite = (await (await graph(naechste)).json()) as { value: GraphItem[]; '@odata.nextLink'?: string };
-      for (const i of seite.value) {
-        if (i.folder && tiefe < 4) await lesen(`/me/drive/items/${i.id}/children?$top=200`, `${praefix}${i.name}/`, tiefe + 1);
-        else if (i.file)
-          out.push({ id: i.id, name: i.name, pfad: praefix + i.name, groesse: i.size ?? 0, geaendert: i.lastModifiedDateTime ?? '', downloadUrl: i['@microsoft.graph.downloadUrl'] });
-      }
-      gefunden?.(out.length, praefix || ordner);
-      naechste = seite['@odata.nextLink'];
-    }
-  };
-  await lesen(basis ? `/me/drive/root:/${basis}:/children?$top=200` : '/me/drive/root/children?$top=200', '', 0);
-  return out;
-}
-
-/** Inhalt einer Datei (über die vorab freigegebene Download-Adresse, sonst über Graph) */
-export async function oneDriveLaden(d: OneDriveDatei): Promise<ArrayBuffer> {
-  if (d.downloadUrl) {
-    const res = await fetch(d.downloadUrl);
-    if (res.ok) return res.arrayBuffer();
-  }
-  return (await graph(`/me/drive/items/${d.id}/content`)).arrayBuffer();
-}
-
-/** Datei in den Ordner legen (vorhandene gleichen Namens wird ersetzt; bis 250 MB) */
-export async function oneDriveSpeichern(ordner: string, name: string, inhalt: Blob): Promise<void> {
-  const ziel = [pfadKodieren(ordner), encodeURIComponent(name)].filter(Boolean).join('/');
-  await graph(`/me/drive/root:/${ziel}:/content`, { method: 'PUT', body: inhalt, headers: { 'Content-Type': inhalt.type || 'application/octet-stream' } });
 }
 
 // ---- Für die Synchronisation (data/sync.ts) ----------------------------------------------------------------

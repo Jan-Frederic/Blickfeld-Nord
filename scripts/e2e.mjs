@@ -557,8 +557,6 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   }, alt);
   await p.reload({ waitUntil: 'networkidle' });
   // Daten auf diesem Gerät: Einträge verständlich benannt, ändern im Editor, Auswahl löschen
-  // OneDrive ohne App-Registrierung: Hinweis statt Anmelde-Knopf
-  expect((await p.locator('app-backstage-onedrive').innerText()).includes('noch nicht eingerichtet'), 'OneDrive-Hinweis fehlt');
   const daten = p.locator('app-backstage-daten');
   await daten.locator('input[type=search]').fill('vor ort');
   await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');
@@ -681,6 +679,23 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await box.locator('input[type=radio]').nth(1).check();
   await until(async () => (await box.locator('button', { hasText: 'Ordner wählen' }).count()) === 1, 'Ordnerwahl erscheint nicht');
   expect(!(await box.locator('button', { hasText: 'Jetzt synchronisieren' }).isEnabled()), 'Synchronisieren ohne Konto und Ordner möglich');
+  // eingerichtet (Cloud-Ordner gewählt, Speicher der App): „Stand sichern“ legt die Sicherung in den Sync-Ordner
+  await p.evaluate(() => {
+    localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
+    localStorage.setItem('bn-probe-2099-04-04', JSON.stringify({ songs: [], notizen: 'x', punkte: [] }));
+  });
+  await p.go('/backstage/abgleich/');
+  const status = p.locator('app-sync-status');
+  await status.locator('button', { hasText: 'Stand sichern' }).click();
+  await until(async () => (await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const k = req.result.transaction('dateien').objectStore('dateien').getAllKeys();
+      k.onsuccess = () => ok(k.result.some((x) => String(x).startsWith('Backstage/blickfeld-nord-backstage-alle-')));
+      k.onerror = () => ok(false);
+    };
+    req.onerror = () => ok(false);
+  }))), 'Stand sichern legt keine Datei in den Sync-Ordner');
   return p;
 });
 
