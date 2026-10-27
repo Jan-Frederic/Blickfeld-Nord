@@ -29,13 +29,20 @@ function merken(show?: string): void {
     // ohne Speicher eben ohne Erinnerung
   }
 }
-const APP = 'blickfeld-nord-backstage';
+export const APP = 'blickfeld-nord-backstage';
 
 interface Backup {
   app: typeof APP;
   version: 1;
   exported: string;
   data: Record<string, unknown>;
+}
+
+/** Einträge einer Backstage-Datei (nur bekannte Bereiche); wirft bei fremden Dateien */
+export function backupEintraege(text: string): [string, unknown][] {
+  const backup = JSON.parse(text) as Partial<Backup>;
+  if (backup.app !== APP || !backup.data) throw new Error('keine Backstage-Datei');
+  return Object.entries(backup.data).filter(([k]) => PREFIXES.some((p) => k.startsWith(p)));
 }
 
 function collect(show?: string): Record<string, unknown> {

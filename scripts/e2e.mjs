@@ -35,7 +35,7 @@ async function page(options = {}) {
   await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
   const p = await context.newPage();
   p.setDefaultTimeout(10_000);
-  p.on('dialog', (d) => (d.type() === 'prompt' ? d.accept('Testvorlage') : d.accept()));
+  p.on('dialog', (d) => (d.type() === 'prompt' ? d.accept(p.promptAntwort ?? 'Testvorlage') : d.accept()));
   const errors = [];
   p.on('pageerror', (e) => errors.push(e.message));
   // von der Content-Security-Policy blockierte Skripte, Styles oder Verbindungen sind ebenfalls Fehler
@@ -544,6 +544,39 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => (await engel.locator('app-noten-editor textarea').inputValue()).includes('Grüße'), 'Einzelne .pro-Datei (Windows-Kodierung) wird nicht übernommen');
   for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
   return q;
+});
+
+test('Backstage: Abgleich – vergangene und verwaiste Einträge aufräumen, Stand ersetzen, alles löschen', async () => {
+  const p = await page();
+  await p.go('/backstage/abgleich/');
+  // ein vergangener Auftritt (aus der Sitemap), ein Auftritt, den es nicht gibt, und eine Einstellung
+  const alt = concerts[0].split('/')[2];
+  await p.evaluate((alt) => {
+    for (const k of [`bn-setlist-${alt}`, `bn-packliste-${alt}`, `bn-vorort-${alt}`, 'bn-packliste-2019-01-01']) localStorage.setItem(k, '[{"title":"Iris","artist":"The Goo Goo Dolls"}]');
+    localStorage.setItem('bn-buehne-zoom', '1.3');
+  }, alt);
+  await p.reload({ waitUntil: 'networkidle' });
+  const box = p.locator('app-backstage-aufraeumen');
+  await until(async () => (await box.locator('tr', { hasText: 'Packlisten' }).locator('td').first().innerText()) === '2', 'Übersicht zählt die Packlisten nicht');
+  // Vergangenes (Standard: Packliste, Vor Ort, Werbeplan, Proben – Setlist bleibt)
+  await box.locator('select').selectOption('0');
+  await box.locator('button', { hasText: 'Einträge entfernen' }).click();
+  await until(async () => (await p.evaluate((alt) => [localStorage.getItem(`bn-packliste-${alt}`), localStorage.getItem(`bn-vorort-${alt}`), !!localStorage.getItem(`bn-setlist-${alt}`)], alt)).join() === ',,true', 'Vergangene Einträge werden nicht (oder zu viel) entfernt');
+  // verwaist: Packliste vom 01.01.2019 war schon vergangen; neuer Eintrag für einen Termin, den es nicht gibt
+  await p.evaluate(() => localStorage.setItem('bn-werbeplan-2099-01-01', '{}'));
+  await p.reload({ waitUntil: 'networkidle' });
+  await box.locator('button', { hasText: /Eintrag entfernen|Einträge.*entfernen$/ }).last().click();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-werbeplan-2099-01-01'))) === null, 'Verwaister Eintrag bleibt');
+  // Stand der Band übernehmen: ersetzt die Setlist durch die Datei
+  const datei = JSON.stringify({ app: 'blickfeld-nord-backstage', version: 1, exported: '', data: { 'bn-probe-2099-02-02': { songs: [], notizen: 'neu', punkte: [] } } });
+  await box.locator('input[type=file]').setInputFiles({ name: 'band.json', mimeType: 'application/json', buffer: Buffer.from(datei) });
+  await p.waitForLoadState('networkidle');
+  await until(async () => (await p.evaluate((alt) => [localStorage.getItem(`bn-setlist-${alt}`), !!localStorage.getItem('bn-probe-2099-02-02'), localStorage.getItem('bn-buehne-zoom')], alt).catch(() => [])).join() === ',true,1.3', 'Ersetzen übernimmt nicht genau den Stand der Datei');
+  // alles löschen – nur mit eingetipptem LÖSCHEN
+  p.promptAntwort = 'LÖSCHEN';
+  await p.locator('app-backstage-aufraeumen button.gefahr').click();
+  await until(async () => (await p.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('bn-')).length).catch(() => -1)) === 0, 'Alles löschen lässt Einträge zurück');
+  return p;
 });
 
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {

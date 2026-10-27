@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageSync } from './backstage-sync';
+import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { offlineReady } from '../pwa';
 
-// Backstage → Abgleich: Gerätedaten (Setlists, Packlisten, Vor-Ort-Angaben) als Datei mit der Band teilen
+// Backstage → Abgleich: Gerätedaten (Setlists, Packlisten, Vor-Ort-Angaben) als Datei mit der Band teilen und
+// darunter aufräumen (backstage-aufraeumen.ts)
 @Component({
   selector: 'app-backstage-abgleich',
-  imports: [MatIconModule, BackstageSync],
+  imports: [MatIconModule, BackstageSync, BackstageAufraeumen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -20,6 +22,7 @@ import { offlineReady } from '../pwa';
           <p class="offline"><mat-icon>offline_pin</mat-icon> Backstage ist auf diesem Gerät auch ohne Netz verfügbar.</p>
         }
       </div>
+      <app-backstage-aufraeumen />
     </section>
   `,
   styles: `

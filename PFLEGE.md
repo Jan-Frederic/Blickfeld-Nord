@@ -167,6 +167,23 @@ Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätt
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
 
+## Gerät aufräumen (Abgleich)
+
+Backstage-Daten liegen nur im Browser des jeweiligen Geräts. Unter **Abgleich → Aufräumen**:
+
+- **Übersicht:** je Bereich (Setlists, Sterne, Packlisten, Vor Ort, Werbeplan, Proben, Songs-Entwurf, Aufgaben,
+  Einstellungen, Noten, Seiten für unterwegs) Anzahl und Größe – mit 🗑 einzeln löschen.
+- **Vergangene Auftritte und Proben:** Alter wählen (gleich danach, 30 Tage, 6 Monate, 1 Jahr) und welche Bereiche.
+  Vorgewählt sind Packlisten, Vor Ort, Werbeplan und Proben; Setlists und Sterne bleiben, weil Rückblick, Top 100
+  und Setlist-Vorschlag sie brauchen.
+- **Verwaiste Einträge:** Daten zu abgesagten oder verschobenen Auftritten, Noten von Songs, die nicht mehr im
+  Repertoire sind, und PDFs, die kein Song nutzt.
+- **Stand der Band übernehmen:** eine Backstage-Datei importieren und dabei alles Bisherige ersetzen – danach hat das
+  Gerät genau den Stand der Datei (Einstellungen und Noten bleiben).
+- **Alles löschen:** setzt die Website auf dem Gerät komplett zurück (Bestätigung durch Eintippen von „LÖSCHEN“).
+
+Vorher sichern: **Alles an die Band schicken** (oben) und für Noten **Songs → Noten → Notenblätter an die Band**.
+
 ## Foto in die Galerie
 
 1. **Standort entfernen.** Handyfotos enthalten oft den GPS-Ort, und der wäre sonst öffentlich. Ihr könnt beim

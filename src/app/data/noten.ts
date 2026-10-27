@@ -122,6 +122,33 @@ export async function alleSongNoten(): Promise<Record<string, SongNoten>> {
   });
 }
 
+// ---- Aufräumen (Backstage → Abgleich) ---------------------------------------------------------------------
+
+/** Noten von Songs, die nicht (mehr) im Repertoire stehen, und PDFs, die kein Song nutzt */
+export async function notenVerwaist(repertoire: Set<string>): Promise<{ songs: string[]; dateien: NotenDateiInfo[] }> {
+  const songs = await alleSongNoten();
+  const weg = Object.keys(songs).filter((k) => !repertoire.has(k));
+  const genutzt = new Set(Object.entries(songs).filter(([k]) => repertoire.has(k)).flatMap(([, n]) => (n.pdfs ?? []).map((p) => p.datei)));
+  return { songs: weg, dateien: (await notenDateien()).filter((d) => !genutzt.has(d.id)) };
+}
+
+export async function notenEntfernen(songs: string[], dateien: string[]): Promise<void> {
+  for (const k of songs) await anfrage(SONGS, 'readwrite', (s) => s.delete(k));
+  for (const id of dateien) await anfrage(DATEIEN, 'readwrite', (s) => s.delete(id));
+}
+
+/** alle Noten auf diesem Gerät löschen (die ganze Datenbank) */
+export async function notenAllesLoeschen(): Promise<void> {
+  if (offen) {
+    (await offen.catch(() => undefined))?.close();
+    offen = undefined;
+  }
+  await new Promise<void>((ok) => {
+    const req = indexedDB.deleteDatabase(DB);
+    req.onsuccess = req.onerror = req.onblocked = () => ok();
+  });
+}
+
 // ---- Austausch in der Band ---------------------------------------------------------------------------------
 
 export const NOTEN_APP = 'blickfeld-nord-noten';
