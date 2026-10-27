@@ -169,6 +169,10 @@ export class SetlistBuehne {
   readonly entries = input.required<Entry[]>();
   /** Auftritts-ID – nur damit gibt es Sterne */
   readonly show = input<string>();
+  /** Startposition in der Liste (z. B. der angeklickte Song in Backstage → Songs) */
+  readonly start = input(0);
+  /** gleich mit geöffneten Noten beginnen */
+  readonly notenAuf = input(false);
   readonly closed = output<void>();
 
   protected readonly isPause = isPause;
@@ -185,7 +189,7 @@ export class SetlistBuehne {
       // ohne Speicher gilt die Größe bis zum Schließen
     }
   }
-  protected readonly index = signal(0);
+  protected readonly index = linkedSignal(() => this.start());
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly now = signal(Date.now());
   private setStart = Date.now();
@@ -209,7 +213,7 @@ export class SetlistBuehne {
 
   // Noten (PDF/Akkordblatt) aus Backstage → Songs: Knopf oben, sobald auf diesem Gerät welche hinterlegt sind
   protected readonly notenSongs = signal(new Set<string>());
-  protected readonly notenOffen = signal(false);
+  protected readonly notenOffen = linkedSignal(() => this.notenAuf());
   private readonly anzeige = viewChild(NotenAnzeige);
   protected notenUmschalten(e: Event): void {
     e.stopPropagation();

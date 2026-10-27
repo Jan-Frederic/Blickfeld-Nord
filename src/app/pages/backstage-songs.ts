@@ -4,9 +4,10 @@ import data from '../data/repertoire.json';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
-import { NotenEditor } from './noten-editor';
+import { SongDialog } from './song-dialog';
+import { SetlistBuehne } from './setlist-buehne';
 import { NotenVerwaltung } from './noten-verwaltung';
-import { SETLIST_PREFIX } from '../data/setlist-data';
+import { SETLIST_PREFIX, Song } from '../data/setlist-data';
 
 // Backstage → Songs: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // „Original“ ist die Tonart der Aufnahme, „wir spielen“ und Capo die Band-Version; das Tempo lässt sich im Proberaum
@@ -15,7 +16,6 @@ import { SETLIST_PREFIX } from '../data/setlist-data';
 const ENTWURF_KEY = SONGINFO_ENTWURF_KEY;
 const RAW_URL = 'https://raw.githubusercontent.com/Jan-Frederic/Blickfeld-Nord/main/src/app/data/songinfo.ts';
 const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts';
-const TONARTEN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
 
 type Werte = SongWerte;
 const key = (t: { title: string; artist: string }) => `${t.title}|${t.artist}`;
@@ -31,15 +31,16 @@ function ladeEntwurf(): Record<string, Werte> {
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [MatIconModule, NotenEditor, NotenVerwaltung],
+  imports: [MatIconModule, NotenVerwaltung, SongDialog, SetlistBuehne],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Songs</h2>
       <p class="lead">
-        Tonart, Tempo und eine kurze Notiz je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel. Spielt ihr
-        einen Song anders als im Original, unter „Wir spielen“ und „Capo“ eintragen; das Tempo im Proberaum mit
-        <mat-icon class="inline">touch_app</mat-icon> mindestens viermal im Takt tippen.
+        Tonart, Tempo, Notiz und Noten je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel. Zeile antippen zum
+        Bearbeiten; spielt ihr einen Song anders als im Original, dort „Wir spielen“ und „Capo“ eintragen, das Tempo im
+        Proberaum mit <mat-icon class="inline">touch_app</mat-icon> mindestens viermal im Takt tippen.
+        <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song – zur Kontrolle der Noten.
         Angaben bisher bei {{ ausgefuellt() }} von {{ songs.length }} Songs. Auf diesem Gerät gelten Änderungen sofort;
         auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
       </p>
@@ -62,48 +63,47 @@ function ladeEntwurf(): Record<string, Werte> {
         <input type="search" placeholder="Song oder Interpret suchen …" [value]="suche()" (input)="suche.set($any($event.target).value)" aria-label="Songs durchsuchen" />
       </label>
 
-      <ul class="list">
-        @for (s of gefiltert(); track s.key) {
-          <li [class.changed]="geaendert().includes(s.key)">
-            <span class="song"><strong>{{ s.title }}</strong><span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span>
-              <button type="button" class="noten" [class.hat]="mitNoten().has(s.key)" (click)="notenOffen.set(notenOffen() === s.key ? null : s.key)" [attr.aria-expanded]="notenOffen() === s.key">
-                <mat-icon>library_music</mat-icon> {{ mitNoten().has(s.key) ? 'Noten ✓' : 'Noten' }}</button></span>
-            <label>Original
-              <select (change)="setzen(s.key, 'tonart', $any($event.target).value)">
-                <option value="" [selected]="!wert(s.key).tonart">–</option>
-                @for (t of tonarten; track t) { <option [value]="t" [selected]="wert(s.key).tonart === t">{{ t }}</option> }
-              </select>
-            </label>
-            <label>Wir spielen
-              <select (change)="setzen(s.key, 'spielTonart', $any($event.target).value)">
-                <option value="" [selected]="!wert(s.key).spielTonart">wie Original</option>
-                @for (t of tonarten; track t) { <option [value]="t" [selected]="wert(s.key).spielTonart === t">{{ t }}</option> }
-              </select>
-            </label>
-            <label>Capo
-              <select (change)="setzen(s.key, 'capo', $any($event.target).value)">
-                <option value="" [selected]="!wert(s.key).capo">–</option>
-                @for (c of capos; track c) { <option [value]="c" [selected]="wert(s.key).capo === c">{{ c }}</option> }
-              </select>
-            </label>
-            <label class="tempo">bpm
-              <span class="tempo-feld">
-                <input type="number" min="40" max="240" inputmode="numeric" [value]="wert(s.key).bpm ?? ''" (change)="setzen(s.key, 'bpm', $any($event.target).value)" />
-                <button type="button" class="tap" [class.aktiv]="tapKey() === s.key" (click)="tippen(s.key)" [attr.aria-label]="'Tempo für ' + s.title + ' im Takt tippen'" title="Mindestens 4-mal im Takt tippen">
-                  @if (tapKey() === s.key) { {{ tapBpm() ?? tapZahl() + '/4' }} } @else { <mat-icon>touch_app</mat-icon> }
-                </button>
-              </span>
-            </label>
-            <label class="notiz">Notiz
-              <input maxlength="40" placeholder="z. B. Intro Gitarre" [value]="wert(s.key).notiz ?? ''" (change)="setzen(s.key, 'notiz', $any($event.target).value)" />
-            </label>
-            @if (quelle(s.key); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
-            @if (notenOffen() === s.key) { <app-noten-editor [songKey]="s.key" [dateien]="notenDateien()" (geaendert)="notenLaden()" /> }
-          </li>
-        } @empty {
-          <li class="empty">Kein Song gefunden.</li>
-        }
-      </ul>
+      <table class="songs">
+        <thead>
+          <tr><th scope="col">Song</th><th scope="col">Tonart · Tempo</th><th scope="col">Noten</th><th scope="col"><span class="sr">Bühnen-Modus</span></th></tr>
+        </thead>
+        <tbody>
+          @for (s of gefiltert(); track s.key; let i = $index) {
+            <tr [class.changed]="geaendert().includes(s.key)" (click)="oeffnen(s.key)">
+              <td class="song">
+                <button type="button" class="oeffnen" (click)="oeffnen(s.key, $event)" [attr.aria-label]="s.title + ' bearbeiten'">{{ s.title }}</button>
+                <span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span>
+              </td>
+              <td class="werte">
+                @let w = wert(s.key);
+                @if (w.tonart || w.spielTonart) { <span>{{ w.spielTonart ?? w.tonart }}@if (w.spielTonart && w.tonart) { <span class="a"> ({{ w.tonart }})</span> }</span> }
+                @if (w.capo) { <span class="a">Capo {{ w.capo }}</span> }
+                @if (w.bpm) { <span class="a">{{ w.bpm }} bpm</span> }
+                @if (!w.tonart && !w.spielTonart && !w.bpm) { <span class="a">–</span> }
+              </td>
+              <td class="noten">
+                @if (mitNoten().get(s.key); as n) {
+                  @if (n.pdf) { <span class="tag">PDF</span> }
+                  @if (n.akkorde) { <span class="tag">Akkorde</span> }
+                } @else { <span class="a">–</span> }
+              </td>
+              <td class="start">
+                <button type="button" (click)="buehneAb(i, $event)" [attr.aria-label]="'Bühnen-Modus ab ' + s.title" title="Im Bühnen-Modus ab hier"><mat-icon>play_arrow</mat-icon></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="a">Kein Song gefunden.</td></tr>
+          }
+        </tbody>
+      </table>
+
+      @if (offen(); as k) {
+        <app-song-dialog [song]="zeile(k)" [werte]="wert(k)" [quelle]="quelle(k)" [dateien]="notenDateien()"
+          [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1"
+          (setzen)="setzen(k, $event.feld, $event.roh)" (notenGeaendert)="notenLaden()" (blaettern)="dialogBlaettern($event)"
+          (buehne)="buehneAusDialog()" (schliessen)="offen.set(null)" />
+      }
+      @if (buehne(); as b) { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenAuf]="true" (closed)="buehneZu()" /> }
 
       <app-noten-verwaltung [dateien]="notenDateien()" [songs]="mitNoten().size" (geaendert)="notenLaden()" />
 
@@ -133,31 +133,23 @@ function ladeEntwurf(): Record<string, Werte> {
     .search { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; border: 1px solid var(--bn-line); border-radius: 10px; }
     .search mat-icon { color: var(--bn-fog); }
     .search input { flex: 1; padding: 10px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
-    .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-    .list li {
-      display: grid; grid-template-columns: minmax(0, 1fr) 76px 118px 62px 116px 150px; gap: 10px; align-items: end;
-      padding: 10px 14px; border: 1px solid var(--bn-line); border-radius: 10px;
-    }
-    .list li.changed { border-color: var(--bn-sunset); }
-    .tempo-feld { display: flex; gap: 4px; }
-    .tempo-feld input { min-width: 0; }
-    .tap {
-      flex: none; display: grid; place-items: center; min-width: 40px; padding: 0 6px; border: 1px solid var(--bn-line); border-radius: 8px;
-      background: none; color: var(--bn-fog); font: inherit; font-size: .8rem; text-transform: none; letter-spacing: 0; cursor: pointer;
-    }
-    .tap:hover, .tap.aktiv { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-    .tap mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .noten { justify-self: start; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .75rem; cursor: pointer; }
-    .noten.hat { color: var(--bn-sunset); }
-    .noten mat-icon { font-size: 14px; width: 14px; height: 14px; }
-    .quelle { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin: 0; font-size: .75rem; color: var(--bn-fog); }
-    .quelle mat-icon { flex: none; font-size: 14px; width: 14px; height: 14px; }
+    .songs { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th { padding: 6px 8px; border-bottom: 1px solid var(--bn-line); text-align: left; font-size: .72rem; font-weight: 500; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
+    td { padding: 8px; border-bottom: 1px solid var(--bn-line); vertical-align: middle; overflow-wrap: anywhere; hyphens: auto; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: rgba(255, 255, 255, .04); }
+    tr.changed td:first-child { box-shadow: inset 3px 0 var(--bn-sunset); }
+    .song, .werte { line-height: 1.35; }
+    .song .a, .werte > span { display: block; }
+    .oeffnen { padding: 0; border: 0; background: none; color: var(--bn-ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+    .oeffnen:hover { color: var(--bn-sunset); }
+    .tag { display: inline-block; margin: 1px 4px 1px 0; padding: 0 7px; border: 1px solid var(--bn-sunset); border-radius: 999px; color: var(--bn-sunset); font-size: .72rem; }
+    .start { width: 1%; }
+    .start button { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--bn-line); border-radius: 50%; background: none; color: var(--bn-ink); cursor: pointer; }
+    .start button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
     mat-icon.inline { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; }
-    .song { display: grid; align-self: center; line-height: 1.4; min-width: 0; }
-    .a { color: var(--bn-fog); font-size: .85rem; }
-    label { display: grid; gap: 2px; min-width: 0; font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
-    select, label input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .9rem; text-transform: none; letter-spacing: 0; }
-    .empty { color: var(--bn-fog); }
+    .a { color: var(--bn-fog); font-size: .82rem; }
     .apply { margin-top: 24px; padding: 16px 18px; border: 1px solid var(--bn-line); border-radius: 12px; font-size: .9rem; line-height: 1.6; }
     .apply p { margin: 0 0 8px; }
     .apply ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
@@ -165,16 +157,11 @@ function ladeEntwurf(): Record<string, Werte> {
     .apply button:hover, .apply a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .apply mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .meldung { margin: 10px 0 0 !important; color: #5fb88a; }
-    @media (max-width: 640px) {
-      .list li { grid-template-columns: 1fr 1fr; }
-      .song, .notiz { grid-column: 1 / -1; }
-    }
+    @media (max-width: 480px) { td, th { padding: 8px 4px; } }
   `,
 })
 export class BackstageSongs {
   protected readonly editUrl = EDIT_URL;
-  protected readonly tonarten = [...TONARTEN, ...TONARTEN.map((t) => t + 'm')];
-  protected readonly capos = Array.from({ length: 9 }, (_, i) => i + 1);
   protected readonly songs = data.tracks.map((t) => ({ title: t.title, artist: t.artist, key: key(t) }));
   private readonly gespeichert: Record<string, Werte> = Object.fromEntries(
     SONGINFO.map((s) => [key(s), Object.fromEntries(SONG_FELDER.filter((f) => s[f] !== undefined).map((f) => [f, s[f]])) as Werte]),
@@ -218,43 +205,59 @@ export class BackstageSongs {
   }
 
   // Noten (PDF/Akkordblatt) je Song – nur auf diesem Gerät, siehe data/noten.ts
-  protected readonly notenOffen = signal<string | null>(null);
-  protected readonly mitNoten = signal(new Set<string>());
+  protected readonly mitNoten = signal(new Map<string, { pdf: boolean; akkorde: boolean }>());
   protected readonly notenDateien = signal<NotenDateiInfo[]>([]);
   constructor() {
     this.notenLaden();
   }
   protected notenLaden(): void {
-    alleSongNoten().then((n) => this.mitNoten.set(new Set(Object.keys(n)))).catch(() => undefined);
+    alleSongNoten()
+      .then((n) => this.mitNoten.set(new Map(Object.entries(n).map(([k, v]) => [k, { pdf: !!v.pdf, akkorde: !!v.chordpro }]))))
+      .catch(() => undefined);
     notenDateien().then((d) => this.notenDateien.set(d)).catch(() => undefined);
+  }
+
+  // Dialog „Song bearbeiten“: Zeile anklicken; Voriger/Nächster gehen die Liste so durch, wie sie beim Öffnen gefiltert
+  // war – ein Song, der durch das Eintragen aus dem Lücken-Filter fällt, bleibt so erreichbar
+  protected readonly offen = signal<string | null>(null);
+  protected readonly dialogListe = signal<string[]>([]);
+  protected readonly dialogIndex = computed(() => this.dialogListe().indexOf(this.offen() ?? ''));
+  private readonly songsNachKey = new Map(this.songs.map((s) => [s.key, s]));
+  protected zeile(k: string) {
+    return this.songsNachKey.get(k)!;
+  }
+  protected oeffnen(k: string, e?: Event): void {
+    e?.stopPropagation();
+    this.dialogListe.set(this.gefiltert().map((s) => s.key));
+    this.offen.set(k);
+  }
+  protected dialogBlaettern(schritt: number): void {
+    const k = this.dialogListe()[this.dialogIndex() + schritt];
+    if (k) this.offen.set(k);
+  }
+
+  // Bühnen-Modus zur Kontrolle: ab dem gewählten Song durch die (gefilterte) Liste, Noten gleich offen –
+  // Blättern und Klick wie auf der Bühne. Aus dem Dialog geöffnet, geht es danach zurück in den Dialog.
+  protected readonly buehne = signal<{ entries: Song[]; start: number; zurueck?: string } | null>(null);
+  protected buehneAb(i: number, e: Event): void {
+    e.stopPropagation();
+    this.buehne.set({ entries: this.gefiltert().map(({ title, artist }) => ({ title, artist })), start: i });
+  }
+  protected buehneAusDialog(): void {
+    const k = this.offen();
+    if (!k) return;
+    const entries = this.dialogListe().map((x) => this.zeile(x)).map(({ title, artist }) => ({ title, artist }));
+    this.offen.set(null);
+    this.buehne.set({ entries, start: Math.max(0, this.dialogListe().indexOf(k)), zurueck: k });
+  }
+  protected buehneZu(): void {
+    const k = this.buehne()?.zurueck;
+    this.buehne.set(null);
+    if (k) this.offen.set(k);
   }
 
   protected quelle(k: string): string | undefined {
     return this.quellen.get(k);
-  }
-
-  // Tap-Tempo: im Takt tippen, ab dem 4. Tippen wird das Tempo aus den letzten (bis zu 8) Abständen übernommen;
-  // mehr als 2 Sekunden Pause oder ein anderer Song beginnt neu
-  protected readonly tapKey = signal<string | null>(null);
-  protected readonly tapZahl = signal(0);
-  protected readonly tapBpm = signal<number | null>(null);
-  private tapZeiten: number[] = [];
-
-  protected tippen(k: string): void {
-    const jetzt = performance.now();
-    if (this.tapKey() !== k || jetzt - (this.tapZeiten.at(-1) ?? 0) > 2000) {
-      this.tapKey.set(k);
-      this.tapZeiten = [];
-      this.tapBpm.set(null);
-    }
-    this.tapZeiten = [...this.tapZeiten, jetzt].slice(-9);
-    this.tapZahl.set(this.tapZeiten.length);
-    if (this.tapZeiten.length < 4) return;
-    const schnitt = (this.tapZeiten.at(-1)! - this.tapZeiten[0]) / (this.tapZeiten.length - 1);
-    const bpm = Math.round(60000 / schnitt);
-    if (bpm < 40 || bpm > 240) return;
-    this.tapBpm.set(bpm);
-    this.setzen(k, 'bpm', String(bpm));
   }
 
   protected setzen(k: string, feld: keyof Werte, roh: string): void {

@@ -84,13 +84,14 @@ darunter einfügen:
 ## Tonart und Tempo der Songs
 
 Für Setlist, Bühnen-Modus und Laufzettel im Backstage. Für 33 Songs sind die Werte der **Originalaufnahme** schon
-recherchiert – die Quelle steht unter dem Song. Am einfachsten im Backstage unter **Songs** eintragen (bleibt als
-Entwurf auf dem Gerät), dann **Datei für GitHub erzeugen**, „songinfo.ts auf GitHub öffnen“, mit Strg+A alles
+recherchiert – die Quelle steht im Song-Dialog. Am einfachsten im Backstage unter **Songs** eintragen: Die Tabelle zeigt
+je Song Tonart, Tempo und ob Noten (PDF/Akkorde) da sind; eine Zeile antippen öffnet den Dialog zum Bearbeiten, mit
+**Voriger/Nächster** geht es durch die Liste (bleibt als Entwurf auf dem Gerät), dann **Datei für GitHub erzeugen**, „songinfo.ts auf GitHub öffnen“, mit Strg+A alles
 markieren, einfügen und „Commit changes“.
 
 - **Original** ist die Tonart der Aufnahme. Spielt ihr den Song anders, unter **Wir spielen** eure Tonart und ggf.
   **Capo** wählen – Setlist und Bühnen-Modus zeigen dann eure Version (z. B. „C · Capo 2“).
-- **Tempo per Tippen:** In der Probe beim Song auf <kbd>👆</kbd> mindestens viermal im Takt tippen – das Tempo wird
+- **Tempo per Tippen:** In der Probe im Song-Dialog auf <kbd>👆</kbd> mindestens viermal im Takt tippen – das Tempo wird
   übernommen. Mehr als zwei Sekunden Pause fängt neu an.
 
 Von Hand: in [`src/app/data/songinfo.ts`](https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/app/data/songinfo.ts)
@@ -122,7 +123,7 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 ## Notenblätter und Akkordblätter im Bühnen-Modus
 
-Im Backstage unter **Songs** beim Song auf **Noten** tippen:
+Im Backstage unter **Songs** die Zeile des Songs antippen – im Dialog unten:
 
 - **PDF hochladen** (oder ein schon hochgeladenes wählen). Bei einem Songbook mit vielen Songs unter **Seite von/bis**
   die Seiten dieses Songs angeben – dieselbe PDF kann für viele Songs dienen.
@@ -131,7 +132,7 @@ Im Backstage unter **Songs** beim Song auf **Noten** tippen:
   Refrain, `{c: Intro 2x}` ist ein Hinweis. Im Bühnen-Modus erscheinen die Akkorde automatisch in **eurer** Tonart –
   mit Capo als Griffbild (z. B. „Wir spielen E, Capo 2“ → Griffe in D). Mit − und + lässt es sich von Hand verschieben.
 - **.pro-Dateien** (ChordPro, auch `.cho`, `.chopro`, `.chordpro`, `.crd`) direkt einlesen: beim Song **.pro-Datei
-  laden**, oder unten unter „Notenblätter auf diesem Gerät“ **Akkordblätter (.pro) einlesen** und gleich viele Dateien
+  laden** im Dialog, oder unten unter „Notenblätter auf diesem Gerät“ **Akkordblätter (.pro) einlesen** und gleich viele Dateien
   auf einmal wählen. Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
   über den Dateinamen (auch „Interpret - Titel.pro“). Was sich nicht zuordnen lässt, wird genannt. Ältere Dateien mit
   Umlauten aus Windows-Programmen werden richtig gelesen; `{capo: 2}` in der Datei wird beim Transponieren berücksichtigt.
@@ -140,7 +141,12 @@ Im **Bühnen-Modus** oben auf das Noten-Symbol tippen. Weiter blättern wie gewo
 oder **Bluetooth-Fußpedal** (die senden Pfeiltasten): erst durch die Seiten, am Ende zum nächsten Song, dessen Noten
 dann gleich erscheinen. Zurück landet auf der letzten Seite des vorigen Songs. Lange Seiten oder **volle Breite**
 (Symbol oben) werden erst gescrollt, dann umgeblättert. **Mitscrollen** lässt ein Akkordblatt in der Länge des Songs
-durchlaufen.
+durchlaufen. Hat ein Song PDF **und** Akkordblatt, bleibt die zuletzt gewählte Ansicht (PDF oder Akkorde) eingestellt –
+auch beim nächsten Song und beim Zurückblättern; Songs mit nur einem von beiden zeigen dieses.
+
+**Zur Kontrolle** ohne Setlist: unter **Songs** auf ▶ in einer Zeile tippen – der Bühnen-Modus startet bei diesem Song
+mit offenen Noten und blättert ab da durch die Liste (wie gerade gefiltert), Tippen, Wischen, Pedal und Klick wie auf
+der Bühne. Im Song-Dialog geht das mit **Im Bühnen-Modus ansehen**; beim Schließen geht es zurück in den Dialog.
 
 **Wichtig:** Noten bleiben nur auf dem jeweiligen Gerät und gehen nie an GitHub – Notenblätter und Liedtexte sind
 urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unten unter Songs mit **Notenblätter an die

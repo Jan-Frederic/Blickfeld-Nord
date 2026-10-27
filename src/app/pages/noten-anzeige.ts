@@ -10,6 +10,8 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 // (ChordPro, in die Tonart der Band transponiert – mit Capo als Griffbild). Geblättert wird vom Bühnen-Modus aus
 // (Tippen, Wischen, Pfeiltasten, Bluetooth-Pedal): erst innerhalb des Blatts, am Ende weiter zum nächsten Song.
 const BREITE_KEY = 'bn-noten-breite';
+// gewählte Ansicht (PDF oder Akkorde) für Songs, die beides haben – bleibt beim Blättern und auf dem Gerät erhalten
+const ANSICHT_KEY = 'bn-noten-ansicht';
 
 @Component({
   selector: 'app-noten-anzeige',
@@ -101,6 +103,7 @@ export class NotenAnzeige {
   protected readonly laden = signal(false);
   protected readonly fehler = signal('');
   protected readonly ansicht = signal<'pdf' | 'akkorde'>('pdf');
+  private bevorzugt = ladeAnsicht();
   protected readonly nurBreite = signal(ladeBreite());
   private readonly doc = signal<PdfDokument | null>(null);
   protected readonly index = signal(0);
@@ -188,7 +191,10 @@ export class NotenAnzeige {
       const n = await songNoten(`${s.title}|${s.artist}`);
       if (this.song() !== s) return;
       this.noten.set(n);
-      this.ansicht.set(n?.pdf || !n?.chordpro ? 'pdf' : 'akkorde');
+      // beides da → die zuletzt gewählte Ansicht, sonst die vorhandene (ohne die Wahl zu ändern)
+      this.ansicht.set(n?.pdf && n.chordpro ? this.bevorzugt : n?.chordpro ? 'akkorde' : 'pdf');
+      // zurückgeblättert ins Akkordblatt: am Ende einsteigen
+      if (vonHinten && this.ansicht() === 'akkorde') requestAnimationFrame(() => requestAnimationFrame(() => this.flaeche()?.nativeElement.scrollTo(0, 1e6)));
       if (n?.pdf) {
         let d = pdfs.get(n.pdf.datei);
         if (!d) {
@@ -239,6 +245,12 @@ export class NotenAnzeige {
     e.stopPropagation();
     this.stoppen();
     this.ansicht.update((a) => (a === 'pdf' ? 'akkorde' : 'pdf'));
+    this.bevorzugt = this.ansicht();
+    try {
+      localStorage.setItem(ANSICHT_KEY, this.bevorzugt);
+    } catch {
+      // ohne Speicher gilt die Wahl bis zum Schließen
+    }
   }
 
   protected breiteUmschalten(e: Event): void {
@@ -294,5 +306,13 @@ function ladeBreite(): boolean {
     return localStorage.getItem(BREITE_KEY) === '1';
   } catch {
     return false;
+  }
+}
+
+function ladeAnsicht(): 'pdf' | 'akkorde' {
+  try {
+    return localStorage.getItem(ANSICHT_KEY) === 'akkorde' ? 'akkorde' : 'pdf';
+  } catch {
+    return 'pdf';
   }
 }

@@ -331,14 +331,18 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   const p = await page();
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
-  const zeile = p.locator('app-backstage-songs .list li').first();
+  // Zeile der Tabelle anklicken öffnet den Dialog
+  await p.locator('app-backstage-songs tbody tr').first().click();
+  const zeile = p.locator('app-song-dialog dialog[open]');
   await zeile.locator('select').first().selectOption('G');
   await zeile.locator('input[type=number]').fill('120');
   await zeile.locator('input[type=number]').blur();
   await until(async () => (await p.locator('app-backstage-songs .apply').innerText()).includes('1 Song geändert'), 'Änderung wird nicht gezählt');
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
-  await until(async () => (await p.locator('app-backstage-songs .list li select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
+  await until(async () => (await p.locator('app-backstage-songs tbody tr').first().innerText()).includes('120 bpm'), 'Entwurf nach Neuladen nicht in der Tabelle');
+  await p.locator('app-backstage-songs tbody tr .oeffnen').first().click();
+  await until(async () => (await zeile.locator('select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
   // der Entwurf gilt auf diesem Gerät sofort im Bühnen-Modus
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -368,7 +372,9 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   const p = await page();
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Iris');
-  const zeile = p.locator('app-backstage-songs .list li').first();
+  await p.locator('app-backstage-songs tbody tr').first().click();
+  const zeile = p.locator('app-song-dialog dialog[open]');
+  await until(async () => (await zeile.count()) === 1, 'Dialog öffnet nicht');
   expect((await zeile.innerText()).includes('Recherche:'), 'Quelle der recherchierten Werte fehlt');
   await zeile.locator('select').nth(1).selectOption('C');
   await zeile.locator('select').nth(2).selectOption('2');
@@ -379,6 +385,12 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   }
   const bpm = Number(await zeile.locator('input[type=number]').inputValue());
   expect(bpm >= 105 && bpm <= 135, `Tap-Tempo ergibt ${bpm} statt etwa 120 bpm`);
+  // aus dem Dialog in den Bühnen-Modus und zurück in den Dialog
+  await zeile.locator('button', { hasText: 'Bühnen-Modus' }).click();
+  await until(async () => (await p.locator('app-setlist-buehne .key').innerText().catch(() => '')) === 'C', 'Bühnen-Modus aus dem Dialog zeigt nicht den Song');
+  await p.keyboard.press('Escape');
+  await p.keyboard.press('Escape');
+  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0 && (await zeile.count()) === 1, 'Nach dem Bühnen-Modus geht es nicht zurück in den Dialog');
 
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -414,9 +426,9 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   const p = await page();
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Iris');
-  const zeile = p.locator('app-backstage-songs .list li').first();
+  await p.locator('app-backstage-songs tbody tr').first().click();
+  const zeile = p.locator('app-song-dialog dialog[open]');
   await zeile.locator('select').nth(1).selectOption('E');
-  await zeile.locator('button.noten').click();
   // Pressekit (mehrseitig) als Notenblatt, davon Seite 2–3
   await zeile.locator('app-noten-editor input[type=file][accept*=pdf]').setInputFiles({ name: 'songbook.pdf', mimeType: 'application/pdf', buffer: readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf')) });
   await until(async () => (await zeile.locator('app-noten-editor .meldung').innerText().catch(() => '')).includes('songbook.pdf'), 'PDF wird nicht gespeichert');
@@ -427,7 +439,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await zeile.locator('app-noten-editor textarea').fill('{key: D}\n[D]Iris [G/H]Text');
   await zeile.locator('app-noten-editor textarea').blur();
   await until(async () => (await zeile.locator('app-noten-editor .pruefung').innerText().catch(() => '')).includes('2 Akkorde'), 'Akkordblatt wird nicht erkannt');
-  expect((await zeile.locator('button.noten').innerText()).includes('✓'), 'Song zeigt keine Noten an');
+  await until(async () => (await p.locator('app-backstage-songs tbody tr .noten .tag').allInnerTexts()).join(' ') === 'PDF Akkorde', 'Tabelle zeigt die Noten nicht an');
 
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -455,6 +467,20 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await p.keyboard.press('Escape');
   await until(async () => (await p.locator('app-noten-anzeige').count()) === 0, 'Escape schließt die Noten nicht');
 
+  // Kontrolle aus Backstage → Songs: ▶ startet den Bühnen-Modus ab diesem Song mit offenen Noten; die zuletzt
+  // gewählte Ansicht (Akkorde) bleibt – auch nach dem nächsten Song und zurück
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs tbody tr', { hasText: 'Iris' }).locator('.start button').click();
+  await until(async () => (await kopf.innerText().catch(() => '')).includes('Iris'), 'Bühnen-Modus startet nicht beim gewählten Song');
+  await until(async () => (await p.locator('app-noten-anzeige .teil b').count()) > 0, 'gewählte Ansicht (Akkorde) wird nicht beibehalten');
+  await p.keyboard.press('ArrowRight');
+  await until(async () => !(await kopf.innerText()).includes('Iris'), 'Pfeiltaste blättert nicht zum nächsten Song der Liste');
+  await p.keyboard.press('ArrowLeft');
+  await until(async () => (await kopf.innerText()).includes('Iris') && (await p.locator('app-noten-anzeige .teil b').count()) > 0, 'Beim Zurückblättern wechselt die Ansicht');
+  await p.keyboard.press('Escape');
+  await p.keyboard.press('Escape');
+  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'Bühnen-Modus lässt sich nicht schließen');
+
   // Weitergabe: Datei exportieren und auf einem zweiten Gerät importieren
   await p.go('/backstage/songs/');
   const [download] = await Promise.all([p.waitForEvent('download'), p.locator('app-noten-verwaltung button', { hasText: 'an die Band' }).click()]);
@@ -473,9 +499,9 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   expect((await q.locator('app-noten-verwaltung').innerText()).includes('gibt-es-nicht.pro'), 'Nicht zugeordnete Datei wird nicht gemeldet');
   // einzelne Datei beim Song, ältere Windows-Kodierung mit Umlaut
   await q.locator('app-backstage-songs input[type=search]').fill('Angels');
-  const engel = q.locator('app-backstage-songs .list li').first();
-  await until(async () => (await engel.locator('button.noten').innerText()).includes('✓'), 'Sammel-Import kennzeichnet den Song nicht');
-  await engel.locator('button.noten').click();
+  await until(async () => (await q.locator('app-backstage-songs tbody tr .noten').first().innerText()).includes('Akkorde'), 'Sammel-Import kennzeichnet den Song nicht');
+  await q.locator('app-backstage-songs tbody tr').first().click();
+  const engel = q.locator('app-song-dialog dialog[open]');
   await until(async () => (await engel.locator('app-noten-editor textarea').inputValue()).includes('I sit and wait'), 'Akkordblatt aus der .pro-Datei fehlt beim Song');
   await engel.locator('app-noten-editor input[type=file][accept*=".pro"]').setInputFiles({ name: 'angels.cho', mimeType: 'text/plain', buffer: Buffer.from('{title: Angels}\n[E]Grüße', 'latin1') });
   await until(async () => (await engel.locator('app-noten-editor textarea').inputValue()).includes('Grüße'), 'Einzelne .pro-Datei (Windows-Kodierung) wird nicht übernommen');
@@ -625,7 +651,7 @@ test('Kalender-Dateien und Service Worker sind vorhanden', async () => {
 // ---- Ausführen ---------------------------------------------------------------------------------------
 
 let failed = 0;
-for (const t of tests) {
+for (const t of tests.filter((x) => !process.env.NUR || x.name.includes(process.env.NUR))) {
   const start = Date.now();
   try {
     const p = await t.fn();
