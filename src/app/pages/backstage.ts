@@ -6,6 +6,7 @@ import { BackstageStats } from './backstage-stats';
 import { HeuteFaellig } from './heute-faellig';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
+import { SyncService } from '../data/sync.service';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
 // Die Übersicht zeigt Kennzahlen und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
@@ -110,6 +111,8 @@ export class Backstage {
     .slice(0, 4);
 
   constructor() {
+    // Synchronisation mit OneDrive (falls eingerichtet und „automatisch“): beim Öffnen und alle 15 Minuten
+    inject(SyncService).automatisch();
     // Direktaufruf einer Unterseite: GitHub Pages leitet /backstage/<id>[/<teil>] über die Fehlerseite
     // nach /backstage/?auftritt=<id>[&teil=<teil>] um – von hier geht es zur eigentlichen Unterseite weiter
     // (der Teil hinter „#“, z. B. eine geteilte Setlist, kommt mit).

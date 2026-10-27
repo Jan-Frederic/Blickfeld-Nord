@@ -659,6 +659,31 @@ test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, 
   return q;
 });
 
+test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten', async () => {
+  const p = await page();
+  await p.go('/backstage/abgleich/');
+  expect((await p.locator('app-sync-status').innerText()).includes('In den Einstellungen einrichten'), 'Hinweis auf die Einstellungen fehlt');
+  await p.locator('app-sync-status a', { hasText: 'Einstellungen' }).click();
+  await p.waitForURL(/\/backstage\/einstellungen/);
+  const box = p.locator('app-sync-einstellungen');
+  // App-ID auf diesem Gerät eintragen → Anmelden wird angeboten (Microsoft selbst ist im Test gesperrt)
+  await box.locator('input[placeholder^="z. B. 1a2b"]').fill('00000000-1111-2222-3333-444444444444');
+  await box.locator('input[placeholder^="z. B. 1a2b"]').blur();
+  await until(async () => (await box.locator('button', { hasText: 'Mit Microsoft anmelden' }).count()) === 1, 'Anmelden erscheint nach dem Eintragen der App-ID nicht');
+  // Optionen bleiben gespeichert
+  await box.locator('select').selectOption('runter');
+  await box.locator('input[type=checkbox]').first().uncheck();
+  await p.reload({ waitUntil: 'networkidle' });
+  expect((await box.locator('select').inputValue()) === 'runter', 'Richtung nicht gespeichert');
+  expect(!(await box.locator('input[type=checkbox]').first().isChecked()), 'Löschungen-Option nicht gespeichert');
+  expect((await p.evaluate(() => localStorage.getItem('bn-onedrive-client'))) === '00000000-1111-2222-3333-444444444444', 'App-ID nicht gespeichert');
+  // Ordner auf dem Computer: Chromium kann das, die Wahl wird angeboten
+  await box.locator('input[type=radio]').nth(1).check();
+  await until(async () => (await box.locator('button', { hasText: 'Ordner wählen' }).count()) === 1, 'Ordnerwahl erscheint nicht');
+  expect(!(await box.locator('button', { hasText: 'Jetzt synchronisieren' }).isEnabled()), 'Synchronisieren ohne Konto und Ordner möglich');
+  return p;
+});
+
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });

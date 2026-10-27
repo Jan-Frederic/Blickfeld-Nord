@@ -25,7 +25,7 @@ export const BEREICHE: Bereich[] = [
     id: 'einstellungen',
     label: 'Einstellungen',
     hinweis: 'Schriftgröße, Klick-Ton, Noten-Ansicht, Filter, Sprache',
-    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-chunk-reload', 'bn-onedrive-'],
+    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-'],
   },
 ];
 
@@ -129,6 +129,9 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-gesichert': 'Letzte Sicherung',
   'bn-chunk-reload': 'Neuladen nach Update',
   'bn-onedrive-ordner': 'OneDrive-Ordner',
+  'bn-onedrive-client': 'OneDrive: App-ID',
+  'bn-sync-einstellungen': 'Synchronisation: Einstellungen',
+  'bn-sync-letzter': 'Synchronisation: letzter Abgleich',
   'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',
   'bn-aufgaben': 'Aufgaben-Häkchen',
   'bn-ui-geprueft': 'Geprüfte Oberflächentexte',

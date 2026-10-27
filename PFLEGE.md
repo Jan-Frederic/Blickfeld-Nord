@@ -209,6 +209,28 @@ Unterordnern (Noten über Titel und Interpret im Dateinamen) – und den Stand d
 - Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
   ersetzt.
 
+## Synchronisation OneDrive ↔ lokal (Einstellungen)
+
+Wie OneSync: Ein **OneDrive-Ordner** wird mit einem **lokalen Ordner** abgeglichen – in beide Richtungen, auf Wunsch
+automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (braucht einmal die App-Registrierung, siehe
+„OneDrive einrichten“ – die App-ID lässt sich dort direkt eintragen):
+
+1. **Microsoft-Konto:** App-ID eintragen (falls nicht schon im Code), **Mit Microsoft anmelden**.
+2. **OneDrive-Ordner:** durchklicken, ggf. **Neuer Ordner**, **Diesen Ordner nehmen**.
+3. **Lokaler Ordner:**
+   - **Speicher dieser App** – auf allen Geräten (iPhone, Android, Mac, PC), offline verfügbar. Die Dateien liegen im
+     Browser (nicht in der Dateien-App sichtbar); unter Abgleich → **Lokale Dateien** lassen sie sich öffnen.
+   - **Ordner auf diesem Computer** – nur Chrome/Edge am Mac oder PC: ein echter Ordner auf der Festplatte.
+4. **Optionen:** Richtung (beide / nur herunter / nur hoch), **Löschungen übertragen** (in OneDrive landen sie im
+   Papierkorb), **Automatisch** (beim Öffnen des Backstage und alle 15 Minuten, solange er offen ist).
+
+So wird abgeglichen: Der Stand nach jedem Abgleich wird gemerkt. Neues und Geändertes wandert auf die andere Seite,
+Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf beiden Seiten geändert, gewinnt die
+neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten. Würden auf einmal viele Dateien gelöscht,
+wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
+Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
+**Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro).
+
 ## OneDrive einrichten (Abgleich)
 
 Alternative mit Anmeldung bei Microsoft (für Geräte ohne OneDrive-App): Im Backstage unter **Abgleich → OneDrive** lassen sich alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien
@@ -227,8 +249,8 @@ Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
 3. Umleitungs-URI: Plattform **Single-Page-Anwendung (SPA)**, Adresse `https://blickfeld-nord.de/auth/`.
 4. Unter **API-Berechtigungen** → Microsoft Graph → Delegiert: `Files.ReadWrite` hinzufügen (`User.Read` ist schon da).
    Beim ersten Verbinden fragt Microsoft einmal, ob die App auf OneDrive zugreifen darf.
-5. Die **Anwendungs-ID (Client-ID)** in `src/app/data/onedrive-config.ts` bei `clientId` eintragen (oder an Claude
-   schicken). Sie ist kein Geheimnis. (`tenant: 'consumers'` = private Konten; für Firmenkonten wäre es `common`.)
+5. Die **Anwendungs-ID (Client-ID)** unter Backstage → **Einstellungen** eintragen (gilt für das Gerät) – oder für
+   alle Geräte in `src/app/data/onedrive-config.ts` bei `clientId` (oder an Claude schicken). Sie ist kein Geheimnis. (`tenant: 'consumers'` = private Konten; für Firmenkonten wäre es `common`.)
 
 Die Daten gehen direkt vom Browser zu OneDrive, nicht über GitHub. Noten bleiben damit weiterhin aus dem öffentlichen
 Repository heraus.
