@@ -648,11 +648,24 @@ test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, 
   await q.locator('app-backstage-ordner input.dateien').setInputFiles([
     { name: 'sicherung.json', mimeType: 'application/json', buffer: Buffer.from(backstage) },
     { name: 'Iris - The Goo Goo Dolls - Gitarre.pdf', mimeType: 'application/pdf', buffer: pdf },
+    // Interpret zuerst, mit Tippfehler
+    { name: 'Robbie Wiliams - Angels - Keys.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.from('2')]) },
+    // nicht zu erkennen → von Hand wählen
+    { name: 'Scan 0042.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.from('3')]) },
   ]);
   const funde = q.locator('app-backstage-ordner app-funde-liste');
   await until(async () => (await funde.innerText().catch(() => '')).includes('Backstage · sicherung.json'), 'Dateiauswahl wird nicht gesichtet');
+  const zeile = (name) => funde.locator('li', { hasText: name });
+  expect((await funde.innerText()).includes('2 von 3 erkannt'), 'Erkennung zählt nicht: ' + (await funde.locator('.kopf').innerText()));
+  expect((await zeile('Robbie Wiliams').locator('select').inputValue()) === 'Angels|Robbie Williams', 'Interpret vor Titel mit Tippfehler nicht erkannt');
+  expect((await zeile('Robbie Wiliams').locator('input.fassung').inputValue()) === 'Keys', 'Fassung nicht erkannt');
+  expect((await zeile('Scan 0042').innerText()).includes('nicht erkannt'), 'Nicht Erkanntes wird nicht gezeigt');
+  await zeile('Scan 0042').locator('select').selectOption('Hey Jude|The Beatles');
+  await zeile('Scan 0042').locator('input.fassung').fill('Chor');
+  await zeile('Scan 0042').locator('input.fassung').blur();
   await funde.locator('button', { hasText: 'Einlesen' }).click();
   await until(async () => (await funde.locator('.meldung').innerText().catch(() => '')).includes('1 Backstage-Eintrag'), 'Einlesen der gewählten Dateien klappt nicht');
+  expect((await funde.locator('.meldung').innerText()).includes('3 PDFs'), 'Nicht alle PDFs eingelesen: ' + (await funde.locator('.meldung').innerText()));
   for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
   return q;
 });

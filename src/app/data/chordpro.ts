@@ -187,44 +187,79 @@ const WORTTRENNER = /[\s_\-–—/()[\]{},.+]+/;
 const woerter = (s: string) => s.split(WORTTRENNER).filter(Boolean);
 const wort = (w: string) => vergleich(w).replace(/ /g, '');
 
+// Abstand zweier Wörter (Levenshtein) – für Tippfehler wie „Dools“ statt „Dolls“ oder „Halleluja“ statt „Hallelujah“
+function abstand(a: string, b: string): number {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  let vorher = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const jetzt = [i];
+    for (let j = 1; j <= b.length; j++) jetzt[j] = Math.min(vorher[j] + 1, jetzt[j - 1] + 1, vorher[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    vorher = jetzt;
+  }
+  return vorher[b.length];
+}
+
+export interface Treffer<T> {
+  song: T;
+  /** 1000 für den Interpreten, dazu die Zahl der Titelwörter; unscharfe Treffer zählen weniger */
+  punkte: number;
+  mitInterpret: boolean;
+  unscharf: boolean;
+  /** Positionen der verbrauchten Wörter – der Rest ist die Fassung */
+  weg: Set<number>;
+}
+
 /**
- * Song aus einem Dateinamen, in dem Titel und Interpret stecken – in beliebiger Reihenfolge und mit Zusätzen wie
- * „Iris - Goo Goo Dolls - Bass v2.pdf“ oder „GooGooDolls_Iris_(Gitarre).pdf“. Was übrig bleibt, ist die Fassung
- * („Bass v2“, „Gitarre“). Bei mehreren passenden Titeln gewinnt der mit Interpret, dann der längste.
+ * Welche Songs stecken in diesem Text (Dateiname, Ordnerpfad, Kopf eines Notenblatts)? Titel und Interpret in
+ * beliebiger Reihenfolge, auch zusammengeschrieben („GooGooDolls“); unscharf=true lässt einen Tippfehler je Wort zu
+ * (Wörter ab 4 Buchstaben). Ergebnis: alle Treffer, die besten zuerst.
  */
-export function dateinameZuordnen<T extends { title: string; artist: string }>(dateiname: string, songs: T[]): { song: T; fassung: string } | undefined {
-  const basis = dateiname.replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '');
-  const roh = woerter(basis);
+export function songsImText<T extends { title: string; artist: string }>(text: string, songs: T[], unscharf = false): { treffer: Treffer<T>[]; woerter: string[] } {
+  const roh = woerter(text);
   const w = roh.map(wort);
-  // Wortfolge im Dateinamen finden – auch zusammengeschrieben („GooGooDolls“); gibt die Positionen zurück
+  const gleich = (a: string, b: string) => a === b || (unscharf && Math.min(a.length, b.length) >= 4 && abstand(a, b) <= (b.length >= 8 ? 2 : 1));
   const finden = (folge: string[], belegt: Set<number>): number[] | undefined => {
     if (!folge.length) return undefined;
     for (let i = 0; i < w.length; i++) {
       if (belegt.has(i)) continue;
-      if (folge.every((f, j) => w[i + j] === f && !belegt.has(i + j))) return folge.map((_, j) => i + j);
-      if (folge.length > 1 && w[i] === folge.join('')) return [i];
+      if (folge.every((f, j) => i + j < w.length && gleich(w[i + j], f) && !belegt.has(i + j))) return folge.map((_, j) => i + j);
+      if (folge.length > 1 && gleich(w[i], folge.join(''))) return [i];
     }
     return undefined;
   };
-  let best: { song: T; punkte: number; weg: Set<number> } | undefined;
-  let gleichauf = false;
+  const treffer: Treffer<T>[] = [];
   for (const song of songs) {
     const titel = woerter(song.title.split(' - ')[0].replace(/\([^)]*\)/g, '')).map(wort).filter(Boolean);
     const t = finden(titel, new Set());
     if (!t) continue;
     const weg = new Set(t);
     const artist = woerter(song.artist).map(wort).filter(Boolean);
-    // Interpret auch ohne Artikel („Goo Goo Dolls“ für „The Goo Goo Dolls“)
-    const a = finden(artist, weg) ?? (['the', 'die', 'der', 'das'].includes(artist[0]) ? finden(artist.slice(1), weg) : undefined);
+    // Interpret auch ohne Artikel („Goo Goo Dolls“ für „The Goo Goo Dolls“) und als „Nachname, Vorname“
+    const a =
+      finden(artist, weg) ??
+      (['the', 'die', 'der', 'das'].includes(artist[0]) ? finden(artist.slice(1), weg) : undefined) ??
+      (artist.length === 2 ? finden([artist[1], artist[0]], weg) : undefined);
     a?.forEach((i) => weg.add(i));
-    const punkte = (a ? 1000 : 0) + titel.length;
-    if (best && punkte === best.punkte) gleichauf = true;
-    if (!best || punkte > best.punkte) {
-      best = { song, punkte, weg };
-      gleichauf = false;
-    }
+    treffer.push({ song, punkte: (a ? 1000 : 0) + titel.length, mitInterpret: !!a, unscharf, weg });
   }
-  if (!best || gleichauf) return undefined;
-  const fassung = roh.filter((_, i) => !best!.weg.has(i)).join(' ');
-  return { song: best.song, fassung };
+  return { treffer: treffer.sort((x, y) => y.punkte - x.punkte), woerter: roh };
+}
+
+/** die besten Treffer (bei Gleichstand mehrere) */
+export function besteTreffer<T>(treffer: Treffer<T>[]): Treffer<T>[] {
+  return treffer.filter((t) => t.punkte === treffer[0]?.punkte);
+}
+
+/**
+ * Song aus einem Dateinamen, in dem Titel und Interpret stecken – in beliebiger Reihenfolge und mit Zusätzen wie
+ * „Iris - Goo Goo Dolls - Bass v2.pdf“ oder „GooGooDolls_Iris_(Gitarre).pdf“. Was übrig bleibt, ist die Fassung
+ * („Bass v2“, „Gitarre“). Bei mehreren passenden Titeln gewinnt der mit Interpret, dann der längste; bei Gleichstand
+ * keiner. unscharf=true lässt Tippfehler zu.
+ */
+export function dateinameZuordnen<T extends { title: string; artist: string }>(dateiname: string, songs: T[], unscharf = false): { song: T; fassung: string } | undefined {
+  const basis = dateiname.replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '');
+  const { treffer, woerter: roh } = songsImText(basis, songs, unscharf);
+  const beste = besteTreffer(treffer);
+  if (beste.length !== 1) return undefined;
+  return { song: beste[0].song, fassung: roh.filter((_, i) => !beste[0].weg.has(i)).join(' ') };
 }

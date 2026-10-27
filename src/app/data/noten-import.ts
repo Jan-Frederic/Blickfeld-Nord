@@ -1,11 +1,11 @@
-import data from './repertoire.json';
-import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText, dateinameZuordnen, songZuordnen } from './chordpro';
+import { CHORDPRO_ENDUNGEN, dateiText } from './chordpro';
+import { erkennen } from './erkennung';
 import { NotenDateiInfo, notenDateiSpeichern, songNoten, songNotenSetzen } from './noten';
 
 // Viele Noten-Dateien auf einmal einlesen – von der Festplatte (Dateien/Ordner wählen) oder aus OneDrive.
 // PDFs über Titel und Interpret im Dateinamen (der Rest ist die Fassung wie „Bass“) – kommen als weiteres PDF zum
-// Song dazu, dieselbe Datei nicht doppelt. Akkordblätter über {title:}/{artist:} oder den Dateinamen (ersetzt ein
-// vorhandenes). Unterordner helfen bei der Zuordnung („Goo Goo Dolls/Iris - Bass.pdf“).
+// Song dazu, dieselbe Datei nicht doppelt. Akkordblätter ersetzen ein vorhandenes. Zuordnung: vorher gewählt (ziel)
+// oder automatisch erkannt – Dateiname, Ordner („Goo Goo Dolls/Iris - Bass.pdf“), Inhalt, Tippfehler.
 
 export interface NotenQuelle {
   name: string;
@@ -13,6 +13,8 @@ export interface NotenQuelle {
   pfad: string;
   groesse: number;
   daten: () => Promise<ArrayBuffer>;
+  /** schon festgelegter Song („Titel|Interpret“) und Fassung – sonst wird über den Namen zugeordnet */
+  ziel?: { key: string; fassung?: string };
 }
 
 export interface NotenErgebnis {
@@ -30,6 +32,13 @@ export const istAkkordblatt = (name: string) => CHORDPRO_ENDUNGEN.split(',').inc
 /** Fortschritt: fertig von gesamt, gerade bearbeitete Datei */
 export type NotenFortschritt = (fertig: number, gesamt: number, name: string) => void;
 
+// ohne vorherige Auswahl: Titel und Interpret erkennen (Name, Ordner, Inhalt, Tippfehler – data/erkennung.ts);
+// nur eindeutige Treffer, Unklares landet in „nicht zugeordnet“
+async function automatisch(datei: NotenQuelle): Promise<{ key: string; fassung: string } | undefined> {
+  const e = await erkennen(datei.name, datei.pfad, datei.daten);
+  return e.key ? { key: e.key, fassung: e.fassung } : undefined;
+}
+
 export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiInfo[], fortschritt?: NotenFortschritt): Promise<NotenErgebnis> {
   const r: NotenErgebnis = { pdfs: 0, blaetter: 0, ersetzt: 0, doppelt: 0, andere: 0, ohne: [] };
   const vorhanden = [...bekannt];
@@ -38,12 +47,12 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
   for (const datei of liste) {
     fortschritt?.(fertig++, liste.length, datei.name);
     if (istPdf(datei.name)) {
-      const z = dateinameZuordnen(datei.name, data.tracks) ?? dateinameZuordnen(datei.pfad, data.tracks);
+      const z = datei.ziel ? { key: datei.ziel.key, fassung: datei.ziel.fassung ?? '' } : await automatisch(datei);
       if (!z) {
         r.ohne.push(datei.name);
         continue;
       }
-      const key = `${z.song.title}|${z.song.artist}`;
+      const key = z.key;
       const vorher = (await songNoten(key)) ?? {};
       let id = vorhanden.find((d) => d.name === datei.name && d.groesse === datei.groesse)?.id;
       if (!id) {
@@ -58,12 +67,11 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
       r.pdfs++;
     } else if (istAkkordblatt(datei.name)) {
       const text = dateiText(await datei.daten());
-      const song = songZuordnen(datei.name, chordproLesen(text), data.tracks) ?? dateinameZuordnen(datei.pfad, data.tracks)?.song;
-      if (!song) {
+      const key = datei.ziel?.key ?? (await automatisch(datei))?.key;
+      if (!key) {
         r.ohne.push(datei.name);
         continue;
       }
-      const key = `${song.title}|${song.artist}`;
       const vorher = (await songNoten(key)) ?? {};
       if (vorher.chordpro?.trim()) r.ersetzt++;
       await songNotenSetzen(key, { ...vorher, chordpro: text });

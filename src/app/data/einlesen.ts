@@ -2,6 +2,7 @@ import { NOTEN_APP, notenDateien, notenImportieren } from './noten';
 import { NotenErgebnis, istAkkordblatt, istPdf, notenEinlesen, notenErgebnisText } from './noten-import';
 import { APP, backstageImportieren } from '../pages/backstage-sync';
 import type { Stand } from '../pages/fortschritt';
+import { Erkennung, erkennen } from './erkennung';
 
 export type Melden = (stand: Stand) => void;
 
@@ -23,6 +24,8 @@ export interface Fund extends Quelle {
   art: 'backstage' | 'noten' | 'pdf' | 'akkordblatt';
   /** Inhalt bei JSON-Dateien (schon beim Sichten gelesen) */
   text?: string;
+  /** bei Noten: erkannter Song, Kandidaten, Fassung */
+  erkennung?: Erkennung;
 }
 
 /** Dateien sichten: Noten nach Endung, JSON-Dateien nach Inhalt; neueste zuerst */
@@ -46,11 +49,22 @@ export async function sichten(quellen: Quelle[], melden?: Melden): Promise<Fund[
       else if (app === NOTEN_APP) funde.push({ ...q, art: 'noten', text });
     }
   }
+  // Noten: Titel und Interpret erkennen (Name, Ordner, Inhalt, Tippfehler)
+  const noten = funde.filter((f) => f.art === 'pdf' || f.art === 'akkordblatt');
+  for (const [n, f] of noten.entries()) {
+    melden?.({ text: `Erkennen: ${f.pfad}`, fertig: n, gesamt: noten.length });
+    f.erkennung = await erkennen(f.name, f.pfad, f.laden);
+  }
   return funde.sort((a, b) => b.geaendert.localeCompare(a.geaendert));
 }
 
 /** gewählte Funde übernehmen; Backstage-Dateien älteste zuerst, damit die neueste gewinnt */
-export async function uebernehmen(funde: Fund[], wahl: { dateien: Set<string>; noten: boolean; ersetzen: boolean }, melden?: Melden): Promise<{ text: string; ohne: string[] }> {
+/** wahl.noten: je Pfad der gewählte Song („Titel|Interpret“) und die Fassung – nur diese Noten-Dateien werden eingelesen */
+export async function uebernehmen(
+  funde: Fund[],
+  wahl: { dateien: Set<string>; noten: Map<string, { key: string; fassung: string }>; ersetzen: boolean },
+  melden?: Melden,
+): Promise<{ text: string; ohne: string[] }> {
   const teile: string[] = [];
   const backstage = funde.filter((d) => d.art === 'backstage' && wahl.dateien.has(d.pfad)).reverse();
   let eintraege = 0;
@@ -61,9 +75,9 @@ export async function uebernehmen(funde: Fund[], wahl: { dateien: Set<string>; n
     teile.push(`Noten für ${await notenImportieren(d.text!)} Songs`);
   }
   let r: NotenErgebnis | undefined;
-  const noten = funde.filter((d) => d.art === 'pdf' || d.art === 'akkordblatt');
-  if (wahl.noten && noten.length) {
-    r = await notenEinlesen(noten.map((d) => ({ name: d.name, pfad: d.pfad, groesse: d.groesse, daten: d.laden })), await notenDateien(), (fertig, gesamt, name) =>
+  const noten = funde.filter((d) => (d.art === 'pdf' || d.art === 'akkordblatt') && wahl.noten.has(d.pfad));
+  if (noten.length) {
+    r = await notenEinlesen(noten.map((d) => ({ name: d.name, pfad: d.pfad, groesse: d.groesse, daten: d.laden, ziel: wahl.noten.get(d.pfad) })), await notenDateien(), (fertig, gesamt, name) =>
       melden?.({ text: name ? `Noten: ${name}` : 'Noten eingelesen', fertig, gesamt }),
     );
     teile.push(notenErgebnisText(r).text);

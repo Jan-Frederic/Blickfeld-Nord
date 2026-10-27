@@ -5,11 +5,13 @@
 // nur die Teile von pdf.js, die hier gebraucht werden
 export interface PdfSeite {
   getViewport(o: { scale: number }): { width: number; height: number };
+  getTextContent(): Promise<{ items: { str?: string; transform?: number[] }[] }>;
   render(o: { canvasContext: CanvasRenderingContext2D; canvas?: HTMLCanvasElement; viewport: unknown }): { promise: Promise<void>; cancel(): void };
 }
 export interface PdfDokument {
   numPages: number;
   getPage(n: number): Promise<PdfSeite>;
+  getMetadata(): Promise<{ info?: { Title?: string; Author?: string } }>;
   destroy(): Promise<void>;
 }
 interface PdfJs {
@@ -61,5 +63,24 @@ export async function seiteZeichnen(doc: PdfDokument, nr: number, canvas: HTMLCa
   } catch (e) {
     // abgebrochen, weil schon neu gezeichnet wird – kein Fehler
     if ((e as Error).name !== 'RenderingCancelledException') throw e;
+  }
+}
+
+/**
+ * Titel-Angaben eines Notenblatts: Titel/Autor aus den PDF-Eigenschaften und der Kopf der ersten Seite (die oberen
+ * Textzeilen – dort stehen Titel und Interpret bzw. Komponist). Für die Zuordnung zum Song (data/erkennung.ts).
+ */
+export async function pdfKopf(daten: ArrayBuffer): Promise<{ eigenschaften: string; kopf: string }> {
+  const doc = await pdfOeffnen(daten);
+  try {
+    const info = (await doc.getMetadata().catch(() => ({ info: undefined }))).info;
+    const seite = await doc.getPage(1);
+    const hoehe = seite.getViewport({ scale: 1 }).height;
+    // Textstücke im oberen Viertel der Seite (y wächst nach oben), von oben nach unten
+    const items = (await seite.getTextContent()).items.filter((i) => i.str?.trim() && (i.transform?.[5] ?? 0) > hoehe * 0.72);
+    items.sort((a, b) => (b.transform?.[5] ?? 0) - (a.transform?.[5] ?? 0));
+    return { eigenschaften: [info?.Title, info?.Author].filter(Boolean).join(' – '), kopf: items.map((i) => i.str).join(' ').slice(0, 300) };
+  } finally {
+    doc.destroy().catch(() => undefined);
   }
 }

@@ -208,6 +208,13 @@ Unterordnern (Noten über Titel und Interpret im Dateinamen) – und den Stand d
   antippen) → **Einlesen**. **Stand sichern** öffnet Teilen bzw. Speichern – dort „In Dateien sichern“ → OneDrive.
 - Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
   ersetzt.
+- **Titel und Interpret** jeder Noten-Datei werden vor dem Einlesen erkannt und angezeigt – aus dem Dateinamen (in
+  beliebiger Reihenfolge, z. B. `Iris - Goo Goo Dolls - Bass.pdf`, `Goo Goo Dolls - Iris.pdf`,
+  `Giesinger, Max - 80 Millionen (Keys).pdf`), dem Ordner (`Goo Goo Dolls/Iris/Bass.pdf`), bei .pro aus
+  `{title}`/`{artist}`, bei PDFs aus den Dokument-Eigenschaften bzw. dem Kopf der ersten Seite, zuletzt mit Toleranz
+  für Tippfehler („Robbie Wiliams“). Was übrig bleibt, ist die Fassung (z. B. „Bass“). Unklares (zwei Songs gleichen
+  Namens) oder nicht Erkanntes ist orange markiert: Song aus der Liste wählen, Fassung bei Bedarf ändern – eingelesen
+  wird genau so, wie es in der Liste steht.
 
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
 
