@@ -4,6 +4,7 @@ import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
 import { BEREICHE, alleSchluessel, cacheLeeren, entfernen, mb, uebersicht, vergangene, verwaist } from '../data/aufraeumen';
 import { alleSongNoten, notenAllesLoeschen, notenDateien, notenEntfernen, notenVerwaist } from '../data/noten';
+import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { PREFIXES, backstageImportieren, backupEintraege } from './backstage-sync';
 
 // Backstage → Abgleich → Aufräumen: was liegt auf diesem Gerät, je Bereich löschen; vergangene Auftritte und
@@ -241,6 +242,7 @@ export class BackstageAufraeumen {
       // egal
     }
     await notenAllesLoeschen();
+    await ordnerSpeicherLoeschen();
     await cacheLeeren();
     this.meldung.set('Alles gelöscht – Seite wird neu geladen …');
     setTimeout(() => location.reload(), 600);

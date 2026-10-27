@@ -598,6 +598,58 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   return p;
 });
 
+test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, einlesen und sichern; Auswahl am Handy', async () => {
+  const backstage = JSON.stringify({ app: 'blickfeld-nord-backstage', version: 1, exported: '', data: { 'bn-probe-2099-03-03': { songs: [], notizen: 'aus OneDrive', punkte: [] } } });
+  const pdf = readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf'));
+  // Chrome/Edge am Computer: der Ordner-Dialog liefert hier einen Ordner im privaten Browser-Speicher (OPFS)
+  const p = await page();
+  await p.addInitScript(() => {
+    window.showDirectoryPicker = async () => (await navigator.storage.getDirectory()).getDirectoryHandle('OneDrive', { create: true });
+  });
+  await p.go('/backstage/abgleich/');
+  await p.evaluate(async ({ backstage, pdf }) => {
+    const wurzel = await (await navigator.storage.getDirectory()).getDirectoryHandle('OneDrive', { create: true });
+    const schreiben = async (ordner, name, inhalt) => {
+      const w = await (await ordner.getFileHandle(name, { create: true })).createWritable();
+      await w.write(inhalt);
+      await w.close();
+    };
+    await schreiben(wurzel, 'sicherung.json', backstage);
+    await schreiben(await wurzel.getDirectoryHandle('Goo Goo Dolls', { create: true }), 'Iris - Bass.pdf', new Uint8Array(pdf));
+  }, { backstage, pdf: [...pdf] });
+  const box = p.locator('app-backstage-ordner');
+  await box.locator('button', { hasText: 'Ordner verbinden' }).click();
+  await box.locator('button', { hasText: 'Ordner durchsuchen' }).click();
+  await until(async () => (await box.locator('app-funde-liste').innerText().catch(() => '')).includes('1 PDF'), 'Ordner wird nicht durchsucht');
+  await box.locator('app-funde-liste button', { hasText: 'Einlesen' }).click();
+  await until(async () => (await box.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('1 PDF eingelesen'), async () => 'Einlesen aus dem Ordner klappt nicht: ' + (await box.locator('app-funde-liste').innerText()));
+  expect((await p.evaluate(() => localStorage.getItem('bn-probe-2099-03-03'))).includes('aus OneDrive'), 'Backstage-Datei aus dem Ordner fehlt');
+  // gemerkt nach dem Neuladen, Sichern schreibt nach Backstage/
+  await p.reload({ waitUntil: 'networkidle' });
+  await box.locator('button', { hasText: 'Stand dort sichern' }).click();
+  await until(async () => (await p.evaluate(async () => {
+    const b = await (await (await navigator.storage.getDirectory()).getDirectoryHandle('OneDrive')).getDirectoryHandle('Backstage').catch(() => null);
+    if (!b) return false;
+    for await (const e of b.values()) if (e.name.startsWith('blickfeld-nord-backstage-alle-')) return true;
+    return false;
+  })), 'Sichern in den Ordner klappt nicht');
+
+  // Safari, Firefox, Handys: Ordner bzw. Dateien wählen
+  const q = await page();
+  await q.addInitScript(() => delete window.showDirectoryPicker);
+  await q.go('/backstage/abgleich/');
+  await q.locator('app-backstage-ordner input.dateien').setInputFiles([
+    { name: 'sicherung.json', mimeType: 'application/json', buffer: Buffer.from(backstage) },
+    { name: 'Iris - The Goo Goo Dolls - Gitarre.pdf', mimeType: 'application/pdf', buffer: pdf },
+  ]);
+  const funde = q.locator('app-backstage-ordner app-funde-liste');
+  await until(async () => (await funde.innerText().catch(() => '')).includes('Backstage · sicherung.json'), 'Dateiauswahl wird nicht gesichtet');
+  await funde.locator('button', { hasText: 'Einlesen' }).click();
+  await until(async () => (await funde.locator('.meldung').innerText().catch(() => '')).includes('1 Backstage-Eintrag'), 'Einlesen der gewählten Dateien klappt nicht');
+  for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
+  return q;
+});
+
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });

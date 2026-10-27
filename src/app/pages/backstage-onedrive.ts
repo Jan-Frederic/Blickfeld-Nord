@@ -1,23 +1,19 @@
-import { Component, computed, output, signal } from '@angular/core';
+import { Component, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { NOTEN_APP, notenDateien, notenExportieren, notenImportieren } from '../data/noten';
-import { istAkkordblatt, istPdf, notenEinlesen, notenErgebnisText } from '../data/noten-import';
-import { OneDriveDatei, oneDriveAbmelden, oneDriveAnmelden, oneDriveDateien, oneDriveEingerichtet, oneDriveKonto, oneDriveLaden, oneDriveSpeichern } from '../data/onedrive';
-import { APP, backstageDatei, backstageImportieren, gesichert } from './backstage-sync';
+import { Fund, sichten } from '../data/einlesen';
+import { notenExportieren } from '../data/noten';
+import { oneDriveAbmelden, oneDriveAnmelden, oneDriveDateien, oneDriveEingerichtet, oneDriveKonto, oneDriveLaden, oneDriveSpeichern } from '../data/onedrive';
+import { backstageDatei, gesichert } from './backstage-sync';
+import { FundeListe } from './funde-liste';
 
 // Backstage → Abgleich → OneDrive: alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien (Setlists,
 // Packlisten …), Notenpakete, PDFs und Akkordblätter (auch in Unterordnern, Zuordnung über den Dateinamen) – und den
 // Stand dieses Geräts dort sichern. Anmeldung über die vorhandene Microsoft-Anmeldung im Browser (siehe data/onedrive.ts).
 const ORDNER_KEY = 'bn-onedrive-ordner';
 
-interface Fund extends OneDriveDatei {
-  art: 'backstage' | 'noten' | 'pdf' | 'akkordblatt';
-  text?: string;
-}
-
 @Component({
   selector: 'app-backstage-onedrive',
-  imports: [MatIconModule],
+  imports: [MatIconModule, FundeListe],
   template: `
     <div class="box">
       <h3><mat-icon>cloud</mat-icon> OneDrive</h3>
@@ -36,26 +32,7 @@ interface Fund extends OneDriveDatei {
             <button type="button" (click)="sichern()" [disabled]="laeuft()"><mat-icon>cloud_upload</mat-icon> Stand dort sichern</button>
             <label class="check"><input type="checkbox" [checked]="mitNoten()" (change)="mitNoten.set($any($event.target).checked)" /> mit Notenblättern</label>
           </div>
-          @if (funde(); as f) {
-            <div class="funde">
-              @if (!f.length) { <p>Im Ordner „{{ ordner() }}“ ist nichts, was sich einlesen ließe (Backstage-Dateien, Notenpakete, PDFs, .pro).</p> }
-              @for (d of backstageFunde(); track d.id) {
-                <label class="check"><input type="checkbox" [checked]="gewaehlt().has(d.id)" (change)="waehlen(d.id)" /> Backstage · {{ d.pfad }} <small>{{ datum(d.geaendert) }}</small></label>
-              }
-              @for (d of notenpakete(); track d.id) {
-                <label class="check"><input type="checkbox" [checked]="gewaehlt().has(d.id)" (change)="waehlen(d.id)" /> Notenpaket · {{ d.pfad }} <small>{{ datum(d.geaendert) }}</small></label>
-              }
-              @if (notenFunde().length) {
-                <label class="check"><input type="checkbox" [checked]="notenAn()" (change)="notenAn.set($any($event.target).checked)" /> {{ notenText() }}</label>
-              }
-              @if (f.length) {
-                @if (backstageFunde().length) {
-                  <label class="check"><input type="checkbox" [checked]="ersetzen()" (change)="ersetzen.set($any($event.target).checked)" /> Backstage-Daten ersetzen statt ergänzen</label>
-                }
-                <button type="button" class="primaer" (click)="einlesen()" [disabled]="laeuft() || !auswahlZahl()"><mat-icon>cloud_download</mat-icon> Einlesen</button>
-              }
-            </div>
-          }
+          @if (funde(); as f) { <app-funde-liste [funde]="f" (geaendert)="geaendert.emit()" /> }
         } @else {
           <p>Setlists, Packlisten, Noten (PDF, .pro) und Sicherungen aus einem OneDrive-Ordner einlesen und den Stand dort
             sichern. Ist der Browser schon bei Microsoft angemeldet, geht es ohne Passwort.</p>
@@ -73,10 +50,8 @@ interface Fund extends OneDriveDatei {
     .ordner { display: grid; gap: 4px; max-width: 420px; margin-bottom: 12px; font-size: .72rem; color: var(--bn-fog); text-transform: uppercase; letter-spacing: .08em; }
     .ordner input { padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .9rem; text-transform: none; letter-spacing: 0; }
     .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-    .funde { display: grid; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bn-line); justify-items: start; }
-    .check { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; overflow-wrap: anywhere; }
-    .check input { flex: none; accent-color: var(--bn-sunset); }
-    small { color: var(--bn-fog); }
+    .check { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; }
+    .check input { accent-color: var(--bn-sunset); }
     button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .86rem; cursor: pointer; }
     button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     button:disabled { opacity: .4; cursor: default; }
@@ -95,20 +70,7 @@ export class BackstageOnedrive {
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
   protected readonly mitNoten = signal(false);
-  protected readonly ersetzen = signal(false);
   protected readonly funde = signal<Fund[] | null>(null);
-  protected readonly gewaehlt = signal(new Set<string>());
-  protected readonly notenAn = signal(true);
-
-  protected readonly backstageFunde = computed(() => (this.funde() ?? []).filter((d) => d.art === 'backstage'));
-  protected readonly notenpakete = computed(() => (this.funde() ?? []).filter((d) => d.art === 'noten'));
-  protected readonly notenFunde = computed(() => (this.funde() ?? []).filter((d) => d.art === 'pdf' || d.art === 'akkordblatt'));
-  protected readonly notenText = computed(() => {
-    const pdfs = this.notenFunde().filter((d) => d.art === 'pdf').length;
-    const pro = this.notenFunde().length - pdfs;
-    return [pdfs && `${pdfs} ${pdfs === 1 ? 'PDF' : 'PDFs'}`, pro && `${pro} ${pro === 1 ? 'Akkordblatt' : 'Akkordblätter'}`].filter(Boolean).join(' und ') + ' (Zuordnung über den Dateinamen)';
-  });
-  protected readonly auswahlZahl = computed(() => this.gewaehlt().size + (this.notenAn() ? this.notenFunde().length : 0));
 
   constructor() {
     if (!this.eingerichtet) return;
@@ -119,22 +81,10 @@ export class BackstageOnedrive {
       .catch(() => undefined);
   }
 
-  protected datum(iso: string): string {
-    return iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '';
-  }
-
   protected ordnerSetzen(wert: string): void {
     this.ordner.set(wert.trim().replace(/^\/+|\/+$/g, ''));
     this.funde.set(null);
     speichere(ORDNER_KEY, this.ordner());
-  }
-
-  protected waehlen(id: string): void {
-    this.gewaehlt.update((g) => {
-      const neu = new Set(g);
-      if (!neu.delete(id)) neu.add(id);
-      return neu;
-    });
   }
 
   private async tun(arbeit: () => Promise<void>): Promise<void> {
@@ -167,57 +117,12 @@ export class BackstageOnedrive {
     });
   }
 
-  // Ordner durchsuchen: JSON-Dateien kurz laden, um Backstage-Dateien und Notenpakete zu erkennen
   protected durchsuchen(): Promise<void> {
     return this.tun(async () => {
       this.meldung.set({ text: `„${this.ordner()}“ wird durchsucht …` });
-      const funde: Fund[] = [];
-      for (const d of await oneDriveDateien(this.ordner())) {
-        if (istPdf(d.name)) funde.push({ ...d, art: 'pdf' });
-        else if (istAkkordblatt(d.name)) funde.push({ ...d, art: 'akkordblatt' });
-        else if (d.name.toLowerCase().endsWith('.json') && d.groesse < 200e6) {
-          const text = new TextDecoder().decode(await oneDriveLaden(d));
-          const app = (() => {
-            try {
-              return (JSON.parse(text) as { app?: string }).app;
-            } catch {
-              return undefined;
-            }
-          })();
-          if (app === APP) funde.push({ ...d, art: 'backstage', text });
-          else if (app === NOTEN_APP) funde.push({ ...d, art: 'noten', text });
-        }
-      }
-      funde.sort((a, b) => b.geaendert.localeCompare(a.geaendert));
-      this.funde.set(funde);
-      // vorausgewählt: die neueste Backstage-Datei und das neueste Notenpaket
-      this.gewaehlt.set(new Set([funde.find((d) => d.art === 'backstage')?.id, funde.find((d) => d.art === 'noten')?.id].filter((x): x is string => !!x)));
-      this.meldung.set({ text: `${funde.length} ${funde.length === 1 ? 'Datei' : 'Dateien'} gefunden.` });
-    });
-  }
-
-  protected einlesen(): Promise<void> {
-    return this.tun(async () => {
-      const teile: string[] = [];
-      // Backstage-Dateien: älteste zuerst, damit die neueste gewinnt
-      const backstage = this.backstageFunde().filter((d) => this.gewaehlt().has(d.id)).reverse();
-      if (backstage.length && this.ersetzen() && !confirm('Alle Backstage-Daten dieses Geräts durch die gewählten Dateien ersetzen?')) return;
-      let eintraege = 0;
-      backstage.forEach((d, i) => (eintraege += backstageImportieren(d.text!, this.ersetzen() && i === 0)));
-      if (backstage.length) teile.push(`${eintraege} Backstage-Einträge`);
-      for (const d of this.notenpakete().filter((x) => this.gewaehlt().has(x.id)).reverse()) {
-        teile.push(`Noten für ${await notenImportieren(d.text!)} Songs`);
-      }
-      if (this.notenAn() && this.notenFunde().length) {
-        this.meldung.set({ text: `${this.notenFunde().length} Noten-Dateien werden geladen …` });
-        const r = await notenEinlesen(
-          this.notenFunde().map((d) => ({ name: d.name, pfad: d.pfad, groesse: d.groesse, daten: () => oneDriveLaden(d) })),
-          await notenDateien(),
-        );
-        teile.push(notenErgebnisText(r).text + (r.ohne.length ? ` – nicht zugeordnet: ${r.ohne.join(', ')}` : ''));
-      }
-      this.meldung.set({ text: `Eingelesen: ${teile.join(' · ')}` });
-      this.geaendert.emit();
+      const dateien = await oneDriveDateien(this.ordner());
+      this.funde.set(await sichten(dateien.map((d) => ({ name: d.name, pfad: d.pfad, groesse: d.groesse, geaendert: d.geaendert, laden: () => oneDriveLaden(d) }))));
+      this.meldung.set(null);
     });
   }
 

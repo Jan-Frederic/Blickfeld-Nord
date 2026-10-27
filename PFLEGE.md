@@ -194,9 +194,24 @@ Darunter **Aufräumen**:
 
 Vorher sichern: **Alles an die Band schicken** (oben) und für Noten **Songs → Noten → Notenblätter an die Band**.
 
+## OneDrive-Ordner auf dem Gerät (Abgleich)
+
+Ohne Anmeldung und ohne Einrichtung: Ist die **OneDrive-App** auf dem Gerät eingerichtet, liegt OneDrive als normaler
+Ordner vor (Windows-Explorer, Finder, „Dateien“-App am iPhone/iPad, OneDrive-App bei Android). Unter
+**Abgleich → Ordner auf dem Gerät** daraus einlesen – Backstage-Dateien, Notenpakete, PDFs und .pro, auch in
+Unterordnern (Noten über Titel und Interpret im Dateinamen) – und den Stand dorthin sichern:
+
+- **Chrome oder Edge am Computer:** einmal **Ordner verbinden** (z. B. `OneDrive\Blickfeld Nord`), danach reichen
+  **Ordner durchsuchen** → **Einlesen** bzw. **Stand dort sichern** (Unterordner `Backstage`, wahlweise mit
+  Notenblättern). Der Browser fragt je Sitzung einmal, ob die Seite den Ordner lesen bzw. schreiben darf.
+- **Safari, Firefox, iPhone/iPad, Android:** **Ordner wählen** oder **Dateien wählen** (am iPhone links „OneDrive“
+  antippen) → **Einlesen**. **Stand sichern** öffnet Teilen bzw. Speichern – dort „In Dateien sichern“ → OneDrive.
+- Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
+  ersetzt.
+
 ## OneDrive einrichten (Abgleich)
 
-Im Backstage unter **Abgleich → OneDrive** lassen sich alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien
+Alternative mit Anmeldung bei Microsoft (für Geräte ohne OneDrive-App): Im Backstage unter **Abgleich → OneDrive** lassen sich alle Daten aus einem OneDrive-Ordner einlesen – Backstage-Dateien
 (Setlists, Packlisten …), Notenpakete, PDFs und Akkordblätter (.pro), auch aus Unterordnern; Noten werden über Titel
 und Interpret im Dateinamen zugeordnet – und der Stand des Geräts dort sichern (Ordner `Backstage`, wahlweise mit
 Notenblättern). Gedacht für ein **privates Microsoft-Konto** (Outlook.com, Hotmail, Live – privates OneDrive). Ist der
