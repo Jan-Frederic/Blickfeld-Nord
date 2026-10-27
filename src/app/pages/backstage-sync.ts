@@ -38,6 +38,25 @@ interface Backup {
   data: Record<string, unknown>;
 }
 
+/** Backstage-Datei bauen und übers Teilen-Menü verschicken, sonst herunterladen; true = geteilt, false = gespeichert, null = abgebrochen */
+export async function backupTeilen(data: Record<string, unknown>, teil: string): Promise<boolean | null> {
+  const backup: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
+  const name = `blickfeld-nord-backstage-${teil}-${new Date().toISOString().slice(0, 10)}.json`;
+  const file = new File([JSON.stringify(backup, null, 1)], name, { type: 'application/json' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Blickfeld Nord – Backstage', text: 'Backstage-Daten zum Importieren (Backstage → Datei importieren)' });
+      return true;
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return null;
+    }
+  }
+  const url = URL.createObjectURL(file);
+  Object.assign(document.createElement('a'), { href: url, download: name }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return false;
+}
+
 /** Einträge einer Backstage-Datei (nur bekannte Bereiche); wirft bei fremden Dateien */
 export function backupEintraege(text: string): [string, unknown][] {
   const backup = JSON.parse(text) as Partial<Backup>;
@@ -99,24 +118,13 @@ export class BackstageSync {
       this.message.set({ text: 'Noch nichts gespeichert, was sich teilen ließe.', error: true });
       return;
     }
-    const backup: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
-    const name = `blickfeld-nord-backstage-${this.show() ?? 'alle'}-${new Date().toISOString().slice(0, 10)}.json`;
-    const file = new File([JSON.stringify(backup, null, 1)], name, { type: 'application/json' });
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: 'Blickfeld Nord – Backstage', text: 'Backstage-Daten zum Importieren (Backstage → Datei importieren)' });
-        this.message.set({ text: `${count} ${count === 1 ? 'Liste' : 'Listen'} geteilt.` });
-        merken(this.show());
-        return;
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return;
-      }
-    }
-    const url = URL.createObjectURL(file);
-    const a = Object.assign(document.createElement('a'), { href: url, download: name });
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const geteilt = await backupTeilen(data, this.show() ?? 'alle');
+    if (geteilt === null) return;
     merken(this.show());
+    if (geteilt) {
+      this.message.set({ text: `${count} ${count === 1 ? 'Liste' : 'Listen'} geteilt.` });
+      return;
+    }
     this.message.set({ text: `${count} ${count === 1 ? 'Liste' : 'Listen'} als Datei gespeichert – jetzt an die Band schicken.` });
   }
 

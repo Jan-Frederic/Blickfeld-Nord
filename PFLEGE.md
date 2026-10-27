@@ -169,7 +169,17 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 
 ## Gerät aufräumen (Abgleich)
 
-Backstage-Daten liegen nur im Browser des jeweiligen Geräts. Unter **Abgleich → Aufräumen**:
+Backstage-Daten liegen nur im Browser des jeweiligen Geräts. Unter **Abgleich → Daten auf diesem Gerät** steht jeder
+einzelne Eintrag, nach Bereichen gruppiert und verständlich benannt (z. B. „Setlist · 04.12.2026 · Weihnachtsmarkt“),
+mit Inhalt („12 Songs, 1 Pause“) und Größe – dazu alle Noten (Songs mit Noten, PDFs und wo sie genutzt werden):
+
+- Titel antippen öffnet die passende Seite (Setlist, Packliste, Probe …).
+- `{ }` zeigt den gespeicherten Inhalt und lässt ihn von Hand ändern (nur gültiges JSON wird gespeichert) – für
+  Notfälle, normal ändert man auf der Seite des Bereichs.
+- Suchen (z. B. „2026“, „Rhede“, „Setlist“), auswählen und die Auswahl **teilen** (Datei zum Importieren auf anderen
+  Geräten) oder **löschen**.
+
+Darunter **Aufräumen**:
 
 - **Übersicht:** je Bereich (Setlists, Sterne, Packlisten, Vor Ort, Werbeplan, Proben, Songs-Entwurf, Aufgaben,
   Einstellungen, Noten, Seiten für unterwegs) Anzahl und Größe – mit 🗑 einzeln löschen.

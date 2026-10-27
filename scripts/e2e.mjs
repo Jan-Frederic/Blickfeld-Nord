@@ -546,7 +546,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   return q;
 });
 
-test('Backstage: Abgleich – vergangene und verwaiste Einträge aufräumen, Stand ersetzen, alles löschen', async () => {
+test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträge aufräumen, Stand ersetzen, alles löschen', async () => {
   const p = await page();
   await p.go('/backstage/abgleich/');
   // ein vergangener Auftritt (aus der Sitemap), ein Auftritt, den es nicht gibt, und eine Einstellung
@@ -555,6 +555,23 @@ test('Backstage: Abgleich – vergangene und verwaiste Einträge aufräumen, Sta
     for (const k of [`bn-setlist-${alt}`, `bn-packliste-${alt}`, `bn-vorort-${alt}`, 'bn-packliste-2019-01-01']) localStorage.setItem(k, '[{"title":"Iris","artist":"The Goo Goo Dolls"}]');
     localStorage.setItem('bn-buehne-zoom', '1.3');
   }, alt);
+  await p.reload({ waitUntil: 'networkidle' });
+  // Daten auf diesem Gerät: Einträge verständlich benannt, ändern im Editor, Auswahl löschen
+  const daten = p.locator('app-backstage-daten');
+  await daten.locator('input[type=search]').fill('vor ort');
+  await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');
+  await daten.locator('input[type=search]').fill('Schriftgröße');
+  await daten.locator('li button[aria-label*="ändern"]').first().click();
+  const editor = p.locator('app-daten-editor dialog[open]');
+  await editor.locator('textarea').fill('1.1');
+  await editor.locator('button', { hasText: 'Speichern' }).click();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-buehne-zoom'))) === '1.1', 'Editor speichert nicht');
+  await daten.locator('input[type=search]').fill('2019');
+  await daten.locator('.leiste input[type=checkbox]').check();
+  await daten.locator('.leiste button', { hasText: 'löschen' }).click();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-packliste-2019-01-01'))) === null, 'Auswahl wird nicht gelöscht');
+  await daten.locator('input[type=search]').fill('');
+  await p.evaluate(() => localStorage.setItem('bn-packliste-2019-01-01', '{"checked":[],"custom":[]}'));
   await p.reload({ waitUntil: 'networkidle' });
   const box = p.locator('app-backstage-aufraeumen');
   await until(async () => (await box.locator('tr', { hasText: 'Packlisten' }).locator('td').first().innerText()) === '2', 'Übersicht zählt die Packlisten nicht');
@@ -571,7 +588,7 @@ test('Backstage: Abgleich – vergangene und verwaiste Einträge aufräumen, Sta
   const datei = JSON.stringify({ app: 'blickfeld-nord-backstage', version: 1, exported: '', data: { 'bn-probe-2099-02-02': { songs: [], notizen: 'neu', punkte: [] } } });
   await box.locator('input[type=file]').setInputFiles({ name: 'band.json', mimeType: 'application/json', buffer: Buffer.from(datei) });
   await p.waitForLoadState('networkidle');
-  await until(async () => (await p.evaluate((alt) => [localStorage.getItem(`bn-setlist-${alt}`), !!localStorage.getItem('bn-probe-2099-02-02'), localStorage.getItem('bn-buehne-zoom')], alt).catch(() => [])).join() === ',true,1.3', 'Ersetzen übernimmt nicht genau den Stand der Datei');
+  await until(async () => (await p.evaluate((alt) => [localStorage.getItem(`bn-setlist-${alt}`), !!localStorage.getItem('bn-probe-2099-02-02'), localStorage.getItem('bn-buehne-zoom')], alt).catch(() => [])).join() === ',true,1.1', 'Ersetzen übernimmt nicht genau den Stand der Datei');
   // alles löschen – nur mit eingetipptem LÖSCHEN
   p.promptAntwort = 'LÖSCHEN';
   await p.locator('app-backstage-aufraeumen button.gefahr').click();

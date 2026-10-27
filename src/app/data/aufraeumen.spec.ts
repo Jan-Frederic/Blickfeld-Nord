@@ -1,4 +1,4 @@
-import { entfernen, uebersicht, vergangene, verwaist } from './aufraeumen';
+import { eintraege, entfernen, uebersicht, vergangene, verwaist } from './aufraeumen';
 
 describe('Aufräumen', () => {
   beforeEach(() => {
@@ -28,5 +28,18 @@ describe('Aufräumen', () => {
     expect(entfernen(['bn-setlist-2025-05-01'])).toBe(1);
     expect(localStorage.getItem('bn-setlist-2025-05-01')).toBeNull();
     expect(localStorage.getItem('fremd')).toBe('[]');
+  });
+});
+
+describe('Einträge beschreiben', () => {
+  it('benennt Einträge nach Bereich, Datum und Ort und fasst den Inhalt zusammen', () => {
+    localStorage.clear();
+    localStorage.setItem('bn-setlist-2026-12-04', JSON.stringify([{ title: 'A', artist: 'x' }, { pause: true }, { title: 'B', artist: 'y' }]));
+    localStorage.setItem('bn-packliste-2019-01-01', JSON.stringify({ checked: ['a'], custom: [] }));
+    localStorage.setItem('bn-buehne-zoom', '1.3');
+    const e = Object.fromEntries(eintraege(new Map([['2026-12-04', 'Weihnachtsmarkt']])).map((x) => [x.key, x]));
+    expect(e['bn-setlist-2026-12-04']).toMatchObject({ titel: 'Setlist · 04.12.2026 · Weihnachtsmarkt', details: '2 Songs, 1 Pause', link: '/backstage/2026-12-04/setlist' });
+    expect(e['bn-packliste-2019-01-01']).toMatchObject({ verwaist: true, details: '1 abgehakt', link: undefined });
+    expect(e['bn-buehne-zoom']).toMatchObject({ titel: 'Schriftgröße im Bühnen-Modus', details: '1.3' });
   });
 });

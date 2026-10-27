@@ -115,3 +115,106 @@ export async function cacheLeeren(): Promise<number> {
 
 export const mb = (bytes: number) =>
   bytes >= 1e6 ? `${(bytes / 1e6).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MB` : bytes ? `${Math.max(1, Math.round(bytes / 1e3))} kB` : '–';
+
+// ---- Einzelne Einträge verständlich beschreiben (Abgleich → Daten auf diesem Gerät) ----------------------------
+
+const EINSTELLUNGEN: Record<string, string> = {
+  'bn-buehne-zoom': 'Schriftgröße im Bühnen-Modus',
+  'bn-buehne-ton': 'Klick-Ton im Bühnen-Modus',
+  'bn-noten-wahl': 'Gewählte Noten-Fassungen',
+  'bn-noten-breite': 'Noten in voller Breite',
+  'bn-noten-ansicht': 'Noten-Ansicht (frühere Version)',
+  'bn-backstage-filter': 'Filter unter Termine',
+  'bn-sprache': 'Gewählte Sprache',
+  'bn-gesichert': 'Letzte Sicherung',
+  'bn-chunk-reload': 'Neuladen nach Update',
+  'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',
+  'bn-aufgaben': 'Aufgaben-Häkchen',
+  'bn-ui-geprueft': 'Geprüfte Oberflächentexte',
+  'bn-uebersetzung-pruefung': 'Geprüfte Übersetzungen',
+};
+
+const ZIEL: Record<string, (id: string) => string> = {
+  setlist: (id) => `/backstage/${id}/setlist`,
+  packliste: (id) => `/backstage/${id}/packliste`,
+  vorort: (id) => `/backstage/${id}/vorort`,
+  werbeplan: (id) => `/backstage/${id}`,
+  bewertung: () => '/backstage/zahlen',
+  probe: (id) => `/backstage/probe/${id}`,
+};
+const ZIEL_FEST: Record<string, string> = {
+  'bn-songinfo-entwurf': '/backstage/songs',
+  'bn-aufgaben': '/backstage/aufgaben',
+  'bn-ui-geprueft': '/backstage/uebersetzungen',
+  'bn-uebersetzung-pruefung': '/backstage/uebersetzungen',
+};
+
+const SINGULAR: Record<string, string> = {
+  setlist: 'Setlist', bewertung: 'Sterne', packliste: 'Packliste', vorort: 'Vor Ort', werbeplan: 'Werbeplan', probe: 'Probe',
+};
+
+const datum = (id: string) => (/^\d{4}-\d{2}-\d{2}/.test(id) ? `${id.slice(8, 10)}.${id.slice(5, 7)}.${id.slice(0, 4)}` : id);
+const anzahl = (n: number, eins: string, viele: string) => `${n} ${n === 1 ? eins : viele}`;
+
+/** kurze Inhaltsangabe eines gespeicherten Werts */
+function inhalt(bereich: string | undefined, v: unknown): string {
+  if (bereich === 'setlist' && Array.isArray(v)) {
+    const songs = v.filter((e) => !(e as { pause?: boolean })?.pause).length;
+    const pausen = v.length - songs;
+    return anzahl(songs, 'Song', 'Songs') + (pausen ? `, ${anzahl(pausen, 'Pause', 'Pausen')}` : '');
+  }
+  if (bereich === 'packliste' && v && typeof v === 'object') {
+    const p = v as { checked?: unknown[]; custom?: unknown[] };
+    return `${p.checked?.length ?? 0} abgehakt${p.custom?.length ? `, ${anzahl(p.custom.length, 'eigener Punkt', 'eigene Punkte')}` : ''}`;
+  }
+  if (bereich === 'bewertung' && v && typeof v === 'object') return anzahl(Object.keys(v).length, 'Song bewertet', 'Songs bewertet');
+  if (bereich === 'werbeplan' && Array.isArray(v)) return anzahl(v.length, 'Schritt erledigt', 'Schritte erledigt');
+  if (bereich === 'probe' && v && typeof v === 'object') {
+    const p = v as { songs?: unknown[]; punkte?: unknown[] };
+    return `${anzahl(p.songs?.length ?? 0, 'Song', 'Songs')}, ${anzahl(p.punkte?.length ?? 0, 'Punkt', 'Punkte')}`;
+  }
+  if (bereich === 'vorort' && v && typeof v === 'object') return anzahl(Object.values(v).filter(Boolean).length, 'Angabe', 'Angaben');
+  if (Array.isArray(v)) return anzahl(v.length, 'Eintrag', 'Einträge');
+  if (v && typeof v === 'object') return anzahl(Object.keys(v).length, 'Eintrag', 'Einträge');
+  const s = String(v);
+  return s.length > 40 ? s.slice(0, 40) + ' …' : s;
+}
+
+export interface Eintrag {
+  key: string;
+  bereich: Bereich;
+  titel: string;
+  details: string;
+  link?: string;
+  bytes: number;
+  /** gehört zu einem Auftritt, den es nicht mehr gibt */
+  verwaist?: boolean;
+}
+
+/** alle Einträge mit Titel, Inhaltsangabe und Ziel-Seite; auftritte: ID → „Ort“ */
+export function eintraege(auftritte: Map<string, string>): Eintrag[] {
+  const einstellungen = BEREICHE.find((b) => b.id === 'einstellungen')!;
+  return alleSchluessel().map((key) => {
+    const bereich = bereichVon(key) ?? einstellungen;
+    const roh = localStorage.getItem(key) ?? '';
+    let wert: unknown = roh;
+    try {
+      wert = JSON.parse(roh);
+    } catch {
+      // einfacher Text
+    }
+    const id = idVon(key);
+    const bytes = (key.length + roh.length) * 2;
+    if (id !== undefined) {
+      const ort = auftritte.get(id);
+      const verwaist = !!bereich.jeAuftritt && ort === undefined;
+      return {
+        key, bereich, bytes, verwaist,
+        titel: `${SINGULAR[bereich.id] ?? bereich.label} · ${datum(id)}${ort ? ' · ' + ort : bereich.jeAuftritt ? ' · Auftritt gibt es nicht mehr' : ''}`,
+        details: inhalt(bereich.id, wert),
+        link: verwaist ? undefined : ZIEL[bereich.id]?.(id),
+      };
+    }
+    return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link: ZIEL_FEST[key] };
+  });
+}

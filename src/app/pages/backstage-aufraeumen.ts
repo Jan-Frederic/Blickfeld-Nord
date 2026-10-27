@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
@@ -106,6 +106,9 @@ const ALTER = [
   `,
 })
 export class BackstageAufraeumen {
+  /** von außen hochgezählt, wenn anderswo auf der Seite Daten geändert wurden */
+  readonly version = input(0);
+  readonly geaendert = output<void>();
   private readonly band = inject(BandService);
   protected readonly mb = mb;
   protected readonly alterListe = ALTER;
@@ -153,7 +156,10 @@ export class BackstageAufraeumen {
   protected readonly speicher = signal(0);
 
   constructor() {
-    void this.laden();
+    effect(() => {
+      this.version();
+      untracked(() => void this.laden());
+    });
   }
 
   private async laden(): Promise<void> {
@@ -178,14 +184,14 @@ export class BackstageAufraeumen {
   protected bereichLoeschen(was: string, keys: string[]): void {
     if (!confirm(`${was}: ${keys.length} ${keys.length === 1 ? 'Eintrag' : 'Einträge'} auf diesem Gerät löschen?`)) return;
     this.meldung.set(`${entfernen(keys)} gelöscht ✓`);
-    void this.laden();
+    this.geaendert.emit();
   }
 
   protected async notenLoeschen(): Promise<void> {
     if (!confirm(`Alle Noten (${this.noten().songs} Songs, ${this.noten().pdfs} PDFs) auf diesem Gerät löschen?`)) return;
     await notenAllesLoeschen();
     this.meldung.set('Noten gelöscht ✓');
-    void this.laden();
+    this.geaendert.emit();
   }
 
   protected async offlineLeeren(): Promise<void> {
@@ -201,7 +207,7 @@ export class BackstageAufraeumen {
     entfernen(this.verwaisteKeys());
     await notenEntfernen(n.songs, n.dateien.map((d) => d.id));
     this.meldung.set('Verwaiste Einträge entfernt ✓');
-    void this.laden();
+    this.geaendert.emit();
   }
 
   protected async ersetzen(e: Event): Promise<void> {
