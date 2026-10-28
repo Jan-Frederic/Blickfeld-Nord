@@ -681,87 +681,6 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   return p;
 });
 
-test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, einlesen und sichern; Auswahl am Handy', async () => {
-  const backstage = JSON.stringify({ app: 'blickfeld-nord-backstage', version: 1, exported: '', data: { 'bn-probe-2099-03-03': { songs: [], notizen: 'aus OneDrive', punkte: [] } } });
-  const pdf = readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf'));
-  // Chrome/Edge am Computer: der Ordner-Dialog liefert hier einen Ordner im privaten Browser-Speicher (OPFS)
-  const p = await page();
-  await p.addInitScript(() => {
-    window.showDirectoryPicker = async () => (await navigator.storage.getDirectory()).getDirectoryHandle('OneDrive', { create: true });
-  });
-  await p.go('/backstage/abgleich/');
-  await p.evaluate(async ({ backstage, pdf }) => {
-    const wurzel = await (await navigator.storage.getDirectory()).getDirectoryHandle('OneDrive', { create: true });
-    const schreiben = async (ordner, name, inhalt) => {
-      const w = await (await ordner.getFileHandle(name, { create: true })).createWritable();
-      await w.write(inhalt);
-      await w.close();
-    };
-    await schreiben(wurzel, 'sicherung.json', backstage);
-    await schreiben(await wurzel.getDirectoryHandle('Goo Goo Dolls', { create: true }), 'Iris - Bass.pdf', new Uint8Array(pdf));
-  }, { backstage, pdf: [...pdf] });
-  const box = p.locator('app-backstage-ordner');
-  // Fortschrittsanzeige: merken, ob ein Balken mit „x / y“ erschienen ist (die Abläufe sind hier sehr schnell)
-  await p.evaluate(() => {
-    window.__balken = [];
-    new MutationObserver(() => {
-      for (const f of document.querySelectorAll('app-fortschritt')) if (f.querySelector('progress[max]')) window.__balken.push(f.textContent.trim());
-    }).observe(document.body, { subtree: true, childList: true, characterData: true });
-  });
-  await box.locator('button', { hasText: 'Ordner verbinden' }).click();
-  await box.locator('button', { hasText: 'Ordner durchsuchen' }).click();
-  await until(async () => (await box.locator('app-funde-liste').innerText().catch(() => '')).includes('1 PDF'), 'Ordner wird nicht durchsucht');
-  await box.locator('app-funde-liste button', { hasText: 'Einlesen' }).click();
-  await until(async () => (await box.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('1 PDF eingelesen'), async () => 'Einlesen aus dem Ordner klappt nicht: ' + (await box.locator('app-funde-liste').innerText()));
-  expect((await p.evaluate(() => localStorage.getItem('bn-probe-2099-03-03'))).includes('aus OneDrive'), 'Backstage-Datei aus dem Ordner fehlt');
-  const balken = await p.evaluate(() => window.__balken);
-  expect(balken.some((t) => t.startsWith('Sichten:')) && balken.some((t) => /^Noten: Iris - Bass\.pdf.*1 \/ 1|^Noten: .*0 \/ 1/.test(t)), 'Fortschrittsanzeige erscheint nicht: ' + [...new Set(balken)].join(' | '));
-  // gemerkt nach dem Neuladen, Sichern schreibt nach Backstage/
-  await p.reload({ waitUntil: 'networkidle' });
-  await box.locator('button', { hasText: 'Stand dort sichern' }).click();
-  await until(async () => (await p.evaluate(async () => {
-    const b = await (await (await navigator.storage.getDirectory()).getDirectoryHandle('OneDrive')).getDirectoryHandle('Backstage').catch(() => null);
-    if (!b) return false;
-    for await (const e of b.values()) if (e.name.startsWith('blickfeld-nord-backstage-alle-')) return true;
-    return false;
-  })), 'Sichern in den Ordner klappt nicht');
-
-  // Safari, Firefox, Handys: Ordner bzw. Dateien wählen
-  const q = await page();
-  await q.addInitScript(() => delete window.showDirectoryPicker);
-  await q.go('/backstage/abgleich/');
-  await q.locator('app-backstage-ordner input.dateien').setInputFiles([
-    { name: 'sicherung.json', mimeType: 'application/json', buffer: Buffer.from(backstage) },
-    { name: 'Iris - The Goo Goo Dolls - Gitarre.pdf', mimeType: 'application/pdf', buffer: pdf },
-    // Interpret zuerst, mit Tippfehler
-    { name: 'Robbie Wiliams - Angels - Keys.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.from('2')]) },
-    // nicht zu erkennen → von Hand wählen
-    { name: 'Scan 0042.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.from('3')]) },
-  ]);
-  const funde = q.locator('app-backstage-ordner app-funde-liste');
-  await until(async () => (await funde.innerText().catch(() => '')).includes('Backstage · sicherung.json'), 'Dateiauswahl wird nicht gesichtet');
-  expect((await funde.innerText()).includes('Was sich ändert: 1 neu'), 'Vorschau der Backstage-Datei fehlt');
-  await funde.locator('details.vorschau summary').click();
-  expect((await funde.locator('details.vorschau').innerText()).includes('Probe · 03.03.2099'), 'Vorschau nennt den Eintrag nicht');
-  const zeile = (name) => funde.locator('li', { hasText: name });
-  expect((await funde.innerText()).includes('2 von 3 erkannt'), 'Erkennung zählt nicht: ' + (await funde.locator('.kopf').innerText()));
-  expect((await zeile('Robbie Wiliams').locator('select').inputValue()) === 'Angels|Robbie Williams', 'Interpret vor Titel mit Tippfehler nicht erkannt');
-  expect((await zeile('Robbie Wiliams').locator('input.fassung').inputValue()) === 'Keys', 'Fassung nicht erkannt');
-  expect((await zeile('Scan 0042').innerText()).includes('nicht erkannt'), 'Nicht Erkanntes wird nicht gezeigt');
-  await zeile('Scan 0042').locator('select').selectOption('Hey Jude|The Beatles');
-  await zeile('Scan 0042').locator('input.fassung').fill('Chor');
-  await zeile('Scan 0042').locator('input.fassung').blur();
-  await funde.locator('button', { hasText: 'Einlesen' }).click();
-  await until(async () => (await funde.locator('.meldung').innerText().catch(() => '')).includes('1 Backstage-Eintrag'), 'Einlesen der gewählten Dateien klappt nicht');
-  expect((await funde.locator('.meldung').innerText()).includes('3 PDFs'), 'Nicht alle PDFs eingelesen: ' + (await funde.locator('.meldung').innerText()));
-  // von Hand Gewähltes ist beim nächsten Mal gemerkt
-  await q.locator('app-backstage-ordner input.dateien').setInputFiles([{ name: 'Scan 0042.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.from('3')]) }]);
-  await until(async () => (await zeile('Scan 0042').innerText().catch(() => '')).includes('wie beim letzten Mal'), 'Zuordnung von Hand wird nicht gemerkt');
-  expect((await zeile('Scan 0042').locator('select').inputValue()) === 'Hey Jude|The Beatles' && (await zeile('Scan 0042').locator('input.fassung').inputValue()) === 'Chor', 'Gemerkte Zuordnung falsch');
-  for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
-  return q;
-});
-
 test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten', async () => {
   const p = await page();
   await p.go('/backstage/abgleich/');
@@ -769,17 +688,15 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await p.locator('app-sync-status a', { hasText: 'Einstellungen' }).click();
   await p.waitForURL(/\/backstage\/einstellungen/);
   const box = p.locator('app-sync-einstellungen');
-  // App-ID auf diesem Gerät eintragen → Anmelden wird angeboten (Microsoft selbst ist im Test gesperrt)
-  await box.locator('input[placeholder^="z. B. 1a2b"]').fill('00000000-1111-2222-3333-444444444444');
-  await box.locator('input[placeholder^="z. B. 1a2b"]').blur();
-  await until(async () => (await box.locator('button', { hasText: 'Mit Microsoft anmelden' }).count()) === 1, 'Anmelden erscheint nach dem Eintragen der App-ID nicht');
+  // App-ID steht fest im Code → gleich „Anmelden“, kein Feld für die App-ID (Microsoft selbst ist im Test gesperrt)
+  await until(async () => (await box.locator('button', { hasText: 'Mit Microsoft anmelden' }).count()) === 1, 'Anmelden wird nicht angeboten');
+  expect(!(await box.locator('input[placeholder^="z. B. 1a2b"]').count()), 'Feld für die App-ID trotz fester App-ID');
   // Optionen bleiben gespeichert
   await box.locator('select').selectOption('runter');
   await box.locator('input[type=checkbox]').first().uncheck();
   await p.reload({ waitUntil: 'networkidle' });
   expect((await box.locator('select').inputValue()) === 'runter', 'Richtung nicht gespeichert');
   expect(!(await box.locator('input[type=checkbox]').first().isChecked()), 'Löschungen-Option nicht gespeichert');
-  expect((await p.evaluate(() => localStorage.getItem('bn-onedrive-client'))) === '00000000-1111-2222-3333-444444444444', 'App-ID nicht gespeichert');
   // Ordner auf dem Computer: Chromium kann das, die Wahl wird angeboten
   await box.locator('input[type=radio]').nth(1).check();
   await until(async () => (await box.locator('button', { hasText: 'Ordner wählen' }).count()) === 1, 'Ordnerwahl erscheint nicht');

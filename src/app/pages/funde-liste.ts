@@ -8,7 +8,7 @@ import { Vorschau, vorschau, vorschauText } from '../data/aufraeumen';
 import { backupEintraege } from './backstage-sync';
 import { Fortschritt, Stand } from './fortschritt';
 
-// Was in einem Ordner gefunden wurde (Abgleich → Ordner auf dem Gerät bzw. Synchronisation): Backstage-Dateien und
+// Was in einem Ordner gefunden wurde (Synchronisation: Einlesen bzw. Zuordnen): Backstage-Dateien und
 // Notenpakete einzeln wählbar (die neuesten vorausgewählt); Noten-Dateien je Datei mit erkanntem Song (Titel –
 // Interpret, data/erkennung.ts), Auswahl bei Unklarem und Fassung zum Korrigieren; dann einlesen.
 @Component({

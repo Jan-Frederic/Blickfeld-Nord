@@ -3,7 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BackstageSync } from './backstage-sync';
 import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { BackstageDaten } from './backstage-daten';
-import { BackstageOrdner } from './backstage-ordner';
+import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { SyncStatus } from './sync-status';
 import { offlineReady } from '../pwa';
 
@@ -11,7 +11,7 @@ import { offlineReady } from '../pwa';
 // darunter alle Daten des Geräts verwalten (backstage-daten.ts) und aufräumen (backstage-aufraeumen.ts)
 @Component({
   selector: 'app-backstage-abgleich',
-  imports: [MatIconModule, BackstageSync, BackstageAufraeumen, BackstageDaten, BackstageOrdner, SyncStatus],
+  imports: [MatIconModule, BackstageSync, BackstageAufraeumen, BackstageDaten, SyncStatus],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -26,7 +26,6 @@ import { offlineReady } from '../pwa';
         }
       </div>
       <app-sync-status (geaendert)="version.set(version() + 1)" />
-      <app-backstage-ordner (geaendert)="version.set(version() + 1)" />
       <app-backstage-daten [version]="version()" (geaendert)="version.set(version() + 1)" />
       <app-backstage-aufraeumen [version]="version()" (geaendert)="version.set(version() + 1)" />
     </section>
@@ -43,4 +42,9 @@ export class BackstageAbgleich {
   protected readonly offline = offlineReady;
   /** Änderungen in einem Bereich der Seite → die anderen lesen neu */
   protected readonly version = signal(0);
+
+  constructor() {
+    // „Ordner auf dem Gerät“ gibt es nicht mehr (die Synchronisation kann es mit) – gemerkten Ordner vergessen
+    void ordnerSpeicherLoeschen();
+  }
 }

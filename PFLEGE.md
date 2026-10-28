@@ -243,38 +243,13 @@ Darunter **Aufräumen**:
 
 Vorher sichern: **Alles an die Band schicken** (oben) und für Noten **Songs → Noten → Notenblätter an die Band**.
 
-## OneDrive-Ordner auf dem Gerät (Abgleich)
-
-Ohne Anmeldung und ohne Einrichtung: Ist die **OneDrive-App** auf dem Gerät eingerichtet, liegt OneDrive als normaler
-Ordner vor (Windows-Explorer, Finder, „Dateien“-App am iPhone/iPad, OneDrive-App bei Android). Unter
-**Abgleich → Ordner auf dem Gerät** daraus einlesen – Backstage-Dateien, Notenpakete, PDFs und .pro, auch in
-Unterordnern (Noten über Titel und Interpret im Dateinamen) – und den Stand dorthin sichern:
-
-- **Chrome oder Edge am Computer:** einmal **Ordner verbinden** (z. B. `OneDrive\Blickfeld Nord`), danach reichen
-  **Ordner durchsuchen** → **Einlesen** bzw. **Stand dort sichern** (Unterordner `Backstage`, wahlweise mit
-  Notenblättern). Der Browser fragt je Sitzung einmal, ob die Seite den Ordner lesen bzw. schreiben darf.
-- **Safari, Firefox, iPhone/iPad, Android:** **Ordner wählen** oder **Dateien wählen** (am iPhone links „OneDrive“
-  antippen) → **Einlesen**. **Stand sichern** öffnet Teilen bzw. Speichern – dort „In Dateien sichern“ → OneDrive.
-- Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
-  ersetzt.
-- **Vorschau:** unter jeder Backstage-Datei steht, was sich ändert („2 neu, 1 geändert, 5 gleich“, aufklappbar; bei
-  Setlists „3 Songs anders“). „Datei importieren“ fragt mit derselben Vorschau nach.
-- **Titel und Interpret** jeder Noten-Datei werden vor dem Einlesen erkannt und angezeigt – aus dem Dateinamen (in
-  beliebiger Reihenfolge, z. B. `Iris - Goo Goo Dolls - Bass.pdf`, `Goo Goo Dolls - Iris.pdf`,
-  `Giesinger, Max - 80 Millionen (Keys).pdf`), dem Ordner (`Goo Goo Dolls/Iris/Bass.pdf`), bei .pro aus
-  `{title}`/`{artist}`, bei PDFs aus den Dokument-Eigenschaften bzw. dem Kopf der ersten Seite, zuletzt mit Toleranz
-  für Tippfehler („Robbie Wiliams“). Was übrig bleibt, ist die Fassung (z. B. „Bass“). Unklares (zwei Songs gleichen
-  Namens) oder nicht Erkanntes ist orange markiert: Song aus der Liste wählen, Fassung bei Bedarf ändern – eingelesen
-  wird genau so, wie es in der Liste steht. Von Hand gewählte Zuordnungen merkt sich das Gerät je Dateiname – beim
-  nächsten Mal steht dort „wie beim letzten Mal“.
-
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
 
 Wie OneSync: Ein **OneDrive-Ordner** wird mit einem **lokalen Ordner** abgeglichen – in beide Richtungen, auf Wunsch
-automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (braucht einmal die App-Registrierung, siehe
-„OneDrive einrichten“ – die App-ID lässt sich dort direkt eintragen):
+automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (die App-Registrierung ist erledigt, siehe
+„OneDrive einrichten“):
 
-1. **Microsoft-Konto:** App-ID eintragen (falls nicht schon im Code), **Mit Microsoft anmelden**.
+1. **Microsoft-Konto:** **Mit Microsoft anmelden** (die App-ID ist fest eingetragen).
 2. **OneDrive-Ordner:** durchklicken, ggf. **Neuer Ordner**, **Diesen Ordner nehmen**.
 3. **Lokaler Ordner:**
    - **Speicher dieser App** – auf allen Geräten (iPhone, Android, Mac, PC), offline verfügbar. Die Dateien liegen im
@@ -294,13 +269,28 @@ Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synch
 **Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro) und **Stand sichern**: legt die
 Backstage-Sicherung (wahlweise mit Notenblättern) in den Unterordner `Backstage` des Sync-Ordners und gleicht gleich ab.
 
+Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
+
+- Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
+  ersetzt.
+- **Vorschau:** unter jeder Backstage-Datei steht, was sich ändert („2 neu, 1 geändert, 5 gleich“, aufklappbar; bei
+  Setlists „3 Songs anders“). „Datei importieren“ fragt mit derselben Vorschau nach.
+- **Titel und Interpret** jeder Noten-Datei werden vor dem Einlesen erkannt und angezeigt – aus dem Dateinamen (in
+  beliebiger Reihenfolge, z. B. `Iris - Goo Goo Dolls - Bass.pdf`, `Goo Goo Dolls - Iris.pdf`,
+  `Giesinger, Max - 80 Millionen (Keys).pdf`), dem Ordner (`Goo Goo Dolls/Iris/Bass.pdf`), bei .pro aus
+  `{title}`/`{artist}`, bei PDFs aus den Dokument-Eigenschaften bzw. dem Kopf der ersten Seite, zuletzt mit Toleranz
+  für Tippfehler („Robbie Wiliams“). Was übrig bleibt, ist die Fassung (z. B. „Bass“). Unklares (zwei Songs gleichen
+  Namens) oder nicht Erkanntes ist orange markiert: Song aus der Liste wählen, Fassung bei Bedarf ändern – eingelesen
+  wird genau so, wie es in der Liste steht. Von Hand gewählte Zuordnungen merkt sich das Gerät je Dateiname – beim
+  nächsten Mal steht dort „wie beim letzten Mal“.
+
 ## OneDrive einrichten (für die Synchronisation)
 
 Die Synchronisation (siehe oben) ist für ein **privates Microsoft-Konto** gedacht (Outlook.com, Hotmail, Live – privates
 OneDrive). Ist der Browser schon bei Microsoft angemeldet (z. B. onedrive.live.com oder Outlook im Browser offen, Edge
 mit Microsoft-Konto), verbindet es sich ohne Passwort (Single Sign-On); sonst einmal im Popup anmelden. Danach bleibt
 das Gerät verbunden. Blockiert der Browser Drittanbieter-Cookies (Safari, Firefox), klappt das stille Anmelden nicht –
-dann eben das Popup. Ganz ohne Registrierung geht nur „Ordner auf dem Gerät“ (siehe oben).
+dann eben das Popup.
 
 Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
 
@@ -310,8 +300,8 @@ Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
 3. Umleitungs-URI: Plattform **Single-Page-Anwendung (SPA)**, Adresse `https://blickfeld-nord.de/auth/`.
 4. Unter **API-Berechtigungen** → Microsoft Graph → Delegiert: `Files.ReadWrite` hinzufügen (`User.Read` ist schon da).
    Beim ersten Verbinden fragt Microsoft einmal, ob die App auf OneDrive zugreifen darf.
-5. Die **Anwendungs-ID (Client-ID)** unter Backstage → **Einstellungen** eintragen (gilt für das Gerät) – oder für
-   alle Geräte in `src/app/data/onedrive-config.ts` bei `clientId` (oder an Claude schicken). Sie ist kein Geheimnis. (`tenant: 'consumers'` = private Konten; für Firmenkonten wäre es `common`.)
+5. Die **Anwendungs-ID (Client-ID)** steht für alle Geräte in `src/app/data/onedrive-config.ts` bei `clientId`
+   (erledigt). Sie ist kein Geheimnis. (`tenant: 'consumers'` = private Konten; für Firmenkonten wäre es `common`.)
 
 Die Daten gehen direkt vom Browser zu OneDrive, nicht über GitHub. Noten bleiben damit weiterhin aus dem öffentlichen
 Repository heraus.
