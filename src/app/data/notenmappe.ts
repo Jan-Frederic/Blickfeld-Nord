@@ -42,6 +42,11 @@ export function blattFuerBand(chordpro: string, title: string, artist: string): 
   return { blatt, griff: [blatt.tonart && `Griffe in ${blatt.tonart}`, info?.capo && `Capo ${info.capo}`].filter(Boolean).join(' · ') };
 }
 
+/** Hinweise zum Song: Notiz aus Backstage → Songs und Notiz für diesen Auftritt (Setlist → ✎) */
+export function notizen(s: { title: string; artist: string; notiz?: string }): string {
+  return [songInfo(s.title, s.artist)?.notiz, s.notiz].filter(Boolean).join(' · ');
+}
+
 // nur Zeichen, die die PDF-Standardschriften (Windows-1252) kennen
 const WIN1252 = /[^\x20-\x7e\xa0-\xff€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/g;
 const sauber = (s: string) => s.replace(/\t/g, '  ').replace(WIN1252, '?');
@@ -91,8 +96,13 @@ export async function notenmappe(entries: Entry[], titel: string, melden?: (s: M
         set++;
         seite.drawText(`— Pause · Set ${set} —`, { x: RAND, y, size: 11, font: fett, color: orange });
       } else {
-        const s = e as { title: string; artist: string };
+        const s = e as { title: string; artist: string; notiz?: string };
         seite.drawText(sauber(`${String(++nr).padStart(2, ' ')}. ${s.title} – ${s.artist}`), { x: RAND, y, size: 11, font: normal });
+        const hinweis = notizen(s);
+        if (hinweis) {
+          y -= 13;
+          seite.drawText(sauber(hinweis), { x: RAND + 22, y, size: 9, font: normal, color: orange, maxWidth: B - 2 * RAND - 22 });
+        }
       }
       y -= 17;
     }
@@ -105,7 +115,7 @@ export async function notenmappe(entries: Entry[], titel: string, melden?: (s: M
       seite.drawText('Pause', { x: RAND, y: H / 2, size: 40, font: fett, color: orange });
       continue;
     }
-    const s = e as { title: string; artist: string };
+    const s = e as { title: string; artist: string; notiz?: string };
     const key = `${s.title}|${s.artist}`;
     melden?.({ text: `Mappe: ${s.title}`, fertig: nr, gesamt: songs.length });
     nr++;
@@ -130,7 +140,7 @@ export async function notenmappe(entries: Entry[], titel: string, melden?: (s: M
         const GROESSE = 10.5;
         const ZEILE = 12.5;
         let seite = mappe.addPage([B, H]);
-        kopf(seite, `${nr}. ${s.title}`, [s.artist, griff].filter(Boolean).join(' · '));
+        kopf(seite, `${nr}. ${s.title}`, [s.artist, griff, notizen(s)].filter(Boolean).join(' · '));
         let y = H - RAND - 62;
         for (const z of akkordSatz(blatt)) {
           if (y < RAND) {

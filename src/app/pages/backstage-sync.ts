@@ -8,7 +8,7 @@ import { NOTEN_APP, notenImportieren } from '../data/noten';
 // Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
 // und auf dem anderen Gerät importieren. Ohne Server – die Datei geht direkt von Gerät zu Gerät.
 
-export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf'];
+export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-'];
 // Zeitpunkt der letzten vollständigen Sicherung („Alles an die Band schicken“) – für den Hinweis unter Aufgaben
 export const GESICHERT_KEY = 'bn-gesichert';
 

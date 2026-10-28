@@ -9,6 +9,7 @@ import { SetlistBuehne } from './setlist-buehne';
 import { Song, loadSetlist } from '../data/setlist-data';
 import { BandService } from '../data/band.service';
 import { historieText, songHistorie } from '../data/song-historie';
+import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
 
 // Backstage → Songs → Liste: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // „Original“ ist die Tonart der Aufnahme, „wir spielen“ und Capo die Band-Version; das Tempo lässt sich im Proberaum
@@ -55,6 +56,7 @@ function ladeEntwurf(): Record<string, Werte> {
             <option value="akkorde">ohne Akkorde</option>
             @for (f of fassungen(); track f) { <option [value]="'fassung:' + f">ohne {{ f }}</option> }
             <option value="nie">noch nie gespielt</option>
+            <option value="wackelt">wackelt noch (deine Liste)</option>
           </select>
         </label>
         <label>Reihenfolge
@@ -82,7 +84,7 @@ function ladeEntwurf(): Record<string, Werte> {
               <td class="song">
                 <button type="button" class="oeffnen" (click)="oeffnen(s.key, $event)" [attr.aria-label]="s.title + ' bearbeiten'">{{ s.title }}</button>
                 <span class="a">{{ s.artist }}</span>
-                <span class="a hist">{{ historieText(historie().get(s.key)) }}</span>
+                <span class="a hist">{{ historieText(historie().get(s.key)) }}@if (wackelt()[s.key]) { <span class="wackelt"> · wackelt noch</span> }</span>
               </td>
               <td class="werte">
                 @let w = wert(s.key);
@@ -109,7 +111,7 @@ function ladeEntwurf(): Record<string, Werte> {
 
       @if (offen(); as k) {
         <app-song-dialog [song]="zeile(k)" [werte]="wert(k)" [quelle]="quelle(k)" [dateien]="notenDateien()"
-          [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1"
+          [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1" [wackelt]="!!wackelt()[k]" (wackeltUmschalten)="wackeltUmschalten(k)"
           (setzen)="setzen(k, $event.feld, $event.roh)" (notenGeaendert)="notenLaden()" (blaettern)="dialogBlaettern($event)"
           (buehne)="buehneAusDialog()" (schliessen)="offen.set(null)" />
       }
@@ -159,6 +161,7 @@ function ladeEntwurf(): Record<string, Werte> {
     .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
     mat-icon.inline { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; }
     .a { color: var(--bn-fog); font-size: .82rem; }
+    .wackelt { color: #e0b25a; }
     .apply { margin-top: 24px; padding: 16px 18px; border: 1px solid var(--bn-line); border-radius: 12px; font-size: .9rem; line-height: 1.6; }
     .apply p { margin: 0 0 8px; }
     .apply ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
@@ -208,6 +211,7 @@ export class SongsListe {
     else if (z === 'noten') liste = liste.filter((s) => !noten.has(s.key));
     else if (z === 'akkorde') liste = liste.filter((s) => !noten.get(s.key)?.akkorde);
     else if (z === 'nie') liste = liste.filter((s) => !this.historie().get(s.key)?.gespielt);
+    else if (z === 'wackelt') liste = liste.filter((s) => this.wackelt()[s.key]);
     else if (z.startsWith('fassung:')) {
       const f = z.slice(8).toLowerCase();
       liste = liste.filter((s) => !noten.get(s.key)?.fassungen.some((x) => x.toLowerCase() === f));
@@ -219,6 +223,11 @@ export class SongsListe {
     return liste;
   });
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
+  /** eigene „Wackelt noch“-Liste (data/wackelt.ts) */
+  protected readonly wackelt = signal(ladeWackelt());
+  protected wackeltUmschalten(k: string): void {
+    this.wackelt.set(wackeltSetzen(k, !this.wackelt()[k]));
+  }
   protected readonly ausgefuellt = computed(() => this.songs.filter((s) => { const w = this.wert(s.key); return w.tonart || w.bpm || w.notiz; }).length);
 
   protected wert(k: string): Werte {

@@ -146,7 +146,8 @@ Im **Bühnen-Modus** oben auf das Noten-Symbol tippen. Weiter blättern wie gewo
 oder **Bluetooth-Fußpedal** (die senden Pfeiltasten): erst durch die Seiten, am Ende zum nächsten Song, dessen Noten
 dann gleich erscheinen. Zurück landet auf der letzten Seite des vorigen Songs. Lange Seiten oder **volle Breite**
 (Symbol oben) werden erst gescrollt, dann umgeblättert. **Mitscrollen** lässt ein Akkordblatt in der Länge des Songs
-durchlaufen. Hat ein Song mehrere Fassungen (mehrere PDFs und/oder Akkorde), steht oben ein **Auswahlfeld**. Die Wahl
+durchlaufen; ‹ und › machen es langsamer oder schneller (je Song gemerkt), ein Tritt aufs Pedal hält es an, der
+nächste lässt es weiterlaufen. Hat ein Song mehrere Fassungen (mehrere PDFs und/oder Akkorde), steht oben ein **Auswahlfeld**. Die Wahl
 wird je Song gemerkt und gilt auch als Vorliebe für die anderen Songs: wer „Bass“ wählt, bekommt bei jedem Song mit
 einem PDF namens „Bass“ dieses, wer „Akkorde“ wählt, die Akkordblätter – auch beim Zurückblättern.
 
@@ -176,7 +177,19 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
   Halbseiten-Blättern zeigt der erste Tritt oben schon den Anfang der nächsten Seite, der zweite blättert ganz um.
   Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten.
 
+- **Einzählen:** neben dem Tempo auf **1-2-3-4** tippen – vier Schläge im Tempo des Songs groß auf dem Bildschirm
+  (mit Ton, wenn der Klick-Ton an ist; die Eins höher). Der **Klick** daneben blinkt dauerhaft im Tempo.
+- **Notiz für diesen Auftritt:** in der Setlist beim Song auf ✎ tippen, z. B. „Schluss zweimal“ oder „Einstieg nur
+  Gitarre“. Sie steht grün im Bühnen-Modus, auf dem Ausdruck, in der Notenmappe und geht mit „Als Link“ an die Band.
+  (Was für einen Song **immer** gilt, gehört in die Notiz unter Songs → Liste.)
+
 **Vor dem Auftritt** (Setlist des Auftritts):
+
+- **Bereit?** steht oben auf der Seite jedes kommenden Auftritts, für den nächsten auch in der Backstage-Übersicht:
+  Termin geklärt, Beginn, Setlist, Tonart/Tempo und Noten der Songs, Vor-Ort-Angaben (Ansprechpartner, Ankunft,
+  Strom), fällige Werbung und – zwei Tage vorher – die Packliste. Jeder offene Punkt führt dorthin, wo er sich erledigen
+  lässt. Setlist, Noten, Vor Ort und Packliste stehen auf dem jeweiligen Gerät – auf einem anderen Handy kann der Check
+  daher anders aussehen.
 
 - **Auftritt vorbereiten** prüft für jeden Song, ob Noten in deiner Fassung (eigene Wahl bzw. Vorliebe wie „Bass“)
   auf dem Gerät sind, ob die PDF sich öffnen lässt und der Seitenbereich passt, und lädt alles für ohne Netz.
@@ -184,8 +197,23 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
   PDF-Seiten im eingestellten Bereich, Akkordblätter in eurer Tonart, Pausen als Trennseite. Zum Drucken oder fürs
   Tablet; die Datei entsteht nur auf dem Gerät und gehört nicht ins Repository.
 
+**In der Probe** (Song-Dialog unter Songs → Liste):
+
+- **Wackelt noch / Sitzt** (oben im Dialog): deine eigene Übe-Liste – je Gerät, also je Musiker. Der
+  **Probe-Vorschlag** nimmt diese Songs zuerst, „Zeigen → wackelt noch“ listet sie.
+- **Mitschnitte:** auf **Aufnehmen** tippen, die Band spielt, **Stopp** – die Aufnahme bleibt beim Song auf diesem Gerät,
+  zum Nachhören zu Hause oder zum **Teilen** (Messenger, AirDrop). Beim ersten Mal fragt der Browser nach dem Mikrofon.
+  Mitschnitte gehen nie an GitHub und nicht in die Sicherung (zu groß); löschen je Aufnahme oder unter
+  **Abgleich → Aufräumen**.
+
+**Nach dem Auftritt** (Seite des Auftritts, sobald er vorbei ist): **Nachbereitung** aufklappen – Sterne je Song (wie im
+Bühnen-Modus), ⚠ setzt einen Song auf die eigene „Wackelt noch“-Liste, dazu „Was lief gut?“ und „Was ging schief?“.
+**Merkpunkte** (eine Zeile je Punkt, z. B. „Kabel für Keys kaufen“) stehen unter **Aufgaben**, bis sie abgehakt sind.
+„Was lief gut“ lässt sich im Rückblick-Formular darunter als Entwurf übernehmen – vor dem Veröffentlichen umformulieren.
+Die Nachbereitung steckt in der Backstage-Sicherung (Abgleich) und geht so auch mit „Stand sichern“ an die Band.
+
 **Songs → Liste:** „Zeigen“ filtert Lücken (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie
-„Bass“, noch nie gespielt). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
+„Bass“, noch nie gespielt, wackelt noch). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
 Auftritte) und ob er in einer kommenden Setlist steht; sortierbar nach „oft“ bzw. „lange nicht gespielt“.
 
 ## Gerät aufräumen (Abgleich)
@@ -452,6 +480,11 @@ Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit
 **Tote Links:** Einmal pro Woche (montags) prüft GitHub alle externen Links, etwa zu Freunden, Instagram oder Spotify.
 Ist einer nicht mehr erreichbar, erscheint unter **Issues** „Tote Links auf der Website“ mit der Liste. Das Issue
 schließt sich von selbst, sobald alle Links wieder gehen.
+
+**Live-Seite:** Einmal pro Woche (mittwochs) ruft GitHub die echte Seite blickfeld-nord.de auf: alle Seiten der
+Sitemap, PDFs, Kalender, Bilder, Service Worker, die 404-Seite – und ob der tägliche Deploy noch läuft (letzte
+Änderung höchstens 3 Tage alt). Probleme erscheinen unter **Issues** als „Probleme auf der Live-Seite“; das Issue
+schließt sich von selbst, sobald alles wieder geht. Von Hand: Actions → **Live-Check** → *Run workflow*.
 
 Nicht weiterkommen? Einfach Fred fragen. Über **History** (Uhr-Symbol oben in der Datei) seht ihr jede frühere
 Fassung und könnt den alten Text von dort zurückkopieren.

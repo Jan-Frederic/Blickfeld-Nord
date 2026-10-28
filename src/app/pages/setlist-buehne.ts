@@ -11,7 +11,8 @@ import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/be
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
 // die Uhr zeigt, wie lange das Set schon läuft und wie lange es laut Spotify-Längen noch dauert.
 // Tonart (die der Band, mit Capo) und Tempo aus songinfo.ts stehen unter dem Titel; „Klick“ blinkt im Tempo,
-// der Ton dazu ist eigens zuschaltbar (bn-buehne-ton) – auf der Bühne reicht meist das Blinken.
+// der Ton dazu ist eigens zuschaltbar (bn-buehne-ton) – auf der Bühne reicht meist das Blinken. „1-2-3-4“ zählt ein.
+// Eine Notiz für diesen Auftritt (Setlist → ✎) steht grün unter dem Titel.
 // Sterne (oder Tasten 1–5) bewerten, wie der Song an diesem Abend lief – Rangliste unter Backstage → Zahlen.
 const ZOOM_KEY = 'bn-buehne-zoom';
 const TON_KEY = 'bn-buehne-ton';
@@ -65,6 +66,7 @@ function ladeZoom(): number {
             <h1>{{ $any(c).title }}</h1>
             <p class="artist">{{ $any(c).artist }} @if (length(c)) { · {{ length(c) }} }</p>
             @if ($any(c).wunsch !== undefined) { <p class="wunsch">♥ {{ $any(c).wunsch ? 'Wunsch von ' + $any(c).wunsch : 'Publikumswunsch' }}</p> }
+            @if ($any(c).notiz) { <p class="wunsch heute" style="color: #9ccc9c">✎ {{ $any(c).notiz }}</p> }
             @if (info(); as i) {
               <p class="info">
                 @if (tonart(i); as t) { <span class="key" title="Tonart">{{ t }}</span> }
@@ -73,6 +75,7 @@ function ladeZoom(): number {
                   <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
                     {{ klickBpm() }} bpm · Klick
                   </button>
+                  <button type="button" class="ton" (click)="einzaehlen($event)" aria-label="Einzählen" title="Vier Schläge im Tempo des Songs vorzählen">1-2-3-4</button>
                   @if (klick()) {
                     <button type="button" class="ton tempo" [class.on]="faktor() < 1" (click)="langsamer($event)" [attr.aria-label]="'Übungstempo ' + faktorText() + ', antippen für langsamer'" title="Zum Üben langsamer: 100 → 90 → 80 → 70 %">{{ faktorText() }}</button>
                     <button type="button" class="ton" [class.on]="ton()" (click)="toggleTon($event)" [attr.aria-pressed]="ton()" [attr.aria-label]="ton() ? 'Ton aus' : 'Ton an'">
@@ -107,6 +110,7 @@ function ladeZoom(): number {
         }
         <span class="progress"><span [style.width.%]="progress()"></span></span>
       </footer>
+      @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
       @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" (schliessen)="notenOffen.set(false)" /> }
     </div>
   `,
@@ -151,6 +155,7 @@ function ladeZoom(): number {
     .ton.on { border-color: #e8a46a; color: #e8a46a; }
     .note { color: #b0b6bc; }
     .next-info { color: #e8a46a; }
+    .einzaehlen { position: fixed; inset: 0; z-index: 3; display: grid; place-items: center; background: #000c; color: #e8a46a; font: 700 60vmin Inter; pointer-events: none; }
     .wunsch { margin: 12px 0 0; font-size: clamp(1.2rem, 4vw, 2.2rem); color: #ff8a80; }
     .stars { display: flex; justify-content: center; gap: 4px; margin: 14px 0 0; }
     .stars button { display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: transparent; color: #555; cursor: pointer; }
@@ -286,6 +291,7 @@ export class SetlistBuehne {
     inject(DestroyRef).onDestroy(() => {
       clearInterval(timer);
       this.stopKlick();
+      this.stopZaehlen();
       this.audio?.close().catch(() => undefined);
       document.removeEventListener('visibilitychange', visible);
       this.wakeLock?.release().catch(() => undefined);
@@ -337,22 +343,54 @@ export class SetlistBuehne {
     this.klickTimer = setInterval(() => {
       this.beat.set(true);
       setTimeout(() => this.beat.set(false), 90);
-      if (!this.ton()) return;
-      this.audio ??= new AudioContext();
-      const osc = this.audio!.createOscillator();
-      const gain = this.audio!.createGain();
-      osc.frequency.value = 1000;
-      gain.gain.setValueAtTime(0.2, this.audio!.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audio!.currentTime + 0.05);
-      osc.connect(gain).connect(this.audio!.destination);
-      osc.start();
-      osc.stop(this.audio!.currentTime + 0.05);
+      if (this.ton()) this.piep(1000);
     }, 60000 / bpm);
+  }
+
+  private piep(frequenz: number): void {
+    this.audio ??= new AudioContext();
+    const a = this.audio;
+    const osc = a.createOscillator();
+    const gain = a.createGain();
+    osc.frequency.value = frequenz;
+    gain.gain.setValueAtTime(0.2, a.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.05);
+    osc.connect(gain).connect(a.destination);
+    osc.start();
+    osc.stop(a.currentTime + 0.05);
   }
 
   private stopKlick(): void {
     clearInterval(this.klickTimer);
     this.beat.set(false);
+  }
+
+  // Einzählen: vier Schläge im Tempo des Songs (beim Üben im gewählten Übungstempo) groß über dem Bildschirm,
+  // mit Ton, wenn er eingeschaltet ist – die Eins höher. Danach läuft der Klick weiter, falls er an war.
+  protected readonly zaehler = signal(0);
+  private zaehlTimer: ReturnType<typeof setInterval> | undefined;
+  protected einzaehlen(e: Event): void {
+    e.stopPropagation();
+    const bpm = Math.round((this.info()?.bpm ?? 0) * this.faktor());
+    if (!bpm) return;
+    this.stopKlick();
+    this.stopZaehlen();
+    let n = 0;
+    const schlag = () => {
+      if (++n > 4) {
+        this.stopZaehlen();
+        this.startKlick();
+        return;
+      }
+      this.zaehler.set(n);
+      if (this.ton()) this.piep(n === 1 ? 1500 : 1000);
+    };
+    schlag();
+    this.zaehlTimer = setInterval(schlag, 60000 / bpm);
+  }
+  private stopZaehlen(): void {
+    clearInterval(this.zaehlTimer);
+    this.zaehler.set(0);
   }
 
   protected go(step: number): void {
@@ -363,7 +401,8 @@ export class SetlistBuehne {
     this.index.set(target);
     // neues Set beginnt (nach der Pause weiter) → Uhr neu starten
     if (this.setNo() !== before) this.setStart = Date.now();
-    // Klick läuft im Tempo des neuen Songs weiter (ohne Tempo: aus)
+    // Klick läuft im Tempo des neuen Songs weiter (ohne Tempo: aus); angefangenes Einzählen endet
+    this.stopZaehlen();
     this.startKlick();
   }
 

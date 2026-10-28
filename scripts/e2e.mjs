@@ -15,7 +15,8 @@ const { base: BASE, close } = serve(DIST);
 const sitemap = readFileSync(join(DIST, 'sitemap.xml'), 'utf8');
 const concerts = [...sitemap.matchAll(/<loc>https:\/\/blickfeld-nord\.de(\/konzerte\/[^<]+)<\/loc>/g)].map((m) => m[1]);
 
-const browser = await chromium.launch();
+// Mikrofon zum Testen der Proben-Mitschnitte: Chromium liefert einen Testton, ohne nachzufragen
+const browser = await chromium.launch({ args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
 const tests = [];
 const test = (name, fn, options = {}) => tests.push({ name, fn, options });
 function expect(ok, message) {
@@ -497,6 +498,19 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
   await until(async () => (await p.locator('app-noten-anzeige .teil b').allInnerTexts()).join(' ') === 'E A/C#', 'Akkorde werden nicht in die Band-Tonart transponiert');
   expect((await kopf.innerText()).includes('Griffe in E'), 'Griffbild fehlt');
+  // Mitscrollen: Pedal hält an und lässt weiterlaufen (statt zu blättern), Tempo je Song mit +
+  const scroll = kopf.locator('button.mitscrollen');
+  // das Test-Blatt ist kurz – länger machen, damit es etwas zu scrollen gibt
+  await p.locator('app-noten-anzeige .blatt').evaluate((b) => (b.style.paddingBottom = '4000px'));
+  await kopf.getByRole('button', { name: 'Schneller scrollen' }).click();
+  await scroll.click();
+  await until(async () => (await kopf.innerText()).includes('110 %'), 'Scroll-Tempo lässt sich nicht ändern');
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await scroll.innerText()).includes('Weiter'), 'Pedal hält das Mitscrollen nicht an');
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await scroll.getAttribute('aria-pressed')) === 'true', 'Pedal lässt das Mitscrollen nicht weiterlaufen');
+  expect((await kopf.locator('.titel').innerText()) !== '', 'Pedal hat den Song gewechselt');
+  await scroll.click();
   await p.keyboard.press('Escape');
   await until(async () => (await p.locator('app-noten-anzeige').count()) === 0, 'Escape schließt die Noten nicht');
 
@@ -935,6 +949,75 @@ test('Backstage: Vor Ort berechnet Abfahrt, Daten lassen sich exportieren und im
   return p;
 });
 
+test('Backstage: Notiz je Auftritt und Einzählen im Bühnen-Modus, „Bereit?“-Check', async () => {
+  const p = await page();
+  const id = '2028-08-19';
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .search input').fill('Wonderwall');
+  await p.locator('app-setlist .pick li button').first().click();
+  p.promptAntwort = 'Schluss zweimal';
+  await p.getByRole('button', { name: 'Notiz für diesen Auftritt' }).click();
+  await until(async () => (await p.locator('app-setlist .list').innerText()).includes('✎ Schluss zweimal'), 'Notiz nicht in der Setlist');
+  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
+  expect((await p.locator('app-setlist-buehne main').innerText()).includes('Schluss zweimal'), 'Notiz nicht im Bühnen-Modus');
+  await p.getByRole('button', { name: 'Einzählen' }).click();
+  await until(async () => (await p.locator('app-setlist-buehne .einzaehlen').count()) === 1, 'Einzählen zeigt nichts');
+  await until(async () => (await p.locator('app-setlist-buehne .einzaehlen').count()) === 0, 'Einzählen hört nicht auf');
+  await p.keyboard.press('Escape');
+  // Seite des Auftritts: Setlist steht, Vor-Ort-Angaben fehlen noch
+  await p.go(`/backstage/${id}`);
+  const bereit = p.locator('app-bereitschaft');
+  expect(await bereit.locator('li.ok', { hasText: 'Setlist steht' }).count(), '„Setlist steht“ nicht abgehakt');
+  expect((await bereit.locator('li:not(.ok)', { hasText: 'Vor Ort geklärt' }).innerText()).includes('Ansprechpartner'), 'fehlende Vor-Ort-Angaben nicht gemeldet');
+  await p.go('/backstage/');
+  expect((await p.locator('app-bereitschaft summary').innerText()).includes('bereit'), 'kein „Bereit?“ für den nächsten Auftritt in der Übersicht');
+  return p;
+});
+
+test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung mit Merkpunkten', async () => {
+  const p = await page({ permissions: ['microphone'] });
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
+  await p.locator('app-backstage-songs tbody tr .oeffnen').first().click();
+  const dialog = p.locator('app-song-dialog dialog[open]');
+  await dialog.getByRole('button', { name: 'Sitzt' }).click();
+  await until(async () => (await dialog.locator('.wackelt').innerText()).includes('Wackelt noch'), '„Wackelt noch“ lässt sich nicht setzen');
+  await dialog.getByRole('button', { name: 'Aufnehmen' }).click();
+  await p.waitForTimeout(1500);
+  await dialog.getByRole('button', { name: /Stopp/ }).click();
+  await until(async () => (await dialog.locator('app-song-mitschnitte audio').count()) === 1, 'Mitschnitt nicht gespeichert');
+  await p.keyboard.press('Escape');
+  await p.locator('app-backstage-songs input[type=search]').fill('');
+  await p.locator('select.zeigen').selectOption('wackelt');
+  await until(async () => (await p.locator('app-backstage-songs tbody tr').count()) === 1, 'Filter „wackelt noch“ zeigt nicht genau den Song');
+  // Probe-Vorschlag nimmt den Song zuerst
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await until(async () => (await p.locator('app-probe-vorschlag li').first().innerText()).includes('wackelt noch'), 'Probe-Vorschlag ohne „wackelt noch“');
+  // Abgleich: Mitschnitte zählen mit
+  await p.go('/backstage/abgleich/');
+  await until(async () => (await p.locator('app-backstage-aufraeumen tr', { hasText: 'Proben-Mitschnitte' }).innerText()).includes('1'), 'Mitschnitt fehlt im Aufräumen');
+
+  // Nachbereitung eines vergangenen Auftritts
+  const id = '2026-08-22';
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .pick li button').first().click();
+  await p.go(`/backstage/${id}`);
+  await p.locator('app-nachbereitung summary').click();
+  await p.locator('app-nachbereitung .sterne button').nth(3).click();
+  await p.locator('app-nachbereitung textarea').first().fill('Alle haben mitgesungen');
+  await p.locator('app-nachbereitung .neu textarea').fill('- Kabel für Keys kaufen\n- Monitor Gesang lauter');
+  await p.getByRole('button', { name: 'Hinzufügen' }).click();
+  await until(async () => (await p.locator('app-nachbereitung .punkte li').count()) === 2, 'Merkpunkte nicht übernommen');
+  await until(async () => (await p.locator('app-nachbereitung summary').innerText()).includes('1 von 1 Songs bewertet'), 'Sterne nicht gezählt');
+  await p.locator('app-rueckblick-formular summary').click();
+  await p.locator('app-rueckblick-formular button', { hasText: 'aus der Nachbereitung' }).click();
+  await until(async () => (await p.locator('app-rueckblick-formular textarea').first().inputValue()) === 'Alle haben mitgesungen', '„Was lief gut“ nicht in den Rückblick übernommen');
+  await p.go('/backstage/aufgaben/');
+  await until(async () => (await p.locator('app-backstage-aufgaben').innerText()).includes('2 offene Merkpunkte aus der Nachbereitung'), 'Merkpunkte fehlen unter Aufgaben');
+  return p;
+});
+
 test('Kalender-Dateien und Service Worker sind vorhanden', async () => {
   const p = await page();
   for (const f of ['/konzerte.ics', '/en/konzerte.ics', '/nl/konzerte.ics', '/backstage/kalender.ics', '/sw.js', '/site.webmanifest']) {
@@ -959,7 +1042,7 @@ for (const t of tests.filter((x) => !process.env.NUR || x.name.includes(process.
     console.log(`✓ ${t.name} (${((Date.now() - start) / 1000).toFixed(1)} s)`);
   } catch (e) {
     failed++;
-    console.log(`::error::✗ ${t.name}: ${e.message.split('\n')[0]}`);
+    console.log(`::error::✗ ${t.name}: ${e.message.split("\n")[0]}`); if (process.env.STACK) console.log(e.stack);
   }
 }
 await browser.close();

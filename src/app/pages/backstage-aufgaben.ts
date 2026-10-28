@@ -10,6 +10,7 @@ import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
 import { tageSeitSicherung } from './backstage-sync';
+import { alleNachbereitungen, offeneMerkpunkte } from '../data/nachbereitung';
 import repertoire from '../data/repertoire.json';
 import technik from '../data/technik.json';
 
@@ -235,6 +236,21 @@ export class BackstageAufgaben {
         link: `/backstage/${this.band.showId(s)}`,
         icon: 'event_repeat',
       });
+
+    // Merkpunkte aus der Nachbereitung vergangener Auftritte (auf diesem Gerät) – abgehakt wird auf der Seite des Auftritts
+    const merkpunkte = offeneMerkpunkte(alleNachbereitungen());
+    if (merkpunkte.length) {
+      const name = (id: string) => {
+        const s = this.band.showById(id);
+        return s ? `${datum(s.date)} – ${s.venue}` : id;
+      };
+      out.push({
+        text: `${merkpunkte.length} ${merkpunkte.length === 1 ? 'offener Merkpunkt' : 'offene Merkpunkte'} aus der Nachbereitung`,
+        details: merkpunkte.map((p) => `${name(p.show)}: ${p.text}`),
+        link: `/backstage/${merkpunkte[0].show}`,
+        icon: 'rate_review',
+      });
+    }
 
     // Backstage-Daten liegen nur auf dem Gerät – regelmäßig an die Band schicken (= Sicherung)
     const tage = tageSeitSicherung();

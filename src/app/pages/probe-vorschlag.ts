@@ -5,6 +5,7 @@ import { BandService } from '../data/band.service';
 import { alleBewertungen, rangliste, songKey } from '../data/bewertung';
 import { Entry, SETLIST_PREFIX, isPause } from '../data/setlist-data';
 import { ProbeTipp, probeTipps } from '../data/probe-vorschlag';
+import { ladeWackelt } from '../data/wackelt';
 
 // Vorschläge für die Probe aus Sternen und Setlists dieses Geräts (Logik: data/probe-vorschlag.ts)
 @Component({
@@ -58,6 +59,6 @@ export class ProbeVorschlag {
     } catch {
       // ohne Speicher nur nach Sternen
     }
-    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10));
+    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())));
   }
 }

@@ -25,6 +25,12 @@ describe('setlist-link', () => {
     expect(setlistAusHash('#liste=' + code, umsortiert)).toEqual([{ title: 'B', artist: 'Y' }]);
   });
 
+  it('Notiz für den Auftritt reist mit – auch mit Komma und Umlauten', () => {
+    const entries = [{ title: 'A', artist: 'X', notiz: 'Schluss zweimal, dann Ö-Ende' }, { title: 'B', artist: 'Y' }];
+    const link = setlistLink('https://blickfeld-nord.de', '2026-12-04', entries, tracks);
+    expect(setlistAusHash(link.slice(link.indexOf('#')), tracks)).toEqual(entries);
+  });
+
   it('ohne Liste im Link: null', () => {
     expect(setlistAusHash('#anderes=1', tracks)).toBeNull();
   });

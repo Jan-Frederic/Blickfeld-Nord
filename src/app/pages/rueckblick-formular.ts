@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { isPause, loadSetlist } from '../data/setlist-data';
 import { ladeBewertungen, songKey } from '../data/bewertung';
+import { ladeNachbereitung } from '../data/nachbereitung';
 
 // „Rückblick schreiben“ auf der Backstage-Seite eines vergangenen Auftritts: Formular → fertiger Block für
 // history in src/app/data/band.service.ts (wie das Termin-Formular). Fotos lädt man vorher in public/historie hoch.
@@ -31,6 +32,9 @@ interface Foto {
       }
       <div class="grid">
         <label class="wide">Überschrift *<input [value]="titel()" (input)="titel.set($any($event.target).value)" placeholder="z. B. Weihnachtsmarkt in Rhede" maxlength="100" /></label>
+        @if (ausNachbereitung() && !text().trim()) {
+          <p class="wide hinweis"><button type="button" class="link" (click)="text.set(ausNachbereitung())"><mat-icon>content_paste</mat-icon> „Was lief gut“ aus der Nachbereitung als Entwurf übernehmen</button></p>
+        }
         <label class="wide">Text * <small>(Absätze mit einer Leerzeile trennen)</small>
           <textarea rows="6" [value]="text()" (input)="text.set($any($event.target).value)" placeholder="Wie war der Abend? Was war besonders?"></textarea>
         </label>
@@ -108,6 +112,9 @@ interface Foto {
     .icon { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: none; color: var(--bn-fog); cursor: pointer; }
     .problem { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; color: #e0b25a; font-size: .9rem; }
     .hint { margin: 10px 0 0; font-size: .8rem; color: var(--bn-fog); }
+    .hinweis { margin: 0; }
+    .link { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--bn-sunset); font: inherit; font-size: .85rem; cursor: pointer; }
+    .link mat-icon { font-size: 16px; width: 16px; height: 16px; }
     @media (max-width: 640px) { .grid.foto { grid-template-columns: 1fr auto; } .grid.foto label { grid-column: 1; } }
   `,
 })
@@ -127,6 +134,11 @@ export class RueckblickFormular {
   private readonly id = computed(() => this.band.showId(this.show()));
   protected readonly songs = computed(() => loadSetlist(this.id()).filter((e) => !isPause(e)) as { title: string; artist: string }[]);
   protected readonly mitSetlist = signal(true);
+  /** „Was lief gut“ aus der Nachbereitung – öffentlich erst nach dem Umformulieren */
+  // bei jedem Zeichnen frisch gelesen – die Nachbereitung steht gleich darüber und ändert sich nebenher
+  protected ausNachbereitung(): string {
+    return ladeNachbereitung(this.id()).gut.trim();
+  }
   protected readonly highlight = linkedSignal(() => {
     const sterne = ladeBewertungen(this.id());
     let best: { title: string; n: number } | null = null;

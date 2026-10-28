@@ -2,8 +2,9 @@ import data from './repertoire.json';
 
 // Gemeinsame Helfer für Setlists (Backstage): Speicherformat, Sets, Songlängen aus der Spotify-Playlist.
 
-/** wunsch: wer sich den Song gewünscht hat (leer = Wunsch ohne Namen) – Herz in Setlist und Bühnen-Modus */
-export type Song = { title: string; artist: string; wunsch?: string };
+/** wunsch: wer sich den Song gewünscht hat (leer = Wunsch ohne Namen) – Herz in Setlist und Bühnen-Modus;
+ *  notiz: Hinweis nur für diesen Auftritt, z. B. „Schluss zweimal“ – im Bühnen-Modus und in der Notenmappe */
+export type Song = { title: string; artist: string; wunsch?: string; notiz?: string };
 export type Entry = Song | { pause: true };
 
 export const SETLIST_PREFIX = 'bn-setlist-';

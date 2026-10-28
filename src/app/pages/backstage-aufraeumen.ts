@@ -4,6 +4,7 @@ import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
 import { BEREICHE, alleSchluessel, cacheLeeren, entfernen, mb, uebersicht, vergangene, verwaist } from '../data/aufraeumen';
 import { alleSongNoten, notenAllesLoeschen, notenDateien, notenEntfernen, notenVerwaist } from '../data/noten';
+import { mitschnittUebersicht, mitschnitteAllesLoeschen } from '../data/mitschnitte';
 import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { syncSpeicherLoeschen } from '../data/sync-ordner';
 import { PREFIXES, backstageImportieren, backupEintraege } from './backstage-sync';
@@ -41,6 +42,12 @@ const ALTER = [
             <td>{{ noten().songs || '–' }}</td>
             <td>{{ mb(noten().bytes) }}</td>
             <td><button type="button" class="klein" [disabled]="!noten().songs && !noten().pdfs" (click)="notenLoeschen()" aria-label="Alle Noten löschen"><mat-icon>delete</mat-icon></button></td>
+          </tr>
+          <tr>
+            <th scope="row">Proben-Mitschnitte<small>{{ mitschnitte().songs }} Songs</small></th>
+            <td>{{ mitschnitte().anzahl || '–' }}</td>
+            <td>{{ mb(mitschnitte().bytes) }}</td>
+            <td><button type="button" class="klein" [disabled]="!mitschnitte().anzahl" (click)="mitschnitteLoeschen()" aria-label="Alle Mitschnitte löschen"><mat-icon>delete</mat-icon></button></td>
           </tr>
           <tr>
             <th scope="row">Seiten für unterwegs<small>lädt beim nächsten Besuch mit Netz neu</small></th>
@@ -154,6 +161,7 @@ export class BackstageAufraeumen {
   });
 
   protected readonly noten = signal({ songs: 0, pdfs: 0, bytes: 0 });
+  protected readonly mitschnitte = signal({ anzahl: 0, songs: 0, bytes: 0 });
   protected readonly caches = signal(0);
   protected readonly speicher = signal(0);
 
@@ -174,10 +182,15 @@ export class BackstageAufraeumen {
       // ohne IndexedDB keine Noten
     }
     try {
+      this.mitschnitte.set(await mitschnittUebersicht());
+    } catch {
+      // ohne IndexedDB keine Mitschnitte
+    }
+    try {
       this.caches.set(typeof caches === 'undefined' ? 0 : (await caches.keys()).length);
       const s = await navigator.storage?.estimate?.();
       // grob: alles, was nicht Noten oder localStorage ist
-      this.speicher.set(Math.max(0, (s?.usage ?? 0) - this.noten().bytes));
+      this.speicher.set(Math.max(0, (s?.usage ?? 0) - this.noten().bytes - this.mitschnitte().bytes));
     } catch {
       // Schätzung nicht verfügbar
     }
@@ -193,6 +206,13 @@ export class BackstageAufraeumen {
     if (!confirm(`Alle Noten (${this.noten().songs} Songs, ${this.noten().pdfs} PDFs) auf diesem Gerät löschen?`)) return;
     await notenAllesLoeschen();
     this.meldung.set('Noten gelöscht ✓');
+    this.geaendert.emit();
+  }
+
+  protected async mitschnitteLoeschen(): Promise<void> {
+    if (!confirm(`Alle ${this.mitschnitte().anzahl} Proben-Mitschnitte auf diesem Gerät löschen?`)) return;
+    await mitschnitteAllesLoeschen();
+    this.meldung.set('Mitschnitte gelöscht ✓');
     this.geaendert.emit();
   }
 
@@ -243,6 +263,7 @@ export class BackstageAufraeumen {
       // egal
     }
     await notenAllesLoeschen();
+    await mitschnitteAllesLoeschen();
     await ordnerSpeicherLoeschen();
     await syncSpeicherLoeschen();
     await cacheLeeren();

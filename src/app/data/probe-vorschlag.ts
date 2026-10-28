@@ -1,5 +1,5 @@
-// „Was sollten wir proben?“ (Backstage → Probe): Songs mit wenig Sternen, lange nicht gespielte und Repertoire-Songs,
-// die noch auf keiner Setlist standen. Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
+// „Was sollten wir proben?“ (Backstage → Probe): zuerst Songs, die als „wackelt noch“ markiert sind, dann Songs mit
+// wenig Sternen, lange nicht gespielte und Repertoire-Songs, die noch auf keiner Setlist standen. Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
 import type { Song } from './setlist-data';
 
 export interface ProbeTipp extends Song {
@@ -13,8 +13,10 @@ const tage = (von: string, bis: string) => Math.round((Date.parse(bis) - Date.pa
  * @param repertoire alle Songs
  * @param sterne Sterne-Schnitt je Song (nur bewertete)
  * @param zuletzt Datum, an dem ein Song zuletzt auf einer Setlist stand
+ * @param wackelt als „wackelt noch“ markierte Songs (Schlüssel „Titel|Interpret“)
  */
-export function probeTipps(repertoire: Song[], sterne: Map<string, number>, zuletzt: Map<string, string>, heute: string, je = 4): ProbeTipp[] {
+export function probeTipps(repertoire: Song[], sterne: Map<string, number>, zuletzt: Map<string, string>, heute: string, je = 4, wackelt = new Set<string>()): ProbeTipp[] {
+  const unsicher = repertoire.filter((s) => wackelt.has(key(s))).map((s) => ({ ...s, grund: 'wackelt noch' }));
   const schwach = repertoire
     .filter((s) => (sterne.get(key(s)) ?? 5) < 3)
     .sort((a, b) => sterne.get(key(a))! - sterne.get(key(b))!)
@@ -30,5 +32,5 @@ export function probeTipps(repertoire: Song[], sterne: Map<string, number>, zule
     .slice(0, je)
     .map((s) => ({ ...s, grund: 'noch auf keiner Setlist' }));
   const gesehen = new Set<string>();
-  return [...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
+  return [...unsicher, ...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
 }

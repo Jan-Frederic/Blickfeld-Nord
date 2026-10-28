@@ -71,12 +71,13 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if ($any(e).notiz) {<span class="info" style="color: #9ccc9c">✎ {{ $any(e).notiz }}</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
                 @if (!isPause(e)) {
                   <button type="button" (click)="wunsch(i)" [class.on]="$any(e).wunsch !== undefined" [attr.aria-pressed]="$any(e).wunsch !== undefined" aria-label="Als Wunsch markieren"><mat-icon>favorite</mat-icon></button>
+                  <button type="button" (click)="notiz(i)" [class.on]="!!$any(e).notiz" aria-label="Notiz für diesen Auftritt" title="Notiz für diesen Auftritt, z. B. „Schluss zweimal“"><mat-icon>edit_note</mat-icon></button>
                 }
                 <button type="button" (click)="move(i, -1)" [disabled]="first" aria-label="Nach oben"><mat-icon>arrow_upward</mat-icon></button>
                 <button type="button" (click)="move(i, 1)" [disabled]="last" aria-label="Nach unten"><mat-icon>arrow_downward</mat-icon></button>
@@ -313,6 +314,15 @@ export class Setlist {
     this.update((l) => l.map((x, j) => (j === i ? { ...(x as object), wunsch } : x)) as Entry[]);
   }
 
+  // Notiz nur für diesen Auftritt (z. B. „Schluss zweimal“, „Einstieg nur Gitarre“) – leer löscht sie
+  protected notiz(i: number): void {
+    const e = this.entries()[i] as { notiz?: string };
+    const text = prompt('Notiz für diesen Auftritt (erscheint im Bühnen-Modus und in der Notenmappe):', e.notiz ?? '');
+    if (text === null) return;
+    const notiz = text.trim().slice(0, 80) || undefined;
+    this.update((l) => l.map((x, j) => (j === i ? { ...(x as object), notiz } : x)) as Entry[]);
+  }
+
   protected remove(i: number): void {
     this.update((l) => l.filter((_, j) => j !== i));
   }
@@ -333,7 +343,7 @@ export class Setlist {
       `Setlist – ${this.title()}`,
       ...this.sets().map((set, i) => {
         const sec = setLength(set).seconds;
-        return [``, `SET ${i + 1}${sec ? ` (${setTime(sec)})` : ''}`, ...set.map((t) => `${++n}. ${t.title} – ${t.artist}`)].join('\n');
+        return [``, `SET ${i + 1}${sec ? ` (${setTime(sec)})` : ''}`, ...set.map((t) => `${++n}. ${t.title} – ${t.artist}${t.notiz ? ` (${t.notiz})` : ''}`)].join('\n');
       }),
     ].join('\n');
     if (navigator.share) {
@@ -353,7 +363,7 @@ export class Setlist {
   // Kleingedrucktes unter dem Titel auf dem Bühnen-Ausdruck: Tonart der Band mit Capo, bei einem Sprung die Überleitung
   private druckInfo(vorher: { title: string; artist: string } | undefined, s: { title: string; artist: string }): string {
     const i = songInfo(s.title, s.artist);
-    const teile = [gespielteTonart(i), i?.capo && `Capo ${i.capo}`].filter(Boolean);
+    const teile = [gespielteTonart(i), i?.capo && `Capo ${i.capo}`, (s as { notiz?: string }).notiz && `✎ ${(s as { notiz?: string }).notiz}`].filter(Boolean);
     const sprung = vorher ? sprungHinweis(this.tonartVon(vorher), this.tonartVon(s)) : null;
     if (sprung) teile.push(`⚡ ${sprung.split(' · ')[1]}`);
     return teile.length ? `<small>${esc(teile.join(' · '))}</small>` : '';

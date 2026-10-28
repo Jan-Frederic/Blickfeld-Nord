@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageStats } from './backstage-stats';
 import { HeuteFaellig } from './heute-faellig';
+import { Bereitschaft } from './bereitschaft';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
@@ -13,7 +14,7 @@ import { SyncService } from '../data/sync.service';
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, Bereitschaft],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -21,6 +22,7 @@ import { SyncService } from '../data/sync.service';
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
 
       <app-heute-faellig />
+      @if (naechsterAuftritt; as n) { <app-bereitschaft [show]="n.show" [titel]="n.titel" /> }
 
       <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
 
@@ -109,6 +111,15 @@ export class Backstage {
   ]
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 4);
+
+  // „Bereit?“ für den nächsten Auftritt
+  protected readonly naechsterAuftritt = (() => {
+    const show = this.shows.find((s) => (s.endDate ?? s.date) >= this.today);
+    if (!show) return null;
+    const tage = Math.round((Date.parse(show.date) - Date.parse(this.today)) / 864e5);
+    const wann = tage <= 0 ? 'heute' : tage === 1 ? 'morgen' : `in ${tage} Tagen`;
+    return { show, titel: `${show.private ? (show.publicName ?? show.venue) : show.venue} ${wann}` };
+  })();
 
   constructor() {
     // Synchronisation mit OneDrive (falls eingerichtet und „automatisch“): beim Öffnen und alle 15 Minuten

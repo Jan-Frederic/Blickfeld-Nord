@@ -3,10 +3,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
 import { NotenEditor } from './noten-editor';
+import { SongMitschnitte } from './song-mitschnitte';
 
 // Dialog „Song bearbeiten“ (Backstage → Songs): Tonart (Original und wie die Band spielt), Capo, Tempo – auch per
 // Tippen im Takt –, Notiz, Recherche-Quelle sowie Noten (PDF, Akkordblatt). Mit „Voriger/Nächster“ lässt sich die
 // Liste durchgehen, „Im Bühnen-Modus“ öffnet den Song zur Kontrolle so, wie er auf der Bühne erscheint.
+// Dazu: „Wackelt noch“ (eigene Übe-Liste) und Proben-Mitschnitte (nur auf diesem Gerät).
 const TONARTEN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
 
 export interface SongZeile {
@@ -17,7 +19,7 @@ export interface SongZeile {
 
 @Component({
   selector: 'app-song-dialog',
-  imports: [MatIconModule, NotenEditor],
+  imports: [MatIconModule, NotenEditor, SongMitschnitte],
   template: `
     <dialog #dialog (close)="schliessen.emit()" [attr.aria-labelledby]="'song-dialog-titel'">
       <header>
@@ -25,6 +27,9 @@ export interface SongZeile {
           <h3 id="song-dialog-titel">{{ song().title }}</h3>
           <span class="a">{{ song().artist }}</span>
         </div>
+        <button type="button" class="wackelt" [class.an]="wackelt()" [attr.aria-pressed]="wackelt()" (click)="wackeltUmschalten.emit()" title="Nur für dich: Songs, bei denen du unsicher bist, schlägt die Probe-Planung zuerst vor">
+          <mat-icon>{{ wackelt() ? 'warning' : 'check' }}</mat-icon> {{ wackelt() ? 'Wackelt noch' : 'Sitzt' }}
+        </button>
         <button type="button" class="icon" (click)="zu()" aria-label="Schließen"><mat-icon>close</mat-icon></button>
       </header>
 
@@ -62,7 +67,10 @@ export interface SongZeile {
       @if (quelle(); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
 
       <!-- je Song neu anlegen, damit der Editor die Noten des neuen Songs lädt -->
-      @for (s of [song()]; track s.key) { <app-noten-editor [songKey]="s.key" [dateien]="dateien()" (geaendert)="notenGeaendert.emit()" /> }
+      @for (s of [song()]; track s.key) {
+        <app-noten-editor [songKey]="s.key" [dateien]="dateien()" (geaendert)="notenGeaendert.emit()" />
+        <app-song-mitschnitte [songKey]="s.key" [titel]="s.title" />
+      }
 
       <footer>
         <button type="button" (click)="blaettern.emit(-1)" [disabled]="!hatVorigen()"><mat-icon>chevron_left</mat-icon> Voriger</button>
@@ -98,6 +106,8 @@ export interface SongZeile {
     button:hover:not(:disabled), .tap.aktiv { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     button:disabled { opacity: .4; cursor: default; }
     button.icon, .tap { flex: none; padding: 0 8px; border-radius: 8px; }
+    .wackelt { flex: none; color: var(--bn-fog); }
+    .wackelt.an { border-color: #e0b25a; color: #e0b25a; }
     button.primaer { margin-left: auto; background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .quelle { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: .78rem; color: var(--bn-fog); }
@@ -119,6 +129,9 @@ export class SongDialog {
   readonly position = input('');
   readonly hatVorigen = input(false);
   readonly hatNaechsten = input(false);
+  /** auf der eigenen „Wackelt noch“-Liste */
+  readonly wackelt = input(false);
+  readonly wackeltUmschalten = output<void>();
   readonly setzen = output<{ feld: keyof SongWerte; roh: string }>();
   readonly notenGeaendert = output<void>();
   readonly blaettern = output<number>();

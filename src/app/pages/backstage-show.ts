@@ -17,6 +17,8 @@ import { KonzertKampagne } from './konzert-kampagne';
 import { Werbeplan } from './werbeplan';
 import { werbeplanAktiv } from '../data/werbeplan';
 import { RueckblickFormular } from './rueckblick-formular';
+import { Nachbereitung } from './nachbereitung';
+import { Bereitschaft } from './bereitschaft';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
 
@@ -26,7 +28,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, KonzertKampagne, Werbeplan],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -43,6 +45,8 @@ const DAY = 24 * 60 * 60 * 1000;
           </span>
           <span class="when" [class.past]="past()">{{ relative() }}</span>
         </div>
+
+        @if (!past()) { <app-bereitschaft [show]="s" [aufgeklappt]="true" /> }
 
         <dl class="facts">
           <div>
@@ -109,7 +113,7 @@ const DAY = 24 * 60 * 60 * 1000;
           @if (werbeplanAktiv(s.date, heute, s.endDate)) { <app-werbeplan [show]="s" [id]="id()" /> }
           <app-konzert-kampagne [id]="id()" />
         }
-        @if (!past()) { <app-wetter [show]="s" /> } @else { <app-rueckblick-formular [show]="s" /> }
+        @if (!past()) { <app-wetter [show]="s" /> } @else { <app-nachbereitung [id]="id()" /><app-rueckblick-formular [show]="s" /> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
           @for (t of tools; track t.path) {

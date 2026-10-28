@@ -32,6 +32,8 @@ for (const file of files(DIST)) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://gc.zgo.at https://blickfeld-nord.goatcounter.com",
     "font-src 'self' data:",
+    // Proben-Mitschnitte (Backstage → Songs) werden als blob: abgespielt
+    "media-src 'self' blob:",
     "connect-src 'self' https://blickfeld-nord.goatcounter.com https://api.open-meteo.com https://raw.githubusercontent.com" +
       ' https://login.microsoftonline.com https://graph.microsoft.com https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com',
     'frame-src https://www.instagram.com https://login.microsoftonline.com https://login.live.com',

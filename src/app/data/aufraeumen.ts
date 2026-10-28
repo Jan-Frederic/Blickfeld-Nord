@@ -18,8 +18,10 @@ export const BEREICHE: Bereich[] = [
   { id: 'packliste', label: 'Packlisten', praefixe: ['bn-packliste-'], jeAuftritt: true },
   { id: 'vorort', label: 'Vor-Ort-Angaben', praefixe: ['bn-vorort-'], jeAuftritt: true },
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
+  { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
   { id: 'probe', label: 'Probenplanung', praefixe: ['bn-probe-'], probe: true },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
+  { id: 'wackelt', label: '„Wackelt noch“-Liste', praefixe: ['bn-wackelt'], hinweis: 'deine Übe-Liste für den Probe-Vorschlag' },
   { id: 'aufgaben', label: 'Aufgaben und Prüf-Häkchen', praefixe: ['bn-aufgaben', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'] },
   {
     id: 'einstellungen',
@@ -127,6 +129,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-noten-zuordnungen': 'Gemerkte Zuordnungen beim Einlesen',
   'bn-noten-breite': 'Noten in voller Breite',
   'bn-noten-ansicht': 'Noten-Ansicht (frühere Version)',
+  'bn-noten-scrolltempo': 'Mitscroll-Tempo je Song',
   'bn-backstage-filter': 'Filter unter Termine',
   'bn-sprache': 'Gewählte Sprache',
   'bn-gesichert': 'Letzte Sicherung',
@@ -135,6 +138,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-sync-einstellungen': 'Synchronisation: Einstellungen',
   'bn-sync-letzter': 'Synchronisation: letzter Abgleich',
   'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',
+  'bn-wackelt': '„Wackelt noch“-Liste',
   'bn-aufgaben': 'Aufgaben-Häkchen',
   'bn-ui-geprueft': 'Geprüfte Oberflächentexte',
   'bn-uebersetzung-pruefung': 'Geprüfte Übersetzungen',
@@ -145,18 +149,20 @@ const ZIEL: Record<string, (id: string) => string> = {
   packliste: (id) => `/backstage/${id}/packliste`,
   vorort: (id) => `/backstage/${id}/vorort`,
   werbeplan: (id) => `/backstage/${id}`,
+  nachbereitung: (id) => `/backstage/${id}`,
   bewertung: () => '/backstage/zahlen',
   probe: (id) => `/backstage/probe/${id}`,
 };
 const ZIEL_FEST: Record<string, string> = {
   'bn-songinfo-entwurf': '/backstage/songs',
+  'bn-wackelt': '/backstage/songs',
   'bn-aufgaben': '/backstage/aufgaben',
   'bn-ui-geprueft': '/backstage/uebersetzungen',
   'bn-uebersetzung-pruefung': '/backstage/uebersetzungen',
 };
 
 const SINGULAR: Record<string, string> = {
-  setlist: 'Setlist', bewertung: 'Sterne', packliste: 'Packliste', vorort: 'Vor Ort', werbeplan: 'Werbeplan', probe: 'Probe',
+  setlist: 'Setlist', bewertung: 'Sterne', packliste: 'Packliste', vorort: 'Vor Ort', werbeplan: 'Werbeplan', nachbereitung: 'Nachbereitung', probe: 'Probe',
 };
 
 const datum = (id: string) => (/^\d{4}-\d{2}-\d{2}/.test(id) ? `${id.slice(8, 10)}.${id.slice(5, 7)}.${id.slice(0, 4)}` : id);

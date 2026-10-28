@@ -39,9 +39,14 @@ const BREITE_KEY = 'bn-noten-breite';
           <span class="griff">{{ griffText() }}</span>
           <button type="button" (click)="verschieben(-1, $event)" aria-label="Halbton tiefer">−</button>
           <button type="button" (click)="verschieben(1, $event)" aria-label="Halbton höher">+</button>
-          <button type="button" (click)="scrollen($event)" [attr.aria-pressed]="laeuft()" title="Scrollt in der Länge des Songs mit">
-            <mat-icon>{{ laeuft() ? 'pause' : 'play_arrow' }}</mat-icon> Mitscrollen
+          <button type="button" class="mitscrollen" (click)="scrollen($event)" [attr.aria-pressed]="laeuft()" title="Scrollt in der Länge des Songs mit – ein Tritt aufs Pedal hält an und lässt weiterlaufen">
+            <mat-icon>{{ laeuft() ? 'pause' : 'play_arrow' }}</mat-icon> {{ pausiert() ? 'Weiter' : 'Mitscrollen' }}
           </button>
+          <span class="scrolltempo" role="group" aria-label="Scroll-Tempo">
+            <button type="button" (click)="tempo(-1, $event)" aria-label="Langsamer scrollen">‹</button>
+            <span class="griff" aria-live="polite">{{ scrollTempoText() }}</span>
+            <button type="button" (click)="tempo(1, $event)" aria-label="Schneller scrollen">›</button>
+          </span>
         }
         <button type="button" class="zu" (click)="zu($event)" aria-label="Noten schließen"><mat-icon>close</mat-icon></button>
       </header>
@@ -82,6 +87,7 @@ const BREITE_KEY = 'bn-noten-breite';
     header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 12px 8px; background: #000; font-size: .95rem; }
     .titel { font-weight: 700; margin-right: auto; overflow-wrap: anywhere; }
     .seite, .griff { color: #e8a46a; font-variant-numeric: tabular-nums; }
+    .scrolltempo { display: inline-flex; align-items: center; gap: 4px; }
     header button {
       display: inline-flex; align-items: center; gap: 4px; min-height: 40px; min-width: 40px; justify-content: center; padding: 0 10px;
       border-radius: 20px; border: 1px solid #444; background: transparent; color: #fff; font: inherit; cursor: pointer;
@@ -179,6 +185,15 @@ export class NotenAnzeige {
     return [t, capo ? `Capo ${capo}` : '', this.extra() ? `${this.extra() > 0 ? '+' : ''}${this.extra()}` : ''].filter(Boolean).join(' · ');
   });
   protected readonly laeuft = signal(false);
+  /** Mitscrollen per Pedal angehalten – der nächste Tritt lässt es weiterlaufen */
+  protected readonly pausiert = signal(false);
+  /** Scroll-Tempo je Song (1 = in Songlänge), gemerkt auf dem Gerät */
+  private readonly scrollTempi = signal<Record<string, number>>(ladeScrollTempi());
+  private readonly scrollFaktor = computed(() => {
+    const s = this.song();
+    return (s && this.scrollTempi()[`${s.title}|${s.artist}`]) || 1;
+  });
+  protected readonly scrollTempoText = computed(() => `${Math.round(this.scrollFaktor() * 100)} %`);
   private rahmen = 0;
 
   constructor() {
@@ -287,6 +302,14 @@ export class NotenAnzeige {
    * ist), dann zur nächsten Seite. false = am Ende bzw. Anfang angekommen, der Bühnen-Modus wechselt den Song.
    */
   blaettern(richtung: number): boolean {
+    // Akkordblatt scrollt mit: Pedal hält an bzw. lässt weiterlaufen, statt zu blättern
+    if (this.ansicht() === 'akkorde' && (this.laeuft() || this.pausiert())) {
+      if (this.laeuft()) {
+        this.stoppen();
+        this.pausiert.set(true);
+      } else this.scrollen();
+      return true;
+    }
     const f = this.flaeche()?.nativeElement;
     const schritt = f ? f.clientHeight * 0.85 : 0;
     if (f && richtung > 0 && f.scrollTop + f.clientHeight < f.scrollHeight - 4) {
@@ -346,19 +369,21 @@ export class NotenAnzeige {
     this.extra.update((x) => Math.max(-11, Math.min(11, x + halbtoene)));
   }
 
-  // Mitscrollen: gleichmäßig in der Länge des Songs (Spotify-Länge, sonst 3:30) vom Anfang bis zum Ende des Blatts
-  protected scrollen(e: Event): void {
-    e.stopPropagation();
+  // Mitscrollen: gleichmäßig in der Länge des Songs (Spotify-Länge, sonst 3:30) vom Anfang bis zum Ende des Blatts,
+  // mit − / + schneller oder langsamer (je Song gemerkt, z. B. wenn die Band ihn schneller spielt als das Original)
+  protected scrollen(e?: Event): void {
+    e?.stopPropagation();
     if (this.laeuft()) return this.stoppen();
     const f = this.flaeche()?.nativeElement;
     const s = this.song();
     if (!f || !s) return;
+    this.pausiert.set(false);
     const sekunden = durationOf(s) ?? 210;
-    const tempo = Math.max(0, f.scrollHeight - f.clientHeight) / sekunden;
+    const basis = Math.max(0, f.scrollHeight - f.clientHeight) / sekunden;
     let zuletzt = performance.now();
     let pos = f.scrollTop;
     const schritt = (jetzt: number) => {
-      pos += (tempo * (jetzt - zuletzt)) / 1000;
+      pos += (basis * this.scrollFaktor() * (jetzt - zuletzt)) / 1000;
       zuletzt = jetzt;
       f.scrollTop = pos;
       if (pos >= f.scrollHeight - f.clientHeight) return this.stoppen();
@@ -371,11 +396,38 @@ export class NotenAnzeige {
   private stoppen(): void {
     cancelAnimationFrame(this.rahmen);
     this.laeuft.set(false);
+    this.pausiert.set(false);
+  }
+
+  protected tempo(richtung: number, e: Event): void {
+    e.stopPropagation();
+    const s = this.song();
+    if (!s) return;
+    const k = `${s.title}|${s.artist}`;
+    const neu = Math.round(Math.min(2, Math.max(0.5, this.scrollFaktor() + richtung * 0.1)) * 10) / 10;
+    this.scrollTempi.update((t) => {
+      const { [k]: _, ...rest } = t;
+      return neu === 1 ? rest : { ...rest, [k]: neu };
+    });
+    try {
+      localStorage.setItem(SCROLL_KEY, JSON.stringify(this.scrollTempi()));
+    } catch {
+      // ohne Speicher gilt das Tempo bis zum Schließen
+    }
   }
 
   protected zu(e: Event): void {
     e.stopPropagation();
     this.schliessen.emit();
+  }
+}
+
+const SCROLL_KEY = 'bn-noten-scrolltempo';
+function ladeScrollTempi(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(SCROLL_KEY) ?? '{}');
+  } catch {
+    return {};
   }
 }
 
