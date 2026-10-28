@@ -56,8 +56,11 @@ test('Startseite: Konzertliste führt zur Konzertseite, Abo-Button vorhanden', a
   await p.locator('app-tour').scrollIntoViewIfNeeded();
   await p.locator('app-tour tr.link').first().waitFor();
   expect((await p.locator('app-abo-button a[mat-flat-button]').getAttribute('href'))?.startsWith('webcal://'), 'Abo-Link ist kein webcal://-Link');
-  await p.locator('app-tour tr.link td.mat-column-city').first().click();
-  await p.waitForURL(/\/konzerte\//);
+  // Ein Klick auf die vorgerenderte Zeile vor dem Hydrieren geht ins Leere – bis zum Seitenwechsel wiederholen
+  await until(async () => {
+    if (!/\/konzerte\//.test(p.url())) await p.locator('app-tour tr.link td.mat-column-city').first().click().catch(() => {});
+    return /\/konzerte\//.test(p.url());
+  }, 'Konzertliste führt nicht zur Konzertseite');
   await p.locator('app-konzert h2').waitFor();
   expect((await p.locator('app-konzert .actions').innerText()).includes('Teilen'), 'Konzertseite ohne Teilen-Button');
   return p;
