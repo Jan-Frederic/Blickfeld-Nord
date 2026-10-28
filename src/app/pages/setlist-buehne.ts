@@ -4,6 +4,7 @@ import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { alleSongNoten, pdfjsVorladen } from '../data/noten';
 import { NotenAnzeige } from './noten-anzeige';
+import { tasten } from '../data/buehne-einstellungen';
 import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/bewertung';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
@@ -380,9 +381,11 @@ export class SetlistBuehne {
     else this.go(e.clientX < window.innerWidth / 3 ? -1 : 1);
   }
 
+  // Tasten fürs Blättern (Fußpedal) – in Backstage → Einstellungen belegbar
+  private readonly tasten = tasten();
   protected key(e: KeyboardEvent): void {
-    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(e.key)) this.go(1);
-    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) this.go(-1);
+    if (this.tasten.weiter.includes(e.key)) this.go(1);
+    else if (this.tasten.zurueck.includes(e.key)) this.go(-1);
     else if (e.key === 'Escape') this.notenOffen() ? this.notenOffen.set(false) : this.closed.emit();
     else if (/^[1-5]$/.test(e.key)) this.bewerte(Number(e.key));
     else return;

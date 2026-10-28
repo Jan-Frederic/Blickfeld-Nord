@@ -4,6 +4,7 @@ import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
 import { NotenPdf, SongNoten, notenDatei, pdfName, songNoten } from '../data/noten';
 import { fassungWaehlen, ladeWahl, pdfId, wahlSpeichern } from '../data/noten-wahl';
+import { halbseite } from '../data/buehne-einstellungen';
 import { PdfDokument, pdfOeffnen, seiteZeichnen } from '../data/pdf';
 import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVerschieben } from '../data/chordpro';
 
@@ -18,7 +19,7 @@ const BREITE_KEY = 'bn-noten-breite';
     <div class="noten">
       <header>
         <span class="titel">{{ song()?.title ?? 'Pause' }}</span>
-        @if (ansicht() === 'pdf' && seiten().length) { <span class="seite">Seite {{ index() + 1 }} / {{ seiten().length }}</span> }
+        @if (ansicht() === 'pdf' && seiten().length) { <span class="seite">Seite {{ index() + 1 }}{{ halb() ? '–' + (index() + 2) : '' }} / {{ seiten().length }}</span> }
         @if (optionen().length > 1) {
           <select class="wahl" aria-label="Fassung wählen" (change)="waehlen($any($event.target).value); $any($event.target).blur()"
             (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
@@ -46,7 +47,11 @@ const BREITE_KEY = 'bn-noten-breite';
         } @else if (fehler(); as f) {
           <p class="hinweis">{{ f }}</p>
         } @else if (ansicht() === 'pdf' && seiten().length) {
-          <canvas #leinwand></canvas>
+          <div class="blattseite">
+            <canvas #leinwand></canvas>
+            <!-- Halbseiten-Blättern: oben schon der Anfang der nächsten Seite -->
+            @if (halb()) { <canvas #naechste class="oben" aria-hidden="true"></canvas> }
+          </div>
         } @else if (ansicht() === 'akkorde' && blatt(); as b) {
           <div class="blatt">
             @for (z of b.zeilen; track $index) {
@@ -82,6 +87,9 @@ const BREITE_KEY = 'bn-noten-breite';
     .flaeche { flex: 1; min-height: 0; overflow: auto; display: grid; place-items: center; touch-action: pan-y; }
     .flaeche.breit { place-items: start center; }
     canvas { display: block; background: #fff; }
+    .blattseite { position: relative; }
+    canvas.oben { position: absolute; top: 0; left: 0; clip-path: inset(0 0 50% 0); }
+    .blattseite:has(.oben)::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 3px solid #e8a46a; }
     .hinweis { color: #9aa0a6; padding: 24px; text-align: center; }
     .blatt { align-self: start; width: 100%; box-sizing: border-box; padding: 16px 20px 40vh; font-size: calc(clamp(1.05rem, 2.6vw, 1.6rem) * var(--zoom, 1)); line-height: 1.25; }
     .zeile { margin: 0; white-space: pre-wrap; }
@@ -100,6 +108,10 @@ export class NotenAnzeige {
 
   private readonly flaeche = viewChild<ElementRef<HTMLDivElement>>('flaeche');
   private readonly leinwand = viewChild<ElementRef<HTMLCanvasElement>>('leinwand');
+  private readonly naechste = viewChild<ElementRef<HTMLCanvasElement>>('naechste');
+  /** Halbseiten-Blättern eingeschaltet (Backstage → Einstellungen) und gerade halb umgeblättert */
+  private readonly halbseite = halbseite();
+  protected readonly halb = signal(false);
 
   protected readonly noten = signal<SongNoten | undefined>(undefined);
   protected readonly laden = signal(false);
@@ -183,6 +195,15 @@ export class NotenAnzeige {
       seiteZeichnen(d, nr, c, b - 8, h - 8, breit).catch((e) => this.fehler.set(`Diese Seite lässt sich nicht anzeigen (${(e as Error).message}).`));
       this.flaeche()?.nativeElement.scrollTo(0, 0);
     });
+    // Halbseite: die nächste Seite in gleicher Größe darüber zeichnen (sichtbar nur die obere Hälfte)
+    effect(() => {
+      const c = this.naechste()?.nativeElement;
+      const d = this.doc();
+      const nr = this.seiten()[this.index() + 1];
+      const { b, h } = this.groesse();
+      if (!c || !d || !nr || !b || !this.halb()) return;
+      seiteZeichnen(d, nr, c, b - 8, h - 8, false).catch(() => this.halb.set(false));
+    });
     const beobachter = new ResizeObserver(([e]) => this.groesse.set({ b: e.contentRect.width, h: e.contentRect.height }));
     effect(() => {
       const f = this.flaeche()?.nativeElement;
@@ -226,6 +247,7 @@ export class NotenAnzeige {
   }
 
   private async ladePdf(p: NotenPdf | undefined, pdfs: Map<string, PdfDokument>): Promise<void> {
+    this.halb.set(false);
     this.doc.set(null);
     this.index.set(0);
     if (!p) return;
@@ -265,6 +287,18 @@ export class NotenAnzeige {
       return true;
     }
     if (this.ansicht() === 'pdf' && this.seiten().length) {
+      // Halbseiten-Blättern (nur bei ganzer Seite): vor → erst halb, dann ganz; zurück aus „halb“ → wieder ganz
+      if (this.halbseite && !this.nurBreite()) {
+        if (richtung > 0 && !this.halb() && this.index() + 1 < this.seiten().length) {
+          this.halb.set(true);
+          return true;
+        }
+        if (this.halb()) {
+          this.halb.set(false);
+          if (richtung > 0) this.index.update((i) => i + 1);
+          return true;
+        }
+      }
       const ziel = this.index() + richtung;
       if (ziel >= 0 && ziel < this.seiten().length) {
         this.index.set(ziel);

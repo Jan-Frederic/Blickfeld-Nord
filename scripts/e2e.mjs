@@ -490,6 +490,25 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await p.keyboard.press('Escape');
   await until(async () => (await p.locator('app-noten-anzeige').count()) === 0, 'Escape schließt die Noten nicht');
 
+  // Halbseiten-Blättern und eigene Pedal-Taste (in den Einstellungen festgelegt)
+  await p.go('/backstage/einstellungen/');
+  const buehne = p.locator('app-buehne-einstellungen');
+  await buehne.locator('input[type=checkbox]').check();
+  await buehne.locator('button.neu').first().click();
+  await p.keyboard.press('b');
+  await until(async () => (await buehne.innerText()).includes('B'), 'Pedal-Taste wird nicht aufgenommen');
+  await p.go(`/backstage/${id}/setlist`);
+  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
+  await p.locator('app-setlist-buehne .noten-knopf').click();
+  await kopf.locator('select.wahl').selectOption({ label: 'songbook' });
+  await until(async () => (await kopf.innerText()).includes('Seite 1 / 2'), 'PDF erscheint nicht');
+  await p.keyboard.press('b');
+  await until(async () => (await kopf.innerText()).includes('Seite 1–2 / 2') && (await p.locator('app-noten-anzeige canvas.oben').count()) === 1, 'Halbseiten-Blättern zeigt die nächste Seite nicht oben');
+  await p.keyboard.press('b');
+  await until(async () => (await kopf.innerText()).includes('Seite 2 / 2') && (await p.locator('app-noten-anzeige canvas.oben').count()) === 0, 'Zweiter Tritt blättert nicht ganz um');
+  await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
+  await p.evaluate(() => ['bn-buehne-halbseite', 'bn-buehne-tasten'].forEach((k) => localStorage.removeItem(k)));
+
   // Kontrolle aus Backstage → Songs: ▶ startet den Bühnen-Modus ab diesem Song mit offenen Noten; die zuletzt
   // gewählte Ansicht (Akkorde) bleibt – auch nach dem nächsten Song und zurück
   await p.go('/backstage/songs/');
