@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
 import { NotenPdf, SongNoten, notenDatei, pdfName, songNoten } from '../data/noten';
+import { fassungWaehlen, ladeWahl, pdfId, wahlSpeichern } from '../data/noten-wahl';
 import { PdfDokument, pdfOeffnen, seiteZeichnen } from '../data/pdf';
 import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVerschieben } from '../data/chordpro';
 
@@ -10,18 +11,6 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 // (ChordPro, in die Tonart der Band transponiert – mit Capo als Griffbild). Geblättert wird vom Bühnen-Modus aus
 // (Tippen, Wischen, Pfeiltasten, Bluetooth-Pedal): erst innerhalb des Blatts, am Ende weiter zum nächsten Song.
 const BREITE_KEY = 'bn-noten-breite';
-// gewählte Fassung (ein PDF wie „Bass“ oder das Akkordblatt): je Song gemerkt, dazu die zuletzt gewählte Art und
-// Fassung als Vorliebe für Songs ohne eigene Wahl – bleibt beim Blättern (auch zurück) und auf dem Gerät erhalten
-const WAHL_KEY = 'bn-noten-wahl';
-const ANSICHT_ALT_KEY = 'bn-noten-ansicht';
-interface Wahl {
-  songs: Record<string, string>;
-  art: 'pdf' | 'akkorde';
-  name?: string;
-}
-const pdfId = (p: NotenPdf) => `pdf:${p.datei}:${p.von ?? ''}`;
-const namensVergleich = (s?: string) => (s ?? '').trim().toLocaleLowerCase('de');
-
 @Component({
   selector: 'app-noten-anzeige',
   imports: [MatIconModule],
@@ -232,16 +221,8 @@ export class NotenAnzeige {
     }
   }
 
-  // Fassung für einen Song: eigene Wahl → zuletzt Akkorde gewählt → PDF mit dem zuletzt gewählten Namen („Bass“) → erstes PDF
   private auswahl(n: SongNoten, key: string): string {
-    const ids = [...(n.pdfs ?? []).map(pdfId), ...(n.chordpro ? ['akkorde'] : [])];
-    const eigen = this.gemerkt.songs[key];
-    if (eigen && ids.includes(eigen)) return eigen;
-    if (this.gemerkt.art === 'akkorde' && n.chordpro) return 'akkorde';
-    const pdfs = n.pdfs ?? [];
-    const name = namensVergleich(this.gemerkt.name);
-    const p = (name && (pdfs.find((x) => namensVergleich(x.name) === name) ?? pdfs.find((x) => namensVergleich(x.name).includes(name)))) || pdfs[0];
-    return p ? pdfId(p) : n.chordpro ? 'akkorde' : '';
+    return fassungWaehlen(n, key, this.gemerkt);
   }
 
   private async ladePdf(p: NotenPdf | undefined, pdfs: Map<string, PdfDokument>): Promise<void> {
@@ -302,11 +283,7 @@ export class NotenAnzeige {
     this.vonHinten = false;
     this.wahl.set(id);
     this.gemerkt = { songs: { ...this.gemerkt.songs, [`${s.title}|${s.artist}`]: id }, art: this.ansicht(), name: this.aktivPdf()?.name ?? this.gemerkt.name };
-    try {
-      localStorage.setItem(WAHL_KEY, JSON.stringify(this.gemerkt));
-    } catch {
-      // ohne Speicher gilt die Wahl bis zum Schließen
-    }
+    wahlSpeichern(this.gemerkt);
   }
 
   protected breiteUmschalten(e: Event): void {
@@ -365,12 +342,3 @@ function ladeBreite(): boolean {
   }
 }
 
-function ladeWahl(): Wahl {
-  try {
-    const w = JSON.parse(localStorage.getItem(WAHL_KEY) ?? 'null') as Wahl | null;
-    if (w?.songs) return w;
-    return { songs: {}, art: localStorage.getItem(ANSICHT_ALT_KEY) === 'akkorde' ? 'akkorde' : 'pdf' };
-  } catch {
-    return { songs: {}, art: 'pdf' };
-  }
-}

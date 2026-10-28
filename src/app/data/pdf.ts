@@ -16,7 +16,7 @@ export interface PdfDokument {
 }
 interface PdfJs {
   GlobalWorkerOptions: { workerSrc: string };
-  getDocument(o: Record<string, unknown>): { promise: Promise<PdfDokument> };
+  getDocument(o: Record<string, unknown>): { promise: Promise<PdfDokument>; destroy(): Promise<void> };
 }
 
 let pdfjs: Promise<PdfJs> | undefined;
@@ -33,12 +33,16 @@ function laden(): Promise<PdfJs> {
 export async function pdfOeffnen(daten: ArrayBuffer): Promise<PdfDokument> {
   const m = await laden();
   // Kopie übergeben – pdf.js übernimmt den Puffer in den Worker und macht das Original unbrauchbar
-  return m.getDocument({
+  const auftrag = m.getDocument({
     data: new Uint8Array(daten.slice(0)),
     isEvalSupported: false,
     wasmUrl: '/pdfjs/wasm/',
     standardFontDataUrl: '/pdfjs/standard_fonts/',
-  }).promise;
+  });
+  const doc = await auftrag.promise;
+  // pdf.js 6: das Dokument selbst hat kein destroy() mehr – freigegeben wird über den Ladeauftrag
+  if (typeof doc.destroy !== 'function') doc.destroy = () => auftrag.destroy();
+  return doc;
 }
 
 // laufendes Zeichnen je Leinwand – ein neues bricht das alte ab (pdf.js erlaubt nur eines gleichzeitig)

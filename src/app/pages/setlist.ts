@@ -1,5 +1,6 @@
 import { Component, computed, effect, input, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
 import { SetlistVorlagen } from './setlist-vorlagen';
 import { SetlistVorschlag } from './setlist-vorschlag';
@@ -19,7 +20,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-setlist',
-  imports: [MatIconModule, SetlistVorlagen, SetlistVorschlag, SetlistBuehne, TempoVerlauf],
+  imports: [AuftrittVorbereiten, MatIconModule, SetlistVorlagen, SetlistVorschlag, SetlistBuehne, TempoVerlauf],
   template: `
     <section class="setlist" aria-labelledby="setlist-title">
       <div class="head">
@@ -39,6 +40,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           <button type="button" (click)="linkTeilen()" [disabled]="!songCount()"><mat-icon>{{ linkKopiert() ? 'check' : 'link' }}</mat-icon> {{ linkKopiert() ? 'Link kopiert!' : 'Als Link' }}</button>
           <button type="button" (click)="clear()" [disabled]="!entries().length"><mat-icon>delete_sweep</mat-icon> Leeren</button>
         </div>
+        <app-auftritt-vorbereiten [entries]="entries()" />
       </div>
 
       @if (importiert()) { <p class="importiert"><mat-icon>check_circle</mat-icon> Setlist aus dem Link übernommen.</p> }

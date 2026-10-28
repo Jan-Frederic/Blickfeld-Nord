@@ -466,6 +466,11 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
     await p.locator('app-setlist .pick li button').first().click();
   }
   await until(async () => (await p.locator('app-setlist .list li .no').count()) === 2, 'Songs nicht in der Setlist');
+  // Auftritt vorbereiten: Iris hat Noten (PDF S. 2–3), Angels nicht
+  await p.locator('app-auftritt-vorbereiten button').click();
+  await until(async () => (await p.locator('app-auftritt-vorbereiten .summe').innerText().catch(() => '')).includes('1 von 2 Songs mit Noten'), async () => 'Prüfung meldet falsch: ' + (await p.locator('app-auftritt-vorbereiten').innerText()));
+  const pruefung = await p.locator('app-auftritt-vorbereiten ul').innerText();
+  expect(pruefung.includes('S. 2–3') && pruefung.includes('keine Noten auf diesem Gerät'), 'Prüfung je Song fehlt: ' + pruefung);
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await p.locator('app-setlist-buehne .noten-knopf').click();
   const kopf = p.locator('app-noten-anzeige header');
