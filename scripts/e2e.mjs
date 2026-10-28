@@ -475,7 +475,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await p.locator('app-setlist-buehne .noten-knopf').click();
   const kopf = p.locator('app-noten-anzeige header');
   await until(async () => (await kopf.innerText()).includes('Seite 1 / 2'), 'PDF-Seitenbereich wird nicht angezeigt');
-  await until(async () => ((await p.locator('app-noten-anzeige canvas').boundingBox())?.width ?? 0) > 100, 'PDF-Seite wird nicht gezeichnet');
+  await until(async () => ((await p.locator('app-noten-anzeige .blattseite > canvas').first().boundingBox())?.width ?? 0) > 100, 'PDF-Seite wird nicht gezeichnet');
   // Pedal/Pfeiltaste: erst die zweite Seite, dann der nächste Song (ohne Noten)
   await p.keyboard.press('ArrowRight');
   await until(async () => (await kopf.innerText()).includes('Seite 2 / 2'), 'Blättern zur zweiten Seite klappt nicht');
@@ -506,6 +506,23 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => (await kopf.innerText()).includes('Seite 1–2 / 2') && (await p.locator('app-noten-anzeige canvas.oben').count()) === 1, 'Halbseiten-Blättern zeigt die nächste Seite nicht oben');
   await p.keyboard.press('b');
   await until(async () => (await kopf.innerText()).includes('Seite 2 / 2') && (await p.locator('app-noten-anzeige canvas.oben').count()) === 0, 'Zweiter Tritt blättert nicht ganz um');
+  // Markieren: Strich auf Seite 2 zeichnen – blättert nicht um, wird gespeichert
+  await kopf.locator('button.stift').click();
+  const box = await p.locator('app-noten-stift canvas').boundingBox();
+  await p.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
+  await p.mouse.down();
+  await p.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.4, { steps: 5 });
+  await p.mouse.up();
+  const markiert = () => p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-noten');
+    req.onsuccess = () => {
+      const k = req.result.transaction('markierungen').objectStore('markierungen').getAll();
+      k.onsuccess = () => ok(k.result.flat().length);
+    };
+  }));
+  await until(async () => (await markiert()) === 1, 'Markierung wird nicht gespeichert');
+  expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Zeichnen hat umgeblättert');
+  await kopf.locator('button.stift').click();
   await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
   await p.evaluate(() => ['bn-buehne-halbseite', 'bn-buehne-tasten'].forEach((k) => localStorage.removeItem(k)));
 
@@ -532,6 +549,13 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await q.locator('app-noten-verwaltung input[type=file][accept*=json]').setInputFiles({ name: 'noten.json', mimeType: 'application/json', buffer: datei });
   await until(async () => (await q.locator('app-noten-verwaltung .meldung').innerText().catch(() => '')).includes('1 Song'), 'Import auf dem zweiten Gerät klappt nicht');
   expect((await q.locator('app-noten-verwaltung li').innerText()).includes('songbook.pdf'), 'PDF fehlt nach dem Import');
+  expect((await q.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-noten');
+    req.onsuccess = () => {
+      const k = req.result.transaction('markierungen').objectStore('markierungen').count();
+      k.onsuccess = () => ok(k.result);
+    };
+  }))) === 1, 'Markierungen kommen nicht mit dem Notenpaket mit');
   // .pro-Dateien gesammelt einlesen: Zuordnung über {title:}, Unbekanntes wird gemeldet
   await q.locator('app-noten-verwaltung input.dateien').setInputFiles([
     { name: 'angels.pro', mimeType: 'text/plain', buffer: Buffer.from('{title: Angels}\n{artist: Robbie Williams}\n{key: E}\n[E]I sit and wait') },

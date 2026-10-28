@@ -5,6 +5,7 @@ import { SongInfo, gespielteTonart } from '../data/songinfo';
 import { NotenPdf, SongNoten, notenDatei, pdfName, songNoten } from '../data/noten';
 import { fassungWaehlen, ladeWahl, pdfId, wahlSpeichern } from '../data/noten-wahl';
 import { halbseite } from '../data/buehne-einstellungen';
+import { NotenStift } from './noten-stift';
 import { PdfDokument, pdfOeffnen, seiteZeichnen } from '../data/pdf';
 import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVerschieben } from '../data/chordpro';
 
@@ -14,7 +15,7 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 const BREITE_KEY = 'bn-noten-breite';
 @Component({
   selector: 'app-noten-anzeige',
-  imports: [MatIconModule],
+  imports: [MatIconModule, NotenStift],
   template: `
     <div class="noten">
       <header>
@@ -27,6 +28,9 @@ const BREITE_KEY = 'bn-noten-breite';
           </select>
         }
         @if (ansicht() === 'pdf' && seiten().length) {
+          <button type="button" class="stift" (click)="stiftUmschalten($event)" [attr.aria-pressed]="stift()" aria-label="Markieren" title="Im Notenblatt markieren">
+            <mat-icon>edit</mat-icon>
+          </button>
           <button type="button" (click)="breiteUmschalten($event)" [attr.aria-pressed]="nurBreite()" title="Ganze Seite oder volle Breite">
             <mat-icon>{{ nurBreite() ? 'fit_screen' : 'unfold_more' }}</mat-icon>
           </button>
@@ -49,6 +53,7 @@ const BREITE_KEY = 'bn-noten-breite';
         } @else if (ansicht() === 'pdf' && seiten().length) {
           <div class="blattseite">
             <canvas #leinwand></canvas>
+            @if (aktivPdf(); as p) { <app-noten-stift [datei]="p.datei" [seite]="seiten()[index()]" [aktiv]="stift()" /> }
             <!-- Halbseiten-Blättern: oben schon der Anfang der nächsten Seite -->
             @if (halb()) { <canvas #naechste class="oben" aria-hidden="true"></canvas> }
           </div>
@@ -112,6 +117,12 @@ export class NotenAnzeige {
   /** Halbseiten-Blättern eingeschaltet (Backstage → Einstellungen) und gerade halb umgeblättert */
   private readonly halbseite = halbseite();
   protected readonly halb = signal(false);
+  /** Markieren (Stift) eingeschaltet */
+  protected readonly stift = signal(false);
+  protected stiftUmschalten(e: Event): void {
+    e.stopPropagation();
+    this.stift.update((x) => !x);
+  }
 
   protected readonly noten = signal<SongNoten | undefined>(undefined);
   protected readonly laden = signal(false);

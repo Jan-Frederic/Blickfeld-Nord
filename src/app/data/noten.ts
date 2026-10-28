@@ -41,14 +41,18 @@ export const pdfName = (p: NotenPdf, i: number, alle: NotenPdf[]) => p.name?.tri
 const DB = 'bn-noten';
 const DATEIEN = 'dateien';
 const SONGS = 'songs';
+const MARKIERUNGEN = 'markierungen';
 
 let offen: Promise<IDBDatabase> | undefined;
 function db(): Promise<IDBDatabase> {
   offen ??= new Promise((ok, fehler) => {
-    const req = indexedDB.open(DB, 1);
+    const req = indexedDB.open(DB, 2);
+    // Version 1: Dateien und Songs; Version 2: Markierungen je PDF-Seite (vorhandene Daten bleiben)
     req.onupgradeneeded = () => {
-      req.result.createObjectStore(DATEIEN, { keyPath: 'id' });
-      req.result.createObjectStore(SONGS);
+      const namen = req.result.objectStoreNames;
+      if (!namen.contains(DATEIEN)) req.result.createObjectStore(DATEIEN, { keyPath: 'id' });
+      if (!namen.contains(SONGS)) req.result.createObjectStore(SONGS);
+      if (!namen.contains(MARKIERUNGEN)) req.result.createObjectStore(MARKIERUNGEN);
     };
     req.onsuccess = () => ok(req.result);
     req.onerror = () => {
@@ -85,9 +89,10 @@ export async function notenDateiSpeichern(name: string, daten: ArrayBuffer, id: 
   return id;
 }
 
-/** Datei löschen – Songs, die sie nutzen, verlieren ihr PDF */
+/** Datei löschen – Songs, die sie nutzen, verlieren ihr PDF, die Markierungen gehen mit */
 export async function notenDateiLoeschen(id: string): Promise<void> {
   await anfrage(DATEIEN, 'readwrite', (s) => s.delete(id));
+  await anfrage(MARKIERUNGEN, 'readwrite', (s) => s.delete(IDBKeyRange.bound(`${id}:`, `${id}:\uffff`)));
   const songs = await alleSongNoten();
   for (const [key, n] of Object.entries(songs)) {
     if (n.pdfs?.some((p) => p.datei === id)) await songNotenSetzen(key, { ...n, pdfs: n.pdfs.filter((p) => p.datei !== id) });
@@ -116,6 +121,41 @@ export async function alleSongNoten(): Promise<Record<string, SongNoten>> {
       const c = req.result;
       if (!c) return ok(out);
       out[String(c.key)] = notenNormal(c.value as SongNoten);
+      c.continue();
+    };
+    req.onerror = () => fehler(req.error);
+  });
+}
+
+// ---- Markierungen (Zeichnungen im Notenblatt, je PDF-Datei und Seite) ----------------------------------------
+
+/** ein Strich: Farbe, Breite (Anteil der Seitenbreite), Punkte als x,y-Paare von 0 bis 1 */
+export interface Strich {
+  farbe: string;
+  breite: number;
+  punkte: number[];
+}
+
+const markKey = (datei: string, seite: number) => `${datei}:${seite}`;
+
+export async function markierungen(datei: string, seite: number): Promise<Strich[]> {
+  return (await anfrage<Strich[] | undefined>(MARKIERUNGEN, 'readonly', (s) => s.get(markKey(datei, seite)))) ?? [];
+}
+
+export async function markierungenSetzen(datei: string, seite: number, striche: Strich[]): Promise<void> {
+  await anfrage(MARKIERUNGEN, 'readwrite', (s) => (striche.length ? s.put(striche, markKey(datei, seite)) : s.delete(markKey(datei, seite))));
+}
+
+/** alle Markierungen der genannten Dateien (für das Notenpaket) */
+async function markierungenVon(dateien: Set<string>): Promise<Record<string, Strich[]>> {
+  const d = await db();
+  return new Promise((ok, fehler) => {
+    const out: Record<string, Strich[]> = {};
+    const req = d.transaction(MARKIERUNGEN, 'readonly').objectStore(MARKIERUNGEN).openCursor();
+    req.onsuccess = () => {
+      const c = req.result;
+      if (!c) return ok(out);
+      if (dateien.has(String(c.key).split(':')[0])) out[String(c.key)] = c.value as Strich[];
       c.continue();
     };
     req.onerror = () => fehler(req.error);
@@ -159,6 +199,8 @@ interface NotenPaket {
   exportiert: string;
   dateien: { id: string; name: string; base64: string }[];
   songs: Record<string, SongNoten>;
+  /** Zeichnungen je „Datei-ID:Seite“ (ab Version mit Markierungen; ältere Pakete haben keine) */
+  markierungen?: Record<string, Strich[]>;
 }
 
 const zuBase64 = (b: ArrayBuffer) => {
@@ -179,7 +221,7 @@ export async function notenExportieren(): Promise<File | null> {
     const d = await notenDatei(id);
     if (d) dateien.push({ id: d.id, name: d.name, base64: zuBase64(d.daten) });
   }
-  const paket: NotenPaket = { app: NOTEN_APP, version: 1, exportiert: new Date().toISOString(), dateien, songs };
+  const paket: NotenPaket = { app: NOTEN_APP, version: 1, exportiert: new Date().toISOString(), dateien, songs, markierungen: await markierungenVon(genutzt) };
   const name = `blickfeld-nord-noten-${new Date().toISOString().slice(0, 10)}.json`;
   return new File([JSON.stringify(paket)], name, { type: 'application/json' });
 }
@@ -190,6 +232,7 @@ export async function notenImportieren(text: string): Promise<number> {
   if (paket.app !== NOTEN_APP || !paket.songs) throw new Error('keine Noten-Datei');
   for (const d of paket.dateien ?? []) await notenDateiSpeichern(d.name, ausBase64(d.base64), d.id);
   for (const [key, n] of Object.entries(paket.songs)) await songNotenSetzen(key, n);
+  for (const [key, striche] of Object.entries(paket.markierungen ?? {})) await anfrage(MARKIERUNGEN, 'readwrite', (s) => s.put(striche, key));
   return Object.keys(paket.songs).length;
 }
 

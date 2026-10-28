@@ -27,7 +27,7 @@ interface Ergebnis {
         <p class="summe" role="status">{{ zusammenfassung() }}</p>
         <ul>
           @for (x of e; track $index) {
-            <li [class]="x.stufe"><mat-icon>{{ x.stufe === 'ok' ? 'check_circle' : x.stufe === 'hinweis' ? 'info' : 'warning' }}</mat-icon>
+            <li [class]="x.stufe"><mat-icon>{{ symbol[x.stufe] }}</mat-icon>
               <span><b>{{ x.titel }}</b> <small>{{ x.text }}</small></span></li>
           }
         </ul>
@@ -57,6 +57,7 @@ export class AuftrittVorbereiten {
   protected readonly ergebnis = signal<Ergebnis[] | null>(null);
   protected readonly zusammenfassung = signal('');
   protected readonly vorliebe = signal(this.vorliebeText());
+  protected readonly symbol: Record<Ergebnis['stufe'], string> = { ok: 'check_circle', hinweis: 'info', fehlt: 'warning' };
 
   protected songs() {
     const gesehen = new Set<string>();
