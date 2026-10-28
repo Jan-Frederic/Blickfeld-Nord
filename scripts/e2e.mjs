@@ -668,6 +668,9 @@ test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, 
   ]);
   const funde = q.locator('app-backstage-ordner app-funde-liste');
   await until(async () => (await funde.innerText().catch(() => '')).includes('Backstage · sicherung.json'), 'Dateiauswahl wird nicht gesichtet');
+  expect((await funde.innerText()).includes('Was sich ändert: 1 neu'), 'Vorschau der Backstage-Datei fehlt');
+  await funde.locator('details.vorschau summary').click();
+  expect((await funde.locator('details.vorschau').innerText()).includes('Probe · 03.03.2099'), 'Vorschau nennt den Eintrag nicht');
   const zeile = (name) => funde.locator('li', { hasText: name });
   expect((await funde.innerText()).includes('2 von 3 erkannt'), 'Erkennung zählt nicht: ' + (await funde.locator('.kopf').innerText()));
   expect((await zeile('Robbie Wiliams').locator('select').inputValue()) === 'Angels|Robbie Williams', 'Interpret vor Titel mit Tippfehler nicht erkannt');

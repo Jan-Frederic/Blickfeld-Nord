@@ -1,4 +1,4 @@
-import { eintraege, entfernen, uebersicht, vergangene, verwaist } from './aufraeumen';
+import { eintraege, entfernen, uebersicht, vergangene, verwaist, vorschau, vorschauText } from './aufraeumen';
 
 describe('Aufräumen', () => {
   beforeEach(() => {
@@ -41,5 +41,27 @@ describe('Einträge beschreiben', () => {
     expect(e['bn-setlist-2026-12-04']).toMatchObject({ titel: 'Setlist · 04.12.2026 · Weihnachtsmarkt', details: '2 Songs, 1 Pause', link: '/backstage/2026-12-04/setlist' });
     expect(e['bn-packliste-2019-01-01']).toMatchObject({ verwaist: true, details: '1 abgehakt', link: undefined });
     expect(e['bn-buehne-zoom']).toMatchObject({ titel: 'Schriftgröße im Bühnen-Modus', details: '1.3' });
+  });
+});
+
+describe('Vorschau vor dem Übernehmen', () => {
+  it('zeigt Neues, Geändertes (Setlist: wie viele Songs anders) und Gleiches', () => {
+    localStorage.clear();
+    const iris = { title: 'Iris', artist: 'X' };
+    const angels = { title: 'Angels', artist: 'Y' };
+    localStorage.setItem('bn-setlist-2026-12-04', JSON.stringify([iris, angels]));
+    localStorage.setItem('bn-packliste-2026-12-04', JSON.stringify({ checked: ['a'], custom: [] }));
+    const v = vorschau(
+      [
+        ['bn-setlist-2026-12-04', [iris, { title: 'Hey Jude', artist: 'Z' }]],
+        ['bn-packliste-2026-12-04', { checked: ['a'], custom: [] }],
+        ['bn-vorort-2026-12-04', { start: '18:00' }],
+      ],
+      new Map([['2026-12-04', 'Weihnachtsmarkt']]),
+    );
+    expect(v.neu.map((e) => e.titel)).toEqual(['Vor Ort · 04.12.2026 · Weihnachtsmarkt']);
+    expect(v.geaendert.map((e) => `${e.titel}: ${e.was}`)).toEqual(['Setlist · 04.12.2026 · Weihnachtsmarkt: 2 Songs anders']);
+    expect(v.gleich).toBe(1);
+    expect(vorschauText(v)).toBe('1 neu, 1 geändert, 1 gleich');
   });
 });

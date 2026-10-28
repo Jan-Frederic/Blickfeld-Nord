@@ -1,4 +1,6 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
+import { BandService } from '../data/band.service';
+import { vorschau, vorschauText } from '../data/aufraeumen';
 import { MatIconModule } from '@angular/material/icon';
 import { NOTEN_APP, notenImportieren } from '../data/noten';
 
@@ -138,6 +140,7 @@ function collect(show?: string): Record<string, unknown> {
 export class BackstageSync {
   /** optional: nur diesen Auftritt austauschen (ID), sonst alles */
   readonly show = input<string>();
+  private readonly band = inject(BandService);
   protected readonly message = signal<{ text: string; error?: boolean } | null>(null);
 
   // Datei bauen und übers Teilen-Menü verschicken (z. B. WhatsApp-Gruppe) – sonst als Download
@@ -173,9 +176,17 @@ export class BackstageSync {
         this.message.set({ text: `Noten für ${n} ${n === 1 ? 'Song' : 'Songs'} übernommen ✓` });
         return;
       }
-      const anzahl = backupEintraege(text).length;
-      if (!anzahl) throw new Error();
-      if (!confirm(`${anzahl} ${anzahl === 1 ? 'Liste' : 'Listen'} übernehmen? Vorhandene Einträge für dieselben Auftritte werden ersetzt.`)) return;
+      const eintraege = backupEintraege(text);
+      if (!eintraege.length) throw new Error();
+      // Vorschau: was neu ist und was sich ändert
+      const v = vorschau(eintraege, new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue])));
+      const zeilen = [...v.neu.map((e) => `+ ${e.titel}`), ...v.geaendert.map((e) => `~ ${e.titel}: ${e.was}`)];
+      const liste = zeilen.slice(0, 12).join('\n') + (zeilen.length > 12 ? `\n… und ${zeilen.length - 12} weitere` : '');
+      if (!v.neu.length && !v.geaendert.length) {
+        this.message.set({ text: 'Nichts Neues – alles ist schon auf dem Stand der Datei.' });
+        return;
+      }
+      if (!confirm(`Übernehmen? ${vorschauText(v)}.\n\n${liste}`)) return;
       backstageImportieren(text);
       this.message.set({ text: 'Übernommen – Seite wird neu geladen …' });
       setTimeout(() => location.reload(), 600);

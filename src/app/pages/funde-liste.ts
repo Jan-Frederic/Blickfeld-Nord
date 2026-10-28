@@ -1,8 +1,11 @@
-import { Component, computed, effect, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { Fund, uebernehmen } from '../data/einlesen';
 import { zuordnungenMerken } from '../data/erkennung';
+import { BandService } from '../data/band.service';
+import { Vorschau, vorschau, vorschauText } from '../data/aufraeumen';
+import { backupEintraege } from './backstage-sync';
 import { Fortschritt, Stand } from './fortschritt';
 
 // Was in einem Ordner gefunden wurde (Abgleich → Ordner auf dem Gerät bzw. Synchronisation): Backstage-Dateien und
@@ -17,6 +20,16 @@ import { Fortschritt, Stand } from './fortschritt';
       @for (d of einzeln(); track d.pfad) {
         <label class="check"><input type="checkbox" [checked]="gewaehlt().has(d.pfad)" (change)="waehlen(d.pfad)" />
           {{ d.art === 'backstage' ? 'Backstage' : 'Notenpaket' }} · {{ d.pfad }} <small>{{ datum(d.geaendert) }}</small></label>
+        @if (vorschauen().get(d.pfad); as v) {
+          <details class="vorschau">
+            <summary>Was sich ändert: {{ text(v) }}</summary>
+            <ul class="aenderungen">
+              @for (e of v.neu; track e.key) { <li><b class="neu">neu</b> {{ e.titel }} <small>{{ e.details }}</small></li> }
+              @for (e of v.geaendert; track e.key) { <li><b class="anders">geändert</b> {{ e.titel }} <small>{{ e.was }}</small></li> }
+              @if (v.gleich) { <li><small>{{ v.gleich }} {{ v.gleich === 1 ? 'Eintrag bleibt' : 'Einträge bleiben' }} gleich</small></li> }
+            </ul>
+          </details>
+        }
       }
       @if (noten().length) {
         <div class="noten">
@@ -74,6 +87,13 @@ import { Fortschritt, Stand } from './fortschritt';
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .meldung { color: #5fb88a; }
     .noten { width: 100%; }
+    .vorschau { margin: -4px 0 4px 28px; font-size: .82rem; color: var(--bn-fog); }
+    .vorschau summary { cursor: pointer; }
+    .aenderungen { max-height: 220px; margin-top: 6px; }
+    .aenderungen li { display: block; padding: 3px 0; border: 0; }
+    b.neu, b.anders { margin-right: 6px; padding: 0 6px; border-radius: 999px; font-size: .7rem; font-weight: 500; }
+    b.neu { background: rgba(95, 184, 138, .2); color: #5fb88a; }
+    b.anders { background: rgba(232, 164, 106, .2); color: #e8a46a; }
     .kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-bottom: 6px; }
     .klein { font-size: .8rem; }
     ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 420px; overflow: auto; }
@@ -105,6 +125,22 @@ export class FundeListe {
   protected readonly ohne = signal<string[]>([]);
 
   protected readonly einzeln = computed(() => this.funde().filter((d) => d.art === 'backstage' || d.art === 'noten'));
+  // Vorschau je Backstage-Datei: was neu ist, was sich ändert, was gleich bleibt
+  private readonly band = inject(BandService);
+  private readonly auftritte = new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue]));
+  protected readonly text = vorschauText;
+  protected readonly vorschauen = computed(() => {
+    const out = new Map<string, Vorschau>();
+    for (const d of this.funde()) {
+      if (d.art !== 'backstage' || !d.text) continue;
+      try {
+        out.set(d.pfad, vorschau(backupEintraege(d.text), this.auftritte));
+      } catch {
+        // keine gültige Datei
+      }
+    }
+    return out;
+  });
   protected readonly hatBackstage = computed(() => this.funde().some((d) => d.art === 'backstage'));
   protected readonly noten = computed(() => this.funde().filter((d) => d.art === 'pdf' || d.art === 'akkordblatt'));
   protected readonly sichtbar = computed(() => (this.nurOffene() ? this.noten().filter((d) => !this.ziele().get(d.pfad)?.key) : this.noten()));

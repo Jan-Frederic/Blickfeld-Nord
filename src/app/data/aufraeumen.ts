@@ -196,29 +196,69 @@ export interface Eintrag {
 }
 
 /** alle Einträge mit Titel, Inhaltsangabe und Ziel-Seite; auftritte: ID → „Ort“ */
-export function eintraege(auftritte: Map<string, string>): Eintrag[] {
-  const einstellungen = BEREICHE.find((b) => b.id === 'einstellungen')!;
-  return alleSchluessel().map((key) => {
-    const bereich = bereichVon(key) ?? einstellungen;
-    const roh = localStorage.getItem(key) ?? '';
-    let wert: unknown = roh;
-    try {
-      wert = JSON.parse(roh);
-    } catch {
-      // einfacher Text
-    }
-    const id = idVon(key);
-    const bytes = (key.length + roh.length) * 2;
-    if (id !== undefined) {
-      const ort = auftritte.get(id);
-      const verwaist = !!bereich.jeAuftritt && ort === undefined;
-      return {
-        key, bereich, bytes, verwaist,
-        titel: `${SINGULAR[bereich.id] ?? bereich.label} · ${datum(id)}${ort ? ' · ' + ort : bereich.jeAuftritt ? ' · Auftritt gibt es nicht mehr' : ''}`,
-        details: inhalt(bereich.id, wert),
-        link: verwaist ? undefined : ZIEL[bereich.id]?.(id),
-      };
-    }
-    return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link: ZIEL_FEST[key] };
-  });
+/** einen Eintrag beschreiben (Titel, Inhaltsangabe, Ziel-Seite); roh = gespeicherter Text */
+export function eintragBeschreiben(key: string, roh: string, auftritte: Map<string, string>): Eintrag {
+  const bereich = bereichVon(key) ?? BEREICHE.find((b) => b.id === 'einstellungen')!;
+  let wert: unknown = roh;
+  try {
+    wert = JSON.parse(roh);
+  } catch {
+    // einfacher Text
+  }
+  const id = idVon(key);
+  const bytes = (key.length + roh.length) * 2;
+  if (id !== undefined) {
+    const ort = auftritte.get(id);
+    const verwaist = !!bereich.jeAuftritt && ort === undefined;
+    return {
+      key, bereich, bytes, verwaist,
+      titel: `${SINGULAR[bereich.id] ?? bereich.label} · ${datum(id)}${ort ? ' · ' + ort : bereich.jeAuftritt ? ' · Auftritt gibt es nicht mehr' : ''}`,
+      details: inhalt(bereich.id, wert),
+      link: verwaist ? undefined : ZIEL[bereich.id]?.(id),
+    };
+  }
+  return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link: ZIEL_FEST[key] };
 }
+
+/** alle Einträge mit Titel, Inhaltsangabe und Ziel-Seite; auftritte: ID → „Ort“ */
+export function eintraege(auftritte: Map<string, string>): Eintrag[] {
+  return alleSchluessel().map((key) => eintragBeschreiben(key, localStorage.getItem(key) ?? '', auftritte));
+}
+
+// ---- Vorschau vor dem Übernehmen einer Backstage-Datei ------------------------------------------------------
+
+export interface Vorschau {
+  neu: Eintrag[];
+  geaendert: (Eintrag & { was: string })[];
+  gleich: number;
+}
+
+const songsVon = (v: unknown) =>
+  Array.isArray(v) ? v.filter((e) => e && !(e as { pause?: boolean }).pause).map((e) => `${(e as { title: string }).title}|${(e as { artist: string }).artist}`) : [];
+
+/** was ändert sich, wenn diese Einträge übernommen werden? (Vergleich mit dem Stand auf diesem Gerät) */
+export function vorschau(eintraege: [string, unknown][], auftritte: Map<string, string>): Vorschau {
+  const v: Vorschau = { neu: [], geaendert: [], gleich: 0 };
+  for (const [key, wert] of eintraege) {
+    const roh = JSON.stringify(wert);
+    const alt = localStorage.getItem(key);
+    const e = eintragBeschreiben(key, roh, auftritte);
+    if (alt === null) v.neu.push(e);
+    else if (JSON.stringify(JSON.parse(alt)) === roh) v.gleich++;
+    else {
+      let was = 'geändert';
+      if (key.startsWith('bn-setlist-')) {
+        const a = songsVon(JSON.parse(alt));
+        const b = songsVon(wert);
+        const anders = b.filter((s) => !a.includes(s)).length + a.filter((s) => !b.includes(s)).length;
+        was = anders ? `${anders} ${anders === 1 ? 'Song' : 'Songs'} anders` : 'Reihenfolge anders';
+      } else if (key.startsWith('bn-bewertung-')) was = 'Sterne werden zusammengeführt';
+      v.geaendert.push({ ...e, was });
+    }
+  }
+  return v;
+}
+
+/** „2 neu, 1 geändert, 5 gleich“ */
+export const vorschauText = (v: Vorschau) =>
+  [v.neu.length && `${v.neu.length} neu`, v.geaendert.length && `${v.geaendert.length} geändert`, v.gleich && `${v.gleich} gleich`].filter(Boolean).join(', ') || 'nichts';
