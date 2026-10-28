@@ -16,11 +16,32 @@ export interface SyncEinstellungen {
   loeschen: boolean;
   /** beim Öffnen des Backstage und alle 15 Minuten */
   auto: boolean;
+  /** neue/geänderte Noten-Dateien nach dem Abgleich gleich beim Song einlesen */
+  notenAuto: boolean;
 }
 
 const EINSTELLUNGEN_KEY = 'bn-sync-einstellungen';
 const LETZTER_KEY = 'bn-sync-letzter';
-const STANDARD: SyncEinstellungen = { cloud: '', lokal: 'app', richtung: 'beide', loeschen: true, auto: true };
+const STANDARD: SyncEinstellungen = { cloud: '', lokal: 'app', richtung: 'beide', loeschen: true, auto: true, notenAuto: true };
+const OFFEN_KEY = 'bn-sync-offen';
+
+/** Noten-Dateien aus dem Abgleich, die sich nicht eindeutig einem Song zuordnen ließen (Pfade im Sync-Ordner) */
+export function offeneNoten(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(OFFEN_KEY) ?? '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function offeneNotenSetzen(pfade: string[]): void {
+  try {
+    if (pfade.length) localStorage.setItem(OFFEN_KEY, JSON.stringify([...new Set(pfade)]));
+    else localStorage.removeItem(OFFEN_KEY);
+  } catch {
+    // egal
+  }
+}
 
 export function syncEinstellungen(): SyncEinstellungen {
   try {

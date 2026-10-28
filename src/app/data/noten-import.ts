@@ -19,6 +19,8 @@ export interface NotenQuelle {
 
 export interface NotenErgebnis {
   pdfs: number;
+  /** vorhandene PDFs mit neuem Inhalt */
+  aktualisiert: number;
   blaetter: number;
   ersetzt: number;
   doppelt: number;
@@ -40,7 +42,7 @@ async function automatisch(datei: NotenQuelle): Promise<{ key: string; fassung: 
 }
 
 export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiInfo[], fortschritt?: NotenFortschritt): Promise<NotenErgebnis> {
-  const r: NotenErgebnis = { pdfs: 0, blaetter: 0, ersetzt: 0, doppelt: 0, andere: 0, ohne: [] };
+  const r: NotenErgebnis = { pdfs: 0, aktualisiert: 0, blaetter: 0, ersetzt: 0, doppelt: 0, andere: 0, ohne: [] };
   const vorhanden = [...bekannt];
   const liste = dateien.filter((d) => !d.name.startsWith('.'));
   let fertig = 0;
@@ -55,6 +57,15 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
       const key = z.key;
       const vorher = (await songNoten(key)) ?? {};
       let id = vorhanden.find((d) => d.name === datei.name && d.groesse === datei.groesse)?.id;
+      // gleiche Datei in neuer Fassung (z. B. in OneDrive geändert): die vorhandene beim Song aktualisieren statt
+      // ein zweites PDF anzuhängen
+      const alt = !id && vorhanden.find((d) => d.name === datei.name && vorher.pdfs?.some((p) => p.datei === d.id));
+      if (alt) {
+        await notenDateiSpeichern(datei.name, await datei.daten(), alt.id);
+        alt.groesse = datei.groesse;
+        r.aktualisiert++;
+        continue;
+      }
       if (!id) {
         id = await notenDateiSpeichern(datei.name, await datei.daten());
         vorhanden.push({ id, name: datei.name, groesse: datei.groesse, hinzugefuegt: '' });
@@ -86,6 +97,7 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
 export function notenErgebnisText(r: NotenErgebnis): { text: string; fehler?: boolean } {
   const teile = [
     r.pdfs && `${r.pdfs} ${r.pdfs === 1 ? 'PDF' : 'PDFs'}`,
+    r.aktualisiert && `${r.aktualisiert} ${r.aktualisiert === 1 ? 'PDF' : 'PDFs'} aktualisiert`,
     r.blaetter && `${r.blaetter} ${r.blaetter === 1 ? 'Akkordblatt' : 'Akkordblätter'}${r.ersetzt ? ` (${r.ersetzt} ersetzt)` : ''}`,
   ].filter(Boolean);
   const rest = [r.doppelt && `${r.doppelt} schon vorhanden`, r.andere && `${r.andere} andere Dateien übersprungen`].filter(Boolean).join(', ');

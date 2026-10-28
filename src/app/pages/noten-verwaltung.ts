@@ -122,7 +122,7 @@ export class NotenVerwaltung {
     );
     this.ohneSong.set(r.ohne);
     this.meldung.set(notenErgebnisText(r));
-    if (r.pdfs || r.blaetter) this.geaendert.emit();
+    if (r.pdfs || r.blaetter || r.aktualisiert) this.geaendert.emit();
   }
 
   protected async importieren(e: Event): Promise<void> {

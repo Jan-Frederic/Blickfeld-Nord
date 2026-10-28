@@ -75,6 +75,7 @@ import { SyncEinstellungen, lokalerOrdnerHandle, lokalerOrdnerSetzen, syncEinste
       </label>
       <label class="check"><input type="checkbox" [checked]="e().loeschen" (change)="setzen({ loeschen: $any($event.target).checked })" /> Löschungen übertragen (in OneDrive landen sie im Papierkorb)</label>
       <label class="check"><input type="checkbox" [checked]="e().auto" (change)="setzen({ auto: $any($event.target).checked })" /> Automatisch beim Öffnen des Backstage und alle 15 Minuten</label>
+      <label class="check"><input type="checkbox" [checked]="e().notenAuto" (change)="setzen({ notenAuto: $any($event.target).checked })" /> Neue Noten (PDF, .pro) nach dem Abgleich gleich beim Song einlesen – Titel und Interpret werden erkannt, Unklares wartet im Abgleich auf eine Zuordnung</label>
 
       <div class="knoepfe ende">
         <button type="button" class="primaer" (click)="sync.jetzt()" [disabled]="!bereit() || sync.laeuft()"><mat-icon>sync</mat-icon> Jetzt synchronisieren</button>

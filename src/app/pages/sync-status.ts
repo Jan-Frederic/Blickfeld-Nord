@@ -37,6 +37,11 @@ import { FundeListe } from './funde-liste';
           <label class="check"><input type="checkbox" [checked]="mitNoten()" (change)="mitNoten.set($any($event.target).checked)" /> mit Notenblättern</label>
         </div>
         @if (sync.stand(); as s) { <app-fortschritt [stand]="s" /> }
+        @if (sync.offen().length) {
+          <p class="offen"><mat-icon>help_outline</mat-icon> {{ sync.offen().length }} {{ sync.offen().length === 1 ? 'Noten-Datei braucht' : 'Noten-Dateien brauchen' }} eine Zuordnung zum Song.
+            <button type="button" (click)="zuordnen()" [disabled]="sync.laeuft()">Zuordnen</button>
+            <button type="button" class="link" (click)="sync.offenErledigt(sync.offen())">ignorieren</button></p>
+        }
         @if (dateien(); as d) {
           <ul class="dateien">
             @for (x of d; track x.pfad) {
@@ -44,7 +49,7 @@ import { FundeListe } from './funde-liste';
             } @empty { <li class="klein">Noch keine Dateien.</li> }
           </ul>
         }
-        @if (funde(); as f) { <app-funde-liste [funde]="f" (geaendert)="geaendert.emit()" /> }
+        @if (funde(); as f) { <app-funde-liste [funde]="f" (geaendert)="eingelesen(f)" /> }
         @if (meldung(); as m) { <p [class.fehler]="m.fehler" [class.letzter]="!m.fehler" role="status">{{ m.text }}</p> }
       }
     </div>
@@ -55,6 +60,7 @@ import { FundeListe } from './funde-liste';
     p { margin: 0 0 10px; max-width: 720px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); overflow-wrap: anywhere; }
     a { color: var(--bn-sunset); }
     .letzter { color: #5fb88a; }
+    .offen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; color: #e8a46a; }
     .fehler { color: #e07a5a; }
     .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
     .check { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; }
@@ -109,10 +115,20 @@ export class SyncStatus {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
-  protected async einlesen(): Promise<void> {
+  protected eingelesen(f: Fund[]): void {
+    this.sync.offenErledigt(f.map((d) => d.pfad));
+    this.geaendert.emit();
+  }
+
+  /** nur die offenen Noten-Dateien zur Zuordnung anzeigen */
+  protected zuordnen(): Promise<void> {
+    return this.einlesen(new Set(this.sync.offen()));
+  }
+
+  protected async einlesen(nur?: Set<string>): Promise<void> {
     try {
       const o = await this.lokal();
-      const liste = await o.liste();
+      const liste = (await o.liste()).filter((d) => !nur || nur.has(d.pfad));
       this.funde.set(
         await sichten(
           liste.map((d) => ({ name: d.pfad.split('/').at(-1)!, pfad: d.pfad, groesse: d.groesse, geaendert: d.geaendert, laden: async () => (await o.lesen(d.pfad)).arrayBuffer() })),

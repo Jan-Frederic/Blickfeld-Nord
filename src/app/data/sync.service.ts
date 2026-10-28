@@ -2,8 +2,13 @@ import { Injectable, signal } from '@angular/core';
 import { oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, ergebnisText, synchronisieren } from './sync';
+import { erkennen } from './erkennung';
+import { notenDateien } from './noten';
+import { NotenQuelle, istAkkordblatt, istPdf, notenEinlesen } from './noten-import';
 import {
   appOrdner,
+  offeneNoten,
+  offeneNotenSetzen,
   cloudOrdner,
   festplattenOrdner,
   letzterSync,
@@ -29,6 +34,38 @@ export class SyncService {
   /** eingerichtet: Microsoft-App, Cloud-Ordner gewählt */
   bereit(): boolean {
     return oneDriveEingerichtet() && !!syncEinstellungen().cloud;
+  }
+
+  /** Noten-Dateien, die zugeordnet werden müssen (nach dem Abgleich nicht eindeutig erkannt) */
+  readonly offen = signal(offeneNoten());
+
+  // neue/geänderte Noten-Dateien aus dem Abgleich gleich beim Song einlesen: eindeutig Erkanntes direkt, der Rest
+  // wartet in der Sync-Karte auf eine Zuordnung von Hand. Ergebnis als Zusatz für „letzter Abgleich“.
+  private async notenEinlesen(lokal: SyncOrdner, neu: string[]): Promise<string> {
+    const pfade = neu.filter((p) => istPdf(p) || istAkkordblatt(p));
+    if (!pfade.length) return '';
+    const groesse = new Map((await lokal.liste()).map((d) => [d.pfad, d.groesse]));
+    const eindeutig: NotenQuelle[] = [];
+    const offen: string[] = [];
+    for (const [i, pfad] of pfade.entries()) {
+      const name = pfad.split('/').at(-1)!;
+      this.stand.set({ text: `Noten erkennen: ${name}`, fertig: i, gesamt: pfade.length });
+      const daten = async () => (await lokal.lesen(pfad)).arrayBuffer();
+      const e = await erkennen(name, pfad, daten);
+      if (e.key) eindeutig.push({ name, pfad, groesse: groesse.get(pfad) ?? 0, daten, ziel: { key: e.key, fassung: e.fassung } });
+      else offen.push(pfad);
+    }
+    const r = await notenEinlesen(eindeutig, await notenDateien(), (fertig, gesamt, name) => this.stand.set({ text: `Noten einlesen: ${name}`, fertig, gesamt }));
+    offeneNotenSetzen([...offeneNoten().filter((p) => !pfade.includes(p)), ...offen]);
+    this.offen.set(offeneNoten());
+    const n = r.pdfs + r.aktualisiert + r.blaetter;
+    return [n && ` · ${n} Noten eingelesen`, offen.length && ` · ${offen.length} Noten brauchen eine Zuordnung`].filter(Boolean).join('');
+  }
+
+  /** offene Zuordnungen erledigt (eingelesen oder verworfen) */
+  offenErledigt(pfade: string[]): void {
+    offeneNotenSetzen(offeneNoten().filter((p) => !pfade.includes(p)));
+    this.offen.set(offeneNoten());
   }
 
   /** die lokale Seite laut Einstellungen (ohne nach Erlaubnis zu fragen) – zum Ansehen und Einlesen */
@@ -78,7 +115,8 @@ export class SyncService {
         });
       const { ergebnis } = still ? await oneDriveStill(lauf) : await lauf();
       this.neu.set(ergebnis.neu);
-      letzterSyncSetzen(ergebnisText(ergebnis) + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
+      const noten = e.notenAuto ? await this.notenEinlesen(lokal, ergebnis.neu) : '';
+      letzterSyncSetzen(ergebnisText(ergebnis) + noten + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
     } catch (err) {
       letzterSyncSetzen(`Abgebrochen: ${(err as Error).message || 'unbekannter Fehler'}`, true);
     } finally {
