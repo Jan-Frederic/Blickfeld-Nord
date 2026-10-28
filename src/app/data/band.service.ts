@@ -500,10 +500,6 @@ export class BandService {
     { date: '2027-06-12', venue: 'Ronny S.', private: true, confirmed: true },
     { date: '2027-08-29', city: 'Rhede', venue: 'Kirmes Rhede', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: false },
     { date: '2027-09-03', endDate: '2027-09-05', venue: 'Bandwochenende', publicName: 'Bandwochenende', private: true, confirmed: false },
-    { date: '2028-06-24', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
-    { date: '2028-07-01', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
-    { date: '2028-07-08', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
-    { date: '2028-08-19', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: '⭐ Favorit unter den Optionen – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
-    { date: '2028-08-26', venue: 'Wolfgang S. 61', private: true, confirmed: false, comment: 'Option – einer von fünf möglichen Terminen (24.06., 01.07., 08.07., 19.08., 26.08.2028)' },
+    { date: '2028-08-19', venue: 'Wolfgang S. 61', private: true, confirmed: true },
   ];
 }
