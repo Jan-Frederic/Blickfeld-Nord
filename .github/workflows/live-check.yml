@@ -1,0 +1,49 @@
+# Prüft einmal pro Woche die echte Website (blickfeld-nord.de), so wie Besucher sie sehen: alle Seiten der Sitemap,
+# Downloads (PDFs, Kalender), Bilder und Skripte, Service Worker, 404-Seite und ob der tägliche Deploy noch läuft.
+# Probleme landen in einem GitHub-Issue „Probleme auf der Live-Seite“: Es wird angelegt bzw. aktualisiert und
+# schließt sich von selbst, sobald alles wieder geht. Von Hand: Actions → Live-Check → Run workflow.
+name: Live-Check
+
+on:
+  schedule:
+    - cron: '43 7 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    env:
+      TITEL: Probleme auf der Live-Seite
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Live-Seite prüfen
+        run: node scripts/live-check.mjs --bericht livebericht.md
+
+      - name: Issue anlegen, aktualisieren oder schließen
+        run: |
+          nummer=$(gh issue list --state open --search "\"$TITEL\" in:title" --json number --jq '.[0].number')
+          if [ -s livebericht.md ]; then
+            {
+              echo "Der wöchentliche Live-Check hat auf blickfeld-nord.de Probleme gefunden:"
+              echo
+              cat livebericht.md
+              echo
+              echo "Oft hilft ein neuer Deploy (Actions → Deploy to GitHub Pages → Run workflow); sonst die genannte Seite bzw. Datei prüfen."
+              echo "Das Issue schließt sich von selbst, sobald alles wieder erreichbar ist. – [Lauf ansehen]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            } > text.md
+            if [ -n "$nummer" ]; then gh issue edit "$nummer" --body-file text.md; else gh issue create --title "$TITEL" --body-file text.md; fi
+          elif [ -n "$nummer" ]; then
+            gh issue close "$nummer" --comment "Die Live-Seite ist wieder vollständig erreichbar ✓"
+          fi
