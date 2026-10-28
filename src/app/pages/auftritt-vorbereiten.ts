@@ -8,7 +8,8 @@ import { Fortschritt, Stand } from './fortschritt';
 
 // Setlist → „Auftritt vorbereiten“: für jeden Song der Setlist prüfen, ob auf diesem Gerät Noten in der Fassung
 // liegen, die der Bühnen-Modus zeigen würde (eigene Wahl bzw. Vorliebe wie „Bass“), ob die PDF sich öffnen lässt
-// und der Seitenbereich passt – und alles für unterwegs ohne Netz vorladen (pdf.js, Service Worker).
+// und der Seitenbereich passt – und alles für unterwegs ohne Netz vorladen (pdf.js, Service Worker). Dazu die
+// Notenmappe: alle Noten der Setlist als ein PDF (data/notenmappe.ts).
 interface Ergebnis {
   titel: string;
   stufe: 'ok' | 'hinweis' | 'fehlt';
@@ -20,8 +21,13 @@ interface Ergebnis {
   imports: [MatIconModule, Fortschritt],
   template: `
     <div class="box">
-      <button type="button" (click)="pruefen()" [disabled]="laeuft() || !songs().length"><mat-icon>task_alt</mat-icon> Auftritt vorbereiten</button>
-      <span class="klein">prüft die Noten jedes Songs in deiner Fassung{{ vorliebe() ? ' („' + vorliebe() + '“)' : '' }} und lädt alles für unterwegs</span>
+      <div class="knoepfe">
+        <button type="button" (click)="pruefen()" [disabled]="laeuft() || !songs().length"><mat-icon>task_alt</mat-icon> Auftritt vorbereiten</button>
+        <button type="button" (click)="mappe()" [disabled]="laeuft() || !songs().length"><mat-icon>picture_as_pdf</mat-icon> Notenmappe (PDF)</button>
+      </div>
+      <p class="klein">Prüft die Noten jedes Songs in deiner Fassung{{ vorliebe() ? ' („' + vorliebe() + '“)' : '' }} und lädt alles für unterwegs –
+        bzw. fasst sie in Reihenfolge zu einem PDF zusammen (zum Drucken oder fürs Tablet, bleibt auf dem Gerät).</p>
+      @if (mappenText(); as m) { <p class="summe" role="status">{{ m }}</p> }
       @if (stand(); as s) { <app-fortschritt [stand]="s" /> }
       @if (ergebnis(); as e) {
         <p class="summe" role="status">{{ zusammenfassung() }}</p>
@@ -36,7 +42,8 @@ interface Ergebnis {
   `,
   styles: `
     .box { margin: 12px 0 0; }
-    .klein { margin-left: 10px; font-size: .8rem; color: var(--bn-fog); }
+    .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+    .klein { margin: 6px 0 0; font-size: .8rem; color: var(--bn-fog); max-width: 640px; }
     button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .88rem; cursor: pointer; }
     button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     button:disabled { opacity: .4; cursor: default; }
@@ -47,11 +54,14 @@ interface Ergebnis {
     li.ok mat-icon { color: #5fb88a; }
     li.hinweis mat-icon { color: #e8a46a; }
     li.fehlt mat-icon { color: #e07a5a; }
-    small { color: var(--bn-fog); }
+    small { margin-left: 6px; color: var(--bn-fog); }
   `,
 })
 export class AuftrittVorbereiten {
   readonly entries = input.required<Entry[]>();
+  /** z. B. „Weihnachtsmarkt · 04.12.2026“ – für Deckblatt und Dateiname der Notenmappe */
+  readonly titel = input('Setlist');
+  protected readonly mappenText = signal('');
   protected readonly laeuft = signal(false);
   protected readonly stand = signal<Stand | null>(null);
   protected readonly ergebnis = signal<Ergebnis[] | null>(null);
@@ -126,6 +136,38 @@ export class AuftrittVorbereiten {
       return { titel, stufe: fehltVorliebe ? 'hinweis' : 'ok', text: name + bereich + hinweis };
     } catch (e) {
       return { titel, stufe: 'fehlt', text: `${name}: lässt sich nicht öffnen (${(e as Error).message || 'beschädigt?'})` };
+    }
+  }
+
+  // Notenmappe: alle Noten der Setlist als ein PDF – teilen (Tablet, Drucker) oder speichern
+  protected async mappe(): Promise<void> {
+    this.laeuft.set(true);
+    this.mappenText.set('');
+    try {
+      const { notenmappe } = await import('../data/notenmappe');
+      const r = await notenmappe(this.entries(), this.titel(), (s) => this.stand.set(s));
+      const name = `Notenmappe ${this.titel()}.pdf`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+·\s+/g, ' ');
+      const datei = new File([r.pdf], name, { type: 'application/pdf' });
+      let geteilt = false;
+      if (navigator.canShare?.({ files: [datei] })) {
+        try {
+          await navigator.share({ files: [datei], title: name });
+          geteilt = true;
+        } catch (e) {
+          if ((e as Error).name === 'AbortError') return;
+        }
+      }
+      if (!geteilt) {
+        const url = URL.createObjectURL(datei);
+        Object.assign(document.createElement('a'), { href: url, download: name }).click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }
+      this.mappenText.set(`Notenmappe mit ${r.seiten} Seiten ${geteilt ? 'geteilt' : 'gespeichert'} ✓${r.ohne.length ? ` – ohne Noten: ${r.ohne.join(', ')}` : ''}`);
+    } catch (e) {
+      this.mappenText.set(`Notenmappe ließ sich nicht erstellen: ${(e as Error).message || 'unbekannter Fehler'}`);
+    } finally {
+      this.stand.set(null);
+      this.laeuft.set(false);
     }
   }
 }

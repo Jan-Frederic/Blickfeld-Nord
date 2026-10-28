@@ -467,10 +467,17 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   }
   await until(async () => (await p.locator('app-setlist .list li .no').count()) === 2, 'Songs nicht in der Setlist');
   // Auftritt vorbereiten: Iris hat Noten (PDF S. 2–3), Angels nicht
-  await p.locator('app-auftritt-vorbereiten button').click();
+  await p.locator('app-auftritt-vorbereiten button', { hasText: 'Auftritt vorbereiten' }).click();
   await until(async () => (await p.locator('app-auftritt-vorbereiten .summe').innerText().catch(() => '')).includes('1 von 2 Songs mit Noten'), async () => 'Prüfung meldet falsch: ' + (await p.locator('app-auftritt-vorbereiten').innerText()));
   const pruefung = await p.locator('app-auftritt-vorbereiten ul').innerText();
   expect(pruefung.includes('S. 2–3') && pruefung.includes('keine Noten auf diesem Gerät'), 'Prüfung je Song fehlt: ' + pruefung);
+  // Notenmappe: Deckblatt + 2 Seiten Iris (Bereich 2–3) + Hinweisseite für Angels
+  const [mappe] = await Promise.all([p.waitForEvent('download'), p.locator('app-auftritt-vorbereiten button', { hasText: 'Notenmappe' }).click()]);
+  const mappenPdf = readFileSync(await mappe.path()).toString('latin1');
+  expect(mappenPdf.startsWith('%PDF') && mappe.suggestedFilename().startsWith('Notenmappe'), 'Notenmappe ist kein PDF');
+  const vorbereiten = () => p.locator('app-auftritt-vorbereiten').evaluate((e) => e.textContent);
+  await until(async () => (await vorbereiten()).includes('4 Seiten'), async () => 'Notenmappe falsch: ' + (await vorbereiten()));
+  expect((await vorbereiten()).includes('ohne Noten: Angels'), 'Notenmappe meldet fehlende Noten nicht');
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await p.locator('app-setlist-buehne .noten-knopf').click();
   const kopf = p.locator('app-noten-anzeige header');
@@ -889,7 +896,8 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   await until(async () => /\d+ min/.test(await p.locator('app-setlist .count').innerText()), 'keine Spieldauer in der Setlist');
   expect((await p.locator('app-setlist .pause-label').innerText()).includes('Set davor'), 'Pause ohne Set-Dauer');
   await p.locator('app-setlist-vorlagen button', { hasText: 'Als Vorlage speichern' }).click();
-  await until(async () => (await p.locator('app-setlist-vorlagen option').count()) === 1, 'Vorlage nicht gespeichert');
+  // neben der festen Vorlage „Weihnachtslieder“ die eben gespeicherte
+  await until(async () => (await p.locator('app-setlist-vorlagen option').allInnerTexts()).some((t) => t.startsWith('Testvorlage · 5 Songs')), 'Vorlage nicht gespeichert');
   await p.locator('app-setlist-vorschlag button', { hasText: 'vorschlagen' }).click();
   await until(async () => (await p.locator('app-setlist .pause-label').count()) === 1 && (await p.locator('app-setlist .list li .no').count()) > 10, 'Setlist-Vorschlag ohne zwei Sets');
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();

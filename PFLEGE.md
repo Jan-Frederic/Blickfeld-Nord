@@ -167,6 +167,27 @@ Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätt
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
 
+**Im Bühnen-Modus außerdem:**
+
+- **Markieren:** in der PDF-Ansicht auf ✏ tippen und mit Finger, Stift oder Maus ins Notenblatt zeichnen (Rot, Blau,
+  Grün, Textmarker; ↶ nimmt den letzten Strich zurück, 🗑 leert die Seite). Die Markierungen gelten je PDF und Seite,
+  bleiben auf dem Gerät und gehen im Notenpaket mit („Notenblätter an die Band“, Synchronisation).
+- **Halbseiten-Blättern** und eigene **Pedal-Tasten:** unter Backstage → **Einstellungen → Bühnen-Modus**. Mit
+  Halbseiten-Blättern zeigt der erste Tritt oben schon den Anfang der nächsten Seite, der zweite blättert ganz um.
+  Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten.
+
+**Vor dem Auftritt** (Setlist des Auftritts):
+
+- **Auftritt vorbereiten** prüft für jeden Song, ob Noten in deiner Fassung (eigene Wahl bzw. Vorliebe wie „Bass“)
+  auf dem Gerät sind, ob die PDF sich öffnen lässt und der Seitenbereich passt, und lädt alles für ohne Netz.
+- **Notenmappe (PDF)** fasst alle Noten der Setlist in Reihenfolge zu einem PDF zusammen – Deckblatt mit der Setlist,
+  PDF-Seiten im eingestellten Bereich, Akkordblätter in eurer Tonart, Pausen als Trennseite. Zum Drucken oder fürs
+  Tablet; die Datei entsteht nur auf dem Gerät und gehört nicht ins Repository.
+
+**Songs → Liste:** „Zeigen“ filtert Lücken (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie
+„Bass“, noch nie gespielt). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
+Auftritte) und ob er in einer kommenden Setlist steht; sortierbar nach „oft“ bzw. „lange nicht gespielt“.
+
 ## Gerät aufräumen (Abgleich)
 
 Backstage-Daten liegen nur im Browser des jeweiligen Geräts. Unter **Abgleich → Daten auf diesem Gerät** steht jeder
@@ -208,13 +229,16 @@ Unterordnern (Noten über Titel und Interpret im Dateinamen) – und den Stand d
   antippen) → **Einlesen**. **Stand sichern** öffnet Teilen bzw. Speichern – dort „In Dateien sichern“ → OneDrive.
 - Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
   ersetzt.
+- **Vorschau:** unter jeder Backstage-Datei steht, was sich ändert („2 neu, 1 geändert, 5 gleich“, aufklappbar; bei
+  Setlists „3 Songs anders“). „Datei importieren“ fragt mit derselben Vorschau nach.
 - **Titel und Interpret** jeder Noten-Datei werden vor dem Einlesen erkannt und angezeigt – aus dem Dateinamen (in
   beliebiger Reihenfolge, z. B. `Iris - Goo Goo Dolls - Bass.pdf`, `Goo Goo Dolls - Iris.pdf`,
   `Giesinger, Max - 80 Millionen (Keys).pdf`), dem Ordner (`Goo Goo Dolls/Iris/Bass.pdf`), bei .pro aus
   `{title}`/`{artist}`, bei PDFs aus den Dokument-Eigenschaften bzw. dem Kopf der ersten Seite, zuletzt mit Toleranz
   für Tippfehler („Robbie Wiliams“). Was übrig bleibt, ist die Fassung (z. B. „Bass“). Unklares (zwei Songs gleichen
   Namens) oder nicht Erkanntes ist orange markiert: Song aus der Liste wählen, Fassung bei Bedarf ändern – eingelesen
-  wird genau so, wie es in der Liste steht.
+  wird genau so, wie es in der Liste steht. Von Hand gewählte Zuordnungen merkt sich das Gerät je Dateiname – beim
+  nächsten Mal steht dort „wie beim letzten Mal“.
 
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
 
@@ -235,6 +259,9 @@ So wird abgeglichen: Der Stand nach jedem Abgleich wird gemerkt. Neues und Geän
 Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf beiden Seiten geändert, gewinnt die
 neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten. Würden auf einmal viele Dateien gelöscht,
 wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
+Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim richtigen Song eingelesen (abschaltbar);
+eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
+(„2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**).
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
 **Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro) und **Stand sichern**: legt die
 Backstage-Sicherung (wahlweise mit Notenblättern) in den Unterordner `Backstage` des Sync-Ordners und gleicht gleich ab.

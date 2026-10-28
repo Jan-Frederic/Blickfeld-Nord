@@ -10,10 +10,14 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
 
-// ohne die Microsoft-Anmeldebibliothek (OneDrive im Backstage): rund 300 kB, nur mit Netz sinnvoll – wird beim
-// ersten Verbinden geladen und dann wie andere Dateien mit Hash gemerkt
-const msal = (f) => f.endsWith('.js') && readFileSync(join(DIST, f), 'utf8').includes('msal.js.browser');
-const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.js' && !msal(f));
+// ohne große, selten gebrauchte Bibliotheken: die Microsoft-Anmeldung (OneDrive, ~300 kB, nur mit Netz sinnvoll)
+// und pdf-lib (Notenmappe, ~440 kB) – sie werden beim ersten Gebrauch geladen und dann wie andere Dateien mit Hash gemerkt
+const gross = (f) => {
+  if (!f.endsWith('.js')) return false;
+  const text = readFileSync(join(DIST, f), 'utf8');
+  return text.includes('msal.js.browser') || text.includes('pdf-lib (https://github.com/Hopding');
+};
+const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.js' && !gross(f));
 const fonts = readdirSync(join(DIST, 'fonts')).map((f) => `fonts/${f}`);
 // Textschriften (von Angular mit Hash nach media/ kopiert)
 const media = readdirSync(join(DIST, 'media')).filter((f) => f.endsWith('.woff2')).map((f) => `media/${f}`);
