@@ -1,4 +1,4 @@
-import { erkennen } from './erkennung';
+import { erkennen, zuordnungenMerken } from './erkennung';
 
 const songs = [
   { title: 'Iris', artist: 'The Goo Goo Dolls' },
@@ -47,5 +47,13 @@ describe('Erkennung von Titel und Interpret', () => {
     expect(e.kandidaten.sort()).toEqual(['Hallelujah|Jeff Buckley', 'Hallelujah|Leonard Cohen']);
     expect(e.fassung).toBe('Gitarre');
     expect(await erkennen('Einkaufsliste.pro', 'Einkaufsliste.pro', text('Milch'), songs)).toEqual({ kandidaten: [], fassung: 'Einkaufsliste' });
+  });
+
+  it('merkt sich Zuordnungen von Hand je Dateiname', async () => {
+    localStorage.clear();
+    expect((await erkennen('Scan 0042.pro', 'Scan 0042.pro', text('[C]x'), songs)).key).toBeUndefined();
+    zuordnungenMerken([{ name: 'Scan 0042.pro', key: 'Iris|The Goo Goo Dolls', fassung: 'Chor' }]);
+    expect(await erkennen('scan 0042.PRO', 'Ordner/scan 0042.PRO', nie, songs)).toEqual({ key: 'Iris|The Goo Goo Dolls', kandidaten: [], fassung: 'Chor', quelle: 'gemerkt' });
+    localStorage.clear();
   });
 });

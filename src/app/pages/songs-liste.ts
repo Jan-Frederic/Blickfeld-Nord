@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
@@ -6,7 +6,9 @@ import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
 import { SongDialog } from './song-dialog';
 import { SetlistBuehne } from './setlist-buehne';
-import { SETLIST_PREFIX, Song } from '../data/setlist-data';
+import { Song, loadSetlist } from '../data/setlist-data';
+import { BandService } from '../data/band.service';
+import { historieText, songHistorie } from '../data/song-historie';
 
 // Backstage → Songs → Liste: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // „Original“ ist die Tonart der Aufnahme, „wir spielen“ und Capo die Band-Version; das Tempo lässt sich im Proberaum
@@ -45,13 +47,24 @@ function ladeEntwurf(): Record<string, Werte> {
         <span [style.width.%]="(ausgefuellt() / songs.length) * 100"></span>
       </div>
       <div class="filter">
-        <label class="check"><input type="checkbox" [checked]="nurLuecken()" (change)="nurLuecken.set($any($event.target).checked)" /> nur Songs ohne Tonart oder Tempo</label>
+        <label>Zeigen
+          <select class="zeigen" (change)="zeigen.set($any($event.target).value)">
+            <option value="">alle Songs</option>
+            <option value="tonart">ohne Tonart oder Tempo</option>
+            <option value="noten">ohne Noten</option>
+            <option value="akkorde">ohne Akkorde</option>
+            @for (f of fassungen(); track f) { <option [value]="'fassung:' + f">ohne {{ f }}</option> }
+            <option value="nie">noch nie gespielt</option>
+          </select>
+        </label>
         <label>Reihenfolge
           <select (change)="sortierung.set($any($event.target).value)">
             <option value="repertoire">wie im Repertoire</option>
-            <option value="haeufig">oft in Setlists zuerst</option>
+            <option value="haeufig">oft gespielt zuerst</option>
+            <option value="lange">lange nicht gespielt zuerst</option>
           </select>
         </label>
+        @if (zeigen()) { <span class="treffer">{{ gefiltert().length }} {{ gefiltert().length === 1 ? 'Song' : 'Songs' }}</span> }
       </div>
 
       <label class="search">
@@ -68,7 +81,8 @@ function ladeEntwurf(): Record<string, Werte> {
             <tr [class.changed]="geaendert().includes(s.key)" (click)="oeffnen(s.key)">
               <td class="song">
                 <button type="button" class="oeffnen" (click)="oeffnen(s.key, $event)" [attr.aria-label]="s.title + ' bearbeiten'">{{ s.title }}</button>
-                <span class="a">{{ s.artist }}@if (haeufigkeit().get(s.key); as n) { · in {{ n }} {{ n === 1 ? 'Setlist' : 'Setlists' }} }</span>
+                <span class="a">{{ s.artist }}</span>
+                <span class="a hist">{{ historieText(historie().get(s.key)) }}</span>
               </td>
               <td class="werte">
                 @let w = wert(s.key);
@@ -134,6 +148,8 @@ function ladeEntwurf(): Record<string, Werte> {
     tr.changed td:first-child { box-shadow: inset 3px 0 var(--bn-sunset); }
     .song, .werte { line-height: 1.35; }
     .song .a, .werte > span { display: block; }
+    .hist { font-size: .75rem; }
+    .treffer { font-size: .85rem; color: var(--bn-fog); }
     .oeffnen { padding: 0; border: 0; background: none; color: var(--bn-ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
     .oeffnen:hover { color: var(--bn-sunset); }
     .tag { display: inline-block; margin: 1px 4px 1px 0; padding: 0 7px; border: 1px solid var(--bn-sunset); border-radius: 999px; color: var(--bn-sunset); font-size: .72rem; }
@@ -164,30 +180,42 @@ export class SongsListe {
   protected readonly suche = signal('');
   protected readonly meldung = signal('');
 
-  // Lücken finden: nur Songs ohne Tonart oder Tempo, wahlweise die oft gespielten zuerst
-  protected readonly nurLuecken = signal(false);
-  protected readonly sortierung = signal<'repertoire' | 'haeufig'>('repertoire');
-  /** in wie vielen Setlists auf diesem Gerät der Song steht */
-  protected readonly haeufigkeit = computed(() => {
-    const n = new Map<string, number>();
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i)!;
-        if (!k.startsWith(SETLIST_PREFIX)) continue;
-        const liste = JSON.parse(localStorage.getItem(k) ?? '[]') as { title?: string; artist?: string }[];
-        for (const s of new Set(liste.filter((e) => e.title).map((e) => key(e as { title: string; artist: string })))) n.set(s, (n.get(s) ?? 0) + 1);
-      }
-    } catch {
-      // ohne Speicher keine Häufigkeit
-    }
-    return n;
+  // Lücken finden (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie „Bass“, nie gespielt) und
+  // sortieren nach Repertoire, oft gespielt oder lange nicht gespielt (Song-Historie aus den Setlists der Auftritte)
+  protected readonly zeigen = signal('');
+  protected readonly sortierung = signal<'repertoire' | 'haeufig' | 'lange'>('repertoire');
+  protected readonly historieText = historieText;
+  private readonly band = inject(BandService);
+  protected readonly historie = computed(() =>
+    songHistorie(
+      this.band.shows.map((show) => ({ tag: show.endDate ?? show.date, setlist: loadSetlist(this.band.showId(show)) })),
+      new Date().toISOString().slice(0, 10),
+    ),
+  );
+  /** alle Fassungsnamen der PDFs auf diesem Gerät (für „ohne Bass“ usw.) */
+  protected readonly fassungen = computed(() => {
+    const namen = new Map<string, string>();
+    for (const n of this.mitNoten().values()) for (const f of n.fassungen) if (!namen.has(f.toLowerCase())) namen.set(f.toLowerCase(), f);
+    return [...namen.values()].sort((a, b) => a.localeCompare(b, 'de'));
   });
 
   protected readonly gefiltert = computed(() => {
     const q = norm(this.suche().trim());
     let liste = q ? this.songs.filter((s) => norm(`${s.title} ${s.artist}`).includes(q)) : this.songs;
-    if (this.nurLuecken()) liste = liste.filter((s) => { const w = this.wert(s.key); return !w.tonart || !w.bpm; });
-    if (this.sortierung() === 'haeufig') liste = [...liste].sort((a, b) => (this.haeufigkeit().get(b.key) ?? 0) - (this.haeufigkeit().get(a.key) ?? 0));
+    const z = this.zeigen();
+    const noten = this.mitNoten();
+    if (z === 'tonart') liste = liste.filter((s) => { const w = this.wert(s.key); return !w.tonart || !w.bpm; });
+    else if (z === 'noten') liste = liste.filter((s) => !noten.has(s.key));
+    else if (z === 'akkorde') liste = liste.filter((s) => !noten.get(s.key)?.akkorde);
+    else if (z === 'nie') liste = liste.filter((s) => !this.historie().get(s.key)?.gespielt);
+    else if (z.startsWith('fassung:')) {
+      const f = z.slice(8).toLowerCase();
+      liste = liste.filter((s) => !noten.get(s.key)?.fassungen.some((x) => x.toLowerCase() === f));
+    }
+    const h = this.historie();
+    if (this.sortierung() === 'haeufig') liste = [...liste].sort((a, b) => (h.get(b.key)?.gespielt ?? 0) - (h.get(a.key)?.gespielt ?? 0));
+    // nie gespielt zuerst, dann der am längsten nicht gespielte
+    if (this.sortierung() === 'lange') liste = [...liste].sort((a, b) => (h.get(a.key)?.zuletzt ?? '').localeCompare(h.get(b.key)?.zuletzt ?? ''));
     return liste;
   });
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
@@ -198,14 +226,14 @@ export class SongsListe {
   }
 
   // Noten (PDF/Akkordblatt) je Song – nur auf diesem Gerät, siehe data/noten.ts
-  protected readonly mitNoten = signal(new Map<string, { pdfs: number; akkorde: boolean }>());
+  protected readonly mitNoten = signal(new Map<string, { pdfs: number; akkorde: boolean; fassungen: string[] }>());
   protected readonly notenDateien = signal<NotenDateiInfo[]>([]);
   constructor() {
     this.notenLaden();
   }
   protected notenLaden(): void {
     alleSongNoten()
-      .then((n) => this.mitNoten.set(new Map(Object.entries(n).map(([k, v]) => [k, { pdfs: v.pdfs?.length ?? 0, akkorde: !!v.chordpro }]))))
+      .then((n) => this.mitNoten.set(new Map(Object.entries(n).map(([k, v]) => [k, { pdfs: v.pdfs?.length ?? 0, akkorde: !!v.chordpro, fassungen: (v.pdfs ?? []).map((p) => p.name?.trim()).filter((x): x is string => !!x) }]))))
       .catch(() => undefined);
     notenDateien().then((d) => this.notenDateien.set(d)).catch(() => undefined);
   }

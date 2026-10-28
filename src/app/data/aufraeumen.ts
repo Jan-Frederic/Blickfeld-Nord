@@ -122,6 +122,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-buehne-zoom': 'Schriftgröße im Bühnen-Modus',
   'bn-buehne-ton': 'Klick-Ton im Bühnen-Modus',
   'bn-noten-wahl': 'Gewählte Noten-Fassungen',
+  'bn-noten-zuordnungen': 'Gemerkte Zuordnungen beim Einlesen',
   'bn-noten-breite': 'Noten in voller Breite',
   'bn-noten-ansicht': 'Noten-Ansicht (frühere Version)',
   'bn-backstage-filter': 'Filter unter Termine',

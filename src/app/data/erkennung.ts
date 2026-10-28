@@ -6,6 +6,7 @@ import { pdfKopf } from './pdf';
 // dem Dateinamen, dem Ordnerpfad, bei .pro den Angaben {title}/{artist} in der Datei, bei PDFs den Eigenschaften und
 // dem Kopf der ersten Seite; zuletzt mit Toleranz für Tippfehler. Bei Gleichstand (z. B. „Hallelujah“ von zwei
 // Interpreten ohne Namen in der Datei) gibt es Kandidaten zur Auswahl. Der Rest des Dateinamens ist die Fassung.
+// Von Hand gewählte Zuordnungen werden je Dateiname gemerkt und gehen allem anderen vor.
 
 export type Song = { title: string; artist: string };
 export const songKey = (s: Song) => `${s.title}|${s.artist}`;
@@ -17,7 +18,31 @@ export interface Erkennung {
   /** Kandidaten bei Gleichstand (Schlüssel) */
   kandidaten: string[];
   fassung: string;
-  quelle?: 'Dateiname' | 'Ordner' | 'Akkordblatt' | 'PDF-Eigenschaften' | 'Notenblatt' | 'ungefähr';
+  quelle?: 'gemerkt' | 'Dateiname' | 'Ordner' | 'Akkordblatt' | 'PDF-Eigenschaften' | 'Notenblatt' | 'ungefähr';
+}
+
+// Von Hand gewählte Zuordnungen je Dateiname merken (beim Einlesen im Abgleich) – beim nächsten Mal sofort erkannt
+const GEMERKT_KEY = 'bn-noten-zuordnungen';
+const namensSchluessel = (name: string) => name.trim().toLocaleLowerCase('de');
+
+export function gemerkteZuordnungen(): Record<string, { key: string; fassung: string }> {
+  try {
+    return JSON.parse(localStorage.getItem(GEMERKT_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+/** Zuordnungen merken (Dateiname → Song und Fassung) */
+export function zuordnungenMerken(neu: { name: string; key: string; fassung: string }[]): void {
+  if (!neu.length) return;
+  const alle = gemerkteZuordnungen();
+  for (const z of neu) alle[namensSchluessel(z.name)] = { key: z.key, fassung: z.fassung };
+  try {
+    localStorage.setItem(GEMERKT_KEY, JSON.stringify(alle));
+  } catch {
+    // ohne Speicher wird nichts gemerkt
+  }
 }
 
 const ohneEndung = (n: string) => n.replace(/\.[^.]+$/, '');
@@ -48,6 +73,9 @@ function namensRest(name: string, song: Song): string {
 
 /** Erkennung für eine Noten-Datei; laden wird nur gerufen, wenn der Inhalt gebraucht wird */
 export async function erkennen(name: string, pfad: string, laden: () => Promise<ArrayBuffer>, songs: Song[] = SONGS): Promise<Erkennung> {
+  // 0. schon einmal von Hand zugeordnet
+  const gemerkt = gemerkteZuordnungen()[namensSchluessel(name)];
+  if (gemerkt && songs.some((s) => songKey(s) === gemerkt.key)) return { key: gemerkt.key, kandidaten: [], fassung: gemerkt.fassung, quelle: 'gemerkt' };
   const pdf = name.toLowerCase().endsWith('.pdf');
   const ordner = pfad.split('/').slice(0, -1).join(' ');
   let kandidaten: Erkennung | undefined;

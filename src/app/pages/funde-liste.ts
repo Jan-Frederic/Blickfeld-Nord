@@ -2,6 +2,7 @@ import { Component, computed, effect, input, output, signal, untracked } from '@
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { Fund, uebernehmen } from '../data/einlesen';
+import { zuordnungenMerken } from '../data/erkennung';
 import { Fortschritt, Stand } from './fortschritt';
 
 // Was in einem Ordner gefunden wurde (Abgleich → Ordner auf dem Gerät bzw. Synchronisation): Backstage-Dateien und
@@ -30,7 +31,7 @@ import { Fortschritt, Stand } from './fortschritt';
               <li [class.offen]="!z?.key">
                 <input type="checkbox" [checked]="!!z?.an" [disabled]="!z?.key" (change)="setzen(d.pfad, { an: $any($event.target).checked })" [attr.aria-label]="d.pfad + ' einlesen'" />
                 <span class="datei">{{ d.pfad }}
-                  <small>{{ z?.key ? (d.erkennung?.key === z?.key ? 'erkannt über ' + d.erkennung?.quelle : 'von Hand gewählt') : d.erkennung?.kandidaten?.length ? 'mehrere möglich – bitte wählen' : 'nicht erkannt – bitte wählen' }}</small>
+                  <small>{{ z?.key ? (d.erkennung?.key === z?.key ? (d.erkennung?.quelle === 'gemerkt' ? 'wie beim letzten Mal' : 'erkannt über ' + d.erkennung?.quelle) : 'von Hand gewählt') : d.erkennung?.kandidaten?.length ? 'mehrere möglich – bitte wählen' : 'nicht erkannt – bitte wählen' }}</small>
                 </span>
                 <select [attr.aria-label]="'Song für ' + d.pfad" (change)="setzen(d.pfad, { key: $any($event.target).value, an: !!$any($event.target).value })">
                   <option value="" [selected]="!z?.key">– Song wählen –</option>
@@ -157,6 +158,12 @@ export class FundeListe {
       this.meldung.set('');
       this.stand.set({ text: 'Einlesen …' });
       const noten = new Map([...this.ziele()].filter(([, z]) => z.an && z.key).map(([pfad, z]) => [pfad, { key: z.key, fassung: z.fassung }]));
+      // von Hand geänderte Zuordnungen für das nächste Mal merken
+      zuordnungenMerken(
+        this.noten()
+          .filter((d) => noten.has(d.pfad) && (d.erkennung?.key !== noten.get(d.pfad)!.key || d.erkennung?.fassung !== noten.get(d.pfad)!.fassung))
+          .map((d) => ({ name: d.name, ...noten.get(d.pfad)! })),
+      );
       const r = await uebernehmen(this.funde(), { dateien: this.gewaehlt(), noten, ersetzen: this.ersetzen() }, (s) => this.stand.set(s));
       this.meldung.set(r.text);
       this.ohne.set(r.ohne);

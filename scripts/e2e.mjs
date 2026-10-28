@@ -370,6 +370,10 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.keyboard.press('Escape');
   await p.go('/backstage/songs/setlists/');
   await until(async () => (await p.locator('app-songs-setlists article').first().innerText().catch(() => '')).includes('G · 120 bpm'), 'Setlist fehlt unter Songs → Setlists');
+  // Song-Historie in der Tabelle (Auftritt vorbei → „gespielt“, kommend → „geplant“)
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
+  await until(async () => /gespielt|geplant/.test(await p.locator('app-backstage-songs tbody tr .hist').first().innerText().catch(() => '')), 'Song-Historie fehlt');
   return p;
 });
 
@@ -445,6 +449,15 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await zeile.locator('app-noten-editor textarea').blur();
   await until(async () => (await zeile.locator('app-noten-editor .pruefung').innerText().catch(() => '')).includes('2 Akkorde'), 'Akkordblatt wird nicht erkannt');
   await until(async () => (await p.locator('app-backstage-songs tbody tr .noten .tag').allInnerTexts()).join(' ') === 'PDF Akkorde', 'Tabelle zeigt die Noten nicht an');
+  // Lückenliste: Iris hat Akkorde und die Fassung „songbook“ → taucht bei „ohne …“ nicht auf
+  await p.keyboard.press('Escape');
+  const zeigen = p.locator('app-backstage-songs select.zeigen');
+  for (const filter of ['akkorde', 'fassung:songbook', 'noten']) {
+    await zeigen.selectOption(filter);
+    await until(async () => (await p.locator('app-backstage-songs tbody').innerText()).includes('Kein Song gefunden'), `Filter „${filter}“ zeigt Iris trotzdem`);
+  }
+  await zeigen.selectOption('tonart');
+  await zeigen.selectOption('');
 
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -666,6 +679,10 @@ test('Backstage: Abgleich – Ordner auf dem Gerät (z. B. OneDrive) verbinden, 
   await funde.locator('button', { hasText: 'Einlesen' }).click();
   await until(async () => (await funde.locator('.meldung').innerText().catch(() => '')).includes('1 Backstage-Eintrag'), 'Einlesen der gewählten Dateien klappt nicht');
   expect((await funde.locator('.meldung').innerText()).includes('3 PDFs'), 'Nicht alle PDFs eingelesen: ' + (await funde.locator('.meldung').innerText()));
+  // von Hand Gewähltes ist beim nächsten Mal gemerkt
+  await q.locator('app-backstage-ordner input.dateien').setInputFiles([{ name: 'Scan 0042.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.from('3')]) }]);
+  await until(async () => (await zeile('Scan 0042').innerText().catch(() => '')).includes('wie beim letzten Mal'), 'Zuordnung von Hand wird nicht gemerkt');
+  expect((await zeile('Scan 0042').locator('select').inputValue()) === 'Hey Jude|The Beatles' && (await zeile('Scan 0042').locator('input.fassung').inputValue()) === 'Chor', 'Gemerkte Zuordnung falsch');
   for (const x of [p, q]) expect(!x.errors.length, 'Fehler auf der Seite: ' + x.errors.join(' | '));
   return q;
 });
