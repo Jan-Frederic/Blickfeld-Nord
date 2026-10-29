@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-20",
+  "updated": "2026-10-29",
   "tracks": [
     {
       "title": "1/2 Lovesong",
@@ -196,6 +196,13 @@
       "year": 2009,
       "duration": 331,
       "url": "https://open.spotify.com/track/2U2ByqoO82fnayaPzO4x2d"
+    },
+    {
+      "title": "Last Christmas",
+      "artist": "Wham!",
+      "year": 1984,
+      "duration": 263,
+      "url": "https://open.spotify.com/track/2FRnf9qhLbvw8fu4IBXx78"
     },
     {
       "title": "Lemon Tree",
