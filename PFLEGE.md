@@ -249,7 +249,10 @@ Wie OneSync: Ein **OneDrive-Ordner** wird mit einem **lokalen Ordner** abgeglich
 automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (die App-Registrierung ist erledigt, siehe
 „OneDrive einrichten“):
 
-1. **Microsoft-Konto:** **Mit Microsoft anmelden** (die App-ID ist fest eingetragen).
+1. **Microsoft-Konto:** **Mit Microsoft anmelden** (die App-ID ist fest eingetragen). Die Anmeldung bleibt auf dem
+   Gerät, auch wenn die App beendet wird. Microsoft erneuert sie bei Browser-Apps spätestens nach 24 Stunden – das
+   geht still im Hintergrund, solange man bei Microsoft angemeldet ist („Angemeldet bleiben“ beim Login); sonst
+   fragt „Jetzt synchronisieren“ einmal kurz nach.
 2. **OneDrive-Ordner:** durchklicken, ggf. **Neuer Ordner**, **Diesen Ordner nehmen**. Ganz oben stehen auch Ordner,
    die jemand mit dir **geteilt** hat (Symbol mit zwei Personen, „geteilt“) – z. B. der gemeinsame Band-Ordner „Sync“
    mit `Backstage`, `ProChords` und `Sheets`. So gleichen alle drei denselben Ordner ab, egal wem er gehört.
@@ -269,7 +272,8 @@ eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeu
 („2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**).
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
 **Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro) und **Stand sichern**: legt die
-Backstage-Sicherung (wahlweise mit Notenblättern) in den Unterordner `Backstage` des Sync-Ordners und gleicht gleich ab.
+Backstage-Sicherung und die Notenblätter (Notenpaket mit PDFs, Akkordblättern und Markierungen; ein älteres Notenpaket
+wird ersetzt) in den Unterordner `Backstage` des Sync-Ordners und gleicht gleich ab.
 
 Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
 

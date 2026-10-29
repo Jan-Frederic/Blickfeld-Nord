@@ -34,7 +34,6 @@ import { FundeListe } from './funde-liste';
           <button type="button" (click)="dateienZeigen()" [disabled]="sync.laeuft()"><mat-icon>folder_open</mat-icon> Lokale Dateien</button>
           <button type="button" (click)="einlesen()" [disabled]="sync.laeuft()"><mat-icon>download</mat-icon> Synchronisierte Dateien einlesen</button>
           <button type="button" (click)="sichern()" [disabled]="sync.laeuft()"><mat-icon>cloud_upload</mat-icon> Stand sichern</button>
-          <label class="check"><input type="checkbox" [checked]="mitNoten()" (change)="mitNoten.set($any($event.target).checked)" /> mit Notenblättern</label>
         </div>
         @if (sync.stand(); as s) { <app-fortschritt [stand]="s" /> }
         @if (sync.offen().length) {
@@ -84,7 +83,6 @@ export class SyncStatus {
   protected readonly dateien = signal<SyncDatei[] | null>(null);
   protected readonly funde = signal<Fund[] | null>(null);
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
-  protected readonly mitNoten = signal(false);
 
   constructor() {
     this.sync.automatisch();
@@ -143,22 +141,30 @@ export class SyncStatus {
     }
   }
 
-  // Stand sichern: Backstage-Sicherung (und wahlweise das Notenpaket) in den Unterordner „Backstage“ des lokalen
-  // Sync-Ordners legen, dann gleich abgleichen – so landet beides in OneDrive
+  // Stand sichern: Backstage-Sicherung und Notenpaket (Noten, Akkordblätter, Markierungen) in den Unterordner
+  // „Backstage“ des lokalen Sync-Ordners legen, dann gleich abgleichen – so landet beides in OneDrive.
+  // Ältere Notenpakete werden dabei ersetzt (sie sind groß); Backstage-Sicherungen bleiben als Verlauf.
   protected async sichern(): Promise<void> {
     try {
       const o = await this.lokal(true);
       const b = backstageDatei();
-      if (this.mitNoten()) this.sync.stand.set({ text: 'Notenblätter werden zusammengestellt …' });
-      const n = this.mitNoten() ? await notenExportieren() : null;
-      if (!b.anzahl && !n) {
+      this.sync.stand.set({ text: 'Notenblätter werden zusammengestellt …' });
+      const n = await notenExportieren();
+      const mitNoten = !!n;
+      if (!b.anzahl && !mitNoten) {
         this.meldung.set({ text: 'Noch nichts gespeichert, was sich sichern ließe.', fehler: true });
+        this.sync.stand.set(null);
         return;
       }
       if (b.anzahl) await o.schreiben(`Backstage/${b.name}`, new Blob([b.text], { type: 'application/json' }));
-      if (n) await o.schreiben(`Backstage/${n.name}`, n);
+      if (n) {
+        for (const alt of await o.liste()) {
+          if (/^Backstage\/blickfeld-nord-noten-.*\.json$/.test(alt.pfad) && alt.pfad !== `Backstage/${n.name}`) await o.loeschen(alt.pfad);
+        }
+        await o.schreiben(`Backstage/${n.name}`, n);
+      }
       gesichert();
-      this.meldung.set({ text: `In „Backstage“ gesichert${n ? ' (mit Notenblättern)' : ''} – wird jetzt mit OneDrive abgeglichen.` });
+      this.meldung.set({ text: `In „Backstage“ gesichert${mitNoten ? ' (mit Notenblättern)' : ''} – wird jetzt mit OneDrive abgeglichen.` });
       this.sync.stand.set(null);
       await this.sync.jetzt();
     } catch (err) {

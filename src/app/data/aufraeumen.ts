@@ -135,6 +135,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-gesichert': 'Letzte Sicherung',
   'bn-chunk-reload': 'Neuladen nach Update',
   'bn-onedrive-client': 'OneDrive: App-ID',
+  'bn-onedrive-konto': 'OneDrive: zuletzt angemeldetes Konto',
   'bn-sync-einstellungen': 'Synchronisation: Einstellungen',
   'bn-sync-letzter': 'Synchronisation: letzter Abgleich',
   'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',

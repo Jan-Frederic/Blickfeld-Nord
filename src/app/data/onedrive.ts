@@ -17,13 +17,32 @@ function msal(): Promise<IPublicClientApplication> {
   // neue Client-ID (in den Einstellungen geändert) → neu anlegen
   if (appFuer !== clientId()) app = undefined;
   appFuer = clientId();
-  app ??= import('@azure/msal-browser').then(({ createStandardPublicClientApplication }) =>
-    createStandardPublicClientApplication({
-      auth: { clientId: appFuer, authority: `https://login.microsoftonline.com/${ONEDRIVE.tenant}`, redirectUri: `${location.origin}/auth/` },
-      cache: { cacheLocation: 'localStorage' },
-    }),
-  );
+  app ??= import('@azure/msal-browser')
+    .then(({ createStandardPublicClientApplication }) =>
+      createStandardPublicClientApplication({
+        auth: { clientId: appFuer, authority: `https://login.microsoftonline.com/${ONEDRIVE.tenant}`, redirectUri: `${location.origin}/auth/` },
+        cache: { cacheLocation: 'localStorage' },
+      }),
+    )
+    .then((m) => {
+      anmeldungBehalten();
+      return m;
+    });
   return app;
+}
+
+// MSAL verschlüsselt die gespeicherte Anmeldung mit einem Schlüssel in einem Sitzungs-Cookie – endet die
+// Browser-Sitzung (App beendet), ist der Schlüssel weg und man müsste sich neu anmelden. Den Cookie machen wir
+// dauerhaft (400 Tage, mehr erlauben Browser nicht), damit die Anmeldung auf dem Gerät bleibt.
+const SCHLUESSEL_COOKIE = 'msal.cache.encryption';
+function anmeldungBehalten(): void {
+  const name = encodeURIComponent(SCHLUESSEL_COOKIE);
+  const wert = document.cookie
+    .split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(name + '='))
+    ?.slice(name.length + 1);
+  if (wert) document.cookie = `${name}=${wert};path=/;max-age=${400 * 86400};SameSite=None;Secure`;
 }
 
 /** schon verbundenes Konto (ohne Netz, aus dem Speicher von MSAL) */
@@ -42,15 +61,35 @@ export async function oneDriveAnmelden(still = false): Promise<AccountInfo | nul
   const vorhanden = await oneDriveKonto();
   if (vorhanden) return vorhanden;
   try {
-    const r = await m.ssoSilent({ scopes: SCOPES });
+    // zuletzt angemeldetes Konto vorgeben – dann klappt das stille Anmelden zuverlässiger
+    const r = await m.ssoSilent({ scopes: SCOPES, loginHint: letztesKonto() });
     m.setActiveAccount(r.account);
+    kontoMerken(r.account.username);
     return r.account;
   } catch {
     if (still) return null;
   }
   const r = await m.loginPopup({ scopes: SCOPES, prompt: 'select_account' });
   m.setActiveAccount(r.account);
+  kontoMerken(r.account.username);
   return r.account;
+}
+
+const KONTO_KEY = 'bn-onedrive-konto';
+function letztesKonto(): string | undefined {
+  try {
+    return localStorage.getItem(KONTO_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+function kontoMerken(name: string | null): void {
+  try {
+    if (name) localStorage.setItem(KONTO_KEY, name);
+    else localStorage.removeItem(KONTO_KEY);
+  } catch {
+    // ohne Speicher eben ohne Vorgabe
+  }
 }
 
 export async function oneDriveAbmelden(): Promise<void> {
@@ -58,6 +97,7 @@ export async function oneDriveAbmelden(): Promise<void> {
   const konto = await oneDriveKonto();
   // nur dieses Gerät/diese Seite vergessen – die Microsoft-Anmeldung im Browser bleibt
   await m.clearCache(konto ? { account: konto } : undefined);
+  kontoMerken(null);
 }
 
 let stillModus = false;
