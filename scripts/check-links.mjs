@@ -40,6 +40,11 @@ for (const file of htmlFiles(DIST)) {
   const urls = [];
   for (const [, , value] of html.matchAll(/\s(href|src)="([^"]*)"/g)) urls.push(value);
   for (const [, value] of html.matchAll(/\ssrcset="([^"]*)"/g)) urls.push(...value.split(',').map((s) => s.trim().split(/\s+/)[0]));
+  // Canonical, hreflang und og:url müssen die Endadresse mit „/“ nennen – GitHub Pages leitet /booking auf /booking/ um,
+  // eine Adresse ohne „/“ meldet Google als „Seite mit Weiterleitung“
+  for (const [, url] of html.matchAll(/<link rel="(?:canonical|alternate)"[^>]*href="(https:\/\/blickfeld-nord\.de[^"]*)"|og:url" content="(https:\/\/blickfeld-nord\.de[^"]*)"/g).map((m) => [m[0], m[1] ?? m[2]])) {
+    if (!/\/$/.test(url.split(/[?#]/)[0])) errors.push(`${page}: ${url} ohne „/“ am Ende (Weiterleitung)`);
+  }
   for (const raw of urls) {
     // Kalender-Abo (webcal://) zeigt auf eine Datei der eigenen Seite
     const url = raw.replace(/&amp;/g, '&').replace(/^webcal:\/\/blickfeld-nord\.de/, SITE);
@@ -99,6 +104,11 @@ if (checkExternal) {
   for (const w of warnings) console.log(`::warning::Externer Link: ${w}`);
   console.log(`${external.size} externe Links geprüft, ${warnings.length} Warnungen`);
   if (bericht) writeFileSync(bericht, warnings.sort().map((w) => `- ${w}`).join('\n'));
+}
+
+// Sitemap: nur Endadressen (mit „/“)
+for (const [, url] of readFileSync(join(DIST, 'sitemap.xml'), 'utf8').matchAll(/<(?:loc|xhtml:link[^>]*href=")>?([^<"]+)/g)) {
+  if (!url.endsWith('/')) errors.push(`sitemap.xml: ${url} ohne „/“ am Ende (Weiterleitung)`);
 }
 
 if (errors.length) {

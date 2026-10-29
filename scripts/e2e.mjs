@@ -13,7 +13,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
 const { base: BASE, close } = serve(DIST);
 const sitemap = readFileSync(join(DIST, 'sitemap.xml'), 'utf8');
-const concerts = [...sitemap.matchAll(/<loc>https:\/\/blickfeld-nord\.de(\/konzerte\/[^<]+)<\/loc>/g)].map((m) => m[1]);
+const concerts = [...sitemap.matchAll(/<loc>https:\/\/blickfeld-nord\.de(\/konzerte\/[^<]+)<\/loc>/g)].map((m) => m[1].replace(/\/$/, ""));
 
 // Mikrofon zum Testen der Proben-Mitschnitte: Chromium liefert einen Testton, ohne nachzufragen
 const browser = await chromium.launch({ args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });

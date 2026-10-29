@@ -65,7 +65,10 @@ const LANGS = ['de', 'en', 'nl'];
 const IN_LANGUAGE = { de: 'de-DE', en: 'en-GB', nl: 'nl-NL' };
 // Pfad einer Seite in einer Sprache: ('/booking', 'en') → '/en/booking', ('/', 'nl') → '/nl'
 const localPath = (path, lang) => (lang === 'de' ? path : path === '/' ? `/${lang}` : `/${lang}${path}`);
-const localUrl = (path, lang) => `${SITE}${localPath(path, lang)}`;
+// Adressen immer mit „/“ am Ende: GitHub Pages leitet /booking auf /booking/ um – Sitemap, Canonical und hreflang
+// müssen die Endadresse nennen, sonst meldet Google „Seite mit Weiterleitung“ bzw. „Alternative Seite …“
+const mitSlash = (p) => p.replace(/^([^?#]*?)\/?([?#].*)?$/, (_, pfad, rest = '') => `${pfad}/${rest}`);
+const localUrl = (path, lang) => `${SITE}${mitSlash(localPath(path, lang))}`;
 // Ausgabedatei einer Seite im Build
 const fileOf = (path, lang) => join(DIST, ...localPath(path, lang).split('/').filter(Boolean), 'index.html');
 // übersetzte Inhalte (wie src/app/content.ts) – ohne Übersetzung das deutsche Original

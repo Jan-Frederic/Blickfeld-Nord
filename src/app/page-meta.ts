@@ -44,7 +44,8 @@ export class PageMetaService {
     // Sprache ergibt sich aus der Adresse (/en/…, /nl/…)
     const lang = langOf('/' + page.path);
     const description = page.description ?? DEFAULT_DESCRIPTION[lang];
-    const url = `${SITE_URL}/${page.path}`;
+    // mit „/“ am Ende – GitHub Pages leitet /booking auf /booking/ um, Canonical und hreflang nennen die Endadresse
+    const url = `${SITE_URL}${mitSlash('/' + page.path)}`;
 
     this.title.setTitle(page.title);
     this.meta.updateTag({ name: 'description', content: description });
@@ -78,12 +79,15 @@ export class PageMetaService {
       const link = this.document.createElement('link');
       link.setAttribute('rel', 'alternate');
       link.setAttribute('hreflang', hreflang);
-      link.setAttribute('href', `${SITE_URL}${path === '/' ? '/' : path}`);
+      link.setAttribute('href', `${SITE_URL}${mitSlash(path)}`);
       after ? after.after(link) : this.document.head.appendChild(link);
       after = link;
     }
   }
 }
+
+/** Pfad mit „/“ am Ende (vor ?… bzw. #…), z. B. „/en/booking“ → „/en/booking/“ */
+export const mitSlash = (p: string) => p.replace(/^([^?#]*?)\/?([?#].*)?$/, (_, pfad: string, rest = '') => `${pfad}/${rest}`);
 
 // Liest title und data.description aus der Route
 @Injectable({ providedIn: 'root' })
