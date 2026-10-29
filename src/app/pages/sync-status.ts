@@ -7,7 +7,7 @@ import { notenExportieren } from '../data/noten';
 import { backstageDatei, gesichert } from './backstage-sync';
 import { SyncDatei } from '../data/sync';
 import { SyncService } from '../data/sync.service';
-import { syncEinstellungen } from '../data/sync-ordner';
+import { cloudName, syncEinstellungen } from '../data/sync-ordner';
 import { Fortschritt } from './fortschritt';
 import { FundeListe } from './funde-liste';
 
@@ -25,7 +25,7 @@ import { FundeListe } from './funde-liste';
         <p>Einen OneDrive-Ordner mit einem lokalen Ordner abgleichen – in beide Richtungen, automatisch.
           <a routerLink="/backstage/einstellungen">In den Einstellungen einrichten</a>.</p>
       } @else {
-        <p>OneDrive „{{ e.cloud }}“ ↔ {{ e.lokal === 'app' ? 'Speicher dieser App' : 'Ordner auf diesem Computer' }}
+        <p>OneDrive „{{ cloudName(e) }}“ ↔ {{ e.lokal === 'app' ? 'Speicher dieser App' : 'Ordner auf diesem Computer' }}
           · {{ e.richtung === 'beide' ? 'beide Richtungen' : e.richtung === 'runter' ? 'nur herunter' : 'nur hoch' }}{{ e.auto ? ' · automatisch' : '' }}
           · <a routerLink="/backstage/einstellungen">ändern</a></p>
         @if (sync.letzter(); as l) { <p class="letzter" [class.fehler]="l.fehler">Zuletzt {{ zeit(l.zeit) }}: {{ l.text }}</p> }
@@ -76,6 +76,7 @@ import { FundeListe } from './funde-liste';
   `,
 })
 export class SyncStatus {
+  protected readonly cloudName = cloudName;
   readonly geaendert = output<void>();
   protected readonly sync = inject(SyncService);
   protected readonly e = syncEinstellungen();

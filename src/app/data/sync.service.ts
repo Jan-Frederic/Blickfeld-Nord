@@ -9,6 +9,7 @@ import {
   appOrdner,
   offeneNoten,
   offeneNotenSetzen,
+  cloudGewaehlt,
   cloudOrdner,
   festplattenOrdner,
   letzterSync,
@@ -33,7 +34,7 @@ export class SyncService {
 
   /** eingerichtet: Microsoft-App, Cloud-Ordner gewählt */
   bereit(): boolean {
-    return oneDriveEingerichtet() && !!syncEinstellungen().cloud;
+    return oneDriveEingerichtet() && cloudGewaehlt(syncEinstellungen());
   }
 
   /** Noten-Dateien, die zugeordnet werden müssen (nach dem Abgleich nicht eindeutig erkannt) */
@@ -108,7 +109,7 @@ export class SyncService {
       }
       const zustand = await syncZustand();
       const lauf = () =>
-        synchronisieren(cloudOrdner(e.cloud), lokal, zustand, e, {
+        synchronisieren(cloudOrdner({ pfad: e.cloud, wurzel: e.wurzel }), lokal, zustand, e, {
           melden: (s) => this.stand.set(s),
           bestaetigen: (text) => !still && confirm(text),
           speichern: (z) => syncZustandSetzen(z).then(() => undefined),

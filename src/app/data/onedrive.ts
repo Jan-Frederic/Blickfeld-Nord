@@ -5,7 +5,8 @@ import { ONEDRIVE, clientId } from './onedrive-config';
 // Ist man im Browser schon bei Microsoft angemeldet (Windows/Edge mit Firmenkonto, Office im Browser …), klappt
 // das ohne Eingabe („Single Sign-On“, ssoSilent); sonst einmal im Popup. Die Bibliothek wird erst beim ersten
 // Verbinden geladen. Antwortseite für Popup und stilles Anmelden: /auth/ (scripts/auth-seite.mjs).
-const SCOPES = ['User.Read', 'Files.ReadWrite'];
+// Files.ReadWrite.All: auch Ordner, die jemand anderes mit einem teilt (z. B. der Band-Ordner „Sync“ eines Mitglieds)
+const SCOPES = ['User.Read', 'Files.ReadWrite.All'];
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 
 export const oneDriveEingerichtet = () => !!clientId();
@@ -95,7 +96,38 @@ interface GraphItem {
   lastModifiedDateTime?: string;
   folder?: unknown;
   file?: unknown;
+  /** Verknüpfung bzw. geteiltes Element: liegt eigentlich im OneDrive eines anderen */
+  remoteItem?: { id: string; name?: string; folder?: unknown; parentReference?: { driveId?: string } };
   '@microsoft.graph.downloadUrl'?: string;
+}
+
+/** geteilter Ordner (aus dem OneDrive eines anderen) als Ausgangspunkt */
+export interface CloudWurzel {
+  drive: string;
+  item: string;
+  name: string;
+}
+
+/** Ort im OneDrive: Pfad ab dem eigenen OneDrive bzw. ab einem geteilten Ordner */
+export interface CloudOrt {
+  pfad: string;
+  wurzel?: CloudWurzel;
+}
+
+/** Graph-Adresse eines Elements über seinen Pfad (ohne /children usw.) */
+export function adresse(ort: CloudOrt, ...teile: string[]): string {
+  const rel = [ort.pfad, ...teile].map(pfadKodieren).filter(Boolean).join('/');
+  const basis = ort.wurzel ? `/drives/${ort.wurzel.drive}/items/${ort.wurzel.item}` : '/me/drive/root';
+  return rel ? `${basis}:/${rel}:` : basis;
+}
+
+/** Graph-Adresse eines Elements über seine ID (drive: fremdes OneDrive) */
+const perId = (id: string, drive?: string) => (drive ? `/drives/${drive}/items/${id}` : `/me/drive/items/${id}`);
+
+/** geteilter Ordner hinter einer Verknüpfung bzw. einem „Mit mir geteilt“-Eintrag */
+function alsWurzel(i: GraphItem): CloudWurzel | undefined {
+  const r = i.remoteItem;
+  return r?.folder && r.parentReference?.driveId ? { drive: r.parentReference.driveId, item: r.id, name: r.name ?? i.name } : undefined;
 }
 
 // ---- Für die Synchronisation (data/sync.ts) ----------------------------------------------------------------
@@ -109,6 +141,8 @@ export interface CloudDatei {
   /** ändert sich nur, wenn sich der Inhalt ändert (cTag, sonst eTag) */
   version: string;
   downloadUrl?: string;
+  /** liegt in einem fremden OneDrive (geteilter Ordner) */
+  drive?: string;
 }
 
 interface GraphDatei extends GraphItem {
@@ -116,8 +150,9 @@ interface GraphDatei extends GraphItem {
   eTag?: string;
 }
 
-const alsCloudDatei = (i: GraphDatei, pfad: string): CloudDatei => ({
+const alsCloudDatei = (i: GraphDatei, pfad: string, drive?: string): CloudDatei => ({
   id: i.id,
+  drive,
   pfad,
   groesse: i.size ?? 0,
   geaendert: i.lastModifiedDateTime ?? '',
@@ -126,23 +161,24 @@ const alsCloudDatei = (i: GraphDatei, pfad: string): CloudDatei => ({
 });
 
 /** alle Dateien unter dem Ordner (rekursiv, ohne Tiefengrenze; höchstens 20 000) mit Versionsangabe */
-export async function cloudBaum(ordner: string, gefunden?: (anzahl: number) => void): Promise<CloudDatei[]> {
+export async function cloudBaum(ort: CloudOrt, gefunden?: (anzahl: number) => void): Promise<CloudDatei[]> {
   const out: CloudDatei[] = [];
-  const lesen = async (url: string, praefix: string): Promise<void> => {
+  const lesen = async (url: string, praefix: string, drive?: string): Promise<void> => {
     let naechste: string | undefined = url;
     while (naechste && out.length < 20000) {
       const seite = (await (await graph(naechste)).json()) as { value: GraphDatei[]; '@odata.nextLink'?: string };
       for (const i of seite.value) {
-        if (i.folder) await lesen(`/me/drive/items/${i.id}/children?$top=500`, `${praefix}${i.name}/`);
-        else if (i.file) out.push(alsCloudDatei(i, praefix + i.name));
+        const w = alsWurzel(i);
+        if (w) await lesen(`${perId(w.item, w.drive)}/children?$top=500`, `${praefix}${i.name}/`, w.drive);
+        else if (i.folder) await lesen(`${perId(i.id, drive)}/children?$top=500`, `${praefix}${i.name}/`, drive);
+        else if (i.file) out.push(alsCloudDatei(i, praefix + i.name, drive));
       }
       gefunden?.(out.length);
       naechste = seite['@odata.nextLink'];
     }
   };
-  const basis = pfadKodieren(ordner);
   try {
-    await lesen(basis ? `/me/drive/root:/${basis}:/children?$top=500` : '/me/drive/root/children?$top=500', '');
+    await lesen(`${adresse(ort)}/children?$top=500`, '', ort.wurzel?.drive);
   } catch (e) {
     // Ordner gibt es (noch) nicht → leer; er entsteht beim ersten Hochladen
     if ((e as Error).message !== 'nicht gefunden') throw e;
@@ -156,18 +192,18 @@ export async function cloudLaden(d: CloudDatei): Promise<Blob> {
     const res = await fetch(d.downloadUrl);
     if (res.ok) return res.blob();
   }
-  return (await graph(`/me/drive/items/${d.id}/content`)).blob();
+  return (await graph(`${perId(d.id, d.drive)}/content`)).blob();
 }
 
 /** Datei hochladen (Ordner entstehen automatisch); bis 250 MB, darüber in Teilen */
-export async function cloudSchreiben(ordner: string, pfad: string, inhalt: Blob): Promise<CloudDatei> {
-  const ziel = [pfadKodieren(ordner), pfadKodieren(pfad)].filter(Boolean).join('/');
+export async function cloudSchreiben(ort: CloudOrt, pfad: string, inhalt: Blob): Promise<CloudDatei> {
+  const ziel = adresse(ort, pfad);
   let item: GraphDatei;
   if (inhalt.size <= 4e6) {
-    item = (await (await graph(`/me/drive/root:/${ziel}:/content`, { method: 'PUT', body: inhalt, headers: { 'Content-Type': 'application/octet-stream' } })).json()) as GraphDatei;
+    item = (await (await graph(`${ziel}/content`, { method: 'PUT', body: inhalt, headers: { 'Content-Type': 'application/octet-stream' } })).json()) as GraphDatei;
   } else {
     const sitzung = (await (
-      await graph(`/me/drive/root:/${ziel}:/createUploadSession`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'replace' } }) })
+      await graph(`${ziel}/createUploadSession`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'replace' } }) })
     ).json()) as { uploadUrl: string };
     const STUECK = 320 * 1024 * 30; // ~9,8 MB, Vielfaches von 320 KiB
     let res: Response | undefined;
@@ -178,26 +214,42 @@ export async function cloudSchreiben(ordner: string, pfad: string, inhalt: Blob)
     }
     item = (await res!.json()) as GraphDatei;
   }
-  return alsCloudDatei(item, pfad);
+  return alsCloudDatei(item, pfad, ort.wurzel?.drive);
 }
 
 /** Datei löschen (landet im Papierkorb von OneDrive) */
-export async function cloudLoeschen(id: string): Promise<void> {
-  const res = await fetch(`${GRAPH}/me/drive/items/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${await token()}` } });
+export async function cloudLoeschen(id: string, drive?: string): Promise<void> {
+  const res = await fetch(GRAPH + perId(id, drive), { method: 'DELETE', headers: { Authorization: `Bearer ${await token()}` } });
   if (!res.ok && res.status !== 404) throw new Error(`Löschen fehlgeschlagen (${res.status})`);
 }
 
-/** Unterordner eines Ordners (für die Auswahl in den Einstellungen) */
-export async function cloudUnterordner(ordner: string): Promise<string[]> {
-  const basis = pfadKodieren(ordner);
-  const r = (await (await graph(basis ? `/me/drive/root:/${basis}:/children?$top=500` : '/me/drive/root/children?$top=500')).json()) as { value: GraphItem[] };
-  return r.value.filter((i) => i.folder).map((i) => i.name).sort((a, b) => a.localeCompare(b, 'de'));
+export interface CloudEintrag {
+  name: string;
+  /** geteilter Ordner (Verknüpfung oder „Mit mir geteilt“) – öffnet sich als neuer Ausgangspunkt */
+  wurzel?: CloudWurzel;
+}
+
+/** Unterordner eines Ordners (für die Auswahl in den Einstellungen); ganz oben auch die mit mir geteilten Ordner */
+export async function cloudUnterordner(ort: CloudOrt): Promise<CloudEintrag[]> {
+  const r = (await (await graph(`${adresse(ort)}/children?$top=500`)).json()) as { value: GraphItem[] };
+  const liste: CloudEintrag[] = r.value.flatMap((i) => (alsWurzel(i) ? [{ name: i.name, wurzel: alsWurzel(i) }] : i.folder ? [{ name: i.name }] : []));
+  if (!ort.pfad && !ort.wurzel) {
+    try {
+      const geteilt = (await (await graph('/me/drive/sharedWithMe')).json()) as { value: GraphItem[] };
+      for (const i of geteilt.value) {
+        const w = alsWurzel(i);
+        if (w && !liste.some((x) => x.wurzel?.item === w.item)) liste.push({ name: w.name, wurzel: w });
+      }
+    } catch {
+      // „Mit mir geteilt“ nicht verfügbar – Verknüpfungen in „Meine Dateien“ gehen trotzdem
+    }
+  }
+  return liste.sort((a, b) => a.name.localeCompare(b.name, 'de'));
 }
 
 /** neuen Ordner anlegen */
-export async function cloudOrdnerAnlegen(eltern: string, name: string): Promise<void> {
-  const basis = pfadKodieren(eltern);
-  await graph(basis ? `/me/drive/root:/${basis}:/children` : '/me/drive/root/children', {
+export async function cloudOrdnerAnlegen(eltern: CloudOrt, name: string): Promise<void> {
+  await graph(`${adresse(eltern)}/children`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, folder: {}, '@microsoft.graph.conflictBehavior': 'fail' }),

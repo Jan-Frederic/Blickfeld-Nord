@@ -1,4 +1,4 @@
-import { CloudDatei, cloudBaum, cloudLaden, cloudLoeschen, cloudSchreiben } from './onedrive';
+import { CloudDatei, CloudOrt, CloudWurzel, cloudBaum, cloudLaden, cloudLoeschen, cloudSchreiben } from './onedrive';
 import { OrdnerHandle } from './ordner';
 import { Richtung, SyncDatei, SyncOrdner, Zustand } from './sync';
 
@@ -9,8 +9,10 @@ import { Richtung, SyncDatei, SyncOrdner, Zustand } from './sync';
 // Einstellungen in localStorage („bn-sync-einstellungen“), Zustand, Dateien und Ordner-Handle in IndexedDB „bn-sync“.
 
 export interface SyncEinstellungen {
-  /** Pfad im OneDrive, z. B. „Blickfeld Nord/Noten“ */
+  /** Pfad im OneDrive, z. B. „Blickfeld Nord/Noten“ – bei einem geteilten Ordner ab diesem */
   cloud: string;
+  /** geteilter Ordner aus dem OneDrive eines anderen Band-Mitglieds */
+  wurzel?: CloudWurzel;
   lokal: 'ordner' | 'app';
   richtung: Richtung;
   loeschen: boolean;
@@ -120,26 +122,31 @@ export function syncSpeicherLoeschen(): Promise<void> {
 
 // ---- Seiten ----------------------------------------------------------------------------------------------
 
+/** OneDrive-Ordner gewählt (eigener Pfad oder geteilter Ordner)? */
+export const cloudGewaehlt = (e: Pick<SyncEinstellungen, 'cloud' | 'wurzel'>) => !!e.cloud || !!e.wurzel;
+/** „Blickfeld Nord/Noten“ bzw. „Sync (geteilt)/Noten“ */
+export const cloudName = (e: Pick<SyncEinstellungen, 'cloud' | 'wurzel'>) => [e.wurzel && `${e.wurzel.name} (geteilt)`, e.cloud].filter(Boolean).join('/');
+
 /** OneDrive-Ordner */
-export function cloudOrdner(pfad: string): SyncOrdner {
+export function cloudOrdner(ort: CloudOrt): SyncOrdner {
   const dateien = new Map<string, CloudDatei>();
   return {
-    name: pfad || 'OneDrive',
+    name: cloudName({ cloud: ort.pfad, wurzel: ort.wurzel }) || 'OneDrive',
     async liste(gefunden) {
-      const liste = await cloudBaum(pfad, gefunden);
+      const liste = await cloudBaum(ort, gefunden);
       dateien.clear();
       for (const d of liste) dateien.set(d.pfad, d);
       return liste;
     },
     lesen: (p) => cloudLaden(dateien.get(p)!),
     async schreiben(p, inhalt) {
-      const d = await cloudSchreiben(pfad, p, inhalt);
+      const d = await cloudSchreiben(ort, p, inhalt);
       dateien.set(p, d);
       return d;
     },
     async loeschen(p) {
       const d = dateien.get(p);
-      if (d) await cloudLoeschen(d.id);
+      if (d) await cloudLoeschen(d.id, d.drive);
       dateien.delete(p);
     },
   };

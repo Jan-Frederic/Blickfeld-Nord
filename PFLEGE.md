@@ -250,7 +250,9 @@ automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (die App-Re
 „OneDrive einrichten“):
 
 1. **Microsoft-Konto:** **Mit Microsoft anmelden** (die App-ID ist fest eingetragen).
-2. **OneDrive-Ordner:** durchklicken, ggf. **Neuer Ordner**, **Diesen Ordner nehmen**.
+2. **OneDrive-Ordner:** durchklicken, ggf. **Neuer Ordner**, **Diesen Ordner nehmen**. Ganz oben stehen auch Ordner,
+   die jemand mit dir **geteilt** hat (Symbol mit zwei Personen, „geteilt“) – z. B. der gemeinsame Band-Ordner „Sync“
+   mit `Backstage`, `ProChords` und `Sheets`. So gleichen alle drei denselben Ordner ab, egal wem er gehört.
 3. **Lokaler Ordner:**
    - **Speicher dieser App** – auf allen Geräten (iPhone, Android, Mac, PC), offline verfügbar. Die Dateien liegen im
      Browser (nicht in der Dateien-App sichtbar); unter Abgleich → **Lokale Dateien** lassen sie sich öffnen.
@@ -298,8 +300,9 @@ Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
    (mit privatem Microsoft-Konto braucht es dafür ein kostenloses Azure-Konto).
 2. Name: „Blickfeld Nord Backstage“. Unterstützte Kontotypen: **Nur persönliche Microsoft-Konten**.
 3. Umleitungs-URI: Plattform **Single-Page-Anwendung (SPA)**, Adresse `https://blickfeld-nord.de/auth/`.
-4. Unter **API-Berechtigungen** → Microsoft Graph → Delegiert: `Files.ReadWrite` hinzufügen (`User.Read` ist schon da).
-   Beim ersten Verbinden fragt Microsoft einmal, ob die App auf OneDrive zugreifen darf.
+4. Unter **API-Berechtigungen** → Microsoft Graph → Delegiert: `Files.ReadWrite.All` hinzufügen (`User.Read` ist schon
+   da). „.All“ ist nötig, damit auch **geteilte Ordner** gehen. Beim ersten Verbinden fragt Microsoft einmal, ob die App
+   auf OneDrive zugreifen darf.
 5. Die **Anwendungs-ID (Client-ID)** steht für alle Geräte in `src/app/data/onedrive-config.ts` bei `clientId`
    (erledigt). Sie ist kein Geheimnis. (`tenant: 'consumers'` = private Konten; für Firmenkonten wäre es `common`.)
 

@@ -1,10 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ONEDRIVE, clientId, clientIdSetzen } from '../data/onedrive-config';
-import { cloudOrdnerAnlegen, cloudUnterordner, oneDriveAbmelden, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto } from '../data/onedrive';
+import { CloudEintrag, CloudOrt, cloudOrdnerAnlegen, cloudUnterordner, oneDriveAbmelden, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto } from '../data/onedrive';
 import { ordnerVerbindbar } from '../data/ordner';
 import { SyncService } from '../data/sync.service';
-import { SyncEinstellungen, lokalerOrdnerHandle, lokalerOrdnerSetzen, syncEinstellungen, syncEinstellungenSetzen, syncZustandLoeschen } from '../data/sync-ordner';
+import { SyncEinstellungen, cloudGewaehlt, cloudName, lokalerOrdnerHandle, lokalerOrdnerSetzen, syncEinstellungen, syncEinstellungenSetzen, syncZustandLoeschen } from '../data/sync-ordner';
 
 // Backstage → Einstellungen → Synchronisation: Microsoft-Konto, OneDrive-Ordner (zum Durchklicken), lokaler Ordner
 // (Ordner auf dem Computer oder Speicher der App), Richtung, Löschungen, automatisch. Wechselt einer der Ordner,
@@ -34,24 +34,26 @@ import { SyncEinstellungen, lokalerOrdnerHandle, lokalerOrdnerSetzen, syncEinste
       }
 
       <h4>2. OneDrive-Ordner</h4>
-      <p class="pfad"><mat-icon>cloud</mat-icon> {{ e().cloud || 'noch keiner gewählt' }}</p>
+      <p class="pfad"><mat-icon>cloud</mat-icon> {{ cloudName(e()) || 'noch keiner gewählt' }}</p>
       @if (konto()) {
         @if (blaettern(); as b) {
           <div class="browser">
-            <p class="klein">OneDrive / {{ b.pfad || '' }}</p>
+            <p class="klein">OneDrive / {{ cloudName({ cloud: b.ort.pfad, wurzel: b.ort.wurzel }) }}</p>
             <div class="liste">
-              @if (b.pfad) { <button type="button" (click)="oeffnen(eltern(b.pfad))"><mat-icon>arrow_upward</mat-icon> eine Ebene hoch</button> }
-              @for (o of b.ordner; track o) { <button type="button" (click)="oeffnen(b.pfad ? b.pfad + '/' + o : o)"><mat-icon>folder</mat-icon> {{ o }}</button> }
+              @if (b.ort.pfad || b.ort.wurzel) { <button type="button" (click)="oeffnen(eltern(b.ort))"><mat-icon>arrow_upward</mat-icon> eine Ebene hoch</button> }
+              @for (o of b.ordner; track o.name + (o.wurzel?.item ?? '')) {
+                <button type="button" (click)="oeffnen(hinein(b.ort, o))"><mat-icon>{{ o.wurzel ? 'folder_shared' : 'folder' }}</mat-icon> {{ o.name }}@if (o.wurzel) { <small>geteilt</small> }</button>
+              }
               @if (!b.ordner.length) { <span class="klein">keine Unterordner</span> }
             </div>
             <div class="knoepfe">
-              <button type="button" class="primaer" [disabled]="!b.pfad" (click)="cloudWaehlen(b.pfad)"><mat-icon>check</mat-icon> Diesen Ordner nehmen</button>
-              <button type="button" (click)="neuerOrdner(b.pfad)"><mat-icon>create_new_folder</mat-icon> Neuer Ordner</button>
+              <button type="button" class="primaer" [disabled]="!b.ort.pfad && !b.ort.wurzel" (click)="cloudWaehlen(b.ort)"><mat-icon>check</mat-icon> Diesen Ordner nehmen</button>
+              <button type="button" (click)="neuerOrdner(b.ort)"><mat-icon>create_new_folder</mat-icon> Neuer Ordner</button>
               <button type="button" (click)="blaettern.set(null)">Abbrechen</button>
             </div>
           </div>
         } @else {
-          <button type="button" (click)="oeffnen(e().cloud)" [disabled]="laeuft()"><mat-icon>folder_open</mat-icon> OneDrive-Ordner wählen</button>
+          <button type="button" (click)="oeffnen({ pfad: e().cloud, wurzel: e().wurzel })" [disabled]="laeuft()"><mat-icon>folder_open</mat-icon> OneDrive-Ordner wählen</button>
         }
       }
 
@@ -120,10 +122,11 @@ export class SyncEinstellungenSeite {
   protected readonly konto = signal<string | null>(null);
   protected readonly e = signal(syncEinstellungen());
   protected readonly ordnerName = signal('');
-  protected readonly blaettern = signal<{ pfad: string; ordner: string[] } | null>(null);
+  protected readonly blaettern = signal<{ ort: CloudOrt; ordner: CloudEintrag[] } | null>(null);
+  protected readonly cloudName = cloudName;
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
-  protected readonly bereit = () => this.eingerichtet() && !!this.e().cloud && !!this.konto() && (this.e().lokal === 'app' || !!this.ordnerName());
+  protected readonly bereit = () => this.eingerichtet() && cloudGewaehlt(this.e()) && !!this.konto() && (this.e().lokal === 'app' || !!this.ordnerName());
 
   constructor() {
     this.kontoLaden();
@@ -141,8 +144,13 @@ export class SyncEinstellungenSeite {
     return new Date(iso).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
   }
 
-  protected eltern(pfad: string): string {
-    return pfad.split('/').slice(0, -1).join('/');
+  // eine Ebene hoch: im Pfad zurück, ganz oben in einem geteilten Ordner zurück zum eigenen OneDrive
+  protected eltern(ort: CloudOrt): CloudOrt {
+    return ort.pfad ? { pfad: ort.pfad.split('/').slice(0, -1).join('/'), wurzel: ort.wurzel } : { pfad: '' };
+  }
+
+  protected hinein(ort: CloudOrt, o: CloudEintrag): CloudOrt {
+    return o.wurzel ? { pfad: '', wurzel: o.wurzel } : { pfad: ort.pfad ? `${ort.pfad}/${o.name}` : o.name, wurzel: ort.wurzel };
   }
 
   private async tun(arbeit: () => Promise<void>): Promise<void> {
@@ -177,30 +185,30 @@ export class SyncEinstellungenSeite {
     });
   }
 
-  protected oeffnen(pfad: string): Promise<void> {
+  protected oeffnen(ort: CloudOrt): Promise<void> {
     return this.tun(async () => {
       try {
-        this.blaettern.set({ pfad, ordner: await cloudUnterordner(pfad) });
+        this.blaettern.set({ ort, ordner: await cloudUnterordner(ort) });
       } catch (err) {
-        // gewählter Ordner gibt es nicht mehr → oben anfangen
-        if ((err as Error).message !== 'nicht gefunden' || !pfad) throw err;
-        this.blaettern.set({ pfad: '', ordner: await cloudUnterordner('') });
+        // gewählter Ordner gibt es nicht mehr (oder ist nicht mehr geteilt) → oben anfangen
+        if ((err as Error).message !== 'nicht gefunden' || (!ort.pfad && !ort.wurzel)) throw err;
+        this.blaettern.set({ ort: { pfad: '' }, ordner: await cloudUnterordner({ pfad: '' }) });
       }
     });
   }
 
-  protected neuerOrdner(eltern: string): Promise<void> {
+  protected neuerOrdner(eltern: CloudOrt): Promise<void> {
     const name = prompt('Name des neuen Ordners')?.trim().replace(/[\\/:*?"<>|]/g, '');
     if (!name) return Promise.resolve();
     return this.tun(async () => {
       await cloudOrdnerAnlegen(eltern, name);
-      this.blaettern.set({ pfad: eltern ? `${eltern}/${name}` : name, ordner: [] });
+      this.blaettern.set({ ort: this.hinein(eltern, { name }), ordner: [] });
     });
   }
 
-  protected async cloudWaehlen(pfad: string): Promise<void> {
+  protected async cloudWaehlen(ort: CloudOrt): Promise<void> {
     this.blaettern.set(null);
-    await this.ordnerGeaendert({ cloud: pfad });
+    await this.ordnerGeaendert({ cloud: ort.pfad, wurzel: ort.wurzel });
   }
 
   protected async lokalArt(art: SyncEinstellungen['lokal']): Promise<void> {
