@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<title>Blickfeld Nord – Kompass</title>
+<g fill="none" stroke="#efece6">
+<circle cx="100" cy="100" r="94" stroke-width="2.5"/>
+<circle cx="100" cy="100" r="72" stroke-width="1" opacity=".7"/>
+<circle cx="100" cy="100" r="40" stroke-width="1" opacity=".5"/>
+<line x1="100.00" y1="8.00" x2="100.00" y2="20.00" stroke-width="1.6"/>
+<line x1="108.02" y1="8.35" x2="107.58" y2="13.33" stroke-width="0.7"/>
+<line x1="115.98" y1="9.40" x2="114.59" y2="17.28" stroke-width="1"/>
+<line x1="123.81" y1="11.13" x2="122.52" y2="15.96" stroke-width="0.7"/>
+<line x1="131.47" y1="13.55" x2="128.73" y2="21.07" stroke-width="1"/>
+<line x1="138.88" y1="16.62" x2="136.77" y2="21.15" stroke-width="0.7"/>
+<line x1="146.00" y1="20.33" x2="140.00" y2="30.72" stroke-width="1.6"/>
+<line x1="152.77" y1="24.64" x2="149.90" y2="28.73" stroke-width="0.7"/>
+<line x1="159.14" y1="29.52" x2="153.99" y2="35.65" stroke-width="1"/>
+<line x1="165.05" y1="34.95" x2="161.52" y2="38.48" stroke-width="0.7"/>
+<line x1="170.48" y1="40.86" x2="164.35" y2="46.01" stroke-width="1"/>
+<line x1="175.36" y1="47.23" x2="171.27" y2="50.10" stroke-width="0.7"/>
+<line x1="179.67" y1="54.00" x2="169.28" y2="60.00" stroke-width="1.6"/>
+<line x1="183.38" y1="61.12" x2="178.85" y2="63.23" stroke-width="0.7"/>
+<line x1="186.45" y1="68.53" x2="178.93" y2="71.27" stroke-width="1"/>
+<line x1="188.87" y1="76.19" x2="184.04" y2="77.48" stroke-width="0.7"/>
+<line x1="190.60" y1="84.02" x2="182.72" y2="85.41" stroke-width="1"/>
+<line x1="191.65" y1="91.98" x2="186.67" y2="92.42" stroke-width="0.7"/>
+<line x1="192.00" y1="100.00" x2="180.00" y2="100.00" stroke-width="1.6"/>
+<line x1="191.65" y1="108.02" x2="186.67" y2="107.58" stroke-width="0.7"/>
+<line x1="190.60" y1="115.98" x2="182.72" y2="114.59" stroke-width="1"/>
+<line x1="188.87" y1="123.81" x2="184.04" y2="122.52" stroke-width="0.7"/>
+<line x1="186.45" y1="131.47" x2="178.93" y2="128.73" stroke-width="1"/>
+<line x1="183.38" y1="138.88" x2="178.85" y2="136.77" stroke-width="0.7"/>
+<line x1="179.67" y1="146.00" x2="169.28" y2="140.00" stroke-width="1.6"/>
+<line x1="175.36" y1="152.77" x2="171.27" y2="149.90" stroke-width="0.7"/>
+<line x1="170.48" y1="159.14" x2="164.35" y2="153.99" stroke-width="1"/>
+<line x1="165.05" y1="165.05" x2="161.52" y2="161.52" stroke-width="0.7"/>
+<line x1="159.14" y1="170.48" x2="153.99" y2="164.35" stroke-width="1"/>
+<line x1="152.77" y1="175.36" x2="149.90" y2="171.27" stroke-width="0.7"/>
+<line x1="146.00" y1="179.67" x2="140.00" y2="169.28" stroke-width="1.6"/>
+<line x1="138.88" y1="183.38" x2="136.77" y2="178.85" stroke-width="0.7"/>
+<line x1="131.47" y1="186.45" x2="128.73" y2="178.93" stroke-width="1"/>
+<line x1="123.81" y1="188.87" x2="122.52" y2="184.04" stroke-width="0.7"/>
+<line x1="115.98" y1="190.60" x2="114.59" y2="182.72" stroke-width="1"/>
+<line x1="108.02" y1="191.65" x2="107.58" y2="186.67" stroke-width="0.7"/>
+<line x1="100.00" y1="192.00" x2="100.00" y2="180.00" stroke-width="1.6"/>
+<line x1="91.98" y1="191.65" x2="92.42" y2="186.67" stroke-width="0.7"/>
+<line x1="84.02" y1="190.60" x2="85.41" y2="182.72" stroke-width="1"/>
+<line x1="76.19" y1="188.87" x2="77.48" y2="184.04" stroke-width="0.7"/>
+<line x1="68.53" y1="186.45" x2="71.27" y2="178.93" stroke-width="1"/>
+<line x1="61.12" y1="183.38" x2="63.23" y2="178.85" stroke-width="0.7"/>
+<line x1="54.00" y1="179.67" x2="60.00" y2="169.28" stroke-width="1.6"/>
+<line x1="47.23" y1="175.36" x2="50.10" y2="171.27" stroke-width="0.7"/>
+<line x1="40.86" y1="170.48" x2="46.01" y2="164.35" stroke-width="1"/>
+<line x1="34.95" y1="165.05" x2="38.48" y2="161.52" stroke-width="0.7"/>
+<line x1="29.52" y1="159.14" x2="35.65" y2="153.99" stroke-width="1"/>
+<line x1="24.64" y1="152.77" x2="28.73" y2="149.90" stroke-width="0.7"/>
+<line x1="20.33" y1="146.00" x2="30.72" y2="140.00" stroke-width="1.6"/>
+<line x1="16.62" y1="138.88" x2="21.15" y2="136.77" stroke-width="0.7"/>
+<line x1="13.55" y1="131.47" x2="21.07" y2="128.73" stroke-width="1"/>
+<line x1="11.13" y1="123.81" x2="15.96" y2="122.52" stroke-width="0.7"/>
+<line x1="9.40" y1="115.98" x2="17.28" y2="114.59" stroke-width="1"/>
+<line x1="8.35" y1="108.02" x2="13.33" y2="107.58" stroke-width="0.7"/>
+<line x1="8.00" y1="100.00" x2="20.00" y2="100.00" stroke-width="1.6"/>
+<line x1="8.35" y1="91.98" x2="13.33" y2="92.42" stroke-width="0.7"/>
+<line x1="9.40" y1="84.02" x2="17.28" y2="85.41" stroke-width="1"/>
+<line x1="11.13" y1="76.19" x2="15.96" y2="77.48" stroke-width="0.7"/>
+<line x1="13.55" y1="68.53" x2="21.07" y2="71.27" stroke-width="1"/>
+<line x1="16.62" y1="61.12" x2="21.15" y2="63.23" stroke-width="0.7"/>
+<line x1="20.33" y1="54.00" x2="30.72" y2="60.00" stroke-width="1.6"/>
+<line x1="24.64" y1="47.23" x2="28.73" y2="50.10" stroke-width="0.7"/>
+<line x1="29.52" y1="40.86" x2="35.65" y2="46.01" stroke-width="1"/>
+<line x1="34.95" y1="34.95" x2="38.48" y2="38.48" stroke-width="0.7"/>
+<line x1="40.86" y1="29.52" x2="46.01" y2="35.65" stroke-width="1"/>
+<line x1="47.23" y1="24.64" x2="50.10" y2="28.73" stroke-width="0.7"/>
+<line x1="54.00" y1="20.33" x2="60.00" y2="30.72" stroke-width="1.6"/>
+<line x1="61.12" y1="16.62" x2="63.23" y2="21.15" stroke-width="0.7"/>
+<line x1="68.53" y1="13.55" x2="71.27" y2="21.07" stroke-width="1"/>
+<line x1="76.19" y1="11.13" x2="77.48" y2="15.96" stroke-width="0.7"/>
+<line x1="84.02" y1="9.40" x2="85.41" y2="17.28" stroke-width="1"/>
+<line x1="91.98" y1="8.35" x2="92.42" y2="13.33" stroke-width="0.7"/>
+<line x1="100" y1="22" x2="100" y2="178" stroke-width=".6" opacity=".45"/>
+<line x1="22" y1="100" x2="178" y2="100" stroke-width=".6" opacity=".45"/>
+</g>
+<g fill="#efece6" font-family="Inter, Arial, sans-serif" text-anchor="middle" dominant-baseline="central">
+<text x="131.00" y="46.31" font-size="8" opacity=".85" transform="rotate(30 131.00 46.31)">030</text>
+<text x="153.69" y="69.00" font-size="8" opacity=".85" transform="rotate(60 153.69 69.00)">060</text>
+<text x="153.69" y="131.00" font-size="8" opacity=".85" transform="rotate(120 153.69 131.00)">120</text>
+<text x="131.00" y="153.69" font-size="8" opacity=".85" transform="rotate(150 131.00 153.69)">150</text>
+<text x="69.00" y="153.69" font-size="8" opacity=".85" transform="rotate(210 69.00 153.69)">210</text>
+<text x="46.31" y="131.00" font-size="8" opacity=".85" transform="rotate(240 46.31 131.00)">240</text>
+<text x="46.31" y="69.00" font-size="8" opacity=".85" transform="rotate(300 46.31 69.00)">300</text>
+<text x="69.00" y="46.31" font-size="8" opacity=".85" transform="rotate(330 69.00 46.31)">330</text>
+<text x="100.00" y="40.00" font-size="15" font-weight="700" fill="#e8a46a">N</text>
+<text x="160.00" y="100.00" font-size="15" font-weight="700">O</text>
+<text x="100.00" y="160.00" font-size="15" font-weight="700">S</text>
+<text x="40.00" y="100.00" font-size="15" font-weight="700">W</text>
+</g>
+<g fill="#efece6" opacity=".35">
+<polygon points="126.87,73.13 96.46,96.46 103.54,103.54"/>
+<polygon points="126.87,126.87 103.54,96.46 96.46,103.54"/>
+<polygon points="73.13,126.87 103.54,103.54 96.46,96.46"/>
+<polygon points="73.13,73.13 96.46,103.54 103.54,96.46"/>
+</g>
+<polygon points="100,52 108,100 92,100" fill="#e8a46a"/>
+<polygon points="100,148 108,100 92,100" fill="#9a9790"/>
+<circle cx="100" cy="100" r="5" fill="#15171c" stroke="#ffffff" stroke-width="2"/>
+</svg>

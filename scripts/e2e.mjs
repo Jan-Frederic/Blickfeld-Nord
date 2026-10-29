@@ -652,7 +652,9 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   const daten = p.locator('app-backstage-daten');
   // Sync-Status: gespiegelte Einträge warten auf den Abgleich, Gerätedaten bleiben lokal; Kompass unten rechts
   await until(async () => /⟳ \d+ warten/.test(await daten.locator('.status').innerText().catch(() => '')), 'Sync-Status fehlt im Abgleich');
+  // Sync-Kompass: vorhanden, aber ausgeblendet, solange nicht abgeglichen wird
   await until(async () => (await p.locator('app-sync-kompass a.kompass').count()) === 1, 'Sync-Kompass fehlt');
+  expect(!(await p.locator('app-sync-kompass a.kompass').isVisible()), 'Sync-Kompass sichtbar, obwohl nicht abgeglichen wird');
   await daten.locator('input[type=search]').fill('vor ort');
   await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');
   await daten.locator('input[type=search]').fill('Schriftgröße');

@@ -276,9 +276,8 @@ jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern 
   Zuordnungen, Wackelt-Liste, Aufgaben-Häkchen, Filter, Sprache.
 - Nur auf dem Gerät bleiben die Synchronisation selbst (Ordner, Anmeldung), Mitschnitte und die Seiten für unterwegs.
 
-Jede Änderung wird nach wenigen Sekunden abgeglichen. **Unten rechts** zeigt der Blickfeld-Nord-Kompass den Stand
-(nur online): er dreht sich beim Abgleichen, ein orangefarbener Punkt heißt „Änderungen warten“, ein roter „Fehler beim
-letzten Abgleich“ – antippen öffnet den Abgleich. Dort steht bei jedem Eintrag ☁ synchron, ⟳ wartet oder
+Jede Änderung wird nach wenigen Sekunden abgeglichen. Solange abgeglichen wird, blendet sich **unten rechts** ein
+Kompass ein und dreht sich (nur online); danach blendet er sich wieder aus – antippen öffnet den Abgleich. Dort steht bei jedem Eintrag ☁ synchron, ⟳ wartet oder
 ▣ nur auf diesem Gerät (persönliche Einstellungen mit „persönlich“), oben die Summe und der letzte Abgleich.
 
 Wie OneSync: Ein **OneDrive-Ordner** wird mit einem **lokalen Ordner** abgeglichen – in beide Richtungen, auf Wunsch
