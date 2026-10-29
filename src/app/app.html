@@ -74,6 +74,13 @@
   <router-outlet />
 </main>
 
+<!-- Sync-Status unten rechts (nur Backstage, erst bei Bedarf geladen) -->
+@if (imBackstage()) {
+  @defer {
+    <app-sync-kompass />
+  }
+}
+
 <!-- Vorschlag einer anderen Sprache laut Browser-Einstellung (nur einmal) -->
 <app-sprach-hinweis />
 

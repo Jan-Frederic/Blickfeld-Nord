@@ -634,6 +634,13 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
 test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträge aufräumen; Backup ersetzt alles; alles löschen', async () => {
   const p = await page();
   await p.go('/backstage/abgleich/');
+  // ohne Berechtigung „Daten löschen“ keine Mülltonnen
+  expect(!(await p.locator('app-backstage-daten button[aria-label$="löschen"]').count()) && !(await p.locator('app-backstage-aufraeumen').count()), 'Mülltonnen ohne Berechtigung sichtbar');
+  // Berechtigung: angemeldet und Besitzer des Sync-Ordners (eigener Ordner, nicht geteilt)
+  await p.evaluate(() => {
+    localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
+    localStorage.setItem('bn-onedrive-konto', 'test@example.com');
+  });
   // ein vergangener Auftritt (aus der Sitemap), ein Auftritt, den es nicht gibt, und eine Einstellung
   const alt = concerts[0].split('/')[2];
   await p.evaluate((alt) => {
@@ -643,6 +650,9 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   await p.reload({ waitUntil: 'networkidle' });
   // Daten auf diesem Gerät: Einträge verständlich benannt, ändern im Editor, Auswahl löschen
   const daten = p.locator('app-backstage-daten');
+  // Sync-Status: gespiegelte Einträge warten auf den Abgleich, Gerätedaten bleiben lokal; Kompass unten rechts
+  await until(async () => /⟳ \d+ warten/.test(await daten.locator('.status').innerText().catch(() => '')), 'Sync-Status fehlt im Abgleich');
+  await until(async () => (await p.locator('app-sync-kompass a.kompass').count()) === 1, 'Sync-Kompass fehlt');
   await daten.locator('input[type=search]').fill('vor ort');
   await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');
   await daten.locator('input[type=search]').fill('Schriftgröße');

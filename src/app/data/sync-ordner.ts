@@ -1,6 +1,7 @@
 import { CloudDatei, CloudOrt, CloudWurzel, cloudBaum, cloudLaden, cloudLoeschen, cloudSchreiben } from './onedrive';
 import { OrdnerHandle } from './ordner';
 import { Richtung, SyncDatei, SyncOrdner, Zustand } from './sync';
+import type { SpiegelZustand } from './spiegel';
 
 // Die beiden Seiten der Synchronisation (data/sync.ts) und was dazu gemerkt wird:
 // - OneDrive-Ordner über Microsoft Graph
@@ -108,7 +109,15 @@ async function idb<T>(store: string, modus: IDBTransactionMode, tun: (s: IDBObje
 export const syncZustand = async (): Promise<Zustand> => (await idb<Zustand | undefined>('meta', 'readonly', (s) => s.get('zustand'))) ?? {};
 export const syncZustandSetzen = (z: Zustand) => idb('meta', 'readwrite', (s) => s.put(z, 'zustand'));
 /** Zustand vergessen – nach dem Wechsel eines Ordners beginnt der Abgleich neu (Gleiches wird erkannt) */
-export const syncZustandLoeschen = () => idb('meta', 'readwrite', (s) => s.delete('zustand'));
+export const syncZustandLoeschen = async () => {
+  await idb('meta', 'readwrite', (s) => s.delete('zustand'));
+  // gespiegelte Einstellungen beim nächsten Abgleich neu in den (anderen) Ordner schreiben
+  await idb('meta', 'readwrite', (s) => s.delete('spiegel'));
+};
+
+/** Stand der gespiegelten Einstellungen (data/spiegel.ts) */
+export const spiegelZustandLaden = async (): Promise<SpiegelZustand> => (await idb<SpiegelZustand | undefined>('meta', 'readonly', (s) => s.get('spiegel')).catch(() => undefined)) ?? {};
+export const spiegelZustandSetzen = (z: SpiegelZustand) => idb('meta', 'readwrite', (s) => s.put(z, 'spiegel'));
 
 export const lokalerOrdnerHandle = () => idb<OrdnerHandle | undefined>('meta', 'readonly', (s) => s.get('ordner')).catch(() => undefined);
 export const lokalerOrdnerSetzen = (h: OrdnerHandle | null) => idb('meta', 'readwrite', (s) => (h ? s.put(h, 'ordner') : s.delete('ordner')));

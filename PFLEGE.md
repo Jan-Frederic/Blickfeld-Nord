@@ -218,7 +218,12 @@ Auftritte) und ob er in einer kommenden Setlist steht; sortierbar nach „oft“
 
 ## Gerät aufräumen (Abgleich)
 
-Backstage-Daten liegen nur im Browser des jeweiligen Geräts. Unter **Abgleich → Daten auf diesem Gerät** steht jeder
+**Löschen nur mit Berechtigung „Daten löschen“:** Mülltonnen und Aufräumen erscheinen nur, wer bei Microsoft angemeldet
+ist und den OneDrive-Ordner der Synchronisation **besitzt** (nicht nur geteilt bekommen hat) – denn Löschen wird
+mitsynchronisiert und betrifft die ganze Band. Ob man die Berechtigung hat, steht unter Einstellungen → Synchronisation.
+(Eine App-Rolle in der App-Registrierung geht dafür nicht: Microsoft vergibt App-Rollen nur an Firmen-/Schulkonten.)
+
+Backstage-Daten liegen im Browser des jeweiligen Geräts – mit Synchronisation zusätzlich in OneDrive (siehe unten). Unter **Abgleich → Daten auf diesem Gerät** steht jeder
 einzelne Eintrag, nach Bereichen gruppiert und verständlich benannt (z. B. „Setlist · 04.12.2026 · Weihnachtsmarkt“),
 mit Inhalt („12 Songs, 1 Pause“) und Größe – dazu alle Noten (Songs mit Noten, PDFs und wo sie genutzt werden),
 Proben-Mitschnitte und Seiten für unterwegs:
@@ -260,6 +265,21 @@ gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup war; nach 30 Tagen
 Einzelne Auftritte oder Proben an die Band schicken: auf deren Seite **Diesen Termin an die Band**.
 
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
+
+**Alle Einstellungen und Backstage-Daten wandern mit:** Ist man angemeldet und die Synchronisation eingerichtet, wird
+jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:
+
+- `Daten/` – für die ganze Band: Setlists (samt Notizen und Vorlagen), Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
+  Nachbereitungen, Songs-Entwurf, Prüf-Häkchen.
+- `Einstellungen/<Name>/` – je Person: Bühnen-Modus (Schriftgröße, Klick-Ton, Pedal-Tasten, Halbseite), gewählte
+  Noten-Fassung (PDF bzw. Akkorde), volle Breite, von Hand verschobene Akkorde und Mitscroll-Tempo je Song, gemerkte
+  Zuordnungen, Wackelt-Liste, Aufgaben-Häkchen, Filter, Sprache.
+- Nur auf dem Gerät bleiben die Synchronisation selbst (Ordner, Anmeldung), Mitschnitte und die Seiten für unterwegs.
+
+Jede Änderung wird nach wenigen Sekunden abgeglichen. **Unten rechts** zeigt der Blickfeld-Nord-Kompass den Stand
+(nur online): er dreht sich beim Abgleichen, ein orangefarbener Punkt heißt „Änderungen warten“, ein roter „Fehler beim
+letzten Abgleich“ – antippen öffnet den Abgleich. Dort steht bei jedem Eintrag ☁ synchron, ⟳ wartet oder
+▣ nur auf diesem Gerät (persönliche Einstellungen mit „persönlich“), oben die Summe und der letzte Abgleich.
 
 Wie OneSync: Ein **OneDrive-Ordner** wird mit einem **lokalen Ordner** abgeglichen – in beide Richtungen, auf Wunsch
 automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (die App-Registrierung ist erledigt, siehe

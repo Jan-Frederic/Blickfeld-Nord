@@ -7,6 +7,8 @@ import { NotenDateiInfo, SongNoten, alleSongNoten, notenAllesLoeschen, notenDate
 import { mitschnittUebersicht, mitschnitteAllesLoeschen } from '../data/mitschnitte';
 import { cacheLeeren } from '../data/aufraeumen';
 import { BackstageAufraeumen } from './backstage-aufraeumen';
+import { SyncService } from '../data/sync.service';
+import { SyncStatus, spiegelArt, syncStatusVon } from '../data/spiegel';
 import { backupTeilen } from './backstage-sync';
 import { DatenEditor } from './daten-editor';
 
@@ -22,20 +24,32 @@ import { DatenEditor } from './daten-editor';
       <h3>Daten auf diesem Gerät</h3>
       <p>{{ liste().length }} Einträge ({{ mb(gesamt()) }}) und Noten für {{ notenSongs().length }} Songs. Antippen zum
         Öffnen, <mat-icon class="inline">data_object</mat-icon> zum Ansehen und Ändern; ausgewählte Einträge lassen sich als
-        Datei teilen oder löschen, <mat-icon class="inline">delete_sweep</mat-icon> löscht einen ganzen Bereich. Vorher am
-        besten ein Backup erstellen (Einstellungen → Backup).</p>
+        Datei teilen.@if (loeschbar()) { <mat-icon class="inline">delete_sweep</mat-icon> löscht einen ganzen Bereich – für alle,
+        denn Löschen wird mitsynchronisiert. Vorher am besten ein Backup erstellen (Einstellungen → Backup).}</p>
+      @if (sync.bereit()) {
+        <p class="status"><span class="s synchron">☁ {{ zaehler().synchron }} synchron</span>
+          <span class="s wartet">⟳ {{ zaehler().wartet }} {{ zaehler().wartet === 1 ? 'wartet' : 'warten' }}</span>
+          <span class="s lokal">▣ {{ zaehler().lokal }} nur auf diesem Gerät</span>
+          @if (sync.letzter(); as l) { <span [class.fehler]="l.fehler">· zuletzt {{ zeit(l.zeit) }}</span> }</p>
+      } @else {
+        <p class="status">Nicht mit OneDrive synchronisiert – <a routerLink="/backstage/einstellungen">in den Einstellungen einrichten</a>.</p>
+      }
+      @if (!loeschbar()) {
+        <p class="klein">Löschen ist nur mit der Berechtigung <strong>„Daten löschen“</strong> möglich: angemeldet und Besitzer des
+          OneDrive-Ordners der Synchronisation.</p>
+      }
       <label class="suche"><mat-icon>search</mat-icon>
         <input type="search" placeholder="Suchen, z. B. Setlist, 2026, Rhede …" aria-label="Daten durchsuchen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
       </label>
       <div class="leiste">
         <label class="check"><input type="checkbox" [checked]="alleGewaehlt()" (change)="alleWaehlen($any($event.target).checked)" /> alle {{ suche() ? 'gefundenen' : '' }} auswählen</label>
         <button type="button" [disabled]="!auswahl().size" (click)="teilen()"><mat-icon>ios_share</mat-icon> {{ auswahl().size }} teilen</button>
-        <button type="button" [disabled]="!auswahl().size" (click)="loeschen([...auswahl()])"><mat-icon>delete</mat-icon> {{ auswahl().size }} löschen</button>
+        @if (loeschbar()) { <button type="button" [disabled]="!auswahl().size" (click)="loeschen([...auswahl()])"><mat-icon>delete</mat-icon> {{ auswahl().size }} löschen</button> }
       </div>
 
       @for (g of gruppen(); track g.id) {
         <div class="gruppe">
-          <button type="button" class="icon weg" (click)="gruppeLoeschen(g.label, g.eintraege, $event)" [attr.aria-label]="g.label + (suche() ? ' (gefundene)' : '') + ' löschen'"><mat-icon>delete_sweep</mat-icon></button>
+          @if (loeschbar()) { <button type="button" class="icon weg" (click)="gruppeLoeschen(g.label, g.eintraege, $event)" [attr.aria-label]="g.label + (suche() ? ' (gefundene)' : '') + ' löschen'"><mat-icon>delete_sweep</mat-icon></button> }
           <details [open]="!!suche() || offen().has(g.id)" (toggle)="merken(g.id, $any($event.target).open)">
           <summary>{{ g.label }} <span class="zahl">{{ g.eintraege.length }} · {{ mb(g.bytes) }}</span></summary>
           <ul>
@@ -44,10 +58,10 @@ import { DatenEditor } from './daten-editor';
                 <input type="checkbox" [checked]="auswahl().has(e.key)" (change)="waehlen(e.key)" [attr.aria-label]="e.titel + ' auswählen'" />
                 <span class="text">
                   @if (e.link) { <a [routerLink]="e.link">{{ e.titel }}</a> } @else { <strong>{{ e.titel }}</strong> }
-                  <small>{{ e.details }} · {{ mb(e.bytes) }}</small>
+                  <small>{{ e.details }} · {{ mb(e.bytes) }}@if (sync.bereit()) { · <span [class]="'s ' + status(e.key)">{{ statusText[status(e.key)] }}{{ art(e.key) === 'person' ? ' (persönlich)' : '' }}</span> }</small>
                 </span>
                 <button type="button" class="icon" (click)="bearbeiten.set(e)" [attr.aria-label]="e.titel + ' ansehen und ändern'"><mat-icon>data_object</mat-icon></button>
-                <button type="button" class="icon" (click)="loeschen([e.key])" [attr.aria-label]="e.titel + ' löschen'"><mat-icon>delete</mat-icon></button>
+                @if (loeschbar()) { <button type="button" class="icon" (click)="loeschen([e.key])" [attr.aria-label]="e.titel + ' löschen'"><mat-icon>delete</mat-icon></button> }
               </li>
             }
           </ul>
@@ -59,20 +73,20 @@ import { DatenEditor } from './daten-editor';
 
       @if (notenSongs().length || pdfs().length) {
         <div class="gruppe">
-          <button type="button" class="icon weg" (click)="notenAlleLoeschen($event)" aria-label="Alle Noten löschen"><mat-icon>delete_sweep</mat-icon></button>
+          @if (loeschbar()) { <button type="button" class="icon weg" (click)="notenAlleLoeschen($event)" aria-label="Alle Noten löschen"><mat-icon>delete_sweep</mat-icon></button> }
           <details [open]="!!suche() || offen().has('noten')" (toggle)="merken('noten', $any($event.target).open)">
           <summary>Noten <span class="zahl">{{ notenSongs().length }} Songs · {{ pdfs().length }} PDFs · {{ mb(pdfBytes()) }}</span></summary>
           <ul>
             @for (n of notenGefiltert(); track n.key) {
               <li>
                 <span class="text"><a routerLink="/backstage/songs">{{ n.titel }}</a><small>{{ n.details }}</small></span>
-                <button type="button" class="icon" (click)="songNotenLoeschen(n.key, n.titel)" [attr.aria-label]="'Noten von ' + n.titel + ' löschen'"><mat-icon>delete</mat-icon></button>
+                @if (loeschbar()) { <button type="button" class="icon" (click)="songNotenLoeschen(n.key, n.titel)" [attr.aria-label]="'Noten von ' + n.titel + ' löschen'"><mat-icon>delete</mat-icon></button> }
               </li>
             }
             @for (d of pdfsGefiltert(); track d.id) {
               <li>
                 <span class="text"><a routerLink="/backstage/songs/noten">{{ d.name }}</a><small>PDF · {{ mb(d.groesse) }} · {{ nutzung(d.id) }}</small></span>
-                <button type="button" class="icon" (click)="pdfLoeschen(d)" [attr.aria-label]="d.name + ' löschen'"><mat-icon>delete</mat-icon></button>
+                @if (loeschbar()) { <button type="button" class="icon" (click)="pdfLoeschen(d)" [attr.aria-label]="d.name + ' löschen'"><mat-icon>delete</mat-icon></button> }
               </li>
             }
           </ul>
@@ -81,7 +95,7 @@ import { DatenEditor } from './daten-editor';
       }
       @if (mitschnitte().anzahl && !suche()) {
         <div class="gruppe">
-          <button type="button" class="icon weg" (click)="mitschnitteLoeschen($event)" aria-label="Alle Mitschnitte löschen"><mat-icon>delete_sweep</mat-icon></button>
+          @if (loeschbar()) { <button type="button" class="icon weg" (click)="mitschnitteLoeschen($event)" aria-label="Alle Mitschnitte löschen"><mat-icon>delete_sweep</mat-icon></button> }
           <details>
           <summary>Proben-Mitschnitte <span class="zahl">{{ mitschnitte().anzahl }} · {{ mitschnitte().songs }} Songs · {{ mb(mitschnitte().bytes) }}</span></summary>
           <p>Anhören, teilen und einzeln löschen im Song-Dialog (<a routerLink="/backstage/songs">Songs → Liste</a>).</p>
@@ -90,7 +104,7 @@ import { DatenEditor } from './daten-editor';
       }
       @if (caches() && !suche()) {
         <div class="gruppe">
-          <button type="button" class="icon weg" (click)="offlineLeeren($event)" aria-label="Seiten für unterwegs leeren"><mat-icon>delete_sweep</mat-icon></button>
+          @if (loeschbar()) { <button type="button" class="icon weg" (click)="offlineLeeren($event)" aria-label="Seiten für unterwegs leeren"><mat-icon>delete_sweep</mat-icon></button> }
           <details>
           <summary>Seiten für unterwegs <span class="zahl">{{ mb(speicher()) }}</span></summary>
           <p>Damit Backstage ohne Netz geht; lädt beim nächsten Besuch mit Netz neu.</p>
@@ -99,8 +113,10 @@ import { DatenEditor } from './daten-editor';
       }
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
 
-      <h4>Aufräumen</h4>
-      <app-backstage-aufraeumen [version]="version() + stand()" (geaendert)="aufgeraeumt()" />
+      @if (loeschbar()) {
+        <h4>Aufräumen</h4>
+        <app-backstage-aufraeumen [version]="version() + stand()" (geaendert)="aufgeraeumt()" />
+      }
     </div>
     @if (bearbeiten(); as e) { <app-daten-editor [schluessel]="e.key" [titel]="e.titel" (gespeichert)="fertig('Gespeichert ✓')" (zu)="bearbeiten.set(null)" /> }
   `,
@@ -137,6 +153,10 @@ import { DatenEditor } from './daten-editor';
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
     mat-icon.inline { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; }
     .meldung { margin: 12px 0 0; color: #5fb88a; }
+    .status { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .82rem; }
+    .status a { color: var(--bn-sunset); }
+    .klein { font-size: .8rem; }
+    .s.synchron { color: #5fb88a; } .s.wartet { color: #e8a46a; } .s.lokal { color: var(--bn-fog); } .fehler { color: #e07a5a; }
   `,
 })
 export class BackstageDaten {
@@ -151,6 +171,27 @@ export class BackstageDaten {
   protected readonly offen = signal(new Set<string>());
   protected readonly meldung = signal('');
   protected readonly bearbeiten = signal<Eintrag | null>(null);
+
+  // Synchronisation: Status je Eintrag (synchron / wartet / nur auf diesem Gerät) und Berechtigung „Daten löschen“
+  protected readonly sync = inject(SyncService);
+  protected loeschbar(): boolean {
+    return this.sync.darfLoeschen();
+  }
+  protected readonly art = spiegelArt;
+  protected readonly statusText: Record<SyncStatus, string> = { synchron: '☁ synchron', wartet: '⟳ wartet', lokal: '▣ nur auf diesem Gerät' };
+  protected status(key: string): SyncStatus {
+    return syncStatusVon(key, localStorage.getItem(key), this.sync.spiegel(), this.sync.person());
+  }
+  protected readonly zaehler = computed(() => {
+    this.sync.spiegel();
+    this.sync.ausstehend();
+    const z = { synchron: 0, wartet: 0, lokal: 0 };
+    for (const e of this.liste()) z[this.status(e.key)]++;
+    return z;
+  });
+  protected zeit(iso: string): string {
+    return new Date(iso).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+  }
 
   private readonly auftritte = new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue]));
   protected readonly liste = computed(() => (this.stand(), this.version(), eintraege(this.auftritte)));

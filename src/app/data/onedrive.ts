@@ -76,7 +76,8 @@ export async function oneDriveAnmelden(still = false): Promise<AccountInfo | nul
 }
 
 const KONTO_KEY = 'bn-onedrive-konto';
-function letztesKonto(): string | undefined {
+/** zuletzt angemeldetes Konto (Adresse) – ohne MSAL zu laden */
+export function letztesKonto(): string | undefined {
   try {
     return localStorage.getItem(KONTO_KEY) ?? undefined;
   } catch {

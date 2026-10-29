@@ -202,7 +202,8 @@ export class NotenAnzeige {
     effect(() => {
       const s = this.song();
       untracked(() => this.stoppen());
-      this.extra.set(0);
+      // von Hand verschobene Halbtöne je Song gemerkt (wie die gewählte Fassung)
+      this.extra.set((s && ladeTransponiert()[`${s.title}|${s.artist}`]) || 0);
       void this.ladeSong(s);
     });
     // Fassung gewechselt (Song oder Auswahl) → das PDF dazu öffnen
@@ -367,6 +368,14 @@ export class NotenAnzeige {
   protected verschieben(halbtoene: number, e: Event): void {
     e.stopPropagation();
     this.extra.update((x) => Math.max(-11, Math.min(11, x + halbtoene)));
+    const s = this.song();
+    if (!s) return;
+    const { [`${s.title}|${s.artist}`]: _, ...rest } = ladeTransponiert();
+    try {
+      localStorage.setItem(TRANSPONIERT_KEY, JSON.stringify(this.extra() ? { ...rest, [`${s.title}|${s.artist}`]: this.extra() } : rest));
+    } catch {
+      // ohne Speicher gilt es bis zum Schließen
+    }
   }
 
   // Mitscrollen: gleichmäßig in der Länge des Songs (Spotify-Länge, sonst 3:30) vom Anfang bis zum Ende des Blatts,
@@ -419,6 +428,15 @@ export class NotenAnzeige {
   protected zu(e: Event): void {
     e.stopPropagation();
     this.schliessen.emit();
+  }
+}
+
+const TRANSPONIERT_KEY = 'bn-noten-transpose';
+function ladeTransponiert(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(TRANSPONIERT_KEY) ?? '{}');
+  } catch {
+    return {};
   }
 }
 

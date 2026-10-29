@@ -7,6 +7,7 @@ import release from './data/version.json';
 import { enableOffline, install, installable, iosHint, setupPwa, updateReady } from './pwa';
 import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
 import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
+import { SyncKompass } from './pages/sync-kompass';
 import { SprachHinweis } from './sections/sprach-hinweis';
 
 const TEXT = tr(
@@ -80,7 +81,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

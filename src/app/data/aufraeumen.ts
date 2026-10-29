@@ -130,6 +130,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-noten-breite': 'Noten in voller Breite',
   'bn-noten-ansicht': 'Noten-Ansicht (frühere Version)',
   'bn-noten-scrolltempo': 'Mitscroll-Tempo je Song',
+  'bn-noten-transpose': 'Akkorde von Hand verschoben (je Song)',
   'bn-backstage-filter': 'Filter unter Termine',
   'bn-sprache': 'Gewählte Sprache',
   'bn-gesichert': 'Letztes Backup',

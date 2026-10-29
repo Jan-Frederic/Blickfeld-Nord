@@ -35,6 +35,10 @@ import { SyncEinstellungen, cloudGewaehlt, cloudName, lokalerOrdnerHandle, lokal
 
       <h4>2. OneDrive-Ordner</h4>
       <p class="pfad"><mat-icon>cloud</mat-icon> {{ cloudName(e()) || 'noch keiner gewählt' }}</p>
+      @if (konto() && cloudGewaehlt(e())) {
+        <p class="klein"><mat-icon class="inline">{{ e().wurzel ? 'lock' : 'delete_sweep' }}</mat-icon> Berechtigung „Daten löschen“:
+          {{ e().wurzel ? 'nein – der Ordner ist mit dir geteilt, löschen darf der Besitzer' : 'ja – du bist Besitzer des Ordners' }}</p>
+      }
       @if (konto()) {
         @if (blaettern(); as b) {
           <div class="browser">
@@ -124,6 +128,7 @@ export class SyncEinstellungenSeite {
   protected readonly ordnerName = signal('');
   protected readonly blaettern = signal<{ ort: CloudOrt; ordner: CloudEintrag[] } | null>(null);
   protected readonly cloudName = cloudName;
+  protected readonly cloudGewaehlt = cloudGewaehlt;
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
   protected readonly bereit = () => this.eingerichtet() && cloudGewaehlt(this.e()) && !!this.konto() && (this.e().lokal === 'app' || !!this.ordnerName());
