@@ -189,10 +189,18 @@ export async function cloudBaum(ort: CloudOrt, gefunden?: (anzahl: number) => vo
 /** Inhalt einer Cloud-Datei */
 export async function cloudLaden(d: CloudDatei): Promise<Blob> {
   if (d.downloadUrl) {
-    const res = await fetch(d.downloadUrl);
-    if (res.ok) return res.blob();
+    try {
+      const res = await fetch(d.downloadUrl);
+      if (res.ok) return res.blob();
+    } catch {
+      // Link abgelaufen oder blockiert → über Graph versuchen
+    }
   }
-  return (await graph(`${perId(d.id, d.drive)}/content`)).blob();
+  try {
+    return await (await graph(`${perId(d.id, d.drive)}/content`)).blob();
+  } catch (e) {
+    throw (e as Error).name === 'TypeError' ? new Error('Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert)', { cause: e }) : e;
+  }
 }
 
 /** Datei hochladen (Ordner entstehen automatisch); bis 250 MB, darüber in Teilen */

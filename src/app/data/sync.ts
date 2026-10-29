@@ -127,7 +127,14 @@ export async function synchronisieren(
   let fertig = 0;
   const uebertragen = async (von: SyncOrdner, nach: SyncOrdner, pfad: string, inhalt?: Blob) => nach.schreiben(pfad, inhalt ?? (await von.lesen(pfad)));
 
+  // derselbe Fehler immer wieder (z. B. Netz weg, Zugriff blockiert) → abbrechen statt jede Datei einzeln scheitern lassen
+  let inFolge = 0;
+  let letzter = '';
   for (const a of aktionen) {
+    if (inFolge >= ABBRUCH_NACH) {
+      e.fehler.unshift(`Abgebrochen nach ${ABBRUCH_NACH} gleichen Fehlern in Folge: ${letzter}`);
+      break;
+    }
     const C = c.get(a.pfad);
     const L = l.get(a.pfad);
     try {
@@ -166,15 +173,21 @@ export async function synchronisieren(
         }
         // Zwischenstand sichern – ein abgebrochener Abgleich macht beim nächsten Mal dort weiter
         if (fertig % 10 === 0) await hilfen.speichern?.(z);
+        inFolge = 0;
       }
     } catch (err) {
-      e.fehler.push(`${a.pfad}: ${(err as Error).message || 'Fehler'}`);
+      const text = (err as Error).message || 'Fehler';
+      inFolge = text === letzter ? inFolge + 1 : 1;
+      letzter = text;
+      e.fehler.push(`${a.pfad}: ${text}`);
     }
   }
   melden({ text: 'Fertig', fertig: arbeit.length, gesamt: arbeit.length });
   await hilfen.speichern?.(z);
   return { ergebnis: e, zustand: z };
 }
+
+const ABBRUCH_NACH = 10;
 
 const TEXT: Record<string, string> = {
   runter: 'Herunterladen',

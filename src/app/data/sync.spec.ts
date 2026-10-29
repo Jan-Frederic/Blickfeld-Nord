@@ -129,4 +129,14 @@ describe('Synchronisation', () => {
     expect(ignorieren('Noten/.git/x')).toBe(true);
     expect(konfliktName('Ordner/Iris.v2/Bass', 'OneDrive', '2026-10-27')).toBe('Ordner/Iris.v2/Bass (Konflikt OneDrive 2026-10-27)');
   });
+
+  it('bricht nach zehn gleichen Fehlern in Folge ab, statt jede Datei scheitern zu lassen', async () => {
+    const dateien = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [`n${i}.pdf`, 'x']));
+    const cloud = { ...speicherOrdner('c', dateien), lesen: async () => { throw new TypeError('Failed to fetch'); } };
+    const lokal = speicherOrdner('l');
+    const { ergebnis } = await synchronisieren(cloud, lokal, {}, BEIDE);
+    expect(ergebnis.fehler.length).toBe(11);
+    expect(ergebnis.fehler[0]).toBe('Abgebrochen nach 10 gleichen Fehlern in Folge: Failed to fetch');
+    expect(ergebnis.runter).toBe(0);
+  });
 });
