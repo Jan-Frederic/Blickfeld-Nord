@@ -3,22 +3,27 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { Eintrag, eintraege, entfernen, mb } from '../data/aufraeumen';
-import { NotenDateiInfo, SongNoten, alleSongNoten, notenDateiLoeschen, notenDateien, pdfName, songNotenSetzen } from '../data/noten';
+import { NotenDateiInfo, SongNoten, alleSongNoten, notenAllesLoeschen, notenDateiLoeschen, notenDateien, pdfName, songNotenSetzen } from '../data/noten';
+import { mitschnittUebersicht, mitschnitteAllesLoeschen } from '../data/mitschnitte';
+import { cacheLeeren } from '../data/aufraeumen';
+import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { backupTeilen } from './backstage-sync';
 import { DatenEditor } from './daten-editor';
 
 // Backstage → Abgleich → Daten auf diesem Gerät: jeder gespeicherte Eintrag einzeln – verständlich benannt (Bereich,
 // Datum, Ort), mit Inhaltsangabe und Größe. Öffnen (Seite des Bereichs), ansehen/ändern, auswählen und als Datei
-// teilen oder löschen. Dazu die Noten (Songs mit Noten, PDFs). Suche über Titel, Inhalt und Schlüssel.
+// teilen oder löschen, je Bereich alles löschen. Dazu Noten, Proben-Mitschnitte und Seiten für unterwegs, darunter
+// das Aufräumen (vergangene und verwaiste Einträge, alles löschen – backstage-aufraeumen.ts).
 @Component({
   selector: 'app-backstage-daten',
-  imports: [RouterLink, MatIconModule, DatenEditor],
+  imports: [RouterLink, MatIconModule, DatenEditor, BackstageAufraeumen],
   template: `
     <div class="box">
       <h3>Daten auf diesem Gerät</h3>
       <p>{{ liste().length }} Einträge ({{ mb(gesamt()) }}) und Noten für {{ notenSongs().length }} Songs. Antippen zum
         Öffnen, <mat-icon class="inline">data_object</mat-icon> zum Ansehen und Ändern; ausgewählte Einträge lassen sich als
-        Datei teilen oder löschen.</p>
+        Datei teilen oder löschen, <mat-icon class="inline">delete_sweep</mat-icon> löscht einen ganzen Bereich. Vorher am
+        besten ein Backup erstellen (Einstellungen → Backup).</p>
       <label class="suche"><mat-icon>search</mat-icon>
         <input type="search" placeholder="Suchen, z. B. Setlist, 2026, Rhede …" aria-label="Daten durchsuchen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
       </label>
@@ -29,7 +34,9 @@ import { DatenEditor } from './daten-editor';
       </div>
 
       @for (g of gruppen(); track g.id) {
-        <details [open]="!!suche() || offen().has(g.id)" (toggle)="merken(g.id, $any($event.target).open)">
+        <div class="gruppe">
+          <button type="button" class="icon weg" (click)="gruppeLoeschen(g.label, g.eintraege, $event)" [attr.aria-label]="g.label + (suche() ? ' (gefundene)' : '') + ' löschen'"><mat-icon>delete_sweep</mat-icon></button>
+          <details [open]="!!suche() || offen().has(g.id)" (toggle)="merken(g.id, $any($event.target).open)">
           <summary>{{ g.label }} <span class="zahl">{{ g.eintraege.length }} · {{ mb(g.bytes) }}</span></summary>
           <ul>
             @for (e of g.eintraege; track e.key) {
@@ -45,12 +52,15 @@ import { DatenEditor } from './daten-editor';
             }
           </ul>
         </details>
+        </div>
       } @empty {
         <p>{{ suche() ? 'Nichts gefunden.' : 'Auf diesem Gerät ist nichts gespeichert.' }}</p>
       }
 
       @if (notenSongs().length || pdfs().length) {
-        <details [open]="!!suche() || offen().has('noten')" (toggle)="merken('noten', $any($event.target).open)">
+        <div class="gruppe">
+          <button type="button" class="icon weg" (click)="notenAlleLoeschen($event)" aria-label="Alle Noten löschen"><mat-icon>delete_sweep</mat-icon></button>
+          <details [open]="!!suche() || offen().has('noten')" (toggle)="merken('noten', $any($event.target).open)">
           <summary>Noten <span class="zahl">{{ notenSongs().length }} Songs · {{ pdfs().length }} PDFs · {{ mb(pdfBytes()) }}</span></summary>
           <ul>
             @for (n of notenGefiltert(); track n.key) {
@@ -67,14 +77,36 @@ import { DatenEditor } from './daten-editor';
             }
           </ul>
         </details>
+        </div>
+      }
+      @if (mitschnitte().anzahl && !suche()) {
+        <div class="gruppe">
+          <button type="button" class="icon weg" (click)="mitschnitteLoeschen($event)" aria-label="Alle Mitschnitte löschen"><mat-icon>delete_sweep</mat-icon></button>
+          <details>
+          <summary>Proben-Mitschnitte <span class="zahl">{{ mitschnitte().anzahl }} · {{ mitschnitte().songs }} Songs · {{ mb(mitschnitte().bytes) }}</span></summary>
+          <p>Anhören, teilen und einzeln löschen im Song-Dialog (<a routerLink="/backstage/songs">Songs → Liste</a>).</p>
+        </details>
+        </div>
+      }
+      @if (caches() && !suche()) {
+        <div class="gruppe">
+          <button type="button" class="icon weg" (click)="offlineLeeren($event)" aria-label="Seiten für unterwegs leeren"><mat-icon>delete_sweep</mat-icon></button>
+          <details>
+          <summary>Seiten für unterwegs <span class="zahl">{{ mb(speicher()) }}</span></summary>
+          <p>Damit Backstage ohne Netz geht; lädt beim nächsten Besuch mit Netz neu.</p>
+        </details>
+        </div>
       }
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
+
+      <h4>Aufräumen</h4>
+      <app-backstage-aufraeumen [version]="version() + stand()" (geaendert)="aufgeraeumt()" />
     </div>
     @if (bearbeiten(); as e) { <app-daten-editor [schluessel]="e.key" [titel]="e.titel" (gespeichert)="fertig('Gespeichert ✓')" (zu)="bearbeiten.set(null)" /> }
   `,
   styles: `
     .box { margin-top: 20px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
-    h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+    h3, h4 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     p { margin: 0 0 12px; max-width: 720px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); }
     .suche { display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--bn-line); border-radius: 10px; }
     .suche input { flex: 1; min-width: 0; padding: 9px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
@@ -82,7 +114,14 @@ import { DatenEditor } from './daten-editor';
     .check { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; }
     input[type=checkbox] { flex: none; accent-color: var(--bn-sunset); }
     details { border-top: 1px solid var(--bn-line); }
-    summary { padding: 10px 0; cursor: pointer; font-size: .92rem; }
+    summary { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; font-size: .92rem; }
+    summary::before { content: '▸'; color: var(--bn-fog); }
+    details[open] > summary::before { content: '▾'; }
+    .gruppe { position: relative; }
+    .gruppe > .weg { position: absolute; top: 3px; right: 0; z-index: 1; }
+    .gruppe summary { padding-right: 40px; }
+    summary::-webkit-details-marker { display: none; }
+    h4 { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--bn-line); color: var(--bn-sunset); }
     .zahl { color: var(--bn-fog); font-size: .8rem; }
     ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 2px; }
     li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, .05); }
@@ -106,7 +145,7 @@ export class BackstageDaten {
   readonly geaendert = output<void>();
   private readonly band = inject(BandService);
   protected readonly mb = mb;
-  private readonly stand = signal(0);
+  protected readonly stand = signal(0);
   protected readonly suche = signal('');
   protected readonly auswahl = signal(new Set<string>());
   protected readonly offen = signal(new Set<string>());
@@ -157,6 +196,63 @@ export class BackstageDaten {
   private notenLaden(): void {
     alleSongNoten().then((n) => this.noten.set(n)).catch(() => undefined);
     notenDateien().then((d) => this.pdfs.set(d)).catch(() => undefined);
+    mitschnittUebersicht().then((m) => this.mitschnitte.set(m)).catch(() => undefined);
+    void this.speicherLaden();
+  }
+
+  // Proben-Mitschnitte und Seiten für unterwegs (Cache des Service Workers)
+  protected readonly mitschnitte = signal({ anzahl: 0, songs: 0, bytes: 0 });
+  protected readonly caches = signal(0);
+  protected readonly speicher = signal(0);
+  private async speicherLaden(): Promise<void> {
+    try {
+      this.caches.set(typeof caches === 'undefined' ? 0 : (await caches.keys()).length);
+      const s = await navigator.storage?.estimate?.();
+      // grob: alles, was nicht Noten oder Mitschnitte ist
+      this.speicher.set(Math.max(0, (s?.usage ?? 0) - this.pdfBytes() - this.mitschnitte().bytes));
+    } catch {
+      // Schätzung nicht verfügbar
+    }
+  }
+
+  /** aus dem Aufräumen (unten): neu lesen und den anderen Teilen der Seite Bescheid geben */
+  protected aufgeraeumt(): void {
+    this.stand.update((x) => x + 1);
+    this.notenLaden();
+    this.geaendert.emit();
+  }
+
+  protected gruppeLoeschen(label: string, liste: Eintrag[], e: Event): void {
+    e.preventDefault();
+    e.stopPropagation();
+    this.loeschen(liste.map((x) => x.key), `${label}: ${liste.length} ${liste.length === 1 ? 'Eintrag' : 'Einträge'}`);
+  }
+
+  protected async notenAlleLoeschen(e: Event): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm(`Alle Noten (${this.notenSongs().length} Songs, ${this.pdfs().length} PDFs) auf diesem Gerät löschen?`)) return;
+    await notenAllesLoeschen();
+    this.notenLaden();
+    this.fertig('Noten gelöscht ✓');
+  }
+
+  protected async mitschnitteLoeschen(e: Event): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm(`Alle ${this.mitschnitte().anzahl} Proben-Mitschnitte auf diesem Gerät löschen?`)) return;
+    await mitschnitteAllesLoeschen();
+    this.notenLaden();
+    this.fertig('Mitschnitte gelöscht ✓');
+  }
+
+  protected async offlineLeeren(e: Event): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Seiten für unterwegs leeren? Ohne Netz ist Backstage dann erst nach dem nächsten Besuch mit Netz wieder da.')) return;
+    await cacheLeeren();
+    this.notenLaden();
+    this.fertig('Seiten für unterwegs geleert ✓');
   }
 
   protected nutzung(id: string): string {
@@ -199,8 +295,8 @@ export class BackstageDaten {
     this.geaendert.emit();
   }
 
-  protected loeschen(keys: string[]): void {
-    const titel = keys.length === 1 ? this.liste().find((e) => e.key === keys[0])?.titel : `${keys.length} Einträge`;
+  protected loeschen(keys: string[], text?: string): void {
+    const titel = text ?? (keys.length === 1 ? this.liste().find((e) => e.key === keys[0])?.titel : `${keys.length} Einträge`);
     if (!confirm(`${titel} auf diesem Gerät löschen?`)) return;
     entfernen(keys);
     this.auswahl.update((a) => new Set([...a].filter((k) => !keys.includes(k))));

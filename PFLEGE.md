@@ -220,18 +220,19 @@ Auftritte) und ob er in einer kommenden Setlist steht; sortierbar nach „oft“
 
 Backstage-Daten liegen nur im Browser des jeweiligen Geräts. Unter **Abgleich → Daten auf diesem Gerät** steht jeder
 einzelne Eintrag, nach Bereichen gruppiert und verständlich benannt (z. B. „Setlist · 04.12.2026 · Weihnachtsmarkt“),
-mit Inhalt („12 Songs, 1 Pause“) und Größe – dazu alle Noten (Songs mit Noten, PDFs und wo sie genutzt werden):
+mit Inhalt („12 Songs, 1 Pause“) und Größe – dazu alle Noten (Songs mit Noten, PDFs und wo sie genutzt werden),
+Proben-Mitschnitte und Seiten für unterwegs:
 
 - Titel antippen öffnet die passende Seite (Setlist, Packliste, Probe …).
 - `{ }` zeigt den gespeicherten Inhalt und lässt ihn von Hand ändern (nur gültiges JSON wird gespeichert) – für
   Notfälle, normal ändert man auf der Seite des Bereichs.
 - Suchen (z. B. „2026“, „Rhede“, „Setlist“), auswählen und die Auswahl **teilen** (Datei zum Importieren auf anderen
   Geräten) oder **löschen**.
+- Neben jedem Bereich (Setlists, Packlisten, Noten, Mitschnitte, Seiten für unterwegs …) löscht der Besen-Knopf den
+  ganzen Bereich (bei einer Suche nur die gefundenen Einträge).
 
-Darunter **Aufräumen**:
+In derselben Karte darunter **Aufräumen**:
 
-- **Übersicht:** je Bereich (Setlists, Sterne, Packlisten, Vor Ort, Werbeplan, Proben, Songs-Entwurf, Aufgaben,
-  Einstellungen, Noten, Seiten für unterwegs) Anzahl und Größe – mit 🗑 einzeln löschen.
 - **Vergangene Auftritte und Proben:** Alter wählen (gleich danach, 30 Tage, 6 Monate, 1 Jahr) und welche Bereiche.
   Vorgewählt sind Packlisten, Vor Ort, Werbeplan und Proben; Setlists und Sterne bleiben, weil Rückblick, Top 100
   und Setlist-Vorschlag sie brauchen.

@@ -1,17 +1,16 @@
 import { Component, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
-import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { BackstageDaten } from './backstage-daten';
 import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { SyncStatus } from './sync-status';
 import { offlineReady } from '../pwa';
 
-// Backstage → Abgleich: Synchronisation mit OneDrive (sync-status.ts), alle Daten des Geräts verwalten
-// (backstage-daten.ts) und aufräumen (backstage-aufraeumen.ts). Backup und Wiederherstellen: Einstellungen → Backup.
+// Backstage → Abgleich: Synchronisation mit OneDrive (sync-status.ts) und alle Daten des Geräts verwalten und
+// aufräumen (backstage-daten.ts mit backstage-aufraeumen.ts). Backup und Wiederherstellen: Einstellungen → Backup.
 @Component({
   selector: 'app-backstage-abgleich',
-  imports: [MatIconModule, RouterLink, BackstageAufraeumen, BackstageDaten, SyncStatus],
+  imports: [MatIconModule, RouterLink, BackstageDaten, SyncStatus],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -23,7 +22,6 @@ import { offlineReady } from '../pwa';
       }
       <app-sync-status (geaendert)="version.set(version() + 1)" />
       <app-backstage-daten [version]="version()" (geaendert)="version.set(version() + 1)" />
-      <app-backstage-aufraeumen [version]="version()" (geaendert)="version.set(version() + 1)" />
     </section>
   `,
   styles: `

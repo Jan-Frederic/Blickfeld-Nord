@@ -659,7 +659,7 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   await p.evaluate(() => localStorage.setItem('bn-packliste-2019-01-01', '{"checked":[],"custom":[]}'));
   await p.reload({ waitUntil: 'networkidle' });
   const box = p.locator('app-backstage-aufraeumen');
-  await until(async () => (await box.locator('tr', { hasText: 'Packlisten' }).locator('td').first().innerText()) === '2', 'Übersicht zählt die Packlisten nicht');
+  await until(async () => (await daten.locator('summary', { hasText: 'Packlisten' }).innerText()).includes('2 ·'), 'Übersicht zählt die Packlisten nicht');
   // Vergangenes (Standard: Packliste, Vor Ort, Werbeplan, Proben – Setlist bleibt)
   await box.locator('select').selectOption('0');
   await box.locator('button', { hasText: 'Einträge entfernen' }).click();
@@ -919,7 +919,7 @@ test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung
   await until(async () => (await p.locator('app-probe-vorschlag li').first().innerText()).includes('wackelt noch'), 'Probe-Vorschlag ohne „wackelt noch“');
   // Abgleich: Mitschnitte zählen mit
   await p.go('/backstage/abgleich/');
-  await until(async () => (await p.locator('app-backstage-aufraeumen tr', { hasText: 'Proben-Mitschnitte' }).innerText()).includes('1'), 'Mitschnitt fehlt im Aufräumen');
+  await until(async () => (await p.locator('app-backstage-daten summary', { hasText: 'Proben-Mitschnitte' }).innerText().catch(() => '')).includes('1 ·'), 'Mitschnitt fehlt unter Daten auf diesem Gerät');
 
   // Nachbereitung eines vergangenen Auftritts
   const id = '2026-08-22';
