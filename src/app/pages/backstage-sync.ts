@@ -2,18 +2,18 @@ import { Component, inject, input, signal } from '@angular/core';
 import { BandService } from '../data/band.service';
 import { vorschau, vorschauText } from '../data/aufraeumen';
 import { MatIconModule } from '@angular/material/icon';
-import { NOTEN_APP, notenImportieren } from '../data/noten';
+import { NOTEN_APP, notenExportieren, notenImportieren } from '../data/noten';
 
-// Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung, Song-Sterne) liegen nur im Browser des jeweiligen Geräts.
-// Damit alle in der Band denselben Stand haben: als Datei exportieren bzw. per WhatsApp & Co. teilen
-// und auf dem anderen Gerät importieren. Ohne Server – die Datei geht direkt von Gerät zu Gerät.
+// Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung, Song-Sterne …) liegen nur im Browser des
+// jeweiligen Geräts. Backup (Einstellungen → Backup, backup-karte.ts): alles samt Notenblättern als Datei bzw. in den
+// OneDrive-Ordner der Synchronisation. Die Komponente unten teilt einzelne Auftritte bzw. Proben mit der Band.
 
 export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-'];
-// Zeitpunkt der letzten vollständigen Sicherung („Alles an die Band schicken“) – für den Hinweis unter Aufgaben
+// Zeitpunkt des letzten Backups – für den Hinweis unter Aufgaben und in der Backup-Kachel
 export const GESICHERT_KEY = 'bn-gesichert';
 
-/** Tage seit der letzten vollständigen Sicherung; null = noch nie; undefined = nichts zu sichern */
-export function tageSeitSicherung(): number | null | undefined {
+/** Tage seit dem letzten Backup; null = noch nie; undefined = nichts zu sichern */
+export function tageSeitBackup(): number | null | undefined {
   try {
     if (!Object.keys(collect()).length) return undefined;
     const zuletzt = Number(localStorage.getItem(GESICHERT_KEY));
@@ -40,7 +40,7 @@ interface Backup {
   data: Record<string, unknown>;
 }
 
-/** Backstage-Datei bauen und übers Teilen-Menü verschicken, sonst herunterladen; true = geteilt, false = gespeichert, null = abgebrochen */
+/** Datei mit Backstage-Daten bauen und übers Teilen-Menü verschicken, sonst herunterladen; true = geteilt, false = gespeichert, null = abgebrochen */
 export async function backupTeilen(data: Record<string, unknown>, teil: string): Promise<boolean | null> {
   const backup: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
   const name = `blickfeld-nord-backstage-${teil}-${new Date().toISOString().slice(0, 10)}.json`;
@@ -59,7 +59,7 @@ export async function backupTeilen(data: Record<string, unknown>, teil: string):
   return false;
 }
 
-/** Einträge einer Backstage-Datei (nur bekannte Bereiche); wirft bei fremden Dateien */
+/** Einträge eines Backups (nur bekannte Bereiche); wirft bei fremden Dateien */
 export function backupEintraege(text: string): [string, unknown][] {
   const backup = JSON.parse(text) as Partial<Backup>;
   if (backup.app !== APP || !backup.data) throw new Error('keine Backstage-Datei');
@@ -84,15 +84,42 @@ export function backstageImportieren(text: string, ersetzen = false): number {
   return eintraege.length;
 }
 
-/** alle Backstage-Einträge dieses Geräts als Datei-Inhalt (für OneDrive) */
-export function backstageDatei(): { name: string; text: string; anzahl: number } {
+/** Backup dieses Geräts als Dateien: Backstage-Daten und Notenblätter (je null, wenn es nichts gibt) */
+export async function backupDateien(): Promise<{ backup: File | null; noten: File | null; anzahl: number }> {
   const data = collect();
-  const backup: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
-  return { name: `blickfeld-nord-backstage-alle-${new Date().toISOString().slice(0, 10)}.json`, text: JSON.stringify(backup, null, 1), anzahl: Object.keys(data).length };
+  const anzahl = Object.keys(data).length;
+  const tag = new Date().toISOString().slice(0, 10);
+  const inhalt: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
+  const backup = anzahl ? new File([JSON.stringify(inhalt, null, 1)], `blickfeld-nord-backup-${tag}.json`, { type: 'application/json' }) : null;
+  const n = await notenExportieren();
+  const noten = n ? new File([n], `blickfeld-nord-backup-noten-${tag}.json`, { type: 'application/json' }) : null;
+  return { backup, noten, anzahl };
 }
 
-/** nach einer Sicherung (Teilen, OneDrive) merken – für den Hinweis unter Aufgaben */
-export function gesichert(): void {
+/** Backup bzw. Notenpaket aus einer Datei übernehmen – mit Vorschau und Rückfrage; Text für die Meldung, null = abgebrochen */
+export async function backupEinlesen(text: string, ersetzen: boolean, auftritte: Map<string, string>): Promise<string | null> {
+  const inhalt = JSON.parse(text) as Partial<Backup> | { app: typeof NOTEN_APP };
+  if (inhalt.app === NOTEN_APP) {
+    const n = await notenImportieren(text);
+    return `Notenblätter für ${n} ${n === 1 ? 'Song' : 'Songs'} übernommen`;
+  }
+  const eintraege = backupEintraege(text);
+  const v = vorschau(eintraege, auftritte);
+  const zeilen = [...v.neu.map((e) => `+ ${e.titel}`), ...v.geaendert.map((e) => `~ ${e.titel}: ${e.was}`)];
+  const liste = zeilen.slice(0, 12).join('\n') + (zeilen.length > 12 ? `\n… und ${zeilen.length - 12} weitere` : '');
+  if (ersetzen) {
+    const alt = Object.keys(localStorage).filter((k) => PREFIXES.some((p) => k.startsWith(p))).length;
+    if (!confirm(`${alt} vorhandene Einträge löschen und durch ${eintraege.length} aus dem Backup ersetzen?`)) return null;
+  } else {
+    if (!v.neu.length && !v.geaendert.length) return 'Nichts Neues – alles ist schon auf dem Stand des Backups';
+    if (!confirm(`Übernehmen? ${vorschauText(v)}.\n\n${liste}`)) return null;
+  }
+  backstageImportieren(text, ersetzen);
+  return `Backup übernommen (${eintraege.length} Einträge)`;
+}
+
+/** nach einem Backup (Datei, OneDrive) merken – für den Hinweis unter Aufgaben */
+export function backupGemerkt(): void {
   merken();
 }
 
@@ -169,29 +196,12 @@ export class BackstageSync {
     if (!file) return;
     try {
       const text = await file.text();
-      const backup = JSON.parse(text) as Partial<Backup> | { app: typeof NOTEN_APP };
-      // Notenblatt-Datei (Backstage → Songs → „Notenblätter an die Band“) auch hier annehmen
-      if (backup.app === NOTEN_APP) {
-        const n = await notenImportieren(text);
-        this.message.set({ text: `Noten für ${n} ${n === 1 ? 'Song' : 'Songs'} übernommen ✓` });
-        return;
-      }
-      const eintraege = backupEintraege(text);
-      if (!eintraege.length) throw new Error();
-      // Vorschau: was neu ist und was sich ändert
-      const v = vorschau(eintraege, new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue])));
-      const zeilen = [...v.neu.map((e) => `+ ${e.titel}`), ...v.geaendert.map((e) => `~ ${e.titel}: ${e.was}`)];
-      const liste = zeilen.slice(0, 12).join('\n') + (zeilen.length > 12 ? `\n… und ${zeilen.length - 12} weitere` : '');
-      if (!v.neu.length && !v.geaendert.length) {
-        this.message.set({ text: 'Nichts Neues – alles ist schon auf dem Stand der Datei.' });
-        return;
-      }
-      if (!confirm(`Übernehmen? ${vorschauText(v)}.\n\n${liste}`)) return;
-      backstageImportieren(text);
-      this.message.set({ text: 'Übernommen – Seite wird neu geladen …' });
+      const ergebnis = await backupEinlesen(text, false, new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue])));
+      if (!ergebnis) return;
+      this.message.set({ text: `${ergebnis} – Seite wird neu geladen …` });
       setTimeout(() => location.reload(), 600);
     } catch {
-      this.message.set({ text: 'Das ist keine Backstage-Datei von Blickfeld Nord.', error: true });
+      this.message.set({ text: 'Das ist keine Datei von Blickfeld Nord.', error: true });
     }
   }
 }

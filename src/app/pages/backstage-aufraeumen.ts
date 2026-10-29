@@ -7,11 +7,10 @@ import { alleSongNoten, notenAllesLoeschen, notenDateien, notenEntfernen, notenV
 import { mitschnittUebersicht, mitschnitteAllesLoeschen } from '../data/mitschnitte';
 import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { syncSpeicherLoeschen } from '../data/sync-ordner';
-import { PREFIXES, backstageImportieren, backupEintraege } from './backstage-sync';
 
 // Backstage → Abgleich → Aufräumen: was liegt auf diesem Gerät, je Bereich löschen; vergangene Auftritte und
 // verwaiste Einträge entfernen; den Stand der Band übernehmen (ersetzt statt ergänzt); alles zurücksetzen.
-// Jeder Schritt fragt vorher nach – gesichert wird oben mit „Alles an die Band schicken“.
+// Jeder Schritt fragt vorher nach – gesichert wird unter Einstellungen → Backup.
 const ALTER = [
   { tage: 0, label: 'gleich nach dem Auftritt' },
   { tage: 30, label: 'älter als 30 Tage' },
@@ -25,8 +24,8 @@ const ALTER = [
   template: `
     <div class="box">
       <h3>Aufräumen</h3>
-      <p>Was auf diesem Gerät gespeichert ist. Vor dem Löschen oben „Alles an die Band schicken“ – mit der Datei lässt
-        sich alles wieder importieren. Noten sichert „Notenblätter an die Band“ unter Songs → Noten.</p>
+      <p>Was auf diesem Gerät gespeichert ist. Vor dem Löschen ein Backup erstellen (Einstellungen → Backup) – damit lässt
+        sich alles samt Notenblättern wiederherstellen.</p>
       <table>
         <tbody>
           @for (z of zeilen(); track z.bereich.id) {
@@ -73,13 +72,6 @@ const ALTER = [
       <p>Daten zu Auftritten, die es nicht mehr gibt (abgesagt oder verschoben), Noten zu Songs, die nicht mehr im Repertoire
         stehen, und PDFs, die kein Song nutzt.</p>
       <button type="button" [disabled]="!verwaistZahl()" (click)="verwaistEntfernen()"><mat-icon>cleaning_services</mat-icon> {{ verwaistText() }}</button>
-
-      <h4>Stand der Band übernehmen</h4>
-      <p>Wie „Datei importieren“, aber alles Bisherige (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan, Entwurf) wird
-        vorher gelöscht – danach hat dieses Gerät genau den Stand der Datei.</p>
-      <label class="knopf"><mat-icon>sync_alt</mat-icon> Datei wählen und ersetzen
-        <input type="file" accept=".json,application/json" (change)="ersetzen($event)" />
-      </label>
 
       <h4>Alles löschen</h4>
       <p>Setzt die Website auf diesem Gerät komplett zurück: alle Backstage-Daten, Noten, Einstellungen und Seiten für unterwegs.</p>
@@ -230,27 +222,6 @@ export class BackstageAufraeumen {
     await notenEntfernen(n.songs, n.dateien.map((d) => d.id));
     this.meldung.set('Verwaiste Einträge entfernt ✓');
     this.geaendert.emit();
-  }
-
-  protected async ersetzen(e: Event): Promise<void> {
-    const feld = e.target as HTMLInputElement;
-    const datei = feld.files?.[0];
-    feld.value = '';
-    if (!datei) return;
-    let text = '';
-    let neu = 0;
-    try {
-      text = await datei.text();
-      neu = backupEintraege(text).length;
-    } catch {
-      this.meldung.set('Das ist keine Backstage-Datei von Blickfeld Nord.');
-      return;
-    }
-    const alt = alleSchluessel().filter((k) => PREFIXES.some((p) => k.startsWith(p)));
-    if (!confirm(`${alt.length} vorhandene Einträge löschen und durch ${neu} aus der Datei ersetzen?`)) return;
-    backstageImportieren(text, true);
-    this.meldung.set('Stand übernommen – Seite wird neu geladen …');
-    setTimeout(() => location.reload(), 600);
   }
 
   protected async allesLoeschen(): Promise<void> {

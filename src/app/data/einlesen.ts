@@ -7,8 +7,8 @@ import { Erkennung, erkennen } from './erkennung';
 export type Melden = (stand: Stand) => void;
 
 // Gemeinsames Einlesen aus einem Ordner – auf dem Gerät (z. B. der OneDrive-Ordner) oder aus OneDrive über Microsoft:
-// erst sichten (was ist da?), dann die gewählten Dateien übernehmen. Erkannt werden Backstage-Dateien („Alles an die
-// Band schicken“), Notenpakete („Notenblätter an die Band“), PDFs und Akkordblätter (.pro & Co.).
+// erst sichten (was ist da?), dann die gewählten Dateien übernehmen. Erkannt werden Backups (Einstellungen → Backup,
+// auch frühere „Backstage“-Dateien), Notenpakete („Notenblätter an die Band“), PDFs und Akkordblätter (.pro & Co.).
 
 export interface Quelle {
   name: string;
@@ -58,7 +58,7 @@ export async function sichten(quellen: Quelle[], melden?: Melden): Promise<Fund[
   return funde.sort((a, b) => b.geaendert.localeCompare(a.geaendert));
 }
 
-/** gewählte Funde übernehmen; Backstage-Dateien älteste zuerst, damit die neueste gewinnt */
+/** gewählte Funde übernehmen; Backups älteste zuerst, damit die neueste gewinnt */
 /** wahl.noten: je Pfad der gewählte Song („Titel|Interpret“) und die Fassung – nur diese Noten-Dateien werden eingelesen */
 export async function uebernehmen(
   funde: Fund[],
@@ -69,7 +69,7 @@ export async function uebernehmen(
   const backstage = funde.filter((d) => d.art === 'backstage' && wahl.dateien.has(d.pfad)).reverse();
   let eintraege = 0;
   backstage.forEach((d, i) => (eintraege += backstageImportieren(d.text!, wahl.ersetzen && i === 0)));
-  if (backstage.length) teile.push(`${eintraege} ${eintraege === 1 ? 'Backstage-Eintrag' : 'Backstage-Einträge'}`);
+  if (backstage.length) teile.push(`${eintraege} ${eintraege === 1 ? 'Eintrag aus dem Backup' : 'Einträge aus dem Backup'}`);
   for (const d of funde.filter((x) => x.art === 'noten' && wahl.dateien.has(x.pfad)).reverse()) {
     melden?.({ text: `Notenpaket: ${d.pfad}` });
     teile.push(`Noten für ${await notenImportieren(d.text!)} Songs`);

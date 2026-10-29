@@ -115,7 +115,7 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
   für den Weihnachtsmarkt – übernehmen und mit weiteren Songs ergänzen. Auf der öffentlichen Repertoire- und
   Songwunsch-Seite stehen die Weihnachtslieder vom 1. bis 24. Dezember automatisch oben.
 - Im Bühnen-Modus unter jedem Song 1–5 **Sterne** antippen (oder Taste 1–5), wie er an dem Abend lief. Die
-  **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über „Datei importieren“ dazu.
+  **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über die Synchronisation bzw. ein Backup dazu.
 - **Setlist vorschlagen** (unter der Setlist): Anzahl Sets und Minuten wählen – die Songs mit den meisten Sternen
   kommen zuerst, der beste ans Set-Ende.
 - Nach dem Auftritt übernimmt **Rückblick schreiben** die Setlist und den „Song des Abends“ (meiste Sterne) – sie
@@ -210,7 +210,7 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 Bühnen-Modus), ⚠ setzt einen Song auf die eigene „Wackelt noch“-Liste, dazu „Was lief gut?“ und „Was ging schief?“.
 **Merkpunkte** (eine Zeile je Punkt, z. B. „Kabel für Keys kaufen“) stehen unter **Aufgaben**, bis sie abgehakt sind.
 „Was lief gut“ lässt sich im Rückblick-Formular darunter als Entwurf übernehmen – vor dem Veröffentlichen umformulieren.
-Die Nachbereitung steckt in der Backstage-Sicherung (Abgleich) und geht so auch mit „Stand sichern“ an die Band.
+Die Nachbereitung steckt im Backup (Einstellungen → Backup).
 
 **Songs → Liste:** „Zeigen“ filtert Lücken (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie
 „Bass“, noch nie gespielt, wackelt noch). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
@@ -237,11 +237,26 @@ Darunter **Aufräumen**:
   und Setlist-Vorschlag sie brauchen.
 - **Verwaiste Einträge:** Daten zu abgesagten oder verschobenen Auftritten, Noten von Songs, die nicht mehr im
   Repertoire sind, und PDFs, die kein Song nutzt.
-- **Stand der Band übernehmen:** eine Backstage-Datei importieren und dabei alles Bisherige ersetzen – danach hat das
-  Gerät genau den Stand der Datei (Einstellungen und Noten bleiben).
 - **Alles löschen:** setzt die Website auf dem Gerät komplett zurück (Bestätigung durch Eintippen von „LÖSCHEN“).
 
-Vorher sichern: **Alles an die Band schicken** (oben) und für Noten **Songs → Noten → Notenblätter an die Band**.
+Vorher sichern: **Einstellungen → Backup → Backup erstellen** (Backstage-Daten und Notenblätter).
+
+## Backup (Einstellungen)
+
+Ein **Backup** sichert alle Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
+Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen). Mitschnitte und Einstellungen
+gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup war; nach 30 Tagen erinnert Backstage → Aufgaben.
+
+- **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners (ein älteres
+  Noten-Backup wird dort ersetzt, die Daten-Backups bleiben als Verlauf) und gleich abgleichen; sonst als Datei zum
+  Teilen oder Speichern. **Als Datei teilen** geht auch mit Synchronisation, z. B. für die WhatsApp-Gruppe.
+- **Aus OneDrive wiederherstellen:** gleicht ab und übernimmt das neueste Backup aus dem OneDrive-Ordner (auch frühere
+  Sicherungen aus dem Ordner `Backstage`) – mit Vorschau, was neu ist und was sich ändert.
+- **Aus Datei wiederherstellen:** Backup-Datei(en) wählen, ebenfalls mit Vorschau; ergänzt, was da ist.
+- **Alles ersetzen statt ergänzen** (aufklappen): löscht vorher alle Backstage-Daten des Geräts – danach hat es genau
+  den Stand des Backups, z. B. ein neues Handy.
+
+Einzelne Auftritte oder Proben an die Band schicken: auf deren Seite **Diesen Termin an die Band**.
 
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
 
@@ -271,16 +286,15 @@ Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim rich
 eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
 („2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**).
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
-**Synchronisierte Dateien einlesen** (Backstage-Dateien, Notenpakete, PDFs, .pro) und **Stand sichern**: legt die
-Backstage-Sicherung und die Notenblätter (Notenpaket mit PDFs, Akkordblättern und Markierungen; ein älteres Notenpaket
-wird ersetzt) in den Unterordner `Backstage` des Sync-Ordners und gleicht gleich ab.
+**Synchronisierte Dateien einlesen** (Backups, Notenpakete, PDFs, .pro). Das Backup in den Sync-Ordner steht unter
+Einstellungen → **Backup**.
 
 Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
 
-- Die neueste Backstage-Datei und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
+- Das neueste Backup und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
   ersetzt.
-- **Vorschau:** unter jeder Backstage-Datei steht, was sich ändert („2 neu, 1 geändert, 5 gleich“, aufklappbar; bei
-  Setlists „3 Songs anders“). „Datei importieren“ fragt mit derselben Vorschau nach.
+- **Vorschau:** unter jedem Backup steht, was sich ändert („2 neu, 1 geändert, 5 gleich“, aufklappbar; bei
+  Setlists „3 Songs anders“). „Aus Datei wiederherstellen“ fragt mit derselben Vorschau nach.
 - **Titel und Interpret** jeder Noten-Datei werden vor dem Einlesen erkannt und angezeigt – aus dem Dateinamen (in
   beliebiger Reihenfolge, z. B. `Iris - Goo Goo Dolls - Bass.pdf`, `Goo Goo Dolls - Iris.pdf`,
   `Giesinger, Max - 80 Millionen (Keys).pdf`), dem Ordner (`Goo Goo Dolls/Iris/Bass.pdf`), bei .pro aus

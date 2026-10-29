@@ -1,5 +1,5 @@
 // Proben-Mitschnitte je Song: am Handy aufnehmen, die Aufnahme bleibt beim Song auf diesem Gerät (IndexedDB
-// „bn-mitschnitte“) – zum Nachhören zu Hause. Nie im Repository und nicht in der Backstage-Sicherung (zu groß);
+// „bn-mitschnitte“) – zum Nachhören zu Hause. Nie im Repository und nicht im Backup (zu groß);
 // weitergeben über „Teilen“. Gelöscht wird je Aufnahme oder unter Abgleich → Aufräumen.
 const DB = 'bn-mitschnitte';
 const AUFNAHMEN = 'aufnahmen';

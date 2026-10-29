@@ -132,7 +132,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-noten-scrolltempo': 'Mitscroll-Tempo je Song',
   'bn-backstage-filter': 'Filter unter Termine',
   'bn-sprache': 'Gewählte Sprache',
-  'bn-gesichert': 'Letzte Sicherung',
+  'bn-gesichert': 'Letztes Backup',
   'bn-chunk-reload': 'Neuladen nach Update',
   'bn-onedrive-client': 'OneDrive: App-ID',
   'bn-onedrive-konto': 'OneDrive: zuletzt angemeldetes Konto',
@@ -234,7 +234,7 @@ export function eintraege(auftritte: Map<string, string>): Eintrag[] {
   return alleSchluessel().map((key) => eintragBeschreiben(key, localStorage.getItem(key) ?? '', auftritte));
 }
 
-// ---- Vorschau vor dem Übernehmen einer Backstage-Datei ------------------------------------------------------
+// ---- Vorschau vor dem Übernehmen eines Backups -----------------------------------------------------------
 
 export interface Vorschau {
   neu: Eintrag[];

@@ -8,7 +8,7 @@ import { Vorschau, vorschau, vorschauText } from '../data/aufraeumen';
 import { backupEintraege } from './backstage-sync';
 import { Fortschritt, Stand } from './fortschritt';
 
-// Was in einem Ordner gefunden wurde (Synchronisation: Einlesen bzw. Zuordnen): Backstage-Dateien und
+// Was in einem Ordner gefunden wurde (Synchronisation: Einlesen bzw. Zuordnen): Backups und
 // Notenpakete einzeln wählbar (die neuesten vorausgewählt); Noten-Dateien je Datei mit erkanntem Song (Titel –
 // Interpret, data/erkennung.ts), Auswahl bei Unklarem und Fassung zum Korrigieren; dann einlesen.
 @Component({
@@ -16,10 +16,10 @@ import { Fortschritt, Stand } from './fortschritt';
   imports: [MatIconModule, Fortschritt],
   template: `
     <div class="funde">
-      @if (!funde().length) { <p>Hier ist nichts, was sich einlesen ließe (Backstage-Dateien, Notenpakete, PDFs, .pro).</p> }
+      @if (!funde().length) { <p>Hier ist nichts, was sich einlesen ließe (Backups, Notenpakete, PDFs, .pro).</p> }
       @for (d of einzeln(); track d.pfad) {
         <label class="check"><input type="checkbox" [checked]="gewaehlt().has(d.pfad)" (change)="waehlen(d.pfad)" />
-          {{ d.art === 'backstage' ? 'Backstage' : 'Notenpaket' }} · {{ d.pfad }} <small>{{ datum(d.geaendert) }}</small></label>
+          {{ d.art === 'backstage' ? 'Backup' : 'Notenpaket' }} · {{ d.pfad }} <small>{{ datum(d.geaendert) }}</small></label>
         @if (vorschauen().get(d.pfad); as v) {
           <details class="vorschau">
             <summary>Was sich ändert: {{ text(v) }}</summary>
@@ -66,7 +66,7 @@ import { Fortschritt, Stand } from './fortschritt';
         </div>
       }
       @if (hatBackstage()) {
-        <label class="check"><input type="checkbox" [checked]="ersetzen()" (change)="ersetzen.set($any($event.target).checked)" /> Backstage-Daten ersetzen statt ergänzen</label>
+        <label class="check"><input type="checkbox" [checked]="ersetzen()" (change)="ersetzen.set($any($event.target).checked)" /> Backup ersetzt alles statt zu ergänzen</label>
       }
       @if (funde().length) {
         <button type="button" class="primaer" (click)="einlesen()" [disabled]="laeuft() || !anzahl()"><mat-icon>download</mat-icon> Einlesen</button>
@@ -125,7 +125,7 @@ export class FundeListe {
   protected readonly ohne = signal<string[]>([]);
 
   protected readonly einzeln = computed(() => this.funde().filter((d) => d.art === 'backstage' || d.art === 'noten'));
-  // Vorschau je Backstage-Datei: was neu ist, was sich ändert, was gleich bleibt
+  // Vorschau je Backup: was neu ist, was sich ändert, was gleich bleibt
   private readonly band = inject(BandService);
   private readonly auftritte = new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue]));
   protected readonly text = vorschauText;
@@ -153,7 +153,7 @@ export class FundeListe {
   protected readonly anzahl = computed(() => this.gewaehlt().size + [...this.ziele().values()].filter((z) => z.an && z.key).length);
 
   constructor() {
-    // neue Funde: die neueste Backstage-Datei und das neueste Notenpaket vorauswählen
+    // neue Funde: das neueste Backup und das neueste Notenpaket vorauswählen
     effect(() => {
       const f = this.funde();
       untracked(() => {

@@ -9,7 +9,7 @@ import { RUECKBLICK_AB, rueckblickJahre } from '../data/jahresrueckblick';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
-import { tageSeitSicherung } from './backstage-sync';
+import { tageSeitBackup } from './backstage-sync';
 import { alleNachbereitungen, offeneMerkpunkte } from '../data/nachbereitung';
 import repertoire from '../data/repertoire.json';
 import technik from '../data/technik.json';
@@ -252,13 +252,13 @@ export class BackstageAufgaben {
       });
     }
 
-    // Backstage-Daten liegen nur auf dem Gerät – regelmäßig an die Band schicken (= Sicherung)
-    const tage = tageSeitSicherung();
+    // Backstage-Daten liegen nur auf dem Gerät – regelmäßig ein Backup erstellen
+    const tage = tageSeitBackup();
     if (tage === null || (tage !== undefined && tage >= 30))
       out.push({
-        text: tage === null ? 'Backstage-Daten auf diesem Gerät noch nie gesichert' : `Backstage-Daten seit ${tage} Tagen nicht gesichert`,
-        details: ['Setlists, Sterne und Vor-Ort-Angaben liegen nur in diesem Browser – unter „Abgleich“ „Alles an die Band schicken“'],
-        link: '/backstage/abgleich',
+        text: tage === null ? 'Noch kein Backup auf diesem Gerät' : `Seit ${tage} Tagen kein Backup`,
+        details: ['Setlists, Sterne, Vor-Ort-Angaben und Notenblätter liegen nur in diesem Browser – unter „Einstellungen“ „Backup erstellen“'],
+        link: '/backstage/einstellungen',
         icon: 'sync',
       });
 
@@ -287,7 +287,7 @@ export class BackstageAufgaben {
           'GitHub → Pull requests: offene Dependabot-Updates (Angular, Lighthouse, Playwright …) prüfen und zusammenführen, wenn die Prüfung grün ist',
           'GitHub → Actions → letzter Deploy → Linkcheck: Warnungen zu externen Links ansehen (z. B. umgezogene Seiten von Veranstaltern)',
           'GitHub → Actions → letzter Deploy → Lighthouse: Werte und Rechner-Tempo kurz ansehen',
-          'Backstage-Daten sichern: unter „Abgleich“ „Alles an die Band schicken“',
+          'Backup erstellen: unter „Einstellungen“ „Backup erstellen“',
         ],
         link: '/backstage/abgleich',
         icon: 'build',

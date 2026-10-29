@@ -631,7 +631,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   return q;
 });
 
-test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträge aufräumen, Stand ersetzen, alles löschen', async () => {
+test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträge aufräumen; Backup ersetzt alles; alles löschen', async () => {
   const p = await page();
   await p.go('/backstage/abgleich/');
   // ein vergangener Auftritt (aus der Sitemap), ein Auftritt, den es nicht gibt, und eine Einstellung
@@ -669,12 +669,16 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   await p.reload({ waitUntil: 'networkidle' });
   await box.locator('button', { hasText: /Eintrag entfernen|Einträge.*entfernen$/ }).last().click();
   await until(async () => (await p.evaluate(() => localStorage.getItem('bn-werbeplan-2099-01-01'))) === null, 'Verwaister Eintrag bleibt');
-  // Stand der Band übernehmen: ersetzt die Setlist durch die Datei
+  // Einstellungen → Backup → „Alles ersetzen“: ersetzt die Setlist durch die Datei
+  await p.go('/backstage/einstellungen/');
+  const backup = p.locator('app-backup-karte');
+  await backup.locator('summary').click();
   const datei = JSON.stringify({ app: 'blickfeld-nord-backstage', version: 1, exported: '', data: { 'bn-probe-2099-02-02': { songs: [], notizen: 'neu', punkte: [] } } });
-  await box.locator('input[type=file]').setInputFiles({ name: 'band.json', mimeType: 'application/json', buffer: Buffer.from(datei) });
-  await p.waitForLoadState('networkidle');
+  await backup.locator('details input[type=file]').setInputFiles({ name: 'band.json', mimeType: 'application/json', buffer: Buffer.from(datei) });
   await until(async () => (await p.evaluate((alt) => [localStorage.getItem(`bn-setlist-${alt}`), !!localStorage.getItem('bn-probe-2099-02-02'), localStorage.getItem('bn-buehne-zoom')], alt).catch(() => [])).join() === ',true,1.1', 'Ersetzen übernimmt nicht genau den Stand der Datei');
+  await p.waitForTimeout(1500);
   // alles löschen – nur mit eingetipptem LÖSCHEN
+  await p.go('/backstage/abgleich/');
   p.promptAntwort = 'LÖSCHEN';
   await p.locator('app-backstage-aufraeumen button.gefahr').click();
   await until(async () => (await p.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('bn-')).length).catch(() => -1)) === 0, 'Alles löschen lässt Einträge zurück');
@@ -701,23 +705,25 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await box.locator('input[type=radio]').nth(1).check();
   await until(async () => (await box.locator('button', { hasText: 'Ordner wählen' }).count()) === 1, 'Ordnerwahl erscheint nicht');
   expect(!(await box.locator('button', { hasText: 'Jetzt synchronisieren' }).isEnabled()), 'Synchronisieren ohne Konto und Ordner möglich');
-  // eingerichtet (Cloud-Ordner gewählt, Speicher der App): „Stand sichern“ legt die Sicherung in den Sync-Ordner
+  // eingerichtet (Cloud-Ordner gewählt, Speicher der App): „Backup erstellen“ legt das Backup in den Sync-Ordner
   await p.evaluate(() => {
     localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
     localStorage.setItem('bn-probe-2099-04-04', JSON.stringify({ songs: [], notizen: 'x', punkte: [] }));
   });
-  await p.go('/backstage/abgleich/');
-  const status = p.locator('app-sync-status');
-  await status.locator('button', { hasText: 'Stand sichern' }).click();
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.locator('app-backup-karte button', { hasText: 'Backup erstellen' }).click();
   await until(async () => (await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync');
     req.onsuccess = () => {
       const k = req.result.transaction('dateien').objectStore('dateien').getAllKeys();
-      k.onsuccess = () => ok(k.result.some((x) => String(x).startsWith('Backstage/blickfeld-nord-backstage-alle-')));
+      k.onsuccess = () => ok(k.result.some((x) => String(x).startsWith('Backup/blickfeld-nord-backup-')));
       k.onerror = () => ok(false);
     };
     req.onerror = () => ok(false);
-  }))), 'Stand sichern legt keine Datei in den Sync-Ordner');
+  }))), 'Backup erstellen legt keine Datei in den Sync-Ordner');
+  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup:'), 'Letztes Backup wird nicht angezeigt');
+  await p.go('/backstage/abgleich/');
+  const status = p.locator('app-sync-status');
   // nach dem Abgleich nicht eindeutig erkannte Noten warten auf eine Zuordnung
   await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync', 1);
@@ -858,8 +864,8 @@ test('Backstage: Vor Ort berechnet Abfahrt, Daten lassen sich exportieren und im
   const [dl] = await Promise.all([p.waitForEvent('download'), p.locator('app-backstage-sync button').click()]);
   const file = await dl.path();
   const q = await page();
-  await q.go('/backstage/abgleich/');
-  await q.locator('app-backstage-sync input[type=file]').setInputFiles(file);
+  await q.go('/backstage/einstellungen/');
+  await q.locator('app-backup-karte .knoepfe input[type=file]').setInputFiles(file);
   await q.waitForTimeout(1500);
   await q.go(`/backstage/${id}/vorort`);
   expect((await q.locator('app-vorort input').first().inputValue()) === 'Test Kontakt', 'Import hat die Vor-Ort-Angaben nicht übernommen');
