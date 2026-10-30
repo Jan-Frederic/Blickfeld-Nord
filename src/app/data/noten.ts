@@ -157,6 +157,8 @@ export interface Strich {
   farbe: string;
   breite: number;
   punkte: number[];
+  /** nur für mich – sonst gilt die Markierung für alle (Synchronisation) */
+  privat?: boolean;
 }
 
 const markKey = (datei: string, seite: number) => `${datei}:${seite}`;

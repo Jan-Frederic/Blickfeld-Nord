@@ -10,7 +10,7 @@ import type { SyncDatei } from './sync';
 export type SpiegelArt = 'band' | 'person';
 
 const BAND = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'];
-const PERSON = ['bn-buehne-', 'bn-noten-wahl', 'bn-noten-breite', 'bn-noten-scrolltempo', 'bn-noten-transpose', 'bn-noten-zuordnungen', 'bn-noten-ansicht', 'bn-wackelt', 'bn-aufgaben', 'bn-backstage-filter', 'bn-sprache'];
+const PERSON = ['bn-buehne-', 'bn-noten-stift-privat', 'bn-noten-wahl', 'bn-noten-breite', 'bn-noten-scrolltempo', 'bn-noten-transpose', 'bn-noten-zuordnungen', 'bn-noten-ansicht', 'bn-wackelt', 'bn-aufgaben', 'bn-backstage-filter', 'bn-sprache'];
 
 /** wird der Eintrag gespiegelt – für alle (band) oder je Person? null = bleibt auf dem Gerät (Sync, Anmeldung …) */
 export function spiegelArt(key: string): SpiegelArt | null {
@@ -48,7 +48,8 @@ export function hash(text: string): string {
 }
 
 /** Stand je gespiegelter Datei: Hash des Inhalts und Version der lokalen Datei beim letzten Spiegeln */
-export type SpiegelZustand = Record<string, { hash: string; version: string; key?: string }>;
+/** teilweise: Datei ließ sich auf diesem Gerät nicht ganz übernehmen (PDF fehlt) – wird von hier nie gelöscht */
+export type SpiegelZustand = Record<string, { hash: string; version: string; key?: string; teilweise?: boolean }>;
 
 /** was vor dem Abgleich in den lokalen Sync-Ordner muss: geänderte Einträge schreiben, gelöschte entfernen */
 export function planVorher(werte: Record<string, string>, zustand: SpiegelZustand, person: string): { schreiben: { pfad: string; text: string; hash: string }[]; loeschen: string[] } {

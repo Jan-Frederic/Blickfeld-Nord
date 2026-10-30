@@ -5,12 +5,22 @@ import { Strich, markierungen, markierungenSetzen } from '../data/noten';
 // Markierungen im Notenblatt (Bühnen-Modus → Noten → Stift): eine durchsichtige Leinwand genau über der PDF-Seite.
 // Gezeichnet wird mit Finger, Stift oder Maus; die Striche werden in Seitenanteilen (0–1) gespeichert und passen so
 // bei jeder Größe. Gespeichert je PDF-Datei und Seite auf diesem Gerät (data/noten.ts), im Notenpaket enthalten.
+// Markierungen gelten für alle in der Band (Synchronisation); mit dem Personen-Knopf nur für mich.
 const FARBEN = [
   { farbe: '#d93025', name: 'Rot' },
   { farbe: '#1a73e8', name: 'Blau' },
   { farbe: '#188038', name: 'Grün' },
   { farbe: 'rgba(255, 213, 0, .45)', name: 'Textmarker' },
 ];
+
+const PRIVAT_KEY = 'bn-noten-stift-privat';
+function ladePrivat(): boolean {
+  try {
+    return localStorage.getItem(PRIVAT_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 @Component({
   selector: 'app-noten-stift',
@@ -24,6 +34,9 @@ const FARBEN = [
         @for (f of farben; track f.farbe) {
           <button type="button" class="farbe" [class.an]="farbe() === f.farbe" [style.background]="f.farbe" (click)="farbe.set(f.farbe)" [attr.aria-label]="f.name" [attr.aria-pressed]="farbe() === f.farbe"></button>
         }
+        <button type="button" class="wer" [class.an]="privat()" (click)="privatUmschalten()" [attr.aria-pressed]="privat()"
+          [attr.aria-label]="privat() ? 'Neue Markierungen nur für mich' : 'Neue Markierungen für alle'" [title]="privat() ? 'Nur für mich' : 'Für alle in der Band'">
+          <mat-icon>{{ privat() ? 'person' : 'groups' }}</mat-icon></button>
         <button type="button" (click)="rueckgaengig()" [disabled]="!striche().length" aria-label="Letzten Strich entfernen"><mat-icon>undo</mat-icon></button>
         <button type="button" (click)="leeren()" [disabled]="!striche().length" aria-label="Alle Markierungen dieser Seite löschen"><mat-icon>delete</mat-icon></button>
       </div>
@@ -40,6 +53,7 @@ const FARBEN = [
     button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #444; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; }
     button:disabled { opacity: .4; }
     .farbe.an { outline: 3px solid #fff; outline-offset: 1px; }
+    .wer.an { border-color: #e8a46a; color: #e8a46a; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
   `,
 })
@@ -51,6 +65,16 @@ export class NotenStift {
   protected readonly farben = FARBEN;
   protected readonly farbe = signal(FARBEN[0].farbe);
   protected readonly striche = signal<Strich[]>([]);
+  /** neue Striche nur für mich (Standard: für alle in der Band) – je Person gemerkt */
+  protected readonly privat = signal(ladePrivat());
+  protected privatUmschalten(): void {
+    this.privat.update((p) => !p);
+    try {
+      localStorage.setItem(PRIVAT_KEY, this.privat() ? '1' : '0');
+    } catch {
+      // ohne Speicher gilt es bis zum Schließen
+    }
+  }
   private readonly flaeche = viewChild.required<ElementRef<HTMLCanvasElement>>('flaeche');
   private aktuell: Strich | null = null;
 
@@ -117,7 +141,7 @@ export class NotenStift {
     e.preventDefault();
     this.flaeche().nativeElement.setPointerCapture(e.pointerId);
     const textmarker = this.farbe().startsWith('rgba');
-    this.aktuell = { farbe: this.farbe(), breite: textmarker ? 0.025 : 0.004, punkte: this.punkt(e) };
+    this.aktuell = { farbe: this.farbe(), breite: textmarker ? 0.025 : 0.004, punkte: this.punkt(e), ...(this.privat() ? { privat: true } : {}) };
     this.zeichnen();
   }
 

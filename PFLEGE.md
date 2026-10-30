@@ -171,8 +171,8 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 **Im Bühnen-Modus außerdem:**
 
 - **Markieren:** in der PDF-Ansicht auf ✏ tippen und mit Finger, Stift oder Maus ins Notenblatt zeichnen (Rot, Blau,
-  Grün, Textmarker; ↶ nimmt den letzten Strich zurück, 🗑 leert die Seite). Die Markierungen gelten je PDF und Seite,
-  bleiben auf dem Gerät und gehen im Notenpaket mit („Notenblätter an die Band“, Synchronisation).
+  Grün, Textmarker; ↶ nimmt den letzten Strich zurück, 🗑 leert die Seite). Markierungen gelten **für alle** in der Band
+  und werden mitsynchronisiert; mit dem Personen-Knopf (👥 → 👤) zeichnest du **nur für dich** (bleibt gemerkt).
 - **Halbseiten-Blättern** und eigene **Pedal-Tasten:** unter Backstage → **Einstellungen → Bühnen-Modus**. Mit
   Halbseiten-Blättern zeigt der erste Tritt oben schon den Anfang der nächsten Seite, der zweite blättert ganz um.
   Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten.
@@ -292,7 +292,9 @@ jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern 
   Zuordnungen, Wackelt-Liste, Aufgaben-Häkchen, Filter, Sprache.
 - `Noten/` – je Song, welche PDFs (mit Fassung und Seitenbereich) und welches Akkordblatt dazugehören. PDFs werden
   über Name und Größe gefunden; fehlt eines auf dem Gerät, holt die App es aus dem Sync-Ordner (z. B. `Sheets/`).
-- `Markierungen/<Name>/` – die eigenen Zeichnungen im Notenblatt, je PDF.
+- `Markierungen/Band/` – Zeichnungen im Notenblatt für alle (Standard), `Markierungen/<Name>/` – die nur für dich
+  gezeichneten, je PDF. Fehlt einem Gerät ein PDF noch, löscht es dessen Noten oder Markierungen nie für die anderen
+  und holt sie nach, sobald das PDF da ist.
 - `Mitschnitte/` – nur, was jemand ausdrücklich mit der Band teilt.
 - Nur auf dem Gerät bleiben die Synchronisation selbst (Ordner, Anmeldung), nicht geteilte Mitschnitte und die Seiten
   für unterwegs.
