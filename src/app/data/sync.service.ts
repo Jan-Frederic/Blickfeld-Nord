@@ -4,7 +4,10 @@ import { letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, on
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, ergebnisText, synchronisieren } from './sync';
 import { erkennen } from './erkennung';
-import { notenDateien } from './noten';
+import { NOTEN_GEAENDERT, NotenDateiInfo, NotenPdf, alleMarkierungen, alleSongNoten, markierungenSetzen, notenDateiSpeichern, notenDateien, songNotenSetzen } from './noten';
+import { MarkDateiInhalt, NotenDateiInhalt, istNotenSpiegel, markTexte, notenPfad, notenText, pdfFinden } from './noten-spiegel';
+import type { SyncDatei } from './sync';
+import { Mitschnitt, mitschnittAusPfad, mitschnittEndung, mitschnittGeteilt, mitschnittPfad, mitschnittPfade, mitschnittSpeichern } from './mitschnitte';
 import { NotenQuelle, istAkkordblatt, istPdf, notenEinlesen } from './noten-import';
 import {
   appOrdner,
@@ -55,6 +58,7 @@ export class SyncService {
         this.ausstehendZaehlen();
       })
       .catch(() => undefined);
+    addEventListener(NOTEN_GEAENDERT, () => !this.spiegelt && this.geaendert());
     // jede Änderung an gespiegelten Einträgen (Setlist, Einstellungen …) wenige Sekunden später abgleichen
     const speicher = Storage.prototype as Storage & { __bnSync?: boolean };
     if (speicher.__bnSync) return;
@@ -120,8 +124,117 @@ export class SyncService {
       await lokal.loeschen(pfad).catch(() => undefined);
       delete z[pfad];
     }
+    // Noten (Zuordnung, Fassung, Seitenbereich, Akkordblatt) und eigene Markierungen
+    const noten = await this.notenExport(person);
+    for (const [pfad, { text, key }] of Object.entries(noten)) {
+      const h = hash(text);
+      if (z[pfad]?.hash === h) continue;
+      const datei = await lokal.schreiben(pfad, new Blob([text], { type: 'application/json' }));
+      z[pfad] = { hash: h, version: datei.version, ...(key ? { key } : {}) };
+    }
+    for (const pfad of Object.keys(z)) {
+      if (istNotenSpiegel(pfad, person) && !noten[pfad]) {
+        await lokal.loeschen(pfad).catch(() => undefined);
+        delete z[pfad];
+      }
+    }
     await spiegelZustandSetzen(z);
     this.spiegel.set(z);
+  }
+
+  /** Mitschnitt mit der Band teilen: in den Ordner „Mitschnitte/<Song>/“ des Sync-Ordners legen und abgleichen */
+  async mitschnittTeilen(m: Mitschnitt): Promise<void> {
+    const lokal = await this.lokal(true);
+    if (!lokal) throw new Error('Kein Zugriff auf den Sync-Ordner – unter Einstellungen → Synchronisation wählen.');
+    const pfad = mitschnittPfad(m, this.person(), mitschnittEndung(m));
+    await lokal.schreiben(pfad.replace(/[^/]+$/, 'song.txt'), new Blob([m.song], { type: 'text/plain' }));
+    await lokal.schreiben(pfad, m.daten);
+    await mitschnittGeteilt(m, pfad);
+    void this.jetzt();
+  }
+
+  // geteilte Mitschnitte der anderen beim Song übernehmen (einmal je Datei)
+  private async mitschnitteNachher(lokal: SyncOrdner, liste: SyncDatei[]): Promise<number> {
+    const bekannt = await mitschnittPfade();
+    const songs = new Map<string, string>();
+    let n = 0;
+    for (const d of liste) {
+      const info = mitschnittAusPfad(d.pfad);
+      if (!info || bekannt.has(d.pfad)) continue;
+      const ordner = d.pfad.replace(/[^/]+$/, '');
+      if (!songs.has(ordner)) {
+        const songDatei = liste.find((x) => x.pfad === ordner + 'song.txt');
+        songs.set(ordner, songDatei ? (await (await lokal.lesen(songDatei.pfad)).text()).trim() : '');
+      }
+      const song = songs.get(ordner);
+      if (!song) continue;
+      await mitschnittSpeichern(song, await lokal.lesen(d.pfad), info.dauer, { datum: info.datum, von: info.von, pfad: d.pfad });
+      n++;
+    }
+    return n;
+  }
+
+  private async notenExport(person: string): Promise<Record<string, { text: string; key?: string }>> {
+    const infos = new Map((await notenDateien()).map((d) => [d.id, { name: d.name, groesse: d.groesse }]));
+    const out: Record<string, { text: string; key?: string }> = {};
+    for (const [key, n] of Object.entries(await alleSongNoten())) out[notenPfad(key)] = { text: notenText(key, n, infos), key };
+    for (const [pfad, text] of Object.entries(markTexte(person, await alleMarkierungen(), infos))) out[pfad] = { text };
+    return out;
+  }
+
+  // Noten aus dem Sync-Ordner übernehmen: PDFs über Name und Größe finden, fehlende aus dem Ordner (z. B. Sheets/) holen
+  private async notenNachher(lokal: SyncOrdner, person: string, liste: SyncDatei[]): Promise<number> {
+    const z: SpiegelZustand = { ...(await spiegelZustandLaden()) };
+    let infos: NotenDateiInfo[] = await notenDateien();
+    const holen = async (name: string, groesse: number): Promise<NotenDateiInfo | undefined> => {
+      const gefunden = pdfFinden(name, groesse, infos);
+      if (gefunden) return gefunden;
+      const quelle = liste.find((d) => d.groesse === groesse && d.pfad.split('/').at(-1)?.toLowerCase() === name.toLowerCase());
+      if (!quelle) return undefined;
+      await notenDateiSpeichern(name, await (await lokal.lesen(quelle.pfad)).arrayBuffer());
+      infos = await notenDateien();
+      return pdfFinden(name, groesse, infos);
+    };
+    let n = 0;
+    this.spiegelt = true;
+    try {
+      const da = new Set<string>();
+      for (const d of liste) {
+        if (!istNotenSpiegel(d.pfad, person)) continue;
+        da.add(d.pfad);
+        if (z[d.pfad]?.version === d.version) continue;
+        const text = await (await lokal.lesen(d.pfad)).text();
+        if (d.pfad.startsWith('Noten/')) {
+          const inhalt = JSON.parse(text) as NotenDateiInhalt;
+          const pdfs: NotenPdf[] = [];
+          for (const p of inhalt.pdfs ?? []) {
+            const f = await holen(p.name, p.groesse);
+            if (f) pdfs.push({ datei: f.id, ...(p.fassung ? { name: p.fassung } : {}), ...(p.von ? { von: p.von } : {}), ...(p.bis ? { bis: p.bis } : {}) });
+          }
+          await songNotenSetzen(inhalt.song, { pdfs, ...(inhalt.chordpro ? { chordpro: inhalt.chordpro } : {}) });
+          // Stand = was dieses Gerät jetzt selbst schreiben würde – fehlt ein PDF hier, bleibt die Datei trotzdem unverändert
+          const map = new Map(infos.map((x) => [x.id, { name: x.name, groesse: x.groesse }]));
+          z[d.pfad] = { hash: hash(notenText(inhalt.song, { pdfs, chordpro: inhalt.chordpro }, map)), version: d.version, key: inhalt.song };
+        } else {
+          const inhalt = JSON.parse(text) as MarkDateiInhalt;
+          const f = await holen(inhalt.name, inhalt.groesse);
+          if (f) for (const [seite, striche] of Object.entries(inhalt.seiten ?? {})) await markierungenSetzen(f.id, Number(seite), striche);
+          z[d.pfad] = { hash: hash(text), version: d.version };
+        }
+        n++;
+      }
+      for (const [pfad, s] of Object.entries(z)) {
+        if (!istNotenSpiegel(pfad, person) || da.has(pfad)) continue;
+        if (pfad.startsWith('Noten/') && s.key) await songNotenSetzen(s.key, {});
+        delete z[pfad];
+        n++;
+      }
+    } finally {
+      this.spiegelt = false;
+    }
+    await spiegelZustandSetzen(z);
+    this.spiegel.set(z);
+    return n;
   }
 
   // nach dem Abgleich: neue/geänderte Dateien in localStorage übernehmen, verschwundene Einträge entfernen
@@ -245,8 +358,12 @@ export class SyncService {
       this.neu.set(ergebnis.neu);
       const uebernommen = await this.spiegelnNachher(lokal, person);
       const noten = e.notenAuto ? await this.notenEinlesen(lokal, ergebnis.neu) : '';
-      const daten = uebernommen ? ` · ${uebernommen} ${uebernommen === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
-      letzterSyncSetzen(ergebnisText(ergebnis) + daten + noten + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
+      const nachListe = await lokal.liste();
+      const notenSync = await this.notenNachher(lokal, person, nachListe);
+      const aufnahmen = await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
+      const daten = uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
+      const mit = aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '';
+      letzterSyncSetzen(ergebnisText(ergebnis) + daten + mit + noten + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
     } catch (err) {
       letzterSyncSetzen(`Abgebrochen: ${(err as Error).message || 'unbekannter Fehler'}`, true);
     } finally {

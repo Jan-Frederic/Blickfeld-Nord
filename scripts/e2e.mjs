@@ -921,6 +921,9 @@ test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung
   await p.waitForTimeout(1500);
   await dialog.getByRole('button', { name: /Stopp/ }).click();
   await until(async () => (await dialog.locator('app-song-mitschnitte audio').count()) === 1, 'Mitschnitt nicht gespeichert');
+  // Üben: Schleife und Tempo
+  await dialog.getByRole('button', { name: 'Üben: Schleife und Tempo' }).click();
+  await until(async () => (await dialog.locator('.ueben select').count()) === 1, 'Üben-Leiste fehlt');
   await p.keyboard.press('Escape');
   await p.locator('app-backstage-songs input[type=search]').fill('');
   await p.locator('select.zeigen').selectOption('wackelt');
@@ -950,6 +953,29 @@ test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung
   await until(async () => (await p.locator('app-rueckblick-formular textarea').first().inputValue()) === 'Alle haben mitgesungen', '„Was lief gut“ nicht in den Rückblick übernommen');
   await p.go('/backstage/aufgaben/');
   await until(async () => (await p.locator('app-backstage-aufgaben').innerText()).includes('2 offene Merkpunkte aus der Nachbereitung'), 'Merkpunkte fehlen unter Aufgaben');
+  return p;
+});
+
+test('Backstage: Hier schon gespielt, Stimmgerät und Probe-Aufnahme', async () => {
+  const p = await page({ permissions: ['microphone'] });
+  // Café Lotti 2026 (Tanz in den Mai) und 2027: gleicher Ort
+  await p.go('/backstage/');
+  await p.evaluate(() => localStorage.setItem('bn-setlist-2026-04-30', JSON.stringify([{ title: 'Iris', artist: 'The Goo Goo Dolls' }])));
+  await p.go('/backstage/2027-04-30/setlist');
+  await p.locator('app-setlist .search input').fill('Iris');
+  await p.locator('app-setlist .pick li button').first().click();
+  await until(async () => (await p.locator('app-setlist .list').innerText()).includes('hier schon am 30.04.2026 gespielt'), '„Hier schon gespielt“ fehlt');
+  await p.getByRole('button', { name: /Für Abwechslung tauschen/ }).click();
+  await until(async () => !(await p.locator('app-setlist .list').innerText()).includes('Iris'), 'Abwechslung tauscht den Song nicht');
+  // Probe: Stimmgerät und Aufnahme der ganzen Probe
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  await p.getByRole('button', { name: /Stimmgerät starten/ }).click();
+  await until(async () => (await p.locator('app-stimmgeraet').innerText()).match(/Ton anspielen|Cent/), 'Stimmgerät startet nicht');
+  expect(!(await p.locator('app-stimmgeraet').innerText()).includes('Kein Zugriff'), 'Stimmgerät bekommt kein Mikrofon');
+  await p.getByRole('button', { name: 'Stimmgerät schließen' }).click();
+  expect(await p.locator('app-backstage-probe app-song-mitschnitte').count(), 'Aufnahme der ganzen Probe fehlt');
   return p;
 });
 

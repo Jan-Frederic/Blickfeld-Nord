@@ -4,8 +4,10 @@ import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { alleSongNoten, pdfjsVorladen } from '../data/noten';
 import { NotenAnzeige } from './noten-anzeige';
+import { Stimmgeraet } from './stimmgeraet';
 import { tasten } from '../data/buehne-einstellungen';
-import { BEWERTUNG_PREFIX, bewerten, ladeBewertungen, songKey } from '../data/bewertung';
+import { BEWERTUNG_PREFIX, alleBewertungen, bewerten, ladeBewertungen, rangliste, songKey } from '../data/bewertung';
+import { RestSong, streichVorschlag, ueberzug } from '../data/kuerzen';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
@@ -34,7 +36,7 @@ function ladeZoom(): number {
 
 @Component({
   selector: 'app-setlist-buehne',
-  imports: [MatIconModule, NotenAnzeige],
+  imports: [MatIconModule, NotenAnzeige, Stimmgeraet],
   host: { tabindex: '-1', '(keydown)': 'key($event)' },
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
@@ -53,6 +55,7 @@ function ladeZoom(): number {
             <mat-icon>library_music</mat-icon>
           </button>
         }
+        <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät"><mat-icon>tune</mat-icon></button>
         <button type="button" class="close" (click)="end($event)" aria-label="Bühnen-Modus beenden"><mat-icon>close</mat-icon></button>
       </header>
 
@@ -108,8 +111,13 @@ function ladeZoom(): number {
         } @else if (current()) {
           <span class="label">Letzter Song</span>
         }
+        @if (streichen().length) {
+          <span class="label" style="color: #ff8a65">⏱ {{ fmt(ueber()) }} drüber</span>
+          <span class="next" style="font-size: .7em">streichen: {{ streichText() }} <button type="button" class="ton" style="display: inline" (click)="streichenJa($event)">Streichen</button></span>
+        }
         <span class="progress"><span [style.width.%]="progress()"></span></span>
       </footer>
+      @if (stimmen()) { <app-stimmgeraet style="position: fixed; left: 50%; top: 50%; z-index: 4; width: min(520px, 92vw); transform: translate(-50%, -50%)" (schliessen)="stimmen.set(false)" (pointerup)="$event.stopPropagation()" /> }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
       @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" (schliessen)="notenOffen.set(false)" /> }
     </div>
@@ -182,6 +190,7 @@ export class SetlistBuehne {
   readonly closed = output<void>();
 
   protected readonly isPause = isPause;
+  protected readonly stimmen = signal(false);
   // Schriftgröße (Faktor), je Gerät gespeichert
   protected readonly ZOOM_MIN = 0.7;
   protected readonly ZOOM_MAX = 1.6;
@@ -202,7 +211,14 @@ export class SetlistBuehne {
 
   protected readonly sets = computed(() => setsOf(this.entries()));
   protected readonly current = computed(() => this.entries()[this.index()]);
-  protected readonly next = computed(() => this.entries()[this.index() + 1]);
+  /** im Set gestrichene Songs (Index) – werden beim Blättern übersprungen */
+  protected readonly gestrichen = signal(new Set<number>());
+  private readonly naechsterIndex = computed(() => {
+    let i = this.index() + 1;
+    while (this.gestrichen().has(i)) i++;
+    return i;
+  });
+  protected readonly next = computed(() => this.entries()[this.naechsterIndex()]);
   // Set-Nummer: Pausen vor der aktuellen Position zählen (Pause gehört noch zum Set davor)
   protected readonly setNo = computed(() => this.entries().slice(0, this.index()).filter((e) => isPause(e)).length + 1);
   protected readonly songNo = computed(() => this.entries().slice(0, this.index() + 1).filter((e) => !isPause(e)).length);
@@ -393,11 +409,37 @@ export class SetlistBuehne {
     this.zaehler.set(0);
   }
 
+  // „Set zu lang“: Rest des laufenden Sets (nach dem aktuellen Song) gegen die geplante Länge – Vorschlag zum Streichen
+  private readonly sterneSchnitt = new Map(rangliste(alleBewertungen(), Infinity).map((p) => [songKey(p), p.schnitt]));
+  private readonly rest = computed<RestSong[]>(() => {
+    const out: RestSong[] = [];
+    for (let i = this.index() + 1; i < this.entries().length; i++) {
+      const e = this.entries()[i];
+      if (isPause(e)) break;
+      if (this.gestrichen().has(i)) continue;
+      out.push({ index: i, title: e.title, dauer: durationOf(e) ?? 0, sterne: this.sterneSchnitt.get(songKey(e)) ?? 3, wunsch: e.wunsch !== undefined });
+    }
+    return out;
+  });
+  protected readonly ueber = computed(() => {
+    const c = this.current();
+    const aktuell = c && !isPause(c) ? (durationOf(c) ?? 0) : 0;
+    return this.planned() ? Math.round(ueberzug(this.elapsed() + aktuell / 2, this.rest().reduce((n, s) => n + s.dauer, 0), this.planned())) : 0;
+  });
+  protected readonly streichen = computed(() => streichVorschlag(this.rest(), this.ueber()));
+  protected readonly streichText = computed(() => this.streichen().map((s) => s.title).join(', '));
+  protected streichenJa(e: Event): void {
+    e.stopPropagation();
+    this.gestrichen.update((g) => new Set([...g, ...this.streichen().map((s) => s.index)]));
+  }
+
   protected go(step: number): void {
     // Noten offen: erst innerhalb des Blatts blättern, am Ende bzw. Anfang weiter zum nächsten bzw. vorigen Song
     if (this.notenOffen() && this.anzeige()?.blaettern(step)) return;
     const before = this.setNo();
-    const target = Math.min(this.entries().length, Math.max(0, this.index() + step));
+    let target = Math.min(this.entries().length, Math.max(0, this.index() + step));
+    // gestrichene Songs überspringen
+    while (this.gestrichen().has(target) && target > 0 && target < this.entries().length) target += step > 0 ? 1 : -1;
     this.index.set(target);
     // neues Set beginnt (nach der Pause weiter) → Uhr neu starten
     if (this.setNo() !== before) this.setStart = Date.now();

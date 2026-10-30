@@ -8,13 +8,14 @@ import { SyncService } from '../data/sync.service';
 import { cloudName, syncEinstellungen } from '../data/sync-ordner';
 import { Fortschritt } from './fortschritt';
 import { FundeListe } from './funde-liste';
+import { SyncKonflikte } from './sync-konflikte';
 
 // Backstage → Abgleich → Synchronisation: Stand des letzten Abgleichs OneDrive ↔ lokal, „Jetzt synchronisieren“
 // mit Fortschritt, die lokalen Dateien (zum Öffnen, auch offline) und das Einlesen der synchronisierten Dateien
 // (Backups, Notenpakete, PDFs, .pro). Eingerichtet wird unter Backstage → Einstellungen, das Backup ebenfalls dort.
 @Component({
   selector: 'app-sync-status',
-  imports: [RouterLink, MatIconModule, Fortschritt, FundeListe],
+  imports: [RouterLink, MatIconModule, Fortschritt, FundeListe, SyncKonflikte],
   template: `
     <div class="box">
       <h3><mat-icon>sync</mat-icon> Synchronisation OneDrive ↔ lokal</h3>
@@ -32,6 +33,7 @@ import { FundeListe } from './funde-liste';
           <button type="button" (click)="einlesen()" [disabled]="sync.laeuft()"><mat-icon>download</mat-icon> Synchronisierte Dateien einlesen</button>
         </div>
         @if (sync.stand(); as s) { <app-fortschritt [stand]="s" /> }
+        <app-sync-konflikte (geaendert)="geaendert.emit()" />
         @if (sync.offen().length) {
           <p class="offen"><mat-icon>help_outline</mat-icon> {{ sync.offen().length }} {{ sync.offen().length === 1 ? 'Noten-Datei braucht' : 'Noten-Dateien brauchen' }} eine Zuordnung zum Song.
             <button type="button" (click)="zuordnen()" [disabled]="sync.laeuft()">Zuordnen</button>

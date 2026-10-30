@@ -109,6 +109,29 @@ export async function songNotenSetzen(key: string, noten: SongNoten): Promise<vo
   const n = notenNormal(noten);
   const leer = !n.pdfs?.length && !n.chordpro?.trim();
   await anfrage(SONGS, 'readwrite', (s) => (leer ? s.delete(key) : s.put(n, key)));
+  gemeldet();
+}
+
+/** Noten geändert (Zuordnung, Akkordblatt, Markierung, neue Datei) – die Synchronisation gleicht dann ab */
+export const NOTEN_GEAENDERT = 'bn-noten-geaendert';
+function gemeldet(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(NOTEN_GEAENDERT));
+}
+
+/** alle Markierungen (Schlüssel „Datei-ID:Seite“) – für die Synchronisation */
+export async function alleMarkierungen(): Promise<Record<string, Strich[]>> {
+  const d = await db();
+  return new Promise((ok, fehler) => {
+    const out: Record<string, Strich[]> = {};
+    const req = d.transaction(MARKIERUNGEN, 'readonly').objectStore(MARKIERUNGEN).openCursor();
+    req.onsuccess = () => {
+      const c = req.result;
+      if (!c) return ok(out);
+      out[String(c.key)] = c.value as Strich[];
+      c.continue();
+    };
+    req.onerror = () => fehler(req.error);
+  });
 }
 
 /** alle Songs mit Noten, Schlüssel „Titel|Interpret“ */
@@ -144,6 +167,7 @@ export async function markierungen(datei: string, seite: number): Promise<Strich
 
 export async function markierungenSetzen(datei: string, seite: number, striche: Strich[]): Promise<void> {
   await anfrage(MARKIERUNGEN, 'readwrite', (s) => (striche.length ? s.put(striche, markKey(datei, seite)) : s.delete(markKey(datei, seite))));
+  gemeldet();
 }
 
 /** alle Markierungen der genannten Dateien (für das Notenpaket) */

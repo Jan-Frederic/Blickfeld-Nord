@@ -1,4 +1,4 @@
-import { hash, keyAusPfad, personOrdner, planNachher, planVorher, spiegelArt, spiegelPfad, syncStatusVon } from './spiegel';
+import { hash, keyAusPfad, konfliktVon, personOrdner, planNachher, planVorher, spiegelArt, spiegelPfad, syncStatusVon } from './spiegel';
 
 describe('Spiegel (Einstellungen ↔ OneDrive)', () => {
   it('teilt Band-Daten, persönliche Einstellungen und Gerätedaten', () => {
@@ -40,5 +40,10 @@ describe('Spiegel (Einstellungen ↔ OneDrive)', () => {
     expect(syncStatusVon('bn-setlist-a', '[1]', zustand, 'Fred')).toBe('synchron');
     expect(syncStatusVon('bn-setlist-a', '[1,2]', zustand, 'Fred')).toBe('wartet');
     expect(syncStatusVon('bn-sync-letzter', '{}', zustand, 'Fred')).toBe('lokal');
+  });
+
+  it('erkennt Konfliktkopien und ihr Original', () => {
+    expect(konfliktVon('Daten/bn-setlist-x (Konflikt Gerät 2026-10-30).json')).toEqual({ original: 'Daten/bn-setlist-x.json', seite: 'Gerät', datum: '2026-10-30' });
+    expect(konfliktVon('Daten/bn-setlist-x.json')).toBeNull();
   });
 });

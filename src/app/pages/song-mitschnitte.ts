@@ -1,6 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Mitschnitt, mitschnittLoeschen, mitschnittName, mitschnittSpeichern, mitschnitte } from '../data/mitschnitte';
+import { SyncService } from '../data/sync.service';
 
 // Proben-Mitschnitte im Dialog „Song bearbeiten“: Aufnehmen mit dem Mikrofon des Geräts (ohne Rauschunterdrückung,
 // damit die Band nicht „weggefiltert“ wird), nachhören, teilen, löschen. Bleibt nur auf diesem Gerät (data/mitschnitte.ts).
@@ -24,10 +25,26 @@ interface Eintrag extends Mitschnitt {
       @if (fehler(); as f) { <p class="fehler" role="alert">{{ f }}</p> }
       @for (m of liste(); track m.id) {
         <div class="eintrag">
-          <span class="wann">{{ datum(m.datum) }} · {{ zeit(m.dauer) }}</span>
-          <audio controls preload="none" [src]="m.url"></audio>
+          <span class="wann">{{ datum(m.datum) }} · {{ zeit(m.dauer) }}@if (m.von) { · von {{ m.von }} } @else if (m.pfad) { · ☁ geteilt }</span>
+          <audio #a controls preload="none" [src]="m.url" (timeupdate)="schleife(m.id, a)" (play)="tempoSetzen(m.id, a)"></audio>
+          <button type="button" class="klein" [class.an]="ueben() === m.id" (click)="ueben.set(ueben() === m.id ? '' : m.id)" aria-label="Üben: Schleife und Tempo" title="Üben: Stelle wiederholen, langsamer abspielen"><mat-icon>repeat</mat-icon></button>
+          @if (sync.bereit() && !m.pfad) {
+            <button type="button" class="klein" (click)="mitBand(m)" aria-label="Mit der Band teilen (OneDrive)" title="Mit der Band teilen (OneDrive)"><mat-icon>cloud_upload</mat-icon></button>
+          }
           <button type="button" class="klein" (click)="teilen(m)" aria-label="Mitschnitt teilen"><mat-icon>share</mat-icon></button>
           <button type="button" class="klein" (click)="loeschen(m)" aria-label="Mitschnitt löschen"><mat-icon>delete</mat-icon></button>
+          @if (ueben() === m.id) {
+            <div class="ueben">
+              <label>Tempo
+                <select (change)="tempo.set($any($event.target).value); tempoSetzen(m.id, a)" aria-label="Abspieltempo">
+                  @for (t of tempi; track t) { <option [value]="t" [selected]="+tempo() === t">{{ t * 100 }} %</option> }
+                </select>
+              </label>
+              <button type="button" (click)="punktSetzen(m.id, 'a', a)">A {{ schleifen()[m.id]?.a !== undefined ? zeit(schleifen()[m.id]!.a!) : 'setzen' }}</button>
+              <button type="button" (click)="punktSetzen(m.id, 'b', a)">B {{ schleifen()[m.id]?.b !== undefined ? zeit(schleifen()[m.id]!.b!) : 'setzen' }}</button>
+              @if (schleifen()[m.id]) { <button type="button" (click)="schleifeAus(m.id)">Schleife aus</button> }
+            </div>
+          }
         </div>
       } @empty {
         @if (!aufnahme()) { <p class="leer">Noch keine Aufnahme – in der Probe auf „Aufnehmen“ tippen, bleibt nur auf diesem Gerät.</p> }
@@ -48,6 +65,9 @@ interface Eintrag extends Mitschnitt {
     .wann { font-size: .8rem; color: var(--bn-fog); min-width: 9em; }
     audio { flex: 1; min-width: 200px; height: 36px; }
     .leer, .fehler { margin: 8px 0 0; font-size: .82rem; color: var(--bn-fog); }
+    .klein.an { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .ueben { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: .82rem; color: var(--bn-fog); }
+    .ueben select { padding: 4px 6px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
     .fehler { color: #e0b25a; }
   `,
 })
@@ -139,6 +159,17 @@ export class SongMitschnitte {
     this.aufnahme.set(false);
   }
 
+  protected readonly sync = inject(SyncService);
+  protected async mitBand(m: Eintrag): Promise<void> {
+    try {
+      const { url: _, ...mitschnitt } = m;
+      await this.sync.mitschnittTeilen(mitschnitt);
+      this.liste.update((l) => l.map((x) => (x.id === m.id ? { ...x, pfad: 'geteilt' } : x)));
+    } catch (err) {
+      this.fehler.set((err as Error).message);
+    }
+  }
+
   protected async teilen(m: Eintrag): Promise<void> {
     const datei = new File([m.daten], mitschnittName(m, this.titel()), { type: m.daten.type });
     if (navigator.canShare?.({ files: [datei] })) {
@@ -159,7 +190,32 @@ export class SongMitschnitte {
   }
 
   protected zeit(sek: number): string {
-    return `${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}`;
+    const s = Math.floor(sek);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  // Üben: Stelle zwischen A und B in Schleife, langsamer abspielen ohne andere Tonhöhe
+  protected readonly ueben = signal('');
+  protected readonly tempi = [1, 0.9, 0.8, 0.75, 0.6, 0.5];
+  protected readonly tempo = signal(1);
+  protected readonly schleifen = signal<Record<string, { a?: number; b?: number }>>({});
+  protected tempoSetzen(id: string, a: HTMLAudioElement): void {
+    (a as HTMLAudioElement & { preservesPitch: boolean }).preservesPitch = true;
+    a.playbackRate = this.ueben() === id ? +this.tempo() : 1;
+  }
+  protected punktSetzen(id: string, welcher: 'a' | 'b', a: HTMLAudioElement): void {
+    this.schleifen.update((s) => {
+      const neu = { ...s[id], [welcher]: a.currentTime };
+      if (neu.a !== undefined && neu.b !== undefined && neu.b <= neu.a) delete neu.b;
+      return { ...s, [id]: neu };
+    });
+  }
+  protected schleifeAus(id: string): void {
+    this.schleifen.update(({ [id]: _, ...rest }) => rest);
+  }
+  protected schleife(id: string, a: HTMLAudioElement): void {
+    const s = this.schleifen()[id];
+    if (s?.a !== undefined && s.b !== undefined && a.currentTime >= s.b) a.currentTime = s.a;
   }
   protected datum(iso: string): string {
     return new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });

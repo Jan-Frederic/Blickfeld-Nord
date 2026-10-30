@@ -6,6 +6,8 @@ import { BandService } from '../data/band.service';
 import { songInfoText } from '../data/songinfo';
 import data from '../data/repertoire.json';
 import { BackstageSync } from './backstage-sync';
+import { SongMitschnitte } from './song-mitschnitte';
+import { Stimmgeraet } from './stimmgeraet';
 import { ProbeVorschlag } from './probe-vorschlag';
 
 // Backstage → Probe planen (/backstage/probe/<datum>): welche Songs geübt werden, Notizen und offene Punkte.
@@ -32,7 +34,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
 
 @Component({
   selector: 'app-backstage-probe',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -51,7 +53,9 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
               <li [class.done]="s.done">
                 <label><input type="checkbox" [checked]="s.done" (change)="toggleSong(i)" /> <span class="t">{{ s.title }}</span> <span class="a">{{ s.artist }}</span></label>
                 @if (info(s); as inf) { <span class="info">{{ inf }}</span> }
+                <button type="button" class="icon" [class.an]="aufnahme() === s.title + '|' + s.artist" (click)="aufnahme.set(aufnahme() === s.title + '|' + s.artist ? '' : s.title + '|' + s.artist)" [attr.aria-label]="'Mitschnitte von ' + s.title" title="Aufnehmen und nachhören"><mat-icon>mic</mat-icon></button>
                 <button type="button" class="icon" (click)="removeSong(i)" [attr.aria-label]="s.title + ' entfernen'"><mat-icon>close</mat-icon></button>
+                @if (aufnahme() === s.title + '|' + s.artist) { <app-song-mitschnitte class="voll" [songKey]="s.title + '|' + s.artist" [titel]="s.title" /> }
               </li>
             }
           </ul>
@@ -72,6 +76,14 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
             }
           </ul>
         }
+
+        <h3><mat-icon>tune</mat-icon> Stimmen</h3>
+        @if (stimmen()) { <app-stimmgeraet (schliessen)="stimmen.set(false)" /> } @else {
+          <button type="button" class="knopf" (click)="stimmen.set(true)"><mat-icon>tune</mat-icon> Stimmgerät starten</button>
+        }
+
+        <h3><mat-icon>graphic_eq</mat-icon> Ganze Probe aufnehmen</h3>
+        <app-song-mitschnitte [songKey]="'Probe|' + p.date" [titel]="'Probe ' + (p.date | date: 'dd.MM.yyyy')" />
 
         <h3><mat-icon>notes</mat-icon> Notizen</h3>
         <textarea rows="4" [value]="plan().notizen" (input)="setNotizen($any($event.target).value)" placeholder="z. B. Übergänge im zweiten Set, neue Ansagen …" aria-label="Notizen zur Probe"></textarea>
@@ -111,7 +123,8 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .a, .info { color: var(--bn-fog); font-size: .85rem; }
     .info { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--bn-line); }
     .icon { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: var(--bn-fog); cursor: pointer; }
-    .icon:hover { color: var(--bn-sunset); }
+    .icon:hover, .icon.an { color: var(--bn-sunset); }
+    .voll { flex-basis: 100%; }
     .search, .add { display: flex; gap: 8px; align-items: center; }
     .add { flex-wrap: wrap; }
     .add input { min-width: min(100%, 220px); }
@@ -125,8 +138,8 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .hits { list-style: none; margin: 6px 0 0; padding: 0; max-height: 260px; overflow-y: auto; border: 1px solid var(--bn-line); border-radius: 10px; }
     .hits button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 0; background: none; color: var(--bn-ink); font: inherit; text-align: left; cursor: pointer; }
     .hits button:hover { background: rgba(236, 233, 228, .06); color: var(--bn-sunset); }
-    .add button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; cursor: pointer; }
-    .add button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .add button, .knopf { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; cursor: pointer; }
+    .add button:hover, .knopf:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .empty { color: var(--bn-fog); font-size: .9rem; padding: 8px 12px; }
     .hint { margin: 32px 0 8px; font-size: .85rem; color: var(--bn-fog); }
   `,
@@ -137,6 +150,9 @@ export class BackstageProbe {
   private readonly band = inject(BandService);
   protected readonly probe = computed(() => this.band.rehearsals.find((r) => r.date === this.datum()));
   protected readonly plan = signal<ProbePlan>(leer());
+  /** Song, dessen Mitschnitte gerade aufgeklappt sind (Titel|Interpret) */
+  protected readonly aufnahme = signal('');
+  protected readonly stimmen = signal(false);
   protected readonly query = signal('');
 
   protected readonly treffer = computed(() => {

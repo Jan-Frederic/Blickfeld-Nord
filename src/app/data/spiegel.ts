@@ -48,7 +48,7 @@ export function hash(text: string): string {
 }
 
 /** Stand je gespiegelter Datei: Hash des Inhalts und Version der lokalen Datei beim letzten Spiegeln */
-export type SpiegelZustand = Record<string, { hash: string; version: string }>;
+export type SpiegelZustand = Record<string, { hash: string; version: string; key?: string }>;
 
 /** was vor dem Abgleich in den lokalen Sync-Ordner muss: geänderte Einträge schreiben, gelöschte entfernen */
 export function planVorher(werte: Record<string, string>, zustand: SpiegelZustand, person: string): { schreiben: { pfad: string; text: string; hash: string }[]; loeschen: string[] } {
@@ -89,4 +89,10 @@ export function syncStatusVon(key: string, wert: string | null, zustand: Spiegel
   const pfad = spiegelPfad(key, person);
   if (!pfad) return 'lokal';
   return wert !== null && zustand[pfad]?.hash === hash(wert) ? 'synchron' : 'wartet';
+}
+
+/** Konfliktkopie („Name (Konflikt Gerät 2026-10-30).json“) → Pfad des Originals und Seite/Datum; sonst null */
+export function konfliktVon(pfad: string): { original: string; seite: string; datum: string } | null {
+  const m = /^(.*) \(Konflikt (\S+) (\d{4}-\d{2}-\d{2})\)(\.[^./]*)?$/.exec(pfad);
+  return m ? { original: m[1] + (m[4] ?? ''), seite: m[2], datum: m[3] } : null;
 }

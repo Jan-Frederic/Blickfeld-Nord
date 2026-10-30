@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
@@ -10,6 +10,8 @@ import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, set
 import { gespielteTonart, songInfo, songInfoText } from '../data/songinfo';
 import { glaetten, sprungHinweis, spruenge } from '../data/tonart-uebergang';
 import { setlistAusHash, setlistLink } from '../data/setlist-link';
+import { BandService } from '../data/band.service';
+import { abwechslung, hierGespielt } from '../data/abwechslung';
 
 // Setlist pro Auftritt (Backstage): Songs aus dem Repertoire per Klick übernehmen, sortieren, Pausen zwischen
 // den Sets einfügen und als großformatige Bühnen-Setlist drucken bzw. als PDF speichern.
@@ -71,7 +73,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if ($any(e).notiz) {<span class="info" style="color: #9ccc9c">✎ {{ $any(e).notiz }}</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if ($any(e).notiz) {<span class="info" style="color: #9ccc9c">✎ {{ $any(e).notiz }}</span>}@if (hier().get($any(e).title + '|' + $any(e).artist); as d) {<span class="sprung" style="color: #e8a46a">↺ hier schon am {{ datum(d) }} gespielt</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
@@ -97,6 +99,12 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           ⚡ {{ n }} {{ n === 1 ? 'Tonartsprung' : 'Tonartsprünge' }} innerhalb der Sets
           <button type="button" (click)="glaetten()"><mat-icon>auto_fix_high</mat-icon> Übergänge glätten</button>
           @if (glattMeldung(); as m) { <span role="status">{{ m }}</span> }
+        </div>
+      }
+      @if (hierZahl(); as n) {
+        <div class="tools uebergaenge" style="color: #e8a46a">
+          ↺ {{ n }} {{ n === 1 ? 'Song lief' : 'Songs liefen' }} hier schon beim letzten Mal
+          <button type="button" (click)="abwechseln()"><mat-icon>shuffle</mat-icon> Für Abwechslung tauschen</button>
         </div>
       }
       <app-tempo-verlauf [sets]="sets()" />
@@ -220,6 +228,22 @@ export class Setlist {
     } catch {
       window.prompt('Link kopieren:', url);
     }
+  }
+
+  // „Hier schon gespielt“: Songs früherer Auftritte am selben Ort (Setlists auf diesem Gerät bzw. aus der Synchronisation)
+  private readonly band = inject(BandService);
+  protected readonly hier = computed(() => {
+    const show = this.band.showById(this.show());
+    return show ? hierGespielt(show, this.band.shows, (s) => loadSetlist(this.band.showId(s))) : new Map<string, string>();
+  });
+  protected readonly hierZahl = computed(() => this.entries().filter((e) => !this.isPause(e) && this.hier().has(`${(e as { title: string }).title}|${(e as { artist: string }).artist}`)).length);
+  protected datum(d: string): string {
+    return d.split('-').reverse().join('.');
+  }
+  protected abwechseln(): void {
+    const r = abwechslung(this.entries(), this.hier(), data.tracks, (x) => songInfo(x.title, x.artist)?.bpm);
+    if (!r.getauscht) return;
+    if (confirm(`${r.getauscht} ${r.getauscht === 1 ? 'Song' : 'Songs'} gegen ${r.getauscht === 1 ? 'einen' : ''} hier noch nicht gespielte tauschen (ähnliches Tempo)?`)) this.replace(r.entries);
   }
 
   protected readonly songCount = computed(() => this.entries().filter((e) => !this.isPause(e)).length);

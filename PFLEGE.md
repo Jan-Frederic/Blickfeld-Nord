@@ -182,6 +182,10 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 - **Notiz für diesen Auftritt:** in der Setlist beim Song auf ✎ tippen, z. B. „Schluss zweimal“ oder „Einstieg nur
   Gitarre“. Sie steht grün im Bühnen-Modus, auf dem Ausdruck, in der Notenmappe und geht mit „Als Link“ an die Band.
   (Was für einen Song **immer** gilt, gehört in die Notiz unter Songs → Liste.)
+- **Stimmgerät:** oben auf das Regler-Symbol tippen – großer Tonname (deutsch: B = B♭, H), Nadel für die Abweichung,
+  grün bei ±5 Cent. Gibt es auch auf der Probenseite.
+- **Set zu lang:** Läuft das Set über die geplante Länge, steht unten „⏱ 4:10 drüber – streichen: …“ mit den Songs mit
+  den wenigsten Sternen (Publikumswünsche bleiben). **Streichen** überspringt sie beim Blättern – nur für diesen Abend.
 
 **Vor dem Auftritt** (Setlist des Auftritts):
 
@@ -203,14 +207,22 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
   **Probe-Vorschlag** nimmt diese Songs zuerst, „Zeigen → wackelt noch“ listet sie.
 - **Mitschnitte:** auf **Aufnehmen** tippen, die Band spielt, **Stopp** – die Aufnahme bleibt beim Song auf diesem Gerät,
   zum Nachhören zu Hause oder zum **Teilen** (Messenger, AirDrop). Beim ersten Mal fragt der Browser nach dem Mikrofon.
-  Mitschnitte gehen nie an GitHub und nicht in die Sicherung (zu groß); löschen je Aufnahme oder unter
-  **Abgleich → Aufräumen**.
+  Mit ☁ (**Mit der Band teilen**) landet sie im Ordner `Mitschnitte/` der OneDrive-Synchronisation und erscheint bei den
+  anderen beim Song („von …“). Mitschnitte gehen nie an GitHub und nicht ins Backup (zu groß).
+- **Üben** (↻ beim Mitschnitt): **A** und **B** setzen wiederholt die Stelle dazwischen in Schleife, **Tempo** spielt
+  langsamer ab (bis 50 %), ohne dass sich die Tonhöhe ändert.
+- **Auf der Probenseite** (Termine → Probe): 🎤 neben jedem geplanten Song nimmt für diesen Song auf, **Ganze Probe
+  aufnehmen** nimmt die Probe am Stück auf (gehört zur Probe, nicht zu einem Song); dazu das **Stimmgerät**.
 
 **Nach dem Auftritt** (Seite des Auftritts, sobald er vorbei ist): **Nachbereitung** aufklappen – Sterne je Song (wie im
 Bühnen-Modus), ⚠ setzt einen Song auf die eigene „Wackelt noch“-Liste, dazu „Was lief gut?“ und „Was ging schief?“.
 **Merkpunkte** (eine Zeile je Punkt, z. B. „Kabel für Keys kaufen“) stehen unter **Aufgaben**, bis sie abgehakt sind.
 „Was lief gut“ lässt sich im Rückblick-Formular darunter als Entwurf übernehmen – vor dem Veröffentlichen umformulieren.
 Die Nachbereitung steckt im Backup (Einstellungen → Backup).
+
+**Hier schon gespielt** (Setlist): Spielt ihr wieder am selben Ort (auch „Café Lotti“ und „Café Lotti – Tanz in den
+Mai“), steht bei jedem Song, der dort schon lief, „↺ hier schon am … gespielt“. **Für Abwechslung tauschen** ersetzt
+sie durch Songs, die dort noch nicht liefen – mit möglichst ähnlichem Tempo.
 
 **Songs → Liste:** „Zeigen“ filtert Lücken (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie
 „Bass“, noch nie gespielt, wackelt noch). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
@@ -274,7 +286,16 @@ jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern 
 - `Einstellungen/<Name>/` – je Person: Bühnen-Modus (Schriftgröße, Klick-Ton, Pedal-Tasten, Halbseite), gewählte
   Noten-Fassung (PDF bzw. Akkorde), volle Breite, von Hand verschobene Akkorde und Mitscroll-Tempo je Song, gemerkte
   Zuordnungen, Wackelt-Liste, Aufgaben-Häkchen, Filter, Sprache.
-- Nur auf dem Gerät bleiben die Synchronisation selbst (Ordner, Anmeldung), Mitschnitte und die Seiten für unterwegs.
+- `Noten/` – je Song, welche PDFs (mit Fassung und Seitenbereich) und welches Akkordblatt dazugehören. PDFs werden
+  über Name und Größe gefunden; fehlt eines auf dem Gerät, holt die App es aus dem Sync-Ordner (z. B. `Sheets/`).
+- `Markierungen/<Name>/` – die eigenen Zeichnungen im Notenblatt, je PDF.
+- `Mitschnitte/` – nur, was jemand ausdrücklich mit der Band teilt.
+- Nur auf dem Gerät bleiben die Synchronisation selbst (Ordner, Anmeldung), nicht geteilte Mitschnitte und die Seiten
+  für unterwegs.
+
+**Konflikte:** Ändern zwei Geräte denselben Eintrag gleichzeitig, gewinnt die neuere Fassung, die ältere bleibt als
+Konfliktkopie. Abgleich → Synchronisation zeigt sie mit beiden Fassungen: **Aktuelle behalten** entfernt die Kopie,
+**Kopie übernehmen** macht sie wieder gültig – für alle.
 
 Jede Änderung wird nach wenigen Sekunden abgeglichen. Solange abgeglichen wird, blendet sich **unten rechts** ein
 Kompass ein und dreht sich (nur online); danach blendet er sich wieder aus – antippen öffnet den Abgleich. Dort steht bei jedem Eintrag ☁ synchron, ⟳ wartet oder
