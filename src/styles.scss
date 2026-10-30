@@ -152,3 +152,20 @@ mat-icon, .material-icons { flex-shrink: 0; }
 // Scrollbare Tabellen: Bezugsrahmen für .sr-only-Texte darin – sonst rutschen sie aus dem Scrollbereich
 // und machen die ganze Seite breiter (seitliches Wegscrollen auf dem Handy)
 .table-wrap { position: relative; }
+
+// Kopfleiste, angemeldet (Microsoft-Konto der Band): Sprachen als Untermenü, Backstage-Zugang (app.html)
+.sprachwahl { position: relative; margin-left: 8px; }
+.sprachwahl summary {
+  list-style: none; padding: 6px 8px; border-radius: 6px; color: var(--bn-sunset); cursor: pointer;
+  font-family: var(--bn-wide); font-size: .7rem; letter-spacing: .12em;
+}
+.sprachwahl summary::-webkit-details-marker { display: none; }
+.sprachliste {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 160px; padding: 6px 0;
+  border: 1px solid var(--bn-line); border-radius: 10px; background: #1b1e22; box-shadow: 0 12px 32px #0008;
+}
+.sprachliste a { padding: 10px 16px; color: var(--bn-ink); text-decoration: none; font-size: .95rem; }
+.sprachliste a:hover, .sprachliste a.current { color: var(--bn-sunset); }
+.menu-sprachen > summary { list-style: none; }
+.menu-sprachen > summary::-webkit-details-marker { display: none; }
+.menu-sprachen .menu-item.unter { padding-left: 56px; min-height: 40px; }

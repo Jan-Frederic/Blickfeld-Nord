@@ -44,7 +44,7 @@
 }
 // auf schmalen Handys passt der Umschalter nicht neben Logo und Menü – dort im Menü und in der Fußzeile
 @media (max-width: 640px) {
-  .languages { display: none; }
+  .languages, .sprachwahl { display: none; }
 }
 footer {
   text-align: center; padding: 48px 16px; color: var(--bn-fog);

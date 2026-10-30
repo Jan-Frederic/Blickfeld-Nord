@@ -21,9 +21,21 @@
     <a class="bn-btn" [routerLink]="'/historie' | loc">{{ t().nav.history }}</a>
     <a class="bn-btn" [routerLink]="'/freunde' | loc">{{ t().nav.friends }}</a>
     <a class="bn-btn" [routerLink]="'/faq' | loc">{{ t().nav.faq }}</a>
+    @if (angemeldet()) { <a class="bn-btn" routerLink="/backstage">Backstage</a> }
     }
   </nav>
-  @if (showLanguages()) {
+  @if (showLanguages() && angemeldet()) {
+    <!-- angemeldet (Microsoft-Konto der Band): Sprachen in einem Untermenü, damit Platz für den Backstage-Zugang ist -->
+    <details class="sprachwahl" #sprachwahl>
+      <summary [attr.aria-label]="t().language">{{ i18n.lang().toUpperCase() }} ▾</summary>
+      <div class="sprachliste">
+        @for (l of languages(); track l.lang) {
+          <a [routerLink]="l.link" (click)="remember(l.lang); sprachwahl.open = false" [attr.lang]="l.lang" [attr.hreflang]="l.lang"
+            [attr.aria-current]="l.current ? 'true' : null" [class.current]="l.current">{{ l.name }}</a>
+        }
+      </div>
+    </details>
+  } @else if (showLanguages()) {
     <nav class="languages" [attr.aria-label]="t().language">
       @for (l of languages(); track l.lang) {
         <a
@@ -60,7 +72,17 @@
     <a class="menu-item" [routerLink]="'/freunde' | loc" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">groups</span> {{ t().nav.friends }}</a>
     <a class="menu-item" [routerLink]="'/faq' | loc" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">help</span> {{ t().nav.faq }}</a>
     }
-    @if (showLanguages()) {
+    @if (showLanguages() && angemeldet()) {
+      <details class="menu-sprachen">
+        <summary class="menu-item"><span class="material-icons" aria-hidden="true">translate</span> {{ t().language }}: {{ i18n.lang().toUpperCase() }}</summary>
+        @for (l of languages(); track l.lang) {
+          @if (!l.current) {
+            <a class="menu-item unter" [routerLink]="l.link" (click)="remember(l.lang); menu.hidePopover()" [attr.lang]="l.lang" [attr.hreflang]="l.lang">{{ l.name }}</a>
+          }
+        }
+      </details>
+      <a class="menu-item" routerLink="/backstage" (click)="menu.hidePopover()"><span class="material-icons" aria-hidden="true">lock_open</span> Backstage</a>
+    } @else if (showLanguages()) {
       @for (l of languages(); track l.lang) {
         @if (!l.current) {
           <a class="menu-item" [routerLink]="l.link" (click)="remember(l.lang); menu.hidePopover()" [attr.lang]="l.lang" [attr.hreflang]="l.lang"><span class="material-icons" aria-hidden="true">translate</span> {{ l.name }}</a>

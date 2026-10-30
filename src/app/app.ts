@@ -109,6 +109,8 @@ export class App {
     rememberLanguage(lang);
   }
   protected readonly showLanguages = computed(() => !this.i18n.path().startsWith('/backstage'));
+  /** mit dem Microsoft-Konto der Synchronisation angemeldet (merkt sich das Gerät) – dann Backstage-Zugang in der Navigation */
+  protected readonly angemeldet = signal(false);
   // Im Backstage listet die Kopfleiste dessen Bereiche statt der Abschnitte der Website (Logo führt zurück)
   protected readonly imBackstage = computed(() => this.i18n.path().startsWith('/backstage'));
   protected readonly backstage = BACKSTAGE_BEREICHE;
@@ -151,6 +153,14 @@ export class App {
     // Progressive Web App: offline nutzbar und installierbar (erst nach dem ersten Rendern, bremst den Seitenaufbau nicht)
     setupPwa();
     afterNextRender(() => enableOffline());
+    // erst nach dem Hydrieren lesen, damit die vorgerenderte Seite (nicht angemeldet) unverändert übernommen wird
+    afterNextRender(() => {
+      try {
+        this.angemeldet.set(!!localStorage.getItem('bn-onedrive-konto'));
+      } catch {
+        // ohne Speicher eben nicht
+      }
+    });
   }
 
   private logoClicks: number[] = [];

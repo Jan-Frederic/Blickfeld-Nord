@@ -230,6 +230,10 @@ Auftritte) und ob er in einer kommenden Setlist steht; sortierbar nach „oft“
 
 ## Gerät aufräumen (Abgleich)
 
+**Angemeldet** (Microsoft-Konto der Synchronisation auf diesem Gerät): Auf der Website fasst die Kopfleiste die
+Sprachen in einem Untermenü zusammen (DE ▾) und zeigt ganz rechts **Backstage** – im Handy-Menü ebenso („Sprache: DE“
+zum Aufklappen, Backstage als letzter Punkt). Besucher sehen davon nichts.
+
 **Löschen nur mit Berechtigung „Daten löschen“:** Mülltonnen und Aufräumen erscheinen nur, wer bei Microsoft angemeldet
 ist und den OneDrive-Ordner der Synchronisation **besitzt** (nicht nur geteilt bekommen hat) – denn Löschen wird
 mitsynchronisiert und betrifft die ganze Band. Ob man die Berechtigung hat, steht unter Einstellungen → Synchronisation.

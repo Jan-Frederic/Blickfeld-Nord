@@ -979,6 +979,20 @@ test('Backstage: Hier schon gespielt, Stimmgerät und Probe-Aufnahme', async () 
   return p;
 });
 
+test('Navigation: angemeldet Sprachen im Untermenü und Backstage-Zugang an letzter Stelle', async () => {
+  const p = await page();
+  await p.go('/');
+  expect(!(await p.locator('header a[href="/backstage"]').count()), 'Backstage-Zugang ohne Anmeldung sichtbar');
+  await p.evaluate(() => localStorage.setItem('bn-onedrive-konto', 'test@example.com'));
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => (await p.locator('.desktop-nav a').last().innerText()) === 'BACKSTAGE' || (await p.locator('.desktop-nav a').last().innerText()) === 'Backstage', 'Backstage nicht an letzter Stelle');
+  expect(!(await p.locator('nav.languages').count()), 'Sprachen stehen noch einzeln in der Leiste');
+  await p.locator('.sprachwahl summary').click();
+  await p.locator('.sprachliste a[hreflang=en]').click();
+  await p.waitForURL(/\/en\/?$/);
+  return p;
+});
+
 test('Kalender-Dateien und Service Worker sind vorhanden', async () => {
   const p = await page();
   for (const f of ['/konzerte.ics', '/en/konzerte.ics', '/nl/konzerte.ics', '/backstage/kalender.ics', '/sw.js', '/site.webmanifest']) {
