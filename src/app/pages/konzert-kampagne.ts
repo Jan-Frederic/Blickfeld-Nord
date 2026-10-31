@@ -26,6 +26,7 @@ type State = 'loading' | 'ok' | 'aus';
         @default {
           <ul>
             <li><span class="wert">{{ seite() | number: '1.0-0' }}</span><span class="was">Aufrufe der Konzertseite (DE/EN/NL)</span></li>
+            <li><span class="wert">{{ presse() | number: '1.0-0' }}</span><span class="was">Aufrufe des Pressekits (Veranstalter)</span></li>
             @for (w of wege(); track w.ref) {
               <li><span class="wert">{{ w.count | number: '1.0-0' }}</span><span class="was">über {{ w.label }}</span></li>
             }
@@ -58,6 +59,8 @@ export class KonzertKampagne {
   protected readonly name = () => kampagne(this.id());
   protected readonly state = signal<State>('loading');
   protected readonly seite = signal(0);
+  /** Aufrufe von /presse/<id> – hat der Veranstalter ins Pressekit geschaut? */
+  protected readonly presse = signal(0);
   protected readonly wege = signal<{ ref: string; label: string; count: number }[]>([]);
 
   constructor() {
@@ -67,9 +70,11 @@ export class KonzertKampagne {
       Promise.all([
         Promise.all(['', '/en', '/nl'].map((l) => zaehler(`${l}/konzerte/${id}`, 'year'))).then((z) => z.reduce((a, b) => a + b, 0)),
         Promise.all(WEGE.map(async (w) => ({ ...w, count: await zaehler(`kampagne-${kampagne(id)}-${w.ref}`, 'year') }))),
+        Promise.all(['', '/en', '/nl'].map((l) => zaehler(`${l}/presse/${id}`, 'year'))).then((z) => z.reduce((a, b) => a + b, 0)),
       ])
-        .then(([seite, wege]) => {
+        .then(([seite, wege, presse]) => {
           this.seite.set(seite);
+          this.presse.set(presse);
           this.wege.set(wege);
           this.state.set('ok');
         })

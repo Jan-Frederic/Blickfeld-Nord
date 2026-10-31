@@ -36,6 +36,9 @@ export interface Friend {
   aliases?: string[];
   // eigenes Symbol (Trommel, Kaffeetasse, Instagram, Noten, Bierkrug, Flamme, Gruppe, Fußball, Plattenspieler), sonst ein allgemeines Link-Symbol
   icon?: 'drum' | 'cafe' | 'instagram' | 'choir' | 'pub' | 'fire' | 'community' | 'football' | 'dj';
+  // optional: Logo oder Foto (Pfad unter public/, z. B. 'freunde/cafe-nenna.webp', quadratisch, ca. 256 px) – nur mit
+  // Freigabe des Freundes; ersetzt das Symbol
+  bild?: string;
 }
 
 export interface HistoryLink {
@@ -506,7 +509,6 @@ export class BandService {
     { date: '2027-05-07', venue: 'Scheperswiese', private: true, confirmed: true },
     { date: '2027-06-12', venue: 'Ronny S.', private: true, confirmed: true },
     { date: '2027-08-29', city: 'Rhede', venue: 'Kirmes Rhede', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: false },
-    { date: '2027-09-03', endDate: '2027-09-05', venue: 'Bandwochenende', publicName: 'Bandwochenende', private: true, confirmed: false },
     { date: '2028-08-19', venue: 'Wolfgang S. 61', private: true, confirmed: true },
   ];
 }

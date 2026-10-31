@@ -6,8 +6,9 @@ import { PageMetaService } from '../page-meta';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
 import { kampagnenLink } from '../data/goatcounter';
-import { postText, posterFileName, renderPoster } from '../data/poster';
-import { schrittText } from '../data/werbeplan';
+import { posterFileName, renderPoster } from '../data/poster';
+import { TEXT_SCHRITTE, presseText } from '../data/presse-texte';
+import { TECHNIK_TEXT } from './technik';
 import repertoire from '../data/repertoire.json';
 
 // Pressekit je Konzert (/presse/<id>): alles für den Veranstalter griffbereit – Eckdaten, Plakat und Story als Bild
@@ -26,7 +27,8 @@ const TEXT = tr(
     bilder: 'Plakat & Story',
     bilderInfo: 'Mit QR-Code zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung im Kalender). Gern aushängen, posten und teilen.',
     plakat: 'Plakat (quadratisch, für Beitrag und Aushang)', story: 'Story / Status (Hochformat)',
-    laden: 'Bild wird erstellt …', download: 'Herunterladen',
+    laden: 'Bild wird erstellt …', download: 'Herunterladen', druck: 'Plakat zum Drucken', drucken: (f: string) => `PDF ${f}`,
+    vorOrt: 'Was wir vor Ort brauchen', riderPdf: 'Technik-Rider (PDF)',
     texte: 'Texte zum Kopieren',
     texteInfo: 'Fertige Texte mit Link zur Konzertseite – für Beitrag, Story oder Status.',
     beitrag: 'Beitrag zum Plakat', story1: 'Zwei Wochen vorher', woche: 'Eine Woche vorher', morgen: 'Am Tag davor', heute: 'Am Auftrittstag',
@@ -47,9 +49,10 @@ const TEXT = tr(
     bilder: 'Poster & story',
     bilderInfo: 'With a QR code to the show page (time, directions, calendar reminder). Feel free to put up, post and share.',
     plakat: 'Poster (square, for posts and notice boards)', story: 'Story / status (portrait)',
-    laden: 'Creating image …', download: 'Download',
+    laden: 'Creating image …', download: 'Download', druck: 'Poster to print', drucken: (f: string) => `PDF ${f}`,
+    vorOrt: 'What we need on site', riderPdf: 'Tech rider (PDF)',
     texte: 'Texts to copy',
-    texteInfo: 'Ready-made texts (in German) with a link to the show page – for posts, stories or status.',
+    texteInfo: 'Ready-made texts with a link to the show page – for posts, stories or status.',
     beitrag: 'Post for the poster', story1: 'Two weeks before', woche: 'One week before', morgen: 'The day before', heute: 'On the day',
     copy: 'Copy', copied: 'Copied!',
     songs: 'Song list',
@@ -68,9 +71,10 @@ const TEXT = tr(
     bilder: 'Affiche & story',
     bilderInfo: 'Met QR-code naar de optredenpagina (tijd, route, herinnering in de agenda). Graag ophangen, posten en delen.',
     plakat: 'Affiche (vierkant, voor posts en ophangen)', story: 'Story / status (staand)',
-    laden: 'Afbeelding wordt gemaakt …', download: 'Downloaden',
+    laden: 'Afbeelding wordt gemaakt …', download: 'Downloaden', druck: 'Affiche om te printen', drucken: (f: string) => `PDF ${f}`,
+    vorOrt: 'Wat we ter plaatse nodig hebben', riderPdf: 'Techniek-rider (pdf)',
     texte: 'Teksten om te kopiëren',
-    texteInfo: 'Kant-en-klare teksten (in het Duits) met link naar de optredenpagina – voor post, story of status.',
+    texteInfo: 'Kant-en-klare teksten met link naar de optredenpagina – voor post, story of status.',
     beitrag: 'Post bij de affiche', story1: 'Twee weken ervoor', woche: 'Een week ervoor', morgen: 'De dag ervoor', heute: 'Op de dag zelf',
     copy: 'Kopiëren', copied: 'Gekopieerd!',
     songs: 'Nummerlijst',
@@ -118,6 +122,24 @@ const TEXT = tr(
               </figcaption>
             </figure>
           }
+        </div>
+
+        <div class="druck">
+          <span>{{ t().druck }}:</span>
+          @for (f of formate; track f) {
+            <button type="button" class="btn small" (click)="druckPdf(f)" [disabled]="druckLaeuft()"><mat-icon>print</mat-icon> {{ t().drucken(f) }}</button>
+          }
+        </div>
+
+        <h3>{{ t().vorOrt }}</h3>
+        <ul class="vor-ort">
+          <li><strong>{{ tech().area }}:</strong> {{ tech().areaValue }}</li>
+          <li><strong>{{ tech().power }}:</strong> {{ tech().powerValue }}</li>
+          <li><strong>{{ tech().banner }}:</strong> {{ tech().bannerValue }}</li>
+          @for (z of tech().timeline; track z.time) { <li><strong>{{ z.time }}:</strong> {{ z.text }}</li> }
+        </ul>
+        <div class="links">
+          <a class="btn small" [href]="'presse/blickfeld-nord-technik-rider' + sfx() + '.pdf'" download><mat-icon>picture_as_pdf</mat-icon> {{ t().riderPdf }}</a>
         </div>
 
         <h3>{{ t().texte }}</h3>
@@ -188,15 +210,40 @@ export class PresseKonzertPage {
     const s = this.show();
     if (!s) return [];
     const t = this.t();
-    const story = kampagnenLink(this.id(), 'story');
-    return [
-      { id: 'beitrag', titel: t.beitrag, text: postText(s, kampagnenLink(this.id(), 'text')) },
-      { id: 'story-1', titel: t.story1, text: schrittText('story-1', s, story) },
-      { id: 'woche', titel: t.woche, text: schrittText('woche', s, story) },
-      { id: 'morgen', titel: t.morgen, text: schrittText('morgen', s, story) },
-      { id: 'heute', titel: t.heute, text: schrittText('heute', s, story) },
-    ];
+    const links = { text: kampagnenLink(this.id(), 'text'), story: kampagnenLink(this.id(), 'story') };
+    const titel = { beitrag: t.beitrag, 'story-1': t.story1, woche: t.woche, morgen: t.morgen, heute: t.heute };
+    // Texte in der Sprache der Seite
+    return TEXT_SCHRITTE.map((id) => ({ id, titel: titel[id], text: presseText(id, s, this.i18n.lang(), links) }));
   });
+
+  // Was wir vor Ort brauchen – dieselben Angaben wie auf der Technik-Seite
+  protected readonly tech = this.i18n.t(TECHNIK_TEXT);
+  protected readonly sfx = computed(() => (this.i18n.lang() === 'de' ? '' : '-' + this.i18n.lang()));
+
+  // Plakat zum Drucken: die Story (Hochformat) mittig auf A4 bzw. A3, dunkler Hintergrund bis zum Rand
+  protected readonly formate = ['A4', 'A3'] as const;
+  protected readonly druckLaeuft = signal(false);
+  protected async druckPdf(format: 'A4' | 'A3'): Promise<void> {
+    const s = this.show();
+    if (!s) return;
+    this.druckLaeuft.set(true);
+    try {
+      const [{ PDFDocument, rgb }, bild] = await Promise.all([import('pdf-lib'), renderPoster(s, 'story', kampagnenLink(this.id(), 'plakat'))]);
+      const pdf = await PDFDocument.create();
+      const [w, h] = format === 'A3' ? [841.89, 1190.55] : [595.28, 841.89];
+      const seite = pdf.addPage([w, h]);
+      seite.drawRectangle({ x: 0, y: 0, width: w, height: h, color: rgb(0.067, 0.075, 0.086) });
+      const img = await pdf.embedPng(await bild.arrayBuffer());
+      const f = Math.min(w / img.width, h / img.height);
+      seite.drawImage(img, { x: (w - img.width * f) / 2, y: (h - img.height * f) / 2, width: img.width * f, height: img.height * f });
+      pdf.setTitle(`Blickfeld Nord live – ${s.venue}`);
+      const url = URL.createObjectURL(new Blob([(await pdf.save()) as BlobPart], { type: 'application/pdf' }));
+      Object.assign(document.createElement('a'), { href: url, download: posterFileName(s, 'feed').replace('.png', `-${format.toLowerCase()}.pdf`) }).click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } finally {
+      this.druckLaeuft.set(false);
+    }
+  }
 
   protected readonly songs = repertoire.tracks.map((x) => ({ title: x.title, artist: x.artist }));
   protected readonly songText = this.songs.map((x, i) => `${i + 1}. ${x.title} – ${x.artist}`).join('\n');

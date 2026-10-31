@@ -570,12 +570,6 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     nl: 'Verjaardag in Gasthof Buschmann',
     geprueft: { en: true },
   },
-  {
-    de: 'Bandwochenende',
-    en: 'Band weekend',
-    nl: 'Bandweekend',
-    geprueft: { en: true },
-  },
   // Technik (technik.json)
   {
     de: 'Entwurf – Positionen, Geräte und Kanalbelegung sind Platzhalter und werden nach und nach ergänzt.',

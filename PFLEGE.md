@@ -55,9 +55,23 @@ Klick führt zu `/presse/<datum>` – alles für den Veranstalter: Eckdaten, **P
 gezeichnet, mit QR-Code zur Konzertseite; Downloads zählen in der Kampagne mit), **fertige Texte** zum Kopieren
 (Beitrag, zwei Wochen/eine Woche vorher, am Tag davor, am Auftrittstag – auf Deutsch) und die **Songliste**
 (Repertoire der offiziellen Playlist, kopieren oder als Textdatei – die Setlist des Abends bleibt im Backstage).
+Dazu **Plakat zum Drucken** (PDF A4/A3, die Story mittig auf dunklem Grund) und **Was wir vor Ort brauchen**
+(Spielfläche, Strom, Banner, Zeitplan wie auf der Technik-Seite, mit Rider-PDF). Die Texte erscheinen in der Sprache
+der Seite (DE/EN/NL). Im Backstage des Auftritts schickt **Pressekit an Veranstalter** den Link mit kurzem Gruß
+(Teilen-Menü, sonst Zwischenablage); die Kachel „Kampagne“ zählt die **Aufrufe des Pressekits**.
 Die Seiten sind nicht für Suchmaschinen (noindex) und stehen nicht in der Sitemap. Den Link einfach an den
 Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im Booking, nicht mehr im Pressekit
 (Website und PDF).
+
+## Saisonplanung und Fans
+
+- **Backstage → Termine → Saisonplanung:** die nächsten 12 Monate auf einer Zeitleiste (freie Monate gestrichelt,
+  offene Anfragen orange, private kursiv) und **Wieder anfragen**: Orte, an denen vor einem Jahr gespielt wurde und
+  noch nichts Neues geplant ist – mit Jahrestag und „am besten bis …“ (drei Monate vorher).
+- **Konzertseite → Als Story teilen:** Fans teilen ein Story-Bild mit QR-Code; in der letzten Woche mit Countdown
+  („NOCH 3 TAGE“, „MORGEN“, „HEUTE“).
+- **Freunde mit Bild:** In `band.service.ts` beim Freund `bild: 'freunde/name.webp'` (quadratisch, ca. 256 px, unter
+  `public/freunde/`) eintragen – nur mit Freigabe; ersetzt das Symbol.
 
 ## Probe ergänzen
 

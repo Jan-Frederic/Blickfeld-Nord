@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { TechnikAufbau } from '../sections/technik-aufbau';
 import { I18n, LocPipe, tr } from '../i18n';
 
-const TEXT = tr(
+export const TECHNIK_TEXT = tr(
   {
     kicker: 'Für Veranstalter',
     title: 'Technik',
@@ -214,7 +214,7 @@ const TEXT = tr(
 })
 export class Technik {
   private readonly i18n = inject(I18n);
-  protected readonly t = this.i18n.t(TEXT);
+  protected readonly t = this.i18n.t(TECHNIK_TEXT);
   // Technik-Rider je Sprache (scripts/build-rider.py): Deutsch ohne Zusatz, sonst -en / -nl
   protected readonly sfx = computed(() => (this.i18n.lang() === 'de' ? '' : '-' + this.i18n.lang()));
 }

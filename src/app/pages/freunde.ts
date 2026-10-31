@@ -39,8 +39,10 @@ const TEXT = tr(
       <div class="grid">
         @for (f of band.friends; track f.url) {
           <a class="card" [id]="id(f)" [class.flash]="flash() === id(f)" [href]="f.url" target="_blank" rel="noopener">
-            <span class="icon" aria-hidden="true">
-              @if (f.icon === 'drum') {
+            <span class="icon" [class.bild]="f.bild" aria-hidden="true">
+              @if (f.bild) {
+                <img [src]="f.bild" alt="" width="64" height="64" loading="lazy" />
+              } @else if (f.icon === 'drum') {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4.5 3.5 15.5 11M19.5 3.5 8.5 11" stroke-width="1.8" />
                   <circle cx="4.2" cy="3.3" r="1.3" fill="currentColor" stroke="none" />
@@ -141,6 +143,8 @@ const TEXT = tr(
       border: 1px solid var(--bn-fog); color: var(--bn-ink);
     }
     .icon svg { width: 34px; height: 34px; }
+    .icon.bild { overflow: hidden; background: #fff; }
+    .icon img { width: 100%; height: 100%; object-fit: cover; }
     .body { display: flex; flex-direction: column; gap: 6px; }
     .name { font-family: var(--bn-display); font-size: 1.05rem; line-height: 1.3; }
     .desc { line-height: 1.6; color: rgba(236, 233, 228, .82); }

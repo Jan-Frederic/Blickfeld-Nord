@@ -157,23 +157,24 @@ function fusszeile(ctx: CanvasRenderingContext2D, H: number, footer: number): vo
 const alsPng = (canvas: HTMLCanvasElement) =>
   new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Bild konnte nicht erzeugt werden'))), 'image/png'));
 
-/** Plakat bzw. Story; mit `link` unten rechts ein QR-Code zur Konzertseite */
-export async function renderPoster(s: Show, format: PosterFormat = 'feed', link?: string): Promise<Blob> {
+/** Plakat bzw. Story; mit `link` unten rechts ein QR-Code zur Konzertseite; `kopf` statt „LIVE“ (z. B. „NOCH 3 TAGE“) */
+export async function renderPoster(s: Show, format: PosterFormat = 'feed', link?: string, kopf = 'LIVE'): Promise<Blob> {
   const base = await leinwand(format);
   const { canvas, ctx, H, gap, footer, cx } = base;
   let y = base.y;
 
-  // „LIVE“ mit Linien links und rechts
+  // „LIVE“ (bzw. Countdown) mit Linien links und rechts
   ctx.fillStyle = SUNSET;
   ctx.font = '400 30px Montserrat';
-  spaced(ctx, 'LIVE', cx, y, 18);
+  spaced(ctx, kopf, cx, y, 18);
+  const halb = kopf === 'LIVE' ? 90 : Math.max(90, ([...kopf].reduce((a, ch) => a + ctx.measureText(ch).width, 0) + 18 * (kopf.length - 1)) / 2 + 30);
   ctx.strokeStyle = SUNSET;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(cx - 230, y - 10);
-  ctx.lineTo(cx - 90, y - 10);
-  ctx.moveTo(cx + 90, y - 10);
-  ctx.lineTo(cx + 230, y - 10);
+  ctx.moveTo(cx - halb - 140, y - 10);
+  ctx.lineTo(cx - halb, y - 10);
+  ctx.moveTo(cx + halb, y - 10);
+  ctx.lineTo(cx + halb + 140, y - 10);
   ctx.stroke();
 
   // Datum

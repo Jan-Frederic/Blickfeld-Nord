@@ -1,3 +1,4 @@
+import { SaisonPlanung } from './saison-planung';
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -37,12 +38,14 @@ function loadFilters(): Set<FilterKey> {
 // Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage-termine',
-  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, AboButton, TerminFormular, Terminabfrage],
+  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, AboButton, TerminFormular, Terminabfrage, SaisonPlanung],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Termine</h2>
       <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen, dazu die Probetermine. Für Details, Plakat, Setlist und Packliste einfach einen Auftritt antippen.</p>
+
+      <app-saison-planung />
 
       <div class="summary">
         <app-abo-button class="export" path="backstage/kalender.ics" (download)="exportAll()" />

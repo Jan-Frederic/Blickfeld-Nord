@@ -95,6 +95,7 @@ const DAY = 24 * 60 * 60 * 1000;
               <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
               {{ copied() ? 'Kopiert!' : 'Text kopieren' }}
             </button>
+            <button mat-stroked-button (click)="pressekitSchicken()"><mat-icon>{{ presseGeteilt() ? 'check' : 'send' }}</mat-icon> {{ presseGeteilt() ? 'Kopiert!' : 'Pressekit an Veranstalter' }}</button>
           } @else {
             <p class="hint">
               <mat-icon>info</mat-icon>
@@ -281,6 +282,40 @@ export class BackstageShow implements OnDestroy {
       setTimeout(() => this.copied.set(false), 2000);
     } catch {
       // Fallback, falls die Zwischenablage gesperrt ist: Text zum manuellen Kopieren anzeigen
+      window.prompt('Text kopieren:', text);
+    }
+  }
+
+  // Pressekit des Auftritts (/presse/<id>: Plakat, Story, Texte, Songliste) an den Veranstalter – teilen (WhatsApp,
+  // Mail …) oder als Text in die Zwischenablage
+  protected readonly presseGeteilt = signal(false);
+  protected async pressekitSchicken(): Promise<void> {
+    const s = this.show()!;
+    const url = `https://blickfeld-nord.de/presse/${this.id()}/`;
+    const text = [
+      'Hallo,',
+      '',
+      `für unseren Auftritt am ${s.date.split('-').reverse().join('.')} bei ${s.venue} haben wir alles für die Ankündigung an einem Ort gesammelt: Plakat und Story als Bild, Plakat zum Drucken, fertige Texte und unsere Songliste.`,
+      '',
+      url,
+      '',
+      'Teilt gern, was euch gefällt – wir freuen uns auf den Abend!',
+      'Viele Grüße',
+      'Blickfeld Nord',
+    ].join('\n');
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Pressekit – ${s.venue}`, text });
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      this.presseGeteilt.set(true);
+      setTimeout(() => this.presseGeteilt.set(false), 2000);
+    } catch {
       window.prompt('Text kopieren:', text);
     }
   }

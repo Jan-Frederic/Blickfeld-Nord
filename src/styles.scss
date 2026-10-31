@@ -270,3 +270,22 @@ app-presse-konzert .text .titel { margin: 0 0 8px; font-weight: 600; }
 app-presse-konzert .text pre { margin: 0 0 10px; white-space: pre-wrap; overflow-wrap: anywhere; font: .88rem/1.55 Inter, sans-serif; color: rgba(236, 233, 228, .88); }
 app-presse-konzert .songs { margin: 16px 0 0; padding-left: 28px; columns: 2 260px; column-gap: 32px; font-size: .92rem; line-height: 1.7; }
 app-presse-konzert .songs .a { color: var(--bn-fog); font-size: .85em; }
+app-presse-konzert .druck { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; color: var(--bn-fog); font-size: .9rem; }
+app-presse-konzert .vor-ort { margin: 0; padding-left: 20px; line-height: 1.8; font-size: .92rem; }
+app-presse-konzert .vor-ort strong { font-weight: 600; }
+// Backstage → Termine: Saisonplanung
+app-saison-planung .saison { margin: 0 0 18px; padding: 10px 14px; border: 1px solid var(--bn-line); border-radius: 12px; font-size: .88rem; }
+app-saison-planung summary { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--bn-ink); }
+app-saison-planung mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
+app-saison-planung .zeitleiste { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+app-saison-planung .zeitleiste li { display: flex; flex-direction: column; gap: 3px; min-height: 56px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .04); }
+app-saison-planung .zeitleiste li.frei { background: none; border: 1px dashed rgba(232, 164, 106, .5); }
+app-saison-planung .monat { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--bn-fog); }
+app-saison-planung .auftritt { color: var(--bn-ink); text-decoration: none; font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+app-saison-planung .auftritt:hover { color: var(--bn-sunset); }
+app-saison-planung .auftritt.offen { color: #e8a46a; }
+app-saison-planung .auftritt.privat { font-style: italic; }
+app-saison-planung .leer { color: #e8a46a; font-size: .8rem; }
+app-saison-planung .titel { display: flex; align-items: center; gap: 6px; margin: 14px 0 4px; color: var(--bn-fog); }
+app-saison-planung .anfragen { margin: 0; padding-left: 20px; line-height: 1.7; color: var(--bn-fog); }
+app-saison-planung .anfragen a { color: var(--bn-sunset); }

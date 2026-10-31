@@ -26,6 +26,7 @@ const TEXT = tr(
     soon: 'Infos folgen',
     remind: 'Erinnere mich',
     share: 'Teilen',
+    story: 'Als Story teilen',
     route: 'Anfahrt',
     arrival: 'Anfahrt & Parken',
     remindHint: '„Erinnere mich“ lädt einen Kalendereintrag mit Erinnerung am Vortag herunter.',
@@ -60,6 +61,7 @@ const TEXT = tr(
     soon: 'details to follow',
     remind: 'Remind me',
     share: 'Share',
+    story: 'Share as story',
     route: 'Directions',
     arrival: 'Getting there & parking',
     remindHint: '“Remind me” downloads a calendar entry with a reminder the day before.',
@@ -94,6 +96,7 @@ const TEXT = tr(
     soon: 'info volgt',
     remind: 'Herinner me',
     share: 'Delen',
+    story: 'Delen als story',
     route: 'Route',
     arrival: 'Bereikbaarheid & parkeren',
     remindHint: '„Herinner me” downloadt een agenda-item met een herinnering de dag ervoor.',
@@ -164,6 +167,9 @@ const TEXT = tr(
             <button type="button" class="btn primary" (click)="remind(s)"><mat-icon>notifications_active</mat-icon> {{ t().remind }}</button>
           }
           <button type="button" class="btn" (click)="share(s)"><mat-icon>share</mat-icon> {{ t().share }}</button>
+          @if (!past()) {
+            <button type="button" class="btn" (click)="story(s)"><mat-icon>smartphone</mat-icon> {{ t().story }}</button>
+          }
           @if (s.mapsUrl) {
             <a class="btn" [href]="s.mapsUrl" target="_blank" rel="noopener"><mat-icon>place</mat-icon> {{ t().route }}</a>
           }
@@ -296,6 +302,19 @@ export class KonzertPage {
 
   protected remind(s: Show): void {
     downloadIcs([s], icsFileName(s), 'Blickfeld Nord', false, true, { lang: this.i18n.lang() });
+  }
+
+  // Story-Bild für Fans (WhatsApp-Status, Instagram): in der letzten Woche mit Countdown („NOCH 3 TAGE“, „MORGEN“,
+  // „HEUTE“), QR-Code zur Konzertseite mit Herkunft „geteilt“. Zeichnen erst beim Klick (lädt die Plakat-Logik nach).
+  protected async story(s: Show): Promise<void> {
+    const id = this.band.showId(s);
+    const [{ renderPoster, shareImage, posterFileName }, { countdownKopf }, { kampagnenLink }] = await Promise.all([
+      import('../data/poster'),
+      import('../data/countdown'),
+      import('../data/goatcounter'),
+    ]);
+    const bild = await renderPoster(s, 'story', kampagnenLink(id, 'geteilt'), countdownKopf(s.date, new Date().toISOString().slice(0, 10)));
+    await shareImage(bild, posterFileName(s, 'story'), `Blickfeld Nord live – ${s.venue}`).catch(() => undefined);
   }
 
   protected share(s: Show): void {

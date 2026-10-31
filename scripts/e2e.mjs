@@ -255,6 +255,18 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   await until(async () => (await seite.locator('.texte pre').count()) >= 4, 'Texte fehlen');
   await until(async () => (await seite.locator('.songs li').count()) > 20, 'Songliste fehlt');
   expect(((await seite.locator('figure a[download]').first().getAttribute('download')) ?? '').endsWith('.png'), 'Download des Plakats fehlt');
+  // Plakat zum Drucken (PDF), Was wir vor Ort brauchen
+  const [pdf] = await Promise.all([p.waitForEvent('download'), seite.locator('.druck button').first().click()]);
+  expect(pdf.suggestedFilename().endsWith('-a4.pdf'), 'Druck-PDF fehlt');
+  expect((await seite.locator('.vor-ort li').count()) >= 4, 'Was wir vor Ort brauchen fehlt');
+  // englische Seite: Texte auf Englisch
+  await p.go(new URL(p.url()).pathname.replace('/presse/', '/en/presse/'));
+  await until(async () => (await p.locator('app-presse-konzert .texte pre').first().innerText().catch(() => '')).includes('Free entry') || (await p.locator('app-presse-konzert .texte pre').first().innerText().catch(() => '')).includes('from '), 'Englische Texte fehlen');
+  // Konzertseite: Story mit Countdown teilen, Termine: Saisonplanung
+  await p.go(new URL(p.url()).pathname.replace('/en/presse/', '/konzerte/'));
+  await until(async () => (await p.locator('app-konzert button', { hasText: 'Als Story teilen' }).count()) === 1, 'Story-Knopf auf der Konzertseite fehlt');
+  await p.go('/backstage/termine/');
+  await until(async () => /Saisonplanung/.test(await p.locator('app-saison-planung').innerText().catch(() => '')), 'Saisonplanung fehlt');
   return p;
 });
 
