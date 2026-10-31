@@ -1,4 +1,4 @@
-import { anfrageText, nachrichtLink, ortKey, waNummer } from './kontakte';
+import { anfrageText, nachfragen, nachrichtLink, ortKey, waNummer } from './kontakte';
 
 describe('kontakte', () => {
   it('gleicher Ort auch bei Varianten', () => {
@@ -18,5 +18,16 @@ describe('kontakte', () => {
     expect(t).toContain('Hallo Anna,');
     expect(t).toContain('am 10.02.2026');
     expect(t).toContain('März, Juli und September');
+  });
+
+  it('erinnert nach 14 Tagen ans Nachfragen – nicht, wenn dort inzwischen ein Termin steht', () => {
+    const shows = [{ venue: 'Café Nenna', city: 'Rhede', date: '2026-02-10' }, { venue: 'Latöchte', city: 'Rhede', date: '2027-04-03' }];
+    const kontakte = {
+      [ortKey(shows[0])]: { name: 'Anna', angefragt: '2026-10-01' },
+      [ortKey(shows[1])]: { angefragt: '2026-10-01' },
+      'Bocholt|neu': { ort: 'Neuer Club', angefragt: '2026-10-25' },
+    };
+    expect(nachfragen(kontakte, shows, '2026-10-31').map((n) => `${n.name} ${n.tage}`)).toEqual(['Café Nenna 30']);
+    expect(nachfragen(kontakte, shows, '2026-11-08').map((n) => n.name)).toEqual(['Café Nenna', 'Neuer Club']);
   });
 });

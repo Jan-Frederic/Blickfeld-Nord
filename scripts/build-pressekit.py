@@ -202,7 +202,8 @@ def build_pdf(tmp, lang):
     t = texts(lang)
     w, h = A4
     m = 20 * mm
-    c = canvas.Canvas(os.path.join(OUT, lang_files(lang)['pdf']), pagesize=A4)
+    c = canvas.Canvas(os.path.join(OUT, lang_files(lang)['pdf']), pagesize=A4, lang=lang)
+    c.setViewerPreference('DisplayDocTitle', 'true')
     c.setTitle(t['title'])
     c.setAuthor('Blickfeld Nord')
     c.setSubject(t['claim'])

@@ -7,11 +7,8 @@ name: Live-Check
 on:
   schedule:
     - cron: '43 7 * * 3'
+  # auch nach jedem Deploy – deploy-pages.yml startet ihn am Ende (Job „live-check“)
   workflow_dispatch:
-  # zusätzlich nach jedem erfolgreichen Deploy – so fällt ein kaputter Stand sofort auf
-  workflow_run:
-    workflows: ['Deploy to GitHub Pages']
-    types: [completed]
 
 permissions:
   contents: read
@@ -19,8 +16,6 @@ permissions:
 
 jobs:
   live:
-    # nach einem Deploy nur, wenn er geklappt hat
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     env:
       TITEL: Probleme auf der Live-Seite
@@ -35,7 +30,7 @@ jobs:
           node-version: 22
 
       - name: Kurz warten, bis GitHub Pages den neuen Stand ausliefert
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_dispatch'
         run: sleep 90
 
       - name: Live-Seite prüfen

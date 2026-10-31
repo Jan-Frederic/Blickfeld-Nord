@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
+import { ladeKontakte, nachfragen } from '../data/kontakte';
 import { kampagnenLink } from '../data/goatcounter';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
@@ -75,6 +76,12 @@ export class HeuteFaellig {
     ...this.band.rehearsals
       .filter((r) => r.date === this.heute)
       .map((r) => ({ icon: 'music_note', label: `Probe${r.time ? ' · ' + r.time + ' Uhr' : ''}${r.place ? ', ' + r.place : ''}`, link: ['/backstage/probe', r.date] })),
+    // Anfragen ohne Antwort (seit 14 Tagen kein neuer Termin dort) – Kontakte unter Termine → Kontakte
+    ...nachfragen(ladeKontakte(), this.band.shows, this.heute).map((n) => ({
+      icon: 'call',
+      label: `Nachfragen: ${n.name} (angefragt am ${n.angefragt.split('-').reverse().join('.')})`,
+      link: ['/backstage/termine/kontakte'],
+    })),
   ]);
 
   protected readonly werbung = computed<Werbung[]>(() => {

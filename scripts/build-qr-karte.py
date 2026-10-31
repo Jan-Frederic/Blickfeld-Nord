@@ -180,13 +180,15 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         pk.register_fonts(tmp)
         for lang in T.LANGS:
-            c = canvas.Canvas(out('qr-karte', lang), pagesize=A4)
+            c = canvas.Canvas(out('qr-karte', lang), pagesize=A4, lang=lang)
+            c.setViewerPreference('DisplayDocTitle', 'true')
             c.setTitle(T.QR[lang]['title'])
             c.setAuthor('Blickfeld Nord')
             sign_page(c, lang)
             cards_page(c, lang)
             c.save()
-            w = canvas.Canvas(out('wunschbox', lang), pagesize=A4)
+            w = canvas.Canvas(out('wunschbox', lang), pagesize=A4, lang=lang)
+            w.setViewerPreference('DisplayDocTitle', 'true')
             w.setTitle(T.QR[lang]['wish_title'])
             w.setAuthor('Blickfeld Nord')
             wunsch_page(w, lang)

@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { saison, wiederAnfragen } from '../data/saison';
 import { Show } from '../data/band.service';
-import { anfrageText, kontaktVon, nachrichtSenden } from '../data/kontakte';
+import { angefragtSetzen, anfrageText, kontaktVon, nachrichtSenden, ortKey } from '../data/kontakte';
 
 // Backstage → Termine: Saisonplanung – die nächsten 12 Monate als Zeitleiste (Auftritte je Monat, freie Monate
 // markiert) und „Wieder anfragen“ für Orte, an denen vor einem Jahr gespielt wurde (data/saison.ts).
@@ -27,7 +27,8 @@ const MONATE = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 
           </li>
         }
       </ol>
-      <p class="mehr"><a routerLink="/backstage/termine/saison"><mat-icon>open_in_new</mat-icon> Saison als eigene Seite – mit Proben und Abwesenheiten, zum Drucken</a></p>
+      <p class="mehr"><a routerLink="/backstage/termine/saison"><mat-icon>open_in_new</mat-icon> Saison als eigene Seite – mit Proben und Abwesenheiten, zum Drucken</a>
+        <a routerLink="/backstage/termine/kontakte"><mat-icon>contacts</mat-icon> Kontakte der Veranstalter</a></p>
       @if (anfragen().length) {
         <p class="titel"><mat-icon>call</mat-icon> Wieder anfragen – vor einem Jahr dort gespielt, noch nichts Neues geplant:</p>
         <ul class="anfragen">
@@ -52,7 +53,11 @@ export class SaisonPlanung {
   // fertige Anfrage an den Ansprechpartner (WhatsApp, sonst E-Mail), sonst Teilen bzw. Zwischenablage
   protected async anfragen_(s: Show): Promise<void> {
     const k = kontaktVon(s);
-    if ((await nachrichtSenden(k, `Anfrage Blickfeld Nord – ${s.venue}`, anfrageText(s, k, this.freiNamen()))) === 'kopiert') {
+    const weg = await nachrichtSenden(k, `Anfrage Blickfeld Nord – ${s.venue}`, anfrageText(s, k, this.freiNamen()));
+    if (weg === 'abgebrochen') return;
+    // Anfrage merken – nach 14 Tagen ohne neuen Termin dort erinnert „Heute fällig“ ans Nachfragen
+    angefragtSetzen(ortKey(s), this.heute);
+    if (weg === 'kopiert') {
       this.kopiert.set(s.date);
       setTimeout(() => this.kopiert.set(''), 2000);
     }

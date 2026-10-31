@@ -11,6 +11,11 @@ export interface Kontakt {
   /** Telefonnummer für WhatsApp, z. B. „0171 1234567“ oder „+49 171 …“ */
   telefon?: string;
   mail?: string;
+  /** Ortsname und Stadt – für Kontakte ohne Auftritt (neue Veranstalter) */
+  ort?: string;
+  stadt?: string;
+  /** zuletzt angefragt am (JJJJ-MM-TT) – nach 14 Tagen ohne neuen Termin dort: „Nachfragen“ unter Heute fällig */
+  angefragt?: string;
 }
 
 export const ortKey = (s: Pick<Show, 'venue' | 'city'>) => `${s.city ?? ''}|${ortBasis(s.venue)}`;
@@ -28,14 +33,19 @@ export function kontaktVon(s: Pick<Show, 'venue' | 'city'>): Kontakt | undefined
 }
 
 export function kontaktSetzen(s: Pick<Show, 'venue' | 'city'>, k: Kontakt): void {
+  kontaktSpeichern(ortKey(s), k);
+}
+
+/** Kontakt unter seinem Schlüssel („Stadt|ort“) speichern; leer → löschen */
+export function kontaktSpeichern(key: string, k: Kontakt): void {
   const alle = ladeKontakte();
   const sauber: Kontakt = Object.fromEntries(
     Object.entries(k)
       .map(([a, b]) => [a, String(b ?? '').trim()])
       .filter(([, b]) => b),
   );
-  if (Object.keys(sauber).length) alle[ortKey(s)] = sauber;
-  else delete alle[ortKey(s)];
+  if (Object.keys(sauber).length) alle[key] = sauber;
+  else delete alle[key];
   try {
     if (Object.keys(alle).length) localStorage.setItem(KONTAKTE_KEY, JSON.stringify(alle));
     else localStorage.removeItem(KONTAKTE_KEY);
@@ -98,4 +108,29 @@ export function anfrageText(s: Pick<Show, 'venue' | 'date'>, kontakt: Kontakt | 
     'Viele Grüße',
     'Blickfeld Nord',
   ].join('\n');
+}
+
+/** angefragt: Datum merken (bzw. mit null löschen, z. B. wenn geantwortet wurde) */
+export function angefragtSetzen(key: string, datum: string | null): void {
+  const k = { ...(ladeKontakte()[key] ?? {}) };
+  if (datum) k.angefragt = datum;
+  else delete k.angefragt;
+  kontaktSpeichern(key, k);
+}
+
+export interface Nachfrage {
+  key: string;
+  name: string;
+  angefragt: string;
+  tage: number;
+}
+
+/** Anfragen, die seit mindestens `nach` Tagen offen sind – ohne neuen Termin an dem Ort seit der Anfrage */
+export function nachfragen(kontakte: Record<string, Kontakt>, shows: Pick<Show, 'venue' | 'city' | 'date'>[], heute: string, nach = 14): Nachfrage[] {
+  return Object.entries(kontakte)
+    .filter(([, k]) => k.angefragt)
+    .map(([key, k]) => ({ key, k, tage: Math.round((Date.parse(heute) - Date.parse(k.angefragt!)) / 864e5) }))
+    .filter(({ key, k, tage }) => tage >= nach && !shows.some((s) => ortKey(s) === key && s.date >= k.angefragt!))
+    .map(({ key, k, tage }) => ({ key, name: k.ort || shows.filter((s) => ortKey(s) === key).at(-1)?.venue || key.split('|')[1], angefragt: k.angefragt!, tage }))
+    .sort((a, b) => b.tage - a.tage);
 }

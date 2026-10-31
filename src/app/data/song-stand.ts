@@ -32,11 +32,32 @@ export function probenAusSpeicher(): { tag: string; songs: { title: string; arti
       const k = localStorage.key(i)!;
       const tag = /^bn-probe-(\d{4}-\d{2}-\d{2})/.exec(k)?.[1];
       if (!tag) continue;
-      const plan = JSON.parse(localStorage.getItem(k) ?? '{}') as { songs?: { title: string; artist: string }[] };
-      out.push({ tag, songs: plan.songs ?? [] });
+      const plan = JSON.parse(localStorage.getItem(k) ?? '{}') as { songs?: { title: string; artist: string; done?: boolean; notiz?: string }[] };
+      // hat die Probe Häkchen „geprobt“, zählen nur die abgehakten Songs – sonst alle geplanten
+      const songs = plan.songs ?? [];
+      out.push({ tag, songs: songs.some((s) => s.done) ? songs.filter((s) => s.done) : songs });
     }
   } catch {
     // ohne Speicher keine Proben
+  }
+  return out;
+}
+
+/** letzte Probennotiz je Song (Probenprotokoll auf der Probenseite), neueste zuerst */
+export function probenNotizen(): Map<string, { tag: string; notiz: string }> {
+  const out = new Map<string, { tag: string; notiz: string }>();
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)!;
+      const tag = /^bn-probe-(\d{4}-\d{2}-\d{2})/.exec(k)?.[1];
+      if (!tag) continue;
+      for (const s of (JSON.parse(localStorage.getItem(k) ?? '{}').songs ?? []) as { title: string; artist: string; notiz?: string }[]) {
+        const key = `${s.title}|${s.artist}`;
+        if (s.notiz && (out.get(key)?.tag ?? '') < tag) out.set(key, { tag, notiz: s.notiz });
+      }
+    }
+  } catch {
+    // ohne Speicher keine Notizen
   }
   return out;
 }

@@ -83,6 +83,21 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Live-Check** läuft jetzt auch nach jedem Deploy (90 s später) und prüft zusätzlich alle Pressekits (Status, noindex)
   und wichtige Inhalte (Konzertliste, Anstehende Konzerte, Verfügbarkeit); Probleme → Issue „Probleme auf der Live-Seite“.
 - **Plakat zum Drucken** wird in doppelter (A4) bzw. dreifacher (A3) Auflösung gezeichnet.
+- **Backstage → Termine → Kontakte** (`/backstage/termine/kontakte`): alle Ansprechpartner mit letztem/nächstem
+  Auftritt, WhatsApp, E-Mail und „Anfrage schreiben“; neue Veranstalter ohne Auftritt anlegen. Jede Anfrage wird mit
+  Datum gemerkt („angefragt am …“, „beantwortet“ setzt zurück) – nach 14 Tagen ohne neuen Termin dort steht
+  **Nachfragen** unter „Heute fällig“.
+- **Saison als Bild teilen** (Termine → Saison): Bild 1080 × 1350 mit allen 12 Monaten für die WhatsApp-Gruppe.
+- **Konzertseite in der letzten Woche:** „Noch 3 Tage – wir freuen uns auf euch!“ (am Tag: „Heute ist es so weit“).
+- **Rückblick-Formular** ist vorgefüllt: Überschrift mit Ort, Text-Entwurf aus Datum, Ort, „Was lief gut“ und Song
+  des Abends – nur noch in eigenen Worten ergänzen.
+- **Probenprotokoll:** Auf der Probenseite je Song eine Notiz („Bridge sitzt“); der Song-Dialog zeigt die letzte
+  unter „Zuletzt geprobt“. Hat eine Probe Häkchen, zählen nur die abgehakten Songs als geprobt (Wunschliste-Stand,
+  Probe-Vorschlag).
+- **PDFs** (Pressekit, Rider, Bühnenplan, QR-Karte, Wunschbox) tragen Sprache und Dokumenttitel (Screenreader,
+  Titelleiste). Vollständig getaggte PDFs (Lesereihenfolge) kann das Werkzeug (ReportLab) nicht erzeugen.
+- **Live-Check** startet am Ende jedes Deploys (Job „live-check“ in deploy-pages.yml) – auch nach dem Deploy von
+  „Screenshots aktualisieren“.
 - **Konzertseite → Als Story teilen:** Fans teilen ein Story-Bild mit QR-Code; in der letzten Woche mit Countdown
   („NOCH 3 TAGE“, „MORGEN“, „HEUTE“).
 - **Freunde mit Bild:** In `band.service.ts` beim Freund `bild: 'freunde/name.webp'` (quadratisch, ca. 256 px, unter

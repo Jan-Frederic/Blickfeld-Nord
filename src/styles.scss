@@ -332,3 +332,25 @@ app-pressetexte-pruefen h4 { margin: 16px 0 6px; font-size: .9rem; }
 app-pressetexte-pruefen .spalten { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
 app-pressetexte-pruefen .lang { font-size: .72rem; letter-spacing: .1em; color: var(--bn-sunset); }
 app-pressetexte-pruefen pre { margin: 4px 0 0; padding: 10px; border-radius: 8px; background: rgba(255, 255, 255, .04); white-space: pre-wrap; overflow-wrap: anywhere; font: .82rem/1.5 Inter, sans-serif; }
+app-saison-planung .mehr { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+// Backstage → Termine → Kontakte
+app-termine-kontakte .kontakte { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+app-termine-kontakte .kontakte > li { padding: 12px 16px; border: 1px solid var(--bn-line); border-radius: 12px; background: rgba(27, 30, 34, .72); }
+app-termine-kontakte .kopf { font-size: 1rem; } app-termine-kontakte .a, app-termine-kontakte .name { color: var(--bn-fog); }
+app-termine-kontakte .info { margin: 4px 0 8px; font-size: .84rem; color: var(--bn-fog); }
+app-termine-kontakte .gut { color: #7fc29b; } app-termine-kontakte .angefragt { color: #e8a46a; }
+app-termine-kontakte .link { padding: 0; border: 0; background: none; color: var(--bn-sunset); font: inherit; text-decoration: underline; cursor: pointer; }
+app-termine-kontakte .knoepfe { display: flex; flex-wrap: wrap; gap: 6px; }
+app-termine-kontakte .btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .84rem; text-decoration: none; cursor: pointer; }
+app-termine-kontakte .btn:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-termine-kontakte .btn mat-icon { font-size: 17px; width: 17px; height: 17px; }
+app-termine-kontakte .btn.leise { margin-left: auto; color: var(--bn-fog); }
+app-termine-kontakte .leer { color: var(--bn-fog); }
+app-termine-kontakte .neu { margin-top: 18px; padding: 12px 16px; border: 1px dashed var(--bn-line); border-radius: 12px; }
+app-termine-kontakte .neu summary { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+app-termine-kontakte .neu form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; align-items: end; }
+app-termine-kontakte .neu label { display: grid; gap: 4px; font-size: .78rem; color: var(--bn-fog); }
+app-termine-kontakte .neu input { padding: 7px 9px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; }
+// Probe: Notiz je Song (Protokoll)
+app-backstage-probe .protokoll { flex: 1 1 160px; min-width: 0; padding: 4px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: transparent; color: var(--bn-ink); font: inherit; font-size: .82rem; }
+app-backstage-probe .protokoll::placeholder { color: var(--bn-fog); opacity: .6; }

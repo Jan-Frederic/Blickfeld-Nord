@@ -15,7 +15,8 @@ import { ProbeVorschlag } from './probe-vorschlag';
 export const PROBE_PREFIX = 'bn-probe-';
 
 interface ProbePlan {
-  songs: { title: string; artist: string; done: boolean }[];
+  /** done = geprobt; notiz = Protokoll („Bridge sitzt“, „Tempo zu schnell“) */
+  songs: { title: string; artist: string; done: boolean; notiz?: string }[];
   notizen: string;
   punkte: { text: string; done: boolean }[];
 }
@@ -53,6 +54,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
               <li [class.done]="s.done">
                 <label><input type="checkbox" [checked]="s.done" (change)="toggleSong(i)" /> <span class="t">{{ s.title }}</span> <span class="a">{{ s.artist }}</span></label>
                 @if (info(s); as inf) { <span class="info">{{ inf }}</span> }
+                <input class="protokoll" maxlength="80" [value]="s.notiz ?? ''" placeholder="Notiz: z. B. Bridge sitzt" [attr.aria-label]="'Notiz zu ' + s.title" (change)="notizSetzen(i, $any($event.target).value)" />
                 <button type="button" class="icon" [class.an]="aufnahme() === s.title + '|' + s.artist" (click)="aufnahme.set(aufnahme() === s.title + '|' + s.artist ? '' : s.title + '|' + s.artist)" [attr.aria-label]="'Mitschnitte von ' + s.title" title="Aufnehmen und nachhören"><mat-icon>mic</mat-icon></button>
                 <button type="button" class="icon" (click)="removeSong(i)" [attr.aria-label]="s.title + ' entfernen'"><mat-icon>close</mat-icon></button>
                 @if (aufnahme() === s.title + '|' + s.artist) { <app-song-mitschnitte class="voll" [songKey]="s.title + '|' + s.artist" [titel]="s.title" /> }
@@ -191,6 +193,11 @@ export class BackstageProbe {
     } catch {
       // ohne Speicher (privater Modus) gilt die Planung nur bis zum Neuladen
     }
+  }
+
+  /** Probenprotokoll je Song – erscheint im Song-Dialog unter „Zuletzt geprobt“ */
+  protected notizSetzen(i: number, notiz: string): void {
+    this.save((p) => ({ ...p, songs: p.songs.map((s, j) => (j === i ? { ...s, notiz: notiz.trim() || undefined } : s)) }));
   }
 
   protected addSong(t: { title: string; artist: string }): void {

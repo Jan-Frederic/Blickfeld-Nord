@@ -24,6 +24,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
         markiert. Zum Mitnehmen in die Bandbesprechung ausdrucken oder als PDF speichern.</p>
       <div class="knoepfe">
         <button type="button" class="btn" (click)="drucken()"><mat-icon>print</mat-icon> Drucken / als PDF</button>
+        <button type="button" class="btn zweit" (click)="bild()"><mat-icon>share</mat-icon> Als Bild teilen</button>
         <span class="zahlen">{{ auftritte() }} Auftritte · {{ proben() }} Proben · {{ frei() }} {{ frei() === 1 ? 'Monat' : 'Monate' }} frei</span>
       </div>
 
@@ -62,6 +63,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
     .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 0 0 20px; }
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: var(--bn-sunset); color: #2a1708; font: 500 .9rem Inter, sans-serif; cursor: pointer; }
     .zahlen { color: var(--bn-fog); font-size: .9rem; }
+    .btn.zweit { background: none; color: var(--bn-ink); border-color: var(--bn-line); }
   `,
 })
 export class TermineSaison {
@@ -83,6 +85,65 @@ export class TermineSaison {
   protected readonly tagText = tag;
   protected datum(d: string): string {
     return d.split('-').reverse().join('.');
+  }
+
+  /** Bild für die WhatsApp-Gruppe der Band (1080 × 1350): 12 Monate im Raster, Auftritte hell, Proben grau, Abwesenheiten rot */
+  protected async bild(): Promise<void> {
+    const W = 1080, H = 1350, rand = 40, kopf = 120, spalten = 3, zeilen = 4;
+    const canvas = document.createElement('canvas');
+    canvas.width = W * 2;
+    canvas.height = H * 2;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(2, 2);
+    await Promise.all([document.fonts.load('400 30px Michroma'), document.fonts.load('400 20px Inter'), document.fonts.load('600 20px Inter')]);
+    ctx.fillStyle = '#15171c';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ece9e4';
+    ctx.font = '400 34px Michroma';
+    ctx.fillText('BLICKFELD NORD · SAISON', rand, 70);
+    ctx.fillStyle = '#9aa0a6';
+    ctx.font = '400 20px Inter';
+    ctx.fillText(`Stand ${new Date().toLocaleDateString('de-DE')} · ${this.auftritte()} Auftritte · ${this.proben()} Proben · ${this.frei()} Monate frei`, rand, 104);
+    const bw = (W - 2 * rand - (spalten - 1) * 16) / spalten;
+    const bh = (H - kopf - rand - (zeilen - 1) * 16) / zeilen;
+    this.plan().forEach((m, i) => {
+      const x = rand + (i % spalten) * (bw + 16);
+      const y = kopf + Math.floor(i / spalten) * (bh + 16);
+      const frei = !this.hatAuftritt(m);
+      ctx.strokeStyle = frei ? '#e8a46a' : '#3a3f45';
+      ctx.setLineDash(frei ? [8, 6] : []);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, bw, bh, 14);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ece9e4';
+      ctx.font = '600 22px Inter';
+      ctx.fillText(this.name(m.monat), x + 16, y + 34);
+      let zy = y + 66;
+      const platz = Math.floor((bh - 70) / 26);
+      const liste = m.eintraege.filter((e) => e.art !== 'probe' || m.eintraege.length <= platz);
+      for (const e of liste.slice(0, platz)) {
+        ctx.fillStyle = e.art === 'auftritt' ? (e.offen ? '#e8a46a' : '#ece9e4') : e.art === 'weg' ? '#e07a5a' : '#9aa0a6';
+        ctx.font = `${e.art === 'auftritt' ? '600' : '400'} 18px Inter`;
+        let t = `${tag(e.datum)} ${e.text}`;
+        while (ctx.measureText(t).width > bw - 32 && t.length > 4) t = t.slice(0, -2) + '…';
+        ctx.fillText(t, x + 16, zy);
+        zy += 26;
+      }
+      if (liste.length > platz) {
+        ctx.fillStyle = '#9aa0a6';
+        ctx.fillText(`+ ${liste.length - platz} weitere`, x + 16, zy);
+      }
+      if (frei) {
+        ctx.fillStyle = '#e8a46a';
+        ctx.font = '400 18px Inter';
+        ctx.fillText('noch kein Auftritt', x + 16, y + bh - 18);
+      }
+    });
+    const blob = await new Promise<Blob>((ok, fehler) => canvas.toBlob((b) => (b ? ok(b) : fehler(new Error('Bild fehlt'))), 'image/png'));
+    const { shareImage } = await import('../data/poster');
+    await shareImage(blob, `blickfeld-nord-saison-${this.heute}.png`, 'Blickfeld Nord – Saison').catch(() => undefined);
   }
 
   /** Ausdruck: alle 12 Monate auf einer A4-Seite (quer), druckt bzw. speichert als PDF über den Browser */

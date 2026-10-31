@@ -269,10 +269,21 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   await until(async () => /Saisonplanung/.test(await p.locator('app-saison-planung').innerText().catch(() => '')), 'Saisonplanung fehlt');
   // eigene Seite Termine → Saison mit Auftritten und Proben
   await p.locator('app-saison-planung summary').click();
-  await p.locator('app-saison-planung .mehr a').click();
+  await p.locator('app-saison-planung .mehr a').first().click();
   await p.waitForURL(/\/backstage\/termine\/saison/);
   await until(async () => (await p.locator('app-termine-saison article').count()) === 12, 'Saison-Seite zeigt keine 12 Monate');
   await until(async () => (await p.locator('app-termine-saison li.probe').count()) > 0, 'Proben fehlen in der Saison');
+  const [bild] = await Promise.all([p.waitForEvent('download'), p.locator('app-termine-saison button', { hasText: 'Als Bild teilen' }).click()]);
+  expect(bild.suggestedFilename().startsWith('blickfeld-nord-saison-'), 'Saison-Bild fehlt');
+  // Kontakte: neuen Veranstalter anlegen
+  await p.go('/backstage/termine/kontakte/');
+  const neu = p.locator('app-termine-kontakte details.neu');
+  await neu.locator('summary').click();
+  await neu.locator('input').nth(0).fill('Testclub');
+  await neu.locator('input').nth(1).fill('Bocholt');
+  await neu.locator('input').nth(2).fill('Ben');
+  await neu.locator('button[type=submit]').click();
+  await until(async () => /Testclub[\s\S]*Ben/.test(await p.locator('app-termine-kontakte .kontakte').innerText()), 'Neuer Kontakt fehlt in der Liste');
   // Ansprechpartner beim Auftritt bleibt gespeichert und gilt am selben Ort
   await p.go(`/backstage/${new URL(BASE + concerts[0]).pathname.split('/')[2]}`);
   const kontakt = p.locator('app-kontakt-karte');
@@ -971,6 +982,9 @@ test('Backstage: Rückblick-Formular erzeugt den Historie-Block', async () => {
   }, vergangen);
   await p.reload();
   await p.locator('app-rueckblick-formular summary').click();
+  // vorgefüllt: Überschrift mit Ort, Text-Entwurf mit Datum
+  expect((await p.locator('app-rueckblick-formular input[maxlength="100"]').inputValue()).length > 0, 'Überschrift nicht vorgefüllt');
+  await until(async () => (await p.locator('app-rueckblick-formular textarea').inputValue()).startsWith('Am '), 'Text-Entwurf fehlt');
   await p.locator('app-rueckblick-formular input[maxlength="100"]').fill("Ein Abend im Café");
   await p.locator('app-rueckblick-formular textarea').fill("Erster Absatz mit Matthias' Solo.\n\nZweiter Absatz.");
   await p.locator('app-rueckblick-formular button', { hasText: 'Foto hinzufügen' }).click();
@@ -1113,8 +1127,7 @@ test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung
   await until(async () => (await p.locator('app-nachbereitung .punkte li').count()) === 2, 'Merkpunkte nicht übernommen');
   await until(async () => (await p.locator('app-nachbereitung summary').innerText()).includes('1 von 1 Songs bewertet'), 'Sterne nicht gezählt');
   await p.locator('app-rueckblick-formular summary').click();
-  await p.locator('app-rueckblick-formular button', { hasText: 'aus der Nachbereitung' }).click();
-  await until(async () => (await p.locator('app-rueckblick-formular textarea').first().inputValue()) === 'Alle haben mitgesungen', '„Was lief gut“ nicht in den Rückblick übernommen');
+  await until(async () => (await p.locator('app-rueckblick-formular textarea').first().inputValue()).includes('Alle haben mitgesungen'), '„Was lief gut“ nicht in den Rückblick-Entwurf übernommen');
   await p.go('/backstage/aufgaben/');
   await until(async () => (await p.locator('app-backstage-aufgaben').innerText()).includes('2 offene Merkpunkte aus der Nachbereitung'), 'Merkpunkte fehlen unter Aufgaben');
   return p;

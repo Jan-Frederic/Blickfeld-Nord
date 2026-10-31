@@ -25,18 +25,16 @@ interface Foto {
   selector: 'app-rueckblick-formular',
   imports: [MatIconModule],
   template: `
-    <details class="neu" [open]="open()" (toggle)="open.set($any($event.target).open)">
+    <details class="neu" [open]="open()" (toggle)="aufklappen($any($event.target).open)">
       <summary><mat-icon>history_edu</mat-icon> {{ vorhanden() ? 'Rückblick ergänzen' : 'Rückblick schreiben' }}</summary>
       @if (vorhanden()) {
         <p class="problem"><mat-icon>info</mat-icon> Für diesen Tag gibt es schon einen Rückblick („{{ vorhanden() }}“). Ein zweiter Eintrag erscheint zusätzlich.</p>
       }
       <div class="grid">
         <label class="wide">Überschrift *<input [value]="titel()" (input)="titel.set($any($event.target).value)" placeholder="z. B. Weihnachtsmarkt in Rhede" maxlength="100" /></label>
-        @if (ausNachbereitung() && !text().trim()) {
-          <p class="wide hinweis"><button type="button" class="link" (click)="text.set(ausNachbereitung())"><mat-icon>content_paste</mat-icon> „Was lief gut“ aus der Nachbereitung als Entwurf übernehmen</button></p>
-        }
+        <p class="wide hinweis">Vorgefüllt aus Datum, Ort, „Was lief gut“ (Nachbereitung) und Song des Abends – bitte in eigenen Worten ergänzen.</p>
         <label class="wide">Text * <small>(Absätze mit einer Leerzeile trennen)</small>
-          <textarea rows="6" [value]="text()" (input)="text.set($any($event.target).value)" placeholder="Wie war der Abend? Was war besonders?"></textarea>
+          <textarea rows="6" [value]="text()" (input)="text.set($any($event.target).value); eigenerText = true" placeholder="Wie war der Abend? Was war besonders?"></textarea>
         </label>
         <label class="wide">Instagram-Reel <small>(Link oder Kennung, optional)</small>
           <input [value]="reel()" (input)="reel.set($any($event.target).value)" placeholder="https://www.instagram.com/reel/ABC123/" />
@@ -124,8 +122,17 @@ export class RueckblickFormular {
   protected readonly editUrl = EDIT_URL;
   protected readonly uploadUrl = UPLOAD_URL;
   protected readonly open = signal(false);
-  protected readonly titel = signal('');
+  // vorgefüllt: Überschrift mit Ort, Text als Entwurf aus Datum, Ort, „Was lief gut“ und Song des Abends –
+  // nur noch ein paar eigene Sätze ergänzen (öffentlich erst nach dem Umformulieren)
+  protected readonly titel = linkedSignal(() => `${this.show().venue}${this.show().city && !this.show().venue.includes(this.show().city!) ? ' in ' + this.show().city : ''}`);
   protected readonly text = signal('');
+  /** beim Aufklappen den Entwurf frisch erzeugen (die Nachbereitung darüber kann sich geändert haben) – nicht, wenn
+   *  schon selbst geschrieben wurde */
+  protected eigenerText = false;
+  protected aufklappen(offen: boolean): void {
+    this.open.set(offen);
+    if (offen && (!this.eigenerText || !this.text().trim())) this.text.set(this.entwurf());
+  }
   protected readonly reel = signal('');
   protected readonly fotos = signal<Foto[]>([]);
   protected readonly copied = signal(false);
@@ -138,6 +145,17 @@ export class RueckblickFormular {
   // bei jedem Zeichnen frisch gelesen – die Nachbereitung steht gleich darüber und ändert sich nebenher
   protected ausNachbereitung(): string {
     return ladeNachbereitung(this.id()).gut.trim();
+  }
+  private entwurf(): string {
+    const s = this.show();
+    const tag = new Date(`${s.date}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    const absaetze = [`Am ${tag} waren wir bei ${s.venue}${s.city && !s.venue.includes(s.city) ? ' in ' + s.city : ''} zu Gast.`];
+    const gut = this.ausNachbereitung();
+    if (gut) absaetze.push(gut);
+    const h = this.highlight();
+    if (h) absaetze.push(`Unser Song des Abends: „${h}“.`);
+    absaetze.push(`Danke an alle, die dabei waren!`);
+    return absaetze.join('\n\n');
   }
   protected readonly highlight = linkedSignal(() => {
     const sterne = ladeBewertungen(this.id());

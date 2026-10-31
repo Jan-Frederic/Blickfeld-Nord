@@ -1,9 +1,10 @@
-import { Component, ElementRef, afterNextRender, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, computed, input, output, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
 import { NotenEditor } from './noten-editor';
 import { SongMitschnitte } from './song-mitschnitte';
+import { probenNotizen } from '../data/song-stand';
 
 // Dialog „Song bearbeiten“ (Backstage → Songs): Tonart (Original und wie die Band spielt), Capo, Tempo – auch per
 // Tippen im Takt –, Notiz, Recherche-Quelle sowie Noten (PDF, Akkordblatt). Mit „Voriger/Nächster“ lässt sich die
@@ -75,6 +76,7 @@ export interface SongZeile {
         </label>
       </div>
       @if (quelle(); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
+      @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ p.tag.split('-').reverse().join('.') }}: {{ p.notiz }}</p> }
 
       <!-- je Song neu anlegen, damit der Editor die Noten des neuen Songs lädt -->
       @for (s of [song()]; track s.key) {
@@ -134,6 +136,8 @@ export class SongDialog {
   readonly song = input.required<SongZeile>();
   readonly werte = input.required<SongWerte>();
   readonly quelle = input<string>();
+  /** letzte Notiz aus dem Probenprotokoll (Probenseite) */
+  protected readonly probe = computed(() => probenNotizen().get(this.song().key));
   readonly dateien = input.required<NotenDateiInfo[]>();
   /** z. B. „3 / 52“ */
   readonly position = input('');

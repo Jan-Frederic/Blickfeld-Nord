@@ -28,6 +28,7 @@ const TEXT = tr(
     remind: 'Erinnere mich',
     share: 'Teilen',
     story: 'Als Story teilen',
+    bald: (n: number) => (n === 0 ? 'Heute ist es so weit – bis gleich!' : n === 1 ? 'Morgen ist es so weit!' : `Noch ${n} Tage – wir freuen uns auf euch!`),
     route: 'Anfahrt',
     arrival: 'Anfahrt & Parken',
     remindHint: '„Erinnere mich“ lädt einen Kalendereintrag mit Erinnerung am Vortag herunter.',
@@ -64,6 +65,7 @@ const TEXT = tr(
     remind: 'Remind me',
     share: 'Share',
     story: 'Share as story',
+    bald: (n: number) => (n === 0 ? "It's tonight – see you soon!" : n === 1 ? "It's tomorrow!" : `${n} days to go – we can't wait to see you!`),
     route: 'Directions',
     arrival: 'Getting there & parking',
     remindHint: '“Remind me” downloads a calendar entry with a reminder the day before.',
@@ -100,6 +102,7 @@ const TEXT = tr(
     remind: 'Herinner me',
     share: 'Delen',
     story: 'Delen als story',
+    bald: (n: number) => (n === 0 ? 'Vandaag is het zover – tot zo!' : n === 1 ? 'Morgen is het zover!' : `Nog ${n} dagen – we kijken ernaar uit!`),
     route: 'Route',
     arrival: 'Bereikbaarheid & parkeren',
     remindHint: '„Herinner me” downloadt een agenda-item met een herinnering de dag ervoor.',
@@ -136,6 +139,9 @@ const TEXT = tr(
       @if (show(); as s) {
         <p class="kicker">{{ past() ? t().recap : 'Live' }}</p>
         <h2>{{ s.venue }}</h2>
+        @if (bald() !== null) {
+          <p class="bald"><mat-icon>celebration</mat-icon> {{ t().bald(bald()!) }}</p>
+        }
         @if (past()) {
           <p class="past"><mat-icon>history</mat-icon> {{ t().over }}</p>
         }
@@ -264,6 +270,7 @@ const TEXT = tr(
     .recap figcaption { margin-top: 6px; font-size: .78rem; color: var(--bn-fog); }
     .recap p:not(.kicker) { margin: 0 0 16px; max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); }
     .recap .top { display: flex; align-items: center; gap: 6px; } .top mat-icon { color: var(--bn-sunset); }
+    .bald { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 8px 14px; border-radius: 999px; background: rgba(232, 164, 106, .14); color: var(--bn-sunset); font-weight: 600; }
     .played { margin: 0 0 16px; } .played summary { cursor: pointer; color: var(--bn-sunset); }
     .played ol { columns: 2 220px; margin: 10px 0 0; padding-left: 22px; line-height: 1.7; } .played small { color: var(--bn-fog); } .played a { color: var(--bn-ink); text-decoration-color: #1db954; }
     .recap-links { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -282,6 +289,13 @@ export class KonzertPage {
   // nur öffentliche, geklärte Konzerte haben eine eigene Seite
   protected readonly show = computed(() => this.band.publicShows.find((s) => this.band.showId(s) === this.id()));
   private readonly today = new Date().toISOString().slice(0, 10);
+  /** in der letzten Woche: Tage bis zum Auftritt (0 = heute), sonst null – die Seite wird im Browser aufgebaut */
+  protected readonly bald = computed(() => {
+    const s = this.show();
+    if (!s) return null;
+    const tage = Math.round((Date.parse(`${s.date}T12:00:00Z`) - Date.parse(`${this.today}T12:00:00Z`)) / 864e5);
+    return tage >= 0 && tage <= 7 ? tage : (s.endDate && s.date < this.today && s.endDate >= this.today ? 0 : null);
+  });
   protected readonly past = computed(() => (this.show()!.endDate ?? this.show()!.date) < this.today);
   protected readonly recap = computed(() => this.band.history.find((h) => h.date === this.show()?.date && !h.example));
 

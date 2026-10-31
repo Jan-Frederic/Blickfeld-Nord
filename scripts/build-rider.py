@@ -232,7 +232,8 @@ def build_plan(lang):
     t, pt = T.RIDER[lang], T.PRESSEKIT[lang]
     w, h = landscape(A4)
     m = 18 * mm
-    c = canvas.Canvas(out(lang, 'buehnenplan'), pagesize=(w, h))
+    c = canvas.Canvas(out(lang, 'buehnenplan'), pagesize=(w, h), lang=lang)
+    c.setViewerPreference('DisplayDocTitle', 'true')
     c.setTitle(f'Blickfeld Nord – {t["plan"]}')
     c.setAuthor('Blickfeld Nord')
     pk.kicker(c, t['setup'], m, h - 16 * mm)
@@ -255,7 +256,8 @@ def build(lang):
     t, pt = T.RIDER[lang], T.PRESSEKIT[lang]
     w, h = A4
     m = 20 * mm
-    c = canvas.Canvas(out(lang), pagesize=A4)
+    c = canvas.Canvas(out(lang), pagesize=A4, lang=lang)
+    c.setViewerPreference('DisplayDocTitle', 'true')
     c.setTitle(t['title'])
     c.setAuthor('Blickfeld Nord')
     header(c, w, h, lang)
