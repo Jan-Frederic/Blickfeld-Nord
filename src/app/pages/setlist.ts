@@ -133,7 +133,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       <app-tempo-verlauf [sets]="sets()" />
       <app-setlist-vorschlag [entries]="entries()" [show]="show()" (apply)="replace($event)" />
       <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
-      @if (stage()) { <app-setlist-buehne [entries]="entries()" [show]="show()" (geaendert)="ausBuehne($event)" (closed)="stage.set(false)" /> }
+      @if (stage()) { @defer { <app-setlist-buehne [entries]="entries()" [show]="show()" (geaendert)="ausBuehne($event)" (closed)="stage.set(false)" /> } }
       <p class="hint">Die Setlist wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>
     </section>
   `,

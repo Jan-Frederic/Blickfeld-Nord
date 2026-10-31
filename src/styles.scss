@@ -299,6 +299,22 @@ app-kontakt-karte summary mat-icon { font-size: 18px; width: 18px; height: 18px;
 app-kontakt-karte .felder { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
 app-kontakt-karte label { display: grid; gap: 4px; font-size: .78rem; color: var(--bn-fog); }
 app-kontakt-karte input { padding: 7px 9px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .9rem; }
+app-kontakt-karte .adressbuch { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
+app-kontakt-karte .adressbuch mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-kontakt-karte .wertung { margin-left: 6px; color: var(--bn-fog); font-size: .78rem; }
+app-kontakt-bewertung .bewertung { margin: 10px 0 0; padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 10px; display: grid; gap: 6px; font-size: .82rem; }
+app-kontakt-bewertung legend { padding: 0 4px; color: var(--bn-fog); font-size: .78rem; }
+app-kontakt-bewertung .reihe { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+app-kontakt-bewertung .reihe > span { min-width: 6.5em; color: var(--bn-fog); }
+app-kontakt-bewertung button { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .8rem; cursor: pointer; }
+app-kontakt-bewertung button.an { border-color: var(--bn-sunset); background: rgba(232, 164, 106, .18); }
+app-kontakt-bewertung .notiz { display: grid; gap: 4px; font-size: .78rem; color: var(--bn-fog); }
+app-kontakt-bewertung input { padding: 6px 9px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .88rem; }
+app-termine-kontakte .bewerten { margin: 6px 0; font-size: .85rem; }
+app-termine-kontakte .bewerten summary { cursor: pointer; color: var(--bn-fog); }
+app-termine-kontakte .bewerten summary.schwach, app-saison-planung .wertung.schwach { color: #e0b25a; }
+app-saison-planung .wertung, app-termine-saison .wertung { display: block; color: var(--bn-fog); font-size: .8rem; }
+app-termine-saison .wertung { display: inline; }
 app-kontakt-karte .hinweis { margin: 8px 0 0; font-size: .78rem; color: var(--bn-fog); }
 app-saison-planung .mehr { margin: 10px 0 0; } app-saison-planung .mehr a { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); }
 // Backstage → Termine → Saison
@@ -354,3 +370,20 @@ app-termine-kontakte .neu input { padding: 7px 9px; border: 1px solid var(--bn-l
 // Probe: Notiz je Song (Protokoll)
 app-backstage-probe .protokoll { flex: 1 1 160px; min-width: 0; padding: 4px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: transparent; color: var(--bn-ink); font: inherit; font-size: .82rem; }
 app-backstage-probe .protokoll::placeholder { color: var(--bn-fog); opacity: .6; }
+// Backstage-Übersicht: Suche und einklappbare Zahlen
+app-backstage-suche .backstage-suche { margin: 0 0 18px; }
+app-backstage-suche .feld { display: flex; align-items: center; gap: 8px; padding: 0 14px; border: 1px solid var(--bn-line); border-radius: 12px; }
+app-backstage-suche .feld mat-icon { color: var(--bn-fog); }
+app-backstage-suche input { flex: 1; min-width: 0; padding: 12px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
+app-backstage-suche ul { list-style: none; margin: 6px 0 0; padding: 6px; border: 1px solid var(--bn-line); border-radius: 12px; background: rgba(27, 30, 34, .95); }
+app-backstage-suche li a { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--bn-ink); text-decoration: none; }
+app-backstage-suche li a:hover, app-backstage-suche li a:focus-visible { background: rgba(255, 255, 255, .06); }
+app-backstage-suche li mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
+app-backstage-suche .i { color: var(--bn-fog); font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+app-backstage-suche .leer { padding: 8px 10px; color: var(--bn-fog); }
+app-backstage .zahlen { margin: 28px 0 0; }
+app-backstage .zahlen > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+app-backstage .zahlen > summary mat-icon { color: var(--bn-sunset); font-size: 20px; width: 20px; height: 20px; }
+app-backstage-zahlen .vorschau-link { margin: 12px 0 0; font-size: .9rem; color: var(--bn-fog); }
+app-backstage-zahlen .vorschau-link a { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); }
+app-backstage-zahlen .vorschau-link mat-icon { font-size: 18px; width: 18px; height: 18px; }

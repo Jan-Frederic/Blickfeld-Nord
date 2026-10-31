@@ -27,3 +27,20 @@ describe('jahresplan', () => {
     ]);
   });
 });
+
+describe('jahresplan: private Auftritte', () => {
+  it('unter dem öffentlichen Namen, als privat markiert', () => {
+    const [m] = jahresplan(
+      {
+        shows: [{ date: '2027-03-06', venue: 'Bei Familie M.', city: 'Rhede', confirmed: true, private: true, publicName: 'Private Feier' }],
+        proben: [],
+        weg: [],
+        showId: (s) => s.date,
+      },
+      '2027-03-01',
+      1,
+    );
+    expect(m.eintraege).toHaveLength(1);
+    expect(m.eintraege[0]).toMatchObject({ text: 'Private Feier', privat: true, art: 'auftritt' });
+  });
+});

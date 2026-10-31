@@ -39,7 +39,7 @@ import { SetlistBuehne } from './setlist-buehne';
         }
       </article>
     }
-    @if (buehne(); as b) { <app-setlist-buehne [entries]="b.entries" [show]="b.id" (closed)="buehne.set(null)" /> }
+    @if (buehne(); as b) { @defer { <app-setlist-buehne [entries]="b.entries" [show]="b.id" (closed)="buehne.set(null)" /> } }
   `,
   styles: `
     .leer { color: var(--bn-fog); }

@@ -4,7 +4,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
-import { Kontakt, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
+import { KontaktBewertung } from './kontakt-bewertung';
+import { Kontakt, adressbuchDa, ausAdressbuch, bewertungSchwach, bewertungText, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
 import { saison } from '../data/saison';
 
 // Backstage → Termine → Kontakte (/backstage/termine/kontakte): alle Ansprechpartner der Veranstalter auf einen Blick –
@@ -23,7 +24,7 @@ interface Zeile {
 
 @Component({
   selector: 'app-termine-kontakte',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, KontaktBewertung],
   template: `
     <section class="section termine-kontakte">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Termine</a>
@@ -44,6 +45,10 @@ interface Zeile {
               @else if (z.zuletzt) { <span>zuletzt {{ datumText(z.zuletzt.date) }}</span> } @else { <span>noch kein Auftritt</span> }
               @if (z.k.angefragt) { <span class="angefragt">· angefragt am {{ datumText(z.k.angefragt) }} <button type="button" class="link" (click)="beantwortet(z)">beantwortet</button></span> }
             </div>
+            <details class="bewerten">
+              <summary [class.schwach]="schwach(z.k)">{{ bewertungText(z.k) || 'Bewerten: Technik, Publikum, Bezahlung' }}</summary>
+              <app-kontakt-bewertung [key]="z.key" (geaendert)="stand.update(n => n + 1)" />
+            </details>
             <div class="knoepfe">
               @if (z.k.telefon) { <a class="btn" [href]="wa(z)" target="_blank" rel="noopener"><mat-icon>chat</mat-icon> WhatsApp</a> }
               @if (z.k.mail) { <a class="btn" [href]="'mailto:' + z.k.mail"><mat-icon>mail</mat-icon> E-Mail</a> }
@@ -66,6 +71,9 @@ interface Zeile {
           <label>Name <input #n placeholder="Ansprechpartner" /></label>
           <label>WhatsApp / Telefon <input #t type="tel" /></label>
           <label>E-Mail <input #m type="email" /></label>
+          @if (adressbuch) {
+            <button type="button" class="btn" (click)="adressbuchFuellen(n, t, m)"><mat-icon>contacts</mat-icon> Aus dem Adressbuch</button>
+          }
           <button type="submit" class="btn"><mat-icon>add</mat-icon> Anlegen</button>
         </form>
       </details>
@@ -79,7 +87,17 @@ interface Zeile {
 export class TermineKontakte {
   protected readonly band = inject(BandService);
   private readonly heute = new Date().toISOString().slice(0, 10);
-  private readonly stand = signal(0);
+  protected readonly stand = signal(0);
+  protected readonly bewertungText = bewertungText;
+  protected readonly schwach = bewertungSchwach;
+  protected readonly adressbuch = adressbuchDa();
+  protected async adressbuchFuellen(n: HTMLInputElement, t: HTMLInputElement, m: HTMLInputElement): Promise<void> {
+    const a = await ausAdressbuch();
+    if (!a) return;
+    if (a.name) n.value = a.name;
+    if (a.telefon) t.value = a.telefon;
+    if (a.mail) m.value = a.mail;
+  }
   protected readonly kopiert = signal('');
   protected readonly datumText = datum;
 

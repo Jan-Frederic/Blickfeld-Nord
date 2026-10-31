@@ -97,14 +97,20 @@ export async function pressePdf(d: PressePdfDaten): Promise<Blob> {
   neueSeite();
   zeile(d.labels.songs, 16, fett);
   y -= 6;
-  const start = y;
-  const halb = Math.ceil(d.songs.length / 2);
-  d.songs.forEach((s, i) => {
-    const spalte = i < halb ? 0 : 1;
-    const zy = start - (i % halb) * 14;
-    let t = pdfText(`${i + 1}. ${s}`);
-    while (normal.widthOfTextAtSize(t, 9) > (W - 2 * M) / 2 - 10) t = t.slice(0, -2) + '.';
-    seite.drawText(t, { x: M + spalte * ((W - 2 * M) / 2), y: zy, size: 9, font: normal, color: dunkel });
-  });
+  // je Seite zwei Spalten mit so vielen Zeilen, wie Platz ist – lange Listen gehen auf der nächsten Seite weiter
+  for (let ab = 0; ab < d.songs.length; ) {
+    if (ab) neueSeite();
+    const start = y;
+    const proSpalte = Math.max(1, Math.floor((start - M) / 14) + 1);
+    const block = d.songs.slice(ab, ab + 2 * proSpalte);
+    const halb = Math.ceil(block.length / 2);
+    block.forEach((s, j) => {
+      const spalte = j < halb ? 0 : 1;
+      let t = pdfText(`${ab + j + 1}. ${s}`);
+      while (normal.widthOfTextAtSize(t, 9) > (W - 2 * M) / 2 - 10) t = t.slice(0, -2) + '.';
+      seite.drawText(t, { x: M + spalte * ((W - 2 * M) / 2), y: start - (j % halb) * 14, size: 9, font: normal, color: dunkel });
+    });
+    ab += block.length;
+  }
   return new Blob([(await pdf.save()) as BlobPart], { type: 'application/pdf' });
 }

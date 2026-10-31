@@ -6,6 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { PlanMonat, SAISON_UPDATE_KEY, jahresplan } from '../data/jahresplan';
 import { wiederAnfragen } from '../data/saison';
+import { bewertungText, kontaktVon } from '../data/kontakte';
+import type { Show } from '../data/band.service';
 
 // Backstage → Termine → Saison (/backstage/termine/saison): die nächsten 12 Monate mit Auftritten, Proben und
 // Abwesenheiten, freie Monate markiert, dazu „Wieder anfragen“ – auf der Seite und als Ausdruck/PDF für die
@@ -52,7 +54,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
         <h3 class="anfragen-titel"><mat-icon>call</mat-icon> Wieder anfragen</h3>
         <ul class="anfragen">
           @for (a of anfragen(); track a.show.date) {
-            <li>{{ a.show.publicName || a.show.venue }}{{ a.show.city ? ', ' + a.show.city : '' }} – letztes Mal {{ datum(a.show.date) }}, am besten bis {{ datum(a.bis) }} anfragen</li>
+            <li>{{ a.show.publicName || a.show.venue }}{{ a.show.city ? ', ' + a.show.city : '' }} – letztes Mal {{ datum(a.show.date) }}, am besten bis {{ datum(a.bis) }} anfragen@if (wertung(a.show); as w) { <small class="wertung"> · {{ w }}</small> }</li>
           }
         </ul>
       }
@@ -84,6 +86,10 @@ export class TermineSaison {
     return monatText(jm);
   }
   protected readonly tagText = tag;
+  /** Bewertung des Veranstalters (nur auf dem Gerät, nicht im Druck) */
+  protected wertung(s: Show): string {
+    return bewertungText(kontaktVon(s));
+  }
   protected datum(d: string): string {
     return datumText(d);
   }

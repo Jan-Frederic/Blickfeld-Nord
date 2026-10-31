@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { saison, wiederAnfragen } from '../data/saison';
 import { Show } from '../data/band.service';
-import { angefragtSetzen, anfrageText, kontaktVon, nachrichtSenden, ortKey } from '../data/kontakte';
+import { angefragtSetzen, anfrageText, bewertungSchwach, bewertungText, kontaktVon, nachrichtSenden, ortKey } from '../data/kontakte';
 
 // Backstage → Termine: Saisonplanung – die nächsten 12 Monate als Zeitleiste (Auftritte je Monat, freie Monate
 // markiert) und „Wieder anfragen“ für Orte, an denen vor einem Jahr gespielt wurde (data/saison.ts).
@@ -34,6 +34,7 @@ import { angefragtSetzen, anfrageText, kontaktVon, nachrichtSenden, ortKey } fro
         <ul class="anfragen">
           @for (a of anfragen(); track a.show.date + a.show.venue) {
             <li><a [routerLink]="'/backstage/' + band.showId(a.show)">{{ a.show.publicName || a.show.venue }}</a>{{ a.show.city ? ', ' + a.show.city : '' }} – Jahrestag {{ datum(a.jahrestag) }}, am besten bis {{ datum(a.bis) }} anfragen
+              @if (wertung(a.show); as w) { <small class="wertung" [class.schwach]="schwach(a.show)">{{ w }}</small> }
               <button type="button" class="anfrage" (click)="anfragen_(a.show)"><mat-icon>send</mat-icon> {{ kopiert() === a.show.date ? 'Kopiert!' : 'Anfrage schreiben' }}</button></li>
           }
         </ul>
@@ -61,6 +62,12 @@ export class SaisonPlanung {
       this.kopiert.set(s.date);
       setTimeout(() => this.kopiert.set(''), 2000);
     }
+  }
+  protected wertung(s: Show): string {
+    return bewertungText(kontaktVon(s));
+  }
+  protected schwach(s: Show): boolean {
+    return bewertungSchwach(kontaktVon(s));
   }
   protected name(jm: string): string {
     return monatText(jm, true);

@@ -1,4 +1,4 @@
-import { anfrageText, nachfragen, nachrichtLink, ortKey, waNummer } from './kontakte';
+import { anfrageText, bewertungSchwach, bewertungText, nachfragen, nachrichtLink, ortKey, waNummer } from './kontakte';
 
 describe('kontakte', () => {
   it('gleicher Ort auch bei Varianten', () => {
@@ -29,5 +29,14 @@ describe('kontakte', () => {
     };
     expect(nachfragen(kontakte, shows, '2026-10-31').map((n) => `${n.name} ${n.tage}`)).toEqual(['Café Nenna 30']);
     expect(nachfragen(kontakte, shows, '2026-11-08').map((n) => n.name)).toEqual(['Café Nenna', 'Neuer Club']);
+  });
+});
+
+describe('bewertung', () => {
+  it('Kurzfassung und „eher nicht“', () => {
+    expect(bewertungText(undefined)).toBe('');
+    expect(bewertungText({ technik: 'gut', publikum: 'ok', bezahlung: 'puenktlich', notiz: ' eine Steckdose ' })).toBe('Technik gut · Publikum okay · Geld pünktlich · eine Steckdose');
+    expect(bewertungSchwach({ technik: 'schwach', bezahlung: 'spaet' })).toBe(true);
+    expect(bewertungSchwach({ technik: 'schwach', publikum: 'gut' })).toBe(false);
   });
 });

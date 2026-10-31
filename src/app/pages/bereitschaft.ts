@@ -6,6 +6,7 @@ import { bereitschaft } from '../data/bereitschaft';
 import { isPause, loadSetlist } from '../data/setlist-data';
 import { songInfo } from '../data/songinfo';
 import { alleSongNoten } from '../data/noten';
+import { type OfflineStand, offlineStand, offlineVorladen } from '../data/offline';
 import { erledigteSchritte } from '../data/werbeplan';
 import { VORORT_PREFIX, loadVorOrt } from './vorort';
 import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
@@ -27,7 +28,10 @@ import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
           <li [class.ok]="p.ok">
             <mat-icon>{{ p.ok ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
             <span>
-              @if (p.ziel !== undefined && !p.ok) { <a [routerLink]="p.ziel ? ['/backstage', id(), p.ziel] : ['/backstage', id()]">{{ p.text }}</a> } @else { {{ p.text }} }
+              @if (p.aktion && !p.ok) {
+                {{ p.text }}
+                <button type="button" class="vorladen" (click)="vorladen()" [disabled]="laedt()">{{ laedt() ? 'Lädt …' : 'Jetzt vorladen' }}</button>
+              } @else if (p.ziel !== undefined && !p.ok) { <a [routerLink]="p.ziel ? ['/backstage', id(), p.ziel] : ['/backstage', id()]">{{ p.text }}</a> } @else { {{ p.text }} }
               @if (p.hinweis) { <small>{{ p.hinweis }}</small> }
             </span>
           </li>
@@ -47,6 +51,7 @@ import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
     li.ok mat-icon { color: #5fb88a; }
     li.ok { color: var(--bn-fog); }
     a { color: var(--bn-sunset); }
+    .vorladen { margin-left: 8px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: none; color: var(--bn-sunset); font: inherit; font-size: .8rem; cursor: pointer; }
     small { display: block; color: var(--bn-fog); font-size: .8rem; }
   `,
 })
@@ -58,11 +63,23 @@ export class Bereitschaft {
   private readonly band = inject(BandService);
   protected readonly id = computed(() => this.band.showId(this.show()));
   private readonly notenKeys = signal<Set<string> | undefined>(undefined);
+  private readonly offline = signal<OfflineStand | undefined>(undefined);
+  protected readonly laedt = signal(false);
 
   constructor() {
     alleSongNoten()
       .then((n) => this.notenKeys.set(new Set(Object.keys(n))))
       .catch(() => undefined);
+    offlineStand().then((s) => this.offline.set(s));
+  }
+
+  protected async vorladen(): Promise<void> {
+    this.laedt.set(true);
+    try {
+      this.offline.set(await offlineVorladen());
+    } finally {
+      this.laedt.set(false);
+    }
   }
 
   protected readonly punkte = computed(() => {
@@ -81,6 +98,7 @@ export class Bereitschaft {
       vorort: loadVorOrt(VORORT_PREFIX + id),
       werbungErledigt: erledigteSchritte(id),
       packliste: { eingepackt: Math.min(pack.checked.length, gesamt), gesamt },
+      offline: this.offline(),
     });
   });
   protected readonly offen = computed(() => this.punkte().filter((p) => !p.ok).length);

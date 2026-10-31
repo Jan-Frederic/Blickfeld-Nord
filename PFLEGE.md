@@ -102,6 +102,16 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   eintragen“ mit Location und Ort vorbelegt (geklärt angehakt) – Datum und Uhrzeit ergänzen, Zeile für GitHub kopieren.
 - **Saison-Update:** In der ersten Woche jedes Monats steht unter „Heute fällig“ „Saison-Update an die Band
   schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
+- **Backstage-Übersicht:** oben eine **Suche über alles** (Auftritte, Proben, Songs aller Spotify-Listen, Kontakte,
+  Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche). Danach Heute fällig, Bereit?, Als Nächstes;
+  „Zahlen und Songs“ lässt sich zuklappen (je Gerät gemerkt, zugeklappt wird es gar nicht erst geladen).
+- **Veranstalter bewerten** (Ansprechpartner beim Auftritt bzw. Termine → Kontakte): Technik, Publikum, Bezahlung
+  pünktlich/spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ (Saisonplanung, Termine → Saison) –
+  gelb, wenn zwei Punkte schlecht waren. Wie die Kontakte nur auf den Geräten und im OneDrive.
+- **Aus dem Adressbuch** (Ansprechpartner, Neuer Veranstalter): übernimmt Name, Telefon und E-Mail aus den Kontakten
+  des Handys – nur in Chrome auf Android (andere Browser können das nicht, dort fehlt der Knopf).
+- **Ladezeit:** Bühnen-Modus, Song-Dialog, Notenbereich und die unteren Teile einer Auftrittsseite werden erst bei
+  Bedarf geladen (Songs-Seite ca. 12 % weniger JavaScript).
 - **Probe-Vorschlag aus Notizen:** Songs, deren letzte Probennotiz nach Baustelle klingt („wackelt“, „Tempo“,
   „Einsatz“, „nochmal“ …), stehen gleich nach „wackelt noch“ – mit der Notiz als Grund.
 - **Startbild:** Ort und Name des nächsten Konzerts sind ein Link zur Konzertseite.
@@ -314,6 +324,9 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
   Strom), fällige Werbung und – zwei Tage vorher – die Packliste. Jeder offene Punkt führt dorthin, wo er sich erledigen
   lässt. Setlist, Noten, Vor Ort und Packliste stehen auf dem jeweiligen Gerät – auf einem anderen Handy kann der Check
   daher anders aussehen.
+- **Bühnen-Modus ohne Netz** (ab einer Woche vorher in Bereit?): prüft, ob der Offline-Speicher aktiv ist und
+  Backstage sowie die Noten-Anzeige (pdf.js) auf dem Gerät liegen. Fehlt etwas, holt **Jetzt vorladen** es nach;
+  ohne aktiven Offline-Speicher die Seite einmal mit Netz neu laden.
 
 - **Auftritt vorbereiten** prüft für jeden Song, ob Noten in deiner Fassung (eigene Wahl bzw. Vorliebe wie „Bass“)
   auf dem Gerät sind, ob die PDF sich öffnen lässt und der Seitenbereich passt, und lädt alles für ohne Netz.
@@ -609,6 +622,10 @@ Unter `/jahr/<Jahr>` (z. B. `/jahr/2026`) steht ein öffentlicher Rückblick: Za
 Momente aus der Historie. Er entsteht automatisch aus den Auftritten und Rückblicken in `band.service.ts` – private
 Feiern erscheinen nur mit ihrem öffentlichen Namen (sonst „Private Feier“) und ohne Ort. Den Rückblick aufs laufende
 Jahr gibt es ab dem **15.12.**; GitHub baut die Seite jeden Morgen von selbst neu. Der Link steht oben auf der Historie.
+
+**Vorschau:** Backstage → Zahlen → „Vorschau Jahresrückblick“ (`/backstage/jahr/<Jahr>`) zeigt die Seite schon vorher
+so, als wären alle Auftritte des Jahres gespielt – Zahlen, Stationen und fehlende Highlights (Rückblick-Einträge in
+`history`) vor dem 15.12. prüfen.
 
 ## Stimmen von Veranstaltern
 

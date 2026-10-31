@@ -5,6 +5,7 @@
 import type { Show } from './band.service';
 import type { Entry } from './setlist-data';
 import { WERBEPLAN, werbeplan } from './werbeplan';
+import { type OfflineStand, offlineFehlt } from './offline';
 
 export interface Punkt {
   text: string;
@@ -13,6 +14,8 @@ export interface Punkt {
   hinweis?: string;
   /** Unterseite des Auftritts (setlist, vorort, packliste) oder '' für die Seite selbst */
   ziel?: string;
+  /** Knopf statt Link: „vorladen“ holt, was für den Bühnen-Modus ohne Netz fehlt */
+  aktion?: 'vorladen';
 }
 
 export interface BereitschaftsDaten {
@@ -27,6 +30,8 @@ export interface BereitschaftsDaten {
   /** erledigte Werbeplan-Schritte */
   werbungErledigt: string[];
   packliste: { eingepackt: number; gesamt: number };
+  /** Offline-Speicher dieses Geräts – undefined, solange unbekannt oder ohne Service Worker */
+  offline?: OfflineStand;
 }
 
 const tageBis = (heute: string, datum: string) => Math.round((Date.parse(datum) - Date.parse(heute)) / 864e5);
@@ -80,6 +85,12 @@ export function bereitschaft(d: BereitschaftsDaten): Punkt[] {
       hinweis: offen.length ? `offen: ${offen.map((x) => x.schritt.titel).join(', ')}` : naechster ? `als Nächstes: ${naechster.titel}` : undefined,
       ziel: '',
     });
+  }
+
+  // ab einer Woche vorher: startet der Bühnen-Modus auch ohne Netz?
+  if (d.offline && tageBis(d.heute, show.date) <= 7) {
+    const fehlt = offlineFehlt(d.offline);
+    punkte.push({ text: 'Bühnen-Modus ohne Netz', ok: !fehlt.length, hinweis: fehlt.length ? fehlt.join(' · ') : undefined, aktion: d.offline.sw ? 'vorladen' : undefined });
   }
 
   // Packliste erst kurz vorher

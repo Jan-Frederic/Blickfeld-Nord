@@ -34,4 +34,16 @@ describe('bereitschaft', () => {
     expect(p.map((x) => x.text)).not.toContain('Werbung im Plan');
     expect(p.find((x) => x.text === 'Beginn eingetragen')?.ok).toBe(false);
   });
+
+  it('Bühnen-Modus ohne Netz: erst ab einer Woche vorher, mit Knopf zum Vorladen', () => {
+    const fehlt = { sw: true, shell: true, pdfjs: false };
+    expect(bereitschaft({ ...basis, offline: fehlt }).map((x) => x.text)).not.toContain('Bühnen-Modus ohne Netz');
+    const p = bereitschaft({ ...basis, heute: '2026-11-30', offline: fehlt }).find((x) => x.text === 'Bühnen-Modus ohne Netz');
+    expect(p).toMatchObject({ ok: false, aktion: 'vorladen' });
+    expect(p?.hinweis).toContain('pdf.js');
+    const ohneSw = bereitschaft({ ...basis, heute: '2026-11-30', offline: { sw: false, shell: false, pdfjs: false } }).find((x) => x.text === 'Bühnen-Modus ohne Netz');
+    expect(ohneSw?.aktion).toBeUndefined();
+    expect(ohneSw?.hinweis).toContain('neu laden');
+    expect(bereitschaft({ ...basis, heute: '2026-11-30', offline: { sw: true, shell: true, pdfjs: true } }).find((x) => x.text === 'Bühnen-Modus ohne Netz')?.ok).toBe(true);
+  });
 });

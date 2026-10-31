@@ -1,3 +1,4 @@
+import { ActivatedRoute } from '@angular/router';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { LISTEN, ListenKey, SongEintrag, abweichungen, gesamtDauer, listeInReihenfolge, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
@@ -178,13 +179,16 @@ function ladeEntwurf(): Record<string, Werte> {
       </table>
 
       @if (offen(); as k) {
+        @defer {
         <app-song-dialog [song]="zeile(k)" [werte]="wert(k)" [quelle]="quelle(k)" [dateien]="notenDateien()"
           [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1" [wackelt]="!!wackelt()[k]" (wackeltUmschalten)="wackeltUmschalten(k)"
           [umbenennbar]="!zeile(k).listen.length" (umbenennen)="umbenennen(k, $event)"
           (setzen)="setzen(k, $event.feld, $event.roh)" (notenGeaendert)="notenLaden()" (blaettern)="dialogBlaettern($event)"
           (buehne)="buehneAusDialog()" (schliessen)="offen.set(null)" />
+        }
       }
-      @if (buehne(); as b) { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenAuf]="true" (closed)="buehneZu()" /> }
+      <!-- Dialog und Bühnen-Modus erst laden, wenn sie gebraucht werden (kleinerer Start der Songs-Seite) -->
+      @if (buehne(); as b) { @defer { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenAuf]="true" (closed)="buehneZu()" /> } }
 
       <div class="apply">
         @if (geaendert().length) {
@@ -265,7 +269,8 @@ export class SongsListe {
   );
   private readonly quellen = new Map(SONGINFO.filter((s) => s.quelle).map((s) => [key(s), s.quelle!]));
   protected readonly entwurf = signal<Record<string, Werte>>(ladeEntwurf());
-  protected readonly suche = signal('');
+  // ?suche=… (z. B. aus der Backstage-Suche) füllt das Suchfeld vor
+  protected readonly suche = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('suche') ?? '');
   protected readonly meldung = signal('');
 
   // Lücken finden (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie „Bass“, nie gespielt) und

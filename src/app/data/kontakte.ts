@@ -17,6 +17,38 @@ export interface Kontakt {
   stadt?: string;
   /** zuletzt angefragt am (JJJJ-MM-TT) – nach 14 Tagen ohne neuen Termin dort: „Nachfragen“ unter Heute fällig */
   angefragt?: string;
+  /** Bewertung nach Auftritten – damit man beim „Wieder anfragen“ weiß, ob es sich lohnt */
+  technik?: Stufe;
+  publikum?: Stufe;
+  bezahlung?: 'puenktlich' | 'spaet';
+  notiz?: string;
+}
+
+export type Stufe = 'gut' | 'ok' | 'schwach';
+export const STUFEN: { wert: Stufe; label: string }[] = [
+  { wert: 'gut', label: 'gut' },
+  { wert: 'ok', label: 'okay' },
+  { wert: 'schwach', label: 'schwach' },
+];
+
+/** Kurzfassung der Bewertung, z. B. „Technik gut · Publikum okay · Geld pünktlich“ – leer ohne Bewertung */
+export function bewertungText(k: Kontakt | undefined): string {
+  if (!k) return '';
+  const stufe = (w?: Stufe) => STUFEN.find((s) => s.wert === w)?.label;
+  return [
+    k.technik && `Technik ${stufe(k.technik)}`,
+    k.publikum && `Publikum ${stufe(k.publikum)}`,
+    k.bezahlung && `Geld ${k.bezahlung === 'puenktlich' ? 'pünktlich' : 'spät'}`,
+    k.notiz?.trim(),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** eher nicht wieder anfragen: mindestens zweimal „schwach“ bzw. spät bezahlt */
+export function bewertungSchwach(k: Kontakt | undefined): boolean {
+  if (!k) return false;
+  return [k.technik === 'schwach', k.publikum === 'schwach', k.bezahlung === 'spaet'].filter(Boolean).length >= 2;
 }
 
 export const ortKey = (s: Pick<Show, 'venue' | 'city'>) => `${s.city ?? ''}|${ortBasis(s.venue)}`;
@@ -52,6 +84,26 @@ export function kontaktSpeichern(key: string, k: Kontakt): void {
     else localStorage.removeItem(KONTAKTE_KEY);
   } catch {
     // ohne Speicher wird nichts gemerkt
+  }
+}
+
+// Kontakt aus dem Adressbuch des Handys (Contact Picker API – Chrome auf Android); sonst gibt es den Knopf nicht
+interface ContactsManager {
+  select(props: string[], opts?: { multiple?: boolean }): Promise<{ name?: string[]; tel?: string[]; email?: string[] }[]>;
+}
+const kontaktWahl = (): ContactsManager | undefined =>
+  typeof navigator !== 'undefined' ? (navigator as Navigator & { contacts?: ContactsManager }).contacts : undefined;
+
+export const adressbuchDa = (): boolean => typeof window !== 'undefined' && 'ContactsManager' in window && !!kontaktWahl();
+
+/** einen Kontakt wählen lassen: Name, erste Telefonnummer, erste E-Mail – null, wenn abgebrochen */
+export async function ausAdressbuch(): Promise<Pick<Kontakt, 'name' | 'telefon' | 'mail'> | null> {
+  try {
+    const [c] = (await kontaktWahl()?.select(['name', 'tel', 'email'], { multiple: false })) ?? [];
+    if (!c) return null;
+    return { name: c.name?.[0]?.trim() || undefined, telefon: c.tel?.[0]?.trim() || undefined, mail: c.email?.[0]?.trim() || undefined };
+  } catch {
+    return null;
   }
 }
 

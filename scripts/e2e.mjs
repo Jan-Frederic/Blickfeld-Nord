@@ -335,6 +335,45 @@ test('Backstage: Übersicht führt in die Bereiche, Direktaufruf eines Bereichs 
   return p;
 });
 
+test('Backstage: Suche über alles, „Zahlen und Songs“ bleibt zugeklappt', async () => {
+  const p = await page();
+  await p.go('/backstage/');
+  const suche = p.locator('app-backstage-suche input');
+  await suche.fill('Nenna');
+  const auftritt = p.locator('app-backstage-suche li a', { hasText: 'Café Nenna' }).first();
+  await auftritt.waitFor();
+  await auftritt.click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/2027-02-19', () => `Treffer führt nach ${p.url()}`);
+  // Song-Treffer öffnet die Songs-Liste mit der Suche
+  await p.go('/backstage/');
+  await p.locator('app-backstage-suche input').fill('small things');
+  await p.locator('app-backstage-suche li a', { hasText: 'All The Small Things' }).first().click();
+  await until(async () => (await p.locator('input[aria-label="Songs durchsuchen"]').inputValue().catch(() => '')) === 'All The Small Things', 'Songs-Liste ohne vorbelegte Suche');
+  // Zahlen zuklappen – nach dem Neuladen weiter zu, die Zahlen werden gar nicht erst geladen
+  await p.go('/backstage/');
+  await p.locator('app-backstage-stats').waitFor();
+  await p.locator('app-backstage details.zahlen > summary').click();
+  await until(async () => !(await p.locator('app-backstage-stats').count()), 'Zahlen bleiben nach dem Zuklappen sichtbar');
+  await p.go('/backstage/');
+  expect(!(await p.locator('app-backstage-stats').count()), 'Zahlen nach dem Neuladen wieder geladen');
+  return p;
+});
+
+test('Backstage: Veranstalter bewerten – Kurzfassung in den Kontakten', async () => {
+  const p = await page();
+  await p.go('/backstage/2027-02-19/');
+  const karte = p.locator('app-kontakt-karte');
+  await karte.locator('summary').first().click();
+  await karte.locator('input[type=tel]').fill('0171 1234567');
+  await karte.locator('input[type=tel]').dispatchEvent('change');
+  await karte.locator('[aria-label="Technik"] button', { hasText: 'gut' }).click();
+  await karte.locator('[aria-label="Bezahlung"] button', { hasText: 'pünktlich' }).click();
+  await until(async () => ((await karte.locator('summary').first().textContent()) ?? '').includes('Technik gut · Geld pünktlich'), 'Bewertung fehlt im Kopf der Karte');
+  await p.go('/backstage/termine/kontakte/');
+  await until(async () => ((await p.locator('app-termine-kontakte .bewerten summary').first().textContent()) ?? '').includes('Technik gut'), 'Bewertung fehlt in den Kontakten');
+  return p;
+});
+
 test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neuladen', async () => {
   const p = await page();
   await p.go('/backstage/aufgaben/');

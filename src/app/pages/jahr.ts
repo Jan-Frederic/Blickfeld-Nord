@@ -73,6 +73,10 @@ const TEXT = tr(
   template: `
     @if (r(); as r) {
       <section class="section jahr">
+        @if (vorschau()) {
+          <p class="vorschau">Vorschau für die Band: So sieht der Rückblick aus, wenn alle Auftritte bis Jahresende stattgefunden haben.
+            Öffentlich ab dem 15.12. unter /jahr/{{ r.jahr }} – fehlende Highlights in band.service.ts (history) nachtragen.</p>
+        }
         <p class="kicker">{{ t().kicker }}</p>
         <h2>{{ t().title(r.jahr) }}</h2>
         <p class="lead">{{ t().lead(r.jahr) }}</p>
@@ -152,12 +156,15 @@ const TEXT = tr(
     .song { margin: 0 0 8px; font-size: .9rem; color: rgba(236, 233, 228, .86); }
     .text a, .links a { color: var(--bn-sunset); }
     .ausblick { margin: 40px 0 10px; font-size: 1.05rem; }
+    .vorschau { padding: 12px 16px; border: 1px dashed #e0b25a; border-radius: 12px; color: #e0b25a; font-size: .9rem; }
     .links { display: flex; flex-wrap: wrap; gap: 18px; margin: 0; }
   `,
 })
 export class JahrPage {
   /** Jahr aus der URL (/jahr/:jahr) */
   readonly jahr = input.required<string>();
+  /** Backstage-Vorschau (/backstage/jahr/:jahr): rechnet, als wäre das Jahr schon vorbei */
+  readonly vorschau = input(false);
 
   private readonly band = inject(BandService);
   private readonly i18n = inject(I18n);
@@ -166,13 +173,14 @@ export class JahrPage {
   private readonly heute = new Date().toISOString().slice(0, 10);
   protected readonly r = computed(() =>
     /^\d{4}$/.test(this.jahr())
-      ? jahresrueckblick(+this.jahr(), this.heute, this.band.shows, this.band.rehearsals, this.band.history, (s) => this.band.showId(s))
+      ? jahresrueckblick(+this.jahr(), this.vorschau() ? `${+this.jahr() + 1}-01-01` : this.heute, this.band.shows, this.band.rehearsals, this.band.history, (s) => this.band.showId(s))
       : undefined,
   );
 
   constructor() {
     const pageMeta = inject(PageMetaService);
     effect(() => {
+      if (this.vorschau()) return;
       const r = this.r();
       const t = this.t();
       pageMeta.set({

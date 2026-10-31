@@ -118,9 +118,11 @@ const DAY = 24 * 60 * 60 * 1000;
         }
         @if (!s.private && s.confirmed) {
           @if (werbeplanAktiv(s.date, heute, s.endDate)) { <app-werbeplan [show]="s" [id]="id()" /> }
-          <app-konzert-kampagne [id]="id()" />
+          @defer (on viewport) { <app-konzert-kampagne [id]="id()" /> } @placeholder { <div style="min-height: 80px"></div> }
         }
-        @if (!past()) { <app-wetter [show]="s" /> } @else { <app-nachbereitung [id]="id()" /><app-rueckblick-formular [show]="s" /> }
+        @defer (on viewport) {
+          @if (!past()) { <app-wetter [show]="s" /> } @else { <app-nachbereitung [id]="id()" /><app-rueckblick-formular [show]="s" /> }
+        } @placeholder { <div style="min-height: 80px"></div> }
 
         <nav class="tools" aria-label="Für diesen Auftritt">
           @for (t of tools; track t.path) {

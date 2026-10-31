@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +6,7 @@ import { BackstageStats } from './backstage-stats';
 import { HeuteFaellig } from './heute-faellig';
 import { Bereitschaft } from './bereitschaft';
 import { SongsKarte } from './songs-karte';
+import { BackstageSuche } from './backstage-suche';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
@@ -15,18 +16,18 @@ import { SyncService } from '../data/sync.service';
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, Bereitschaft, SongsKarte],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, Bereitschaft, SongsKarte, BackstageSuche],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
 
+      <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, Bereit-Check, die nächsten Termine; Zahlen und Songs
+           einklappbar (Zustand je Gerät gemerkt), zuletzt die Bereiche -->
+      <app-backstage-suche />
       <app-heute-faellig />
       @if (naechsterAuftritt; as n) { <app-bereitschaft [show]="n.show" [titel]="n.titel" /> }
-
-      <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
-      <app-songs-karte />
 
       <h3>Als Nächstes</h3>
       @if (next.length) {
@@ -44,6 +45,14 @@ import { SyncService } from '../data/sync.service';
       } @else {
         <p class="empty">Keine kommenden Termine eingetragen.</p>
       }
+
+      <details class="zahlen" [open]="zahlenOffen()" (toggle)="zahlenUmschalten($any($event.target).open)">
+        <summary><mat-icon>insights</mat-icon> Zahlen und Songs</summary>
+        @if (zahlenOffen()) {
+          <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
+          @defer { <app-songs-karte /> }
+        }
+      </details>
 
       <ul class="tiles">
         @for (b of bereiche; track b.path) {
@@ -88,6 +97,24 @@ import { SyncService } from '../data/sync.service';
   `,
 })
 export class Backstage {
+  // „Zahlen und Songs“ auf- oder zugeklappt – je Gerät gemerkt (Standard: offen)
+  protected readonly zahlenOffen = signal(Backstage.ansicht() !== 'zu');
+  private static ansicht(): string | null {
+    try {
+      return localStorage.getItem('bn-backstage-ansicht');
+    } catch {
+      return null;
+    }
+  }
+  protected zahlenUmschalten(offen: boolean): void {
+    this.zahlenOffen.set(offen);
+    try {
+      localStorage.setItem('bn-backstage-ansicht', offen ? 'offen' : 'zu');
+    } catch {
+      // ohne Speicher gilt es bis zum Neuladen
+    }
+  }
+
   private readonly router = inject(Router);
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));

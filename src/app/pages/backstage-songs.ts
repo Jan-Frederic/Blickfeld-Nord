@@ -29,8 +29,9 @@ export const SONG_BEREICHE = [
         }
       </nav>
       @switch (teil()) {
-        @case ('setlists') { <app-songs-setlists /> }
-        @case ('noten') { <app-noten-verwaltung [dateien]="dateien()" [songs]="mitNoten()" (geaendert)="laden()" /> }
+        <!-- Setlists und Noten-Verwaltung erst laden, wenn der Reiter gewählt ist -->
+        @case ('setlists') { @defer { <app-songs-setlists /> } }
+        @case ('noten') { @defer { <app-noten-verwaltung [dateien]="dateien()" [songs]="mitNoten()" (geaendert)="laden()" /> } }
         @default { <app-songs-liste /> }
       }
     </section>
