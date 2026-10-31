@@ -1,4 +1,4 @@
-import { pdfSongKey, songAbgleich, vergleichsKey } from './playlisten';
+import { pdfSong, pdfSongKey, songAbgleich, vergleichsKey } from './playlisten';
 
 describe('playlisten', () => {
   it('vergleicht Titel ohne Zusatz und den ersten Interpreten', () => {
@@ -21,10 +21,18 @@ describe('playlisten', () => {
   });
 
   it('listet Songs nur mit Noten ohne Liste', () => {
-    const songs = songAbgleich([{ key: 'website', tracks: [{ title: 'Iris', artist: 'Goo Goo Dolls' }] }], ['Iris|Goo Goo Dolls', pdfSongKey('Eigener Song.PDF')]);
+    const songs = songAbgleich([{ key: 'website', tracks: [{ title: 'Iris', artist: 'Goo Goo Dolls' }] }], ['Iris|Goo Goo Dolls', pdfSongKey('Toto - Africa.PDF'), pdfSongKey('Eigener Song.pdf')]);
     expect(songs).toEqual([
+      { key: 'Africa|Toto', title: 'Africa', artist: 'Toto', listen: [] },
       { key: 'Eigener Song|', title: 'Eigener Song', artist: '', listen: [] },
       { key: 'Iris|Goo Goo Dolls', title: 'Iris', artist: 'Goo Goo Dolls', listen: ['website'] },
     ]);
+  });
+
+  it('liest „<Band> - <Titel>.pdf“, Rest ist die Fassung; passt der Song zu einer Liste, gilt deren Schlüssel', () => {
+    expect(pdfSong('Toto - Africa - Bass.pdf')).toEqual({ artist: 'Toto', title: 'Africa', fassung: 'Bass' });
+    expect(pdfSong('Ohne Band.pdf')).toEqual({ artist: '', title: 'Ohne Band', fassung: '' });
+    const liste = songAbgleich([{ key: 'website', tracks: [{ title: 'Angels', artist: 'Robbie Williams' }] }]);
+    expect(pdfSongKey('robbie williams - angels - Gitarre.pdf', liste)).toBe('Angels|Robbie Williams');
   });
 });

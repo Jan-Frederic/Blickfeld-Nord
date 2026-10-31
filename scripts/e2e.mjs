@@ -343,6 +343,20 @@ test('Backstage: Songs – Filter nach Spotify-Liste, Symbole verlinken die List
   await until(async () => ((await link.getAttribute('href')) ?? '').startsWith('https://open.spotify.com/playlist/'), 'Symbol verlinkt nicht nach Spotify');
   await chips.filter({ hasText: 'Ohne Liste' }).click();
   await until(async () => (await p.locator('app-songs-liste tbody tr').first().innerText()).includes('Kein Song gefunden'), 'Ohne-Liste-Filter zeigt Songs');
+  // alleinstehendes PDF „<Band> - <Titel> - <Fassung>.pdf“ wird ein Song ohne Liste
+  await p.evaluate(() => new Promise((ok, fehler) => {
+    const req = indexedDB.open('bn-noten', 2);
+    req.onupgradeneeded = () => { for (const n of ['dateien', 'songs', 'markierungen']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n, n === 'dateien' ? { keyPath: 'id' } : undefined); };
+    req.onsuccess = () => {
+      const tx = req.result.transaction('dateien', 'readwrite');
+      tx.objectStore('dateien').put({ id: 'e2e-frei', name: 'Testband - Eigener Song - Bass.pdf', daten: new ArrayBuffer(8), groesse: 8, hinzugefuegt: '2026-01-01' });
+      tx.oncomplete = () => { req.result.close(); ok(); };
+      tx.onerror = () => fehler(tx.error);
+    };
+  }));
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.locator('app-songs-liste .listen-chips button', { hasText: 'Ohne Liste' }).click();
+  await until(async () => /Eigener Song[\s\S]*Testband[\s\S]*PDF/.test(await p.locator('app-songs-liste tbody tr').first().innerText()), 'PDF ohne Liste fehlt als Song');
   return p;
 });
 

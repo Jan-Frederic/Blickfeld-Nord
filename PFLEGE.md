@@ -91,9 +91,12 @@ von Spotify (Actions → „Repertoire aktualisieren“, auch per Knopfdruck); d
 Unter **Songs → Liste** stehen alle Songs aller Listen, gegeneinander abgeglichen (gleicher Titel ohne Zusatz wie
 „Remastered“ und gleicher erster Interpret = derselbe Song). Je Song zeigen grüne Symbole, in welchen Listen er
 steht – ein Tipp darauf öffnet die Liste in Spotify: 🌐 Website, Setlist, Probe, Repertoire, ♥ Wunschliste,
-Archiv. Oben filtern Chips nach einer Liste oder „Ohne Liste“: Songs, zu denen es nur Noten gibt (Noten zu
-einem Song, der in keiner Liste steht, oder ein PDF, das keinem Song zugeordnet ist und zu keinem passt –
-dann heißt der Song wie die Datei).
+Archiv. Oben filtern Chips nach einer Liste oder „Ohne Liste“.
+
+**PDFs ohne Spotify-Titel:** Ein PDF, das noch keinem Song zugeordnet ist, wird beim Öffnen von Songs → Liste
+nach seinem Namen zugeordnet: **`<Band> - <Titel>.pdf`**, alles nach einem weiteren „ - “ ist die Fassung
+(„Toto - Africa - Bass.pdf“). Steht der Song in einer Spotify-Liste, kommt das PDF dorthin; sonst wird er ein
+eigener Song ohne Liste (ohne Symbol). Ohne „ - “ im Namen gilt der ganze Name als Titel.
 
 ## Tonart und Tempo der Songs
 

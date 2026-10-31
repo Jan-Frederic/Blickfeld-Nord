@@ -1,10 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { LISTEN, ListenKey, SongEintrag, pdfSongKey, songAbgleich } from '../data/playlisten';
-import { erkennen } from '../data/erkennung';
+import { LISTEN, ListenKey, SongEintrag, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
-import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
+import { NotenDateiInfo, NotenPdf, alleSongNoten, notenDateien, songNotenSetzen } from '../data/noten';
 import { SongDialog } from './song-dialog';
 import { SetlistBuehne } from './setlist-buehne';
 import { Song, loadSetlist } from '../data/setlist-data';
@@ -283,20 +282,27 @@ export class SongsListe {
     notenDateien().then((d) => this.notenDateien.set(d)).catch(() => undefined);
   }
 
-  /** Songs, die es nur als Noten gibt: Noten zu Songs in keiner Liste und PDFs, die keinem Song zugeordnet sind
-   *  und deren Name zu keinem Song der Listen passt – ohne Spotify-Titel, als „Dateiname|“ */
+  /** Songs, die es nur als Noten gibt: Noten zu Songs in keiner Liste und alleinstehende PDFs. Ein PDF, das noch
+   *  keinem Song zugeordnet ist, wird dem Song aus seinem Namen „<Band> - <Titel>.pdf“ zugeordnet (Rest = Fassung) –
+   *  steht der Song in einer Liste, diesem; sonst ist es ein eigener Song ohne Liste */
   private async notenSongs(): Promise<void> {
     try {
       const [songs, dateien] = await Promise.all([alleSongNoten(), notenDateien()]);
-      const mitInhalt = Object.entries(songs).filter(([, n]) => n.pdfs?.length || n.chordpro);
-      const genutzt = new Set(mitInhalt.flatMap(([, n]) => (n.pdfs ?? []).map((p) => p.datei)));
+      const genutzt = new Set(Object.values(songs).flatMap((n) => (n.pdfs ?? []).map((p) => p.datei)));
       const bekannt = songAbgleich(LISTEN);
-      const frei: string[] = [];
+      const neu = new Map<string, NotenPdf[]>();
       for (const d of dateien.filter((x) => !genutzt.has(x.id))) {
-        const e = await erkennen(d.name, '', () => Promise.reject(new Error('nur Name')), bekannt);
-        if (!e.key && !e.kandidaten.length) frei.push(pdfSongKey(d.name));
+        const k = pdfSongKey(d.name, bekannt);
+        const fassung = pdfSong(d.name).fassung;
+        neu.set(k, [...(neu.get(k) ?? []), { datei: d.id, ...(fassung ? { name: fassung } : {}) }]);
       }
-      this.notenKeys.set([...mitInhalt.map(([k]) => k), ...frei]);
+      for (const [k, pdfs] of neu) {
+        const alt = songs[k] ?? {};
+        songs[k] = { ...alt, pdfs: [...(alt.pdfs ?? []), ...pdfs] };
+        await songNotenSetzen(k, songs[k]);
+      }
+      if (neu.size) this.notenLaden();
+      this.notenKeys.set(Object.entries(songs).filter(([, n]) => n.pdfs?.length || n.chordpro).map(([k]) => k));
     } catch {
       // ohne IndexedDB nur die Listen
     }
