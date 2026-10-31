@@ -8,6 +8,8 @@ import { Stimmgeraet } from './stimmgeraet';
 import { tasten } from '../data/buehne-einstellungen';
 import { BEWERTUNG_PREFIX, alleBewertungen, bewerten, ladeBewertungen, rangliste, songKey } from '../data/bewertung';
 import { RestSong, streichVorschlag, ueberzug } from '../data/kuerzen';
+import { wunschEinfuegen } from '../data/buehne-wunsch';
+import { LISTEN, songAbgleich } from '../data/playlisten';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
@@ -55,6 +57,7 @@ function ladeZoom(): number {
             <mat-icon>library_music</mat-icon>
           </button>
         }
+        <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)"><mat-icon>search</mat-icon></button>
         <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät"><mat-icon>tune</mat-icon></button>
         <button type="button" class="close" (click)="end($event)" aria-label="Bühnen-Modus beenden"><mat-icon>close</mat-icon></button>
       </header>
@@ -115,9 +118,30 @@ function ladeZoom(): number {
           <span class="label" style="color: #ff8a65">⏱ {{ fmt(ueber()) }} drüber</span>
           <span class="next" style="font-size: .7em">streichen: {{ streichText() }} <button type="button" class="ton" style="display: inline" (click)="streichenJa($event)">Streichen</button></span>
         }
-        <span class="progress"><span [style.width.%]="progress()"></span></span>
+        <div class="progress" role="slider" tabindex="0" aria-label="Position in der Setlist – antippen zum Springen" aria-valuemin="1" [attr.aria-valuemax]="liste().length" [attr.aria-valuenow]="index() + 1"
+             (pointerdown)="$event.stopPropagation()" (pointerup)="balken($event)">
+          <span class="stand" [style.width.%]="progress()"></span>
+          @for (m of setMarken(); track m.index) { <span class="marke" [style.left.%]="m.links" [attr.title]="'Set ' + m.set"></span> }
+        </div>
       </footer>
       @if (stimmen()) { <app-stimmgeraet style="position: fixed; left: 50%; top: 50%; z-index: 4; width: min(520px, 92vw); transform: translate(-50%, -50%)" (schliessen)="stimmen.set(false)" (pointerup)="$event.stopPropagation()" /> }
+      @if (lupe()) {
+        <div class="suche" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (keydown)="$event.stopPropagation(); $event.key === 'Escape' && lupe.set(false)">
+          <div class="suche-kopf">
+            <mat-icon>search</mat-icon>
+            <input #feld type="search" placeholder="Song suchen – kommt jetzt dran" aria-label="Song suchen" [value]="suche()" (input)="suche.set($any($event.target).value)" (keydown.enter)="treffer()[0] && waehlen(treffer()[0])" />
+            <button type="button" class="close" (click)="lupe.set(false)" aria-label="Suche schließen"><mat-icon>close</mat-icon></button>
+          </div>
+          <ul>
+            @for (t of treffer(); track t.key) {
+              <li><button type="button" (click)="waehlen(t)">
+                <span class="t">{{ t.title }}</span> <span class="a">{{ t.artist }}</span>
+                @if (platz(t); as nr) { <small>steht als Nr. {{ nr }} drin – kommt hierher</small> }
+              </button></li>
+            } @empty { <li class="leer">{{ suche().trim() ? 'Kein Song gefunden.' : 'Titel oder Interpret eintippen …' }}</li> }
+          </ul>
+        </div>
+      }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
       @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" (schliessen)="notenOffen.set(false)" /> }
     </div>
@@ -175,12 +199,13 @@ function ladeZoom(): number {
     footer { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: baseline; font-size: clamp(1.1rem, 3.5vw, 2rem); }
     .label { color: #9aa0a6; font-size: .7em; text-transform: uppercase; letter-spacing: .12em; }
     .next { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .progress { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: #222; margin-top: 10px; overflow: hidden; }
-    .progress span { display: block; height: 100%; background: var(--bn-sunset); }
   `,
 })
 export class SetlistBuehne {
   readonly entries = input.required<Entry[]>();
+  /** Setlist im Bühnen-Modus – spontane Wünsche (Lupe) ändern sie; geaendert meldet die neue Liste zum Speichern */
+  protected readonly liste = linkedSignal(() => this.entries());
+  readonly geaendert = output<Entry[]>();
   /** Auftritts-ID – nur damit gibt es Sterne */
   readonly show = input<string>();
   /** Startposition in der Liste (z. B. der angeklickte Song in Backstage → Songs) */
@@ -209,8 +234,8 @@ export class SetlistBuehne {
   private readonly now = signal(Date.now());
   private setStart = Date.now();
 
-  protected readonly sets = computed(() => setsOf(this.entries()));
-  protected readonly current = computed(() => this.entries()[this.index()]);
+  protected readonly sets = computed(() => setsOf(this.liste()));
+  protected readonly current = computed(() => this.liste()[this.index()]);
   /** im Set gestrichene Songs (Index) – werden beim Blättern übersprungen */
   protected readonly gestrichen = signal(new Set<number>());
   private readonly naechsterIndex = computed(() => {
@@ -218,11 +243,11 @@ export class SetlistBuehne {
     while (this.gestrichen().has(i)) i++;
     return i;
   });
-  protected readonly next = computed(() => this.entries()[this.naechsterIndex()]);
+  protected readonly next = computed(() => this.liste()[this.naechsterIndex()]);
   // Set-Nummer: Pausen vor der aktuellen Position zählen (Pause gehört noch zum Set davor)
-  protected readonly setNo = computed(() => this.entries().slice(0, this.index()).filter((e) => isPause(e)).length + 1);
-  protected readonly songNo = computed(() => this.entries().slice(0, this.index() + 1).filter((e) => !isPause(e)).length);
-  protected readonly progress = computed(() => (this.entries().length ? ((this.index() + 1) / this.entries().length) * 100 : 0));
+  protected readonly setNo = computed(() => this.liste().slice(0, this.index()).filter((e) => isPause(e)).length + 1);
+  protected readonly songNo = computed(() => this.liste().slice(0, this.index() + 1).filter((e) => !isPause(e)).length);
+  protected readonly progress = computed(() => (this.liste().length ? ((this.index() + 1) / this.liste().length) * 100 : 0));
   protected readonly elapsed = computed(() => Math.max(0, Math.round((this.now() - this.setStart) / 1000)));
   protected readonly planned = computed(() => setLength(this.sets()[this.setNo() - 1] ?? []).seconds);
   protected readonly plannedText = computed(() => setTime(this.planned()));
@@ -413,8 +438,8 @@ export class SetlistBuehne {
   private readonly sterneSchnitt = new Map(rangliste(alleBewertungen(), Infinity).map((p) => [songKey(p), p.schnitt]));
   private readonly rest = computed<RestSong[]>(() => {
     const out: RestSong[] = [];
-    for (let i = this.index() + 1; i < this.entries().length; i++) {
-      const e = this.entries()[i];
+    for (let i = this.index() + 1; i < this.liste().length; i++) {
+      const e = this.liste()[i];
       if (isPause(e)) break;
       if (this.gestrichen().has(i)) continue;
       out.push({ index: i, title: e.title, dauer: durationOf(e) ?? 0, sterne: this.sterneSchnitt.get(songKey(e)) ?? 3, wunsch: e.wunsch !== undefined });
@@ -436,11 +461,64 @@ export class SetlistBuehne {
   protected go(step: number): void {
     // Noten offen: erst innerhalb des Blatts blättern, am Ende bzw. Anfang weiter zum nächsten bzw. vorigen Song
     if (this.notenOffen() && this.anzeige()?.blaettern(step)) return;
-    const before = this.setNo();
-    let target = Math.min(this.entries().length, Math.max(0, this.index() + step));
+    let target = Math.min(this.liste().length, Math.max(0, this.index() + step));
     // gestrichene Songs überspringen
-    while (this.gestrichen().has(target) && target > 0 && target < this.entries().length) target += step > 0 ? 1 : -1;
-    this.index.set(target);
+    while (this.gestrichen().has(target) && target > 0 && target < this.liste().length) target += step > 0 ? 1 : -1;
+    this.springen(target);
+  }
+
+  // Fortschrittsbalken: antippen springt an die Stelle; die Sets sind als Striche markiert (an den Pausen)
+  protected readonly setMarken = computed(() => {
+    const l = this.liste();
+    const out: { index: number; links: number; set: number }[] = [];
+    l.forEach((e, i) => isPause(e) && out.push({ index: i, links: ((i + 0.5) / l.length) * 100, set: out.length + 2 }));
+    return out;
+  });
+  protected balken(e: PointerEvent): void {
+    e.stopPropagation();
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const anteil = Math.min(0.999, Math.max(0, (e.clientX - r.left) / r.width));
+    this.springen(Math.floor(anteil * this.liste().length));
+  }
+
+  // Lupe: spontaner Wunsch – Song aus allen Listen (und eigenständige mit Noten) suchen; er kommt an die aktuelle
+  // Stelle, steht er schon drin, wird er hierher gezogen (data/buehne-wunsch.ts)
+  protected readonly lupe = signal(false);
+  protected readonly suche = signal('');
+  private readonly feld = viewChild<ElementRef<HTMLInputElement>>('feld');
+  private readonly alleSongs = computed(() => songAbgleich(LISTEN, [...this.notenSongs()]));
+  protected readonly treffer = computed(() => {
+    const q = this.suche().trim().toLocaleLowerCase('de').normalize('NFD').replace(/\p{Diacritic}/gu, '');
+    if (!q) return [];
+    return this.alleSongs()
+      .filter((s) => `${s.title} ${s.artist}`.toLocaleLowerCase('de').normalize('NFD').replace(/\p{Diacritic}/gu, '').includes(q))
+      .slice(0, 8);
+  });
+  protected lupeAuf(e: Event): void {
+    e.stopPropagation();
+    this.suche.set('');
+    this.lupe.set(!this.lupe());
+    if (this.lupe()) setTimeout(() => this.feld()?.nativeElement.focus());
+  }
+  /** Nummer in der Setlist, falls der Song schon drinsteht (nicht der aktuelle) */
+  protected platz(t: { title: string; artist: string }): number | null {
+    const l = this.liste();
+    const i = l.findIndex((e, j) => j !== this.index() && !isPause(e) && e.title === t.title && e.artist === t.artist);
+    return i < 0 ? null : l.slice(0, i + 1).filter((e) => !isPause(e)).length;
+  }
+  protected waehlen(t: { title: string; artist: string }): void {
+    const r = wunschEinfuegen(this.liste(), this.index(), t);
+    this.gestrichen.update((g) => new Set([...g].map(r.abbild).filter((i) => i !== r.ziel)));
+    this.liste.set(r.liste);
+    this.geaendert.emit(r.liste);
+    this.lupe.set(false);
+    this.springen(r.ziel);
+    this.host.nativeElement.focus();
+  }
+
+  private springen(target: number): void {
+    const before = this.setNo();
+    this.index.set(Math.min(this.liste().length, Math.max(0, target)));
     // neues Set beginnt (nach der Pause weiter) → Uhr neu starten
     if (this.setNo() !== before) this.setStart = Date.now();
     // Klick läuft im Tempo des neuen Songs weiter (ohne Tempo: aus); angefangenes Einzählen endet

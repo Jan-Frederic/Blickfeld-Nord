@@ -842,6 +842,35 @@ test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichu
   return p;
 });
 
+test('Backstage: Bühnen-Modus – Lupe holt Wünsche an die aktuelle Stelle, Balken springt', async () => {
+  const id = concerts[concerts.length - 1].split('/')[2];
+  const p = await page();
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Setlist' }).click();
+  await p.locator('app-setlist button.aus-liste').click();
+  await until(async () => (await p.locator('app-setlist .list li .no').count()) > 20, 'Spotify-Setlist wird nicht übernommen');
+  const zehnter = (await p.locator('app-setlist .list li .t').nth(9).innerText()).trim();
+  await p.locator('app-setlist button', { hasText: 'Bühnen-Modus' }).first().click();
+  const buehne = p.locator('app-setlist-buehne');
+  const titel = buehne.locator('main h1');
+  await titel.waitFor();
+  const erster = (await titel.innerText()).trim();
+  // Song, der schon drinsteht, wird an die aktuelle Stelle gezogen
+  await buehne.locator('button.lupe').click();
+  await buehne.locator('.suche input').fill(zehnter);
+  await buehne.locator('.suche li button').first().click();
+  await until(async () => (await titel.innerText()).trim() === zehnter, 'Gezogener Song ist nicht dran');
+  await until(async () => (await buehne.locator('footer .next').innerText()).includes(erster), 'Bisheriger Song folgt nicht danach');
+  // Fortschrittsbalken: antippen springt, Sets sind markiert
+  const balken = buehne.locator('footer .progress');
+  const box = await balken.boundingBox();
+  await p.mouse.click(box.x + box.width * 0.95, box.y + box.height / 2);
+  await until(async () => Number(await buehne.locator('main .no').innerText().catch(() => '0')) > 20 || (await buehne.innerText()).includes('Pause'), 'Balken springt nicht');
+  await buehne.locator('button[aria-label="Bühnen-Modus beenden"]').click();
+  await until(async () => (await p.locator('app-setlist .list li .t').first().innerText()).trim() === zehnter, 'Wunsch landet nicht in der gespeicherten Setlist');
+  return p;
+});
+
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });

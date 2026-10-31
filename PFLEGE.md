@@ -235,6 +235,11 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
   (Was für einen Song **immer** gilt, gehört in die Notiz unter Songs → Liste.)
 - **Stimmgerät:** oben auf das Regler-Symbol tippen – großer Tonname (deutsch: B = B♭, H), Nadel für die Abweichung,
   grün bei ±5 Cent. Gibt es auch auf der Probenseite.
+- **Lupe (Wunsch):** Oben die Lupe antippen, Titel oder Interpret tippen (alle Spotify-Listen und eigenständige
+  Songs) – der Song kommt **an die aktuelle Stelle** und ist sofort dran, der bisherige folgt danach. Steht er schon
+  in der Setlist, wird er von dort **hierher gezogen**. Er ist als Publikumswunsch (♥) markiert und landet in der
+  gespeicherten Setlist (und damit beim Abgleich bei der Band).
+- **Fortschrittsbalken:** antippen springt an die Stelle; weiße Striche markieren die Pausen zwischen den Sets.
 - **Set zu lang:** Läuft das Set über die geplante Länge, steht unten „⏱ 4:10 drüber – streichen: …“ mit den Songs mit
   den wenigsten Sternen (Publikumswünsche bleiben). **Streichen** überspringt sie beim Blättern – nur für diesen Abend.
 
