@@ -1,10 +1,10 @@
 # Holt die Repertoire-Playlist von Spotify, speichert sie in src/app/data/repertoire.json und
-# stößt bei Änderungen einen neuen Deploy an. Läuft montags früh und per Knopfdruck (Actions → Run workflow).
+# stößt bei Änderungen einen neuen Deploy an. Läuft täglich früh und per Knopfdruck (Actions → Run workflow).
 name: Repertoire aktualisieren
 
 on:
   schedule:
-    - cron: '17 4 * * 1'
+    - cron: '17 4 * * *'
   workflow_dispatch:
 
 permissions:

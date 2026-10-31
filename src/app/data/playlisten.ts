@@ -135,3 +135,38 @@ export function pdfSongKey(dateiname: string, songs: SongEintrag[] = []): string
   const v = vergleichsKey(s.title, s.artist);
   return songs.find((x) => vergleichsKey(x.title, x.artist) === v)?.key ?? `${s.title}|${s.artist}`;
 }
+
+/**
+ * Abweichungen zwischen den Listen: Songs der Spotify-Setlist, die nicht auf der Website-Liste stehen (öffentlich
+ * fehlt etwas, was live gespielt wird), und Songs im Archiv, die noch auf der Website stehen.
+ */
+export function abweichungen(songs: SongEintrag[]): { setlistOhneWebsite: SongEintrag[]; archivAufWebsite: SongEintrag[] } {
+  return {
+    setlistOhneWebsite: songs.filter((s) => s.listen.includes('setlist') && !s.listen.includes('website')),
+    archivAufWebsite: songs.filter((s) => s.listen.includes('archiv') && s.listen.includes('website')),
+  };
+}
+
+/** Gesamtlänge (Sekunden) von Songs; fehlend zählt Songs ohne bekannte Länge */
+export function gesamtDauer(songs: { title: string; artist: string }[], dauer: (s: { title: string; artist: string }) => number | undefined): { sekunden: number; fehlend: number } {
+  let sekunden = 0;
+  let fehlend = 0;
+  for (const s of songs) {
+    const d = dauer(s);
+    if (d) sekunden += d;
+    else fehlend++;
+  }
+  return { sekunden, fehlend };
+}
+
+/** Songs einer Liste in ihrer Spotify-Reihenfolge, mit den Schlüsseln des Abgleichs (Website-Schreibweise) */
+export function listeInReihenfolge(key: ListenKey, songs: SongEintrag[] = songAbgleich(LISTEN)): SongEintrag[] {
+  const nachVergleich = new Map(songs.map((s) => [vergleichsKey(s.title, s.artist), s]));
+  const nachKey = new Map(songs.map((s) => [s.key, s]));
+  const out: SongEintrag[] = [];
+  for (const t of LISTEN.find((l) => l.key === key)?.tracks ?? []) {
+    const s = nachKey.get(`${t.title}|${t.artist}`) ?? nachVergleich.get(vergleichsKey(t.title, t.artist));
+    if (s && !out.includes(s)) out.push(s);
+  }
+  return out;
+}

@@ -26,6 +26,16 @@ export interface SongZeile {
         <div class="titel">
           <h3 id="song-dialog-titel">{{ song().title }}</h3>
           <span class="a">{{ song().artist }}</span>
+          @if (umbenennbar()) {
+            <details class="umbenennen">
+              <summary>Titel oder Band ändern</summary>
+              <form (submit)="$event.preventDefault(); umbenennen.emit({ title: t.value.trim(), artist: b.value.trim() })">
+                <input #t aria-label="Titel" placeholder="Titel" maxlength="120" required [value]="song().title" />
+                <input #b aria-label="Band" placeholder="Band" maxlength="120" [value]="song().artist" />
+                <button type="submit">Übernehmen</button>
+              </form>
+            </details>
+          }
         </div>
         <button type="button" class="wackelt" [class.an]="wackelt()" [attr.aria-pressed]="wackelt()" (click)="wackeltUmschalten.emit()" title="Nur für dich: Songs, bei denen du unsicher bist, schlägt die Probe-Planung zuerst vor">
           <mat-icon>{{ wackelt() ? 'warning' : 'check' }}</mat-icon> {{ wackelt() ? 'Wackelt noch' : 'Sitzt' }}
@@ -132,6 +142,9 @@ export class SongDialog {
   /** auf der eigenen „Wackelt noch“-Liste */
   readonly wackelt = input(false);
   readonly wackeltUmschalten = output<void>();
+  /** eigenständiger Song (in keiner Spotify-Liste): Titel und Band lassen sich ändern – alles zieht mit */
+  readonly umbenennbar = input(false);
+  readonly umbenennen = output<{ title: string; artist: string }>();
   readonly setzen = output<{ feld: keyof SongWerte; roh: string }>();
   readonly notenGeaendert = output<void>();
   readonly blaettern = output<number>();

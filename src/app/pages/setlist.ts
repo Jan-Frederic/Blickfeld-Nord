@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
-import { LISTEN, ListenKey, ListenWahl, listenFiltern, listenZahlen, songAbgleich } from '../data/playlisten';
+import { LISTEN, ListenKey, ListenWahl, listeInReihenfolge, listenFiltern, listenZahlen, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
 import { SetlistVorlagen } from './setlist-vorlagen';
 import { SetlistVorschlag } from './setlist-vorschlag';
@@ -57,6 +57,9 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
             }
             <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste</button>
           </div>
+          @if (liste() === 'setlist' || liste() === 'probe') {
+            <button type="button" class="aus-liste" (click)="listeUebernehmen()"><mat-icon>playlist_add</mat-icon> Ganze Liste „{{ listeVon($any(liste())).label }}“ in dieser Reihenfolge übernehmen</button>
+          }
           <label class="search">
             <mat-icon aria-hidden="true">search</mat-icon>
             <input type="search" placeholder="Song suchen …" aria-label="Songs durchsuchen"
@@ -317,6 +320,15 @@ export class Setlist {
   protected listeVon(k: ListenKey) {
     return this.listenNachKey.get(k)!;
   }
+  /** Spotify-Liste (Setlist/Probe) als ganze Setlist übernehmen – ersetzt nach Rückfrage die bisherige */
+  protected listeUebernehmen(): void {
+    const l = this.liste() as ListenKey;
+    const songs = listeInReihenfolge(l, this.alleSongs());
+    if (!songs.length) return;
+    if (this.songCount() && !confirm(`Setlist durch die ${songs.length} Songs der Spotify-Liste „${this.listeVon(l).label}“ ersetzen?`)) return;
+    this.update(() => songs.map(({ title, artist }) => ({ title, artist })));
+  }
+
   protected readonly available = computed(() => {
     const used = new Set(this.entries().map((e) => (this.isPause(e) ? '' : `${(e as { title: string }).title}|${(e as { artist: string }).artist}`)));
     const q = norm(this.query().trim());

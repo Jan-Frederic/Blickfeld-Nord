@@ -185,3 +185,23 @@ app-songs-liste, app-setlist {
 }
 app-setlist .pick .listen-chips { margin-bottom: 10px; }
 app-setlist .pick mat-icon.liste { font-size: 14px; width: 14px; height: 14px; margin-left: 4px; vertical-align: -2px; color: #1db954; }
+// Song-Dialog: eigenständigen Song umbenennen (Budget von song-dialog)
+app-song-dialog .umbenennen { margin-top: 6px; font-size: .8rem; color: var(--bn-fog); }
+app-song-dialog .umbenennen summary { cursor: pointer; }
+app-song-dialog .umbenennen form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+app-song-dialog .umbenennen input { flex: 1 1 140px; min-width: 0; padding: 5px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; }
+app-song-dialog .umbenennen button { padding: 5px 12px; border: 1px solid var(--bn-sunset); border-radius: 999px; background: none; color: var(--bn-sunset); font: inherit; cursor: pointer; }
+// Songs: Dauer/Notenmappe/Aktualisieren, Abweichungen, Stand der Wunschliste
+app-songs-liste .listen-info { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: -4px 0 12px; font-size: .85rem; color: var(--bn-fog); }
+app-songs-liste .listen-info button, app-songs-liste .listen-info a { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .8rem; text-decoration: none; cursor: pointer; }
+app-songs-liste .listen-info button:hover, app-songs-liste .listen-info a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-songs-liste .listen-info mat-icon, app-songs-liste .abweichungen mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-songs-liste .abweichungen { margin: 0 0 12px; padding: 8px 12px; border: 1px solid rgba(232, 164, 106, .4); border-radius: 10px; font-size: .85rem; color: var(--bn-fog); }
+app-songs-liste .abweichungen summary { display: flex; align-items: center; gap: 6px; color: #e8a46a; cursor: pointer; }
+app-songs-liste .abweichungen p { margin: 6px 0 0; line-height: 1.5; }
+app-songs-liste .wunsch-stand { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+app-songs-liste .wunsch-stand span { padding: 0 7px; border: 1px solid var(--bn-line); border-radius: 999px; font-size: .7rem; color: var(--bn-fog); }
+app-songs-liste .wunsch-stand span.ok { border-color: #5fb88a; color: #5fb88a; }
+// Setlist/Probe: ganze Spotify-Liste übernehmen
+app-setlist .aus-liste, app-backstage-probe .aus-liste { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 10px; padding: 5px 12px; border: 1px solid #1db954; border-radius: 999px; background: none; color: #1db954; font: inherit; font-size: .82rem; cursor: pointer; }
+app-setlist .aus-liste mat-icon, app-backstage-probe .aus-liste mat-icon { font-size: 18px; width: 18px; height: 18px; }

@@ -56,6 +56,11 @@ export async function mitschnittSpeichern(song: string, daten: Blob, dauer: numb
   return m;
 }
 
+/** Song umbenannt (eigenständiger Song): Aufnahmen ziehen mit */
+export async function mitschnitteUmbenennen(alt: string, neu: string): Promise<void> {
+  for (const m of await mitschnitte(alt)) await anfrage('readwrite', (s) => s.put({ ...m, song: neu }));
+}
+
 /** Pfade der schon geteilten bzw. übernommenen Mitschnitte (Sync-Ordner) */
 export async function mitschnittPfade(): Promise<Set<string>> {
   const alle = await anfrage<Mitschnitt[]>('readonly', (s) => s.getAll());

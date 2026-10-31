@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { songInfoText } from '../data/songinfo';
-import data from '../data/repertoire.json';
+import { LISTEN, listeInReihenfolge, songAbgleich } from '../data/playlisten';
 import { BackstageSync } from './backstage-sync';
 import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
@@ -63,9 +63,12 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           <p class="empty">Noch keine Songs ausgewählt.</p>
         }
         <app-probe-vorschlag [drin]="plan().songs" (add)="addSong($event)" />
+        @if (ausProbeListe().length) {
+          <button type="button" class="aus-liste" (click)="probeListeUebernehmen()"><mat-icon>piano</mat-icon> {{ ausProbeListe().length }} {{ ausProbeListe().length === 1 ? 'Song' : 'Songs' }} aus der Spotify-Liste „Probe“ übernehmen</button>
+        }
         <label class="search">
           <mat-icon>search</mat-icon>
-          <input type="search" placeholder="Song aus dem Repertoire hinzufügen …" [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Song suchen" />
+          <input type="search" placeholder="Song hinzufügen (alle Listen) …" [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Song suchen" />
         </label>
         @if (query().trim()) {
           <ul class="hits">
@@ -158,8 +161,18 @@ export class BackstageProbe {
   protected readonly treffer = computed(() => {
     const q = norm(this.query().trim());
     const drin = new Set(this.plan().songs.map((s) => s.title + s.artist));
-    return data.tracks.filter((t) => !drin.has(t.title + t.artist) && norm(`${t.title} ${t.artist}`).includes(q)).slice(0, 20);
+    return this.alle.filter((t) => !drin.has(t.title + t.artist) && norm(`${t.title} ${t.artist}`).includes(q)).slice(0, 20);
   });
+  // Songs aller Spotify-Listen; „Probe“-Liste mit einem Klick übernehmen (nur, was noch fehlt, in Spotify-Reihenfolge)
+  private readonly alle = songAbgleich(LISTEN);
+  protected readonly ausProbeListe = computed(() => {
+    const drin = new Set(this.plan().songs.map((s) => s.title + s.artist));
+    return listeInReihenfolge('probe', this.alle).filter((t) => !drin.has(t.title + t.artist));
+  });
+  protected probeListeUebernehmen(): void {
+    const neu = this.ausProbeListe();
+    this.save((p) => ({ ...p, songs: [...p.songs, ...neu.map((t) => ({ title: t.title, artist: t.artist, done: false }))] }));
+  }
 
   constructor() {
     // beim Öffnen (und beim Wechsel zu einer anderen Probe) den gespeicherten Stand laden

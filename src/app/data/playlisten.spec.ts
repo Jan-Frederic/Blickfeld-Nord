@@ -1,4 +1,4 @@
-import { pdfSong, pdfSongKey, songAbgleich, vergleichsKey } from './playlisten';
+import { abweichungen, gesamtDauer, pdfSong, pdfSongKey, songAbgleich, vergleichsKey } from './playlisten';
 
 describe('playlisten', () => {
   it('vergleicht Titel ohne Zusatz und den ersten Interpreten', () => {
@@ -36,5 +36,20 @@ describe('playlisten', () => {
     expect(pdfSong('Ohne Band.pdf')).toEqual({ artist: '', title: 'Ohne Band', fassung: '' });
     const liste = songAbgleich([{ key: 'website', tracks: [{ title: 'Angels', artist: 'Robbie Williams' }] }]);
     expect(pdfSongKey('robbie williams - angels - Gitarre.pdf', liste)).toBe('Angels|Robbie Williams');
+  });
+
+  it('findet Abweichungen zwischen Setlist, Archiv und Website', () => {
+    const songs = songAbgleich([
+      { key: 'website', tracks: [{ title: 'A', artist: 'X' }, { title: 'B', artist: 'Y' }] },
+      { key: 'setlist', tracks: [{ title: 'A', artist: 'X' }, { title: 'C', artist: 'Z' }] },
+      { key: 'archiv', tracks: [{ title: 'B', artist: 'Y' }] },
+    ]);
+    const a = abweichungen(songs);
+    expect(a.setlistOhneWebsite.map((s) => s.key)).toEqual(['C|Z']);
+    expect(a.archivAufWebsite.map((s) => s.key)).toEqual(['B|Y']);
+  });
+
+  it('summiert die Dauer', () => {
+    expect(gesamtDauer([{ title: 'A', artist: '' }, { title: 'B', artist: '' }], (s) => (s.title === 'A' ? 200 : undefined))).toEqual({ sekunden: 200, fehlend: 1 });
   });
 });

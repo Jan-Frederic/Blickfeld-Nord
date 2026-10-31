@@ -1,12 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { LISTEN, ListenKey, SongEintrag, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
+import { LISTEN, ListenKey, SongEintrag, abweichungen, gesamtDauer, listeInReihenfolge, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
+import { songUmbenennen } from '../data/song-umbenennen';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, NotenPdf, alleSongNoten, notenDateien, songNotenSetzen } from '../data/noten';
 import { SongDialog } from './song-dialog';
 import { SetlistBuehne } from './setlist-buehne';
-import { Song, loadSetlist } from '../data/setlist-data';
+import { Song, durationOf, loadSetlist, setTime } from '../data/setlist-data';
 import { BandService } from '../data/band.service';
 import { historieText, songHistorie } from '../data/song-historie';
 import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
@@ -54,6 +55,21 @@ function ladeEntwurf(): Record<string, Werte> {
         }
         <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste <span class="n">{{ anzahl()['ohne'] }}</span></button>
       </div>
+      <div class="listen-info">
+        @if (liste()) {
+          <span>{{ listenSongs().length }} Songs · {{ zeitText(listenDauer().sekunden) }}@if (listenDauer().fehlend) { <span class="a"> ({{ listenDauer().fehlend }} ohne Länge)</span> }@if (liste() === 'ohne') { <span class="a"> · je 4 Minuten angenommen</span> }</span>
+          <button type="button" (click)="mappe()" [disabled]="mappeLaeuft()"><mat-icon>picture_as_pdf</mat-icon> Notenmappe dieser Liste</button>
+        }
+        <a [href]="aktualisierenUrl" target="_blank" rel="noopener" title="Holt alle Spotify-Listen neu (GitHub → „Run workflow“), danach neuer Stand der Website"><mat-icon>refresh</mat-icon> Listen jetzt aktualisieren</a>
+      </div>
+      @if (mappeText(); as m) { <p class="a" role="status">{{ m }}</p> }
+      @if (abw().setlistOhneWebsite.length || abw().archivAufWebsite.length) {
+        <details class="abweichungen">
+          <summary><mat-icon>rule</mat-icon> {{ abw().setlistOhneWebsite.length + abw().archivAufWebsite.length }} Abweichungen zwischen den Listen</summary>
+          @if (abw().setlistOhneWebsite.length) { <p><b>In der Setlist, aber nicht auf der Website:</b> {{ namen(abw().setlistOhneWebsite) }}</p> }
+          @if (abw().archivAufWebsite.length) { <p><b>Im Archiv, aber noch auf der Website:</b> {{ namen(abw().archivAufWebsite) }}</p> }
+        </details>
+      }
       <div class="filter">
         <label>Zeigen
           <select class="zeigen" (change)="zeigen.set($any($event.target).value)">
@@ -99,6 +115,12 @@ function ladeEntwurf(): Record<string, Werte> {
                     }
                   </span>
                 }
+                @if (liste() === 'wunschliste') {
+                  @let f = fortschritt(s.key);
+                  <span class="wunsch-stand" [attr.aria-label]="'Stand: ' + f.zahl + ' von 3'">
+                    <span [class.ok]="f.noten">Noten</span><span [class.ok]="f.tonart">Tonart/Tempo</span><span [class.ok]="f.geprobt">{{ f.geprobt ? f.geprobt + '× geprobt' : 'nicht geprobt' }}</span>
+                  </span>
+                }
                 <span class="a hist">{{ historieText(historie().get(s.key)) }}@if (wackelt()[s.key]) { <span class="wackelt"> · wackelt noch</span> }</span>
               </td>
               <td class="werte">
@@ -127,6 +149,7 @@ function ladeEntwurf(): Record<string, Werte> {
       @if (offen(); as k) {
         <app-song-dialog [song]="zeile(k)" [werte]="wert(k)" [quelle]="quelle(k)" [dateien]="notenDateien()"
           [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1" [wackelt]="!!wackelt()[k]" (wackeltUmschalten)="wackeltUmschalten(k)"
+          [umbenennbar]="!zeile(k).listen.length" (umbenennen)="umbenennen(k, $event)"
           (setzen)="setzen(k, $event.feld, $event.roh)" (notenGeaendert)="notenLaden()" (blaettern)="dialogBlaettern($event)"
           (buehne)="buehneAusDialog()" (schliessen)="offen.set(null)" />
       }
@@ -259,6 +282,81 @@ export class SongsListe {
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
   /** eigene „Wackelt noch“-Liste (data/wackelt.ts) */
   protected readonly wackelt = signal(ladeWackelt());
+  // Lücken je Liste: „Zeigen“ und Reihenfolge wirken zusätzlich zu den Chips (z. B. Setlist + ohne Bass)
+  // Dauer, Notenmappe, Abweichungen, Stand der Wunschliste
+  protected readonly aktualisierenUrl = 'https://github.com/Jan-Frederic/Blickfeld-Nord/actions/workflows/repertoire.yml';
+  protected readonly abw = computed(() => abweichungen(this.songs()));
+  protected namen(songs: SongEintrag[]): string {
+    return songs.map((s) => (s.artist ? `${s.title} (${s.artist})` : s.title)).join(', ');
+  }
+  /** Songs der gewählten Liste – bei Spotify-Listen in deren Reihenfolge */
+  protected readonly listenSongs = computed(() => {
+    const l = this.liste();
+    if (!l) return this.songs();
+    if (l === 'ohne') return this.songs().filter((s) => !s.listen.length);
+    return listeInReihenfolge(l, this.songs());
+  });
+  protected readonly listenDauer = computed(() => gesamtDauer(this.listenSongs(), durationOf));
+  protected zeitText(sek: number): string {
+    return setTime(sek);
+  }
+  protected readonly mappeLaeuft = signal(false);
+  protected readonly mappeText = signal('');
+  protected async mappe(): Promise<void> {
+    const l = this.liste();
+    const name = l === 'ohne' ? 'Ohne Liste' : this.listeVon(l as ListenKey).label;
+    this.mappeLaeuft.set(true);
+    this.mappeText.set('Notenmappe wird erstellt …');
+    try {
+      const { notenmappe } = await import('../data/notenmappe');
+      const r = await notenmappe(this.listenSongs().map(({ title, artist }) => ({ title, artist })), `Liste ${name}`, (st) => this.mappeText.set(st.text));
+      const datei = new File([r.pdf], `Notenmappe ${name}.pdf`, { type: 'application/pdf' });
+      const url = URL.createObjectURL(datei);
+      Object.assign(document.createElement('a'), { href: url, download: datei.name }).click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      this.mappeText.set(`Notenmappe mit ${r.seiten} Seiten gespeichert ✓${r.ohne.length ? ` – ohne Noten: ${r.ohne.length}` : ''}`);
+    } catch (e) {
+      this.mappeText.set(`Notenmappe ließ sich nicht erstellen: ${(e as Error).message || 'unbekannter Fehler'}`);
+    } finally {
+      this.mappeLaeuft.set(false);
+    }
+  }
+  /** Wunschliste: Noten da, Tonart/Tempo eingetragen, wie oft schon geprobt (vergangene Proben) */
+  private readonly geprobt = computed(() => {
+    const n = new Map<string, number>();
+    const heute = new Date().toISOString().slice(0, 10);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)!;
+        const tag = /^bn-probe-(\d{4}-\d{2}-\d{2})/.exec(k)?.[1];
+        if (!tag || tag > heute) continue;
+        const plan = JSON.parse(localStorage.getItem(k) ?? '{}') as { songs?: { title: string; artist: string }[] };
+        for (const s of plan.songs ?? []) n.set(`${s.title}|${s.artist}`, (n.get(`${s.title}|${s.artist}`) ?? 0) + 1);
+      }
+    } catch {
+      // ohne Speicher keine Proben
+    }
+    return n;
+  });
+  protected fortschritt(k: string) {
+    const w = this.wert(k);
+    const f = { noten: this.mitNoten().has(k), tonart: !!((w.tonart || w.spielTonart) && w.bpm), geprobt: this.geprobt().get(k) ?? 0 };
+    return { ...f, zahl: [f.noten, f.tonart, f.geprobt > 0].filter(Boolean).length };
+  }
+  /** eigenständigen Song umbenennen – Noten, Mitschnitte, Setlists, Proben, Entwurf ziehen mit */
+  protected async umbenennen(k: string, neu: { title: string; artist: string }): Promise<void> {
+    const alt = this.zeile(k);
+    if (!neu.title || (neu.title === alt.title && neu.artist === alt.artist)) return;
+    await songUmbenennen(alt, neu);
+    const neuKey = `${neu.title}|${neu.artist}`;
+    this.entwurf.set(ladeEntwurf());
+    this.wackelt.set(ladeWackelt());
+    this.offen.set(null);
+    await this.notenSongs();
+    this.notenLaden();
+    if (this.songsNachKey().has(neuKey)) this.offen.set(neuKey);
+  }
+
   protected wackeltUmschalten(k: string): void {
     this.wackelt.set(wackeltSetzen(k, !this.wackelt()[k]));
   }

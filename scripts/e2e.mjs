@@ -802,6 +802,28 @@ test('Backstage: Setlist – Songs aus allen Spotify-Listen per Filter', async (
   return p;
 });
 
+test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichungen unter Songs', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  const knopf = p.locator('app-backstage-probe button.aus-liste');
+  const zahl = Number(/(\d+)/.exec(await knopf.innerText())[1]);
+  await knopf.click();
+  await until(async () => (await p.locator('app-backstage-probe .list li label').count()) >= zahl, 'Probe-Liste wird nicht übernommen');
+  const id = concerts[concerts.length - 1].split('/')[2];
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Setlist' }).click();
+  await p.locator('app-setlist button.aus-liste').click();
+  await until(async () => (await p.locator('app-setlist .list li .no').count()) > 20, 'Spotify-Setlist wird nicht übernommen');
+  await p.go('/backstage/songs/');
+  await p.locator('app-songs-liste .listen-chips button', { hasText: 'Setlist' }).click();
+  await until(async () => /\d+ Songs · \d/.test(await p.locator('app-songs-liste .listen-info').innerText()), 'Dauer der Liste fehlt');
+  await p.locator('app-songs-liste .listen-chips button', { hasText: 'Wunschliste' }).click();
+  await until(async () => (await p.locator('app-songs-liste .wunsch-stand').count()) > 0, 'Stand der Wunschliste fehlt');
+  return p;
+});
+
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });

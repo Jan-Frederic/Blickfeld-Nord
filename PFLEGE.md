@@ -84,7 +84,7 @@ darunter einfügen:
 ## Spotify-Listen
 
 Die **offizielle** Playlist steht als Repertoire auf der Startseite (`repertoire.json`). Nur fürs Backstage gibt es
-dazu **Setlist, Probe, Repertoire, Wunschliste und Archiv** (`playlisten.json`). Beide holt GitHub montags früh
+dazu **Setlist, Probe, Repertoire, Wunschliste und Archiv** (`playlisten.json`). Beide holt GitHub täglich früh
 von Spotify (Actions → „Repertoire aktualisieren“, auch per Knopfdruck); die Listen-IDs stehen in
 `scripts/sync-repertoire.mjs`. Gibt Spotify eine Liste nicht heraus, bleibt ihr letzter Stand (Hinweis im Protokoll).
 
@@ -96,6 +96,20 @@ Archiv. Oben filtern Chips nach einer Liste oder „Ohne Liste“.
 **Setlist erstellen:** Auch dort filtern die Chips über der Songauswahl nach Liste oder „Ohne Liste“ (eigenständige
 Songs, zu denen es Noten auf dem Gerät gibt); kleine grüne Symbole zeigen je Song die Listen. Songs außerhalb der
 Website-Liste reisen im Setlist-Link als Text mit; ihre Länge kommt aus der Spotify-Liste, in der sie stehen.
+
+**Je Liste unter Songs:** Anzahl und Gesamtlänge (eigenständige Songs zählen mit **4 Minuten**, auch in Setlist,
+Bühnen-Modus und Laufzettel), **Notenmappe dieser Liste** (alle Noten als ein PDF, in Spotify-Reihenfolge) und
+**Listen jetzt aktualisieren** (öffnet GitHub → „Run workflow“). „Zeigen“ und „Reihenfolge“ wirken zusätzlich
+zu den Chips – z. B. Setlist + „ohne Bass“. Bei **Wunschliste** zeigt jeder Song seinen Stand: Noten,
+Tonart/Tempo, wie oft geprobt (vergangene Proben). **Abweichungen** (aufklappbar): Songs der Spotify-Setlist, die
+nicht auf der Website-Liste stehen, und Songs im Archiv, die noch auf der Website stehen.
+
+**Übernehmen:** In der Setlist eines Auftritts mit Chip „Setlist“ oder „Probe“: **Ganze Liste in dieser Reihenfolge
+übernehmen** (ersetzt nach Rückfrage). Auf der Probenseite: **… Songs aus der Spotify-Liste „Probe“ übernehmen**
+(nur, was noch fehlt); die Suche dort findet Songs aller Listen.
+
+**Eigenständige Songs umbenennen:** Im Song-Dialog „Titel oder Band ändern“ – Noten, Mitschnitte, Setlists,
+Proben, Tonart/Tempo-Entwurf und „Wackelt noch“ ziehen mit.
 
 **PDFs ohne Spotify-Titel:** Ein PDF, das noch keinem Song zugeordnet ist, wird beim Öffnen von Songs → Liste
 nach seinem Namen zugeordnet: **`<Band> - <Titel>.pdf`**, alles nach einem weiteren „ - “ ist die Fassung

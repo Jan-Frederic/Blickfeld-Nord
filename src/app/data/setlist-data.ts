@@ -39,7 +39,13 @@ for (const t of [...(data.tracks as Track[]), ...playlisten.listen.flatMap((l) =
   const k = `${t.title}|${t.artist}`;
   if (!lengths.get(k) && t.duration) lengths.set(k, t.duration);
 }
-export const durationOf = (s: Song): number | undefined => lengths.get(`${s.title}|${s.artist}`);
+/** eigenständige Songs (in keiner Spotify-Liste, z. B. nur als PDF): angenommen 4 Minuten */
+export const EIGEN_DAUER = 240;
+const inListe = new Set([...(data.tracks as Track[]), ...playlisten.listen.flatMap((l) => l.tracks as Track[])].map((t) => `${t.title}|${t.artist}`));
+export const durationOf = (s: Song): number | undefined => {
+  const k = `${s.title}|${s.artist}`;
+  return lengths.get(k) ?? (inListe.has(k) ? undefined : EIGEN_DAUER);
+};
 
 // Gesamtlänge eines Sets; „missing“ zählt Songs ohne bekannte Länge
 export function setLength(set: Song[]): { seconds: number; missing: number } {
