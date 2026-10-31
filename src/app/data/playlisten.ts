@@ -106,7 +106,7 @@ export function songAbgleich(listen: Pick<Liste, 'key' | 'tracks'>[], notenKeys:
  * manche Apps und Downloads). Ohne „ - “ ist der ganze Name der Titel, ohne Interpret.
  */
 export function pdfSong(dateiname: string): { title: string; artist: string; fassung: string } {
-  const teile = dateiname.replace(/\.pdf$/i, '').replace(/_+/g, ' ').split(/\s+[-–]\s+/).map((t) => t.trim()).filter(Boolean);
+  const teile = dateiname.replace(/\.(pdf|pro|cho|chopro|crd|chordpro|txt)$/i, '').replace(/_+/g, ' ').split(/\s+[-–]\s+/).map((t) => t.trim()).filter(Boolean);
   if (teile.length < 2) return { title: teile[0] ?? dateiname.trim(), artist: '', fassung: '' };
   return { artist: teile[0], title: teile[1], fassung: teile.slice(2).join(' – ') };
 }

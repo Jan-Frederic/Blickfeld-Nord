@@ -1,6 +1,8 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import data from '../data/repertoire.json';
+import { LISTEN, pdfSong, songAbgleich } from '../data/playlisten';
+import { SyncService } from '../data/sync.service';
+import { notenDateiLoeschen, notenDateien } from '../data/noten';
 import { Fund, uebernehmen } from '../data/einlesen';
 import { zuordnungenMerken } from '../data/erkennung';
 import { BandService } from '../data/band.service';
@@ -11,6 +13,10 @@ import { Fortschritt, Stand } from './fortschritt';
 // Was in einem Ordner gefunden wurde (Synchronisation: Einlesen bzw. Zuordnen): Backups und
 // Notenpakete einzeln wählbar (die neuesten vorausgewählt); Noten-Dateien je Datei mit erkanntem Song (Titel –
 // Interpret, data/erkennung.ts), Auswahl bei Unklarem und Fassung zum Korrigieren; dann einlesen.
+// Statt eines Songs: „Eigenständig“ – ein eigener Song aus dem Dateinamen „<Band> - <Titel>.pdf“, ohne Spotify-Liste –
+// oder „Löschen“ (nur mit Berechtigung „Daten löschen“): aus dem Sync-Ordner, damit aus OneDrive und von diesem Gerät.
+const EIGEN = '__eigen';
+const LOESCHEN = '__loeschen';
 @Component({
   selector: 'app-funde-liste',
   imports: [MatIconModule, Fortschritt],
@@ -41,19 +47,23 @@ import { Fortschritt, Stand } from './fortschritt';
           <ul>
             @for (d of sichtbar(); track d.pfad) {
               @let z = ziele().get(d.pfad);
-              <li [class.offen]="!z?.key">
-                <input type="checkbox" [checked]="!!z?.an" [disabled]="!z?.key" (change)="setzen(d.pfad, { an: $any($event.target).checked })" [attr.aria-label]="d.pfad + ' einlesen'" />
+              <li [class.offen]="!z?.key" [class.weg]="z?.key === loeschenWert">
+                <input type="checkbox" [checked]="!!z?.an" [disabled]="!z?.key || z?.key === loeschenWert" (change)="setzen(d.pfad, { an: $any($event.target).checked })" [attr.aria-label]="d.pfad + ' einlesen'" />
                 <span class="datei">{{ d.pfad }}
-                  <small>{{ z?.key ? (d.erkennung?.key === z?.key ? (d.erkennung?.quelle === 'gemerkt' ? 'wie beim letzten Mal' : 'erkannt über ' + d.erkennung?.quelle) : 'von Hand gewählt') : d.erkennung?.kandidaten?.length ? 'mehrere möglich – bitte wählen' : 'nicht erkannt – bitte wählen' }}</small>
+                  <small>{{ z?.key === loeschenWert ? 'wird gelöscht – aus OneDrive und von diesem Gerät' : z?.key === eigenWert ? 'eigenständig, ohne Spotify-Liste' : z?.key ? (d.erkennung?.key === z?.key ? (d.erkennung?.quelle === 'gemerkt' ? 'wie beim letzten Mal' : 'erkannt über ' + d.erkennung?.quelle) : 'von Hand gewählt') : d.erkennung?.kandidaten?.length ? 'mehrere möglich – bitte wählen' : 'nicht erkannt – bitte wählen' }}</small>
                 </span>
-                <select [attr.aria-label]="'Song für ' + d.pfad" (change)="setzen(d.pfad, { key: $any($event.target).value, an: !!$any($event.target).value })">
+                <select [attr.aria-label]="'Song für ' + d.pfad" (change)="songWaehlen(d.pfad, d.name, $any($event.target).value)">
                   <option value="" [selected]="!z?.key">– Song wählen –</option>
+                  <optgroup label="Ohne Liste">
+                    <option [value]="eigenWert" [selected]="z?.key === eigenWert">Eigenständig: {{ eigenText(d.name) }}</option>
+                    @if (loeschbar()) { <option [value]="loeschenWert" [selected]="z?.key === loeschenWert">Löschen</option> }
+                  </optgroup>
                   @if (d.erkennung?.kandidaten?.length) {
                     <optgroup label="Passend">
                       @for (k of d.erkennung!.kandidaten; track k) { <option [value]="k" [selected]="z?.key === k">{{ anzeige(k) }}</option> }
                     </optgroup>
                   }
-                  <optgroup label="Repertoire">
+                  <optgroup label="Songs">
                     @for (s of repertoire; track s.key) { <option [value]="s.key" [selected]="z?.key === s.key">{{ s.text }}</option> }
                   </optgroup>
                 </select>
@@ -99,6 +109,7 @@ import { Fortschritt, Stand } from './fortschritt';
     ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 420px; overflow: auto; }
     li { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 220px) 110px; align-items: center; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, .06); font-size: .85rem; }
     li.offen .datei small { color: #e8a46a; }
+    li.weg .datei { text-decoration: line-through; opacity: .7; }
     .datei { display: grid; overflow-wrap: anywhere; }
     li select, li .fassung { width: 100%; box-sizing: border-box; padding: 5px 6px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .82rem; color-scheme: dark; }
     @media (max-width: 640px) {
@@ -115,9 +126,22 @@ export class FundeListe {
   /** je Noten-Datei: gewählter Song, Fassung, einlesen ja/nein */
   protected readonly ziele = signal(new Map<string, { key: string; fassung: string; an: boolean }>());
   protected readonly nurOffene = signal(false);
-  protected readonly repertoire = [...data.tracks]
-    .map((t) => ({ key: `${t.title}|${t.artist}`, text: `${t.title} – ${t.artist}` }))
-    .sort((a, b) => a.text.localeCompare(b.text, 'de'));
+  // Songs aller Spotify-Listen (alphabetisch)
+  protected readonly repertoire = songAbgleich(LISTEN).map((t) => ({ key: t.key, text: t.artist ? `${t.title} – ${t.artist}` : t.title }));
+  protected readonly eigenWert = EIGEN;
+  protected readonly loeschenWert = LOESCHEN;
+  private readonly sync = inject(SyncService);
+  /** Löschen nur mit Berechtigung „Daten löschen“ (Besitzer des Sync-Ordners) */
+  protected readonly loeschbar = computed(() => this.sync.darfLoeschen());
+  protected eigenText(name: string): string {
+    const s = pdfSong(name);
+    return s.artist ? `${s.title} – ${s.artist}` : s.title;
+  }
+  protected songWaehlen(pfad: string, name: string, wert: string): void {
+    // eigenständig: Fassung aus dem Dateinamen („Band - Titel - Bass.pdf“)
+    const fassung = wert === EIGEN ? { fassung: pdfSong(name).fassung } : {};
+    this.setzen(pfad, { key: wert, an: !!wert && wert !== LOESCHEN, ...fassung });
+  }
   protected readonly ersetzen = signal(false);
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
@@ -150,7 +174,7 @@ export class FundeListe {
     const { pdfs, pro } = this.notenZahl();
     return [pdfs && `${pdfs} ${pdfs === 1 ? 'PDF' : 'PDFs'}`, pro && `${pro} ${pro === 1 ? 'Akkordblatt' : 'Akkordblätter'}`].filter(Boolean).join(' und ');
   });
-  protected readonly anzahl = computed(() => this.gewaehlt().size + [...this.ziele().values()].filter((z) => z.an && z.key).length);
+  protected readonly anzahl = computed(() => this.gewaehlt().size + [...this.ziele().values()].filter((z) => (z.an && z.key) || z.key === LOESCHEN).length);
 
   constructor() {
     // neue Funde: das neueste Backup und das neueste Notenpaket vorauswählen
@@ -168,6 +192,13 @@ export class FundeListe {
 
   protected datum(iso: string): string {
     return iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  }
+
+  /** Schlüssel für „eigenständig“: Titel und Band aus dem Dateinamen */
+  private ziel(pfad: string, key: string): string {
+    if (key !== EIGEN) return key;
+    const s = pdfSong(this.noten().find((d) => d.pfad === pfad)?.name ?? pfad);
+    return `${s.title}|${s.artist}`;
   }
 
   protected anzeige(key: string): string {
@@ -189,11 +220,13 @@ export class FundeListe {
   protected async einlesen(): Promise<void> {
     const backstage = this.einzeln().some((d) => d.art === 'backstage' && this.gewaehlt().has(d.pfad));
     if (backstage && this.ersetzen() && !confirm('Alle Backstage-Daten dieses Geräts durch die gewählten Dateien ersetzen?')) return;
+    const weg = this.noten().filter((d) => this.ziele().get(d.pfad)?.key === LOESCHEN);
+    if (weg.length && !confirm(`${weg.length} ${weg.length === 1 ? 'Datei' : 'Dateien'} aus OneDrive und von diesem Gerät löschen? Das betrifft die ganze Band.`)) return;
     this.laeuft.set(true);
     try {
       this.meldung.set('');
       this.stand.set({ text: 'Einlesen …' });
-      const noten = new Map([...this.ziele()].filter(([, z]) => z.an && z.key).map(([pfad, z]) => [pfad, { key: z.key, fassung: z.fassung }]));
+      const noten = new Map([...this.ziele()].filter(([, z]) => z.an && z.key && z.key !== LOESCHEN).map(([pfad, z]) => [pfad, { key: this.ziel(pfad, z.key), fassung: z.fassung }]));
       // von Hand geänderte Zuordnungen für das nächste Mal merken
       zuordnungenMerken(
         this.noten()
@@ -201,7 +234,9 @@ export class FundeListe {
           .map((d) => ({ name: d.name, ...noten.get(d.pfad)! })),
       );
       const r = await uebernehmen(this.funde(), { dateien: this.gewaehlt(), noten, ersetzen: this.ersetzen() }, (s) => this.stand.set(s));
-      this.meldung.set(r.text);
+      const geloescht = weg.length ? await this.loeschen(weg) : 0;
+      this.meldung.set([r.text, geloescht && `${geloescht} ${geloescht === 1 ? 'Datei' : 'Dateien'} gelöscht`].filter(Boolean).join(' · '));
+      if (geloescht) void this.sync.jetzt();
       this.ohne.set(r.ohne);
       this.geaendert.emit();
     } catch (e) {
@@ -210,5 +245,22 @@ export class FundeListe {
       this.laeuft.set(false);
       this.stand.set(null);
     }
+  }
+
+  /** aus dem lokalen Sync-Ordner löschen (der nächste Abgleich löscht in OneDrive) und auf dem Gerät, falls schon
+   *  eingelesen (gleicher Name und gleiche Größe) */
+  private async loeschen(weg: Fund[]): Promise<number> {
+    if (!this.loeschbar()) return 0;
+    const lokal = await this.sync.lokal(true);
+    if (!lokal) throw new Error('Kein Zugriff auf den Sync-Ordner – unter Einstellungen → Synchronisation wählen.');
+    const geraet = await notenDateien();
+    let n = 0;
+    for (const d of weg) {
+      this.stand.set({ text: `Löschen: ${d.pfad}` });
+      await lokal.loeschen(d.pfad);
+      for (const x of geraet.filter((x) => x.name === d.name && x.groesse === d.groesse)) await notenDateiLoeschen(x.id);
+      n++;
+    }
+    return n;
   }
 }

@@ -355,6 +355,10 @@ Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
 
 - Das neueste Backup und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
   ersetzt.
+- **Ohne Liste:** In der Song-Auswahl jeder Noten-Datei gibt es oben **Eigenständig: <Titel> – <Band>** – ein eigener
+  Song aus dem Dateinamen `<Band> - <Titel>.pdf` (Rest = Fassung), der zu keiner Spotify-Liste gehört und unter
+  Songs → „Ohne Liste“ steht – und, mit Berechtigung „Daten löschen“, **Löschen**: Die Datei verschwindet beim
+  Einlesen (nach Rückfrage) aus dem Sync-Ordner und damit aus OneDrive für die ganze Band, und von diesem Gerät.
 - **Vorschau:** unter jedem Backup steht, was sich ändert („2 neu, 1 geändert, 5 gleich“, aufklappbar; bei
   Setlists „3 Songs anders“). „Aus Datei wiederherstellen“ fragt mit derselben Vorschau nach.
 - **Titel und Interpret** jeder Noten-Datei werden vor dem Einlesen erkannt und angezeigt – aus dem Dateinamen (in

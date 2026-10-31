@@ -765,18 +765,26 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
     req.onsuccess = () => {
       const t = req.result.transaction('dateien', 'readwrite');
       t.objectStore('dateien').put({ inhalt: new Blob(['[C]x']), groesse: 4, geaendert: new Date().toISOString(), version: 'v1' }, 'Noten/Scan 7.pro');
+      t.objectStore('dateien').put({ inhalt: new Blob(['[G]y']), groesse: 4, geaendert: new Date().toISOString(), version: 'v1' }, 'Noten/Testband_-_Eigenes_Lied.pro');
       t.oncomplete = () => ok(null);
     };
   }));
-  await p.evaluate(() => localStorage.setItem('bn-sync-offen', JSON.stringify(['Noten/Scan 7.pro'])));
+  await p.evaluate(() => localStorage.setItem('bn-sync-offen', JSON.stringify(['Noten/Scan 7.pro', 'Noten/Testband_-_Eigenes_Lied.pro'])));
   await p.reload({ waitUntil: 'networkidle' });
-  await until(async () => (await status.innerText()).includes('1 Noten-Datei braucht eine Zuordnung'), 'Offene Zuordnung wird nicht gemeldet');
+  await until(async () => (await status.innerText()).includes('2 Noten-Dateien brauchen eine Zuordnung'), 'Offene Zuordnung wird nicht gemeldet');
   await status.locator('button', { hasText: 'Zuordnen' }).click();
   const offen = status.locator('app-funde-liste li', { hasText: 'Scan 7.pro' });
   await offen.locator('select').selectOption('Angels|Robbie Williams');
+  // eigenständig: Song aus dem Dateinamen „<Band> - <Titel>“, ohne Spotify-Liste
+  const eigen = status.locator('app-funde-liste li', { hasText: 'Eigenes_Lied' });
+  await until(async () => (await eigen.locator('select').innerText()).includes('Eigenständig: Eigenes Lied – Testband'), 'Option „Eigenständig“ fehlt');
+  await eigen.locator('select').selectOption('__eigen');
   await status.locator('app-funde-liste button', { hasText: 'Einlesen' }).click();
-  await until(async () => (await status.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('1 Akkordblatt'), 'Zuordnen liest nicht ein');
-  await until(async () => !(await status.innerText()).includes('braucht eine Zuordnung'), 'Offene Zuordnung bleibt stehen');
+  await until(async () => (await status.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('2 Akkordblätter'), 'Zuordnen liest nicht ein');
+  await until(async () => !(await status.innerText()).includes('eine Zuordnung'), 'Offene Zuordnung bleibt stehen');
+  await p.go('/backstage/songs/');
+  await p.locator('app-songs-liste .listen-chips button', { hasText: 'Ohne Liste' }).click();
+  await until(async () => /Eigenes Lied[\s\S]*Testband[\s\S]*Akkorde/.test(await p.locator('app-songs-liste tbody').innerText()), 'Eigenständiger Song fehlt unter „Ohne Liste“');
   return p;
 });
 
