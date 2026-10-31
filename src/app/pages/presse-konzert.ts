@@ -139,7 +139,7 @@ const TEXT = tr(
           <button type="button" class="btn small" (click)="songsSpeichern()"><mat-icon>description</mat-icon> {{ t().songsTxt }}</button>
         </div>
         <ol class="songs">
-          @for (s of songs; track s.title + s.artist) { <li><span>{{ s.title }}</span> <span class="a">{{ s.artist }}</span></li> }
+          @for (s of songs; track s.title + s.artist) { <li><span>{{ s.title }}</span>&ngsp;<span class="a">· {{ s.artist }}</span></li> }
         </ol>
       } @else {
         <h2>{{ t().notFound }}</h2>
@@ -149,6 +149,9 @@ const TEXT = tr(
   `,
   styles: `
     .presse-konzert { max-width: 1000px; }
+    /* lange Ortsnamen („Weihnachtsmarkt“) passen aufs Handy, ohne mitten im Wort umzubrechen */
+    .section h2 { font-size: clamp(1.2rem, 5.2vw, 2.6rem); }
+    .back { margin-bottom: 14px; }
     .back { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-fog); text-decoration: none; font-size: .9rem; }
     .back:hover { color: var(--bn-sunset); }
     h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .08em; margin: 40px 0 10px; }

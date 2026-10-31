@@ -214,6 +214,8 @@ const TEXT = tr(
     </section>
   `,
   styles: `
+    /* lange Ortsnamen passen aufs Handy, ohne mitten im Wort umzubrechen */
+    .section h2 { font-size: clamp(1.2rem, 5.2vw, 2.6rem); }
     .back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; color: var(--bn-fog); text-decoration: none; font-size: .9rem; }
     .back:hover { color: var(--bn-sunset); }
     .back mat-icon, .past mat-icon { font-size: 18px; width: 18px; height: 18px; }
