@@ -12,11 +12,12 @@ const PLAYLIST_ID = '6O7apXN53rSGaWGhP8S8TW';
 const DATA = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'app', 'data');
 const OUT = join(DATA, 'repertoire.json');
 // Weitere Listen nur fürs Backstage (Songs → Liste gleicht alle gegeneinander ab) – Reihenfolge der Songs bleibt
+// Zuordnung nach dem Namen der Liste in Spotify („Blickfeld Nord - Probe“ usw.)
 const BACKSTAGE_LISTEN = [
-  { key: 'setlist', id: '6rE8puTezdETpgZxMCrzP2' },
-  { key: 'probe', id: '7eJtC9Qfm7NvjAVJWh3Gfx' },
-  { key: 'repertoire', id: '5gQJdIVofQQBFc3tRXDOwA' },
-  { key: 'wunschliste', id: '65HmuHebsSOpzWQKNHAkL3' },
+  { key: 'setlist', id: '7eJtC9Qfm7NvjAVJWh3Gfx' },
+  { key: 'probe', id: '6rE8puTezdETpgZxMCrzP2' },
+  { key: 'repertoire', id: '65HmuHebsSOpzWQKNHAkL3' },
+  { key: 'wunschliste', id: '5gQJdIVofQQBFc3tRXDOwA' },
   { key: 'archiv', id: '1KYYKkZiF8h9GdXPgSIISc' },
 ];
 const LISTEN_OUT = join(DATA, 'playlisten.json');
