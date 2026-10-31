@@ -40,3 +40,19 @@ describe('bewertung', () => {
     expect(bewertungSchwach({ technik: 'schwach', publikum: 'gut' })).toBe(false);
   });
 });
+
+describe('veranstalterRangliste', () => {
+  it('bewertete zuerst, dann nach Auftritten', async () => {
+    const { veranstalterRangliste, bewertungPunkte } = await import('./kontakte');
+    const k = (venue: string) => ortKey({ venue, city: 'X' });
+    expect(bewertungPunkte({ technik: 'gut', bezahlung: 'spaet' })).toBe(1);
+    const shows = [
+      { venue: 'A', city: 'X', date: '2026-01-01', confirmed: true },
+      { venue: 'A', city: 'X', date: '2026-05-01', confirmed: true },
+      { venue: 'C', city: 'X', date: '2026-03-01', confirmed: true },
+      { venue: 'C', city: 'X', date: '2027-03-01', confirmed: true },
+    ];
+    const r = veranstalterRangliste({ [k('A')]: {}, [k('B')]: { technik: 'schwach' }, [k('C')]: { technik: 'gut', publikum: 'gut' } }, shows, '2026-10-31');
+    expect(r.map((e) => `${e.key} ${e.auftritte} ${e.punkte ?? '-'}`)).toEqual([`${k('C')} 1 2`, `${k('B')} 0 0`, `${k('A')} 2 -`]);
+  });
+});

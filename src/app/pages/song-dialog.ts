@@ -6,7 +6,7 @@ import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
 import { NotenEditor } from './noten-editor';
 import { SongMitschnitte } from './song-mitschnitte';
-import { probenNotizen } from '../data/song-stand';
+import { probenNotizen, probenPlaene, probenVerlauf } from '../data/song-stand';
 
 // Dialog „Song bearbeiten“ (Backstage → Songs): Tonart (Original und wie die Band spielt), Capo, Tempo – auch per
 // Tippen im Takt –, Notiz, Recherche-Quelle sowie Noten (PDF, Akkordblatt). Mit „Voriger/Nächster“ lässt sich die
@@ -79,6 +79,15 @@ export interface SongZeile {
       </div>
       @if (quelle(); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
       @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ datumText(p.tag) }}: {{ p.notiz }}</p> }
+      @if (verlauf().length) {
+        <div class="proben-verlauf" role="img" [attr.aria-label]="verlaufText()">
+          <span class="titel">Proben</span>
+          @for (v of verlauf(); track v.tag) {
+            <span class="punkt" [class]="v.stufe" [title]="datumText(v.tag) + ': ' + (v.stufe === 'geplant' ? 'geplant, nicht geprobt' : v.stufe === 'baustelle' ? 'Baustelle' : 'sitzt') + (v.notiz ? ' – ' + v.notiz : '')"></span>
+          }
+          <small>{{ verlaufText() }}</small>
+        </div>
+      }
 
       <!-- je Song neu anlegen, damit der Editor die Noten des neuen Songs lädt -->
       @for (s of [song()]; track s.key) {
@@ -141,6 +150,19 @@ export class SongDialog {
   readonly quelle = input<string>();
   /** letzte Notiz aus dem Probenprotokoll (Probenseite) */
   protected readonly probe = computed(() => probenNotizen().get(this.song().key));
+  /** Proben-Verlauf: je Probe ein Punkt – grün sitzt, gelb Baustelle, grau nur geplant */
+  protected readonly verlauf = computed(() => probenVerlauf(probenPlaene(), this.song().key, new Date().toISOString().slice(0, 10)));
+  protected readonly verlaufText = computed(() => {
+    const v = this.verlauf();
+    const geprobt = v.filter((p) => p.stufe !== 'geplant');
+    const letzte = geprobt.at(-1);
+    return [
+      `${geprobt.length}× geprobt${v[0] ? ' seit ' + datumText(v[0].tag) : ''}`,
+      letzte && (letzte.stufe === 'baustelle' ? 'zuletzt noch Baustelle' : 'zuletzt sitzt'),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  });
   readonly dateien = input.required<NotenDateiInfo[]>();
   /** z. B. „3 / 52“ */
   readonly position = input('');

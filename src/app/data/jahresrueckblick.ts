@@ -61,3 +61,15 @@ export function jahresrueckblick(
     ausblick: shows.filter((s) => s.confirmed && !s.private && s.date.startsWith(`${jahr + 1}-`)).length,
   };
 }
+
+/**
+ * Auftritte im Dezember, deren Rückblick noch fehlt – vom Tag nach dem Auftritt bis zum 14.12., damit der Moment im
+ * Jahresrückblick (ab RUECKBLICK_AB) steht. Für „Heute fällig“.
+ */
+export function rueckblickFrist(shows: Show[], history: HistoryEntry[], heute: string): Show[] {
+  const jahr = heute.slice(0, 4);
+  const frist = `${jahr}-12-14`;
+  return shows.filter(
+    (s) => s.confirmed && s.date.startsWith(`${jahr}-12-`) && s.date < heute && heute <= frist && !history.some((h) => h.date === s.date && !h.example),
+  );
+}

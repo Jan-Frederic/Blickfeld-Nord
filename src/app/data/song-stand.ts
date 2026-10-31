@@ -71,6 +71,50 @@ export function notizBaustellen(notizen: Map<string, { tag: string; notiz: strin
     .map(([key, n]) => ({ key, notiz: n.notiz }));
 }
 
+export type ProbenStufe = 'sitzt' | 'baustelle' | 'geplant';
+export interface ProbenPunkt {
+  tag: string;
+  stufe: ProbenStufe;
+  notiz?: string;
+}
+
+/**
+ * Proben-Verlauf eines Songs über alle Probenpläne (bis heute): „sitzt“ (geprobt, Notiz ohne Baustelle), „baustelle“
+ * (Notiz wie „wackelt“, „Tempo“), „geplant“ (stand auf dem Plan, wurde laut Häkchen aber nicht geprobt). Älteste zuerst.
+ */
+export function probenVerlauf(
+  plaene: { tag: string; songs: { title: string; artist: string; done?: boolean; notiz?: string }[] }[],
+  key: string,
+  heute: string,
+): ProbenPunkt[] {
+  return plaene
+    .filter((p) => p.tag <= heute)
+    .flatMap((p) => {
+      const s = p.songs.find((x) => `${x.title}|${x.artist}` === key);
+      if (!s) return [];
+      const mitHaken = p.songs.some((x) => x.done);
+      const notiz = s.notiz?.trim() || undefined;
+      const stufe: ProbenStufe = mitHaken && !s.done ? 'geplant' : notiz && BAUSTELLE.test(notiz) ? 'baustelle' : 'sitzt';
+      return [{ tag: p.tag, stufe, notiz }];
+    })
+    .sort((a, b) => a.tag.localeCompare(b.tag));
+}
+
+/** alle Probenpläne mit Häkchen und Notizen (roh) – für den Verlauf */
+export function probenPlaene(): { tag: string; songs: { title: string; artist: string; done?: boolean; notiz?: string }[] }[] {
+  const out: { tag: string; songs: { title: string; artist: string; done?: boolean; notiz?: string }[] }[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)!;
+      const tag = /^bn-probe-(\d{4}-\d{2}-\d{2})/.exec(k)?.[1];
+      if (tag) out.push({ tag, songs: JSON.parse(localStorage.getItem(k) ?? '{}').songs ?? [] });
+    }
+  } catch {
+    // ohne Speicher keine Proben
+  }
+  return out;
+}
+
 /** bühnenreif: Noten da, Tonart und Tempo eingetragen, mindestens einmal geprobt */
 export const buehnenreif = (f: { noten: boolean; tonart: boolean; geprobt: number }) => f.noten && f.tonart && f.geprobt > 0;
 

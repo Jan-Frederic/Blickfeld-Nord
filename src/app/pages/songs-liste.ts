@@ -9,6 +9,7 @@ import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, NotenPdf, alleSongNoten, notenDateien, songNotenSetzen } from '../data/noten';
 import { SongDialog } from './song-dialog';
 import { SetlistBuehne } from './setlist-buehne';
+import { WunschPassung } from './wunsch-passung';
 import { Song, durationOf, loadSetlist, setTime } from '../data/setlist-data';
 import { BandService } from '../data/band.service';
 import { historieText, songHistorie } from '../data/song-historie';
@@ -36,7 +37,7 @@ function ladeEntwurf(): Record<string, Werte> {
 
 @Component({
   selector: 'app-songs-liste',
-  imports: [MatIconModule, SongDialog, SetlistBuehne],
+  imports: [MatIconModule, SongDialog, SetlistBuehne, WunschPassung],
   template: `
       <p class="lead">
         Tonart, Tempo, Notiz und Noten je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel. Zeile antippen zum
@@ -118,6 +119,8 @@ function ladeEntwurf(): Record<string, Werte> {
         <mat-icon>search</mat-icon>
         <input type="search" placeholder="Song oder Interpret suchen …" [value]="suche()" (input)="suche.set($any($event.target).value)" aria-label="Songs durchsuchen" />
       </label>
+
+      @if (liste() === 'wunschliste') { <app-wunsch-passung [songs]="songs()" (oeffnen)="oeffnen($event)" /> }
 
       <table class="songs">
         <thead>

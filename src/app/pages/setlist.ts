@@ -13,6 +13,7 @@ import { TempoVerlauf } from './tempo-verlauf';
 import { Entry, SETLIST_PREFIX, durationOf, isPause, loadSetlist, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { gespielteTonart, songInfo, songInfoText } from '../data/songinfo';
 import { glaetten, sprungHinweis, spruenge } from '../data/tonart-uebergang';
+import { bogenAbweichung, spannungsbogen } from '../data/set-bogen';
 import { setlistAusHash, setlistLink } from '../data/setlist-link';
 import { BandService } from '../data/band.service';
 import { abwechslung, hierGespielt } from '../data/abwechslung';
@@ -122,6 +123,13 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           ⚡ {{ n }} {{ n === 1 ? 'Tonartsprung' : 'Tonartsprünge' }} innerhalb der Sets
           <button type="button" (click)="glaetten()"><mat-icon>auto_fix_high</mat-icon> Übergänge glätten</button>
           @if (glattMeldung(); as m) { <span role="status">{{ m }}</span> }
+        </div>
+      }
+      @if (bogenMoeglich()) {
+        <div class="tools bogen">
+          📈 Spannungsbogen: Start mit Schwung, ruhiger nach zwei Dritteln, schnellster Song zum Schluss
+          <button type="button" (click)="bogen()"><mat-icon>trending_up</mat-icon> Sets nach Tempo ordnen</button>
+          @if (bogenMeldung(); as m) { <span role="status">{{ m }}</span> }
         </div>
       }
       @if (hierZahl(); as n) {
@@ -316,6 +324,24 @@ export class Setlist {
     }
     if (!confirm(`Reihenfolge innerhalb der Sets nach Tonart ordnen? Tonartsprünge: ${vorher} → ${nachher}. Erster und letzter Song je Set bleiben.`)) return;
     this.glattMeldung.set('');
+    this.replace(neu);
+  }
+
+  // Spannungsbogen je Set (data/set-bogen.ts) – nur, wenn genug Songs mit Tempo da sind
+  private readonly bpmVon = (s: { title: string; artist: string }) => songInfo(s.title, s.artist)?.bpm;
+  protected readonly bogenMoeglich = computed(() => this.entries().filter((e) => !isPause(e) && this.bpmVon(e as { title: string; artist: string })).length >= 4);
+  protected readonly bogenMeldung = signal('');
+  protected bogen(): void {
+    const neu = spannungsbogen(this.entries(), this.bpmVon, this.tonartVon);
+    const gleich = neu.every((e, i) => e === this.entries()[i]);
+    if (gleich) {
+      this.bogenMeldung.set('Die Sets folgen dem Bogen schon.');
+      return;
+    }
+    const vorher = Math.round((1 - bogenAbweichung(this.entries(), this.bpmVon)) * 100);
+    const nachher = Math.round((1 - bogenAbweichung(neu, this.bpmVon)) * 100);
+    if (!confirm(`Songs innerhalb der Sets nach Spannungsbogen ordnen? Passt zum Bogen: ${vorher} % → ${nachher} %. Tonartsprünge: ${spruenge(this.entries(), this.tonartVon)} → ${spruenge(neu, this.tonartVon)}.`)) return;
+    this.bogenMeldung.set('');
     this.replace(neu);
   }
 

@@ -110,6 +110,16 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   gelb, wenn zwei Punkte schlecht waren. Wie die Kontakte nur auf den Geräten und im OneDrive.
 - **Aus dem Adressbuch** (Ansprechpartner, Neuer Veranstalter): übernimmt Name, Telefon und E-Mail aus den Kontakten
   des Handys – nur in Chrome auf Android (andere Browser können das nicht, dort fehlt der Knopf).
+- **Spannungsbogen** (Setlist eines Auftritts): „Sets nach Tempo ordnen“ legt jedes Set neu – Start mit Schwung,
+  nach etwa zwei Dritteln ruhiger, der schnellste Song zum Schluss; Tonartsprünge werden dabei möglichst vermieden.
+- **Was passt als Nächstes?** (Songs → Liste „Wunschliste“): Wunschsongs, die am besten in die Setlist passen – nach
+  dem Tempo, von dem die Spotify-Setlist am wenigsten hat, und nach vertrauter Tonart.
+- **Proben-Verlauf** im Song-Dialog: je Probe ein Punkt – grün sitzt, gelb Baustelle (Notiz wie „wackelt“), Kreis
+  nur geplant (Häkchen fehlte).
+- **Wo lohnt es sich wieder?** (Termine → Kontakte): sortiert die Veranstalter nach Bewertung, dann nach Zahl der
+  Auftritte dort.
+- **Rückblick-Frist:** Nach einem Auftritt im Dezember erinnert „Heute fällig“ bis zum 14.12. an den Rückblick, damit er
+  im Jahresrückblick steht.
 - **Ladezeit:** Bühnen-Modus, Song-Dialog, Notenbereich und die unteren Teile einer Auftrittsseite werden erst bei
   Bedarf geladen (Songs-Seite ca. 12 % weniger JavaScript).
 - **Probe-Vorschlag aus Notizen:** Songs, deren letzte Probennotiz nach Baustelle klingt („wackelt“, „Tempo“,

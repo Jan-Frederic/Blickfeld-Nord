@@ -44,3 +44,14 @@ describe('jahresrueckblick', () => {
     expect(r.highlights.map((h) => h.title)).toEqual(['Gasthof']);
   });
 });
+
+describe('rueckblickFrist', () => {
+  it('Dezember-Auftritt ohne Rückblick: vom Tag danach bis 14.12.', async () => {
+    const { rueckblickFrist } = await import('./jahresrueckblick');
+    const s = { date: '2026-12-04', venue: 'Weihnachtsmarkt', city: 'Rhede', confirmed: true } as never;
+    expect(rueckblickFrist([s], [], '2026-12-04')).toHaveLength(0);
+    expect(rueckblickFrist([s], [], '2026-12-05')).toHaveLength(1);
+    expect(rueckblickFrist([s], [], '2026-12-15')).toHaveLength(0);
+    expect(rueckblickFrist([s], [{ date: '2026-12-04', title: 'x' } as never], '2026-12-06')).toHaveLength(0);
+  });
+});

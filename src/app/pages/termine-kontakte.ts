@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { KontaktBewertung } from './kontakt-bewertung';
-import { Kontakt, adressbuchDa, ausAdressbuch, bewertungSchwach, bewertungText, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
+import { Kontakt, veranstalterRangliste, adressbuchDa, ausAdressbuch, bewertungSchwach, bewertungText, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
 import { saison } from '../data/saison';
 
 // Backstage → Termine → Kontakte (/backstage/termine/kontakte): alle Ansprechpartner der Veranstalter auf einen Blick –
@@ -20,6 +20,7 @@ interface Zeile {
   stadt: string;
   zuletzt?: Show;
   naechster?: Show;
+  auftritte: number;
 }
 
 @Component({
@@ -33,6 +34,11 @@ interface Zeile {
       <p class="lead">Ansprechpartner der Veranstalter – nur auf euren Geräten und im OneDrive, nie auf der Website.
         Anfragen werden mit Datum gemerkt; kommt nach 14 Tagen kein Termin zustande, erinnert „Heute fällig“ ans Nachfragen.</p>
 
+      <div class="sortierung" role="group" aria-label="Reihenfolge">
+        <button type="button" [class.an]="sortierung() === 'name'" [attr.aria-pressed]="sortierung() === 'name'" (click)="sortierung.set('name')">Alphabetisch</button>
+        <button type="button" [class.an]="sortierung() === 'lohnt'" [attr.aria-pressed]="sortierung() === 'lohnt'" (click)="sortierung.set('lohnt')"><mat-icon>star</mat-icon> Wo lohnt es sich wieder?</button>
+      </div>
+
       <ul class="kontakte">
         @for (z of zeilen(); track z.key) {
           <li>
@@ -43,6 +49,7 @@ interface Zeile {
             <div class="info">
               @if (z.naechster) { <span class="gut">nächster Auftritt {{ datumText(z.naechster.date) }}</span> }
               @else if (z.zuletzt) { <span>zuletzt {{ datumText(z.zuletzt.date) }}</span> } @else { <span>noch kein Auftritt</span> }
+              @if (z.auftritte) { <span>· {{ z.auftritte }}× gespielt</span> }
               @if (z.k.angefragt) { <span class="angefragt">· angefragt am {{ datumText(z.k.angefragt) }} <button type="button" class="link" (click)="beantwortet(z)">beantwortet</button></span> }
             </div>
             <details class="bewerten">
@@ -88,6 +95,7 @@ export class TermineKontakte {
   protected readonly band = inject(BandService);
   private readonly heute = new Date().toISOString().slice(0, 10);
   protected readonly stand = signal(0);
+  protected readonly sortierung = signal<'name' | 'lohnt'>('name');
   protected readonly bewertungText = bewertungText;
   protected readonly schwach = bewertungSchwach;
   protected readonly adressbuch = adressbuchDa();
@@ -104,15 +112,19 @@ export class TermineKontakte {
   protected readonly zeilen = computed<Zeile[]>(() => {
     this.stand();
     const alle = ladeKontakte();
+    const rangliste = veranstalterRangliste(alle, this.band.shows, this.heute);
+    const rang = new Map(rangliste.map((r) => [r.key, r.auftritte]));
+    const platz = new Map(rangliste.map((r, i) => [r.key, i]));
+    const lohnt = this.sortierung() === 'lohnt';
     return Object.entries(alle)
       .map(([key, k]) => {
         const shows = this.band.shows.filter((s) => ortKey(s) === key);
         const zuletzt = shows.filter((s) => (s.endDate ?? s.date) < this.heute).at(-1);
         const naechster = shows.find((s) => (s.endDate ?? s.date) >= this.heute);
         const bekannt = naechster ?? zuletzt;
-        return { key, k, zuletzt, naechster, ort: k.ort || bekannt?.venue || key.split('|')[1], stadt: k.stadt || bekannt?.city || key.split('|')[0] };
+        return { key, k, zuletzt, naechster, auftritte: rang.get(key) ?? 0, ort: k.ort || bekannt?.venue || key.split('|')[1], stadt: k.stadt || bekannt?.city || key.split('|')[0] };
       })
-      .sort((a, b) => a.ort.localeCompare(b.ort, 'de'));
+      .sort((a, b) => (lohnt ? platz.get(a.key)! - platz.get(b.key)! : 0) || a.ort.localeCompare(b.ort, 'de'));
   });
 
   protected wa(z: Zeile): string {

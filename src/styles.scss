@@ -387,3 +387,22 @@ app-backstage .zahlen > summary mat-icon { color: var(--bn-sunset); font-size: 2
 app-backstage-zahlen .vorschau-link { margin: 12px 0 0; font-size: .9rem; color: var(--bn-fog); }
 app-backstage-zahlen .vorschau-link a { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); }
 app-backstage-zahlen .vorschau-link mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-wunsch-passung .wunsch-passung { margin: 0 0 16px; padding: 10px 14px; border: 1px solid var(--bn-line); border-radius: 12px; font-size: .9rem; }
+app-wunsch-passung summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; cursor: pointer; font-weight: 600; }
+app-wunsch-passung summary mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
+app-wunsch-passung summary small { font-weight: 400; color: var(--bn-fog); }
+app-wunsch-passung ol { margin: 8px 0 0; padding-left: 1.4em; display: grid; gap: 6px; }
+app-wunsch-passung .link { padding: 0; border: 0; background: none; color: var(--bn-ink); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+app-wunsch-passung .a { color: var(--bn-fog); }
+app-wunsch-passung li small { display: block; color: var(--bn-fog); font-size: .8rem; }
+app-song-dialog .proben-verlauf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 6px 0; font-size: .82rem; }
+app-song-dialog .proben-verlauf .titel { margin-right: 4px; color: var(--bn-fog); }
+app-song-dialog .proben-verlauf .punkt { width: 12px; height: 12px; border-radius: 50%; background: #5fb88a; }
+app-song-dialog .proben-verlauf .punkt.baustelle { background: #e0b25a; }
+app-song-dialog .proben-verlauf .punkt.geplant { background: transparent; border: 2px solid var(--bn-fog); box-sizing: border-box; }
+app-song-dialog .proben-verlauf small { margin-left: 6px; color: var(--bn-fog); }
+app-termine-kontakte .sortierung { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+app-termine-kontakte .sortierung button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+app-termine-kontakte .sortierung button.an { border-color: var(--bn-sunset); background: rgba(232, 164, 106, .18); }
+app-termine-kontakte .sortierung mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-setlist .bogen { margin: 14px 0 0; font-size: .85rem; color: var(--bn-fog); }

@@ -374,6 +374,24 @@ test('Backstage: Veranstalter bewerten – Kurzfassung in den Kontakten', async 
   return p;
 });
 
+test('Backstage: Bereit? prüft den Bühnen-Modus ohne Netz und lädt fehlende Teile nach', async () => {
+  // echter Service Worker (sonst überall gesperrt), Datum eine Woche vor dem Weihnachtsmarkt
+  const p = await page({ serviceWorkers: 'allow' });
+  await p.clock.setFixedTime(new Date('2026-11-30T10:00:00'));
+  await p.go('/backstage/2026-12-04/');
+  await p.evaluate(() => navigator.serviceWorker.ready);
+  await until(async () => p.evaluate(() => !!navigator.serviceWorker.controller), 'Service Worker übernimmt die Seite nicht');
+  await p.go('/backstage/2026-12-04/');
+  const bereit = p.locator('app-bereitschaft').first();
+  if ((await bereit.locator('details').getAttribute('open')) === null) await bereit.locator('summary').click();
+  const punkt = bereit.locator('li', { hasText: 'Bühnen-Modus ohne Netz' });
+  await punkt.waitFor();
+  expect(!(await punkt.getAttribute('class'))?.includes('ok'), 'pdf.js ist vor dem Vorladen schon gespeichert – Test prüft nichts');
+  await punkt.getByRole('button', { name: 'Jetzt vorladen' }).click();
+  await until(async () => ((await punkt.getAttribute('class')) ?? '').includes('ok'), async () => `nach dem Vorladen nicht bereit: ${await punkt.textContent()}`);
+  return p;
+});
+
 test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neuladen', async () => {
   const p = await page();
   await p.go('/backstage/aufgaben/');

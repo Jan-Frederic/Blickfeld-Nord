@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { ladeKontakte, nachfragen } from '../data/kontakte';
 import { SAISON_UPDATE_KEY, saisonUpdateFaellig } from '../data/jahresplan';
+import { rueckblickFrist } from '../data/jahresrueckblick';
 import { kampagnenLink } from '../data/goatcounter';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
@@ -83,6 +84,12 @@ export class HeuteFaellig {
     ...(saisonUpdateFaellig(this.heute, this.gelesen(SAISON_UPDATE_KEY))
       ? [{ icon: 'date_range', label: 'Saison-Update an die Band schicken (Termine → Saison → Als Bild teilen)', link: ['/backstage/termine/saison'] }]
       : []),
+    // Dezember-Auftritte: Rückblick bis zum 14.12. schreiben, damit er im Jahresrückblick (/jahr/<Jahr>, ab 15.12.) steht
+    ...rueckblickFrist(this.band.shows, this.band.history, this.heute).map((s) => ({
+      icon: 'auto_stories',
+      label: `Rückblick „${s.private ? (s.publicName ?? 'Private Feier') : s.venue}“ bis 14.12. schreiben – sonst fehlt er im Jahresrückblick`,
+      link: ['/backstage', this.band.showId(s)],
+    })),
     // Anfragen ohne Antwort (seit 14 Tagen kein neuer Termin dort) – Kontakte unter Termine → Kontakte
     ...nachfragen(ladeKontakte(), this.band.shows, this.heute).map((n) => ({
       icon: 'call',

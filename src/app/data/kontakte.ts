@@ -187,3 +187,30 @@ export function nachfragen(kontakte: Record<string, Kontakt>, shows: Pick<Show, 
     .map(({ key, k, tage }) => ({ key, name: k.ort || shows.filter((s) => ortKey(s) === key).at(-1)?.venue || key.split('|')[1], angefragt: k.angefragt!, tage }))
     .sort((a, b) => b.tage - a.tage);
 }
+
+const STUFE_PUNKTE: Record<Stufe, number> = { gut: 2, ok: 1, schwach: 0 };
+
+/** Bewertung als Zahl 0–2 (Mittel aus Technik, Publikum, Bezahlung) – undefined ohne Bewertung */
+export function bewertungPunkte(k: Kontakt | undefined): number | undefined {
+  if (!k) return undefined;
+  const p = [k.technik && STUFE_PUNKTE[k.technik], k.publikum && STUFE_PUNKTE[k.publikum], k.bezahlung && (k.bezahlung === 'puenktlich' ? 2 : 0)].filter(
+    (x): x is number => typeof x === 'number',
+  );
+  return p.length ? p.reduce((a, b) => a + b, 0) / p.length : undefined;
+}
+
+export interface RangEintrag {
+  key: string;
+  auftritte: number;
+  punkte?: number;
+}
+
+/**
+ * „Wo lohnt es sich wieder?“ – Veranstalter nach Bewertung (bewertete zuerst, beste oben), dann nach Zahl der
+ * gespielten Auftritte dort.
+ */
+export function veranstalterRangliste(kontakte: Record<string, Kontakt>, shows: Pick<Show, 'venue' | 'city' | 'date' | 'confirmed'>[], heute: string): RangEintrag[] {
+  return Object.entries(kontakte)
+    .map(([key, k]) => ({ key, auftritte: shows.filter((s) => s.confirmed && s.date < heute && ortKey(s) === key).length, punkte: bewertungPunkte(k) }))
+    .sort((a, b) => (b.punkte ?? -1) - (a.punkte ?? -1) || b.auftritte - a.auftritte || a.key.localeCompare(b.key, 'de'));
+}

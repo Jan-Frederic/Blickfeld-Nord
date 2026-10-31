@@ -43,3 +43,21 @@ describe('song-stand', () => {
     expect(text).toContain('Zombi|The Cranberies ~ Zombie|The Cranberries: fast gleich geschrieben → Zombie|The Cranberries');
   });
 });
+
+describe('probenVerlauf', () => {
+  it('sitzt, Baustelle, nur geplant – älteste zuerst, Zukunft ohne', async () => {
+    const { probenVerlauf } = await import('./song-stand');
+    const A = { title: 'A', artist: 'X' };
+    const plaene = [
+      { tag: '2026-10-20', songs: [{ ...A, done: true, notiz: 'sitzt jetzt' }] },
+      { tag: '2026-09-01', songs: [{ ...A, notiz: 'Bridge wackelt' }] },
+      { tag: '2026-09-15', songs: [{ ...A }, { title: 'B', artist: 'X', done: true }] },
+      { tag: '2026-12-01', songs: [{ ...A }] },
+    ];
+    expect(probenVerlauf(plaene, 'A|X', '2026-10-31').map((p) => `${p.tag} ${p.stufe}`)).toEqual([
+      '2026-09-01 baustelle',
+      '2026-09-15 geplant',
+      '2026-10-20 sitzt',
+    ]);
+  });
+});
