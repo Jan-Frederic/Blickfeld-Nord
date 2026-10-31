@@ -1,3 +1,5 @@
+import { datumText } from './datum';
+
 // Antwortvorlagen für Booking-Anfragen (Backstage → Material), auf Deutsch, Englisch und Niederländisch. Nur
 // Angaben, die auch auf der Website bzw. im Technik-Rider stehen (Spielfläche, Strom, Aufbau, Spielzeit) – Gage und
 // Adressen kommen erst beim Verschicken von Hand dazu und gehören nicht ins öffentliche Repository.
@@ -51,7 +53,7 @@ interface Texte {
 const T: Record<Sprache, Texte> = {
   de: {
     hallo: (n) => `Hallo ${n},`,
-    am: (tag, d) => `am ${tag}, ${d.split('-').reverse().join('.')}`,
+    am: (tag, d) => `am ${tag}, ${datumText(d)}`,
     fuer: (a) => `für ${a}`,
     name: '[Name]',
     gruss: 'Viele Grüße',
@@ -75,7 +77,7 @@ const T: Record<Sprache, Texte> = {
   },
   en: {
     hallo: (n) => `Hi ${n},`,
-    am: (tag, d) => `on ${tag}, ${d.split('-').reverse().join('/')}`,
+    am: (tag, d) => `on ${tag}, ${datumText(d, '/')}`,
     fuer: (a) => `for ${a}`,
     name: '[name]',
     gruss: 'Best wishes',
@@ -99,7 +101,7 @@ const T: Record<Sprache, Texte> = {
   },
   nl: {
     hallo: (n) => `Hallo ${n},`,
-    am: (tag, d) => `op ${tag} ${d.split('-').reverse().join('-')}`,
+    am: (tag, d) => `op ${tag} ${datumText(d, '-')}`,
     fuer: (a) => `voor ${a}`,
     name: '[naam]',
     gruss: 'Met vriendelijke groet',

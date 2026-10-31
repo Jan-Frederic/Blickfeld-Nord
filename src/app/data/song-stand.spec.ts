@@ -1,5 +1,5 @@
 import { songAbgleich } from './playlisten';
-import { archivKandidaten, doppelte, gespieltNichtAufWebsite, probenStand } from './song-stand';
+import { archivKandidaten, doppelte, gespieltNichtAufWebsite, notizBaustellen, probenStand } from './song-stand';
 
 const songs = songAbgleich(
   [
@@ -11,6 +11,15 @@ const songs = songAbgleich(
 );
 
 describe('song-stand', () => {
+  it('erkennt Baustellen in Probennotizen', () => {
+    const n = new Map([
+      ['A|X', { tag: '2026-10-01', notiz: 'Bridge sitzt' }],
+      ['B|Y', { tag: '2026-10-02', notiz: 'Tempo zu schnell' }],
+      ['C|Z', { tag: '2026-10-03', notiz: 'Einsatz Refrain wackelt' }],
+    ]);
+    expect(notizBaustellen(n).map((x) => x.key)).toEqual(['C|Z', 'B|Y']);
+  });
+
   it('zählt nur vergangene Proben', () => {
     const p = probenStand([{ tag: '2026-01-01', songs: [{ title: 'Iris', artist: 'Goo Goo Dolls' }] }, { tag: '2099-01-01', songs: [{ title: 'Iris', artist: 'Goo Goo Dolls' }] }], '2026-06-01');
     expect(p.get('Iris|Goo Goo Dolls')).toEqual({ anzahl: 1, zuletzt: '2026-01-01' });

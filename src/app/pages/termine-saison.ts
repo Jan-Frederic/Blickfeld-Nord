@@ -1,14 +1,15 @@
+import { datumText, monatText } from '../data/datum';
+
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
-import { PlanMonat, jahresplan } from '../data/jahresplan';
+import { PlanMonat, SAISON_UPDATE_KEY, jahresplan } from '../data/jahresplan';
 import { wiederAnfragen } from '../data/saison';
 
 // Backstage → Termine → Saison (/backstage/termine/saison): die nächsten 12 Monate mit Auftritten, Proben und
 // Abwesenheiten, freie Monate markiert, dazu „Wieder anfragen“ – auf der Seite und als Ausdruck/PDF für die
 // Bandbesprechung (data/jahresplan.ts).
-const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const tag = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -80,11 +81,11 @@ export class TermineSaison {
     return m.eintraege.some((e) => e.art === 'auftritt');
   }
   protected name(jm: string): string {
-    return `${MONATE[Number(jm.slice(5, 7)) - 1]} ${jm.slice(0, 4)}`;
+    return monatText(jm);
   }
   protected readonly tagText = tag;
   protected datum(d: string): string {
-    return d.split('-').reverse().join('.');
+    return datumText(d);
   }
 
   /** Bild für die WhatsApp-Gruppe der Band (1080 × 1350): 12 Monate im Raster, Auftritte hell, Proben grau, Abwesenheiten rot */
@@ -144,6 +145,12 @@ export class TermineSaison {
     const blob = await new Promise<Blob>((ok, fehler) => canvas.toBlob((b) => (b ? ok(b) : fehler(new Error('Bild fehlt'))), 'image/png'));
     const { shareImage } = await import('../data/poster');
     await shareImage(blob, `blickfeld-nord-saison-${this.heute}.png`, 'Blickfeld Nord – Saison').catch(() => undefined);
+    // Saison-Update für diesen Monat erledigt (Erinnerung unter „Heute fällig“ verschwindet)
+    try {
+      localStorage.setItem(SAISON_UPDATE_KEY, this.heute.slice(0, 7));
+    } catch {
+      // ohne Speicher bleibt die Erinnerung stehen
+    }
   }
 
   /** Ausdruck: alle 12 Monate auf einer A4-Seite (quer), druckt bzw. speichert als PDF über den Browser */

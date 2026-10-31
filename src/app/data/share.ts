@@ -1,3 +1,4 @@
+import { datumText } from './datum';
 import { Show } from './band.service';
 import { Lang, localize } from '../i18n';
 import { kampagnenLink } from './goatcounter';
@@ -8,21 +9,21 @@ const TEXT: Record<Lang, { weekdays: string[]; from: (t: string) => string; free
     from: (t) => ` ab ${t} Uhr`,
     free: 'Eintritt frei',
     entry: 'Eintritt',
-    date: (d) => d.split('-').reverse().join('.'),
+    date: (d) => datumText(d),
   },
   en: {
     weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     from: (t) => ` from ${t}`,
     free: 'Free entry',
     entry: 'Entry',
-    date: (d) => d.split('-').reverse().join('/'),
+    date: (d) => datumText(d, '/'),
   },
   nl: {
     weekdays: ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'],
     from: (t) => ` vanaf ${t} uur`,
     free: 'Gratis entree',
     entry: 'Entree',
-    date: (d) => d.split('-').reverse().join('-'),
+    date: (d) => datumText(d, '-'),
   },
 };
 

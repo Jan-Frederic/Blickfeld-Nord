@@ -1,3 +1,4 @@
+import { datumText } from './datum';
 import type { Show } from './band.service';
 import { ortBasis } from './abwechslung';
 
@@ -95,7 +96,7 @@ export async function nachrichtSenden(k: Kontakt | undefined, betreff: string, t
 
 /** Anfrage an einen Veranstalter von vor einem Jahr – mit den freien Monaten der Saisonplanung */
 export function anfrageText(s: Pick<Show, 'venue' | 'date'>, kontakt: Kontakt | undefined, freieMonate: string[]): string {
-  const datum = s.date.split('-').reverse().join('.');
+  const datum = datumText(s.date);
   const frei = freieMonate.length > 1 ? `${freieMonate.slice(0, -1).join(', ')} und ${freieMonate.at(-1)}` : freieMonate[0];
   return [
     `Hallo${kontakt?.name ? ' ' + kontakt.name : ''},`,

@@ -9,7 +9,7 @@ import { ladeWackelt } from '../data/wackelt';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
 import { SONGINFO, SONGINFO_ENTWURF_KEY } from '../data/songinfo';
-import { probenAusSpeicher, probenStand } from '../data/song-stand';
+import { notizBaustellen, probenAusSpeicher, probenNotizen, probenStand } from '../data/song-stand';
 
 // Vorschläge für die Probe aus Sternen und Setlists dieses Geräts (Logik: data/probe-vorschlag.ts)
 @Component({
@@ -86,6 +86,10 @@ export class ProbeVorschlag {
     } catch {
       // ohne Speicher nur nach Sternen
     }
-    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())), bereit);
+    const baustellen = notizBaustellen(probenNotizen()).map((b) => {
+      const i = b.key.lastIndexOf('|');
+      return { song: { title: b.key.slice(0, i), artist: b.key.slice(i + 1) }, notiz: b.notiz };
+    });
+    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())), bereit, baustellen);
   }
 }

@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 
@@ -13,7 +14,7 @@ const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'"
   selector: 'app-termin-formular',
   imports: [MatIconModule],
   template: `
-    <details class="neu" [open]="open()" (toggle)="open.set($any($event.target).open)">
+    <details class="neu" id="neuer-termin" [open]="open()" (toggle)="open.set($any($event.target).open)">
       <summary><mat-icon>add_circle</mat-icon> Neuen Termin eintragen</summary>
 
       <div class="art" role="radiogroup" aria-label="Art des Termins">
@@ -138,6 +139,18 @@ export class TerminFormular {
   });
   protected readonly copied = signal(false);
   private readonly band = inject(BandService);
+
+  // Vorbelegung aus Termine → Kontakte („Zusage → Auftritt eintragen“): ?neu=auftritt&ort=…&stadt=… – öffnet das
+  // Formular mit Location und Ort, geklärt angehakt (Datum und Uhrzeit fehlen noch)
+  constructor() {
+    const q = inject(ActivatedRoute).snapshot.queryParamMap;
+    if (q.get('neu') === 'auftritt') {
+      this.art.set('auftritt');
+      this.f.update((f) => ({ ...f, venue: q.get('ort') ?? '', city: q.get('stadt') ?? '', confirmed: true }));
+      this.open.set(true);
+      afterNextRender(() => document.getElementById('neuer-termin')?.scrollIntoView({ block: 'start' }));
+    }
+  }
 
   // Hinweis, wenn am selben Tag schon ein Termin eingetragen ist
   protected readonly taken = computed(() => {

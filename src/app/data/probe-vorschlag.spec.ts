@@ -24,6 +24,13 @@ describe('probeTipps', () => {
   });
 });
 
+describe('probeTipps – Probennotizen', () => {
+  it('nimmt Songs mit Baustellen-Notiz gleich nach „wackelt noch“', () => {
+    const r = probeTipps([], new Map(), new Map(), '2026-10-31', 4, new Set(), [], [{ song: { title: 'Iris', artist: 'X' }, notiz: 'Tempo zu schnell' }]);
+    expect(r.map((t) => t.grund)).toEqual(['Probennotiz: Tempo zu schnell']);
+  });
+});
+
 describe('probeTipps – Wunschliste', () => {
   it('nimmt bereite Wunschlisten-Songs gleich nach „wackelt noch“', () => {
     const r = probeTipps([{ title: 'A', artist: 'X' }], new Map(), new Map(), '2026-10-31', 4, new Set(['A|X']), [{ title: 'Neu', artist: 'Y' }]);

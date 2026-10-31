@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, computed, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
@@ -15,7 +17,7 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
   template: `
     @if (beispiel(); as b) {
       <details class="pressetexte">
-        <summary><mat-icon>campaign</mat-icon> Pressekit-Texte gegenlesen (Beispiel: {{ b.venue }}, {{ b.date.split('-').reverse().join('.') }})</summary>
+        <summary><mat-icon>campaign</mat-icon> Pressekit-Texte gegenlesen (Beispiel: {{ b.venue }}, {{ datumText(b.date) }})</summary>
         <p class="info">Diese Texte erzeugt die Website für jedes Konzert (Pressekit und Backstage). Englisch und Niederländisch sind noch
           nicht gegengelesen – Korrekturen in <a [href]="editUrl" target="_blank" rel="noopener">presse-texte.ts</a> eintragen.</p>
         @for (z of zeilen(); track z.id) {
@@ -29,6 +31,7 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
   `,
 })
 export class PressetextePruefen {
+  protected readonly datumText = datumText;
   private readonly band = inject(BandService);
   protected readonly editUrl = EDIT_URL;
   protected readonly beispiel = computed(() => {

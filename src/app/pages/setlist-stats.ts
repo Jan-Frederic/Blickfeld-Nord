@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -129,7 +131,7 @@ export class SetlistStats {
   });
 
   protected de(date: string): string {
-    return date.split('-').reverse().join('.');
+    return datumText(date);
   }
 
   private read(): { id: string; date: string; venue: string; songs: Song[] }[] {

@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, DestroyRef, afterNextRender, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +25,7 @@ const TEXT = tr(
     past: 'Dieses Konzert ist schon vorbei.',
     date: 'Datum', until: 'bis', start: 'Beginn', time: (t: string) => t + ' Uhr', tba: 'wird noch bekannt gegeben',
     place: 'Ort', entry: 'Eintritt', free: 'frei', soon: 'Infos folgen', arrival: 'Anfahrt & Parken',
-    page: 'Konzertseite', route: 'Anfahrt', rider: 'Technik & Rider',
+    page: 'Konzertseite', route: 'Anfahrt', rider: 'Technik & Rider', allesPdf: 'Alles als PDF (für E-Mails)', pdfLink: 'Konzertseite',
     bilder: 'Plakat & Story',
     bilderInfo: 'Mit QR-Code zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung im Kalender). Gern aushängen, posten und teilen.',
     plakat: 'Plakat (quadratisch, für Beitrag und Aushang)', story: 'Story / Status (Hochformat)',
@@ -45,7 +47,7 @@ const TEXT = tr(
     past: 'This show is already over.',
     date: 'Date', until: 'until', start: 'Start', time: (t: string) => t, tba: 'to be announced',
     place: 'Venue', entry: 'Entry', free: 'free', soon: 'details to follow', arrival: 'Getting there & parking',
-    page: 'Show page', route: 'Directions', rider: 'Tech & rider',
+    page: 'Show page', route: 'Directions', rider: 'Tech & rider', allesPdf: 'Everything as PDF (for emails)', pdfLink: 'Show page',
     bilder: 'Poster & story',
     bilderInfo: 'With a QR code to the show page (time, directions, calendar reminder). Feel free to put up, post and share.',
     plakat: 'Poster (square, for posts and notice boards)', story: 'Story / status (portrait)',
@@ -67,7 +69,7 @@ const TEXT = tr(
     past: 'Dit optreden is al voorbij.',
     date: 'Datum', until: 'tot', start: 'Aanvang', time: (t: string) => t + ' uur', tba: 'wordt nog bekendgemaakt',
     place: 'Locatie', entry: 'Entree', free: 'gratis', soon: 'info volgt', arrival: 'Bereikbaarheid & parkeren',
-    page: 'Optredenpagina', route: 'Route', rider: 'Techniek & rider',
+    page: 'Optredenpagina', route: 'Route', rider: 'Techniek & rider', allesPdf: 'Alles als pdf (voor e-mails)', pdfLink: 'Optredenpagina',
     bilder: 'Affiche & story',
     bilderInfo: 'Met QR-code naar de optredenpagina (tijd, route, herinnering in de agenda). Graag ophangen, posten en delen.',
     plakat: 'Affiche (vierkant, voor posts en ophangen)', story: 'Story / status (staand)',
@@ -109,6 +111,7 @@ const TEXT = tr(
           <a class="btn" [routerLink]="('/konzerte/' + id()) | loc"><mat-icon>open_in_new</mat-icon> {{ t().page }}</a>
           @if (s.mapsUrl) { <a class="btn" [href]="s.mapsUrl" target="_blank" rel="noopener"><mat-icon>map</mat-icon> {{ t().route }}</a> }
           <a class="btn" [routerLink]="'/technik' | loc"><mat-icon>tune</mat-icon> {{ t().rider }}</a>
+          <button type="button" class="btn" (click)="allesPdf()" [disabled]="druckLaeuft()"><mat-icon>picture_as_pdf</mat-icon> {{ t().allesPdf }}</button>
         </div>
 
         <h3>{{ t().bilder }}</h3>
@@ -223,6 +226,39 @@ export class PresseKonzertPage {
   // Plakat zum Drucken: die Story (Hochformat) mittig auf A4 bzw. A3, dunkler Hintergrund bis zum Rand
   protected readonly formate = ['A4', 'A3'] as const;
   protected readonly druckLaeuft = signal(false);
+  /** Pressekit dieses Auftritts als ein PDF: Eckdaten + Plakat, Texte, Songliste (data/presse-pdf.ts) */
+  protected async allesPdf(): Promise<void> {
+    const s = this.show();
+    if (!s) return;
+    this.druckLaeuft.set(true);
+    try {
+      const t = this.t();
+      const [{ pressePdf }, plakat] = await Promise.all([import('../data/presse-pdf'), renderPoster(s, 'feed', kampagnenLink(this.id(), 'plakat'), 'LIVE', 2)]);
+      const datum = new Date(`${s.date}T12:00:00`).toLocaleDateString(this.i18n.lang() === 'de' ? 'de-DE' : this.i18n.lang() === 'nl' ? 'nl-NL' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const blob = await pressePdf({
+        show: s,
+        titel: `${s.venue}${s.city ? ', ' + s.city : ''}`,
+        eckdaten: [
+          [t.date, datum],
+          [t.start, s.time ? t.time(s.time) : t.tba],
+          [t.place, `${s.venue}${s.city ? ', ' + s.city : ''}`],
+          [t.entry, s.price === 0 ? t.free : s.price ? `${s.price} €` : t.soon],
+          ...(s.anfahrt ? [[t.arrival, this.content.t(s.anfahrt)] as [string, string]] : []),
+        ],
+        plakat,
+        texte: this.texte().map((x) => ({ titel: x.titel, text: x.text })),
+        songs: this.songs.map((x) => `${x.title} – ${x.artist}`),
+        labels: { texte: t.texte, songs: t.songs, link: t.pdfLink },
+        link: kampagnenLink(this.id(), 'text'),
+      });
+      const url = URL.createObjectURL(blob);
+      Object.assign(document.createElement('a'), { href: url, download: `blickfeld-nord-pressekit-${this.id()}.pdf` }).click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } finally {
+      this.druckLaeuft.set(false);
+    }
+  }
+
   protected async druckPdf(format: 'A4' | 'A3'): Promise<void> {
     const s = this.show();
     if (!s) return;
@@ -256,7 +292,7 @@ export class PresseKonzertPage {
     effect(() => {
       const s = this.show();
       pageMeta.set({
-        title: s ? `Pressekit: ${s.venue} – ${s.date.split('-').reverse().join('.')} – Blickfeld Nord` : 'Pressekit – Blickfeld Nord',
+        title: s ? `Pressekit: ${s.venue} – ${datumText(s.date)} – Blickfeld Nord` : 'Pressekit – Blickfeld Nord',
         path: this.i18n.link(`/presse/${this.id()}`).slice(1),
         robots: 'noindex',
       });

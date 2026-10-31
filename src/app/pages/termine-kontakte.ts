@@ -1,5 +1,7 @@
+import { MONATE, datumText } from '../data/datum';
+
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { Kontakt, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
@@ -8,8 +10,7 @@ import { saison } from '../data/saison';
 // Backstage → Termine → Kontakte (/backstage/termine/kontakte): alle Ansprechpartner der Veranstalter auf einen Blick –
 // Ort, letzter bzw. nächster Auftritt, WhatsApp, E-Mail, Anfrage (mit „angefragt am“, Nachfrage nach 14 Tagen unter
 // Heute fällig). Neue Veranstalter ohne Auftritt lassen sich anlegen. Nur auf den Geräten und im OneDrive (bn-kontakte).
-const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-const datum = (d: string) => d.split('-').reverse().join('.');
+const datum = (d: string) => datumText(d);
 
 interface Zeile {
   key: string;
@@ -46,6 +47,7 @@ interface Zeile {
             <div class="knoepfe">
               @if (z.k.telefon) { <a class="btn" [href]="wa(z)" target="_blank" rel="noopener"><mat-icon>chat</mat-icon> WhatsApp</a> }
               @if (z.k.mail) { <a class="btn" [href]="'mailto:' + z.k.mail"><mat-icon>mail</mat-icon> E-Mail</a> }
+              <button type="button" class="btn" (click)="zusage(z)" title="Anfrage erledigt – neuen Auftritt mit Location und Ort vorbelegt eintragen"><mat-icon>event_available</mat-icon> Zusage → Auftritt eintragen</button>
               <button type="button" class="btn" (click)="anfragen(z)"><mat-icon>send</mat-icon> {{ kopiert() === z.key ? 'Kopiert!' : 'Anfrage schreiben' }}</button>
               @if (z.zuletzt || z.naechster) { <a class="btn" [routerLink]="'/backstage/' + band.showId((z.naechster ?? z.zuletzt)!)"><mat-icon>event</mat-icon> Auftritt</a> }
               <button type="button" class="btn leise" (click)="loeschen(z)" [attr.aria-label]="'Kontakt ' + z.ort + ' löschen'"><mat-icon>delete</mat-icon></button>
@@ -130,6 +132,13 @@ export class TermineKontakte {
       setTimeout(() => this.kopiert.set(''), 2000);
     }
     this.stand.update((n) => n + 1);
+  }
+
+  private readonly router = inject(Router);
+  /** Zusage: Anfrage erledigt, Termin-Formular mit Location und Ort vorbelegt öffnen */
+  protected zusage(z: Zeile): void {
+    angefragtSetzen(z.key, null);
+    void this.router.navigate(['/backstage/termine'], { queryParams: { neu: 'auftritt', ort: z.ort, stadt: z.stadt } });
   }
 
   protected beantwortet(z: Zeile): void {

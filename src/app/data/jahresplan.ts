@@ -2,6 +2,12 @@ import type { Abwesenheit, Rehearsal, Show } from './band.service';
 
 // Jahresplanung (Backstage → Termine → Saison): je Monat Auftritte, Proben und Abwesenheiten – auf der Seite und als
 // Ausdruck für die Bandbesprechung. Ohne Angular-Abhängigkeiten (Tests in jahresplan.spec.ts).
+/** Saison-Update an die Band: in der ersten Woche jedes Monats fällig, bis das Bild geteilt wurde (bn-saison-update) */
+export const SAISON_UPDATE_KEY = 'bn-saison-update';
+export function saisonUpdateFaellig(heute: string, zuletzt: string | null): boolean {
+  return Number(heute.slice(8, 10)) <= 7 && zuletzt !== heute.slice(0, 7);
+}
+
 export type PlanArt = 'auftritt' | 'probe' | 'weg';
 
 export interface PlanEintrag {

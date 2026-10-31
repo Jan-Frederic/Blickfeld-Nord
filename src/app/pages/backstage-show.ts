@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, OnDestroy, computed, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
@@ -299,7 +301,7 @@ export class BackstageShow implements OnDestroy {
     const text = [
       'Hallo,',
       '',
-      `für unseren Auftritt am ${s.date.split('-').reverse().join('.')} bei ${s.venue} haben wir alles für die Ankündigung an einem Ort gesammelt: Plakat und Story als Bild, Plakat zum Drucken, fertige Texte und unsere Songliste.`,
+      `für unseren Auftritt am ${datumText(s.date)} bei ${s.venue} haben wir alles für die Ankündigung an einem Ort gesammelt: Plakat und Story als Bild, Plakat zum Drucken, fertige Texte und unsere Songliste.`,
       '',
       url,
       '',

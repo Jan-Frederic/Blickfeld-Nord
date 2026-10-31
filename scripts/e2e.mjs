@@ -255,6 +255,10 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   await until(async () => (await seite.locator('.texte pre').count()) >= 4, 'Texte fehlen');
   await until(async () => (await seite.locator('.songs li').count()) > 20, 'Songliste fehlt');
   expect(((await seite.locator('figure a[download]').first().getAttribute('download')) ?? '').endsWith('.png'), 'Download des Plakats fehlt');
+  // Alles als PDF (Eckdaten, Plakat, Texte, Songliste)
+  const [alles] = await Promise.all([p.waitForEvent('download'), seite.locator('button', { hasText: 'Alles als PDF' }).click()]);
+  expect(alles.suggestedFilename().startsWith('blickfeld-nord-pressekit-'), 'Pressekit-PDF des Konzerts fehlt');
+  expect((await import('node:fs')).readFileSync(await alles.path()).subarray(0, 5).toString() === '%PDF-', 'Pressekit-PDF ist kein PDF');
   // Plakat zum Drucken (PDF), Was wir vor Ort brauchen
   const [pdf] = await Promise.all([p.waitForEvent('download'), seite.locator('.druck button').first().click()]);
   expect(pdf.suggestedFilename().endsWith('-a4.pdf'), 'Druck-PDF fehlt');
@@ -284,6 +288,10 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   await neu.locator('input').nth(2).fill('Ben');
   await neu.locator('button[type=submit]').click();
   await until(async () => /Testclub[\s\S]*Ben/.test(await p.locator('app-termine-kontakte .kontakte').innerText()), 'Neuer Kontakt fehlt in der Liste');
+  // Zusage → Auftritt: Formular mit Location und Ort vorbelegt
+  await p.locator('app-termine-kontakte li', { hasText: 'Testclub' }).locator('button', { hasText: 'Zusage' }).click();
+  await p.waitForURL(/\/backstage\/termine\?neu=auftritt/);
+  await until(async () => (await p.locator('app-termin-formular label', { hasText: 'Location' }).locator('input').inputValue().catch(() => '')) === 'Testclub', 'Formular nicht vorbelegt');
   // Ansprechpartner beim Auftritt bleibt gespeichert und gilt am selben Ort
   await p.go(`/backstage/${new URL(BASE + concerts[0]).pathname.split('/')[2]}`);
   const kontakt = p.locator('app-kontakt-karte');

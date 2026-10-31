@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -264,7 +266,7 @@ export class BackstageBesucher implements OnInit {
             const id = this.band.showId(s);
             const seiten = await Promise.all(['', '/en', '/nl'].map((l) => n(`${l}/konzerte/${id}`)));
             const wege = await Promise.all(WEGE.map((w) => n(`kampagne-${kampagne(id)}-${w.ref}`)));
-            return { id, datum: s.date.split('-').reverse().join('.'), name: s.venue, seite: seiten.reduce((a, b) => a + b, 0), wege };
+            return { id, datum: datumText(s.date), name: s.venue, seite: seiten.reduce((a, b) => a + b, 0), wege };
           }),
         ),
       );

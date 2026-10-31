@@ -1,6 +1,12 @@
-import { jahresplan } from './jahresplan';
+import { jahresplan, saisonUpdateFaellig } from './jahresplan';
 
 describe('jahresplan', () => {
+  it('Saison-Update in der ersten Woche des Monats, bis es geschickt wurde', () => {
+    expect(saisonUpdateFaellig('2026-11-03', '2026-10')).toBe(true);
+    expect(saisonUpdateFaellig('2026-11-03', '2026-11')).toBe(false);
+    expect(saisonUpdateFaellig('2026-11-12', null)).toBe(false);
+  });
+
   it('sammelt Auftritte, Proben und Abwesenheiten je Monat, sortiert', () => {
     const plan = jahresplan(
       {

@@ -1,8 +1,11 @@
+import { datumText } from '../data/datum';
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { ladeKontakte, nachfragen } from '../data/kontakte';
+import { SAISON_UPDATE_KEY, saisonUpdateFaellig } from '../data/jahresplan';
 import { kampagnenLink } from '../data/goatcounter';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
@@ -76,13 +79,25 @@ export class HeuteFaellig {
     ...this.band.rehearsals
       .filter((r) => r.date === this.heute)
       .map((r) => ({ icon: 'music_note', label: `Probe${r.time ? ' · ' + r.time + ' Uhr' : ''}${r.place ? ', ' + r.place : ''}`, link: ['/backstage/probe', r.date] })),
+    // Monatsanfang: Saison als Bild an die Band (Termine → Saison → Als Bild teilen)
+    ...(saisonUpdateFaellig(this.heute, this.gelesen(SAISON_UPDATE_KEY))
+      ? [{ icon: 'date_range', label: 'Saison-Update an die Band schicken (Termine → Saison → Als Bild teilen)', link: ['/backstage/termine/saison'] }]
+      : []),
     // Anfragen ohne Antwort (seit 14 Tagen kein neuer Termin dort) – Kontakte unter Termine → Kontakte
     ...nachfragen(ladeKontakte(), this.band.shows, this.heute).map((n) => ({
       icon: 'call',
-      label: `Nachfragen: ${n.name} (angefragt am ${n.angefragt.split('-').reverse().join('.')})`,
+      label: `Nachfragen: ${n.name} (angefragt am ${datumText(n.angefragt)})`,
       link: ['/backstage/termine/kontakte'],
     })),
   ]);
+
+  private gelesen(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
 
   protected readonly werbung = computed<Werbung[]>(() => {
     this.stand();

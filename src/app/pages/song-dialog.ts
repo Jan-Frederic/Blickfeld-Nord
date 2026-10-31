@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, ElementRef, afterNextRender, computed, input, output, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
@@ -76,7 +78,7 @@ export interface SongZeile {
         </label>
       </div>
       @if (quelle(); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
-      @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ p.tag.split('-').reverse().join('.') }}: {{ p.notiz }}</p> }
+      @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ datumText(p.tag) }}: {{ p.notiz }}</p> }
 
       <!-- je Song neu anlegen, damit der Editor die Noten des neuen Songs lädt -->
       @for (s of [song()]; track s.key) {
@@ -133,6 +135,7 @@ export interface SongZeile {
   `,
 })
 export class SongDialog {
+  protected readonly datumText = datumText;
   readonly song = input.required<SongZeile>();
   readonly werte = input.required<SongWerte>();
   readonly quelle = input<string>();

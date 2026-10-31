@@ -16,8 +16,19 @@ const tage = (von: string, bis: string) => Math.round((Date.parse(bis) - Date.pa
  * @param zuletzt Datum, an dem ein Song zuletzt auf einer Setlist stand
  * @param wackelt als „wackelt noch“ markierte Songs (Schlüssel „Titel|Interpret“)
  */
-export function probeTipps(repertoire: Song[], sterne: Map<string, number>, zuletzt: Map<string, string>, heute: string, je = 4, wackelt = new Set<string>(), bereit: Song[] = []): ProbeTipp[] {
+export function probeTipps(
+  repertoire: Song[],
+  sterne: Map<string, number>,
+  zuletzt: Map<string, string>,
+  heute: string,
+  je = 4,
+  wackelt = new Set<string>(),
+  bereit: Song[] = [],
+  baustellen: { song: Song; notiz: string }[] = [],
+): ProbeTipp[] {
   const unsicher = repertoire.filter((s) => wackelt.has(key(s))).map((s) => ({ ...s, grund: 'wackelt noch' }));
+  // Probennotizen wie „Tempo zu schnell“ – gleich nach „wackelt noch“
+  const notiert = baustellen.slice(0, je).map((b) => ({ ...b.song, grund: `Probennotiz: ${b.notiz}` }));
   const neu = bereit.slice(0, je).map((s) => ({ ...s, grund: 'Wunschliste: Noten und Tonart da, noch nie geprobt' }));
   const schwach = repertoire
     .filter((s) => (sterne.get(key(s)) ?? 5) < 3)
@@ -34,5 +45,5 @@ export function probeTipps(repertoire: Song[], sterne: Map<string, number>, zule
     .slice(0, je)
     .map((s) => ({ ...s, grund: 'noch auf keiner Setlist' }));
   const gesehen = new Set<string>();
-  return [...unsicher, ...neu, ...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
+  return [...unsicher, ...notiert, ...neu, ...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
 }

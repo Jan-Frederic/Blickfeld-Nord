@@ -1,3 +1,5 @@
+import { MONATE, datumText, monatText } from '../data/datum';
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,8 +10,6 @@ import { angefragtSetzen, anfrageText, kontaktVon, nachrichtSenden, ortKey } fro
 
 // Backstage → Termine: Saisonplanung – die nächsten 12 Monate als Zeitleiste (Auftritte je Monat, freie Monate
 // markiert) und „Wieder anfragen“ für Orte, an denen vor einem Jahr gespielt wurde (data/saison.ts).
-const LANG = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-const MONATE = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 
 @Component({
   selector: 'app-saison-planung',
@@ -48,7 +48,7 @@ export class SaisonPlanung {
   protected readonly freieMonate = computed(() => this.monate().filter((m) => !m.shows.length).length);
   protected readonly anfragen = computed(() => wiederAnfragen(this.band.shows, this.heute));
   /** freie Monate (ganzer Name) für die Anfrage – ab dem übernächsten Monat */
-  private readonly freiNamen = computed(() => this.monate().slice(2).filter((m) => !m.shows.length).map((m) => `${LANG[Number(m.monat.slice(5, 7)) - 1]}${m.monat.slice(0, 4) !== this.heute.slice(0, 4) ? ' ' + m.monat.slice(0, 4) : ''}`).slice(0, 4));
+  private readonly freiNamen = computed(() => this.monate().slice(2).filter((m) => !m.shows.length).map((m) => `${MONATE[Number(m.monat.slice(5, 7)) - 1]}${m.monat.slice(0, 4) !== this.heute.slice(0, 4) ? ' ' + m.monat.slice(0, 4) : ''}`).slice(0, 4));
   protected readonly kopiert = signal('');
   // fertige Anfrage an den Ansprechpartner (WhatsApp, sonst E-Mail), sonst Teilen bzw. Zwischenablage
   protected async anfragen_(s: Show): Promise<void> {
@@ -63,9 +63,9 @@ export class SaisonPlanung {
     }
   }
   protected name(jm: string): string {
-    return `${MONATE[Number(jm.slice(5, 7)) - 1]} ${jm.slice(2, 4)}`;
+    return monatText(jm, true);
   }
   protected datum(d: string): string {
-    return d.split('-').reverse().join('.');
+    return datumText(d);
   }
 }

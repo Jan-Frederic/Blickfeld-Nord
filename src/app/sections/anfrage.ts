@@ -1,3 +1,4 @@
+import { datumText } from '../data/datum';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
@@ -26,7 +27,7 @@ const T = {
     hello: 'Hallo Blickfeld Nord,', intro: 'wir möchten euch gerne buchen:', startAt: 'Beginn ca.', clock: ' Uhr', approx: 'ca.',
     guestsMail: 'Gäste', venueMail: 'Drinnen / draußen', powerMail: '2 Steckdosen vorhanden', regards: 'Viele Grüße',
     subject: (a: string, d: string) => `Booking-Anfrage: ${a} am ${d}`,
-    formatDate: (d: string) => d.split('-').reverse().join('.'),
+    formatDate: (d: string) => datumText(d),
   },
   en: {
     title: 'Request a quote', steps: ['Date', 'Occasion', 'Contact'],
@@ -44,7 +45,7 @@ const T = {
     hello: 'Hello Blickfeld Nord,', intro: 'we would like to book you:', startAt: 'start approx.', clock: '', approx: 'approx.',
     guestsMail: 'Guests', venueMail: 'Indoors / outdoors', powerMail: '2 power sockets available', regards: 'Best regards',
     subject: (a: string, d: string) => `Booking request: ${a} on ${d}`,
-    formatDate: (d: string) => d.split('-').reverse().join('/'),
+    formatDate: (d: string) => datumText(d, '/'),
   },
   nl: {
     title: 'Offerte aanvragen', steps: ['Datum', 'Gelegenheid', 'Contact'],
@@ -62,7 +63,7 @@ const T = {
     hello: 'Hallo Blickfeld Nord,', intro: 'we willen jullie graag boeken:', startAt: 'aanvang ca.', clock: ' uur', approx: 'ca.',
     guestsMail: 'Gasten', venueMail: 'Binnen / buiten', powerMail: '2 stopcontacten aanwezig', regards: 'Met vriendelijke groet',
     subject: (a: string, d: string) => `Boekingsaanvraag: ${a} op ${d}`,
-    formatDate: (d: string) => d.split('-').reverse().join('-'),
+    formatDate: (d: string) => datumText(d, '-'),
   },
 };
 

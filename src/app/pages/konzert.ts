@@ -1,3 +1,5 @@
+import { datumText, tageZwischen } from '../data/datum';
+
 import repertoire from '../data/repertoire.json';
 import { Component, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -44,7 +46,7 @@ const TEXT = tr(
     notFoundText: 'Diesen Termin gibt es nicht (mehr). Alle aktuellen Termine findet ihr in der',
     list: 'Konzertliste',
     metaFallback: 'Konzert – Blickfeld Nord',
-    metaDate: (d: string) => d.split('-').reverse().join('.'),
+    metaDate: (d: string) => datumText(d),
     metaDescription: (when: string, time: string | undefined, where: string, free: boolean) =>
       `Blickfeld Nord live am ${when}${time ? ' ab ' + time + ' Uhr' : ''}: ${where}${free ? ' – Eintritt frei' : ''}. Partymusik zum Mitsingen und Tanzen.`,
     in: ' in ',
@@ -81,7 +83,7 @@ const TEXT = tr(
     notFoundText: "This date doesn't exist (any more). You'll find all current dates in the",
     list: 'list of shows',
     metaFallback: 'Show – Blickfeld Nord',
-    metaDate: (d: string) => d.split('-').reverse().join('/'),
+    metaDate: (d: string) => datumText(d, '/'),
     metaDescription: (when: string, time: string | undefined, where: string, free: boolean) =>
       `Blickfeld Nord live on ${when}${time ? ' from ' + time : ''}: ${where}${free ? ' – free entry' : ''}. Party music to sing along and dance to.`,
     in: ' in ',
@@ -118,7 +120,7 @@ const TEXT = tr(
     notFoundText: 'Deze datum bestaat niet (meer). Alle actuele data vinden jullie in de',
     list: 'lijst met optredens',
     metaFallback: 'Optreden – Blickfeld Nord',
-    metaDate: (d: string) => d.split('-').reverse().join('-'),
+    metaDate: (d: string) => datumText(d, '-'),
     metaDescription: (when: string, time: string | undefined, where: string, free: boolean) =>
       `Blickfeld Nord live op ${when}${time ? ' vanaf ' + time + ' uur' : ''}: ${where}${free ? ' – gratis entree' : ''}. Partymuziek om mee te zingen en op te dansen.`,
     in: ' in ',
@@ -293,7 +295,7 @@ export class KonzertPage {
   protected readonly bald = computed(() => {
     const s = this.show();
     if (!s) return null;
-    const tage = Math.round((Date.parse(`${s.date}T12:00:00Z`) - Date.parse(`${this.today}T12:00:00Z`)) / 864e5);
+    const tage = tageZwischen(this.today, s.date);
     return tage >= 0 && tage <= 7 ? tage : (s.endDate && s.date < this.today && s.endDate >= this.today ? 0 : null);
   });
   protected readonly past = computed(() => (this.show()!.endDate ?? this.show()!.date) < this.today);

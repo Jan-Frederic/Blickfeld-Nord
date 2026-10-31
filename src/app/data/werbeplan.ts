@@ -3,6 +3,7 @@
 // Angezeigt auf der Backstage-Seite des Auftritts (werbeplan.ts in pages) und als Aufgabe (backstage-aufgaben.ts).
 // Plakat, Story und Instagram-Text gibt es auf der Seite des Auftritts – mit Herkunft und Kampagne im Link.
 // Erledigte Schritte merkt sich das Gerät (bn-werbeplan-<ID>, mit „Abgleich“ teilbar).
+import { datumText } from './datum';
 import { Show } from './band.service';
 import { postText } from './poster';
 
@@ -85,7 +86,7 @@ export function setzeSchritt(showId: string, schritt: string, erledigt: boolean)
 // ---- Texte je Schritt --------------------------------------------------------------------------------------------
 
 const TAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-const wann = (d: string) => `${TAGE[new Date(`${d}T12:00:00`).getDay()]}, ${d.split('-').reverse().join('.')}`;
+const wann = (d: string) => `${TAGE[new Date(`${d}T12:00:00`).getDay()]}, ${datumText(d)}`;
 
 /** fertiger Text für Story, Status oder Beitrag zum jeweiligen Schritt – `link` mit Herkunft und Kampagne */
 export function schrittText(schritt: string, s: Show, link: string): string {

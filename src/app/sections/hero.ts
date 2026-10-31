@@ -10,6 +10,7 @@ const TEXT = tr(
     oclock: ' Uhr',
     free: 'Eintritt frei',
     live: 'Jetzt live!',
+    zum: 'Zum Konzert',
     day: 'Tag',
     days: 'Tage',
     hours: 'Std',
@@ -23,6 +24,7 @@ const TEXT = tr(
     oclock: '',
     free: 'Free entry',
     live: 'Live now!',
+    zum: 'Go to the show',
     day: 'Day',
     days: 'Days',
     hours: 'Hrs',
@@ -36,6 +38,7 @@ const TEXT = tr(
     oclock: '',
     free: 'Gratis entree',
     live: 'Nu live!',
+    zum: 'Naar het optreden',
     day: 'Dag',
     days: 'Dagen',
     hours: 'Uur',
@@ -52,12 +55,12 @@ const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands'
 
 @Component({
   selector: 'app-next-show',
-  imports: [LDatePipe],
+  imports: [LDatePipe, RouterLink],
   template: `
     @if (nextShow; as s) {
       <p class="claim">
         <span>{{ t().next }} <strong>{{ s.date | ldate: 'short' }}@if (s.time) {, {{ s.time }}{{ t().oclock }}}</strong></span>
-        <span>{{ s.venue }} {{ s.city ?? '' }}@if (s.price === 0) { · {{ t().free }}}</span>
+        <span><a class="zum-konzert" [routerLink]="konzertLink" [attr.aria-label]="t().zum + ': ' + s.venue">{{ s.venue }} {{ s.city ?? '' }}</a>@if (s.price === 0) { · {{ t().free }}}</span>
       </p>
       <!-- Countdown: Platz ist immer reserviert (kein Layout-Sprung), Zahlen erscheinen erst im Browser -->
       <div class="countdown" aria-live="off">
@@ -97,6 +100,8 @@ const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands'
     @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(232, 164, 106, .25); } }
     @media (prefers-reduced-motion: reduce) { .live { animation: none; } }
     @media (max-width: 720px) { .claim { letter-spacing: .14em; } }
+    .zum-konzert { color: inherit; text-decoration: underline; text-decoration-color: rgba(232, 164, 106, .6); text-underline-offset: 4px; }
+    .zum-konzert:hover { color: var(--bn-sunset); }
   `,
 })
 export class NextShow {
@@ -107,7 +112,10 @@ export class NextShow {
   protected readonly t = inject(I18n).t(TEXT);
 
   // Nächster öffentlicher Termin, der noch nicht vorbei ist (Beginn + 3 h bzw. Tagesende ohne Uhrzeit)
-  protected readonly nextShow = inject(BandService).publicShows.find((s) => this.end(s) > Date.now());
+  private readonly band = inject(BandService);
+  protected readonly nextShow = this.band.publicShows.find((s) => this.end(s) > Date.now());
+  /** der nächste Auftritt im Startbild führt direkt zur Konzertseite (in der Sprache der Seite) */
+  protected readonly konzertLink = this.nextShow ? inject(I18n).link(`/konzerte/${this.band.showId(this.nextShow)}`) : '/';
 
   protected readonly left = computed(() => {
     const s = this.nextShow;

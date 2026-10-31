@@ -62,6 +62,15 @@ export function probenNotizen(): Map<string, { tag: string; notiz: string }> {
   return out;
 }
 
+/** Probennotizen, die nach „nochmal üben“ klingen („wackelt“, „Tempo zu schnell“, „Einsatz verpasst“ …) */
+const BAUSTELLE = /wackel|unsicher|tempo|zu schnell|zu langsam|nochmal|noch mal|üben|einsatz|vergessen|hakt|schief|klappt nicht|fehlt|holpert/i;
+export function notizBaustellen(notizen: Map<string, { tag: string; notiz: string }>): { key: string; notiz: string }[] {
+  return [...notizen]
+    .filter(([, n]) => BAUSTELLE.test(n.notiz))
+    .sort((a, b) => b[1].tag.localeCompare(a[1].tag))
+    .map(([key, n]) => ({ key, notiz: n.notiz }));
+}
+
 /** bühnenreif: Noten da, Tonart und Tempo eingetragen, mindestens einmal geprobt */
 export const buehnenreif = (f: { noten: boolean; tonart: boolean; geprobt: number }) => f.noten && f.tonart && f.geprobt > 0;
 

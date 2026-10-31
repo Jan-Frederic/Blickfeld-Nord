@@ -1,3 +1,5 @@
+import { datumText } from '../data/datum';
+
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
@@ -267,7 +269,7 @@ export class Setlist {
   });
   protected readonly hierZahl = computed(() => this.entries().filter((e) => !this.isPause(e) && this.hier().has(`${(e as { title: string }).title}|${(e as { artist: string }).artist}`)).length);
   protected datum(d: string): string {
-    return d.split('-').reverse().join('.');
+    return datumText(d);
   }
   protected abwechseln(): void {
     const r = abwechslung(this.entries(), this.hier(), data.tracks, (x) => songInfo(x.title, x.artist)?.bpm);

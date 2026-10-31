@@ -98,6 +98,15 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Titelleiste). Vollständig getaggte PDFs (Lesereihenfolge) kann das Werkzeug (ReportLab) nicht erzeugen.
 - **Live-Check** startet am Ende jedes Deploys (Job „live-check“ in deploy-pages.yml) – auch nach dem Deploy von
   „Screenshots aktualisieren“.
+- **Zusage → Auftritt eintragen** (Termine → Kontakte): setzt die Anfrage auf beantwortet und öffnet „Neuen Termin
+  eintragen“ mit Location und Ort vorbelegt (geklärt angehakt) – Datum und Uhrzeit ergänzen, Zeile für GitHub kopieren.
+- **Saison-Update:** In der ersten Woche jedes Monats steht unter „Heute fällig“ „Saison-Update an die Band
+  schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
+- **Probe-Vorschlag aus Notizen:** Songs, deren letzte Probennotiz nach Baustelle klingt („wackelt“, „Tempo“,
+  „Einsatz“, „nochmal“ …), stehen gleich nach „wackelt noch“ – mit der Notiz als Grund.
+- **Startbild:** Ort und Name des nächsten Konzerts sind ein Link zur Konzertseite.
+- **Pressekit je Konzert → Alles als PDF (für E-Mails):** Eckdaten mit Plakat, die fertigen Texte und die Songliste in
+  einer Datei (Standardschrift, Emojis fallen weg).
 - **Konzertseite → Als Story teilen:** Fans teilen ein Story-Bild mit QR-Code; in der letzten Woche mit Countdown
   („NOCH 3 TAGE“, „MORGEN“, „HEUTE“).
 - **Freunde mit Bild:** In `band.service.ts` beim Freund `bild: 'freunde/name.webp'` (quadratisch, ca. 256 px, unter
