@@ -24,6 +24,8 @@ const publicPages = (): Routes => [
     ),
   },
   { path: 'konzerte/:id', loadComponent: () => import('./pages/konzert').then((m) => m.KonzertPage) },
+  // Pressekit je öffentlichem Konzert (Plakat, Story, Texte, Songliste) – für Veranstalter, nicht für Suchmaschinen
+  { path: 'presse/:id', loadComponent: () => import('./pages/presse-konzert').then((m) => m.PresseKonzertPage), data: { robots: 'noindex' } },
   { path: 'jahr/:jahr', loadComponent: () => import('./pages/jahr').then((m) => m.JahrPage) },
   { path: 'band/:slug', loadComponent: () => import('./pages/member').then((m) => m.MemberPage) },
   {

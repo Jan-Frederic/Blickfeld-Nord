@@ -48,6 +48,17 @@ Was die Angaben bewirken:
 **Termin ändern oder absagen:** Nach dem Datum suchen (z. B. `2026-12-04`), die Zeile anpassen oder ganz löschen.
 Aus „offen“ wird „geklärt“, indem ihr `confirmed: false` in `confirmed: true` ändert.
 
+## Pressekit je Konzert
+
+Unter **Pressekit** stehen über dem Pressetext die **anstehenden öffentlichen Konzerte** (öffentlich und geklärt). Ein
+Klick führt zu `/presse/<datum>` – alles für den Veranstalter: Eckdaten, **Plakat und Story als Bild** (im Browser
+gezeichnet, mit QR-Code zur Konzertseite; Downloads zählen in der Kampagne mit), **fertige Texte** zum Kopieren
+(Beitrag, zwei Wochen/eine Woche vorher, am Tag davor, am Auftrittstag – auf Deutsch) und die **Songliste**
+(Repertoire der offiziellen Playlist, kopieren oder als Textdatei – die Setlist des Abends bleibt im Backstage).
+Die Seiten sind nicht für Suchmaschinen (noindex) und stehen nicht in der Sitemap. Den Link einfach an den
+Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im Booking, nicht mehr im Pressekit
+(Website und PDF).
+
 ## Probe ergänzen
 
 Im Formular oben **Probe** wählen. Die Zeile kommt unter `readonly rehearsals: Rehearsal[] = [`.

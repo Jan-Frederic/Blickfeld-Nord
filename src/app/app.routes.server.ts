@@ -26,6 +26,15 @@ export const serverRoutes: ServerRoute[] = [
       },
     },
     {
+      // Pressekit je Konzert (noindex, nicht in der Sitemap)
+      path: `${prefix}presse/:id`,
+      renderMode: RenderMode.Prerender,
+      getPrerenderParams: async () => {
+        const band = inject(BandService);
+        return band.publicShows.map((s) => ({ id: band.showId(s) }));
+      },
+    },
+    {
       // Jahresrückblick: das laufende Jahr erst ab dem 15.12. (Deploy an dem Tag: deploy-pages.yml, „schedule“)
       path: `${prefix}jahr/:jahr`,
       renderMode: RenderMode.Prerender,

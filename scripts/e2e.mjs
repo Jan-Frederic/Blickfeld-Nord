@@ -236,6 +236,28 @@ test('Handy: Menü öffnet sich, Seite verschiebt sich nicht seitlich', async ()
   return p;
 });
 
+test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat, Story, Texten und Songliste', async () => {
+  const p = await page();
+  await p.go('/presse/');
+  const termin = p.locator('app-presse-termine a').first();
+  await termin.waitFor();
+  expect(!(await p.locator('app-presse app-referenzen').count()), 'Referenzen stehen noch im Pressekit');
+  const reihe = await p.evaluate(() => {
+    const t = document.querySelector('app-presse-termine').getBoundingClientRect().top;
+    const h = [...document.querySelectorAll('app-presse h3')].find((x) => /Pressetext/.test(x.textContent ?? '')).getBoundingClientRect().top;
+    return t < h;
+  });
+  expect(reihe, 'Konzerte stehen nicht über dem Pressetext');
+  await termin.click();
+  await p.waitForURL(/\/presse\/\d{4}-/);
+  const seite = p.locator('app-presse-konzert');
+  await until(async () => (await seite.locator('figure img').count()) === 2, 'Plakat und Story werden nicht gezeichnet');
+  await until(async () => (await seite.locator('.texte pre').count()) >= 4, 'Texte fehlen');
+  await until(async () => (await seite.locator('.songs li').count()) > 20, 'Songliste fehlt');
+  expect(((await seite.locator('figure a[download]').first().getAttribute('download')) ?? '').endsWith('.png'), 'Download des Plakats fehlt');
+  return p;
+});
+
 // ---- Backstage ---------------------------------------------------------------------------------------
 
 test('Backstage: Übersetzung als passend markieren', async () => {

@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { I18n, tr } from '../i18n';
-import { Referenzen } from '../sections/referenzen';
+import { PresseTermine } from '../sections/presse-termine';
 import { Stimmen } from '../sections/stimmen';
 
 // Dateien werden von scripts/build-pressekit.py nach public/presse/ erzeugt
@@ -204,7 +204,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-presse',
-  imports: [MatIconModule, Referenzen, Stimmen],
+  imports: [MatIconModule, PresseTermine, Stimmen],
   template: `
     <section class="section presse">
       <p class="kicker">{{ t().kicker }}</p>
@@ -223,6 +223,8 @@ const TEXT = tr(
         </a>
       </div>
 
+      <app-presse-termine />
+
       <h3>{{ t().pressText }}</h3>
       <div class="press-text">
         @for (p of paragraphs(); track $index) {
@@ -239,7 +241,6 @@ const TEXT = tr(
         </div>
       </div>
 
-      <app-referenzen />
       <app-stimmen />
 
       <h3>{{ t().logos }}</h3>
