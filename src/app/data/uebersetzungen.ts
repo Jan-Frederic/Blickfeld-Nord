@@ -512,6 +512,11 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     nl: 'Specialist uit Rhede voor hekpaalsystemen – voor dubbelstaafmatten, standaard- en ballenvangerpalen en maatwerkconstructies. Made in Germany sinds 1998.',
   },
   {
+    de: 'Guter Kaffee, Frühstück von echten Menschen gemacht, eine Terrasse in der Sonne. Mitten in Rhede ein Ort zum Ankommen.',
+    en: 'Good coffee, breakfast made by real people, a terrace in the sun. A place to arrive, right in the middle of Rhede.',
+    nl: 'Goede koffie, ontbijt gemaakt door echte mensen, een terras in de zon. Midden in Rhede een plek om thuis te komen.',
+  },
+  {
     de: 'Ehrenamtlich im Einsatz für Dingden und Umgebung – rund um die Uhr, wenn es darauf ankommt.',
     en: 'Volunteers serving Dingden and the surrounding area – around the clock, when it matters.',
     nl: 'Als vrijwilligers in actie voor Dingden en omgeving – de klok rond, als het erop aankomt.',

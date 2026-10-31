@@ -426,6 +426,12 @@ export class BandService {
       url: 'https://www.instagram.com/dvm_pfostentechnik/',
       icon: 'instagram',
     },
+    {
+      name: 'Café Nenna',
+      description: 'Guter Kaffee, Frühstück von echten Menschen gemacht, eine Terrasse in der Sonne. Mitten in Rhede ein Ort zum Ankommen.',
+      url: 'https://cafenenna.de/',
+      icon: 'cafe',
+    },
   ];
 
   // Neue Fotos nach public/galerie/ legen (Original + verkleinerte -thumb-Version) und hier eintragen
@@ -493,6 +499,7 @@ export class BandService {
     { date: '2026-09-05', city: 'Hamminkeln-Dingden', venue: 'Nachbarschaftsfest', publicName: 'Nachbarschaftsfest', private: true, confirmed: true },
     { date: '2026-09-25', city: 'Hamminkeln-Ringenberg', venue: 'Gasthof Buschmann', publicName: 'Geburtstag im Gasthof Buschmann', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Gasthof%20Buschmann%2C%20Ringenberg%2C%20Hamminkeln%2C%20NRW', private: true, confirmed: true },
     { date: '2026-12-04', time: '18:00', city: 'Rhede', venue: 'Weihnachtsmarkt', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rhede%2C%20NRW', confirmed: true, price: 0 },
+    { date: '2027-02-19', time: '18:00', city: 'Rhede', venue: 'Café Nenna', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Nenna%2C%20Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-03', time: '18:00', city: 'Rhede', venue: 'Latöchte', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lat%C3%B6chte%2C%20Rhede%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-04-30', time: '18:00', city: 'Hamminkeln-Dingden', venue: 'Café Lotti – Tanz in den Mai', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Lotti%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true, price: 0 },
     { date: '2027-05-02', time: '10:00', city: 'Hamminkeln-Dingden', venue: 'Queens Pub', mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Queens%20Pub%2C%20Dingden%2C%20Hamminkeln%2C%20NRW', confirmed: true, price: 0 },
