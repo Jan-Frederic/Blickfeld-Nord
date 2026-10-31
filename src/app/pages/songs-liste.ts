@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import data from '../data/repertoire.json';
+import { LISTEN, ListenKey, SongEintrag, pdfSongKey, songAbgleich } from '../data/playlisten';
+import { erkennen } from '../data/erkennung';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
@@ -40,12 +41,19 @@ function ladeEntwurf(): Record<string, Werte> {
         Bearbeiten; spielt ihr einen Song anders als im Original, dort „Wir spielen“ und „Capo“ eintragen, das Tempo im
         Proberaum mit <mat-icon class="inline">touch_app</mat-icon> mindestens viermal im Takt tippen.
         <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song – zur Kontrolle der Noten.
-        Angaben bisher bei {{ ausgefuellt() }} von {{ songs.length }} Songs. Auf diesem Gerät gelten Änderungen sofort;
+        Angaben bisher bei {{ ausgefuellt() }} von {{ songs().length }} Songs. Auf diesem Gerät gelten Änderungen sofort;
         auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
       </p>
 
-      <div class="fortschritt" role="progressbar" [attr.aria-valuenow]="ausgefuellt()" aria-valuemin="0" [attr.aria-valuemax]="songs.length" aria-label="Songs mit Tonart oder Tempo">
-        <span [style.width.%]="(ausgefuellt() / songs.length) * 100"></span>
+      <div class="fortschritt" role="progressbar" [attr.aria-valuenow]="ausgefuellt()" aria-valuemin="0" [attr.aria-valuemax]="songs().length" aria-label="Songs mit Tonart oder Tempo">
+        <span [style.width.%]="(ausgefuellt() / (songs().length || 1)) * 100"></span>
+      </div>
+      <div class="listen-chips" role="group" aria-label="Nach Spotify-Liste filtern">
+        <button type="button" [attr.aria-pressed]="liste() === ''" (click)="liste.set('')">Alle <span class="n">{{ songs().length }}</span></button>
+        @for (l of listen; track l.key) {
+          <button type="button" [attr.aria-pressed]="liste() === l.key" (click)="liste.set(l.key)"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }} <span class="n">{{ anzahl()[l.key] || 0 }}</span></button>
+        }
+        <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste <span class="n">{{ anzahl()['ohne'] }}</span></button>
       </div>
       <div class="filter">
         <label>Zeigen
@@ -61,7 +69,7 @@ function ladeEntwurf(): Record<string, Werte> {
         </label>
         <label>Reihenfolge
           <select (change)="sortierung.set($any($event.target).value)">
-            <option value="repertoire">wie im Repertoire</option>
+            <option value="repertoire">alphabetisch</option>
             <option value="haeufig">oft gespielt zuerst</option>
             <option value="lange">lange nicht gespielt zuerst</option>
           </select>
@@ -84,6 +92,14 @@ function ladeEntwurf(): Record<string, Werte> {
               <td class="song">
                 <button type="button" class="oeffnen" (click)="oeffnen(s.key, $event)" [attr.aria-label]="s.title + ' bearbeiten'">{{ s.title }}</button>
                 <span class="a">{{ s.artist }}</span>
+                @if (s.listen.length) {
+                  <span class="listen-icons">
+                    @for (k of s.listen; track k) {
+                      @let l = listeVon(k);
+                      <a [href]="l.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()" [attr.aria-label]="'In Liste ' + l.label + ' – auf Spotify öffnen'" [title]="l.label + ' – auf Spotify öffnen'"><mat-icon>{{ l.icon }}</mat-icon></a>
+                    }
+                  </span>
+                }
                 <span class="a hist">{{ historieText(historie().get(s.key)) }}@if (wackelt()[s.key]) { <span class="wackelt"> · wackelt noch</span> }</span>
               </td>
               <td class="werte">
@@ -174,7 +190,23 @@ function ladeEntwurf(): Record<string, Werte> {
 })
 export class SongsListe {
   protected readonly editUrl = EDIT_URL;
-  protected readonly songs = data.tracks.map((t) => ({ title: t.title, artist: t.artist, key: key(t) }));
+  // alle Spotify-Listen gegeneinander abgeglichen (data/playlisten.ts), dazu Songs, die es nur als Noten gibt
+  protected readonly listen = LISTEN;
+  private readonly notenKeys = signal<string[]>([]);
+  protected readonly songs = computed<SongEintrag[]>(() => songAbgleich(LISTEN, this.notenKeys()));
+  protected readonly liste = signal<ListenKey | '' | 'ohne'>('');
+  protected readonly anzahl = computed(() => {
+    const n: Record<string, number> = { ohne: 0 };
+    for (const s of this.songs()) {
+      if (!s.listen.length) n['ohne']++;
+      for (const k of s.listen) n[k] = (n[k] ?? 0) + 1;
+    }
+    return n;
+  });
+  private readonly listenNachKey = new Map(LISTEN.map((l) => [l.key, l]));
+  protected listeVon(k: ListenKey) {
+    return this.listenNachKey.get(k)!;
+  }
   private readonly gespeichert: Record<string, Werte> = Object.fromEntries(
     SONGINFO.map((s) => [key(s), Object.fromEntries(SONG_FELDER.filter((f) => s[f] !== undefined).map((f) => [f, s[f]])) as Werte]),
   );
@@ -204,7 +236,10 @@ export class SongsListe {
 
   protected readonly gefiltert = computed(() => {
     const q = norm(this.suche().trim());
-    let liste = q ? this.songs.filter((s) => norm(`${s.title} ${s.artist}`).includes(q)) : this.songs;
+    let liste = q ? this.songs().filter((s) => norm(`${s.title} ${s.artist}`).includes(q)) : this.songs();
+    const l = this.liste();
+    if (l === 'ohne') liste = liste.filter((s) => !s.listen.length);
+    else if (l) liste = liste.filter((s) => s.listen.includes(l));
     const z = this.zeigen();
     const noten = this.mitNoten();
     if (z === 'tonart') liste = liste.filter((s) => { const w = this.wert(s.key); return !w.tonart || !w.bpm; });
@@ -228,7 +263,7 @@ export class SongsListe {
   protected wackeltUmschalten(k: string): void {
     this.wackelt.set(wackeltSetzen(k, !this.wackelt()[k]));
   }
-  protected readonly ausgefuellt = computed(() => this.songs.filter((s) => { const w = this.wert(s.key); return w.tonart || w.bpm || w.notiz; }).length);
+  protected readonly ausgefuellt = computed(() => this.songs().filter((s) => { const w = this.wert(s.key); return w.tonart || w.bpm || w.notiz; }).length);
 
   protected wert(k: string): Werte {
     return this.entwurf()[k] ?? this.gespeichert[k] ?? {};
@@ -241,10 +276,30 @@ export class SongsListe {
     this.notenLaden();
   }
   protected notenLaden(): void {
+    void this.notenSongs();
     alleSongNoten()
       .then((n) => this.mitNoten.set(new Map(Object.entries(n).map(([k, v]) => [k, { pdfs: v.pdfs?.length ?? 0, akkorde: !!v.chordpro, fassungen: (v.pdfs ?? []).map((p) => p.name?.trim()).filter((x): x is string => !!x) }]))))
       .catch(() => undefined);
     notenDateien().then((d) => this.notenDateien.set(d)).catch(() => undefined);
+  }
+
+  /** Songs, die es nur als Noten gibt: Noten zu Songs in keiner Liste und PDFs, die keinem Song zugeordnet sind
+   *  und deren Name zu keinem Song der Listen passt – ohne Spotify-Titel, als „Dateiname|“ */
+  private async notenSongs(): Promise<void> {
+    try {
+      const [songs, dateien] = await Promise.all([alleSongNoten(), notenDateien()]);
+      const mitInhalt = Object.entries(songs).filter(([, n]) => n.pdfs?.length || n.chordpro);
+      const genutzt = new Set(mitInhalt.flatMap(([, n]) => (n.pdfs ?? []).map((p) => p.datei)));
+      const bekannt = songAbgleich(LISTEN);
+      const frei: string[] = [];
+      for (const d of dateien.filter((x) => !genutzt.has(x.id))) {
+        const e = await erkennen(d.name, '', () => Promise.reject(new Error('nur Name')), bekannt);
+        if (!e.key && !e.kandidaten.length) frei.push(pdfSongKey(d.name));
+      }
+      this.notenKeys.set([...mitInhalt.map(([k]) => k), ...frei]);
+    } catch {
+      // ohne IndexedDB nur die Listen
+    }
   }
 
   // Dialog „Song bearbeiten“: Zeile anklicken; Voriger/Nächster gehen die Liste so durch, wie sie beim Öffnen gefiltert
@@ -252,9 +307,9 @@ export class SongsListe {
   protected readonly offen = signal<string | null>(null);
   protected readonly dialogListe = signal<string[]>([]);
   protected readonly dialogIndex = computed(() => this.dialogListe().indexOf(this.offen() ?? ''));
-  private readonly songsNachKey = new Map(this.songs.map((s) => [s.key, s]));
+  private readonly songsNachKey = computed(() => new Map(this.songs().map((s) => [s.key, s])));
   protected zeile(k: string) {
-    return this.songsNachKey.get(k)!;
+    return this.songsNachKey().get(k)!;
   }
   protected oeffnen(k: string, e?: Event): void {
     e?.stopPropagation();
@@ -322,7 +377,8 @@ export class SongsListe {
 
   // aktuelle songinfo.ts holen, Liste mit allen Angaben (gespeichert + Entwurf) ersetzen, in die Zwischenablage
   protected async erzeugen(): Promise<void> {
-    const liste: SongInfo[] = this.songs.map((s) => ({ title: s.title, artist: s.artist, ...this.wert(s.key), quelle: this.quelle(s.key) }));
+    // Songs der Website-Liste und alle mit Angaben – reine Noten-Songs ohne Angaben bleiben draußen
+    const liste: SongInfo[] = this.songs().filter((s) => s.listen.includes('website') || Object.keys(this.wert(s.key)).length || this.quelle(s.key)).map((s) => ({ title: s.title, artist: s.artist, ...this.wert(s.key), quelle: this.quelle(s.key) }));
     try {
       const res = await fetch(`${RAW_URL}?t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error(String(res.status));

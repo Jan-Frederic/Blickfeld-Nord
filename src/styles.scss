@@ -169,3 +169,17 @@ mat-icon, .material-icons { flex-shrink: 0; }
 .menu-sprachen > summary { list-style: none; }
 .menu-sprachen > summary::-webkit-details-marker { display: none; }
 .menu-sprachen .menu-item.unter { padding-left: 56px; min-height: 40px; }
+
+// Backstage → Songs: Filter nach Spotify-Liste und Listen-Symbole je Song (Budget von songs-liste)
+app-songs-liste {
+  .listen-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .listen-chips button { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .82rem; cursor: pointer; }
+  .listen-chips button:hover { color: var(--bn-ink); }
+  .listen-chips button[aria-pressed='true'] { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+  .listen-chips mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  .listen-chips .n { opacity: .7; font-size: .75rem; }
+  .listen-icons { display: flex; gap: 2px; margin-top: 2px; }
+  .listen-icons a { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #1db954; }
+  .listen-icons a:hover { background: rgba(29, 185, 84, .15); }
+  .listen-icons mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}

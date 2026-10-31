@@ -332,6 +332,20 @@ test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', 
   return p;
 });
 
+test('Backstage: Songs – Filter nach Spotify-Liste, Symbole verlinken die Liste', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/');
+  const chips = p.locator('app-songs-liste .listen-chips button');
+  await until(async () => (await chips.allInnerTexts()).join(' ').includes('Wunschliste'), 'Listen-Filter fehlen');
+  await chips.filter({ hasText: 'Website' }).click();
+  await until(async () => (await chips.filter({ hasText: 'Website' }).getAttribute('aria-pressed')) === 'true', 'Filter nicht gewählt');
+  const link = p.locator('app-songs-liste tbody tr .listen-icons a').first();
+  await until(async () => ((await link.getAttribute('href')) ?? '').startsWith('https://open.spotify.com/playlist/'), 'Symbol verlinkt nicht nach Spotify');
+  await chips.filter({ hasText: 'Ohne Liste' }).click();
+  await until(async () => (await p.locator('app-songs-liste tbody tr').first().innerText()).includes('Kein Song gefunden'), 'Ohne-Liste-Filter zeigt Songs');
+  return p;
+});
+
 test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async () => {
   const p = await page();
   await p.go('/backstage/songs/');

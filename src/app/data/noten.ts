@@ -190,11 +190,12 @@ async function markierungenVon(dateien: Set<string>): Promise<Record<string, Str
 
 // ---- Aufräumen (Backstage → Abgleich) ---------------------------------------------------------------------
 
-/** Noten von Songs, die nicht (mehr) im Repertoire stehen, und PDFs, die kein Song nutzt */
+/** leere Noten-Einträge von Songs, die in keiner Liste (mehr) stehen, und PDFs, die kein Song nutzt – Songs mit
+ *  PDF oder Akkordblatt bleiben: sie stehen unter Songs auch ohne Spotify-Titel */
 export async function notenVerwaist(repertoire: Set<string>): Promise<{ songs: string[]; dateien: NotenDateiInfo[] }> {
   const songs = await alleSongNoten();
-  const weg = Object.keys(songs).filter((k) => !repertoire.has(k));
-  const genutzt = new Set(Object.entries(songs).filter(([k]) => repertoire.has(k)).flatMap(([, n]) => (n.pdfs ?? []).map((p) => p.datei)));
+  const weg = Object.keys(songs).filter((k) => !repertoire.has(k) && !songs[k].pdfs?.length && !songs[k].chordpro);
+  const genutzt = new Set(Object.entries(songs).filter(([k]) => !weg.includes(k)).flatMap(([, n]) => (n.pdfs ?? []).map((p) => p.datei)));
   return { songs: weg, dateien: (await notenDateien()).filter((d) => !genutzt.has(d.id)) };
 }
 

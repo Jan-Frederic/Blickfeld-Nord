@@ -9,7 +9,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PLAYLIST_ID = '6O7apXN53rSGaWGhP8S8TW';
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'app', 'data', 'repertoire.json');
+const DATA = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'app', 'data');
+const OUT = join(DATA, 'repertoire.json');
+// Weitere Listen nur fürs Backstage (Songs → Liste gleicht alle gegeneinander ab) – Reihenfolge der Songs bleibt
+const BACKSTAGE_LISTEN = [
+  { key: 'setlist', id: '6rE8puTezdETpgZxMCrzP2' },
+  { key: 'probe', id: '7eJtC9Qfm7NvjAVJWh3Gfx' },
+  { key: 'repertoire', id: '5gQJdIVofQQBFc3tRXDOwA' },
+  { key: 'wunschliste', id: '65HmuHebsSOpzWQKNHAkL3' },
+  { key: 'archiv', id: '1KYYKkZiF8h9GdXPgSIISc' },
+];
+const LISTEN_OUT = join(DATA, 'playlisten.json');
 
 const { SPOTIFY_CLIENT_ID: id, SPOTIFY_CLIENT_SECRET: secret, SPOTIFY_REFRESH_TOKEN: refresh } = process.env;
 if (!id || !secret || !refresh) {
@@ -20,9 +30,10 @@ if (!id || !secret || !refresh) {
   process.exit(1);
 }
 
-async function json(res, what) {
+async function json(res, what, weiter = false) {
   if (!res.ok) {
     console.error(`${what} fehlgeschlagen: HTTP ${res.status} ${await res.text()}`);
+    if (weiter) return undefined;
     process.exit(1);
   }
   return res.json();
@@ -44,26 +55,33 @@ if (auth.refresh_token && auth.refresh_token !== refresh) {
   console.warn('Hinweis: Spotify hat ein neues Refresh-Token ausgegeben – das alte bleibt in der Regel gültig.');
 }
 
-const tracks = [];
-// Seit der API-Umstellung im Februar/März 2026 heißt der Endpunkt …/items (früher …/tracks)
-// und jeder Eintrag steckt unter „item“ statt „track“ – beides wird unterstützt.
-let url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/items?limit=50&market=DE`;
-while (url) {
-  const page = await json(await fetch(url, { headers: { Authorization: `Bearer ${token}` } }), 'Playlist laden');
-  for (const entry of page.items) {
-    const track = entry.item ?? entry.track;
-    if (!track || track.type !== 'track') continue; // Podcasts/gelöschte Titel überspringen
-    tracks.push({
-      title: track.name,
-      artist: track.artists.map((a) => a.name).join(', '),
-      year: Number(track.album?.release_date?.slice(0, 4)) || undefined,
-      // Länge in Sekunden – für die Spieldauer der Sets in der Backstage-Setlist
-      duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : undefined,
-      url: track.external_urls?.spotify,
-    });
+/** alle Titel einer Playlist in ihrer Reihenfolge; undefined, wenn Spotify sie nicht herausgibt */
+async function playlist(id, weiter = false) {
+  const tracks = [];
+  // Seit der API-Umstellung im Februar/März 2026 heißt der Endpunkt …/items (früher …/tracks)
+  // und jeder Eintrag steckt unter „item“ statt „track“ – beides wird unterstützt.
+  let url = `https://api.spotify.com/v1/playlists/${id}/items?limit=50&market=DE`;
+  while (url) {
+    const page = await json(await fetch(url, { headers: { Authorization: `Bearer ${token}` } }), `Playlist ${id} laden`, weiter);
+    if (!page) return undefined;
+    for (const entry of page.items) {
+      const track = entry.item ?? entry.track;
+      if (!track || track.type !== 'track') continue; // Podcasts/gelöschte Titel überspringen
+      tracks.push({
+        title: track.name,
+        artist: track.artists.map((a) => a.name).join(', '),
+        year: Number(track.album?.release_date?.slice(0, 4)) || undefined,
+        // Länge in Sekunden – für die Spieldauer der Sets in der Backstage-Setlist
+        duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : undefined,
+        url: track.external_urls?.spotify,
+      });
+    }
+    url = page.next;
   }
-  url = page.next;
+  return tracks;
 }
+
+const tracks = await playlist(PLAYLIST_ID);
 
 // Doppelte entfernen, alphabetisch nach Titel
 const seen = new Set();
@@ -84,3 +102,22 @@ if (previous === JSON.stringify(unique)) {
   writeFileSync(OUT, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), tracks: unique }, null, 2) + '\n');
   console.log(`Repertoire aktualisiert: ${unique.length} Songs.`);
 }
+
+// Backstage-Listen: eine Liste, die Spotify (noch) nicht herausgibt, behält ihren letzten Stand
+let vorher = { listen: [] };
+try {
+  vorher = JSON.parse(readFileSync(LISTEN_OUT, 'utf8'));
+} catch {}
+const listen = [];
+for (const l of BACKSTAGE_LISTEN) {
+  const info = await json(await fetch(`https://api.spotify.com/v1/playlists/${l.id}?fields=name`, { headers: { Authorization: `Bearer ${token}` } }), `Liste ${l.key}`, true);
+  const titel = await playlist(l.id, true);
+  const alt = vorher.listen.find((x) => x.key === l.key);
+  if (!titel) console.warn(`Liste ${l.key} nicht lesbar – bleibt beim letzten Stand.`);
+  else console.log(`Liste ${l.key}: „${info?.name ?? '?'}“, ${titel.length} Songs.`);
+  listen.push({ key: l.key, id: l.id, name: info?.name ?? alt?.name ?? '', tracks: titel ?? alt?.tracks ?? [] });
+}
+if (JSON.stringify(vorher.listen) !== JSON.stringify(listen)) {
+  writeFileSync(LISTEN_OUT, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), listen }, null, 2) + '\n');
+  console.log('Backstage-Listen aktualisiert.');
+} else console.log('Backstage-Listen unverändert.');

@@ -81,6 +81,20 @@ darunter einfügen:
   meldet Auftritte und Proben, die in eine Abwesenheit fallen.
 - Das Repo ist öffentlich: als Grund nur ein Stichwort, keine Details.
 
+## Spotify-Listen
+
+Die **offizielle** Playlist steht als Repertoire auf der Startseite (`repertoire.json`). Nur fürs Backstage gibt es
+dazu **Setlist, Probe, Repertoire, Wunschliste und Archiv** (`playlisten.json`). Beide holt GitHub montags früh
+von Spotify (Actions → „Repertoire aktualisieren“, auch per Knopfdruck); die Listen-IDs stehen in
+`scripts/sync-repertoire.mjs`. Gibt Spotify eine Liste nicht heraus, bleibt ihr letzter Stand (Hinweis im Protokoll).
+
+Unter **Songs → Liste** stehen alle Songs aller Listen, gegeneinander abgeglichen (gleicher Titel ohne Zusatz wie
+„Remastered“ und gleicher erster Interpret = derselbe Song). Je Song zeigen grüne Symbole, in welchen Listen er
+steht – ein Tipp darauf öffnet die Liste in Spotify: 🌐 Website, Setlist, Probe, Repertoire, ♥ Wunschliste,
+Archiv. Oben filtern Chips nach einer Liste oder „Ohne Liste“: Songs, zu denen es nur Noten gibt (Noten zu
+einem Song, der in keiner Liste steht, oder ein PDF, das keinem Song zugeordnet ist und zu keinem passt –
+dann heißt der Song wie die Datei).
+
 ## Tonart und Tempo der Songs
 
 Für Setlist, Bühnen-Modus und Laufzettel im Backstage. Für 33 Songs sind die Werte der **Originalaufnahme** schon

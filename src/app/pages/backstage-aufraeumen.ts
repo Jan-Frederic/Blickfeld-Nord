@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import data from '../data/repertoire.json';
+import { LISTEN, songAbgleich } from '../data/playlisten';
 import { BandService } from '../data/band.service';
 import { BEREICHE, alleSchluessel, cacheLeeren, entfernen, vergangene, verwaist } from '../data/aufraeumen';
 import { notenAllesLoeschen, notenEntfernen, notenVerwaist } from '../data/noten';
@@ -34,7 +34,7 @@ const ALTER = [
       <button type="button" [disabled]="!alt().length" (click)="bereichLoeschen('vergangene Einträge', alt())"><mat-icon>auto_delete</mat-icon> {{ alt().length }} {{ alt().length === 1 ? 'Eintrag' : 'Einträge' }} entfernen</button>
 
       <h5>Verwaiste Einträge</h5>
-      <p>Daten zu Auftritten, die es nicht mehr gibt (abgesagt oder verschoben), Noten zu Songs, die nicht mehr im Repertoire
+      <p>Daten zu Auftritten, die es nicht mehr gibt (abgesagt oder verschoben), leere Noten-Einträge zu Songs, die in keiner Spotify-Liste
         stehen, und PDFs, die kein Song nutzt.</p>
       <button type="button" [disabled]="!verwaistZahl()" (click)="verwaistEntfernen()"><mat-icon>cleaning_services</mat-icon> {{ verwaistText() }}</button>
 
@@ -92,7 +92,8 @@ export class BackstageAufraeumen {
   }
 
   // Verwaistes: localStorage sofort, Noten asynchron
-  private readonly repertoire = new Set(data.tracks.map((t) => `${t.title}|${t.artist}`));
+  // Songs aller Spotify-Listen (Website und Backstage-Listen)
+  private readonly repertoire = new Set(songAbgleich(LISTEN).map((s) => s.key));
   private readonly verwaisteNoten = signal<{ songs: string[]; dateien: { id: string }[] }>({ songs: [], dateien: [] });
   private readonly verwaisteKeys = computed(() => (this.stand(), verwaist(new Set(this.letzterTag.keys()))));
   protected readonly verwaistZahl = computed(() => this.verwaisteKeys().length + this.verwaisteNoten().songs.length + this.verwaisteNoten().dateien.length);
