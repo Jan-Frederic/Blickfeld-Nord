@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '43 7 * * 3'
   workflow_dispatch:
+  # zusätzlich nach jedem erfolgreichen Deploy – so fällt ein kaputter Stand sofort auf
+  workflow_run:
+    workflows: ['Deploy to GitHub Pages']
+    types: [completed]
 
 permissions:
   contents: read
@@ -15,6 +19,8 @@ permissions:
 
 jobs:
   live:
+    # nach einem Deploy nur, wenn er geklappt hat
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     env:
       TITEL: Probleme auf der Live-Seite
@@ -28,6 +34,10 @@ jobs:
         with:
           node-version: 22
 
+      - name: Kurz warten, bis GitHub Pages den neuen Stand ausliefert
+        if: github.event_name == 'workflow_run'
+        run: sleep 90
+
       - name: Live-Seite prüfen
         run: node scripts/live-check.mjs --bericht livebericht.md
 
@@ -36,7 +46,7 @@ jobs:
           nummer=$(gh issue list --state open --search "\"$TITEL\" in:title" --json number --jq '.[0].number')
           if [ -s livebericht.md ]; then
             {
-              echo "Der wöchentliche Live-Check hat auf blickfeld-nord.de Probleme gefunden:"
+              echo "Der Live-Check (wöchentlich und nach jedem Deploy) hat auf blickfeld-nord.de Probleme gefunden:"
               echo
               cat livebericht.md
               echo

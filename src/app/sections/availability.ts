@@ -20,6 +20,7 @@ const T = {
     pickFree: 'frei – Termin anfragen', states: { free: 'frei', booked: 'belegt', option: 'reserviert', past: 'vergangen' },
     legend: ['frei – zum Anfragen antippen', 'reserviert / angefragt', 'belegt'],
     label: (d: number, m: string, y: number) => `${d}. ${m} ${y}`,
+    samstage: 'Noch freie Samstage', springe: (m: string) => `${m} anzeigen`,
   },
   en: {
     title: 'Availability', prev: 'Previous month', next: 'Next month',
@@ -29,6 +30,7 @@ const T = {
     pickFree: 'free – request this date', states: { free: 'free', booked: 'booked', option: 'reserved', past: 'past' },
     legend: ['free – tap to request', 'reserved / requested', 'booked'],
     label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
+    samstage: 'Saturdays still free', springe: (m: string) => `show ${m}`,
   },
   nl: {
     title: 'Beschikbaarheid', prev: 'Vorige maand', next: 'Volgende maand',
@@ -38,6 +40,7 @@ const T = {
     pickFree: 'vrij – datum aanvragen', states: { free: 'vrij', booked: 'geboekt', option: 'gereserveerd', past: 'voorbij' },
     legend: ['vrij – tik om aan te vragen', 'gereserveerd / aangevraagd', 'geboekt'],
     label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
+    samstage: 'Nog vrije zaterdagen', springe: (m: string) => `${m} tonen`,
   },
 } satisfies Record<string, { states: Record<DayState, string> } & Record<string, unknown>>;
 // So weit lässt sich in die Zukunft blättern
@@ -66,6 +69,14 @@ function iso(y: number, m: number, d: number): string {
           </button>
         </div>
       </div>
+
+      @if (freieSamstage().length) {
+        <p class="samstage"><span>{{ t().samstage }}:</span>
+          @for (f of freieSamstage(); track f.offset) {
+            <button type="button" [class.an]="offset() === f.offset" (click)="offset.set(f.offset)" [attr.aria-label]="t().springe(f.name)">{{ f.name }} <b>{{ f.anzahl }}</b></button>
+          }
+        </p>
+      }
 
       <p class="note">
         <mat-icon>info</mat-icon>
@@ -176,6 +187,22 @@ export class Availability {
     }
     return map;
   })();
+
+  // Überblick für Veranstalter: je Monat die Zahl der noch freien Samstage (antippen springt zum Monat)
+  protected readonly freieSamstage = computed(() =>
+    Array.from({ length: MONTHS_AHEAD + 1 }, (_, offset) => {
+      const erster = new Date(this.now.getFullYear(), this.now.getMonth() + offset, 1);
+      let anzahl = 0;
+      for (const d = new Date(erster); d.getMonth() === erster.getMonth(); d.setDate(d.getDate() + 1)) {
+        const key = iso(d.getFullYear(), d.getMonth(), d.getDate());
+        if (d.getDay() === 6 && key > this.today && !this.busy.has(key)) anzahl++;
+      }
+      const jahr = erster.getFullYear() !== this.now.getFullYear() ? ` ${String(erster.getFullYear()).slice(2)}` : '';
+      return { offset, anzahl, name: this.t().months[erster.getMonth()].slice(0, 3) + jahr };
+    })
+      .filter((f) => f.anzahl)
+      .slice(0, 8),
+  );
 
   private readonly month = computed(() => {
     const d = new Date(this.now.getFullYear(), this.now.getMonth() + this.offset(), 1);

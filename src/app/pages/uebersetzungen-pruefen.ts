@@ -1,3 +1,4 @@
+import { PressetextePruefen } from './pressetexte-pruefen';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageUebersetzungen } from './backstage-uebersetzungen';
@@ -26,7 +27,7 @@ function load(): Pruefung {
 
 @Component({
   selector: 'app-uebersetzungen-pruefen',
-  imports: [MatIconModule, BackstageUebersetzungen, UiTextePruefen],
+  imports: [MatIconModule, BackstageUebersetzungen, UiTextePruefen, PressetextePruefen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -37,6 +38,7 @@ function load(): Pruefung {
       </p>
 
       <app-backstage-uebersetzungen />
+      <app-pressetexte-pruefen />
 
       <div class="controls">
         <div class="seg" role="group" aria-label="Sprache">

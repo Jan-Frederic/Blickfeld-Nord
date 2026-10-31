@@ -157,6 +157,7 @@ export const routes: Routes = [
   { path: 'booking/nl', redirectTo: '/nl/booking' },
   // Backstage: nur für die Band, nur auf Deutsch
   // Backstage-Bereiche (vor backstage/:id, damit sie nicht als Auftritt gelten)
+  { path: 'backstage/termine/saison', loadComponent: () => import('./pages/termine-saison').then((m) => m.TermineSaison), title: 'Saison – Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/termine', loadComponent: () => import('./pages/backstage-termine').then((m) => m.BackstageTermine), title: 'Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/zahlen', loadComponent: () => import('./pages/backstage-zahlen').then((m) => m.BackstageZahlen), title: 'Zahlen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   { path: 'backstage/material', loadComponent: () => import('./pages/backstage-material').then((m) => m.BackstageMaterial), title: 'Material – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },

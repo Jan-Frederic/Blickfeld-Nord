@@ -7,6 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
 import { PosterFormat, postText, renderDanke, shareImage, sharePoster } from '../data/poster';
+import { kontaktVon, nachrichtSenden } from '../data/kontakte';
+import { KontaktKarte } from './kontakt-karte';
 import { TOOLS } from './backstage-tool';
 import { printLaufzettel } from './laufzettel';
 import { printMixerZettel } from './mixer-zettel';
@@ -28,7 +30,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -82,6 +84,8 @@ const DAY = 24 * 60 * 60 * 1000;
             <dd class="comment">{{ s.comment || '–' }}</dd>
           </div>
         </dl>
+
+        <app-kontakt-karte [show]="s" />
 
         <div class="actions">
           <button mat-stroked-button (click)="calendar()"><mat-icon>event_available</mat-icon> In den Kalender</button>
@@ -303,20 +307,12 @@ export class BackstageShow implements OnDestroy {
       'Viele Grüße',
       'Blickfeld Nord',
     ].join('\n');
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `Pressekit – ${s.venue}`, text });
-        return;
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(text);
+    // an den hinterlegten Ansprechpartner (WhatsApp, sonst E-Mail), sonst Teilen-Menü bzw. Zwischenablage
+    const k = kontaktVon(s);
+    const gruss = k?.name ? text.replace('Hallo,', `Hallo ${k.name},`) : text;
+    if ((await nachrichtSenden(k, `Pressekit – ${s.venue}`, gruss)) === 'kopiert') {
       this.presseGeteilt.set(true);
       setTimeout(() => this.presseGeteilt.set(false), 2000);
-    } catch {
-      window.prompt('Text kopieren:', text);
     }
   }
 

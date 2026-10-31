@@ -87,7 +87,7 @@ function drawQr(ctx: CanvasRenderingContext2D, text: string, x: number, y: numbe
 }
 
 /** Hintergrund mit Logo-Motiv (oder einem Foto) und Schimmer – gemeinsam für Plakat, Story und Danke-Story */
-async function leinwand(format: PosterFormat, foto?: string) {
+async function leinwand(format: PosterFormat, foto?: string, skala = 1) {
   const { h: H, heroY, gap, footer } = FORMAT[format];
   // Schriften der Website sicher geladen, bevor gezeichnet wird
   await Promise.all([
@@ -99,10 +99,12 @@ async function leinwand(format: PosterFormat, foto?: string) {
   ]);
   const hero = await loadImage(foto ?? 'hero.webp');
 
+  // skala > 1: dieselbe Zeichnung in höherer Auflösung (Druck) – alle Maße bleiben in Plakat-Pixeln
   const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = W * skala;
+  canvas.height = H * skala;
   const ctx = canvas.getContext('2d')!;
+  ctx.scale(skala, skala);
 
   ctx.fillStyle = NIGHT;
   ctx.fillRect(0, 0, W, H);
@@ -158,8 +160,8 @@ const alsPng = (canvas: HTMLCanvasElement) =>
   new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Bild konnte nicht erzeugt werden'))), 'image/png'));
 
 /** Plakat bzw. Story; mit `link` unten rechts ein QR-Code zur Konzertseite; `kopf` statt „LIVE“ (z. B. „NOCH 3 TAGE“) */
-export async function renderPoster(s: Show, format: PosterFormat = 'feed', link?: string, kopf = 'LIVE'): Promise<Blob> {
-  const base = await leinwand(format);
+export async function renderPoster(s: Show, format: PosterFormat = 'feed', link?: string, kopf = 'LIVE', skala = 1): Promise<Blob> {
+  const base = await leinwand(format, undefined, skala);
   const { canvas, ctx, H, gap, footer, cx } = base;
   let y = base.y;
 

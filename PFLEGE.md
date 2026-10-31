@@ -68,6 +68,21 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Backstage → Termine → Saisonplanung:** die nächsten 12 Monate auf einer Zeitleiste (freie Monate gestrichelt,
   offene Anfragen orange, private kursiv) und **Wieder anfragen**: Orte, an denen vor einem Jahr gespielt wurde und
   noch nichts Neues geplant ist – mit Jahrestag und „am besten bis …“ (drei Monate vorher).
+- **Backstage → Termine → Saison** (`/backstage/termine/saison`, auch über die Saisonplanung): 12 Monate mit
+  Auftritten, Proben und Abwesenheiten, freie Monate markiert, „Wieder anfragen“ – **Drucken / als PDF** gibt alles
+  auf einer A4-Seite (quer) für die Bandbesprechung aus.
+- **Wieder anfragen → Anfrage schreiben:** fertige Nachricht („letztes Jahr am … bei euch – Lust auf eine
+  Wiederholung? Noch frei: März, Juli …“) an den Ansprechpartner.
+- **Ansprechpartner** (Backstage eines Auftritts): Name, WhatsApp/Telefon, E-Mail je Ort – gilt für alle Auftritte
+  dort, bleibt auf den Geräten und im OneDrive (`bn-kontakte`), nie im Repository. Pressekit-Link und Anfrage gehen
+  dann direkt per WhatsApp (sonst E-Mail), ohne Kontakt über Teilen bzw. Zwischenablage.
+- **Booking → Verfügbarkeit:** „Noch freie Samstage“ je Monat (antippen springt hin) – private Termine nur als belegt.
+- **Übersetzungen → Pressekit-Texte gegenlesen:** Beitrag und Stories auf Deutsch, Englisch und Niederländisch
+  nebeneinander (Vorlagen in `src/app/data/presse-texte.ts`).
+- **Konzertseite → Gespielt an diesem Abend:** Songs der offiziellen Playlist sind zum Nachhören auf Spotify verlinkt.
+- **Live-Check** läuft jetzt auch nach jedem Deploy (90 s später) und prüft zusätzlich alle Pressekits (Status, noindex)
+  und wichtige Inhalte (Konzertliste, Anstehende Konzerte, Verfügbarkeit); Probleme → Issue „Probleme auf der Live-Seite“.
+- **Plakat zum Drucken** wird in doppelter (A4) bzw. dreifacher (A3) Auflösung gezeichnet.
 - **Konzertseite → Als Story teilen:** Fans teilen ein Story-Bild mit QR-Code; in der letzten Woche mit Countdown
   („NOCH 3 TAGE“, „MORGEN“, „HEUTE“).
 - **Freunde mit Bild:** In `band.service.ts` beim Freund `bild: 'freunde/name.webp'` (quadratisch, ca. 256 px, unter

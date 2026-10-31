@@ -60,6 +60,23 @@ for (const [p, erwartet] of [['/sw.js', 200], ['/site.webmanifest', 200], ['/bac
   if (r.status !== erwartet) probleme.push(`${p}: Status ${r.status || r.fehler} statt ${erwartet}`);
 }
 
+// 3b. Inhalte: was jede Änderung der letzten Zeit sichtbar machen soll – Pressekit je Konzert (noindex, nicht in der
+// Sitemap) für jedes Konzert der Sitemap, die Liste „Anstehende Konzerte“ im Pressekit, Konzertliste auf der Startseite
+const konzerte = [...new Set(seiten.map((u) => /\/konzerte\/([^/]+)\/?$/.exec(u)?.[1]).filter(Boolean))];
+await parallel(konzerte, 4, async (id) => {
+  const r = await holen(`${BASIS}/presse/${id}/`);
+  if (r.status !== 200) return probleme.push(`Pressekit /presse/${id}/: Status ${r.status || r.fehler}`);
+  if (!/name="robots" content="noindex/.test(r.text)) probleme.push(`Pressekit /presse/${id}/: noindex fehlt (soll nicht bei Google erscheinen)`);
+});
+for (const [p, muster, was] of [
+  ['/presse/', /presse-termine|app-presse-termine/, 'Liste „Anstehende Konzerte“'],
+  ['/', /app-tour/, 'Konzertliste'],
+  ['/booking/', /app-availability/, 'Verfügbarkeitskalender'],
+]) {
+  const r = await holen(BASIS + p);
+  if (r.status === 200 && !muster.test(r.text)) probleme.push(`${p}: ${was} fehlt`);
+}
+
 // 4. Stand des Deploys
 const start = await holen(`${BASIS}/`, { methode: 'HEAD' });
 const geaendert = Date.parse(start.headers.get('last-modified') ?? '');
@@ -68,7 +85,7 @@ if (geaendert) {
   if (tage > 3) probleme.push(`Letzter Deploy ist ${Math.floor(tage)} Tage alt – der tägliche Deploy läuft offenbar nicht (Actions → Deploy to GitHub Pages)`);
 }
 
-console.log(`Live-Check ${BASIS}: ${seiten.length} Seiten, ${dateien.size} Dateien geprüft – ${probleme.length ? probleme.length + ' Probleme' : 'alles erreichbar'}.`);
+console.log(`Live-Check ${BASIS}: ${seiten.length} Seiten, ${konzerte.length} Pressekits, ${dateien.size} Dateien geprüft – ${probleme.length ? probleme.length + ' Probleme' : 'alles erreichbar'}.`);
 for (const p of probleme) console.log(`  ✗ ${p}`);
 if (bericht) writeFileSync(bericht, probleme.map((p) => `- ${p}`).join('\n') + (probleme.length ? '\n' : ''));
 if (!bericht && probleme.length) process.exit(1);

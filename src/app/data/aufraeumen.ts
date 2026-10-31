@@ -21,6 +21,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
   { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
   { id: 'probe', label: 'Probenplanung', praefixe: ['bn-probe-'], probe: true },
+  { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
   { id: 'wackelt', label: '„Wackelt noch“-Liste', praefixe: ['bn-wackelt'], hinweis: 'deine Übe-Liste für den Probe-Vorschlag' },
   { id: 'aufgaben', label: 'Aufgaben und Prüf-Häkchen', praefixe: ['bn-aufgaben', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'] },

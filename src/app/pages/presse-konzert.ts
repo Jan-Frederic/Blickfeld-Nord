@@ -228,7 +228,7 @@ export class PresseKonzertPage {
     if (!s) return;
     this.druckLaeuft.set(true);
     try {
-      const [{ PDFDocument, rgb }, bild] = await Promise.all([import('pdf-lib'), renderPoster(s, 'story', kampagnenLink(this.id(), 'plakat'))]);
+      const [{ PDFDocument, rgb }, bild] = await Promise.all([import('pdf-lib'), renderPoster(s, 'story', kampagnenLink(this.id(), 'plakat'), 'LIVE', format === 'A3' ? 3 : 2)]);
       const pdf = await PDFDocument.create();
       const [w, h] = format === 'A3' ? [841.89, 1190.55] : [595.28, 841.89];
       const seite = pdf.addPage([w, h]);

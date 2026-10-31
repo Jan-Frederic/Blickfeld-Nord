@@ -267,6 +267,22 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   await until(async () => (await p.locator('app-konzert button', { hasText: 'Als Story teilen' }).count()) === 1, 'Story-Knopf auf der Konzertseite fehlt');
   await p.go('/backstage/termine/');
   await until(async () => /Saisonplanung/.test(await p.locator('app-saison-planung').innerText().catch(() => '')), 'Saisonplanung fehlt');
+  // eigene Seite Termine → Saison mit Auftritten und Proben
+  await p.locator('app-saison-planung summary').click();
+  await p.locator('app-saison-planung .mehr a').click();
+  await p.waitForURL(/\/backstage\/termine\/saison/);
+  await until(async () => (await p.locator('app-termine-saison article').count()) === 12, 'Saison-Seite zeigt keine 12 Monate');
+  await until(async () => (await p.locator('app-termine-saison li.probe').count()) > 0, 'Proben fehlen in der Saison');
+  // Ansprechpartner beim Auftritt bleibt gespeichert und gilt am selben Ort
+  await p.go(`/backstage/${new URL(BASE + concerts[0]).pathname.split('/')[2]}`);
+  const kontakt = p.locator('app-kontakt-karte');
+  await kontakt.locator('summary').click();
+  await kontakt.locator('input').first().fill('Anna');
+  await kontakt.locator('input').first().blur();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-kontakte') ?? '')).includes('Anna'), 'Kontakt wird nicht gespeichert');
+  // Booking: freie Samstage je Monat
+  await p.go('/booking/');
+  await until(async () => (await p.locator('app-availability .samstage button').count()) > 0, 'Freie Samstage fehlen im Booking');
   return p;
 });
 

@@ -1,3 +1,4 @@
+import repertoire from '../data/repertoire.json';
 import { Component, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,6 +34,7 @@ const TEXT = tr(
     photo: 'Foto',
     readAll: 'Ganzen Rückblick lesen',
     played: 'Gespielt an diesem Abend',
+    listen: 'auf Spotify anhören',
     highlight: 'Song des Abends',
     video: 'Video auf Instagram',
     more: 'Ihr wollt uns auch bei euch haben?',
@@ -68,6 +70,7 @@ const TEXT = tr(
     photo: 'Photo',
     readAll: 'Read the full story',
     played: 'Played that night',
+    listen: 'listen on Spotify',
     highlight: 'Song of the night',
     video: 'Video on Instagram',
     more: 'Want us to play for you too?',
@@ -103,6 +106,7 @@ const TEXT = tr(
     photo: 'Foto',
     readAll: 'Lees de hele terugblik',
     played: 'Gespeeld die avond',
+    listen: 'beluisteren op Spotify',
     highlight: 'Nummer van de avond',
     video: 'Video op Instagram',
     more: 'Willen jullie ons ook bij jullie?',
@@ -195,7 +199,9 @@ const TEXT = tr(
             @if (h.setlist?.length) {
               <details class="played">
                 <summary>{{ t().played }} ({{ h.setlist!.length }})</summary>
-                <ol>@for (x of h.setlist; track $index) { <li>{{ x.title }} <small>{{ x.artist }}</small></li> }</ol>
+                <ol>@for (x of h.setlist; track $index) {
+                  <li>@if (spotify(x); as url) { <a [href]="url" target="_blank" rel="noopener" [attr.aria-label]="x.title + ' – ' + x.artist + ' ' + t().listen">{{ x.title }}</a> } @else { {{ x.title }} } <small>{{ x.artist }}</small></li>
+                }</ol>
               </details>
             }
             <div class="recap-links">
@@ -259,7 +265,7 @@ const TEXT = tr(
     .recap p:not(.kicker) { margin: 0 0 16px; max-width: 760px; line-height: 1.7; color: rgba(236, 233, 228, .86); }
     .recap .top { display: flex; align-items: center; gap: 6px; } .top mat-icon { color: var(--bn-sunset); }
     .played { margin: 0 0 16px; } .played summary { cursor: pointer; color: var(--bn-sunset); }
-    .played ol { columns: 2 220px; margin: 10px 0 0; padding-left: 22px; line-height: 1.7; } .played small { color: var(--bn-fog); }
+    .played ol { columns: 2 220px; margin: 10px 0 0; padding-left: 22px; line-height: 1.7; } .played small { color: var(--bn-fog); } .played a { color: var(--bn-ink); text-decoration-color: #1db954; }
     .recap-links { display: flex; flex-wrap: wrap; gap: 10px; }
     .more { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--bn-line); }
     .more p { margin: 0 0 12px; color: rgba(236, 233, 228, .86); }
@@ -315,6 +321,12 @@ export class KonzertPage {
     ]);
     const bild = await renderPoster(s, 'story', kampagnenLink(id, 'geteilt'), countdownKopf(s.date, new Date().toISOString().slice(0, 10)));
     await shareImage(bild, posterFileName(s, 'story'), `Blickfeld Nord live – ${s.venue}`).catch(() => undefined);
+  }
+
+  // Gespielte Songs zum Nachhören: Link zur Aufnahme in der offiziellen Playlist (repertoire.json)
+  private readonly spotifyUrls = new Map(repertoire.tracks.map((t) => [`${t.title}|${t.artist}`, t.url]));
+  protected spotify(x: { title: string; artist: string }): string | undefined {
+    return this.spotifyUrls.get(`${x.title}|${x.artist}`);
   }
 
   protected share(s: Show): void {

@@ -4,9 +4,9 @@
 import type { Show } from './band.service';
 import type { Entry, Song } from './setlist-data';
 
-const basis = (v: string) => v.toLocaleLowerCase('de').split(/\s+[–—-]\s+|\s+mit\s+|,|\(/)[0].trim();
+export const ortBasis = (v: string) => v.toLocaleLowerCase('de').split(/\s+[–—-]\s+|\s+mit\s+|,|\(/)[0].trim();
 export const gleicherOrt = (a: Show, b: Show) =>
-  (a.city ?? '') === (b.city ?? '') && (basis(a.venue).startsWith(basis(b.venue)) || basis(b.venue).startsWith(basis(a.venue)));
+  (a.city ?? '') === (b.city ?? '') && (ortBasis(a.venue).startsWith(ortBasis(b.venue)) || ortBasis(b.venue).startsWith(ortBasis(a.venue)));
 const key = (s: { title: string; artist: string }) => `${s.title}|${s.artist}`;
 
 /** Songs, die bei früheren Auftritten am selben Ort liefen: Schlüssel → letztes Datum */
