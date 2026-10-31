@@ -135,7 +135,7 @@ const TEXT = tr(
         <h3>{{ t().songs }}</h3>
         <p class="info">{{ t().songsInfo(songs.length) }}</p>
         <div class="text-actions">
-          <button type="button" class="btn small" (click)="kopieren('songs', songText)"><mat-icon>{{ kopiert() === 'songs' ? 'check' : 'content_copy' }}</mat-icon> {{ kopiert() === 'songs' ? t().copied : t().songsCopy }}</button>
+          <button type="button" class="btn small" (click)="kopieren(songId, songText)"><mat-icon>{{ kopiert() === songId ? 'check' : 'content_copy' }}</mat-icon> {{ kopiert() === songId ? t().copied : t().songsCopy }}</button>
           <button type="button" class="btn small" (click)="songsSpeichern()"><mat-icon>description</mat-icon> {{ t().songsTxt }}</button>
         </div>
         <ol class="songs">
@@ -198,6 +198,8 @@ export class PresseKonzertPage {
   protected readonly songs = repertoire.tracks.map((x) => ({ title: x.title, artist: x.artist }));
   protected readonly songText = this.songs.map((x, i) => `${i + 1}. ${x.title} – ${x.artist}`).join('\n');
   protected readonly kopiert = signal('');
+  // als Feld, nicht als Text im Icon-Ausdruck – scripts/subset-icons.py liest Texte in <mat-icon> als Icon-Namen
+  protected readonly songId = 'songliste';
 
   constructor() {
     const pageMeta = inject(PageMetaService);
