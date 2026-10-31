@@ -645,7 +645,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   return q;
 });
 
-test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträge aufräumen; Backup ersetzt alles; alles löschen', async () => {
+test('Backstage: Abgleich – Daten verwalten, vergangene Einträge aufräumen; Backup ersetzt alles; alles löschen', async () => {
   const p = await page();
   await p.go('/backstage/abgleich/');
   // ohne Berechtigung „Daten löschen“ keine Mülltonnen
@@ -690,11 +690,6 @@ test('Backstage: Abgleich – Daten verwalten, vergangene und verwaiste Einträg
   await box.locator('select').selectOption('0');
   await box.locator('button', { hasText: 'Einträge entfernen' }).click();
   await until(async () => (await p.evaluate((alt) => [localStorage.getItem(`bn-packliste-${alt}`), localStorage.getItem(`bn-vorort-${alt}`), !!localStorage.getItem(`bn-setlist-${alt}`)], alt)).join() === ',,true', 'Vergangene Einträge werden nicht (oder zu viel) entfernt');
-  // verwaist: Packliste vom 01.01.2019 war schon vergangen; neuer Eintrag für einen Termin, den es nicht gibt
-  await p.evaluate(() => localStorage.setItem('bn-werbeplan-2099-01-01', '{}'));
-  await p.reload({ waitUntil: 'networkidle' });
-  await box.locator('button', { hasText: /Eintrag entfernen|Einträge.*entfernen$/ }).last().click();
-  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-werbeplan-2099-01-01'))) === null, 'Verwaister Eintrag bleibt');
   // Einstellungen → Backup → „Alles ersetzen“: ersetzt die Setlist durch die Datei
   await p.go('/backstage/einstellungen/');
   const backup = p.locator('app-backup-karte');

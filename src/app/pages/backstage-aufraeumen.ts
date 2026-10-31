@@ -1,15 +1,14 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { LISTEN, songAbgleich } from '../data/playlisten';
 import { BandService } from '../data/band.service';
-import { BEREICHE, alleSchluessel, cacheLeeren, entfernen, vergangene, verwaist } from '../data/aufraeumen';
-import { notenAllesLoeschen, notenEntfernen, notenVerwaist } from '../data/noten';
+import { BEREICHE, alleSchluessel, cacheLeeren, entfernen, vergangene } from '../data/aufraeumen';
+import { notenAllesLoeschen } from '../data/noten';
 import { mitschnitteAllesLoeschen } from '../data/mitschnitte';
 import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { syncSpeicherLoeschen } from '../data/sync-ordner';
 
 // Backstage → Abgleich → Daten auf diesem Gerät → Aufräumen (in backstage-daten.ts eingebettet): vergangene Auftritte
-// und verwaiste Einträge entfernen, alles zurücksetzen.
+// entfernen, alles zurücksetzen. Einzelne Dateien löscht man in OneDrive.
 // Jeder Schritt fragt vorher nach – gesichert wird unter Einstellungen → Backup.
 const ALTER = [
   { tage: 0, label: 'gleich nach dem Auftritt' },
@@ -32,11 +31,6 @@ const ALTER = [
         }
       </div>
       <button type="button" [disabled]="!alt().length" (click)="bereichLoeschen('vergangene Einträge', alt())"><mat-icon>auto_delete</mat-icon> {{ alt().length }} {{ alt().length === 1 ? 'Eintrag' : 'Einträge' }} entfernen</button>
-
-      <h5>Verwaiste Einträge</h5>
-      <p>Daten zu Auftritten, die es nicht mehr gibt (abgesagt oder verschoben), leere Noten-Einträge zu Songs, die in keiner Spotify-Liste
-        stehen, und PDFs, die kein Song nutzt.</p>
-      <button type="button" [disabled]="!verwaistZahl()" (click)="verwaistEntfernen()"><mat-icon>cleaning_services</mat-icon> {{ verwaistText() }}</button>
 
       <h5>Alles löschen</h5>
       <p>Setzt die Website auf diesem Gerät komplett zurück: alle Backstage-Daten, Noten, Einstellungen und Seiten für unterwegs.</p>
@@ -91,51 +85,17 @@ export class BackstageAufraeumen {
     });
   }
 
-  // Verwaistes: localStorage sofort, Noten asynchron
-  // Songs aller Spotify-Listen (Website und Backstage-Listen)
-  private readonly repertoire = new Set(songAbgleich(LISTEN).map((s) => s.key));
-  private readonly verwaisteNoten = signal<{ songs: string[]; dateien: { id: string }[] }>({ songs: [], dateien: [] });
-  private readonly verwaisteKeys = computed(() => (this.stand(), verwaist(new Set(this.letzterTag.keys()))));
-  protected readonly verwaistZahl = computed(() => this.verwaisteKeys().length + this.verwaisteNoten().songs.length + this.verwaisteNoten().dateien.length);
-  protected readonly verwaistText = computed(() => {
-    const n = this.verwaisteNoten();
-    const teile = [
-      this.verwaisteKeys().length && `${this.verwaisteKeys().length} ${this.verwaisteKeys().length === 1 ? 'Eintrag' : 'Einträge'}`,
-      n.songs.length && `${n.songs.length} Noten`,
-      n.dateien.length && `${n.dateien.length} ungenutzte ${n.dateien.length === 1 ? 'PDF' : 'PDFs'}`,
-    ].filter(Boolean);
-    return teile.length ? `${teile.join(', ')} entfernen` : 'Nichts Verwaistes gefunden';
-  });
-
-
   constructor() {
+    // andere Teile der Seite haben Daten geändert → neu lesen
     effect(() => {
       this.version();
-      untracked(() => void this.laden());
+      this.stand.update((x) => x + 1);
     });
-  }
-
-  private async laden(): Promise<void> {
-    this.stand.update((x) => x + 1);
-    try {
-      this.verwaisteNoten.set(await notenVerwaist(this.repertoire));
-    } catch {
-      // ohne IndexedDB keine Noten
-    }
   }
 
   protected bereichLoeschen(was: string, keys: string[]): void {
     if (!confirm(`${was}: ${keys.length} ${keys.length === 1 ? 'Eintrag' : 'Einträge'} auf diesem Gerät löschen?`)) return;
     this.meldung.set(`${entfernen(keys)} gelöscht ✓`);
-    this.geaendert.emit();
-  }
-
-  protected async verwaistEntfernen(): Promise<void> {
-    if (!confirm(`${this.verwaistText()}?`)) return;
-    const n = this.verwaisteNoten();
-    entfernen(this.verwaisteKeys());
-    await notenEntfernen(n.songs, n.dateien.map((d) => d.id));
-    this.meldung.set('Verwaiste Einträge entfernt ✓');
     this.geaendert.emit();
   }
 

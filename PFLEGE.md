@@ -271,8 +271,6 @@ In derselben Karte darunter **Aufräumen**:
 - **Vergangene Auftritte und Proben:** Alter wählen (gleich danach, 30 Tage, 6 Monate, 1 Jahr) und welche Bereiche.
   Vorgewählt sind Packlisten, Vor Ort, Werbeplan und Proben; Setlists und Sterne bleiben, weil Rückblick, Top 100
   und Setlist-Vorschlag sie brauchen.
-- **Verwaiste Einträge:** Daten zu abgesagten oder verschobenen Auftritten, Noten von Songs, die nicht mehr im
-  Repertoire sind, und PDFs, die kein Song nutzt.
 - **Alles löschen:** setzt die Website auf dem Gerät komplett zurück (Bestätigung durch Eintippen von „LÖSCHEN“).
 
 Vorher sichern: **Einstellungen → Backup → Backup erstellen** (Backstage-Daten und Notenblätter).

@@ -89,11 +89,6 @@ export function vergangene(bis: string, bereiche: Set<string>, letzterTag: Map<s
   });
 }
 
-/** Daten zu Auftritten, die es nicht (mehr) gibt – z. B. abgesagt oder auf einen anderen Tag verschoben */
-export function verwaist(auftritte: Set<string>): string[] {
-  return alleSchluessel().filter((k) => bereichVon(k)?.jeAuftritt && !auftritte.has(idVon(k)!));
-}
-
 export function entfernen(keys: string[]): number {
   let n = 0;
   for (const k of keys) {

@@ -15,7 +15,7 @@ import { DatenEditor } from './daten-editor';
 // Backstage → Abgleich → Daten auf diesem Gerät: jeder gespeicherte Eintrag einzeln – verständlich benannt (Bereich,
 // Datum, Ort), mit Inhaltsangabe und Größe. Öffnen (Seite des Bereichs), ansehen/ändern, auswählen und als Datei
 // teilen oder löschen, je Bereich alles löschen. Dazu Noten, Proben-Mitschnitte und Seiten für unterwegs, darunter
-// das Aufräumen (vergangene und verwaiste Einträge, alles löschen – backstage-aufraeumen.ts).
+// das Aufräumen (vergangene Einträge, alles löschen – backstage-aufraeumen.ts).
 @Component({
   selector: 'app-backstage-daten',
   imports: [RouterLink, MatIconModule, DatenEditor, BackstageAufraeumen],

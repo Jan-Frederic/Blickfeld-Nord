@@ -1,4 +1,4 @@
-import { eintraege, entfernen, uebersicht, vergangene, verwaist, vorschau, vorschauText } from './aufraeumen';
+import { eintraege, entfernen, uebersicht, vergangene, vorschau, vorschauText } from './aufraeumen';
 
 describe('Aufräumen', () => {
   beforeEach(() => {
@@ -18,10 +18,6 @@ describe('Aufräumen', () => {
     const letzterTag = new Map([['2025-05-01', '2025-05-03']]);
     expect(vergangene('2025-05-03', new Set(['packliste', 'probe']), letzterTag)).toEqual(['bn-packliste-2024-01-01-2', 'bn-probe-2025-02-03']);
     expect(vergangene('2025-06-01', new Set(['packliste']), letzterTag)).toEqual(['bn-packliste-2024-01-01-2', 'bn-packliste-2025-05-01']);
-  });
-
-  it('findet Daten zu Auftritten, die es nicht mehr gibt – Proben zählen nicht', () => {
-    expect(verwaist(new Set(['2025-05-01', '2026-12-04']))).toEqual(['bn-packliste-2024-01-01-2']);
   });
 
   it('löscht nur die genannten Schlüssel', () => {
