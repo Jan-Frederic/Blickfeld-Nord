@@ -2,6 +2,8 @@
 // je Song die Nummer im Repertoire (repertoire.json) plus eine kurze Prüfsumme des Titels, falls sich die Reihenfolge
 // des Repertoires inzwischen geändert hat. Pausen als „p“, Publikumswünsche nur als Markierung (ohne Namen),
 // Notizen für den Auftritt nach „~“ (URL-kodiert). Beispiel: #liste=1a.k3,7.x0!,p,22.mm~Schluss%20zweimal
+// Songs, die nicht im Repertoire stehen (andere Spotify-Listen, eigenständige Songs nur mit Noten), stehen als Text:
+// „*Titel|Interpret“ (URL-kodiert), z. B. *Africa%7CToto
 import { Entry, isPause } from './setlist-data';
 
 export interface Track {
@@ -18,13 +20,23 @@ function pruef(t: Track): string {
   return h.toString(36).padStart(2, '0');
 }
 
+/** URL-kodiert, dazu ! ~ * und Komma – sie trennen im Link */
+const kodiert = (s: string) => encodeURIComponent(s).replace(/[!~*'()]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+function dekodiert(s: string): string {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return '';
+  }
+}
+
 export function setlistKodieren(entries: Entry[], tracks: Track[]): string {
   return entries
     .map((e) => {
       if (isPause(e)) return 'p';
       const i = tracks.findIndex((t) => t.title === e.title && t.artist === e.artist);
-      if (i < 0) return '';
-      return `${i.toString(36)}.${pruef(tracks[i])}${e.wunsch !== undefined ? '!' : ''}${e.notiz ? '~' + encodeURIComponent(e.notiz) : ''}`;
+      const song = i < 0 ? `*${kodiert(`${e.title}|${e.artist}`)}` : `${i.toString(36)}.${pruef(tracks[i])}`;
+      return `${song}${e.wunsch !== undefined ? '!' : ''}${e.notiz ? '~' + kodiert(e.notiz) : ''}`;
     })
     .filter(Boolean)
     .join(',');
@@ -33,6 +45,14 @@ export function setlistKodieren(entries: Entry[], tracks: Track[]): string {
 export function setlistDekodieren(code: string, tracks: Track[]): Entry[] {
   return code.split(',').flatMap((teil): Entry[] => {
     if (teil === 'p') return [{ pause: true }];
+    const text = /^\*([^!~]+)(!?)(?:~(.*))?$/.exec(teil);
+    if (text) {
+      const song = dekodiert(text[1]);
+      const i = song.lastIndexOf('|');
+      if (i < 1) return [];
+      const notiz = dekodiert(text[3] ?? '').slice(0, 80);
+      return [{ title: song.slice(0, i).slice(0, 120), artist: song.slice(i + 1).slice(0, 120), ...(text[2] ? { wunsch: '' } : {}), ...(notiz ? { notiz } : {}) }];
+    }
     const m = /^([0-9a-z]+)\.([0-9a-z]{2})(!?)(?:~(.*))?$/.exec(teil);
     if (!m) return [];
     const nr = parseInt(m[1], 36);

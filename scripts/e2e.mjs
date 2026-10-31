@@ -788,6 +788,20 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   return p;
 });
 
+test('Backstage: Setlist – Songs aus allen Spotify-Listen per Filter', async () => {
+  const id = concerts[concerts.length - 1].split('/')[2];
+  const p = await page();
+  await p.go(`/backstage/${id}/setlist`);
+  const chips = p.locator('app-setlist .pick .listen-chips button');
+  await chips.filter({ hasText: 'Archiv' }).click();
+  const erster = p.locator('app-setlist .pick li button').first();
+  await until(async () => (await erster.locator('mat-icon.liste').allInnerTexts()).includes('inventory_2'), 'Archiv-Filter zeigt keine Archiv-Songs');
+  const titel = (await erster.locator('.t').innerText()).trim();
+  await erster.click();
+  await until(async () => (await p.locator('app-setlist .list').innerText()).includes(titel), 'Song aus dem Archiv landet nicht auf der Setlist');
+  return p;
+});
+
 test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });

@@ -93,6 +93,10 @@ Unter **Songs → Liste** stehen alle Songs aller Listen, gegeneinander abgeglic
 steht – ein Tipp darauf öffnet die Liste in Spotify: 🌐 Website, Setlist, Probe, Repertoire, ♥ Wunschliste,
 Archiv. Oben filtern Chips nach einer Liste oder „Ohne Liste“.
 
+**Setlist erstellen:** Auch dort filtern die Chips über der Songauswahl nach Liste oder „Ohne Liste“ (eigenständige
+Songs, zu denen es Noten auf dem Gerät gibt); kleine grüne Symbole zeigen je Song die Listen. Songs außerhalb der
+Website-Liste reisen im Setlist-Link als Text mit; ihre Länge kommt aus der Spotify-Liste, in der sie stehen.
+
 **PDFs ohne Spotify-Titel:** Ein PDF, das noch keinem Song zugeordnet ist, wird beim Öffnen von Songs → Liste
 nach seinem Namen zugeordnet: **`<Band> - <Titel>.pdf`**, alles nach einem weiteren „ - “ ist die Fassung
 („Toto - Africa - Bass.pdf“). Steht der Song in einer Spotify-Liste, kommt das PDF dorthin; sonst wird er ein

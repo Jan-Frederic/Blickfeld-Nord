@@ -1,4 +1,7 @@
 import data from './repertoire.json';
+import playlisten from './playlisten.json';
+
+type Track = { title: string; artist: string; duration?: number };
 
 // Gemeinsame Helfer für Setlists (Backstage): Speicherformat, Sets, Songlängen aus der Spotify-Playlist.
 
@@ -30,9 +33,12 @@ export function setsOf(entries: Entry[]): Song[][] {
 }
 
 // Songlänge in Sekunden laut Spotify (scripts/sync-repertoire.mjs) – fehlt bei Songs ohne Angabe
-const lengths = new Map(
-  (data.tracks as { title: string; artist: string; duration?: number }[]).map((t) => [`${t.title}|${t.artist}`, t.duration]),
-);
+// (Website-Liste zuerst, dann die Backstage-Listen)
+const lengths = new Map<string, number | undefined>();
+for (const t of [...(data.tracks as Track[]), ...playlisten.listen.flatMap((l) => l.tracks as Track[])]) {
+  const k = `${t.title}|${t.artist}`;
+  if (!lengths.get(k) && t.duration) lengths.set(k, t.duration);
+}
 export const durationOf = (s: Song): number | undefined => lengths.get(`${s.title}|${s.artist}`);
 
 // Gesamtlänge eines Sets; „missing“ zählt Songs ohne bekannte Länge

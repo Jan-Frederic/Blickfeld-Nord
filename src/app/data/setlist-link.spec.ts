@@ -31,6 +31,13 @@ describe('setlist-link', () => {
     expect(setlistAusHash(link.slice(link.indexOf('#')), tracks)).toEqual(entries);
   });
 
+  it('Songs außerhalb des Repertoires reisen als Text mit – auch mit Komma, ! und ~', () => {
+    const entries = [{ title: 'Africa', artist: 'Toto', wunsch: '' }, { title: 'Ja, klar! ~ (live)', artist: '', notiz: 'leise, bitte' }, { title: 'B', artist: 'Y' }];
+    const link = setlistLink('https://blickfeld-nord.de', '2026-12-04', entries, tracks);
+    expect(link).toContain('*Africa%7CToto!');
+    expect(setlistAusHash(link.slice(link.indexOf('#')), tracks)).toEqual(entries);
+  });
+
   it('ohne Liste im Link: null', () => {
     expect(setlistAusHash('#anderes=1', tracks)).toBeNull();
   });

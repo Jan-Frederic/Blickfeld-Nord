@@ -2,6 +2,8 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
+import { LISTEN, ListenKey, ListenWahl, listenFiltern, listenZahlen, songAbgleich } from '../data/playlisten';
+import { alleSongNoten } from '../data/noten';
 import { SetlistVorlagen } from './setlist-vorlagen';
 import { SetlistVorschlag } from './setlist-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
@@ -48,16 +50,23 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       @if (importiert()) { <p class="importiert"><mat-icon>check_circle</mat-icon> Setlist aus dem Link übernommen.</p> }
       <div class="cols">
         <div class="pick">
+          <div class="listen-chips" role="group" aria-label="Songs nach Spotify-Liste filtern">
+            <button type="button" [attr.aria-pressed]="liste() === ''" (click)="liste.set('')">Alle</button>
+            @for (l of listen; track l.key) {
+              <button type="button" [attr.aria-pressed]="liste() === l.key" (click)="liste.set(l.key)" [attr.aria-label]="l.label + ' (' + (zahlen()[l.key] || 0) + ')'"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }}</button>
+            }
+            <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste</button>
+          </div>
           <label class="search">
             <mat-icon aria-hidden="true">search</mat-icon>
-            <input type="search" placeholder="Song aus dem Repertoire suchen …" aria-label="Repertoire durchsuchen"
+            <input type="search" placeholder="Song suchen …" aria-label="Songs durchsuchen"
                    [value]="query()" (input)="query.set($any($event.target).value)" />
           </label>
           <ul class="songs">
             @for (t of available(); track t.title + t.artist) {
               <li>
                 <button type="button" (click)="add(t)" [attr.aria-label]="t.title + ' zur Setlist hinzufügen'">
-                  <span class="song"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}</span></span><mat-icon>add</mat-icon>
+                  <span class="song"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}</span>@for (k of t.listen; track k) {<mat-icon class="liste" [attr.title]="listeVon(k).label" aria-hidden="true">{{ listeVon(k).icon }}</mat-icon>}</span><mat-icon>add</mat-icon>
                 </button>
               </li>
             } @empty {
@@ -194,6 +203,9 @@ export class Setlist {
   private linkListe = typeof location === 'undefined' ? null : setlistAusHash(location.hash, data.tracks);
 
   constructor() {
+    alleSongNoten()
+      .then((n) => this.notenKeys.set(Object.entries(n).filter(([, x]) => x.pdfs?.length || x.chordpro).map(([k]) => k)))
+      .catch(() => undefined);
     effect(() => {
       this.entries.set(loadSetlist(this.show()));
       this.ausLink();
@@ -294,11 +306,21 @@ export class Setlist {
   }
   protected readonly time = setTime;
 
-  // Songs, die noch nicht auf der Setlist stehen, gefiltert nach Suche
+  // Songs aller Spotify-Listen und eigenständige Songs (nur mit Noten auf dem Gerät, data/playlisten.ts) –
+  // die noch nicht auf der Setlist stehen, gefiltert nach Liste und Suche
+  protected readonly listen = LISTEN;
+  protected readonly liste = signal<ListenWahl>('');
+  private readonly notenKeys = signal<string[]>([]);
+  private readonly alleSongs = computed(() => songAbgleich(LISTEN, this.notenKeys()));
+  protected readonly zahlen = computed(() => listenZahlen(this.alleSongs()));
+  private readonly listenNachKey = new Map(LISTEN.map((l) => [l.key, l]));
+  protected listeVon(k: ListenKey) {
+    return this.listenNachKey.get(k)!;
+  }
   protected readonly available = computed(() => {
-    const used = new Set(this.entries().map((e) => (this.isPause(e) ? '' : (e as { title: string }).title)));
+    const used = new Set(this.entries().map((e) => (this.isPause(e) ? '' : `${(e as { title: string }).title}|${(e as { artist: string }).artist}`)));
     const q = norm(this.query().trim());
-    return data.tracks.filter((t) => !used.has(t.title) && (!q || norm(`${t.title} ${t.artist}`).includes(q)));
+    return listenFiltern(this.alleSongs(), this.liste()).filter((t) => !used.has(t.key) && (!q || norm(`${t.title} ${t.artist}`).includes(q)));
   });
 
   protected isPause(e: Entry): boolean {

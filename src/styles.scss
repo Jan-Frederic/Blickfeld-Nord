@@ -170,8 +170,8 @@ mat-icon, .material-icons { flex-shrink: 0; }
 .menu-sprachen > summary::-webkit-details-marker { display: none; }
 .menu-sprachen .menu-item.unter { padding-left: 56px; min-height: 40px; }
 
-// Backstage → Songs: Filter nach Spotify-Liste und Listen-Symbole je Song (Budget von songs-liste)
-app-songs-liste {
+// Backstage → Songs und Setlist: Filter nach Spotify-Liste und Listen-Symbole je Song (Budget der Komponenten)
+app-songs-liste, app-setlist {
   .listen-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .listen-chips button { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .82rem; cursor: pointer; }
   .listen-chips button:hover { color: var(--bn-ink); }
@@ -183,3 +183,5 @@ app-songs-liste {
   .listen-icons a:hover { background: rgba(29, 185, 84, .15); }
   .listen-icons mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
+app-setlist .pick .listen-chips { margin-bottom: 10px; }
+app-setlist .pick mat-icon.liste { font-size: 14px; width: 14px; height: 14px; margin-left: 4px; vertical-align: -2px; color: #1db954; }

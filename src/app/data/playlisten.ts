@@ -100,6 +100,24 @@ export function songAbgleich(listen: Pick<Liste, 'key' | 'tracks'>[], notenKeys:
   return [...nachKey.values()].sort((a, b) => a.title.localeCompare(b.title, 'de') || a.artist.localeCompare(b.artist, 'de'));
 }
 
+/** Filter nach Liste: alle, eine Liste oder „ohne“ (Songs ohne Spotify-Titel) */
+export type ListenWahl = ListenKey | '' | 'ohne';
+
+export function listenFiltern<T extends { listen: ListenKey[] }>(songs: T[], wahl: ListenWahl): T[] {
+  if (wahl === 'ohne') return songs.filter((s) => !s.listen.length);
+  return wahl ? songs.filter((s) => s.listen.includes(wahl)) : songs;
+}
+
+/** Anzahl je Liste und „ohne“ – für die Chips */
+export function listenZahlen(songs: { listen: ListenKey[] }[]): Record<string, number> {
+  const n: Record<string, number> = { ohne: 0 };
+  for (const s of songs) {
+    if (!s.listen.length) n['ohne']++;
+    for (const k of s.listen) n[k] = (n[k] ?? 0) + 1;
+  }
+  return n;
+}
+
 /**
  * Song aus dem Namen eines alleinstehenden PDFs: „<Band> - <Titel>.pdf“, alles nach einem weiteren „ - “ ist die
  * Fassung („Toto - Africa - Bass.pdf“). Unterstriche gelten als Leerzeichen („Toto_-_Africa.pdf“, so speichern
