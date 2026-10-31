@@ -1,5 +1,6 @@
 import { BandService, friendId } from './band.service';
 import repertoire from './repertoire.json';
+import playlisten from './playlisten.json';
 import { SONGINFO } from './songinfo';
 import technik from './technik.json';
 
@@ -65,9 +66,10 @@ describe('Proben', () => {
 });
 
 describe('Tonart und Tempo (songinfo.ts)', () => {
-  it('passen zu Songs im Repertoire und haben gültige Werte', () => {
+  it('passen zu Songs der Spotify-Listen und haben gültige Werte', () => {
+    const alle = [...repertoire.tracks, ...playlisten.listen.flatMap((l) => l.tracks)];
     for (const s of SONGINFO) {
-      expect(repertoire.tracks.some((t) => t.title === s.title && t.artist === s.artist), `${s.title} – ${s.artist} nicht im Repertoire`).toBe(true);
+      expect(alle.some((t) => t.title === s.title && t.artist === s.artist), `${s.title} – ${s.artist} in keiner Spotify-Liste`).toBe(true);
       if (s.tonart) expect(s.tonart).toMatch(/^[A-H][#b]?m?$/);
       if (s.spielTonart) expect(s.spielTonart).toMatch(/^[A-H][#b]?m?$/);
       if (s.capo) expect(Number.isInteger(s.capo) && s.capo >= 1 && s.capo <= 12).toBe(true);
