@@ -1137,7 +1137,8 @@ test('Backstage: Notiz je Auftritt und Einzählen im Bühnen-Modus, „Bereit?�
   await p.getByRole('button', { name: 'Notiz für diesen Auftritt' }).click();
   await until(async () => (await p.locator('app-setlist .list').innerText()).includes('✎ Schluss zweimal'), 'Notiz nicht in der Setlist');
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
-  expect((await p.locator('app-setlist-buehne main').innerText()).includes('Schluss zweimal'), 'Notiz nicht im Bühnen-Modus');
+  // der Bühnen-Modus wird erst beim Öffnen nachgeladen (@defer) – kurz warten
+  await until(async () => ((await p.locator('app-setlist-buehne main').innerText().catch(() => '')) ?? '').includes('Schluss zweimal'), 'Notiz nicht im Bühnen-Modus');
   await p.getByRole('button', { name: 'Einzählen' }).click();
   await until(async () => (await p.locator('app-setlist-buehne .einzaehlen').count()) === 1, 'Einzählen zeigt nichts');
   await until(async () => (await p.locator('app-setlist-buehne .einzaehlen').count()) === 0, 'Einzählen hört nicht auf');
