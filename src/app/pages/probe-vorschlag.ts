@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
@@ -6,6 +6,10 @@ import { alleBewertungen, rangliste, songKey } from '../data/bewertung';
 import { Entry, SETLIST_PREFIX, isPause } from '../data/setlist-data';
 import { ProbeTipp, probeTipps } from '../data/probe-vorschlag';
 import { ladeWackelt } from '../data/wackelt';
+import { LISTEN, songAbgleich } from '../data/playlisten';
+import { alleSongNoten } from '../data/noten';
+import { SONGINFO, SONGINFO_ENTWURF_KEY } from '../data/songinfo';
+import { probenAusSpeicher, probenStand } from '../data/song-stand';
 
 // Vorschläge für die Probe aus Sternen und Setlists dieses Geräts (Logik: data/probe-vorschlag.ts)
 @Component({
@@ -38,13 +42,36 @@ export class ProbeVorschlag {
   readonly drin = input.required<{ title: string; artist: string }[]>();
   readonly add = output<ProbeTipp>();
   private readonly band = inject(BandService);
-  private readonly alle = this.berechnen();
+  /** Wunschlisten-Songs mit Noten und Tonart/Tempo, die noch nie geprobt wurden (Noten asynchron aus IndexedDB) */
+  private readonly bereit = signal<{ title: string; artist: string }[]>([]);
   protected readonly tipps = computed(() => {
     const drin = new Set(this.drin().map(songKey));
-    return this.alle.filter((t) => !drin.has(songKey(t)));
+    return this.berechnen(this.bereit()).filter((t) => !drin.has(songKey(t)));
   });
 
-  private berechnen(): ProbeTipp[] {
+  constructor() {
+    alleSongNoten()
+      .then((noten) => {
+        let entwurf: Record<string, { tonart?: string; spielTonart?: string; bpm?: number }> = {};
+        try {
+          entwurf = JSON.parse(localStorage.getItem(SONGINFO_ENTWURF_KEY) ?? '{}');
+        } catch {
+          // ohne Entwurf
+        }
+        const info = new Map(SONGINFO.map((s) => [`${s.title}|${s.artist}`, s]));
+        const geprobt = probenStand(probenAusSpeicher(), new Date().toISOString().slice(0, 10));
+        this.bereit.set(
+          songAbgleich(LISTEN).filter((s) => {
+            const w = entwurf[s.key] ?? info.get(s.key);
+            const n = noten[s.key];
+            return s.listen.includes('wunschliste') && (n?.pdfs?.length || n?.chordpro) && (w?.tonart || w?.spielTonart) && w?.bpm && !geprobt.has(s.key);
+          }),
+        );
+      })
+      .catch(() => undefined);
+  }
+
+  private berechnen(bereit: { title: string; artist: string }[]): ProbeTipp[] {
     const sterne = new Map(rangliste(alleBewertungen(), Infinity).map((p) => [songKey(p), p.schnitt]));
     const zuletzt = new Map<string, string>();
     try {
@@ -59,6 +86,6 @@ export class ProbeVorschlag {
     } catch {
       // ohne Speicher nur nach Sternen
     }
-    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())));
+    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())), bereit);
   }
 }

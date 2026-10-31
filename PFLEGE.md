@@ -108,6 +108,22 @@ nicht auf der Website-Liste stehen, und Songs im Archiv, die noch auf der Websit
 übernehmen** (ersetzt nach Rückfrage). Auf der Probenseite: **… Songs aus der Spotify-Liste „Probe“ übernehmen**
 (nur, was noch fehlt); die Suche dort findet Songs aller Listen.
 
+**Hinweise zu den Listen** (unter Songs, aufklappbar): Setlist-Songs nicht auf der Website, Archiv-Songs noch auf
+der Website, **live gespielt, aber nicht auf der Website** (Link zur offiziellen Playlist – dort hinzufügen),
+**fürs Archiv?** (seit über 12 Monaten weder gespielt noch geprobt; neue Songs ohne Auftritt/Probe nicht) und
+**vermutlich doppelt** (gleicher Titel mit anderer bzw. ohne Band, fast gleich geschrieben). Steht einer der beiden
+in keiner Liste, lässt er sich mit einem Klick im anderen **aufgehen** – Noten, Mitschnitte und Einträge ziehen mit.
+In der **Nachbereitung** eines Auftritts stehen gespielte Songs, die nicht auf der offiziellen Playlist sind.
+
+**Schneller eintragen:** „Tonart und Tempo schnell eintragen“ zeigt Tonart und bpm direkt in der Tabelle (ohne
+Dialog). Mit einem Listen-Chip gibt es die Reihenfolge **wie in Spotify**.
+
+**Spielzeit je Auftritt:** In der Setlist die geplante Spielzeit (Minuten Musik ohne Pausen) eintragen – angezeigt
+wird „noch … frei“ bzw. „… zu lang“, dazu bis zu drei Songs, die in die Lücke passen (Website-Liste zuerst). Wird
+mit der Band abgeglichen. Die Backstage-Übersicht zeigt eine Kachel **Songs**: je Liste, wie viele der Wunschliste
+**bühnenreif** sind (Noten, Tonart/Tempo, geprobt) und die Zahl der Hinweise. Der Probe-Vorschlag nimmt
+bühnenreife-bis-auf-Probe Wunschlisten-Songs (Noten und Tonart da, nie geprobt) gleich nach „wackelt noch“.
+
 **Eigenständige Songs umbenennen:** Im Song-Dialog „Titel oder Band ändern“ – Noten, Mitschnitte, Setlists,
 Proben, Tonart/Tempo-Entwurf und „Wackelt noch“ ziehen mit.
 

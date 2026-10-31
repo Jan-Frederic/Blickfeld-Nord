@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BackstageStats } from './backstage-stats';
 import { HeuteFaellig } from './heute-faellig';
 import { Bereitschaft } from './bereitschaft';
+import { SongsKarte } from './songs-karte';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
@@ -14,7 +15,7 @@ import { SyncService } from '../data/sync.service';
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, Bereitschaft],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, Bereitschaft, SongsKarte],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -25,6 +26,7 @@ import { SyncService } from '../data/sync.service';
       @if (naechsterAuftritt; as n) { <app-bereitschaft [show]="n.show" [titel]="n.titel" /> }
 
       <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
+      <app-songs-karte />
 
       <h3>Als Nächstes</h3>
       @if (next.length) {

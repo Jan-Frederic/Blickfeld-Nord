@@ -15,6 +15,7 @@ export interface Bereich {
 export const BEREICHE: Bereich[] = [
   { id: 'setlist', label: 'Setlists', praefixe: ['bn-setlist-'], jeAuftritt: true, hinweis: 'für Rückblick und Songs → Setlists' },
   { id: 'bewertung', label: 'Song-Sterne', praefixe: ['bn-bewertung-'], jeAuftritt: true, hinweis: 'für die Top 100 und den Setlist-Vorschlag' },
+  { id: 'spielzeit', label: 'Geplante Spielzeiten', praefixe: ['bn-spielzeit-'], jeAuftritt: true },
   { id: 'packliste', label: 'Packlisten', praefixe: ['bn-packliste-'], jeAuftritt: true },
   { id: 'vorort', label: 'Vor-Ort-Angaben', praefixe: ['bn-vorort-'], jeAuftritt: true },
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
@@ -143,6 +144,7 @@ const EINSTELLUNGEN: Record<string, string> = {
 
 const ZIEL: Record<string, (id: string) => string> = {
   setlist: (id) => `/backstage/${id}/setlist`,
+  spielzeit: (id) => `/backstage/${id}/setlist`,
   packliste: (id) => `/backstage/${id}/packliste`,
   vorort: (id) => `/backstage/${id}/vorort`,
   werbeplan: (id) => `/backstage/${id}`,
@@ -159,7 +161,7 @@ const ZIEL_FEST: Record<string, string> = {
 };
 
 const SINGULAR: Record<string, string> = {
-  setlist: 'Setlist', bewertung: 'Sterne', packliste: 'Packliste', vorort: 'Vor Ort', werbeplan: 'Werbeplan', nachbereitung: 'Nachbereitung', probe: 'Probe',
+  setlist: 'Setlist', spielzeit: 'Spielzeit', bewertung: 'Sterne', packliste: 'Packliste', vorort: 'Vor Ort', werbeplan: 'Werbeplan', nachbereitung: 'Nachbereitung', probe: 'Probe',
 };
 
 const datum = (id: string) => (/^\d{4}-\d{2}-\d{2}/.test(id) ? `${id.slice(8, 10)}.${id.slice(5, 7)}.${id.slice(0, 4)}` : id);

@@ -36,6 +36,15 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           {{ songCount() }} Songs · {{ sets().length }} {{ sets().length === 1 ? 'Set' : 'Sets' }}
           @if (total().seconds) { · <strong>{{ time(total().seconds) }}</strong>@if (total().missing) { <span title="Songs ohne Längenangabe von Spotify"> + {{ total().missing }} ohne Länge</span>} }
         </span>
+        <div class="spielzeit">
+          <label>Spielzeit <input type="number" min="10" max="600" step="5" inputmode="numeric" placeholder="–" aria-label="Geplante Spielzeit in Minuten (Musik ohne Pausen)" [value]="ziel() || ''" (change)="zielSetzen($any($event.target).value)" /> Min.</label>
+          @if (ziel()) {
+            <span [class.zu-lang]="rest() < 0">{{ rest() >= 0 ? 'noch ' + time(rest()) + ' frei' : time(-rest()) + ' zu lang' }}</span>
+            @for (t of auffuellen(); track t.key) {
+              <button type="button" (click)="add(t)" [attr.aria-label]="t.title + ' hinzufügen'"><mat-icon>add</mat-icon> {{ t.title }} <small>{{ length(t) }}</small></button>
+            }
+          }
+        </div>
         <div class="tools">
           <button type="button" class="primary" (click)="stage.set(true)" [disabled]="!songCount()"><mat-icon>fit_screen</mat-icon> Bühnen-Modus</button>
           <button type="button" (click)="addPause()" [disabled]="!entries().length"><mat-icon>coffee</mat-icon> Pause einfügen</button>
@@ -211,6 +220,11 @@ export class Setlist {
       .catch(() => undefined);
     effect(() => {
       this.entries.set(loadSetlist(this.show()));
+      try {
+        this.ziel.set(Number(localStorage.getItem(this.zielKey())) || 0);
+      } catch {
+        this.ziel.set(0);
+      }
       this.ausLink();
     });
   }
@@ -320,6 +334,32 @@ export class Setlist {
   protected listeVon(k: ListenKey) {
     return this.listenNachKey.get(k)!;
   }
+  // Ziel-Spielzeit je Auftritt (Minuten Musik ohne Pausen, bn-spielzeit-<id>, mit der Band abgeglichen): wie viel
+  // noch frei ist bzw. zu lang, dazu bis zu drei Songs, die in die Lücke passen (Website-Liste zuerst, dann längste)
+  private readonly zielKey = computed(() => 'bn-spielzeit-' + this.show());
+  protected readonly ziel = signal(0);
+  protected readonly rest = computed(() => this.ziel() * 60 - this.total().seconds);
+  protected readonly auffuellen = computed(() => {
+    const frei = this.rest();
+    if (frei < 120) return [];
+    return this.available()
+      .map((t) => ({ t, d: durationOf(t) ?? 0 }))
+      .filter((x) => x.d && x.d <= frei)
+      .sort((a, b) => Number(b.t.listen.includes('website')) - Number(a.t.listen.includes('website')) || b.d - a.d)
+      .slice(0, 3)
+      .map((x) => x.t);
+  });
+  protected zielSetzen(roh: string): void {
+    const min = Math.round(Number(roh));
+    this.ziel.set(min >= 10 && min <= 600 ? min : 0);
+    try {
+      if (this.ziel()) localStorage.setItem(this.zielKey(), String(this.ziel()));
+      else localStorage.removeItem(this.zielKey());
+    } catch {
+      // ohne Speicher gilt das Ziel bis zum Neuladen
+    }
+  }
+
   /** Spotify-Liste (Setlist/Probe) als ganze Setlist übernehmen – ersetzt nach Rückfrage die bisherige */
   protected listeUebernehmen(): void {
     const l = this.liste() as ListenKey;

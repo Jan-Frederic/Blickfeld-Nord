@@ -1,6 +1,7 @@
 import { Component, computed, input, linkedSignal, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { isPause, loadSetlist } from '../data/setlist-data';
+import { LISTEN, songAbgleich } from '../data/playlisten';
 import { BEWERTUNG_PREFIX, Bewertungen, bewerten, ladeBewertungen, songKey } from '../data/bewertung';
 import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
 import { Nachbereitung as Daten, ladeNachbereitung, nachbereitungSpeichern, punkteAusText } from '../data/nachbereitung';
@@ -34,6 +35,10 @@ import { Nachbereitung as Daten, ladeNachbereitung, nachbereitungSpeichern, punk
             </li>
           }
         </ul>
+        @if (nichtAufWebsite().length) {
+          <p class="hint"><mat-icon class="spotify">public</mat-icon> Gespielt, aber nicht auf der offiziellen Playlist: {{ nichtAufWebsite().join(', ') }} –
+            <a [href]="websiteUrl" target="_blank" rel="noopener">in Spotify öffnen und hinzufügen</a>, dann steht er auch im Repertoire auf der Website.</p>
+        }
       } @else {
         <p class="hint">Auf diesem Gerät gibt es keine Setlist zu diesem Auftritt – Sterne und „wackelt noch“ dann im Bühnen-Modus bzw. unter Songs.</p>
       }
@@ -98,6 +103,10 @@ export class Nachbereitung {
       .filter((e) => !isPause(e))
       .map((e) => ({ ...(e as { title: string; artist: string }), key: songKey(e as { title: string; artist: string }) })),
   );
+  // gespielte Songs, die (noch) nicht auf der offiziellen Spotify-Playlist stehen – Kandidaten für die Website
+  protected readonly websiteUrl = LISTEN[0].url;
+  private readonly website = new Set(songAbgleich(LISTEN).filter((s) => s.listen.includes('website')).map((s) => s.key));
+  protected readonly nichtAufWebsite = computed(() => this.songs().filter((s) => !this.website.has(s.key)).map((s) => s.title));
   protected readonly sterne = linkedSignal<Bewertungen>(() => ladeBewertungen(this.id()));
   protected readonly wackelt = signal(ladeWackelt());
   protected readonly daten = linkedSignal<Daten>(() => ladeNachbereitung(this.id()));

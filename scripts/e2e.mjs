@@ -821,6 +821,24 @@ test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichu
   await until(async () => /\d+ Songs · \d/.test(await p.locator('app-songs-liste .listen-info').innerText()), 'Dauer der Liste fehlt');
   await p.locator('app-songs-liste .listen-chips button', { hasText: 'Wunschliste' }).click();
   await until(async () => (await p.locator('app-songs-liste .wunsch-stand').count()) > 0, 'Stand der Wunschliste fehlt');
+  // Reihenfolge wie in Spotify, Schnell-Eintragen von Tonart/Tempo, Hinweise zu den Listen
+  await p.locator('app-songs-liste .listen-chips button', { hasText: 'Setlist' }).click();
+  await p.locator('app-songs-liste .filter select').nth(1).selectOption('spotify');
+  await p.locator('app-songs-liste .filter label', { hasText: 'schnell eintragen' }).locator('input').check();
+  const zeile = p.locator('app-songs-liste tbody tr').first();
+  await zeile.locator('.schnell input').fill('111');
+  await zeile.locator('.schnell input').blur();
+  await until(async () => (await p.locator('app-songs-liste .apply').innerText()).includes('1 Song geändert'), 'Schnell-Eintragen speichert nicht');
+  await until(async () => /Hinweise zu den Listen/.test(await p.locator('app-songs-liste').innerText()), 'Hinweise zu den Listen fehlen');
+  // Ziel-Spielzeit der Setlist
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .spielzeit input').fill('600');
+  await p.locator('app-setlist .spielzeit input').blur();
+  await until(async () => /noch .* frei/.test(await p.locator('app-setlist .spielzeit').innerText()), 'Spielzeit zeigt nichts Freies');
+  await until(async () => (await p.locator('app-setlist .spielzeit button').count()) > 0, 'Keine Songs zum Auffüllen vorgeschlagen');
+  // Kachel auf der Backstage-Übersicht
+  await p.go('/backstage/');
+  await until(async () => /bühnenreif/.test(await p.locator('app-songs-karte').innerText().catch(() => '')), 'Songs-Kachel fehlt');
   return p;
 });
 

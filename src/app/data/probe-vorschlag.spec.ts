@@ -23,3 +23,10 @@ describe('probeTipps', () => {
     expect(tipps.length).toBe(1);
   });
 });
+
+describe('probeTipps – Wunschliste', () => {
+  it('nimmt bereite Wunschlisten-Songs gleich nach „wackelt noch“', () => {
+    const r = probeTipps([{ title: 'A', artist: 'X' }], new Map(), new Map(), '2026-10-31', 4, new Set(['A|X']), [{ title: 'Neu', artist: 'Y' }]);
+    expect(r.map((t) => t.grund)).toEqual(['wackelt noch', 'Wunschliste: Noten und Tonart da, noch nie geprobt']);
+  });
+});

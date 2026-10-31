@@ -205,3 +205,27 @@ app-songs-liste .wunsch-stand span.ok { border-color: #5fb88a; color: #5fb88a; }
 // Setlist/Probe: ganze Spotify-Liste übernehmen
 app-setlist .aus-liste, app-backstage-probe .aus-liste { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 10px; padding: 5px 12px; border: 1px solid #1db954; border-radius: 999px; background: none; color: #1db954; font: inherit; font-size: .82rem; cursor: pointer; }
 app-setlist .aus-liste mat-icon, app-backstage-probe .aus-liste mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-songs-liste .schnell { display: flex; gap: 4px; }
+app-songs-liste .schnell select, app-songs-liste .schnell input { width: 70px; padding: 4px 6px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .82rem; color-scheme: dark; }
+app-songs-liste .doppelt { margin: 4px 0 0; padding-left: 18px; line-height: 1.6; }
+app-songs-liste .doppelt button, app-songs-liste .abweichungen a { margin-left: 4px; padding: 1px 8px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-sunset); font: inherit; font-size: .78rem; cursor: pointer; }
+// Setlist: Ziel-Spielzeit
+app-setlist .spielzeit { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; flex-basis: 100%; font-size: .85rem; color: var(--bn-fog); }
+app-setlist .spielzeit label { display: inline-flex; align-items: center; gap: 6px; }
+app-setlist .spielzeit input { width: 70px; padding: 4px 6px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+app-setlist .spielzeit .zu-lang { color: #e07a5a; }
+app-setlist .spielzeit button { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .8rem; cursor: pointer; }
+app-setlist .spielzeit button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-setlist .spielzeit mat-icon { font-size: 16px; width: 16px; height: 16px; }
+// Backstage-Übersicht: Kachel Songs
+app-songs-karte .songs-karte { display: grid; gap: 8px; margin: 16px 0 0; padding: 14px 18px; border: 1px solid var(--bn-line); border-radius: 12px; color: var(--bn-ink); text-decoration: none; }
+app-songs-karte .songs-karte:hover { border-color: var(--bn-sunset); }
+app-songs-karte .kopf { display: flex; align-items: center; gap: 8px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .8rem; }
+app-songs-karte .zahlen { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--bn-fog); }
+app-songs-karte .zahlen span { display: inline-flex; align-items: center; gap: 4px; }
+app-songs-karte .zahlen mat-icon { font-size: 16px; width: 16px; height: 16px; color: #1db954; }
+app-songs-karte b { color: var(--bn-ink); font-weight: 600; }
+app-songs-karte .stand { font-size: .85rem; color: var(--bn-fog); }
+app-songs-karte .warn { color: #e8a46a; }
+app-nachbereitung mat-icon.spotify { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; color: #1db954; }
+app-nachbereitung .hint a { color: var(--bn-sunset); }

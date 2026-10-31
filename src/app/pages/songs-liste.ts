@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { LISTEN, ListenKey, SongEintrag, abweichungen, gesamtDauer, listeInReihenfolge, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
 import { songUmbenennen } from '../data/song-umbenennen';
+import { Doppelt, archivKandidaten, buehnenreif, doppelte, gespieltNichtAufWebsite, probenAusSpeicher, probenStand } from '../data/song-stand';
 import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, NotenPdf, alleSongNoten, notenDateien, songNotenSetzen } from '../data/noten';
@@ -63,11 +64,29 @@ function ladeEntwurf(): Record<string, Werte> {
         <a [href]="aktualisierenUrl" target="_blank" rel="noopener" title="Holt alle Spotify-Listen neu (GitHub → „Run workflow“), danach neuer Stand der Website"><mat-icon>refresh</mat-icon> Listen jetzt aktualisieren</a>
       </div>
       @if (mappeText(); as m) { <p class="a" role="status">{{ m }}</p> }
-      @if (abw().setlistOhneWebsite.length || abw().archivAufWebsite.length) {
+      @if (hinweisZahl()) {
         <details class="abweichungen">
-          <summary><mat-icon>rule</mat-icon> {{ abw().setlistOhneWebsite.length + abw().archivAufWebsite.length }} Abweichungen zwischen den Listen</summary>
+          <summary><mat-icon>rule</mat-icon> {{ hinweisZahl() }} Hinweise zu den Listen</summary>
           @if (abw().setlistOhneWebsite.length) { <p><b>In der Setlist, aber nicht auf der Website:</b> {{ namen(abw().setlistOhneWebsite) }}</p> }
           @if (abw().archivAufWebsite.length) { <p><b>Im Archiv, aber noch auf der Website:</b> {{ namen(abw().archivAufWebsite) }}</p> }
+          @if (fuerWebsite().length) {
+            <p><b>Live gespielt, aber nicht auf der Website:</b> {{ namen(fuerWebsite()) }} –
+              <a [href]="websiteUrl" target="_blank" rel="noopener">offizielle Playlist in Spotify öffnen</a> und hinzufügen</p>
+          }
+          @if (fuersArchiv().length) {
+            <p><b>Fürs Archiv? Seit über 12 Monaten weder gespielt noch geprobt:</b>
+              @for (x of fuersArchiv(); track x.song.key; let l = $last) { {{ x.song.title }} <span class="a">({{ datum(x.zuletzt) }})</span>{{ l ? '' : ', ' }} }</p>
+          }
+          @if (doppelt().length) {
+            <p><b>Vermutlich doppelt:</b></p>
+            <ul class="doppelt">
+              @for (d of doppelt(); track d.a.key + d.b.key) {
+                <li>{{ anzeige(d.a) }} ↔ {{ anzeige(d.b) }} <span class="a">· {{ d.grund }}</span>
+                  @if (d.von) { <button type="button" (click)="zusammenfuehren(d)">„{{ anzeige(d.von) }}“ in „{{ anzeige(d.nach!) }}“ aufgehen lassen</button> }
+                </li>
+              }
+            </ul>
+          }
         </details>
       }
       <div class="filter">
@@ -87,8 +106,10 @@ function ladeEntwurf(): Record<string, Werte> {
             <option value="repertoire">alphabetisch</option>
             <option value="haeufig">oft gespielt zuerst</option>
             <option value="lange">lange nicht gespielt zuerst</option>
+            @if (liste() && liste() !== 'ohne') { <option value="spotify">wie in Spotify</option> }
           </select>
         </label>
+        <label><input type="checkbox" [checked]="schnell()" (change)="schnell.set($any($event.target).checked)" /> Tonart und Tempo schnell eintragen</label>
         @if (zeigen()) { <span class="treffer">{{ gefiltert().length }} {{ gefiltert().length === 1 ? 'Song' : 'Songs' }}</span> }
       </div>
 
@@ -125,10 +146,20 @@ function ladeEntwurf(): Record<string, Werte> {
               </td>
               <td class="werte">
                 @let w = wert(s.key);
+                @if (schnell()) {
+                  <span class="schnell" (click)="$event.stopPropagation()">
+                    <select [attr.aria-label]="'Tonart von ' + s.title" (change)="setzen(s.key, w.tonart ? 'spielTonart' : 'tonart', $any($event.target).value)">
+                      <option value="" [selected]="!(w.spielTonart ?? w.tonart)">Tonart</option>
+                      @for (t of tonarten; track t) { <option [value]="t" [selected]="(w.spielTonart ?? w.tonart) === t">{{ t }}</option> }
+                    </select>
+                    <input type="number" min="40" max="240" inputmode="numeric" placeholder="bpm" [attr.aria-label]="'Tempo von ' + s.title" [value]="w.bpm ?? ''" (change)="setzen(s.key, 'bpm', $any($event.target).value)" />
+                  </span>
+                } @else {
                 @if (w.tonart || w.spielTonart) { <span>{{ w.spielTonart ?? w.tonart }}@if (w.spielTonart && w.tonart) { <span class="a"> ({{ w.tonart }})</span> }</span> }
                 @if (w.capo) { <span class="a">Capo {{ w.capo }}</span> }
                 @if (w.bpm) { <span class="a">{{ w.bpm }} bpm</span> }
                 @if (!w.tonart && !w.spielTonart && !w.bpm) { <span class="a">–</span> }
+                }
               </td>
               <td class="noten">
                 @if (mitNoten().get(s.key); as n) {
@@ -240,7 +271,10 @@ export class SongsListe {
   // Lücken finden (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie „Bass“, nie gespielt) und
   // sortieren nach Repertoire, oft gespielt oder lange nicht gespielt (Song-Historie aus den Setlists der Auftritte)
   protected readonly zeigen = signal('');
-  protected readonly sortierung = signal<'repertoire' | 'haeufig' | 'lange'>('repertoire');
+  protected readonly sortierung = signal<'repertoire' | 'haeufig' | 'lange' | 'spotify'>('repertoire');
+  /** Schnell-Modus: Tonart und Tempo direkt in der Tabelle, ohne Dialog */
+  protected readonly schnell = signal(false);
+  protected readonly tonarten = ((t) => [...t, ...t.map((x) => x + 'm')])(['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H']);
   protected readonly historieText = historieText;
   private readonly band = inject(BandService);
   protected readonly historie = computed(() =>
@@ -276,6 +310,10 @@ export class SongsListe {
     const h = this.historie();
     if (this.sortierung() === 'haeufig') liste = [...liste].sort((a, b) => (h.get(b.key)?.gespielt ?? 0) - (h.get(a.key)?.gespielt ?? 0));
     // nie gespielt zuerst, dann der am längsten nicht gespielte
+    if (this.sortierung() === 'spotify' && this.liste() && this.liste() !== 'ohne') {
+      const reihe = new Map(this.listenSongs().map((x, i) => [x.key, i]));
+      liste = [...liste].sort((a, b) => (reihe.get(a.key) ?? 1e9) - (reihe.get(b.key) ?? 1e9));
+    }
     if (this.sortierung() === 'lange') liste = [...liste].sort((a, b) => (h.get(a.key)?.zuletzt ?? '').localeCompare(h.get(b.key)?.zuletzt ?? ''));
     return liste;
   });
@@ -322,22 +360,32 @@ export class SongsListe {
     }
   }
   /** Wunschliste: Noten da, Tonart/Tempo eingetragen, wie oft schon geprobt (vergangene Proben) */
-  private readonly geprobt = computed(() => {
-    const n = new Map<string, number>();
-    const heute = new Date().toISOString().slice(0, 10);
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i)!;
-        const tag = /^bn-probe-(\d{4}-\d{2}-\d{2})/.exec(k)?.[1];
-        if (!tag || tag > heute) continue;
-        const plan = JSON.parse(localStorage.getItem(k) ?? '{}') as { songs?: { title: string; artist: string }[] };
-        for (const s of plan.songs ?? []) n.set(`${s.title}|${s.artist}`, (n.get(`${s.title}|${s.artist}`) ?? 0) + 1);
-      }
-    } catch {
-      // ohne Speicher keine Proben
-    }
-    return n;
-  });
+  private readonly proben = computed(() => probenStand(probenAusSpeicher(), new Date().toISOString().slice(0, 10)));
+  private readonly geprobt = computed(() => new Map([...this.proben()].map(([k, p]) => [k, p.anzahl])));
+  // Hinweise: Kandidaten für die Website-Liste und fürs Archiv, vermutlich Doppelte (data/song-stand.ts)
+  protected readonly websiteUrl = LISTEN[0].url;
+  protected readonly fuerWebsite = computed(() => gespieltNichtAufWebsite(this.songs(), this.historie()));
+  protected readonly fuersArchiv = computed(() => archivKandidaten(this.songs(), this.historie(), this.proben(), new Date().toISOString().slice(0, 10)));
+  protected readonly doppelt = computed(() => doppelte(this.songs()));
+  protected readonly hinweisZahl = computed(
+    () => this.abw().setlistOhneWebsite.length + this.abw().archivAufWebsite.length + this.fuerWebsite().length + this.fuersArchiv().length + this.doppelt().length,
+  );
+  protected anzeige(s: SongEintrag): string {
+    return s.artist ? `${s.title} – ${s.artist}` : s.title;
+  }
+  protected datum(iso: string): string {
+    return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+  }
+  protected async zusammenfuehren(d: Doppelt): Promise<void> {
+    if (!d.von || !d.nach || !confirm(`„${this.anzeige(d.von)}“ in „${this.anzeige(d.nach)}“ aufgehen lassen? Noten, Mitschnitte und Einträge ziehen mit.`)) return;
+    await songUmbenennen(d.von, d.nach);
+    this.entwurf.set(ladeEntwurf());
+    this.wackelt.set(ladeWackelt());
+    await this.notenSongs();
+    this.notenLaden();
+  }
+  /** bühnenreif (Noten, Tonart/Tempo, geprobt) – für die Wunschliste */
+  protected readonly buehnenreif = buehnenreif;
   protected fortschritt(k: string) {
     const w = this.wert(k);
     const f = { noten: this.mitNoten().has(k), tonart: !!((w.tonart || w.spielTonart) && w.bpm), geprobt: this.geprobt().get(k) ?? 0 };
