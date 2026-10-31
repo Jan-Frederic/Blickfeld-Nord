@@ -102,10 +102,11 @@ export function songAbgleich(listen: Pick<Liste, 'key' | 'tracks'>[], notenKeys:
 
 /**
  * Song aus dem Namen eines alleinstehenden PDFs: „<Band> - <Titel>.pdf“, alles nach einem weiteren „ - “ ist die
- * Fassung („Toto - Africa - Bass.pdf“). Ohne „ - “ ist der ganze Name der Titel, ohne Interpret.
+ * Fassung („Toto - Africa - Bass.pdf“). Unterstriche gelten als Leerzeichen („Toto_-_Africa.pdf“, so speichern
+ * manche Apps und Downloads). Ohne „ - “ ist der ganze Name der Titel, ohne Interpret.
  */
 export function pdfSong(dateiname: string): { title: string; artist: string; fassung: string } {
-  const teile = dateiname.replace(/\.pdf$/i, '').split(/\s+[-–]\s+/).map((t) => t.trim()).filter(Boolean);
+  const teile = dateiname.replace(/\.pdf$/i, '').replace(/_+/g, ' ').split(/\s+[-–]\s+/).map((t) => t.trim()).filter(Boolean);
   if (teile.length < 2) return { title: teile[0] ?? dateiname.trim(), artist: '', fassung: '' };
   return { artist: teile[0], title: teile[1], fassung: teile.slice(2).join(' – ') };
 }

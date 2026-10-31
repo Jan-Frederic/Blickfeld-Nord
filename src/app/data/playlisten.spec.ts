@@ -31,6 +31,8 @@ describe('playlisten', () => {
 
   it('liest „<Band> - <Titel>.pdf“, Rest ist die Fassung; passt der Song zu einer Liste, gilt deren Schlüssel', () => {
     expect(pdfSong('Toto - Africa - Bass.pdf')).toEqual({ artist: 'Toto', title: 'Africa', fassung: 'Bass' });
+    expect(pdfSong('Brüker - Zwischen Den Zeilen.pdf')).toEqual({ artist: 'Brüker', title: 'Zwischen Den Zeilen', fassung: '' });
+    expect(pdfSong('Brüker_-_Das_Alte_Bauernhaus.pdf')).toEqual({ artist: 'Brüker', title: 'Das Alte Bauernhaus', fassung: '' });
     expect(pdfSong('Ohne Band.pdf')).toEqual({ artist: '', title: 'Ohne Band', fassung: '' });
     const liste = songAbgleich([{ key: 'website', tracks: [{ title: 'Angels', artist: 'Robbie Williams' }] }]);
     expect(pdfSongKey('robbie williams - angels - Gitarre.pdf', liste)).toBe('Angels|Robbie Williams');
