@@ -132,7 +132,7 @@ test('Booking: freier Tag im Kalender → Anfrage-Assistent in 3 Schritten', asy
   await until(async () => (await p.locator('app-entfernung .result').count()) && (await p.locator('app-entfernung .result').innerText()).includes('das passt'), 'Entfernungs-Check kennt den Ortsteil Haldern nicht');
   await p.locator('app-entfernung input').fill('Berlin');
   await until(async () => (await p.locator('app-entfernung .result').innerText()).includes('Tournee'), 'Entfernungs-Check antwortet bei Berlin nicht');
-  // im laufenden Monat ist wegen Abwesenheiten und Schonzeit evtl. nichts frei – über die Chips „freie Samstage“ springen
+  // im laufenden Monat ist wegen Abwesenheiten und Schonzeit evtl. nichts frei – über die Chips „freie Wochen“ springen
   if (!(await p.locator('app-availability button.day.free').count())) await p.locator('app-availability .samstage button').first().click();
   const free = p.locator('app-availability button.day.free').first();
   await free.click();
@@ -301,9 +301,9 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   await kontakt.locator('input').first().fill('Anna');
   await kontakt.locator('input').first().blur();
   await until(async () => (await p.evaluate(() => localStorage.getItem('bn-kontakte') ?? '')).includes('Anna'), 'Kontakt wird nicht gespeichert');
-  // Booking: freie Samstage je Monat
+  // Booking: freie Wochen je Monat
   await p.go('/booking/');
-  await until(async () => (await p.locator('app-availability .samstage button').count()) > 0, 'Freie Samstage fehlen im Booking');
+  await until(async () => (await p.locator('app-availability .samstage button').count()) > 0, 'Freie Wochen fehlen im Booking');
   return p;
 });
 

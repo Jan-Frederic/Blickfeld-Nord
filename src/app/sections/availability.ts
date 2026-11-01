@@ -21,7 +21,7 @@ const T = {
     pickFree: 'frei – Termin anfragen', states: { free: 'frei', booked: 'belegt', option: 'reserviert', past: 'vergangen' },
     legend: ['frei – zum Anfragen antippen', 'reserviert / angefragt', 'belegt'],
     label: (d: number, m: string, y: number) => `${d}. ${m} ${y}`,
-    samstage: 'Noch freie Samstage', springe: (m: string) => `${m} anzeigen`,
+    samstage: 'Noch freie Wochen', springe: (m: string) => `${m} anzeigen`,
   },
   en: {
     title: 'Availability', prev: 'Previous month', next: 'Next month',
@@ -31,7 +31,7 @@ const T = {
     pickFree: 'free – request this date', states: { free: 'free', booked: 'booked', option: 'reserved', past: 'past' },
     legend: ['free – tap to request', 'reserved / requested', 'booked'],
     label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
-    samstage: 'Saturdays still free', springe: (m: string) => `show ${m}`,
+    samstage: 'Weeks still free', springe: (m: string) => `show ${m}`,
   },
   nl: {
     title: 'Beschikbaarheid', prev: 'Vorige maand', next: 'Volgende maand',
@@ -41,7 +41,7 @@ const T = {
     pickFree: 'vrij – datum aanvragen', states: { free: 'vrij', booked: 'geboekt', option: 'gereserveerd', past: 'voorbij' },
     legend: ['vrij – tik om aan te vragen', 'gereserveerd / aangevraagd', 'geboekt'],
     label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
-    samstage: 'Nog vrije zaterdagen', springe: (m: string) => `${m} tonen`,
+    samstage: 'Nog vrije weken', springe: (m: string) => `${m} tonen`,
   },
 } satisfies Record<string, { states: Record<DayState, string> } & Record<string, unknown>>;
 // So weit lässt sich in die Zukunft blättern
@@ -195,14 +195,22 @@ export class Availability {
     return map;
   })();
 
-  // Überblick für Veranstalter: je Monat die Zahl der noch freien Samstage (antippen springt zum Monat)
+  // Überblick für Veranstalter: je Monat die Zahl der noch ganz freien Wochen (Mo–So ohne Auftritt, Abwesenheit oder
+  // Schonzeit, Montag nach heute) – eine Woche zählt zu dem Monat, in dem ihr Samstag liegt; antippen springt hin
   protected readonly freieSamstage = computed(() =>
     Array.from({ length: MONTHS_AHEAD + 1 }, (_, offset) => {
       const erster = new Date(this.now.getFullYear(), this.now.getMonth() + offset, 1);
       let anzahl = 0;
-      for (const d = new Date(erster); d.getMonth() === erster.getMonth(); d.setDate(d.getDate() + 1)) {
-        const key = iso(d.getFullYear(), d.getMonth(), d.getDate());
-        if (d.getDay() === 6 && key > this.today && !this.busy.has(key)) anzahl++;
+      for (const sa = new Date(erster); sa.getMonth() === erster.getMonth(); sa.setDate(sa.getDate() + 1)) {
+        if (sa.getDay() !== 6) continue;
+        const mo = new Date(sa.getFullYear(), sa.getMonth(), sa.getDate() - 5);
+        if (iso(mo.getFullYear(), mo.getMonth(), mo.getDate()) <= this.today) continue;
+        let frei = true;
+        for (let i = 0; i < 7 && frei; i++) {
+          const d = new Date(mo.getFullYear(), mo.getMonth(), mo.getDate() + i);
+          if (this.busy.has(iso(d.getFullYear(), d.getMonth(), d.getDate()))) frei = false;
+        }
+        if (frei) anzahl++;
       }
       const jahr = erster.getFullYear() !== this.now.getFullYear() ? ` ${String(erster.getFullYear()).slice(2)}` : '';
       return { offset, anzahl, name: this.t().months[erster.getMonth()].slice(0, 3) + jahr };

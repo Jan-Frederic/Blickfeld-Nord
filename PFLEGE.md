@@ -76,7 +76,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Ansprechpartner** (Backstage eines Auftritts): Name, WhatsApp/Telefon, E-Mail je Ort – gilt für alle Auftritte
   dort, bleibt auf den Geräten und im OneDrive (`bn-kontakte`), nie im Repository. Pressekit-Link und Anfrage gehen
   dann direkt per WhatsApp (sonst E-Mail), ohne Kontakt über Teilen bzw. Zwischenablage.
-- **Booking → Verfügbarkeit:** „Noch freie Samstage“ je Monat (antippen springt hin) – private Termine nur als belegt.
+- **Booking → Verfügbarkeit:** „Noch freie Wochen“ je Monat – ganze Wochen Mo–So ohne Auftritt, Abwesenheit oder Schonzeit (antippen springt hin) – private Termine nur als belegt.
 - **Übersetzungen → Pressekit-Texte gegenlesen:** Beitrag und Stories auf Deutsch, Englisch und Niederländisch
   nebeneinander (Vorlagen in `src/app/data/presse-texte.ts`).
 - **Konzertseite → Gespielt an diesem Abend:** Songs der offiziellen Playlist sind zum Nachhören auf Spotify verlinkt.
@@ -183,9 +183,9 @@ darunter einfügen:
 - Das Repo ist öffentlich: als Grund nur ein Stichwort, keine Details.
 - Sperren für die ganze Band (`'Band'`) gelten nur für Auftritte – Proben finden trotzdem statt.
 
-**Schonzeit:** Sobald ein Auftritt geklärt ist (`confirmed: true`), sind die drei vollen Wochen (Montag bis Sonntag)
-davor und danach automatisch reserviert – im Verfügbarkeitskalender gestrichelt als **reserviert**, nicht als frei.
-Die Woche des Auftritts selbst bleibt offen. Das gilt auch für schon eingetragene Auftritte; die bleiben stehen, auch
+**Schonzeit:** Sobald ein Auftritt geklärt ist (`confirmed: true`), sind die Woche des Auftritts und die drei vollen
+Wochen (Montag bis Sonntag) davor und danach automatisch reserviert – sieben Wochen am Stück, im Verfügbarkeitskalender
+gestrichelt als **reserviert**, nicht als frei. Das gilt auch für schon eingetragene Auftritte; die bleiben stehen, auch
 wenn sie in die Schonzeit eines anderen fallen. Eintragen muss man dafür nichts (`data/schonzeit.ts`, Länge in
 `SCHONZEIT_WOCHEN`). Das Termin-Formular warnt bei einem neuen Auftritt in der Schonzeit („Band (Schonzeit)“); Proben
 sind nicht betroffen.
