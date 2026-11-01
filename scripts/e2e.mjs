@@ -392,6 +392,46 @@ test('Backstage: Bereit? prüft den Bühnen-Modus ohne Netz und lädt fehlende T
   return p;
 });
 
+test('Backstage: Tap-Tempo und Status in der Songliste, Veranstalter-Mappe als PDF', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/');
+  await p.locator('app-songs-liste .filter label', { hasText: 'schnell eintragen' }).locator('input').check();
+  // nur unsichere bzw. automatisch ermittelte Werte
+  await p.locator('app-songs-liste .filter select').first().selectOption('unsicher');
+  await until(async () => (await p.locator('app-songs-liste tbody tr .status').count()) > 0, 'Filter „unsicher“ zeigt nichts');
+  const zeile = p.locator('app-songs-liste tbody tr').first();
+  const tap = zeile.locator('.schnell .tap');
+  for (let i = 0; i < 5; i++) {
+    await tap.click();
+    await p.waitForTimeout(500);
+  }
+  await until(async () => Math.abs(Number(await zeile.locator('.schnell input').inputValue().catch(() => '0')) - 120) <= 6, async () => `Tap-Tempo trägt nichts ein: ${await zeile.locator('.schnell input').inputValue()}`);
+  await until(async () => (await p.locator('app-songs-liste .apply').innerText().catch(() => '')).includes('geändert'), 'Tap-Tempo landet nicht im Entwurf');
+  // Mappe eines neuen Veranstalters
+  await p.go('/backstage/termine/kontakte/');
+  await p.locator('app-termine-kontakte details.neu summary').click();
+  await p.locator('app-termine-kontakte form label', { hasText: 'Ort' }).locator('input').fill('Testhalle');
+  await p.locator('app-termine-kontakte form label', { hasText: 'Stadt' }).locator('input').fill('Rhede');
+  await p.locator('app-termine-kontakte form button[type=submit]').click();
+  const [pdf] = await Promise.all([p.waitForEvent('download'), p.locator('app-termine-kontakte li', { hasText: 'Testhalle' }).getByRole('button', { name: /Mappe/ }).click()]);
+  expect(pdf.suggestedFilename() === 'Mappe Testhalle.pdf', `Mappe heißt ${pdf.suggestedFilename()}`);
+  return p;
+});
+
+test('Woche vor dem Konzert: „Noch … Tage“-Leiste auf Unterseiten, nicht auf der Startseite', async () => {
+  const p = await page();
+  await p.clock.setFixedTime(new Date('2026-11-30T10:00:00'));
+  await p.go('/booking/');
+  await until(async () => /Noch 4 Tage/.test((await p.locator('app-bald-leiste').innerText().catch(() => '')) ?? ''), 'Leiste fehlt auf /booking');
+  await p.locator('app-bald-leiste a').click();
+  await until(async () => new URL(p.url()).pathname.startsWith('/konzerte/2026-12-04'), () => `Leiste führt nach ${p.url()}`);
+  expect(!(await p.locator('app-bald-leiste .bald').count()), 'Leiste auf der eigenen Konzertseite');
+  await p.go('/');
+  await p.waitForTimeout(500);
+  expect(!(await p.locator('app-bald-leiste .bald').count()), 'Leiste auf der Startseite');
+  return p;
+});
+
 test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neuladen', async () => {
   const p = await page();
   await p.go('/backstage/aufgaben/');

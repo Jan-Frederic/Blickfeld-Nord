@@ -17,6 +17,8 @@ export interface SongInfo {
   bpm?: number;
   /** kurzer Hinweis für die Bühne, z. B. „Intro nur Gitarre“ */
   notiz?: string;
+  /** von der Band am Instrument geprüft bzw. selbst eingetragen (Backstage → Songs) */
+  geprueft?: boolean;
   /** woher Tonart und Tempo stammen (Recherche) – erscheint unter Backstage → Songs */
   quelle?: string;
 }
@@ -167,8 +169,29 @@ export const SONGINFO: SongInfo[] = [
 export const SONGINFO_ENTWURF_KEY = 'bn-songinfo-entwurf';
 
 /** im Backstage änderbare Felder (die Quelle kommt nur aus der Recherche) */
-export type SongWerte = Pick<SongInfo, 'tonart' | 'spielTonart' | 'capo' | 'bpm' | 'notiz'>;
-export const SONG_FELDER = ['tonart', 'spielTonart', 'capo', 'bpm', 'notiz'] as const;
+export type SongWerte = Pick<SongInfo, 'tonart' | 'spielTonart' | 'capo' | 'bpm' | 'notiz' | 'geprueft'>;
+export const SONG_FELDER = ['tonart', 'spielTonart', 'capo', 'bpm', 'notiz', 'geprueft'] as const;
+
+/**
+ * Wie verlässlich sind Tonart und Tempo? „geprueft“ (Band), „recherche“ (Notenausgaben, Akkordseiten),
+ * „automatisch“ (Spotify-Analyse), „unsicher“ (Quellen uneinig, nur eine Quelle …), „fehlt“ (nichts eingetragen).
+ */
+export type SongStatus = 'geprueft' | 'recherche' | 'automatisch' | 'unsicher' | 'fehlt';
+const UNSICHER = /unsicher|uneinig|nur eine Quelle|prüfen|keine eigene Seite|statt|Liste|nicht gefunden/i;
+export function songStatus(w: SongWerte, quelle: string | undefined): SongStatus {
+  if (w.geprueft) return 'geprueft';
+  if (!w.tonart && !w.spielTonart && !w.bpm) return 'fehlt';
+  if (!quelle) return 'geprueft'; // ohne Quelle hat die Band es selbst eingetragen
+  if (UNSICHER.test(quelle) || !(w.tonart || w.spielTonart) || !w.bpm) return 'unsicher';
+  return /^Spotify-Analyse/.test(quelle) ? 'automatisch' : 'recherche';
+}
+export const STATUS_TEXT: Record<SongStatus, string> = {
+  geprueft: 'von der Band geprüft',
+  recherche: 'recherchiert (Noten, Akkordseiten)',
+  automatisch: 'automatisch ermittelt (Spotify-Analyse)',
+  unsicher: 'unsicher – am Instrument prüfen',
+  fehlt: 'noch nichts eingetragen',
+};
 
 function entwurf(): Record<string, SongWerte> {
   try {

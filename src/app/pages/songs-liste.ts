@@ -4,12 +4,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { LISTEN, ListenKey, SongEintrag, abweichungen, gesamtDauer, listeInReihenfolge, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
 import { songUmbenennen } from '../data/song-umbenennen';
 import { Doppelt, archivKandidaten, buehnenreif, doppelte, gespieltNichtAufWebsite, probenAusSpeicher, probenStand } from '../data/song-stand';
-import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, SongInfo, SongWerte } from '../data/songinfo';
+import { SONGINFO, SONGINFO_ENTWURF_KEY, SONG_FELDER, STATUS_TEXT, SongInfo, SongStatus, SongWerte, songStatus } from '../data/songinfo';
 import { patchSongInfo } from '../data/songinfo-patch';
 import { NotenDateiInfo, NotenPdf, alleSongNoten, notenDateien, songNotenSetzen } from '../data/noten';
 import { SongDialog } from './song-dialog';
 import { SetlistBuehne } from './setlist-buehne';
 import { WunschPassung } from './wunsch-passung';
+import { TapTempo } from '../data/tap-tempo';
 import { Song, durationOf, loadSetlist, setTime } from '../data/setlist-data';
 import { BandService } from '../data/band.service';
 import { historieText, songHistorie } from '../data/song-historie';
@@ -96,6 +97,7 @@ function ladeEntwurf(): Record<string, Werte> {
           <select class="zeigen" (change)="zeigen.set($any($event.target).value)">
             <option value="">alle Songs</option>
             <option value="tonart">ohne Tonart oder Tempo</option>
+            <option value="unsicher">Werte unsicher</option>
             <option value="noten">ohne Noten</option>
             <option value="akkorde">ohne Akkorde</option>
             @for (f of fassungen(); track f) { <option [value]="'fassung:' + f">ohne {{ f }}</option> }
@@ -150,6 +152,8 @@ function ladeEntwurf(): Record<string, Werte> {
               </td>
               <td class="werte">
                 @let w = wert(s.key);
+                @let st = status(s.key);
+                @if (st !== 'fehlt') { <span class="status" [class]="'status ' + st" [title]="statusText[st]" role="img" [attr.aria-label]="statusText[st]"></span> }
                 @if (schnell()) {
                   <span class="schnell" (click)="$event.stopPropagation()">
                     <select [attr.aria-label]="'Tonart von ' + s.title" (change)="setzen(s.key, w.tonart ? 'spielTonart' : 'tonart', $any($event.target).value)">
@@ -157,6 +161,9 @@ function ladeEntwurf(): Record<string, Werte> {
                       @for (t of tonarten; track t) { <option [value]="t" [selected]="(w.spielTonart ?? w.tonart) === t">{{ t }}</option> }
                     </select>
                     <input type="number" min="40" max="240" inputmode="numeric" placeholder="bpm" [attr.aria-label]="'Tempo von ' + s.title" [value]="w.bpm ?? ''" (change)="setzen(s.key, 'bpm', $any($event.target).value)" />
+                    <button type="button" class="tap" [class.aktiv]="tapKey() === s.key" (click)="tippen(s.key)" [attr.aria-label]="'Tempo von ' + s.title + ' im Takt tippen'" title="Mindestens 4-mal im Takt tippen">
+                      @if (tapKey() === s.key) { {{ tapAnzeige() }} } @else { <mat-icon>touch_app</mat-icon> }
+                    </button>
                   </span>
                 } @else {
                 @if (w.tonart || w.spielTonart) { <span>{{ w.spielTonart ?? w.tonart }}@if (w.spielTonart && w.tonart) { <span class="a"> ({{ w.tonart }})</span> }</span> }
@@ -282,6 +289,17 @@ export class SongsListe {
   protected readonly sortierung = signal<'repertoire' | 'haeufig' | 'lange' | 'spotify'>('repertoire');
   /** Schnell-Modus: Tonart und Tempo direkt in der Tabelle, ohne Dialog */
   protected readonly schnell = signal(false);
+  // Tap-Tempo je Zeile (schnell eintragen): ein Song zur Zeit
+  protected readonly tapKey = signal('');
+  protected readonly tapAnzeige = signal('');
+  private readonly tap = new TapTempo();
+  protected tippen(k: string): void {
+    if (this.tapKey() !== k) this.tap.neu();
+    this.tapKey.set(k);
+    const bpm = this.tap.tippen(performance.now());
+    this.tapAnzeige.set(bpm ? String(bpm) : `${this.tap.zahl}/4`);
+    if (bpm) this.setzen(k, 'bpm', String(bpm));
+  }
   protected readonly tonarten = ((t) => [...t, ...t.map((x) => x + 'm')])(['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H']);
   protected readonly historieText = historieText;
   private readonly band = inject(BandService);
@@ -307,6 +325,7 @@ export class SongsListe {
     const z = this.zeigen();
     const noten = this.mitNoten();
     if (z === 'tonart') liste = liste.filter((s) => { const w = this.wert(s.key); return !w.tonart || !w.bpm; });
+    if (z === 'unsicher') liste = liste.filter((s) => ['unsicher', 'automatisch'].includes(this.status(s.key)));
     else if (z === 'noten') liste = liste.filter((s) => !noten.has(s.key));
     else if (z === 'akkorde') liste = liste.filter((s) => !noten.get(s.key)?.akkorde);
     else if (z === 'nie') liste = liste.filter((s) => !this.historie().get(s.key)?.gespielt);
@@ -504,12 +523,20 @@ export class SongsListe {
   protected quelle(k: string): string | undefined {
     return this.quellen.get(k);
   }
+  /** Verlässlichkeit von Tonart und Tempo (geprüft, recherchiert, automatisch, unsicher) */
+  protected status(k: string): SongStatus {
+    return songStatus(this.wert(k), this.quelle(k));
+  }
+  protected readonly statusText = STATUS_TEXT;
 
   protected setzen(k: string, feld: keyof Werte, roh: string): void {
     const neu: Werte = { ...this.wert(k) };
     if (feld === 'bpm') neu.bpm = Number(roh) >= 40 && Number(roh) <= 240 ? Math.round(Number(roh)) : undefined;
     else if (feld === 'capo') neu.capo = Number(roh) >= 1 && Number(roh) <= 12 ? Number(roh) : undefined;
+    else if (feld === 'geprueft') neu.geprueft = roh ? true : undefined;
     else neu[feld] = roh.trim() || undefined;
+    // wer Tonart oder Tempo selbst einträgt, hat es geprüft
+    if ((feld === 'tonart' || feld === 'spielTonart' || feld === 'bpm') && roh.trim()) neu.geprueft = true;
     // „wir spielen“ gleich dem Original ist keine Abweichung
     if (neu.spielTonart && neu.spielTonart === neu.tonart) neu.spielTonart = undefined;
     const alt = this.gespeichert[k] ?? {};

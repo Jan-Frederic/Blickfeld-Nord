@@ -47,3 +47,18 @@ export function probeTipps(
   const gesehen = new Set<string>();
   return [...unsicher, ...notiert, ...neu, ...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
 }
+
+/**
+ * „Für den nächsten Auftritt“ (Probenseite): Songs mit Baustelle aus der letzten Probe und Songs der Setlist des
+ * nächsten Auftritts, die noch nie geprobt wurden – ohne die, die schon auf dem Plan stehen.
+ */
+export function vorAuftritt(baustellen: Song[], setlist: Song[], geprobt: Set<string>, drin: Set<string>): ProbeTipp[] {
+  const out: ProbeTipp[] = [];
+  const dazu = (s: Song, grund: string) => {
+    if (drin.has(key(s)) || out.some((o) => key(o) === key(s))) return;
+    out.push({ title: s.title, artist: s.artist, grund });
+  };
+  for (const s of baustellen) dazu(s, 'Baustelle aus der letzten Probe');
+  for (const s of setlist) if (!geprobt.has(key(s))) dazu(s, 'auf der Setlist, noch nie geprobt');
+  return out;
+}

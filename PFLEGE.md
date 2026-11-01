@@ -120,6 +120,23 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Auftritte dort.
 - **Rückblick-Frist:** Nach einem Auftritt im Dezember erinnert „Heute fällig“ bis zum 14.12. an den Rückblick, damit er
   im Jahresrückblick steht.
+- **Tonart hören** (Song-Dialog): 15–20 Sekunden den Song oder die Akkordfolge spielen, das Mikrofon schlägt die
+  Tonart vor. Ohne Original-Tonart wird sie das Original, weicht sie ab, „Wir spielen“.
+- **Tap-Tempo in der Songliste:** bei „Tonart und Tempo schnell eintragen“ je Zeile ein Tipp-Knopf (4-mal im Takt).
+- **Verlässlichkeit** in der Songliste: Punkt grün = von der Band geprüft, blau = recherchiert, blauer Kreis =
+  automatisch (Spotify-Analyse), gelb = unsicher. „Zeigen: Werte unsicher“ listet, was noch zu prüfen ist; im Song-Dialog
+  bestätigt „✓ Stimmt so“ die Werte (wer selbst Tonart oder Tempo einträgt, bestätigt automatisch). Über „Datei für
+  GitHub“ landet das als `geprueft: true` in songinfo.ts.
+- **Setlist rund** (Bereit?): mehr als zwei langsame Songs hintereinander, Tonartsprünge und Songs mit Baustelle aus der
+  letzten Probennotiz.
+- **Für den nächsten Auftritt** (Probenseite): „Alle übernehmen“ holt Baustellen-Songs und Setlist-Songs des nächsten
+  Auftritts, die noch nie geprobt wurden, auf den Probenplan.
+- **Veranstalter-Mappe** (Termine → Kontakte → „Mappe“): PDF mit Ansprechpartner, Bewertung und allen Auftritten dort
+  samt Setlist und Vor-Ort-Angaben – wird auf dem Gerät erzeugt, nur für die Band.
+- **Noch … Tage** (öffentlich): In der Woche vor einem öffentlichen, geklärten Konzert zeigen die Unterseiten unten eine
+  kleine Leiste zur Konzertseite (nicht auf der Startseite mit dem Countdown, schließbar).
+- **Website-Update gescheitert:** Ist der letzte Deploy auf GitHub fehlgeschlagen, steht das ganz oben unter „Heute
+  fällig“ mit Link zum Lauf – live ist dann noch der alte Stand.
 - **Ladezeit:** Bühnen-Modus, Song-Dialog, Notenbereich und die unteren Teile einer Auftrittsseite werden erst bei
   Bedarf geladen (Songs-Seite ca. 12 % weniger JavaScript).
 - **Probe-Vorschlag aus Notizen:** Songs, deren letzte Probennotiz nach Baustelle klingt („wackelt“, „Tempo“,

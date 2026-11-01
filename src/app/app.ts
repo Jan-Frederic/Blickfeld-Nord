@@ -9,6 +9,7 @@ import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr 
 import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
 import { SyncKompass } from './pages/sync-kompass';
 import { SprachHinweis } from './sections/sprach-hinweis';
+import { BaldLeiste } from './sections/bald-leiste';
 
 const TEXT = tr(
   {
@@ -81,7 +82,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass, BaldLeiste],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

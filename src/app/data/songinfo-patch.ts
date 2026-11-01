@@ -13,6 +13,7 @@ export function songInfoZeile(s: SongInfo): string {
   if (s.capo) teile.push(`capo: ${s.capo}`);
   if (s.bpm) teile.push(`bpm: ${s.bpm}`);
   if (s.notiz?.trim()) teile.push(`notiz: ${q(s.notiz)}`);
+  if (s.geprueft) teile.push('geprueft: true');
   if (s.quelle?.trim()) teile.push(`quelle: ${q(s.quelle)}`);
   return `  { ${teile.join(', ')} },`;
 }

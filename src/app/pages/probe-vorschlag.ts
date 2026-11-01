@@ -3,8 +3,8 @@ import { MatIconModule } from '@angular/material/icon';
 import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
 import { alleBewertungen, rangliste, songKey } from '../data/bewertung';
-import { Entry, SETLIST_PREFIX, isPause } from '../data/setlist-data';
-import { ProbeTipp, probeTipps } from '../data/probe-vorschlag';
+import { Entry, SETLIST_PREFIX, Song, isPause, loadSetlist } from '../data/setlist-data';
+import { ProbeTipp, probeTipps, vorAuftritt } from '../data/probe-vorschlag';
 import { ladeWackelt } from '../data/wackelt';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
@@ -16,6 +16,14 @@ import { notizBaustellen, probenAusSpeicher, probenNotizen, probenStand } from '
   selector: 'app-probe-vorschlag',
   imports: [MatIconModule],
   template: `
+    @if (auftritt(); as a) {
+      @if (a.songs.length) {
+        <div class="tipps">
+          <p class="label"><mat-icon>event</mat-icon> Für {{ a.name }}: {{ a.songs.length }} {{ a.songs.length === 1 ? 'Song' : 'Songs' }} mit Baustelle oder noch nie geprobt</p>
+          <button type="button" class="alle" (click)="alleUebernehmen(a.songs)"><mat-icon>playlist_add</mat-icon> Alle übernehmen</button>
+        </div>
+      }
+    }
     @if (tipps().length) {
       <div class="tipps">
         <p class="label"><mat-icon>lightbulb</mat-icon> Vorschläge – antippen zum Übernehmen</p>
@@ -35,12 +43,31 @@ import { notizBaustellen, probenAusSpeicher, probenNotizen, probenStand } from '
     button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .88rem; cursor: pointer; }
     button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     small { color: var(--bn-fog); font-size: .76rem; }
+    .alle { border-color: var(--bn-sunset); }
   `,
 })
 export class ProbeVorschlag {
   /** Songs, die schon auf dem Probenplan stehen */
   readonly drin = input.required<{ title: string; artist: string }[]>();
   readonly add = output<ProbeTipp>();
+  /** Datum der Probe – der nächste Auftritt danach bestimmt die Setlist */
+  readonly datum = input<string>(new Date().toISOString().slice(0, 10));
+  /** nächster Auftritt nach der Probe: Baustellen und ungeprobte Setlist-Songs */
+  protected readonly auftritt = computed(() => {
+    const show = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date)).find((s) => s.date >= this.datum());
+    if (!show) return null;
+    const setlist = loadSetlist(this.band.showId(show)).filter((e) => !isPause(e)) as Song[];
+    const baustellen = notizBaustellen(probenNotizen()).map((b) => {
+      const i = b.key.lastIndexOf('|');
+      return { title: b.key.slice(0, i), artist: b.key.slice(i + 1) };
+    });
+    const geprobt = new Set(probenStand(probenAusSpeicher(), this.datum()).keys());
+    const songs = vorAuftritt(baustellen, setlist, geprobt, new Set(this.drin().map(songKey)));
+    return { name: show.private ? (show.publicName ?? show.venue) : show.venue, songs };
+  });
+  protected alleUebernehmen(songs: ProbeTipp[]): void {
+    for (const s of songs) this.add.emit(s);
+  }
   private readonly band = inject(BandService);
   /** Wunschlisten-Songs mit Noten und Tonart/Tempo, die noch nie geprobt wurden (Noten asynchron aus IndexedDB) */
   private readonly bereit = signal<{ title: string; artist: string }[]>([]);

@@ -34,7 +34,7 @@ for (const file of files(DIST)) {
     "font-src 'self' data:",
     // Proben-Mitschnitte (Backstage → Songs) werden als blob: abgespielt
     "media-src 'self' blob:",
-    "connect-src 'self' https://blickfeld-nord.goatcounter.com https://api.open-meteo.com https://raw.githubusercontent.com" +
+    "connect-src 'self' https://blickfeld-nord.goatcounter.com https://api.open-meteo.com https://raw.githubusercontent.com https://api.github.com" +
       // OneDrive: Anmeldung, Graph und die Download-/Upload-Adressen (privates OneDrive liefert Dateien über
       // *.microsoftpersonalcontent.com bzw. api.onedrive.com aus, Firmen-OneDrive über *.sharepoint.com)
       ' https://login.microsoftonline.com https://graph.microsoft.com https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com' +

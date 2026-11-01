@@ -105,6 +105,8 @@
 
 <!-- Vorschlag einer anderen Sprache laut Browser-Einstellung (nur einmal) -->
 <app-sprach-hinweis />
+<!-- Woche vor einem Konzert: „Noch 3 Tage“-Leiste – erst im Leerlauf geladen, damit die Startseite nicht schwerer wird -->
+@defer (on idle) { <app-bald-leiste /> }
 
 <footer>
   <div class="social">

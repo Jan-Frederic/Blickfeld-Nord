@@ -406,3 +406,23 @@ app-termine-kontakte .sortierung button { display: inline-flex; align-items: cen
 app-termine-kontakte .sortierung button.an { border-color: var(--bn-sunset); background: rgba(232, 164, 106, .18); }
 app-termine-kontakte .sortierung mat-icon { font-size: 16px; width: 16px; height: 16px; }
 app-setlist .bogen { margin: 14px 0 0; font-size: .85rem; color: var(--bn-fog); }
+app-song-dialog .hoeren-knopf { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 0; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
+app-song-dialog .hoeren-knopf mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-tonart-hoeren .hoeren { position: relative; margin: 10px 0 0; padding: 12px 48px 12px 14px; border-radius: 12px; background: #111; color: #fff; font-size: .9rem; }
+app-tonart-hoeren .hoeren p { margin: 0 0 8px; }
+app-tonart-hoeren .vorschlag strong { font-size: 2rem; color: #e8a46a; margin-right: 10px; }
+app-tonart-hoeren .a { color: #9aa0a6; }
+app-tonart-hoeren button { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; padding: 5px 12px; border-radius: 999px; border: 1px solid #444; background: none; color: #fff; font: inherit; font-size: .85rem; cursor: pointer; }
+app-tonart-hoeren button:disabled { opacity: .5; cursor: default; }
+app-tonart-hoeren .zu { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; padding: 0; justify-content: center; }
+app-tonart-hoeren mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-songs-liste .schnell .tap { display: inline-grid; place-items: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .78rem; cursor: pointer; }
+app-songs-liste .schnell .tap.aktiv { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-songs-liste .schnell .tap mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-songs-liste .status { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; vertical-align: middle; }
+app-songs-liste .status.geprueft { background: #5fb88a; }
+app-songs-liste .status.recherche { background: #7aa7d9; }
+app-songs-liste .status.automatisch { background: transparent; border: 2px solid #7aa7d9; box-sizing: border-box; }
+app-songs-liste .status.unsicher { background: #e0b25a; }
+app-song-dialog .stimmt { margin-left: 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid #5fb88a; background: none; color: #5fb88a; font: inherit; font-size: .8rem; cursor: pointer; }
+app-song-dialog .geprueft { color: #5fb88a; }

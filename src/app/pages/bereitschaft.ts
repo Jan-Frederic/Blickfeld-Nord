@@ -2,9 +2,11 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
-import { bereitschaft } from '../data/bereitschaft';
+import { bereitschaft, langsamStrecken } from '../data/bereitschaft';
 import { isPause, loadSetlist } from '../data/setlist-data';
-import { songInfo } from '../data/songinfo';
+import { gespielteTonart, songInfo } from '../data/songinfo';
+import { spruenge } from '../data/tonart-uebergang';
+import { notizBaustellen, probenNotizen } from '../data/song-stand';
 import { alleSongNoten } from '../data/noten';
 import { type OfflineStand, offlineStand, offlineVorladen } from '../data/offline';
 import { erledigteSchritte } from '../data/werbeplan';
@@ -63,6 +65,8 @@ export class Bereitschaft {
   private readonly band = inject(BandService);
   protected readonly id = computed(() => this.band.showId(this.show()));
   private readonly notenKeys = signal<Set<string> | undefined>(undefined);
+  /** Songs, deren letzte Probennotiz nach Baustelle klingt */
+  private readonly baustellen = new Set(notizBaustellen(probenNotizen()).map((b) => b.key));
   private readonly offline = signal<OfflineStand | undefined>(undefined);
   protected readonly laedt = signal(false);
 
@@ -99,6 +103,11 @@ export class Bereitschaft {
       werbungErledigt: erledigteSchritte(id),
       packliste: { eingepackt: Math.min(pack.checked.length, gesamt), gesamt },
       offline: this.offline(),
+      setlistCheck: {
+        langsamStrecken: langsamStrecken(setlist, (s) => songInfo(s.title, s.artist)?.bpm),
+        spruenge: spruenge(setlist, (s) => gespielteTonart(songInfo(s.title, s.artist))),
+        baustellen: songs.filter((s) => this.baustellen.has(`${s.title}|${s.artist}`)).map((s) => s.title),
+      },
     });
   });
   protected readonly offen = computed(() => this.punkte().filter((p) => !p.ok).length);

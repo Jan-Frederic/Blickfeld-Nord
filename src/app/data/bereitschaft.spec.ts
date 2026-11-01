@@ -1,4 +1,4 @@
-import { bereitschaft } from './bereitschaft';
+import { bereitschaft, langsamStrecken } from './bereitschaft';
 
 const show = { date: '2026-12-04', time: '18:00', venue: 'Weihnachtsmarkt', city: 'Rhede', confirmed: true };
 const basis = {
@@ -45,5 +45,16 @@ describe('bereitschaft', () => {
     expect(ohneSw?.aktion).toBeUndefined();
     expect(ohneSw?.hinweis).toContain('neu laden');
     expect(bereitschaft({ ...basis, heute: '2026-11-30', offline: { sw: true, shell: true, pdfjs: true } }).find((x) => x.text === 'Bühnen-Modus ohne Netz')?.ok).toBe(true);
+  });
+
+  it('Setlist rund: langsame Strecken, Sprünge, Baustellen', () => {
+    const S = (title: string) => ({ title, artist: 'X' });
+    const bpm: Record<string, number> = { a: 70, b: 80, c: 90, d: 85, e: 140 };
+    expect(langsamStrecken([S('a'), S('b'), S('c'), S('d'), S('e'), S('a'), S('b')], (s) => bpm[s.title])).toBe(1);
+    expect(langsamStrecken([S('a'), S('b'), { pause: true }, S('c')], (s) => bpm[s.title])).toBe(0);
+    const p = bereitschaft({ ...basis, setlistCheck: { langsamStrecken: 1, spruenge: 0, baustellen: ['A'] } }).find((x) => x.text === 'Setlist rund');
+    expect(p).toMatchObject({ ok: false, ziel: 'setlist' });
+    expect(p?.hinweis).toBe('1× mehr als zwei langsame Songs hintereinander · Baustelle laut letzter Probe: A');
+    expect(bereitschaft({ ...basis, setlistCheck: { langsamStrecken: 0, spruenge: 0, baustellen: [] } }).find((x) => x.text === 'Setlist rund')?.ok).toBe(true);
   });
 });

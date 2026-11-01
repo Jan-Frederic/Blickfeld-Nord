@@ -7,6 +7,7 @@ import { BandService, Show } from '../data/band.service';
 import { ladeKontakte, nachfragen } from '../data/kontakte';
 import { SAISON_UPDATE_KEY, saisonUpdateFaellig } from '../data/jahresplan';
 import { rueckblickFrist } from '../data/jahresrueckblick';
+import { DeployLauf, deployStatus } from '../data/deploy-status';
 import { kampagnenLink } from '../data/goatcounter';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
@@ -25,10 +26,16 @@ interface Werbung {
   selector: 'app-heute-faellig',
   imports: [RouterLink, MatIconModule],
   template: `
-    @if (termine().length || werbung().length) {
+    @if (termine().length || werbung().length || deploy()) {
       <section class="heute" aria-labelledby="heute-titel">
         <h3 id="heute-titel"><mat-icon>today</mat-icon> Heute fällig</h3>
         <ul>
+          @if (deploy(); as d) {
+            <li class="spaet">
+              <mat-icon>error</mat-icon>
+              <a [href]="d.html_url" target="_blank" rel="noopener">Website-Update gescheitert ({{ seit(d.created_at) }}) – live ist noch der alte Stand. Zum Lauf auf GitHub</a>
+            </li>
+          }
           @for (t of termine(); track t.label) {
             <li>
               <mat-icon>{{ t.icon }}</mat-icon>
@@ -72,6 +79,15 @@ export class HeuteFaellig {
   private readonly heute = new Date().toISOString().slice(0, 10);
   private readonly stand = signal(0); // nach dem Abhaken neu berechnen
   protected readonly kopiert = signal<string | null>(null);
+  /** letzter Deploy gescheitert? (GitHub, nur mit Netz) */
+  protected readonly deploy = signal<DeployLauf | null>(null);
+  constructor() {
+    if (typeof navigator !== 'undefined' && navigator.onLine) deployStatus().then((d) => this.deploy.set(d));
+  }
+  protected seit(iso: string): string {
+    const std = Math.round((Date.now() - Date.parse(iso)) / 36e5);
+    return std < 1 ? 'gerade eben' : std < 24 ? `vor ${std} Std.` : `vor ${Math.round(std / 24)} Tagen`;
+  }
 
   protected readonly termine = computed(() => [
     ...this.band.shows

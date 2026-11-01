@@ -62,6 +62,7 @@ interface Zeile {
               <button type="button" class="btn" (click)="zusage(z)" title="Anfrage erledigt – neuen Auftritt mit Location und Ort vorbelegt eintragen"><mat-icon>event_available</mat-icon> Zusage → Auftritt eintragen</button>
               <button type="button" class="btn" (click)="anfragen(z)"><mat-icon>send</mat-icon> {{ kopiert() === z.key ? 'Kopiert!' : 'Anfrage schreiben' }}</button>
               @if (z.zuletzt || z.naechster) { <a class="btn" [routerLink]="'/backstage/' + band.showId((z.naechster ?? z.zuletzt)!)"><mat-icon>event</mat-icon> Auftritt</a> }
+              <button type="button" class="btn" (click)="mappe(z)" [disabled]="mappeLaeuft() === z.key" title="Kontakt, Bewertung, Auftritte mit Setlist und Vor-Ort-Angaben – nur für die Band"><mat-icon>picture_as_pdf</mat-icon> {{ mappeLaeuft() === z.key ? 'Wird erstellt …' : 'Mappe' }}</button>
               <button type="button" class="btn leise" (click)="loeschen(z)" [attr.aria-label]="'Kontakt ' + z.ort + ' löschen'"><mat-icon>delete</mat-icon></button>
             </div>
           </li>
@@ -174,6 +175,46 @@ export class TermineKontakte {
   protected beantwortet(z: Zeile): void {
     angefragtSetzen(z.key, null);
     this.stand.update((n) => n + 1);
+  }
+
+  // Veranstalter-Mappe (data/veranstalter-pdf.ts): pdf-lib erst beim Klick laden
+  protected readonly mappeLaeuft = signal('');
+  protected async mappe(z: Zeile): Promise<void> {
+    this.mappeLaeuft.set(z.key);
+    try {
+      const [{ veranstalterPdf }, { loadSetlist, isPause }, { FIELDS, VORORT_PREFIX, loadVorOrt }] = await Promise.all([
+        import('../data/veranstalter-pdf'),
+        import('../data/setlist-data'),
+        import('./vorort'),
+      ]);
+      const auftritte = this.band.shows
+        .filter((s) => ortKey(s) === z.key)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((s) => {
+          const id = this.band.showId(s);
+          const vo = loadVorOrt(VORORT_PREFIX + id);
+          return {
+            titel: `${datumText(s.date)}${s.time ? ' · ' + s.time + ' Uhr' : ''} – ${s.venue}${s.confirmed ? '' : ' (offen)'}`,
+            setlist: loadSetlist(id).filter((e) => !isPause(e)).map((e) => `${(e as { title: string }).title}`),
+            vorort: FIELDS.filter((f) => vo[f.key]?.trim()).map((f) => [f.label, vo[f.key]!.trim()] as [string, string]),
+          };
+        });
+      const kontakt: [string, string][] = [
+        ['Name', z.k.name ?? ''],
+        ['Telefon', z.k.telefon ?? ''],
+        ['E-Mail', z.k.mail ?? ''],
+        ['Zuletzt angefragt', z.k.angefragt ? datumText(z.k.angefragt) : ''],
+      ].filter(([, v]) => v) as [string, string][];
+      const blob = await veranstalterPdf({ ort: z.ort, stadt: z.stadt, kontakt, bewertung: bewertungText(z.k), auftritte, stand: datumText(this.heute) });
+      const url = URL.createObjectURL(new File([blob], `Mappe ${z.ort}.pdf`, { type: 'application/pdf' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: `Mappe ${z.ort}.pdf` });
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } finally {
+      this.mappeLaeuft.set('');
+    }
   }
 
   protected loeschen(z: Zeile): void {

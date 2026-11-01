@@ -6,6 +6,8 @@ import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
 import { NotenEditor } from './noten-editor';
 import { SongMitschnitte } from './song-mitschnitte';
+import { TonartHoeren } from './tonart-hoeren';
+import { TapTempo } from '../data/tap-tempo';
 import { probenNotizen, probenPlaene, probenVerlauf } from '../data/song-stand';
 
 // Dialog „Song bearbeiten“ (Backstage → Songs): Tonart (Original und wie die Band spielt), Capo, Tempo – auch per
@@ -22,7 +24,7 @@ export interface SongZeile {
 
 @Component({
   selector: 'app-song-dialog',
-  imports: [MatIconModule, NotenEditor, SongMitschnitte],
+  imports: [MatIconModule, NotenEditor, SongMitschnitte, TonartHoeren],
   template: `
     <dialog #dialog (close)="schliessen.emit()" [attr.aria-labelledby]="'song-dialog-titel'">
       <header>
@@ -77,7 +79,17 @@ export interface SongZeile {
           <input maxlength="40" placeholder="z. B. Intro Gitarre" [value]="werte().notiz ?? ''" (change)="setzen.emit({ feld: 'notiz', roh: $any($event.target).value })" />
         </label>
       </div>
-      @if (quelle(); as q) { <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}</p> }
+      @if (hoeren()) {
+        <app-tonart-hoeren (uebernehmen)="gehoert($event)" (fertig)="hoeren.set(false)" />
+      } @else {
+        <button type="button" class="hoeren-knopf" (click)="hoeren.set(true)"><mat-icon>hearing</mat-icon> Tonart hören (Mikrofon)</button>
+      }
+      @if (quelle(); as q) {
+        <p class="quelle"><mat-icon>info</mat-icon> Recherche: {{ q }}
+          @if (werte().geprueft) { <span class="geprueft"> · ✓ von der Band geprüft</span> }
+          @else if (werte().tonart || werte().bpm) { <button type="button" class="stimmt" (click)="setzen.emit({ feld: 'geprueft', roh: '1' })">✓ Stimmt so</button> }
+        </p>
+      }
       @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ datumText(p.tag) }}: {{ p.notiz }}</p> }
       @if (verlauf().length) {
         <div class="proben-verlauf" role="img" [attr.aria-label]="verlaufText()">
@@ -195,20 +207,26 @@ export class SongDialog {
   // Tap-Tempo: im Takt tippen, ab dem 4. Tippen wird das Tempo aus den letzten (bis zu 8) Abständen übernommen;
   // mehr als 2 Sekunden Pause beginnt neu
   protected readonly tapZahl = signal(0);
+  /** „Tonart hören“ offen */
+  protected readonly hoeren = signal(false);
+  /** gehörte Tonart: ohne Original wird sie das Original, weicht sie davon ab, „Wir spielen“ */
+  protected gehoert(t: string): void {
+    const original = this.werte().tonart;
+    if (!original) this.setzen.emit({ feld: 'tonart', roh: t });
+    else if (t !== original) this.setzen.emit({ feld: 'spielTonart', roh: t });
+    this.hoeren.set(false);
+  }
   protected readonly tapBpm = signal<number | null>(null);
-  private tapZeiten: number[] = [];
+  private readonly tap = new TapTempo();
   protected tippen(): void {
     const jetzt = performance.now();
-    if (jetzt - (this.tapZeiten.at(-1) ?? 0) > 2000) {
-      this.tapZeiten = [];
-      this.tapBpm.set(null);
-    }
-    this.tapZeiten = [...this.tapZeiten, jetzt].slice(-9);
-    this.tapZahl.set(this.tapZeiten.length);
-    if (this.tapZeiten.length < 4) return;
-    const bpm = Math.round(60000 / ((this.tapZeiten.at(-1)! - this.tapZeiten[0]) / (this.tapZeiten.length - 1)));
-    if (bpm < 40 || bpm > 240) return;
+    if (this.tap.zahl && jetzt - this.tapLetzt > 2000) this.tapBpm.set(null);
+    this.tapLetzt = jetzt;
+    const bpm = this.tap.tippen(jetzt);
+    this.tapZahl.set(this.tap.zahl);
+    if (!bpm) return;
     this.tapBpm.set(bpm);
     this.setzen.emit({ feld: 'bpm', roh: String(bpm) });
   }
+  private tapLetzt = 0;
 }

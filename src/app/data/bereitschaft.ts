@@ -6,6 +6,21 @@ import type { Show } from './band.service';
 import type { Entry } from './setlist-data';
 import { WERBEPLAN, werbeplan } from './werbeplan';
 import { type OfflineStand, offlineFehlt } from './offline';
+import { isPause, type Song } from './setlist-data';
+
+/** wie oft stehen mehr als zwei langsame Songs (unter `grenze` bpm) hintereinander – je Set gezählt */
+export function langsamStrecken(setlist: Entry[], bpm: (s: Song) => number | undefined, grenze = 95): number {
+  let zahl = 0;
+  let lauf = 0;
+  for (const e of setlist) {
+    const b = isPause(e) ? undefined : bpm(e);
+    if (b !== undefined && b < grenze) {
+      lauf++;
+      if (lauf === 3) zahl++;
+    } else lauf = 0;
+  }
+  return zahl;
+}
 
 export interface Punkt {
   text: string;
@@ -30,6 +45,8 @@ export interface BereitschaftsDaten {
   /** erledigte Werbeplan-Schritte */
   werbungErledigt: string[];
   packliste: { eingepackt: number; gesamt: number };
+  /** Auffälligkeiten der Setlist: langsame Strecken, Tonartsprünge, Songs mit Baustelle aus der letzten Probe */
+  setlistCheck?: { langsamStrecken: number; spruenge: number; baustellen: string[] };
   /** Offline-Speicher dieses Geräts – undefined, solange unbekannt oder ohne Service Worker */
   offline?: OfflineStand;
 }
@@ -64,6 +81,15 @@ export function bereitschaft(d: BereitschaftsDaten): Punkt[] {
         hinweis: d.ohneNoten.length ? `fehlen für ${liste(d.ohneNoten)} – „Auftritt vorbereiten“ in der Setlist prüft auch die Fassung` : undefined,
         ziel: 'setlist',
       });
+  }
+  if (songs.length && d.setlistCheck) {
+    const c = d.setlistCheck;
+    const teile = [
+      c.langsamStrecken && `${c.langsamStrecken}× mehr als zwei langsame Songs hintereinander`,
+      c.spruenge && `${c.spruenge} ${c.spruenge === 1 ? 'Tonartsprung' : 'Tonartsprünge'}`,
+      c.baustellen.length && `Baustelle laut letzter Probe: ${liste(c.baustellen)}`,
+    ].filter(Boolean);
+    punkte.push({ text: 'Setlist rund', ok: !teile.length, hinweis: teile.length ? teile.join(' · ') : undefined, ziel: 'setlist' });
   }
   const wichtig = [
     ['kontakt', 'Ansprechpartner'],

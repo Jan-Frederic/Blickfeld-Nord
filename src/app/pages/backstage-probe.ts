@@ -64,7 +64,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
         } @else {
           <p class="empty">Noch keine Songs ausgewählt.</p>
         }
-        <app-probe-vorschlag [drin]="plan().songs" (add)="addSong($event)" />
+        <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
         @if (ausProbeListe().length) {
           <button type="button" class="aus-liste" (click)="probeListeUebernehmen()"><mat-icon>piano</mat-icon> {{ ausProbeListe().length }} {{ ausProbeListe().length === 1 ? 'Song' : 'Songs' }} aus der Spotify-Liste „Probe“ übernehmen</button>
         }

@@ -37,3 +37,12 @@ describe('probeTipps – Wunschliste', () => {
     expect(r.map((t) => t.grund)).toEqual(['wackelt noch', 'Wunschliste: Noten und Tonart da, noch nie geprobt']);
   });
 });
+
+describe('vorAuftritt', () => {
+  it('Baustellen zuerst, dann ungeprobte Setlist-Songs, ohne Doppelte und ohne schon Geplante', async () => {
+    const { vorAuftritt } = await import('./probe-vorschlag');
+    const S = (title: string) => ({ title, artist: 'X' });
+    const r = vorAuftritt([S('a')], [S('a'), S('b'), S('c'), S('d')], new Set(['c|X']), new Set(['d|X']));
+    expect(r.map((t) => `${t.title}: ${t.grund}`)).toEqual(['a: Baustelle aus der letzten Probe', 'b: auf der Setlist, noch nie geprobt']);
+  });
+});
