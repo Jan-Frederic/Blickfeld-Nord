@@ -17,9 +17,10 @@ const BREITE_KEY = 'bn-noten-breite';
   selector: 'app-noten-anzeige',
   imports: [MatIconModule, NotenStift],
   template: `
-    <div class="noten">
-      <header>
+    <div class="noten" [class.weg]="kopfWeg()" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" (pointerdown)="zeigerStart($event)" (pointerup)="zeigerEnde($event)">
+      <header [attr.aria-hidden]="kopfWeg()" [attr.inert]="kopfWeg() ? '' : null">
         <span class="titel">{{ song()?.title ?? 'Pause' }}</span>
+        @if (ansicht() !== 'akkorde' && capoText(); as c) { <span class="capo">{{ c }}</span> }
         @if (ansicht() === 'pdf' && seiten().length) { <span class="seite">Seite {{ index() + 1 }}{{ halb() ? '–' + (index() + 2) : '' }} / {{ seiten().length }}</span> }
         @if (optionen().length > 1) {
           <select class="wahl" aria-label="Fassung wählen" (change)="waehlen($any($event.target).value); $any($event.target).blur()"
@@ -50,6 +51,12 @@ const BREITE_KEY = 'bn-noten-breite';
         }
         <button type="button" class="zu" (click)="zu($event)" aria-label="Noten schließen"><mat-icon>close</mat-icon></button>
       </header>
+      <!-- Einstellungen weggewischt: Capo bleibt als kleines Schild sichtbar, Tippen holt die Leiste zurück -->
+      @if (kopfWeg()) {
+        <button type="button" class="kopf-zurueck" (click)="kopfZeigen($event)" (pointerup)="$event.stopPropagation()" aria-label="Einstellungen einblenden">
+          @if (capoText(); as c) { <span>{{ c }}</span> } <mat-icon>expand_more</mat-icon>
+        </button>
+      }
       <div class="flaeche" #flaeche [class.breit]="nurBreite()">
         @if (laden()) {
           <p class="hinweis">Lädt …</p>
@@ -84,7 +91,14 @@ const BREITE_KEY = 'bn-noten-breite';
   styles: `
     :host { position: absolute; inset: 0; z-index: 2; display: block; }
     .noten { height: 100%; display: flex; flex-direction: column; background: #111; color: #fff; }
-    header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 12px 8px; background: #000; font-size: .95rem; }
+    header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 12px 8px; background: #000; font-size: .95rem; max-height: 240px; overflow: hidden; transition: max-height .25s ease, padding .25s ease, opacity .2s ease; }
+    .weg header { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; pointer-events: none; }
+    .capo { padding: 4px 12px; border-radius: 8px; border: 1px solid #e8a46a; color: #e8a46a; font-weight: 700; white-space: nowrap; }
+    .kopf-zurueck {
+      position: absolute; top: max(6px, env(safe-area-inset-top)); right: 8px; z-index: 3; display: inline-flex; align-items: center; gap: 4px;
+      min-height: 36px; padding: 0 8px 0 12px; border-radius: 18px; border: 1px solid #e8a46a; background: rgba(0, 0, 0, .75); color: #e8a46a; font: 700 .9rem Inter, sans-serif; cursor: pointer;
+    }
+    .kopf-zurueck mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .titel { font-weight: 700; margin-right: auto; overflow-wrap: anywhere; }
     .seite, .griff { color: #e8a46a; font-variant-numeric: tabular-nums; }
     .scrolltempo { display: inline-flex; align-items: center; gap: 4px; }
@@ -116,6 +130,49 @@ export class NotenAnzeige {
   readonly song = input<Song>();
   readonly info = input<SongInfo>();
   readonly schliessen = output<void>();
+
+  // Einstellungen (Kopfleiste) nach oben wegwischen, nach unten wieder hervorholen – Touch-Ereignisse, weil der
+  // Browser beim Scrollen im Blatt die Pointer-Ereignisse abbricht; mit der Maus über Pointer-Ereignisse
+  protected readonly kopfWeg = signal(false);
+  private wisch: { x: number; y: number } | null = null;
+  protected wischStart(e: TouchEvent): void {
+    const t = e.touches[0];
+    this.wisch = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+  }
+  protected wischEnde(e: TouchEvent): void {
+    const t = e.changedTouches[0];
+    if (this.wisch && t) this.wischen(t.clientX - this.wisch.x, t.clientY - this.wisch.y);
+    this.wisch = null;
+  }
+  protected zeigerStart(e: PointerEvent): void {
+    if (e.pointerType === 'mouse') this.wisch = { x: e.clientX, y: e.clientY };
+  }
+  protected zeigerEnde(e: PointerEvent): void {
+    if (e.pointerType !== 'mouse' || !this.wisch) return;
+    this.wischen(e.clientX - this.wisch.x, e.clientY - this.wisch.y);
+    this.wisch = null;
+  }
+  /** senkrecht deutlich mehr als waagerecht (waagerecht blättert der Bühnen-Modus) */
+  private wischen(dx: number, dy: number): void {
+    if (this.stift() || Math.abs(dy) < 40 || Math.abs(dy) < Math.abs(dx) * 1.5) return;
+    this.fokusHalten();
+    this.kopfWeg.set(dy < 0);
+  }
+  protected kopfZeigen(e: Event): void {
+    e.stopPropagation();
+    this.fokusHalten();
+    this.kopfWeg.set(false);
+  }
+  /** Tastatur/Pedal hören auf den Bühnen-Modus: Fokus dorthin, bevor Knöpfe verschwinden (sonst landet er im Leeren) */
+  private readonly wirt = inject(ElementRef<HTMLElement>);
+  private fokusHalten(): void {
+    (this.wirt.nativeElement.closest('[tabindex]') as HTMLElement | null)?.focus({ preventScroll: true });
+  }
+  /** Capo (und Band-Tonart) aus songinfo – auch bei PDF-Noten sichtbar */
+  protected readonly capoText = computed(() => {
+    const i = this.info();
+    return i?.capo ? `Capo ${i.capo}` : '';
+  });
 
   private readonly flaeche = viewChild<ElementRef<HTMLDivElement>>('flaeche');
   private readonly leinwand = viewChild<ElementRef<HTMLCanvasElement>>('leinwand');

@@ -335,6 +335,9 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 - **Markieren:** in der PDF-Ansicht auf ✏ tippen und mit Finger, Stift oder Maus ins Notenblatt zeichnen (Rot, Blau,
   Grün, Textmarker; ↶ nimmt den letzten Strich zurück, 🗑 leert die Seite). Markierungen gelten **für alle** in der Band
   und werden mitsynchronisiert; mit dem Personen-Knopf (👥 → 👤) zeichnest du **nur für dich** (bleibt gemerkt).
+- **Noten im Bühnen- und Probemodus:** Capo steht immer mit in der Kopfleiste, auch bei PDF-Noten. Nach oben
+  wischen blendet die Einstellungen aus (mehr Platz fürs Blatt, Capo bleibt als kleines Schild oben rechts), nach
+  unten wischen oder Tippen aufs Schild holt sie zurück. Waagerecht wischen blättert wie gewohnt.
 - **Halbseiten-Blättern** und eigene **Pedal-Tasten:** unter Backstage → **Einstellungen → Bühnen-Modus**. Mit
   Halbseiten-Blättern zeigt der erste Tritt oben schon den Anfang der nächsten Seite, der zweite blättert ganz um.
   Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten.

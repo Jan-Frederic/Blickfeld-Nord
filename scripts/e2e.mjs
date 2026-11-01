@@ -683,6 +683,22 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   const kopf = p.locator('app-noten-anzeige header');
   await until(async () => (await kopf.innerText()).includes('Seite 1 / 2'), 'PDF-Seitenbereich wird nicht angezeigt');
   await until(async () => ((await p.locator('app-noten-anzeige .blattseite > canvas').first().boundingBox())?.width ?? 0) > 100, 'PDF-Seite wird nicht gezeichnet');
+  // nach oben wischen blendet die Einstellungen aus, nach unten wieder ein – blättert dabei nicht um
+  const flaeche = await p.locator('app-noten-anzeige .flaeche').boundingBox();
+  const wisch = async (von, bis) => {
+    await p.mouse.move(flaeche.x + flaeche.width / 2, flaeche.y + von);
+    await p.mouse.down();
+    await p.mouse.move(flaeche.x + flaeche.width / 2, flaeche.y + bis, { steps: 5 });
+    await p.mouse.up();
+  };
+  await wisch(300, 120);
+  await until(async () => (await p.locator('app-noten-anzeige .noten.weg').count()) === 1, 'Nach oben wischen blendet die Einstellungen nicht aus');
+  expect((await kopf.innerText()).includes('Seite 1 / 2'), 'Wischen nach oben hat umgeblättert');
+  await wisch(120, 300);
+  await until(async () => (await p.locator('app-noten-anzeige .noten.weg').count()) === 0, 'Nach unten wischen holt die Einstellungen nicht zurück');
+  await wisch(300, 120);
+  await p.locator('app-noten-anzeige .kopf-zurueck').click();
+  await until(async () => (await p.locator('app-noten-anzeige .noten.weg').count()) === 0, 'Tippen auf das Schild holt die Einstellungen nicht zurück');
   // Pedal/Pfeiltaste: erst die zweite Seite, dann der nächste Song (ohne Noten)
   await p.keyboard.press('ArrowRight');
   await until(async () => (await kopf.innerText()).includes('Seite 2 / 2'), 'Blättern zur zweiten Seite klappt nicht');
