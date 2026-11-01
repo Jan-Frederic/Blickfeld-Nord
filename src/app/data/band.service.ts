@@ -12,7 +12,8 @@ export interface Member {
   // Ausführliche Bio für die Unterseite /band/<slug>
   tagline?: string;
   story?: string[];
-  link?: { label: string; url: string };
+  // Link unter der Bio; mit Bild als Karte (Vorschaubild der verlinkten Seite, 1200 × 630 bzw. 600 × 315)
+  link?: { label: string; url: string; bild?: { src: string; gross?: string; alt: string } };
   // Foto für die Unterseite: großes Bild plus quadratischer Ausschnitt (Gesicht) fürs runde Profilbild
   photo?: { src: string; avatar: string; alt: string };
 }
@@ -226,11 +227,17 @@ export class BandService {
       },
       link: { label: 'Zur Drum School Matthias Wigger', url: 'https://www.drumschool-wigger.de/' },
     },
-    { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', nickname: 'Fred', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck. Nebenbei ist er der bandeigene IT-ler – diese Website hat er gleich selbst gebaut.',
+    { slug: 'jan-frederic-overbeck', name: 'Jan-Frederic Overbeck', role: 'Bass & Gesang', initials: 'JO', nickname: 'Fred', bio: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck. Nebenbei ist er der bandeigene IT-ler – diese Website hat er gleich selbst gebaut. Früher hat er mit der Punkband Morbid Fingers Videospielmusik komponiert.',
       photo: {
         src: 'band/jan-frederic-overbeck.webp',
         avatar: 'band/jan-frederic-overbeck-avatar.webp',
         alt: 'Fred mit Schiebermütze spielt lächelnd seinen E-Bass, vor einer Backsteinmauer',
+      },
+      // Vorschaubild = og:image der verlinkten Seite (1200 × 630), als WebP in public/band/
+      link: {
+        label: 'Morbid Racers spielen – mit Morbid-Fingers-Soundtrack',
+        url: 'https://jan-frederic.github.io/Zero/',
+        bild: { src: 'band/morbid-racers-600.webp', gross: 'band/morbid-racers-1200.webp', alt: 'Morbid Racers: Schriftzug über einer Neon-Skyline mit einem Anti-Schwerkraft-Rennschiff' },
       },
     },
   ];

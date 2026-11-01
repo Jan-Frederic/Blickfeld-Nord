@@ -45,9 +45,19 @@ export const UEBERSETZUNGEN: Uebersetzung[] = [
     geprueft: { en: true },
   },
   {
-    de: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck. Nebenbei ist er der bandeigene IT-ler – diese Website hat er gleich selbst gebaut.',
-    en: 'Fred joined in October 2025 and turned the duo into a trio – with bass, voice and plenty of punch. On the side he’s the band’s in-house IT guy – and built this website himself.',
-    nl: 'Fred is er sinds oktober 2025 bij en maakte van het duo een trio – met bas, stem en een flinke dosis power. Daarnaast is hij de huis-IT’er van de band – deze website bouwde hij meteen zelf.',
+    de: 'Fred ist seit Oktober 2025 dabei und hat aus dem Duo ein Trio gemacht – mit Bass, Stimme und jeder Menge Druck. Nebenbei ist er der bandeigene IT-ler – diese Website hat er gleich selbst gebaut. Früher hat er mit der Punkband Morbid Fingers Videospielmusik komponiert.',
+    en: 'Fred joined in October 2025 and turned the duo into a trio – with bass, voice and plenty of punch. On the side he’s the band’s in-house IT guy – and built this website himself. Back in the day he composed video game music with the punk band Morbid Fingers.',
+    nl: 'Fred is er sinds oktober 2025 bij en maakte van het duo een trio – met bas, stem en een flinke dosis power. Daarnaast is hij de huis-IT’er van de band – deze website bouwde hij meteen zelf. Vroeger componeerde hij met de punkband Morbid Fingers muziek voor videogames.',
+  },
+  {
+    de: 'Morbid Racers spielen – mit Morbid-Fingers-Soundtrack',
+    en: 'Play Morbid Racers – with a Morbid Fingers soundtrack',
+    nl: 'Morbid Racers spelen – met Morbid Fingers-soundtrack',
+  },
+  {
+    de: 'Morbid Racers: Schriftzug über einer Neon-Skyline mit einem Anti-Schwerkraft-Rennschiff',
+    en: 'Morbid Racers title over a neon city skyline with an anti-gravity racing ship',
+    nl: 'Morbid Racers: logo boven een neon-skyline met een antizwaartekracht-racer',
   },
   {
     de: 'David Bröker singt ins Mikrofon und spielt Akustikgitarre, mit Brille und kariertem Hemd vor Sprossenfenstern im bunten Bühnenlicht',

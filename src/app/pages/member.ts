@@ -72,13 +72,22 @@ const TEXT = tr(
             <p>{{ content.t(m.bio) }}</p>
             <p class="soon">{{ t().soon }}</p>
           }
-          <app-uebersetzung-hinweis [status]="content.status(m.role, m.tagline, m.bio, ...(m.story ?? []), m.photo?.alt, m.link?.label)" />
+          <app-uebersetzung-hinweis [status]="content.status(m.role, m.tagline, m.bio, ...(m.story ?? []), m.photo?.alt, m.link?.label, m.link?.bild?.alt)" />
         </div>
 
-        @if (m.link) {
-          <a mat-flat-button [href]="m.link.url" target="_blank" rel="noopener">
-            <mat-icon>open_in_new</mat-icon> {{ content.t(m.link.label) }}
-          </a>
+        @if (m.link; as l) {
+          @if (l.bild; as b) {
+            <!-- Link als Karte mit dem Vorschaubild der verlinkten Seite -->
+            <a class="projekt" [href]="l.url" target="_blank" rel="noopener">
+              <img [src]="b.src" [attr.srcset]="b.gross ? b.src + ' 600w, ' + b.gross + ' 1200w' : null" sizes="(max-width: 640px) 100vw, 600px"
+                width="600" height="315" loading="lazy" decoding="async" [alt]="content.t(b.alt)" />
+              <span class="projekt-text"><mat-icon>open_in_new</mat-icon> {{ content.t(l.label) }}</span>
+            </a>
+          } @else {
+            <a mat-flat-button [href]="l.url" target="_blank" rel="noopener">
+              <mat-icon>open_in_new</mat-icon> {{ content.t(l.label) }}
+            </a>
+          }
         }
 
         <nav class="others" [attr.aria-label]="t().others">
@@ -112,6 +121,11 @@ const TEXT = tr(
       border: 1px solid var(--bn-fog); color: var(--bn-ink);
     }
     .avatar.photo { object-fit: cover; padding: 0; border-color: var(--bn-sunset); }
+    .projekt { display: block; max-width: 600px; margin: 8px 0 32px; border-radius: 12px; overflow: hidden; border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none; background: rgba(27, 30, 34, .72); }
+    .projekt:hover { border-color: var(--bn-sunset); }
+    .projekt img { display: block; width: 100%; height: auto; aspect-ratio: 1200 / 630; object-fit: cover; }
+    .projekt-text { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-weight: 600; }
+    .projekt-text mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
     .portrait {
       float: right; width: min(42%, 320px); margin: 4px 0 20px 28px;
       border-radius: 12px; overflow: hidden; border: 1px solid var(--bn-line);

@@ -52,14 +52,14 @@ export class Content {
 
 /** Alle übersetzbaren Inhaltstexte aus band.service.ts – für den Test und die Übersicht im Backstage */
 export function inhaltsTexte(band: {
-  members: { role: string; bio: string; tagline?: string; story?: string[]; photo?: { alt: string } }[];
+  members: { role: string; bio: string; tagline?: string; story?: string[]; photo?: { alt: string }; link?: { label: string; bild?: { alt: string } } }[];
   history: { title: string; text: string[]; images?: { alt: string }[] }[];
   photos: { alt: string; caption?: string }[];
   friends: { description: string }[];
   shows: { private?: boolean; publicName?: string }[];
 }): string[] {
   const texts = [
-    ...band.members.flatMap((m) => [m.role, m.bio, m.tagline, ...(m.story ?? []), m.photo?.alt]),
+    ...band.members.flatMap((m) => [m.role, m.bio, m.tagline, ...(m.story ?? []), m.photo?.alt, m.link?.label, m.link?.bild?.alt]),
     ...band.history.flatMap((h) => [h.title, ...h.text, ...(h.images ?? []).map((i) => i.alt)]),
     ...band.photos.flatMap((p) => [p.alt, p.caption]),
     ...band.friends.map((f) => f.description),
