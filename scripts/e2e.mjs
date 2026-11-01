@@ -132,6 +132,8 @@ test('Booking: freier Tag im Kalender → Anfrage-Assistent in 3 Schritten', asy
   await until(async () => (await p.locator('app-entfernung .result').count()) && (await p.locator('app-entfernung .result').innerText()).includes('das passt'), 'Entfernungs-Check kennt den Ortsteil Haldern nicht');
   await p.locator('app-entfernung input').fill('Berlin');
   await until(async () => (await p.locator('app-entfernung .result').innerText()).includes('Tournee'), 'Entfernungs-Check antwortet bei Berlin nicht');
+  // im laufenden Monat ist wegen Abwesenheiten und Schonzeit evtl. nichts frei – über die Chips „freie Samstage“ springen
+  if (!(await p.locator('app-availability button.day.free').count())) await p.locator('app-availability .samstage button').first().click();
   const free = p.locator('app-availability button.day.free').first();
   await free.click();
   await until(async () => /^\d{4}-\d{2}-\d{2}$/.test(await p.locator('app-anfrage input[type=date]').inputValue()), 'Datum wurde nicht übernommen');

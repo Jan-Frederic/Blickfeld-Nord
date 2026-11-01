@@ -163,7 +163,7 @@ export class TerminFormular {
   protected readonly abwesend = computed(() => {
     const date = this.f().date;
     // „Band“-Sperren gelten nur für Auftritte – Proben finden trotzdem statt
-    const weg = this.band.abwesenheiten.filter((a) => a.von <= date && date <= (a.bis ?? a.von) && !(this.art() === 'probe' && a.wer === 'Band'));
+    const weg = this.band.sperrzeiten.filter((a) => a.von <= date && date <= (a.bis ?? a.von) && !(this.art() === 'probe' && a.wer === 'Band'));
     return weg.length ? weg.map((a) => a.wer + (a.grund ? ` (${a.grund})` : '')).join(', ') : null;
   });
   // Auftritte und Proben im Zeitraum einer neuen Abwesenheit

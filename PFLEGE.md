@@ -181,6 +181,14 @@ darunter einfügen:
 - Das Termin-Formular im Backstage warnt, wenn ein neuer Termin auf so einen Tag fällt, und die Aufgaben-Seite
   meldet Auftritte und Proben, die in eine Abwesenheit fallen.
 - Das Repo ist öffentlich: als Grund nur ein Stichwort, keine Details.
+- Sperren für die ganze Band (`'Band'`) gelten nur für Auftritte – Proben finden trotzdem statt.
+
+**Schonzeit:** Sobald ein Auftritt geklärt ist (`confirmed: true`), sind die drei vollen Wochen (Montag bis Sonntag)
+davor und danach automatisch reserviert – im Verfügbarkeitskalender gestrichelt als **reserviert**, nicht als frei.
+Die Woche des Auftritts selbst bleibt offen. Das gilt auch für schon eingetragene Auftritte; die bleiben stehen, auch
+wenn sie in die Schonzeit eines anderen fallen. Eintragen muss man dafür nichts (`data/schonzeit.ts`, Länge in
+`SCHONZEIT_WOCHEN`). Das Termin-Formular warnt bei einem neuen Auftritt in der Schonzeit („Band (Schonzeit)“); Proben
+sind nicht betroffen.
 
 ## Spotify-Listen
 

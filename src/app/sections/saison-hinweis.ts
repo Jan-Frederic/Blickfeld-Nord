@@ -73,7 +73,7 @@ export class SaisonHinweis {
       : m <= 3 ? { s: 'sommer' as const, von: new Date(j, 4, 1), bis: new Date(j, 8, 30) } : null;
     if (!fenster) return null;
     const belegt = new Set<string>();
-    for (const a of this.band.abwesenheiten)
+    for (const a of this.band.sperrzeiten)
       for (let d = new Date(`${a.von}T12:00:00`); d <= new Date(`${a.bis ?? a.von}T12:00:00`); d.setDate(d.getDate() + 1)) belegt.add(iso(d));
     for (const s of this.band.shows)
       for (let d = new Date(`${s.date}T12:00:00`); d <= new Date(`${s.endDate ?? s.date}T12:00:00`); d.setDate(d.getDate() + 1)) belegt.add(iso(d));

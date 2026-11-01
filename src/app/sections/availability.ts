@@ -1,5 +1,6 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { SCHONZEIT_GRUND } from '../data/schonzeit';
 import { BandService } from '../data/band.service';
 import { I18n } from '../i18n';
 
@@ -171,10 +172,15 @@ export class Availability {
   private readonly busy = (() => {
     const map = new Map<string, DayState>();
     const band = inject(BandService);
-    for (const a of band.abwesenheiten) {
+    // Abwesenheiten: belegt; Schonzeit um geklärte Auftritte (3 Wochen davor/danach): reserviert
+    for (const a of band.sperrzeiten) {
+      const zustand: DayState = a.grund === SCHONZEIT_GRUND ? 'option' : 'booked';
       const d = new Date(`${a.von}T12:00:00`);
       const end = new Date(`${a.bis ?? a.von}T12:00:00`);
-      for (; d <= end; d.setDate(d.getDate() + 1)) map.set(iso(d.getFullYear(), d.getMonth(), d.getDate()), 'booked');
+      for (; d <= end; d.setDate(d.getDate() + 1)) {
+        const key = iso(d.getFullYear(), d.getMonth(), d.getDate());
+        if (map.get(key) !== 'booked') map.set(key, zustand);
+      }
     }
     for (const s of band.shows) {
       const state: DayState = s.confirmed ? 'booked' : 'option';
@@ -182,7 +188,8 @@ export class Availability {
       const end = new Date(`${s.endDate ?? s.date}T12:00:00`);
       for (; d <= end; d.setDate(d.getDate() + 1)) {
         const key = iso(d.getFullYear(), d.getMonth(), d.getDate());
-        if (map.get(key) !== 'booked') map.set(key, state);
+        // geklärte Auftritte sind belegt – auch mitten in einer Schonzeit
+        if (state === 'booked' || map.get(key) !== 'booked') map.set(key, state);
       }
     }
     return map;

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { schonzeiten } from './schonzeit';
 
 export interface Member {
   slug: string;
@@ -131,6 +132,14 @@ export interface Abwesenheit {
 @Injectable({ providedIn: 'root' })
 export class BandService {
   // Öffentlich gelistet wird nur, was öffentlich UND geklärt ist – chronologisch
+  /**
+   * Alle Sperren für Auftritte: eingetragene Abwesenheiten plus die Schonzeit (3 Wochen Mo–So vor und nach jedem
+   * geklärten Auftritt). Für Verfügbarkeit, Saison-Hinweis und Termin-Formular; Proben sind davon nicht betroffen.
+   */
+  get sperrzeiten(): Abwesenheit[] {
+    return [...this.abwesenheiten, ...schonzeiten(this.shows)];
+  }
+
   get publicShows(): Show[] {
     return this.shows.filter((s) => !s.private && s.confirmed).sort((a, b) => a.date.localeCompare(b.date));
   }
@@ -458,16 +467,10 @@ export class BandService {
   // mit Warnung. Beispiel: { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' }
   // wer: 'Band' sperrt nur für Auftritte – Proben finden an solchen Tagen trotzdem statt.
   readonly abwesenheiten: Abwesenheit[] = [
-    // Wochenenden (Fr–So) im November und Dezember 2026 – Freitag, 04.12. spielen wir in Rhede
-    { wer: 'Band', von: '2026-11-01', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-11-06', bis: '2026-11-08', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-11-13', bis: '2026-11-15', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-11-20', bis: '2026-11-22', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-11-27', bis: '2026-11-29', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-12-05', bis: '2026-12-06', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-12-11', bis: '2026-12-13', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-12-18', bis: '2026-12-20', grund: 'privat verhindert' },
-    { wer: 'Band', von: '2026-12-25', bis: '2026-12-27', grund: 'privat verhindert' },
+    // November und Dezember 2026: ganze Wochen (Mo–So) privat verhindert – nur Freitag, 04.12. spielen wir in Rhede.
+    // Dazu kommt automatisch die Schonzeit um jeden geklärten Auftritt (data/schonzeit.ts, siehe sperrzeiten).
+    { wer: 'Band', von: '2026-10-26', bis: '2026-12-03', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-12-05', bis: '2026-12-27', grund: 'privat verhindert' },
   ];
 
   // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
