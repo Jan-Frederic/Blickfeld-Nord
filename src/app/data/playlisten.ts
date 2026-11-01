@@ -170,3 +170,26 @@ export function listeInReihenfolge(key: ListenKey, songs: SongEintrag[] = songAb
   }
   return out;
 }
+
+/**
+ * Setlist für Spotify: die Track-Links der Songs in Setlist-Reihenfolge (aus allen Listen). In Spotify am Computer
+ * eine Playlist öffnen und einfügen (Strg/Cmd+V) – dann stehen die Songs darin. ohne: Songs ohne bekannten Link.
+ */
+export function spotifyLinks(songs: { title: string; artist: string }[], listen: Pick<Liste, 'tracks'>[] = LISTEN): { links: string[]; ohne: string[] } {
+  const url = new Map<string, string>();
+  for (const l of listen) for (const t of l.tracks) if (t.url && !url.has(vergleichsKey(t.title, t.artist))) url.set(vergleichsKey(t.title, t.artist), t.url);
+  const links: string[] = [];
+  const ohne: string[] = [];
+  for (const s of songs) {
+    const u = url.get(vergleichsKey(s.title, s.artist));
+    if (u) links.push(u);
+    else ohne.push(s.title);
+  }
+  return { links, ohne };
+}
+
+/** Songs, die nicht in der Spotify-Liste `key` stehen (z. B. Setlist-Songs, die in der Liste „Setlist“ fehlen) */
+export function fehltInListe<T extends { title: string; artist: string }>(songs: T[], key: ListenKey, listen: Pick<Liste, 'key' | 'tracks'>[] = LISTEN): T[] {
+  const da = new Set((listen.find((l) => l.key === key)?.tracks ?? []).map((t) => vergleichsKey(t.title, t.artist)));
+  return songs.filter((s) => !da.has(vergleichsKey(s.title, s.artist)));
+}

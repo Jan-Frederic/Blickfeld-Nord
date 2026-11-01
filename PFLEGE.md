@@ -372,6 +372,14 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 - **Bühnen-Modus ohne Netz** (ab einer Woche vorher in Bereit?): prüft, ob der Offline-Speicher aktiv ist und
   Backstage sowie die Noten-Anzeige (pdf.js) auf dem Gerät liegen. Fehlt etwas, holt **Jetzt vorladen** es nach;
   ohne aktiven Offline-Speicher die Seite einmal mit Netz neu laden.
+- **Vortag:** Am Tag vor einem Auftritt steht unter **Heute fällig** „Morgen: <Ort> – Bereit?, Packliste, Wetter,
+  Notenmappe und Offline prüfen“ und führt auf die Seite des Auftritts. Dort kommen in Bereit? zwei Punkte zum Abhaken
+  dazu: **Wetter angesehen** und **Notenmappe dabei** (gespiegelt für die Band, `bn-vorabend-<Auftritt>`).
+- **Für Spotify kopieren** (Setlist): kopiert die Spotify-Track-Links der Songs in Setlist-Reihenfolge – in Spotify am
+  Computer eine Playlist öffnen und mit Strg/Cmd+V einfügen. Songs ohne bekannten Link werden genannt. Stehen Songs der
+  Setlist nicht in der Spotify-Liste „Setlist“, sagt ein Hinweis unter der Setlist, welche.
+- **An die Band schicken** (Songs → Song bearbeiten): Steckbrief mit Tonart (und Band-Tonart), Capo, Tempo, Notiz und
+  Spotify-Link – übers Teilen-Menü (z. B. WhatsApp), sonst in die Zwischenablage.
 
 - **Auftritt vorbereiten** prüft für jeden Song, ob Noten in deiner Fassung (eigene Wahl bzw. Vorliebe wie „Bass“)
   auf dem Gerät sind, ob die PDF sich öffnen lässt und der Seitenbereich passt, und lädt alles für ohne Netz.
@@ -443,7 +451,9 @@ Vorher sichern: **Einstellungen → Backup → Backup erstellen** (Backstage-Dat
 
 Ein **Backup** sichert alle Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
 Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen). Mitschnitte und Einstellungen
-gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup war; nach 30 Tagen erinnert Backstage → Aufgaben.
+gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup von diesem Gerät war und (mit Synchronisation) das neueste
+Backup im OneDrive-Ordner „Backup“. Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
+**Heute fällig**; nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
 
 - **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners (ein älteres
   Noten-Backup wird dort ersetzt, die Daten-Backups bleiben als Verlauf) und gleich abgleichen; sonst als Datei zum
@@ -457,6 +467,26 @@ gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup war; nach 30 Tagen
 Einzelne Auftritte oder Proben an die Band schicken: auf deren Seite **Diesen Termin an die Band**.
 
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
+
+**Hilfe im Abgleich:** Neben jedem Knopf (Jetzt synchronisieren, Lokale Dateien, Synchronisierte Dateien einlesen,
+Zuordnen, ignorieren) erklärt ein **(i)**, was er tut. Während des Abgleichs steht unter dem Fortschritt
+**„Was passiert gerade?“** in einfachen Worten (Daten vorbereiten, Listen lesen, Hoch-/Herunterladen, Konflikte, Noten
+erkennen). Texte: `src/app/data/sync-hilfe.ts`.
+
+**Geräte:** Unter **Abgleich → Geräte** bekommt jedes Gerät einen Namen (z. B. „Freds Handy“; ohne Namen ein Vorschlag
+wie „iPhone“). Beim Abgleich legt es höchstens stündlich eine kleine Datei `Geraete/<Kennung>.json` (Name, Person,
+Zeitpunkt) in den Sync-Ordner – die Liste zeigt, welches Gerät wann zuletzt abgeglichen hat. Name und Kennung bleiben auf
+dem Gerät (`bn-geraet-…`, nicht gespiegelt).
+
+**Zuordnen in einem Rutsch:** Beim Einlesen zeigt jede Noten-Datei „liegt schon bei …“, wenn eine gleichnamige Datei
+auf diesem Gerät schon bei einem anderen Song liegt. Hat man für eine Datei den Song gewählt, übernimmt
+**„für alle gleich benannten übernehmen“** die Wahl für alle Dateien mit gleichem Titel und Interpret im Namen (Fassung
+egal, z. B. „Toto - Africa - Bass.pdf“ und „Toto - Africa - Gitarre.pdf“).
+
+**Noten-Check** (Abgleich → Daten auf diesem Gerät, unter „Noten“): listet Noten-Dateien ohne Song und doppelte Dateien
+(gleicher Name, gleiche Größe). **Zusammenführen** lässt alle Songs auf eine Kopie zeigen, nimmt Markierungen mit und
+entfernt die übrigen Kopien von diesem Gerät – in OneDrive ändert sich nichts. Ein „Löschen“ gibt es dort bewusst nicht:
+Dateien in OneDrive löscht ihr dort selbst.
 
 **Alle Einstellungen und Backstage-Daten wandern mit:** Ist man angemeldet und die Synchronisation eingerichtet, wird
 jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:

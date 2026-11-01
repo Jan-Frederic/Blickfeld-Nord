@@ -945,9 +945,18 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
     };
     req.onerror = () => ok(false);
   }))), 'Backup erstellen legt keine Datei in den Sync-Ordner');
-  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup:'), 'Letztes Backup wird nicht angezeigt');
+  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup von diesem Gerät:'), 'Letztes Backup wird nicht angezeigt');
+  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Neuestes Backup in OneDrive:'), 'Backup in OneDrive wird nicht angezeigt');
   await p.go('/backstage/abgleich/');
   const status = p.locator('app-sync-status');
+  // (i) erklärt den Knopf; Gerät benennen
+  await status.getByRole('button', { name: 'Was macht „Jetzt synchronisieren“?' }).click();
+  await until(async () => (await status.locator('.hilfe').innerText().catch(() => '')).includes('Gleicht OneDrive und dieses Gerät ab'), '(i) erklärt „Jetzt synchronisieren“ nicht');
+  await status.locator('.geraete summary').click();
+  await status.locator('.geraet-name input').fill('Freds Handy');
+  await status.locator('.geraet-name input').dispatchEvent('change');
+  await until(async () => (await status.locator('.geraete summary').innerText()).includes('dieses: Freds Handy'), 'Gerätename wird nicht übernommen');
+  expect((await p.evaluate(() => localStorage.getItem('bn-geraet-name'))) === 'Freds Handy', 'Gerätename nicht gespeichert');
   // nach dem Abgleich nicht eindeutig erkannte Noten warten auf eine Zuordnung
   await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync', 1);
@@ -988,6 +997,10 @@ test('Backstage: Setlist – Songs aus allen Spotify-Listen per Filter', async (
   const titel = (await erster.locator('.t').innerText()).trim();
   await erster.click();
   await until(async () => (await p.locator('app-setlist .list').innerText()).includes(titel), 'Song aus dem Archiv landet nicht auf der Setlist');
+  // fehlt in der Spotify-Liste „Setlist“ → Hinweis; Track-Links für Spotify
+  await until(async () => (await p.locator('app-setlist .spotify-hinweis.fehlt').innerText().catch(() => '')).includes(titel), 'Hinweis „nicht in der Spotify-Liste Setlist“ fehlt');
+  await p.locator('app-setlist button', { hasText: 'Für Spotify kopieren' }).click();
+  await until(async () => /Track-Links kopiert|Für keinen Song/.test(await p.locator('app-setlist .spotify-hinweis').first().innerText().catch(() => '')), 'Spotify-Export meldet nichts');
   return p;
 });
 

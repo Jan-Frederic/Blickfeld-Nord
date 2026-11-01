@@ -16,7 +16,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'setlist', label: 'Setlists', praefixe: ['bn-setlist-'], jeAuftritt: true, hinweis: 'für Rückblick und Songs → Setlists' },
   { id: 'bewertung', label: 'Song-Sterne', praefixe: ['bn-bewertung-'], jeAuftritt: true, hinweis: 'für die Top 100 und den Setlist-Vorschlag' },
   { id: 'spielzeit', label: 'Geplante Spielzeiten', praefixe: ['bn-spielzeit-'], jeAuftritt: true },
-  { id: 'packliste', label: 'Packlisten', praefixe: ['bn-packliste-'], jeAuftritt: true },
+  { id: 'packliste', label: 'Packlisten', praefixe: ['bn-packliste-', 'bn-vorabend-'], jeAuftritt: true },
   { id: 'vorort', label: 'Vor-Ort-Angaben', praefixe: ['bn-vorort-'], jeAuftritt: true },
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
   { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
@@ -29,7 +29,7 @@ export const BEREICHE: Bereich[] = [
     id: 'einstellungen',
     label: 'Einstellungen',
     hinweis: 'Schriftgröße, Klick-Ton, Noten-Ansicht, Filter, Sprache',
-    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-'],
+    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-geraet-', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-'],
   },
 ];
 

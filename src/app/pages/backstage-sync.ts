@@ -8,7 +8,7 @@ import { NOTEN_APP, notenExportieren, notenImportieren } from '../data/noten';
 // jeweiligen Geräts. Backup (Einstellungen → Backup, backup-karte.ts): alles samt Notenblättern als Datei bzw. in den
 // OneDrive-Ordner der Synchronisation. Die Komponente unten teilt einzelne Auftritte bzw. Proben mit der Band.
 
-export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-'];
+export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorabend-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-'];
 // Zeitpunkt des letzten Backups – für den Hinweis unter Aufgaben und in der Backup-Kachel
 export const GESICHERT_KEY = 'bn-gesichert';
 

@@ -430,3 +430,38 @@ app-songs-liste .status.automatisch { background: transparent; border: 2px solid
 app-songs-liste .status.unsicher { background: #e0b25a; }
 app-song-dialog .stimmt { margin-left: 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid #5fb88a; background: none; color: #5fb88a; font: inherit; font-size: .8rem; cursor: pointer; }
 app-song-dialog .geprueft { color: #5fb88a; }
+
+// Abgleich → Synchronisation: (i)-Hilfe je Knopf, „Was passiert gerade?“, Geräte (sync-status.ts)
+app-sync-status .paar { display: inline-flex; align-items: center; gap: 4px; }
+app-sync-status button.info { padding: 4px; border: 0; border-radius: 50%; color: var(--bn-fog); }
+app-sync-status button.info.an { color: var(--bn-sunset); }
+app-sync-status .hilfe { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--bn-sunset); border-radius: 0 8px 8px 0; background: rgba(232, 164, 106, .08); color: var(--bn-ink); }
+app-sync-status .passiert { margin-top: 8px; font-size: .84rem; }
+app-sync-status .geraete { margin: 12px 0 0; font-size: .88rem; }
+app-sync-status .geraete summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--bn-fog); }
+app-sync-status .geraet-name { display: grid; gap: 4px; max-width: 320px; margin: 10px 0; color: var(--bn-fog); font-size: .84rem; }
+app-sync-status .geraet-name input { padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; }
+app-sync-status .geraete ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+app-sync-status .geraete li.ich { color: var(--bn-sunset); }
+
+// Einlesen: „liegt schon bei …“ und „für alle gleich benannten übernehmen“ (funde-liste.ts)
+app-funde-liste .datei small.schon { color: #e0b25a; }
+app-funde-liste button.alle { justify-self: start; margin: 2px 0; padding: 2px 10px; border-color: var(--bn-line); background: none; color: var(--bn-sunset); font-size: .78rem; }
+
+// Setlist: Spotify-Hinweise (setlist.ts)
+app-setlist .spotify-hinweis { margin: 10px 0 0; max-width: 760px; font-size: .84rem; line-height: 1.5; color: #8fd19e; }
+app-setlist .spotify-hinweis.fehlt { color: #e8a46a; }
+
+// Daten auf diesem Gerät → Noten-Check (noten-check.ts)
+app-noten-check { display: block; }
+app-noten-check .noten-check { margin: 8px 0 0; padding: 10px 14px; border: 1px solid #e0b25a; border-radius: 10px; font-size: .88rem; }
+app-noten-check summary { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #e0b25a; }
+app-noten-check h5 { margin: 12px 0 6px; font-size: .86rem; font-weight: 600; }
+app-noten-check p { margin: 0 0 8px; color: var(--bn-fog); font-size: .84rem; }
+app-noten-check ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+app-noten-check li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, .06); overflow-wrap: anywhere; }
+app-noten-check small { color: var(--bn-fog); }
+app-noten-check button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
+app-noten-check button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-noten-check mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-noten-check .meldung { margin-top: 8px; color: #5fb88a; }

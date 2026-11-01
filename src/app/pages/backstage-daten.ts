@@ -6,6 +6,7 @@ import { Eintrag, eintraege, entfernen, mb } from '../data/aufraeumen';
 import { NotenDateiInfo, SongNoten, alleSongNoten, notenAllesLoeschen, notenDateiLoeschen, notenDateien, pdfName, songNotenSetzen } from '../data/noten';
 import { mitschnittUebersicht, mitschnitteAllesLoeschen } from '../data/mitschnitte';
 import { cacheLeeren } from '../data/aufraeumen';
+import { NotenCheckKarte } from './noten-check';
 import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { SyncService } from '../data/sync.service';
 import { SyncStatus, spiegelArt, syncStatusVon } from '../data/spiegel';
@@ -18,7 +19,7 @@ import { DatenEditor } from './daten-editor';
 // das Aufräumen (vergangene Einträge, alles löschen – backstage-aufraeumen.ts).
 @Component({
   selector: 'app-backstage-daten',
-  imports: [RouterLink, MatIconModule, DatenEditor, BackstageAufraeumen],
+  imports: [RouterLink, MatIconModule, DatenEditor, BackstageAufraeumen, NotenCheckKarte],
   template: `
     <div class="box">
       <h3>Daten auf diesem Gerät</h3>
@@ -92,6 +93,7 @@ import { DatenEditor } from './daten-editor';
           </ul>
         </details>
         </div>
+        @if (!suche()) { <app-noten-check [version]="version() + stand()" (geaendert)="aufgeraeumt()" /> }
       }
       @if (mitschnitte().anzahl && !suche()) {
         <div class="gruppe">

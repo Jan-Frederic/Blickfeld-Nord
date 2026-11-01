@@ -9,6 +9,7 @@ import { BAND, MarkDateiInhalt, NotenDateiInhalt, istNotenSpiegel, markTexte, ma
 import type { Strich } from './noten';
 import type { SyncDatei } from './sync';
 import { Mitschnitt, mitschnittAusPfad, mitschnittEndung, mitschnittGeteilt, mitschnittPfad, mitschnittPfade, mitschnittSpeichern } from './mitschnitte';
+import { GERAETE_ORDNER, GeraetEintrag, geraetMeldung, geraeteListe } from './geraete';
 import { NotenQuelle, istAkkordblatt, istPdf, notenEinlesen } from './noten-import';
 import {
   appOrdner,
@@ -46,6 +47,8 @@ export class SyncService {
   readonly person = signal(personOrdner(letztesKonto() ?? ''));
   /** Einträge, die seit dem letzten Abgleich geändert wurden */
   readonly ausstehend = signal(0);
+  /** Geräte, die zuletzt abgeglichen haben (Geraete/*.json im Sync-Ordner), neueste zuerst */
+  readonly geraete = signal<GeraetEintrag[]>([]);
   private spiegelt = false;
   private nachAenderung: ReturnType<typeof setTimeout> | undefined;
 
@@ -326,6 +329,15 @@ export class SyncService {
     this.offen.set(offeneNoten());
   }
 
+  /** Geräte-Liste aus dem Sync-Ordner lesen (ohne Liste: Ordner selbst lesen, ohne nach Erlaubnis zu fragen) */
+  async geraeteLesen(lokal?: SyncOrdner | null, liste?: SyncDatei[]): Promise<void> {
+    lokal ??= await this.lokal();
+    if (!lokal) return;
+    liste ??= await lokal.liste();
+    const dateien = liste.filter((d) => d.pfad.startsWith(GERAETE_ORDNER + '/') && d.pfad.endsWith('.json') && d.groesse < 10_000);
+    this.geraete.set(geraeteListe(await Promise.all(dateien.map(async (d) => (await lokal!.lesen(d.pfad)).text()))));
+  }
+
   /** die lokale Seite laut Einstellungen (ohne nach Erlaubnis zu fragen) – zum Ansehen und Einlesen */
   async lokal(schreiben = false): Promise<SyncOrdner | null> {
     if (syncEinstellungen().lokal === 'app') return appOrdner;
@@ -368,6 +380,9 @@ export class SyncService {
       this.person.set(person);
       this.stand.set({ text: 'Einstellungen und Daten vorbereiten …' });
       await this.spiegelnVorher(lokal, person);
+      // dieses Gerät als „zuletzt abgeglichen“ melden (höchstens stündlich eine neue Datei)
+      const g = geraetMeldung(person);
+      if (g) await lokal.schreiben(g.pfad, new Blob([g.text], { type: 'application/json' })).catch(() => undefined);
       const zustand = await syncZustand();
       const lauf = () =>
         synchronisieren(cloudOrdner({ pfad: e.cloud, wurzel: e.wurzel }), lokal, zustand, e, {
@@ -382,6 +397,7 @@ export class SyncService {
       const nachListe = await lokal.liste();
       const notenSync = await this.notenNachher(lokal, person, nachListe);
       const aufnahmen = await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
+      await this.geraeteLesen(lokal, nachListe).catch(() => undefined);
       const daten = uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
       const mit = aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '';
       letzterSyncSetzen(ergebnisText(ergebnis) + daten + mit + noten + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);

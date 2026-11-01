@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import { MatIconModule } from '@angular/material/icon';
 import { LISTEN, pdfSong, songAbgleich } from '../data/playlisten';
 import { SyncService } from '../data/sync.service';
-import { notenDateiLoeschen, notenDateien } from '../data/noten';
+import { alleSongNoten, notenDateiLoeschen, notenDateien } from '../data/noten';
 import { Fund, uebernehmen } from '../data/einlesen';
 import { zuordnungenMerken } from '../data/erkennung';
 import { BandService } from '../data/band.service';
@@ -50,6 +50,10 @@ const LOESCHEN = '__loeschen';
               <li [class.offen]="!z?.key" [class.weg]="z?.key === loeschenWert">
                 <input type="checkbox" [checked]="!!z?.an" [disabled]="!z?.key || z?.key === loeschenWert" (change)="setzen(d.pfad, { an: $any($event.target).checked })" [attr.aria-label]="d.pfad + ' einlesen'" />
                 <span class="datei">{{ d.pfad }}
+                  @if (schonBei(d.name, z?.key); as bei) { <small class="schon">liegt schon bei {{ bei }}</small> }
+                  @if (z?.key && z?.key !== loeschenWert && gleicheOffen(d).length; as n) {
+                    <button type="button" class="alle" (click)="alleGleichen(d)">für {{ n === 1 ? 'die gleich benannte Datei' : 'alle ' + n + ' gleich benannten' }} übernehmen</button>
+                  }
                   <small>{{ z?.key === loeschenWert ? 'wird gelöscht – aus OneDrive und von diesem Gerät' : z?.key === eigenWert ? 'eigenständig, ohne Spotify-Liste' : z?.key ? (d.erkennung?.key === z?.key ? (d.erkennung?.quelle === 'gemerkt' ? 'wie beim letzten Mal' : 'erkannt über ' + d.erkennung?.quelle) : 'von Hand gewählt') : d.erkennung?.kandidaten?.length ? 'mehrere möglich – bitte wählen' : 'nicht erkannt – bitte wählen' }}</small>
                 </span>
                 <select [attr.aria-label]="'Song für ' + d.pfad" (change)="songWaehlen(d.pfad, d.name, $any($event.target).value)">
@@ -142,6 +146,44 @@ export class FundeListe {
     const fassung = wert === EIGEN ? { fassung: pdfSong(name).fassung } : {};
     this.setzen(pfad, { key: wert, an: !!wert && wert !== LOESCHEN, ...fassung });
   }
+  /** schon eingelesene Noten auf diesem Gerät: Dateiname → Songs (für „liegt schon bei …“) */
+  private readonly vorhanden = signal(new Map<string, string[]>());
+  private async vorhandeneLaden(): Promise<void> {
+    try {
+      const [dateien, songs] = await Promise.all([notenDateien(), alleSongNoten()]);
+      const name = new Map(dateien.map((d) => [d.id, d.name.toLocaleLowerCase('de')]));
+      const out = new Map<string, string[]>();
+      for (const [key, n] of Object.entries(songs))
+        for (const p of n.pdfs ?? []) {
+          const nm = name.get(p.datei);
+          if (nm && !out.get(nm)?.includes(key)) out.set(nm, [...(out.get(nm) ?? []), key]);
+        }
+      this.vorhanden.set(out);
+    } catch {
+      // ohne Noten-Speicher kein Hinweis
+    }
+  }
+  /** „Titel – Interpret“ der Songs, bei denen eine gleichnamige Datei schon liegt (außer dem gewählten) */
+  protected schonBei(name: string, gewaehlt?: string): string {
+    const bei = (this.vorhanden().get(name.toLocaleLowerCase('de')) ?? []).filter((k) => k !== gewaehlt);
+    return bei.length ? bei.map((k) => `„${this.anzeige(k)}“`).join(', ') : '';
+  }
+  /** gleich benannt: gleicher Titel und Interpret laut Dateiname (Fassung egal) */
+  private basis(name: string): string {
+    const s = pdfSong(name);
+    return `${s.title}|${s.artist}`.toLocaleLowerCase('de');
+  }
+  /** andere Noten-Dateien mit gleichem Namen, die noch einen anderen (oder keinen) Song haben */
+  protected gleicheOffen(d: Fund): Fund[] {
+    const key = this.ziele().get(d.pfad)?.key;
+    const b = this.basis(d.name);
+    return this.noten().filter((x) => x.pfad !== d.pfad && this.basis(x.name) === b && this.ziele().get(x.pfad)?.key !== key);
+  }
+  protected alleGleichen(d: Fund): void {
+    const key = this.ziele().get(d.pfad)?.key;
+    if (!key) return;
+    for (const x of this.gleicheOffen(d)) this.setzen(x.pfad, { key, an: true, ...(key === EIGEN ? { fassung: pdfSong(x.name).fassung } : {}) });
+  }
   protected readonly ersetzen = signal(false);
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
@@ -177,6 +219,7 @@ export class FundeListe {
   protected readonly anzahl = computed(() => this.gewaehlt().size + [...this.ziele().values()].filter((z) => (z.an && z.key) || z.key === LOESCHEN).length);
 
   constructor() {
+    void this.vorhandeneLaden();
     // neue Funde: das neueste Backup und das neueste Notenpaket vorauswählen
     effect(() => {
       const f = this.funde();

@@ -1,5 +1,6 @@
 import { Component, inject, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Fund, sichten } from '../data/einlesen';
 import { mb } from '../data/aufraeumen';
@@ -7,6 +8,8 @@ import { SyncDatei } from '../data/sync';
 import { SyncService } from '../data/sync.service';
 import { cloudName, syncEinstellungen } from '../data/sync-ordner';
 import { Fortschritt } from './fortschritt';
+import { KNOPF_HILFE, KNOPF_NAME, Knopf, wasPassiert } from '../data/sync-hilfe';
+import { geraetId, geraetName, geraetNameSetzen, seitText, standardName } from '../data/geraete';
 import { FundeListe } from './funde-liste';
 import { SyncKonflikte } from './sync-konflikte';
 
@@ -15,7 +18,7 @@ import { SyncKonflikte } from './sync-konflikte';
 // (Backups, Notenpakete, PDFs, .pro). Eingerichtet wird unter Backstage → Einstellungen, das Backup ebenfalls dort.
 @Component({
   selector: 'app-sync-status',
-  imports: [RouterLink, MatIconModule, Fortschritt, FundeListe, SyncKonflikte],
+  imports: [RouterLink, NgTemplateOutlet, MatIconModule, Fortschritt, FundeListe, SyncKonflikte],
   template: `
     <div class="box">
       <h3><mat-icon>sync</mat-icon> Synchronisation OneDrive ↔ lokal</h3>
@@ -28,17 +31,42 @@ import { SyncKonflikte } from './sync-konflikte';
           · <a routerLink="/backstage/einstellungen">ändern</a></p>
         @if (sync.letzter(); as l) { <p class="letzter" [class.fehler]="l.fehler">Zuletzt {{ zeit(l.zeit) }}: {{ l.text }}</p> }
         <div class="knoepfe">
-          <button type="button" class="primaer" (click)="sync.jetzt()" [disabled]="sync.laeuft()"><mat-icon>sync</mat-icon> Jetzt synchronisieren</button>
-          <button type="button" (click)="dateienZeigen()" [disabled]="sync.laeuft()"><mat-icon>folder_open</mat-icon> Lokale Dateien</button>
-          <button type="button" (click)="einlesen()" [disabled]="sync.laeuft()"><mat-icon>download</mat-icon> Synchronisierte Dateien einlesen</button>
+          <span class="paar"><button type="button" class="primaer" (click)="sync.jetzt()" [disabled]="sync.laeuft()"><mat-icon>sync</mat-icon> Jetzt synchronisieren</button>
+            <ng-container *ngTemplateOutlet="info; context: { $implicit: 'jetzt' }" /></span>
+          <span class="paar"><button type="button" (click)="dateienZeigen()" [disabled]="sync.laeuft()"><mat-icon>folder_open</mat-icon> Lokale Dateien</button>
+            <ng-container *ngTemplateOutlet="info; context: { $implicit: 'dateien' }" /></span>
+          <span class="paar"><button type="button" (click)="einlesen()" [disabled]="sync.laeuft()"><mat-icon>download</mat-icon> Synchronisierte Dateien einlesen</button>
+            <ng-container *ngTemplateOutlet="info; context: { $implicit: 'einlesen' }" /></span>
         </div>
-        @if (sync.stand(); as s) { <app-fortschritt [stand]="s" /> }
+        <ng-template #info let-k>
+          <button type="button" class="info" [class.an]="hilfe() === k" (click)="hilfe.set(hilfe() === k ? null : k)" [attr.aria-expanded]="hilfe() === k" [attr.aria-label]="'Was macht „' + knopfName[k] + '“?'"><mat-icon>info</mat-icon></button>
+        </ng-template>
+        @if (hilfe(); as k) { <p class="hilfe" role="note">{{ hilfeText[k] }}</p> }
+        @if (sync.stand(); as s) {
+          <app-fortschritt [stand]="s" />
+          <p class="passiert" aria-live="polite"><b>Was passiert gerade?</b> {{ wasPassiert(s.text) }}</p>
+        }
         <app-sync-konflikte (geaendert)="geaendert.emit()" />
         @if (sync.offen().length) {
           <p class="offen"><mat-icon>help_outline</mat-icon> {{ sync.offen().length }} {{ sync.offen().length === 1 ? 'Noten-Datei braucht' : 'Noten-Dateien brauchen' }} eine Zuordnung zum Song.
             <button type="button" (click)="zuordnen()" [disabled]="sync.laeuft()">Zuordnen</button>
-            <button type="button" class="link" (click)="sync.offenErledigt(sync.offen())">ignorieren</button></p>
+            <ng-container *ngTemplateOutlet="info; context: { $implicit: 'zuordnen' }" />
+            <button type="button" class="link" (click)="sync.offenErledigt(sync.offen())">ignorieren</button>
+            <ng-container *ngTemplateOutlet="info; context: { $implicit: 'ignorieren' }" /></p>
         }
+        <details class="geraete">
+          <summary><mat-icon>devices</mat-icon> Geräte · dieses: {{ name() || vorschlag }}</summary>
+          <label class="geraet-name">Name dieses Geräts
+            <input [value]="name()" [placeholder]="vorschlag + ' (z. B. „Freds Handy“)'" maxlength="40" (change)="nameSetzen($any($event.target).value)" />
+          </label>
+          @if (sync.geraete().length) {
+            <ul>
+              @for (g of sync.geraete(); track g.id) {
+                <li [class.ich]="g.id === meineId">{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }} <small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen</small></li>
+              }
+            </ul>
+          } @else { <p class="klein">Noch keine Geräte gemeldet – nach dem nächsten Abgleich steht hier, welches Gerät wann zuletzt abgeglichen hat.</p> }
+        </details>
         @if (dateien(); as d) {
           <ul class="dateien">
             @for (x of d; track x.pfad) {
@@ -82,8 +110,25 @@ export class SyncStatus {
   protected readonly funde = signal<Fund[] | null>(null);
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
 
+  protected readonly hilfe = signal<Knopf | null>(null);
+  protected readonly hilfeText: Record<string, string> = KNOPF_HILFE;
+  protected readonly knopfName: Record<string, string> = KNOPF_NAME;
+  protected readonly wasPassiert = wasPassiert;
+  protected readonly name = signal(geraetName());
+  protected readonly vorschlag = standardName(typeof navigator === 'undefined' ? '' : navigator.userAgent);
+  protected readonly meineId = geraetId();
+  protected seit(iso: string): string {
+    return seitText(iso);
+  }
+
   constructor() {
     this.sync.automatisch();
+    if (this.sync.bereit()) void this.sync.geraeteLesen().catch(() => undefined);
+  }
+
+  protected nameSetzen(wert: string): void {
+    geraetNameSetzen(wert);
+    this.name.set(geraetName());
   }
 
   protected zeit(iso: string): string {

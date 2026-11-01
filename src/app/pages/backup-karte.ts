@@ -21,7 +21,10 @@ const DATEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup|backstage-
       <p>Alle Backstage-Daten dieses Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan, Nachbereitungen) und
         die Notenblätter. {{ sync.bereit() ? 'Landet im OneDrive-Ordner der Synchronisation unter „Backup“.' : 'Ohne Synchronisation als Datei zum Teilen oder Speichern.' }}
         Mitschnitte und Einstellungen gehören nicht dazu.</p>
-      <p class="zuletzt" [class.alt]="!zuletzt()">{{ zuletzt() ? 'Letztes Backup: ' + zuletzt() : 'Noch kein Backup auf diesem Gerät.' }}</p>
+      <p class="zuletzt" [class.alt]="!zuletzt()">{{ zuletzt() ? 'Letztes Backup von diesem Gerät: ' + zuletzt() : 'Noch kein Backup auf diesem Gerät.' }}</p>
+      @if (sync.bereit() && inOneDrive() !== undefined) {
+        <p class="zuletzt" [class.alt]="!inOneDrive()">{{ inOneDrive() ? 'Neuestes Backup in OneDrive: ' + inOneDrive() : 'In OneDrive liegt noch kein Backup.' }}</p>
+      }
       <div class="knoepfe">
         <button type="button" class="primaer" (click)="erstellen()" [disabled]="laeuft()"><mat-icon>backup</mat-icon> Backup erstellen</button>
         @if (sync.bereit()) {
@@ -68,6 +71,24 @@ export class BackupKarte {
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal<{ text: string; fehler?: boolean } | null>(null);
   protected readonly zuletzt = signal(this.letztes());
+  /** neuestes Backup im Ordner „Backup“ des Sync-Ordners (Datum, Dateiname); '' = keins; undefined = unbekannt */
+  protected readonly inOneDrive = signal<string | undefined>(undefined);
+
+  constructor() {
+    void this.oneDriveStand();
+  }
+
+  private async oneDriveStand(): Promise<void> {
+    if (!this.sync.bereit()) return;
+    try {
+      const o = await this.sync.lokal();
+      if (!o) return;
+      const d = (await o.liste()).filter((x) => DATEN_BACKUP.test(x.pfad)).sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))[0];
+      this.inOneDrive.set(d ? `${d.geaendert ? new Date(d.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : d.pfad.slice(-15, -5)} (${d.pfad.split('/').at(-1)})` : '');
+    } catch {
+      // ohne Zugriff auf den Ordner bleibt es unbekannt
+    }
+  }
 
   private letztes(): string {
     try {
@@ -89,6 +110,7 @@ export class BackupKarte {
     } finally {
       this.laeuft.set(false);
       this.zuletzt.set(this.letztes());
+      void this.oneDriveStand();
     }
   }
 
@@ -115,6 +137,7 @@ export class BackupKarte {
       for (const f of liste) await o.schreiben(`${ORDNER}/${f.name}`, f);
       backupGemerkt();
       this.zuletzt.set(this.letztes());
+      void this.oneDriveStand();
       this.meldung.set({ text: 'Backup erstellt – wird jetzt mit OneDrive abgeglichen …' });
       await this.sync.jetzt();
       return 'Backup erstellt und in OneDrive unter „Backup“ abgelegt ✓';

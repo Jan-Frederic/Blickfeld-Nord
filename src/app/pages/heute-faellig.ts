@@ -9,6 +9,7 @@ import { SAISON_UPDATE_KEY, saisonUpdateFaellig } from '../data/jahresplan';
 import { rueckblickFrist } from '../data/jahresrueckblick';
 import { DeployLauf, deployStatus } from '../data/deploy-status';
 import { kampagnenLink } from '../data/goatcounter';
+import { tageSeitBackup } from './backstage-sync';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
 // Backstage-Übersicht, ganz oben: was heute dran ist – Auftritt und Probe von heute sowie fällige, noch nicht
@@ -89,7 +90,13 @@ export class HeuteFaellig {
     return std < 1 ? 'gerade eben' : std < 24 ? `vor ${std} Std.` : `vor ${Math.round(std / 24)} Tagen`;
   }
 
+  private readonly morgen = new Date(Date.parse(this.heute) + 864e5).toISOString().slice(0, 10);
+
   protected readonly termine = computed(() => [
+    // Vortag: alles auf einer Seite prüfen – Bereit?, Packliste, Wetter, Notenmappe, Bühnen-Modus ohne Netz
+    ...this.band.shows
+      .filter((s) => s.date === this.morgen)
+      .map((s) => ({ icon: 'checklist', label: `Morgen: ${s.venue} – Bereit?, Packliste, Wetter, Notenmappe und Offline prüfen`, link: ['/backstage', this.band.showId(s)] })),
     ...this.band.shows
       .filter((s) => s.date <= this.heute && (s.endDate ?? s.date) >= this.heute)
       .map((s) => ({ icon: 'celebration', label: `Auftritt: ${s.venue}${s.time ? ' · ' + s.time + ' Uhr' : ''}`, link: ['/backstage', this.band.showId(s)] })),
@@ -106,6 +113,8 @@ export class HeuteFaellig {
       label: `Rückblick „${s.private ? (s.publicName ?? 'Private Feier') : s.venue}“ bis 14.12. schreiben – sonst fehlt er im Jahresrückblick`,
       link: ['/backstage', this.band.showId(s)],
     })),
+    // Backup älter als 14 Tage (oder noch nie) – Backstage-Daten liegen sonst nur auf diesem Gerät
+    ...this.backupFaellig(),
     // Anfragen ohne Antwort (seit 14 Tagen kein neuer Termin dort) – Kontakte unter Termine → Kontakte
     ...nachfragen(ladeKontakte(), this.band.shows, this.heute).map((n) => ({
       icon: 'call',
@@ -113,6 +122,12 @@ export class HeuteFaellig {
       link: ['/backstage/termine/kontakte'],
     })),
   ]);
+
+  private backupFaellig(): { icon: string; label: string; link: string[] }[] {
+    const tage = tageSeitBackup();
+    if (tage === undefined || (tage !== null && tage <= 14)) return [];
+    return [{ icon: 'backup', label: tage === null ? 'Noch kein Backup auf diesem Gerät – jetzt erstellen' : `Letztes Backup vor ${tage} Tagen – neues erstellen`, link: ['/backstage/einstellungen'] }];
+  }
 
   private gelesen(key: string): string | null {
     try {
