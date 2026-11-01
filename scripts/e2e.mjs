@@ -1005,6 +1005,11 @@ test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichu
   await until(async () => /\d+ Songs · \d/.test(await p.locator('app-songs-liste .listen-info').innerText()), 'Dauer der Liste fehlt');
   await p.locator('app-songs-liste .listen-chips button', { hasText: 'Wunschliste' }).click();
   await until(async () => (await p.locator('app-songs-liste .wunsch-stand').count()) > 0, 'Stand der Wunschliste fehlt');
+  // Fortschritt je Filter: Text und Gesamtzahl folgen dem gewählten Chip
+  await until(async () => /^Wunschliste: Angaben bei \d+ von \d+ Songs/.test(await p.locator('app-songs-liste .fortschritt-text').innerText()), 'Fortschritt folgt nicht dem Filter Wunschliste');
+  const wunschGesamt = Number(/von (\d+)/.exec(await p.locator('app-songs-liste .fortschritt-text').innerText())[1]);
+  const wunschChip = Number(await p.locator('app-songs-liste .listen-chips button', { hasText: 'Wunschliste' }).locator('.n').innerText());
+  expect(wunschGesamt === wunschChip, `Fortschritt zählt ${wunschGesamt} Songs, die Wunschliste hat ${wunschChip}`);
   // Reihenfolge wie in Spotify, Schnell-Eintragen von Tonart/Tempo, Hinweise zu den Listen
   await p.locator('app-songs-liste .listen-chips button', { hasText: 'Setlist' }).click();
   await p.locator('app-songs-liste .filter select').nth(1).selectOption('spotify');

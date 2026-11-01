@@ -45,19 +45,22 @@ function ladeEntwurf(): Record<string, Werte> {
         Bearbeiten; spielt ihr einen Song anders als im Original, dort „Wir spielen“ und „Capo“ eintragen, das Tempo im
         Proberaum mit <mat-icon class="inline">touch_app</mat-icon> mindestens viermal im Takt tippen.
         <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song – zur Kontrolle der Noten.
-        Angaben bisher bei {{ ausgefuellt() }} von {{ songs().length }} Songs. Auf diesem Gerät gelten Änderungen sofort;
+        Auf diesem Gerät gelten Änderungen sofort;
         auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
       </p>
 
-      <div class="fortschritt" role="progressbar" [attr.aria-valuenow]="ausgefuellt()" aria-valuemin="0" [attr.aria-valuemax]="songs().length" aria-label="Songs mit Tonart oder Tempo">
-        <span [style.width.%]="(ausgefuellt() / (songs().length || 1)) * 100"></span>
-      </div>
       <div class="listen-chips" role="group" aria-label="Nach Spotify-Liste filtern">
         <button type="button" [attr.aria-pressed]="liste() === ''" (click)="liste.set('')">Alle <span class="n">{{ songs().length }}</span></button>
         @for (l of listen; track l.key) {
           <button type="button" [attr.aria-pressed]="liste() === l.key" (click)="liste.set(l.key)"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }} <span class="n">{{ anzahl()[l.key] || 0 }}</span></button>
         }
         <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste <span class="n">{{ anzahl()['ohne'] }}</span></button>
+      </div>
+      <!-- Fortschritt je Filter: Anteil der Songs der gewählten Liste mit Tonart, Tempo oder Notiz -->
+      @let fs = fortschrittListe();
+      <p class="fortschritt-text">{{ fs.name }}: Angaben bei {{ fs.fertig }} von {{ fs.gesamt }} Songs ({{ fs.prozent }} %)</p>
+      <div class="fortschritt" role="progressbar" [attr.aria-valuenow]="fs.fertig" aria-valuemin="0" [attr.aria-valuemax]="fs.gesamt" [attr.aria-label]="fs.name + ': Songs mit Tonart oder Tempo'">
+        <span [style.width.%]="fs.prozent"></span>
       </div>
       <div class="listen-info">
         @if (liste()) {
@@ -216,6 +219,7 @@ function ladeEntwurf(): Record<string, Werte> {
       </div>
   `,
   styles: `
+    .fortschritt-text { margin: 10px 0 4px; font-size: .82rem; color: var(--bn-fog); }
     .fortschritt { height: 6px; margin: 0 0 14px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
     .fortschritt span { display: block; height: 100%; background: var(--bn-sunset); }
     .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-bottom: 12px; font-size: .88rem; color: var(--bn-fog); }
@@ -435,7 +439,15 @@ export class SongsListe {
   protected wackeltUmschalten(k: string): void {
     this.wackelt.set(wackeltSetzen(k, !this.wackelt()[k]));
   }
-  protected readonly ausgefuellt = computed(() => this.songs().filter((s) => { const w = this.wert(s.key); return w.tonart || w.bpm || w.notiz; }).length);
+  /** Fortschritt für den gewählten Listen-Filter (Alle, eine Spotify-Liste oder „ohne Liste“) */
+  protected readonly fortschrittListe = computed(() => {
+    this.entwurf();
+    const l = this.liste();
+    const songs = this.listenSongs();
+    const fertig = songs.filter((s) => { const w = this.wert(s.key); return w.tonart || w.spielTonart || w.bpm || w.notiz; }).length;
+    const name = !l ? 'Alle Listen' : l === 'ohne' ? 'Ohne Liste' : this.listeVon(l).label;
+    return { name, fertig, gesamt: songs.length, prozent: songs.length ? Math.round((fertig / songs.length) * 100) : 0 };
+  });
 
   protected wert(k: string): Werte {
     return this.entwurf()[k] ?? this.gespeichert[k] ?? {};

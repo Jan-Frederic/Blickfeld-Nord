@@ -1,4 +1,4 @@
-import data from './repertoire.json';
+import { LISTEN, songAbgleich } from './playlisten';
 import { Akkordblatt, besteTreffer, chordproLesen, dateiText, songZuordnen, songsImText } from './chordpro';
 import { pdfKopf } from './pdf';
 
@@ -6,11 +6,14 @@ import { pdfKopf } from './pdf';
 // dem Dateinamen, dem Ordnerpfad, bei .pro den Angaben {title}/{artist} in der Datei, bei PDFs den Eigenschaften und
 // dem Kopf der ersten Seite; zuletzt mit Toleranz für Tippfehler. Bei Gleichstand (z. B. „Hallelujah“ von zwei
 // Interpreten ohne Namen in der Datei) gibt es Kandidaten zur Auswahl. Der Rest des Dateinamens ist die Fassung.
-// Von Hand gewählte Zuordnungen werden je Dateiname gemerkt und gehen allem anderen vor.
+// Von Hand gewählte Zuordnungen werden je Dateiname gemerkt und gehen allem anderen vor. Gesucht wird in allen
+// Spotify-Listen, nicht nur im öffentlichen Repertoire.
 
 export type Song = { title: string; artist: string };
 export const songKey = (s: Song) => `${s.title}|${s.artist}`;
-const SONGS: Song[] = data.tracks;
+// alle Songs aus allen Spotify-Listen (Website, Setlist, Probe, Repertoire, Wunschliste, Archiv) – ein Song gilt als
+// erkannt, sobald er in mindestens einer Liste steht; Schlüssel wie im Abgleich (Schreibweise der Website-Liste zuerst)
+const SONGS: Song[] = songAbgleich(LISTEN).map(({ title, artist }) => ({ title, artist }));
 
 export interface Erkennung {
   /** „Titel|Interpret“ des erkannten Songs */

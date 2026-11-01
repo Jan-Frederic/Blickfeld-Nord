@@ -123,6 +123,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Tonart hören** (Song-Dialog): 15–20 Sekunden den Song oder die Akkordfolge spielen, das Mikrofon schlägt die
   Tonart vor. Ohne Original-Tonart wird sie das Original, weicht sie ab, „Wir spielen“.
 - **Tap-Tempo in der Songliste:** bei „Tonart und Tempo schnell eintragen“ je Zeile ein Tipp-Knopf (4-mal im Takt).
+- **Noten zuordnen:** Beim Einlesen von PDF- und .pro-Dateien sucht die automatische Zuordnung in **allen**
+  Spotify-Listen (Website, Setlist, Probe, Repertoire, Wunschliste, Archiv) – steht der Song in mindestens einer, ist er
+  erkannt. Gibt es einen Titel bei zwei Interpreten (z. B. „Wonderwall“), stehen beide zur Auswahl.
+- **Fortschritt je Filter** (Songs → Liste): Balken und „Angaben bei … von … Songs“ beziehen sich auf den gewählten
+  Chip (Alle, eine Spotify-Liste oder „Ohne Liste“).
 - **Verlässlichkeit** in der Songliste: Punkt grün = von der Band geprüft, blau = recherchiert, blauer Kreis =
   automatisch (Spotify-Analyse), gelb = unsicher. „Zeigen: Werte unsicher“ listet, was noch zu prüfen ist; im Song-Dialog
   bestätigt „✓ Stimmt so“ die Werte (wer selbst Tonart oder Tempo einträgt, bestätigt automatisch). Über „Datei für

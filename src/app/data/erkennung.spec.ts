@@ -57,3 +57,12 @@ describe('Erkennung von Titel und Interpret', () => {
     localStorage.clear();
   });
 });
+
+describe('erkennen: alle Spotify-Listen', () => {
+  it('findet auch Songs, die nur in einer Backstage-Liste stehen (z. B. Wunschliste)', async () => {
+    const { erkennen } = await import('./erkennung');
+    const leer = async () => new ArrayBuffer(0);
+    const e = await erkennen('Mumford & Sons - Hopeless Wanderer.pdf', '', leer);
+    expect(e.key).toBe('Hopeless Wanderer|Mumford & Sons');
+  });
+});
