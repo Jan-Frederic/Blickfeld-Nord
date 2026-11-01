@@ -7,6 +7,7 @@ import { BandService, Show } from '../data/band.service';
 import { KontaktBewertung } from './kontakt-bewertung';
 import { Kontakt, veranstalterRangliste, adressbuchDa, ausAdressbuch, bewertungSchwach, bewertungText, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
 import { saison } from '../data/saison';
+import { monatGesperrt } from '../data/schonzeit';
 
 // Backstage → Termine → Kontakte (/backstage/termine/kontakte): alle Ansprechpartner der Veranstalter auf einen Blick –
 // Ort, letzter bzw. nächster Auftritt, WhatsApp, E-Mail, Anfrage (mit „angefragt am“, Nachfrage nach 14 Tagen unter
@@ -136,7 +137,7 @@ export class TermineKontakte {
   private freieMonate(): string[] {
     return saison(this.band.shows, this.heute)
       .slice(2)
-      .filter((m) => !m.shows.length)
+      .filter((m) => !m.shows.length && !monatGesperrt(m.monat, this.band.sperrzeiten, this.band.shows))
       .map((m) => MONATE[Number(m.monat.slice(5, 7)) - 1])
       .slice(0, 4);
   }

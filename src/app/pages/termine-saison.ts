@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { PlanMonat, SAISON_UPDATE_KEY, jahresplan } from '../data/jahresplan';
 import { wiederAnfragen } from '../data/saison';
+import { monatGesperrt } from '../data/schonzeit';
 import { bewertungText, kontaktVon } from '../data/kontakte';
 import type { Show } from '../data/band.service';
 
@@ -33,7 +34,8 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
       <div class="monate">
         @for (m of plan(); track m.monat) {
-          <article [class.frei]="!hatAuftritt(m)">
+          @let g = gesperrt(m.monat);
+          <article [class.frei]="!hatAuftritt(m) && !g" [class.gesperrt]="!!g">
             <h3>{{ name(m.monat) }}</h3>
             <ul>
               @for (e of m.eintraege; track e.datum + e.text) {
@@ -45,7 +47,8 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 </li>
               }
             </ul>
-            @if (!hatAuftritt(m)) { <p class="leer">noch kein Auftritt</p> }
+            @if (g) { <p class="gesperrt-text">komplett gesperrt · {{ g.join(', ') }}</p> }
+            @else if (!hatAuftritt(m)) { <p class="leer">noch kein Auftritt</p> }
           </article>
         }
       </div>
@@ -78,7 +81,11 @@ export class TermineSaison {
   protected readonly anfragen = computed(() => wiederAnfragen(this.band.shows, this.heute));
   protected readonly auftritte = computed(() => this.plan().reduce((n, m) => n + m.eintraege.filter((e) => e.art === 'auftritt').length, 0));
   protected readonly proben = computed(() => this.plan().reduce((n, m) => n + m.eintraege.filter((e) => e.art === 'probe').length, 0));
-  protected readonly frei = computed(() => this.plan().filter((m) => !this.hatAuftritt(m)).length);
+  protected readonly frei = computed(() => this.plan().filter((m) => !this.hatAuftritt(m) && !this.gesperrt(m.monat)).length);
+  /** Monat komplett gesperrt (Schonzeit, Band verhindert, Auftritte) – rot markiert */
+  protected gesperrt(jm: string): string[] | null {
+    return monatGesperrt(jm, this.band.sperrzeiten, this.band.shows);
+  }
   protected hatAuftritt(m: PlanMonat): boolean {
     return m.eintraege.some((e) => e.art === 'auftritt');
   }
@@ -116,8 +123,15 @@ export class TermineSaison {
     this.plan().forEach((m, i) => {
       const x = rand + (i % spalten) * (bw + 16);
       const y = kopf + Math.floor(i / spalten) * (bh + 16);
-      const frei = !this.hatAuftritt(m);
-      ctx.strokeStyle = frei ? '#e8a46a' : '#3a3f45';
+      const zu = this.gesperrt(m.monat);
+      const frei = !this.hatAuftritt(m) && !zu;
+      ctx.strokeStyle = zu ? '#e07a5a' : frei ? '#e8a46a' : '#3a3f45';
+      if (zu) {
+        ctx.fillStyle = 'rgba(224, 122, 90, .14)';
+        ctx.beginPath();
+        ctx.roundRect(x, y, bw, bh, 14);
+        ctx.fill();
+      }
       ctx.setLineDash(frei ? [8, 6] : []);
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -142,7 +156,11 @@ export class TermineSaison {
         ctx.fillStyle = '#9aa0a6';
         ctx.fillText(`+ ${liste.length - platz} weitere`, x + 16, zy);
       }
-      if (frei) {
+      if (zu) {
+        ctx.fillStyle = '#e07a5a';
+        ctx.font = '400 18px Inter';
+        ctx.fillText(`gesperrt · ${zu.join(', ')}`, x + 16, y + bh - 18);
+      } else if (frei) {
         ctx.fillStyle = '#e8a46a';
         ctx.font = '400 18px Inter';
         ctx.fillText('noch kein Auftritt', x + 16, y + bh - 18);
@@ -165,9 +183,9 @@ export class TermineSaison {
     if (!win) return;
     const monate = this.plan()
       .map(
-        (m) => `<section class="${this.hatAuftritt(m) ? '' : 'frei'}"><h2>${this.name(m.monat)}</h2><ul>${m.eintraege
+        (m) => `<section class="${this.gesperrt(m.monat) ? 'gesperrt' : this.hatAuftritt(m) ? '' : 'frei'}"><h2>${this.name(m.monat)}</h2><ul>${m.eintraege
           .map((e) => `<li class="${e.art}${e.offen ? ' offen' : ''}"><b>${tag(e.datum)}${e.bis && e.bis !== e.datum ? '–' + tag(e.bis) : ''}</b> ${esc(e.text)}${e.info ? ` <small>${esc(e.info)}</small>` : ''}${e.offen ? ' <small>(offen)</small>' : ''}</li>`)
-          .join('')}</ul>${this.hatAuftritt(m) ? '' : '<p class="leer">noch kein Auftritt</p>'}</section>`,
+          .join('')}</ul>${this.gesperrt(m.monat) ? `<p class="gesperrt-text">komplett gesperrt · ${esc(this.gesperrt(m.monat)!.join(', '))}</p>` : this.hatAuftritt(m) ? '' : '<p class="leer">noch kein Auftritt</p>'}</section>`,
       )
       .join('');
     const anfragen = this.anfragen().length
@@ -180,6 +198,7 @@ export class TermineSaison {
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   section { border: 1px solid #bbb; border-radius: 4px; padding: 5px 7px; min-height: 30mm; break-inside: avoid; }
   section.frei { border-style: dashed; }
+  section.gesperrt { border-color: #c33; background: #fbeaea; } .gesperrt-text { color: #a22; margin: 2px 0 0; }
   h2 { font-size: 10pt; margin: 0 0 3px; } ul { margin: 0; padding: 0; list-style: none; } li { margin: 1px 0; }
   li.probe { color: #555; } li.weg { color: #a33; font-style: italic; } li.offen b { color: #c60; }
   small { color: #666; } .leer { color: #c60; margin: 2px 0 0; }

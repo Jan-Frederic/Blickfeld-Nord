@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { saison, wiederAnfragen } from '../data/saison';
+import { monatGesperrt } from '../data/schonzeit';
 import { Show } from '../data/band.service';
 import { angefragtSetzen, anfrageText, bewertungSchwach, bewertungText, kontaktVon, nachrichtSenden, ortKey } from '../data/kontakte';
 
@@ -16,14 +17,15 @@ import { angefragtSetzen, anfrageText, bewertungSchwach, bewertungText, kontaktV
   imports: [RouterLink, MatIconModule],
   template: `
     <details class="saison">
-      <summary><mat-icon>date_range</mat-icon> Saisonplanung · {{ freieMonate() }} {{ freieMonate() === 1 ? 'Monat' : 'Monate' }} ohne Auftritt@if (anfragen().length) { · {{ anfragen().length }}× wieder anfragen }</summary>
+      <summary><mat-icon>date_range</mat-icon> Saisonplanung · {{ freieMonate() }} {{ freieMonate() === 1 ? 'Monat' : 'Monate' }} frei@if (anfragen().length) { · {{ anfragen().length }}× wieder anfragen }</summary>
       <ol class="zeitleiste">
         @for (m of monate(); track m.monat) {
-          <li [class.frei]="!m.shows.length">
+          @let g = gesperrt(m.monat);
+          <li [class.frei]="!m.shows.length && !g" [class.gesperrt]="!!g" [attr.title]="g ? 'komplett gesperrt: ' + g.join(', ') : null">
             <span class="monat">{{ name(m.monat) }}</span>
             @for (s of m.shows; track s.date + s.venue) {
               <a class="auftritt" [class.offen]="!s.confirmed" [class.privat]="s.private" [routerLink]="'/backstage/' + band.showId(s)" [title]="s.venue + (s.city ? ', ' + s.city : '')">{{ s.date.slice(8, 10) }}. {{ s.publicName || s.venue }}</a>
-            } @empty { <span class="leer">frei</span> }
+            } @empty { <span class="leer">{{ g ? 'gesperrt · ' + g.join(', ') : 'frei' }}</span> }
           </li>
         }
       </ol>
@@ -46,10 +48,14 @@ export class SaisonPlanung {
   protected readonly band = inject(BandService);
   private readonly heute = new Date().toISOString().slice(0, 10);
   protected readonly monate = computed(() => saison(this.band.shows, this.heute));
-  protected readonly freieMonate = computed(() => this.monate().filter((m) => !m.shows.length).length);
+  protected readonly freieMonate = computed(() => this.monate().filter((m) => !m.shows.length && !this.gesperrt(m.monat)).length);
+  /** Monat komplett gesperrt (Schonzeit, Band verhindert, Auftritte) – rot markiert, nicht für Anfragen anbieten */
+  protected gesperrt(jm: string): string[] | null {
+    return monatGesperrt(jm, this.band.sperrzeiten, this.band.shows);
+  }
   protected readonly anfragen = computed(() => wiederAnfragen(this.band.shows, this.heute));
   /** freie Monate (ganzer Name) für die Anfrage – ab dem übernächsten Monat */
-  private readonly freiNamen = computed(() => this.monate().slice(2).filter((m) => !m.shows.length).map((m) => `${MONATE[Number(m.monat.slice(5, 7)) - 1]}${m.monat.slice(0, 4) !== this.heute.slice(0, 4) ? ' ' + m.monat.slice(0, 4) : ''}`).slice(0, 4));
+  private readonly freiNamen = computed(() => this.monate().slice(2).filter((m) => !m.shows.length && !this.gesperrt(m.monat)).map((m) => `${MONATE[Number(m.monat.slice(5, 7)) - 1]}${m.monat.slice(0, 4) !== this.heute.slice(0, 4) ? ' ' + m.monat.slice(0, 4) : ''}`).slice(0, 4));
   protected readonly kopiert = signal('');
   // fertige Anfrage an den Ansprechpartner (WhatsApp, sonst E-Mail), sonst Teilen bzw. Zwischenablage
   protected async anfragen_(s: Show): Promise<void> {

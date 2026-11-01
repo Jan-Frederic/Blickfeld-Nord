@@ -13,3 +13,17 @@ describe('schonzeiten', () => {
     expect(schonzeiten([{ date: '2027-05-01', endDate: '2027-05-03', confirmed: true }])[0]).toMatchObject({ von: '2027-04-05', bis: '2027-05-30' });
   });
 });
+
+describe('monatGesperrt', () => {
+  it('voll gesperrt durch Schonzeit, Abwesenheit oder Auftritte – sonst null', async () => {
+    const { monatGesperrt, schonzeiten } = await import('./schonzeit');
+    const shows = [{ date: '2027-02-19', confirmed: true }];
+    const sperren = schonzeiten(shows); // 25.01.–14.03.2027
+    expect(monatGesperrt('2027-02', sperren, shows)).toEqual(['Schonzeit']);
+    expect(monatGesperrt('2027-01', sperren, shows)).toBeNull();
+    const privat = [{ wer: 'Band', von: '2027-03-01', bis: '2027-03-31', grund: 'privat verhindert' }];
+    expect(monatGesperrt('2027-03', [...sperren, ...privat], shows)).toEqual(['Schonzeit', 'privat verhindert']);
+    expect(monatGesperrt('2027-03', privat, [])).toEqual(['privat verhindert']);
+    expect(monatGesperrt('2027-03', [{ wer: 'Fred', von: '2027-03-01', bis: '2027-03-31' }], [])).toBeNull();
+  });
+});

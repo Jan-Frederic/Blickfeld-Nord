@@ -187,7 +187,9 @@ darunter einfügen:
 Wochen (Montag bis Sonntag) davor und danach automatisch reserviert – sieben Wochen am Stück, im Verfügbarkeitskalender
 gestrichelt als **reserviert**, nicht als frei. Das gilt auch für schon eingetragene Auftritte; die bleiben stehen, auch
 wenn sie in die Schonzeit eines anderen fallen. Eintragen muss man dafür nichts (`data/schonzeit.ts`, Länge in
-`SCHONZEIT_WOCHEN`). Das Termin-Formular warnt bei einem neuen Auftritt in der Schonzeit („Band (Schonzeit)“); Proben
+`SCHONZEIT_WOCHEN`). Monate, in denen kein Tag mehr frei ist (Schonzeit, Band verhindert, Auftritte), sind in der
+Saisonplanung und unter Termine → Saison **rot** markiert („komplett gesperrt · Schonzeit“) – auch im Bild und im
+Ausdruck – und werden in Anfragen nicht mehr als frei angeboten. Das Termin-Formular warnt bei einem neuen Auftritt in der Schonzeit („Band (Schonzeit)“); Proben
 sind nicht betroffen.
 
 ## Spotify-Listen
