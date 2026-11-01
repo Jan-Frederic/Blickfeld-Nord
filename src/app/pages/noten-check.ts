@@ -1,15 +1,19 @@
-import { Component, input, output, signal, effect } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { SyncService } from '../data/sync.service';
+import type { NotenDateiInfo } from '../data/noten';
 import { MatIconModule } from '@angular/material/icon';
+import { NgTemplateOutlet } from '@angular/common';
 import { alleMarkierungen, markierungenSetzen, alleSongNoten, notenDateiLoeschen, notenDateien, songNotenSetzen } from '../data/noten';
 import { DoppelGruppe, NotenCheck, notenCheck, zusammenfuehren } from '../data/noten-check';
 import { mb } from '../data/aufraeumen';
 
 // Backstage → Abgleich → Daten auf diesem Gerät → Noten-Check (Logik: data/noten-check.ts): Noten-Dateien ohne Song
-// und doppelte Dateien. Doppelte lassen sich zusammenführen (nur auf diesem Gerät). Dateien in OneDrive löscht ihr dort
-// selbst – deshalb gibt es hier kein „Löschen“.
+// und doppelte Dateien. Doppelte lassen sich zusammenführen (nur auf diesem Gerät). Dateien ohne Song lassen sich
+// löschen (mit Berechtigung „Daten löschen“, wie überall auf dieser Seite): nur von diesem Gerät oder auch aus OneDrive (gleicher Name und gleiche
+// Größe im Sync-Ordner; der nächste Abgleich löscht dort, das betrifft die ganze Band).
 @Component({
   selector: 'app-noten-check',
-  imports: [MatIconModule],
+  imports: [MatIconModule, NgTemplateOutlet],
   template: `
     @if (check(); as c) {
       @if (c.ohneSong.length || c.doppelt.length) {
@@ -21,20 +25,35 @@ import { mb } from '../data/aufraeumen';
               @for (g of c.doppelt; track g.behalten.id) {
                 <li>
                   <span>{{ g.behalten.name }} <small>{{ g.weitere.length + 1 }}× · je {{ mb(g.behalten.groesse) }}{{ g.songs.length ? ' · bei ' + songsText(g.songs) : ' · bei keinem Song' }}</small></span>
-                  <button type="button" (click)="fuehren(g)" [disabled]="laeuft()"><mat-icon>merge</mat-icon> Zusammenführen</button>
+                  <span class="knoepfe">
+                    @if (g.songs.length) {
+                      <button type="button" (click)="fuehren(g)" [disabled]="laeuft()"><mat-icon>merge</mat-icon> Zusammenführen</button>
+                    } @else {
+                      <ng-container *ngTemplateOutlet="weg; context: { $implicit: [g.behalten].concat(g.weitere), name: g.behalten.name }" />
+                    }
+                  </span>
                 </li>
               }
             </ul>
           }
           @if (c.ohneSong.length) {
             <h5>Ohne Song</h5>
-            <p>Diese Dateien gehören zu keinem Song – zuordnen unter Abgleich → „Synchronisierte Dateien einlesen“. Was weg soll, löscht ihr in OneDrive.</p>
+            <p>Diese Dateien gehören zu keinem Song – zuordnen unter Abgleich → „Synchronisierte Dateien einlesen“{{ oneDrive() ? ' oder hier löschen' : '' }}.</p>
             <ul>
-              @for (d of c.ohneSong; track d.id) { <li><span>{{ d.name }} <small>{{ mb(d.groesse) }}</small></span></li> }
+              @for (d of c.ohneSong; track d.id) {
+                <li><span>{{ d.name }} <small>{{ mb(d.groesse) }}</small></span>
+                  <span class="knoepfe"><ng-container *ngTemplateOutlet="weg; context: { $implicit: [d], name: d.name }" /></span></li>
+              }
             </ul>
           }
           @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
         </details>
+        <ng-template #weg let-dateien let-name="name">
+          @if (oneDrive()) {
+            <button type="button" (click)="loeschen(dateien, false)" [disabled]="laeuft()" [attr.aria-label]="name + ' von diesem Gerät löschen'"><mat-icon>delete</mat-icon> Vom Gerät</button>
+            <button type="button" class="gefahr" (click)="loeschen(dateien, true)" [disabled]="laeuft()" [attr.aria-label]="name + ' auch aus OneDrive löschen'"><mat-icon>delete_forever</mat-icon> Auch aus OneDrive</button>
+          }
+        </ng-template>
       }
     }
   `,
@@ -47,6 +66,41 @@ export class NotenCheckKarte {
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
   protected readonly mb = mb;
+  private readonly sync = inject(SyncService);
+  /** Löschen (vom Gerät wie aus OneDrive) nur mit Berechtigung „Daten löschen“ (Besitzer des Sync-Ordners) */
+  protected readonly oneDrive = computed(() => this.sync.darfLoeschen());
+
+  /** von diesem Gerät löschen; mit oneDrive auch die gleichen Dateien (Name und Größe) im Sync-Ordner */
+  protected async loeschen(dateien: NotenDateiInfo[], oneDrive: boolean): Promise<void> {
+    const name = dateien[0].name;
+    const frage = oneDrive
+      ? `„${name}“ aus OneDrive und von diesem Gerät löschen? Das betrifft die ganze Band – beim nächsten Abgleich verschwindet die Datei auch auf den anderen Geräten aus dem Sync-Ordner.`
+      : `„${name}“ von diesem Gerät löschen? In OneDrive bleibt die Datei.`;
+    if (!this.oneDrive() || !confirm(frage)) return;
+    this.laeuft.set(true);
+    try {
+      let drueben = 0;
+      if (oneDrive) {
+        const lokal = await this.sync.lokal(true);
+        if (!lokal) throw new Error('Kein Zugriff auf den Sync-Ordner – unter Einstellungen → Synchronisation wählen.');
+        const passt = new Set(dateien.map((d) => `${d.name.toLocaleLowerCase('de')}|${d.groesse}`));
+        for (const x of await lokal.liste())
+          if (passt.has(`${x.pfad.split('/').at(-1)!.toLocaleLowerCase('de')}|${x.groesse}`)) {
+            await lokal.loeschen(x.pfad);
+            drueben++;
+          }
+      }
+      for (const d of dateien) await notenDateiLoeschen(d.id);
+      this.meldung.set(`„${name}“ von diesem Gerät gelöscht${oneDrive ? (drueben ? ` und aus dem Sync-Ordner (${drueben}) – wird jetzt mit OneDrive abgeglichen` : ' – im Sync-Ordner lag sie nicht (mehr)') : ''} ✓`);
+      if (drueben) void this.sync.jetzt();
+      await this.pruefen();
+      this.geaendert.emit();
+    } catch (e) {
+      this.meldung.set(`Löschen fehlgeschlagen: ${(e as Error).message || 'unbekannter Fehler'}`);
+    } finally {
+      this.laeuft.set(false);
+    }
+  }
 
   constructor() {
     effect(() => {

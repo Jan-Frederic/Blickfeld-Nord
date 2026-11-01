@@ -485,8 +485,9 @@ egal, z. B. „Toto - Africa - Bass.pdf“ und „Toto - Africa - Gitarre.pdf“
 
 **Noten-Check** (Abgleich → Daten auf diesem Gerät, unter „Noten“): listet Noten-Dateien ohne Song und doppelte Dateien
 (gleicher Name, gleiche Größe). **Zusammenführen** lässt alle Songs auf eine Kopie zeigen, nimmt Markierungen mit und
-entfernt die übrigen Kopien von diesem Gerät – in OneDrive ändert sich nichts. Ein „Löschen“ gibt es dort bewusst nicht:
-Dateien in OneDrive löscht ihr dort selbst.
+entfernt die übrigen Kopien von diesem Gerät – in OneDrive ändert sich nichts. Dateien ohne Song (auch doppelte ohne
+Song) lassen sich mit der Berechtigung „Daten löschen“ löschen: **Vom Gerät** (OneDrive bleibt) oder **Auch aus OneDrive**
+(gleicher Name und gleiche Größe im Sync-Ordner; der Abgleich löscht dort – betrifft die ganze Band).
 
 **Alle Einstellungen und Backstage-Daten wandern mit:** Ist man angemeldet und die Synchronisation eingerichtet, wird
 jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:

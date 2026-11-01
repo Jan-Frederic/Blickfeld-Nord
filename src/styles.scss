@@ -465,3 +465,5 @@ app-noten-check button { display: inline-flex; align-items: center; gap: 6px; pa
 app-noten-check button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 app-noten-check mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-noten-check .meldung { margin-top: 8px; color: #5fb88a; }
+app-noten-check .knoepfe { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+app-noten-check button.gefahr { border-color: #e07a5a; color: #e07a5a; }

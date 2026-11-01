@@ -872,6 +872,43 @@ test('Backstage: Abgleich – Daten verwalten, vergangene Einträge aufräumen; 
   // Sync-Kompass: vorhanden, aber ausgeblendet, solange nicht abgeglichen wird
   await until(async () => (await p.locator('app-sync-kompass a.kompass').count()) === 1, 'Sync-Kompass fehlt');
   expect(!(await p.locator('app-sync-kompass a.kompass').isVisible()), 'Sync-Kompass sichtbar, obwohl nicht abgeglichen wird');
+  // Noten-Check: eine Datei ohne Song, auf dem Gerät und im Sync-Ordner → „Auch aus OneDrive“ löscht beides
+  await p.evaluate(() => Promise.all([
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-noten', 2);
+      req.onupgradeneeded = () => {
+        for (const n of ['dateien', 'songs', 'markierungen']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n, n === 'dateien' ? { keyPath: 'id' } : undefined);
+      };
+      req.onsuccess = () => {
+        const t = req.result.transaction('dateien', 'readwrite');
+        t.objectStore('dateien').put({ id: 'waise', name: 'Waise.pdf', daten: new ArrayBuffer(5), groesse: 5, hinzugefuegt: '2026-01-01' });
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-sync', 1);
+      req.onupgradeneeded = () => { for (const n of ['dateien', 'meta']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n); };
+      req.onsuccess = () => {
+        if (!req.result.objectStoreNames.contains('dateien')) return ok(null);
+        const t = req.result.transaction('dateien', 'readwrite');
+        t.objectStore('dateien').put({ inhalt: new Blob(['%PDF-']), groesse: 5, geaendert: new Date().toISOString(), version: 'v1' }, 'Noten/Waise.pdf');
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+  ]));
+  await p.reload({ waitUntil: 'networkidle' });
+  const check = p.locator('app-noten-check');
+  await until(async () => (await check.innerText().catch(() => '')).includes('1 ohne Song'), 'Noten-Check zeigt die Datei ohne Song nicht');
+  await check.locator('summary').click();
+  await check.getByRole('button', { name: 'Waise.pdf auch aus OneDrive löschen' }).click();
+  await until(async () => (await check.innerText().catch(() => '')).includes('und aus dem Sync-Ordner (1)') || !(await check.locator('details').count()), 'Löschen aus OneDrive meldet nichts');
+  expect(!(await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const k = req.result.transaction('dateien').objectStore('dateien').getAllKeys();
+      k.onsuccess = () => ok(k.result.includes('Noten/Waise.pdf'));
+    };
+  }))), 'Datei liegt noch im Sync-Ordner');
   await daten.locator('input[type=search]').fill('vor ort');
   await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');
   await daten.locator('input[type=search]').fill('Schriftgröße');
