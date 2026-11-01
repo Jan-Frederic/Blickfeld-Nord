@@ -637,7 +637,12 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await p.locator('app-backstage-songs input[type=search]').fill('Iris');
   await p.locator('app-backstage-songs tbody tr').first().click();
   const zeile = p.locator('app-song-dialog dialog[open]');
-  await zeile.locator('select').nth(1).selectOption('E');
+  await zeile.waitFor();
+  // „Wir spielen E“ – erst weiter, wenn der Entwurf wirklich gespeichert ist (sonst bleibt das Akkordblatt später in D)
+  await until(async () => {
+    await zeile.locator('select').nth(1).selectOption('E');
+    return p.evaluate(() => JSON.parse(localStorage.getItem('bn-songinfo-entwurf') ?? '{}')['Iris|The Goo Goo Dolls']?.spielTonart === 'E');
+  }, '„Wir spielen E“ wird nicht gespeichert');
   // Pressekit (mehrseitig) als Notenblatt, davon Seite 2–3
   await zeile.locator('app-noten-editor input[type=file][accept*=pdf]').setInputFiles({ name: 'songbook.pdf', mimeType: 'application/pdf', buffer: readFileSync(join(DIST, 'presse', 'blickfeld-nord-pressekit.pdf')) });
   await until(async () => (await zeile.locator('app-noten-editor .meldung').innerText().catch(() => '')).includes('songbook.pdf'), 'PDF wird nicht gespeichert');
