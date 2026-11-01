@@ -467,10 +467,11 @@ export class BandService {
   // mit Warnung. Beispiel: { wer: 'David', von: '2027-07-12', bis: '2027-07-19', grund: 'Urlaub' }
   // wer: 'Band' sperrt nur für Auftritte – Proben finden an solchen Tagen trotzdem statt.
   readonly abwesenheiten: Abwesenheit[] = [
-    // November und Dezember 2026: ganze Wochen (Mo–So) privat verhindert – nur Freitag, 04.12. spielen wir in Rhede.
+    // November 2026 bis 10. Januar 2027: ganze Wochen (Mo–So) privat verhindert – nur Freitag, 04.12. spielen wir in Rhede.
     // Dazu kommt automatisch die Schonzeit um jeden geklärten Auftritt (data/schonzeit.ts, siehe sperrzeiten).
     { wer: 'Band', von: '2026-10-26', bis: '2026-12-03', grund: 'privat verhindert' },
     { wer: 'Band', von: '2026-12-05', bis: '2026-12-27', grund: 'privat verhindert' },
+    { wer: 'Band', von: '2026-12-28', bis: '2027-01-10', grund: 'privat verhindert' },
   ];
 
   // Probetermine – erscheinen nur im Backstage (Filter „Probetermine“) und im Backstage-Kalender-Abo.
