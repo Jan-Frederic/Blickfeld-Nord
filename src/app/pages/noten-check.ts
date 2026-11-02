@@ -79,8 +79,8 @@ export class NotenCheckKarte {
     if (!this.oneDrive() || !confirm(frage)) return;
     this.laeuft.set(true);
     try {
-      const drueben = oneDrive ? await this.sync.ausOneDriveLoeschen(dateien) : 0;
       for (const d of dateien) await notenDateiLoeschen(d.id);
+      const drueben = oneDrive ? await this.sync.ausOneDriveLoeschen(dateien) : 0;
       this.meldung.set(`„${name}“ von diesem Gerät gelöscht${oneDrive ? (drueben ? ` und aus dem Sync-Ordner (${drueben}) – wird jetzt mit OneDrive abgeglichen` : ' – im Sync-Ordner lag sie nicht (mehr)') : ''} ✓`);
       await this.pruefen();
       this.geaendert.emit();

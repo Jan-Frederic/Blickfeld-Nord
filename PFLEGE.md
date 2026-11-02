@@ -388,7 +388,10 @@ warme Kleidung, Gewichte …) landen automatisch auf der Packliste des Auftritts
 als Leerzeichen). Der Mülleimer löscht für alle **nur von diesem Gerät** (in OneDrive bleibt die Datei). Wer den
 OneDrive-Ordner der Synchronisation besitzt (angemeldet, eigener Ordner – Berechtigung „Daten löschen“), wird gefragt:
 **Nur vom Gerät** oder **Auch aus OneDrive** – dann verschwindet die Datei (gleicher Name, gleiche Größe) aus dem
-Sync-Ordner, wird gleich abgeglichen und ist danach für die ganze Band weg.
+Sync-Ordner, wird gleich abgeglichen und ist danach für die ganze Band weg. Auf den Geräten der anderen verschwindet
+beim nächsten Abgleich auch die schon eingelesene Kopie im Noten-Speicher – auch wenn dort „Löschungen übertragen“
+aus ist. Dafür merkt sich die Band die gelöschten Dateien (Name, Größe, Zeitpunkt; `bn-noten-geloescht`, 120 Tage).
+Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei später neu einliest, behält sie.
 
 **Im Bühnen-Modus außerdem:**
 

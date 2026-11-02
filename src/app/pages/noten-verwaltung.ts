@@ -122,10 +122,11 @@ export class NotenVerwaltung {
     if (!confirm(text)) return;
     this.frage.set(null);
     try {
-      const drueben = oneDrive ? await this.sync.ausOneDriveLoeschen([d]) : 0;
+      // erst vom Gerät (Songs verlieren den Verweis), dann aus OneDrive – der Abgleich danach schreibt den neuen Stand
       await notenDateiLoeschen(d.id);
+      const drueben = oneDrive ? await this.sync.ausOneDriveLoeschen([d]) : 0;
       this.meldung.set({
-        text: `„${d.name}“ gelöscht${oneDrive ? (drueben ? ' – auch aus OneDrive, wird jetzt abgeglichen' : ' – im Sync-Ordner lag sie nicht (mehr)') : ' (nur auf diesem Gerät)'} ✓`,
+        text: `„${d.name}“ gelöscht${oneDrive ? (drueben ? ' – auch aus OneDrive; die anderen Geräte entfernen sie beim nächsten Abgleich' : ' – im Sync-Ordner lag sie nicht (mehr); die anderen Geräte entfernen ihre Kopie beim nächsten Abgleich') : ' (nur auf diesem Gerät)'} ✓`,
       });
       this.geaendert.emit();
     } catch (e) {

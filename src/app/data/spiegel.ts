@@ -9,7 +9,7 @@ import type { SyncDatei } from './sync';
 
 export type SpiegelArt = 'band' | 'person';
 
-const BAND = ['bn-setlist-', 'bn-spielzeit-', 'bn-kontakte', 'bn-saison-update', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-', 'bn-vorabend-', 'bn-zusage-', 'bn-unsicher-', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'];
+const BAND = ['bn-setlist-', 'bn-spielzeit-', 'bn-kontakte', 'bn-saison-update', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-', 'bn-vorabend-', 'bn-zusage-', 'bn-unsicher-', 'bn-noten-geloescht', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'];
 const PERSON = ['bn-buehne-', 'bn-noten-stift-privat', 'bn-noten-wahl', 'bn-noten-breite', 'bn-noten-scrolltempo', 'bn-noten-transpose', 'bn-noten-zuordnungen', 'bn-noten-ansicht', 'bn-wackelt', 'bn-aufgaben', 'bn-backstage-filter', 'bn-backstage-ansicht', 'bn-sprache', 'bn-ich'];
 
 /** wird der Eintrag gespiegelt – für alle (band) oder je Person? null = bleibt auf dem Gerät (Sync, Anmeldung …) */

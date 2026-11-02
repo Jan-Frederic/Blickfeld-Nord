@@ -8,6 +8,7 @@ import { zuordnungenMerken } from '../data/erkennung';
 import { BandService } from '../data/band.service';
 import { Vorschau, vorschau, vorschauText } from '../data/aufraeumen';
 import { backupEintraege } from './backstage-sync';
+import { geloeschtMerken } from '../data/noten-geloescht';
 import { Fortschritt, Stand } from './fortschritt';
 
 // Was in einem Ordner gefunden wurde (Synchronisation: Einlesen bzw. Zuordnen): Backups und
@@ -297,6 +298,8 @@ export class FundeListe {
     const lokal = await this.sync.lokal(true);
     if (!lokal) throw new Error('Kein Zugriff auf den Sync-Ordner – unter Einstellungen → Synchronisation wählen.');
     const geraet = await notenDateien();
+    // für alle merken: die anderen Geräte entfernen ihre Kopien beim nächsten Abgleich
+    geloeschtMerken(weg.map((d) => ({ name: d.name, groesse: d.groesse })));
     let n = 0;
     for (const d of weg) {
       this.stand.set({ text: `Löschen: ${d.pfad}` });

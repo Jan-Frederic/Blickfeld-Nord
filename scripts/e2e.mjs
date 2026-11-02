@@ -578,6 +578,9 @@ test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer au
   await until(async () => (await v.locator('.frage button').count()) === 3, 'Besitzer wird nicht gefragt');
   await v.getByRole('button', { name: 'Auch aus OneDrive' }).click();
   await until(async () => (await v.locator('.meldung').innerText().catch(() => '')).includes('auch aus OneDrive'), 'Löschen aus OneDrive meldet nichts');
+  // für die Band vermerkt: die anderen Geräte entfernen ihre Kopie beim nächsten Abgleich
+  expect((await p.evaluate(() => JSON.parse(localStorage.getItem('bn-noten-geloescht') ?? '[]'))).some((g) => g.name === 'Toto - Africa.pdf' && g.groesse === 7), 'Löschung wird nicht für die Band vermerkt');
+  await until(async () => !(await v.locator('ul').innerText().catch(() => '')).includes('Toto - Africa.pdf'), 'Datei steht nach dem Löschen noch in der Liste');
   expect(!(await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync');
     req.onsuccess = () => {
