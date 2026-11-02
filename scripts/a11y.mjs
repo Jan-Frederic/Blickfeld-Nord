@@ -104,9 +104,16 @@ async function handyPruefung(phone, path) {
       }
       return false;
     };
-    return els
-      // „Blätter“ (ohne Kind-Elemente) und Bedienelemente wie Auswahllisten, deren Kinder (option) nicht gezeichnet werden
-      .filter((el) => (!el.children.length || ['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA'].includes(el.tagName)))
+    // sichtbare Kästen: Rahmen oder Hintergrund (z. B. eine Zeile mit Rand, deren Text selbst noch hineinpasst)
+    const kasten = (el) => {
+      const st = getComputedStyle(el);
+      return parseFloat(st.borderRightWidth) > 0 || (st.backgroundColor !== 'rgba(0, 0, 0, 0)' && st.backgroundColor !== 'transparent');
+    };
+    return [...document.querySelectorAll('body *')]
+      .filter((el) => getComputedStyle(el).position !== 'fixed')
+      // „Blätter“ (ohne Kind-Elemente), Symbole, Bedienelemente wie Auswahllisten (deren option nicht gezeichnet wird) und
+      // sichtbare Kästen
+      .filter((el) => !el.children.length || el.tagName === 'MAT-ICON' || ['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA'].includes(el.tagName) || kasten(el))
       .filter((el) => el.getBoundingClientRect().right > vw + 1 && !clippedInside(el))
       .slice(0, 3)
       .map((el) => `${el.tagName.toLowerCase()} „${el.textContent.trim().slice(0, 30)}“ bis ${Math.round(el.getBoundingClientRect().right)} px`);

@@ -931,8 +931,15 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Zeichnen hat umgeblättert');
   // Schrift: „T“, auf die Stelle tippen, Text eingeben – blättert nicht um
   await p.locator('app-noten-stift').getByRole('button', { name: 'Schrift einfügen' }).click();
-  p.promptAntwort = 'Bridge leise';
   await p.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.7);
+  // mehrzeilig: Enter macht eine neue Zeile (blättert nicht), „Übernehmen“ speichert
+  const feld = p.locator('app-noten-stift .schrift textarea');
+  await until(async () => await feld.isVisible().catch(() => false), 'Eingabefeld für Schrift erscheint nicht');
+  await feld.type('Bridge leise');
+  await feld.press('Enter');
+  await feld.type('ab Takt 9');
+  expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Enter im Schriftfeld hat geblättert');
+  await p.locator('app-noten-stift .schrift').getByRole('button', { name: 'Übernehmen' }).click();
   const texte = () => p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-noten');
     req.onsuccess = () => {
@@ -940,8 +947,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
       k.onsuccess = () => ok(k.result.flat().filter((x) => x.text).map((x) => x.text));
     };
   }));
-  await until(async () => (await texte()).includes('Bridge leise'), 'Schrift wird nicht gespeichert');
-  p.promptAntwort = undefined;
+  await until(async () => (await texte()).includes('Bridge leise\nab Takt 9'), async () => 'Mehrzeilige Schrift wird nicht gespeichert: ' + JSON.stringify(await texte()));
   expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Schreiben hat umgeblättert');
   await kopf.locator('button.stift').click();
   await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
