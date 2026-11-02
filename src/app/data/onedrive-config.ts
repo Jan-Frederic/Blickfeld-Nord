@@ -8,7 +8,7 @@ export const ONEDRIVE: { clientId: string; tenant: string; bandOrdner: { drive: 
   // Sichtsperre fürs Backstage (data/zugang.ts): reingelassen wird, wer diesen OneDrive-Ordner sehen darf – also die
   // Personen, mit denen er geteilt ist. Kennung unter Backstage → Einstellungen → „Band-Ordner“ (nur Besitzer).
   // null = keine Sperre.
-  bandOrdner: null,
+  bandOrdner: { drive: 'C42454105B784E4A', item: 'C42454105B784E4A!s7d949f90a83448dd84414480f583c4eb' },
 };
 
 const GERAET_KEY = 'bn-onedrive-client';
