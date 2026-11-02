@@ -617,6 +617,25 @@ Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
   wird genau so, wie es in der Liste steht. Von Hand gewählte Zuordnungen merkt sich das Gerät je Dateiname – beim
   nächsten Mal steht dort „wie beim letzten Mal“.
 
+## Backstage nur für die Band (Sichtsperre)
+
+Das Backstage öffnet sich nur für Microsoft-Konten, die den **Band-Ordner** in OneDrive sehen dürfen – also für alle,
+mit denen der Ordner geteilt ist. Wer dazugehört, steuert allein die **OneDrive-Freigabe** (neues Mitglied: Ordner
+freigeben; jemand geht: Freigabe entfernen). Im Code stehen keine E-Mail-Adressen, nur die Kennung des Ordners.
+
+- **Einrichten (einmal, Besitzer des Ordners):** Backstage → Einstellungen → **Band-Ordner** → „Diesen Sync-Ordner als
+  Band-Ordner festlegen“. Die angezeigte Zeile `bandOrdner: { drive: '…', item: '…' },` in
+  `src/app/data/onedrive-config.ts` eintragen (statt `bandOrdner: null`). Ohne Eintrag gibt es keine Sperre.
+- **Neues Gerät:** Jede Backstage-Seite führt zuerst zu **Nur für die Band → Mit Microsoft anmelden**. Darf das Konto
+  den Ordner sehen, geht es weiter zur gewünschten Seite; sonst „Kein Zugang“ (mit „Mit anderem Konto anmelden“).
+- **Offline:** Ein Gerät, das einmal drin war, bleibt offen – auch ohne Netz (Bühnen-Modus). Nach 30 Tagen prüft es mit
+  Netz im Hintergrund neu; nur wenn OneDrive klar „nicht freigegeben“ sagt, geht es wieder zur Anmeldeseite.
+- **Was die Sperre ist:** eine Sichtsperre für die Oberfläche. Der Code der Website ist öffentlich, wer ihn gezielt
+  umgeht, sieht trotzdem nur eine leere Oberfläche – die Daten liegen nur auf euren Geräten und im freigegebenen
+  OneDrive-Ordner. Eine echte Sperre der Adresse bräuchte einen vorgeschalteten Dienst (z. B. Cloudflare Access).
+- Tests, Barrierefreiheits-Check und Screenshots verhalten sich wie ein freigeschaltetes Gerät
+  (`scripts/lib/zugang-test.mjs`).
+
 ## OneDrive einrichten (für die Synchronisation)
 
 Die Synchronisation (siehe oben) ist für ein **privates Microsoft-Konto** gedacht (Outlook.com, Hotmail, Live – privates

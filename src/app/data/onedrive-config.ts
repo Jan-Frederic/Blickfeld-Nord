@@ -2,9 +2,13 @@
 // Die Client-ID ist kein Geheimnis – sie steht bei jeder Single-Page-App im Browser. Leer = auf dem Gerät eintragen.
 // tenant: 'consumers' = private Microsoft-Konten (Outlook.com, Hotmail, Live – privates OneDrive);
 // 'common' wäre zusätzlich Firmen-/Schulkonten, eine Tenant-ID nur ein bestimmtes Firmenkonto.
-export const ONEDRIVE = {
+export const ONEDRIVE: { clientId: string; tenant: string; bandOrdner: { drive: string; item: string } | null } = {
   clientId: 'fdaed256-3673-4744-ab09-57e06b8d2a1e',
   tenant: 'consumers',
+  // Sichtsperre fürs Backstage (data/zugang.ts): reingelassen wird, wer diesen OneDrive-Ordner sehen darf – also die
+  // Personen, mit denen er geteilt ist. Kennung unter Backstage → Einstellungen → „Band-Ordner“ (nur Besitzer).
+  // null = keine Sperre.
+  bandOrdner: null,
 };
 
 const GERAET_KEY = 'bn-onedrive-client';

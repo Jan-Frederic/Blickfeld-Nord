@@ -518,3 +518,14 @@ app-probe-zusagen .wer { display: grid; gap: 4px; max-width: 420px; color: var(-
 app-probe-zusagen .wer small { font-size: .8rem; }
 app-probe-zusagen mat-icon { font-size: 20px; width: 20px; height: 20px; }
 app-probe-leiste .uebergang { margin: 0; max-width: 620px; padding: 8px 12px; border-left: 3px solid var(--bn-sunset); color: #ece9e4; font-size: .9em; text-align: left; }
+
+// Einstellungen → Band-Ordner (band-ordner.ts)
+app-band-ordner .box { margin-top: 20px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
+app-band-ordner h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 400 .85rem var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; }
+app-band-ordner p { margin: 0 0 10px; max-width: 720px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); }
+app-band-ordner pre { margin: 0 0 10px; padding: 10px 12px; border-radius: 8px; background: #1b1e22; font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+app-band-ordner button { display: inline-flex; align-items: center; gap: 6px; margin: 0 8px 10px 0; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .86rem; cursor: pointer; }
+app-band-ordner button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-band-ordner mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-band-ordner .ok { color: #5fb88a; }
+app-band-ordner .fehler { color: #e07a5a; }

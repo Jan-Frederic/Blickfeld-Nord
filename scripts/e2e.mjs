@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
 import { serve } from './lib/static-server.mjs';
+import { BAND_ORDNER_ITEM, zugangFreischalten } from './lib/zugang-test.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
@@ -32,8 +33,10 @@ async function until(check, message) {
 }
 
 async function page(options = {}) {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, locale: 'de-DE', ...options });
+  const { ohneZugang, ...rest } = options;
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, locale: 'de-DE', ...rest });
   await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+  if (!ohneZugang) await zugangFreischalten(context);
   const p = await context.newPage();
   p.setDefaultTimeout(10_000);
   p.on('dialog', (d) => (d.type() === 'prompt' ? d.accept(p.promptAntwort ?? 'Testvorlage') : d.accept()));
@@ -619,6 +622,28 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   await until(async () => /generalprobe · set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
   await buehne.locator('app-probe-leiste').getByRole('button', { name: 'Übergang' }).click();
   await until(async () => (await buehne.locator('app-probe-leiste .uebergang').innerText().catch(() => '')).includes('Übergang zu „Iris“'), 'Übergang zum nächsten Song fehlt');
+  return p;
+});
+
+test('Backstage: Sichtsperre – Anmeldeseite; mit Band-Ordner landet ein neues Gerät dort', async () => {
+  const p = await page({ ohneZugang: true });
+  await p.go('/backstage/zugang/');
+  const seite = p.locator('app-backstage-zugang');
+  await until(async () => /nur für die band/i.test(await seite.innerText().catch(() => '')), 'Anmeldeseite fehlt');
+  expect(await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).isVisible(), 'Anmelden-Knopf fehlt');
+  if (!BAND_ORDNER_ITEM) {
+    // ohne eingetragenen Band-Ordner keine Sperre: weiter ins Backstage
+    await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click();
+    await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', 'Ohne Band-Ordner geht es nicht weiter');
+  } else {
+    // neues Gerät: jede Backstage-Seite führt zur Anmeldeseite und merkt sich das Ziel
+    await p.go('/backstage/termine/');
+    await until(async () => decodeURIComponent(p.url()).includes('/backstage/zugang?ziel=/backstage/termine'), async () => 'Keine Umleitung zur Anmeldeseite: ' + p.url());
+    // schon geprüftes Gerät: kommt direkt rein
+    await p.evaluate((item) => localStorage.setItem('bn-zugang', JSON.stringify({ ordner: item, zeit: Date.now() })), BAND_ORDNER_ITEM);
+    await p.go('/backstage/termine/');
+    await until(async () => new URL(p.url()).pathname.startsWith('/backstage/termine'), 'Freigeschaltetes Gerät kommt nicht rein');
+  }
   return p;
 });
 
