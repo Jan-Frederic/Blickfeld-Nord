@@ -484,6 +484,50 @@ test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', asy
   return p;
 });
 
+test('Backstage: Probe-Modus – Sitzt/Nochmal, Notiz und Durchläufe, Rest auf die nächste Probe', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
+  await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }, { title: 'Angels', artist: 'Robbie Williams', done: false }], notizen: '', punkte: [] })), datum);
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
+  const buehne = p.locator('app-setlist-buehne');
+  await until(async () => /probe · 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
+  const leiste = buehne.locator('app-probe-leiste');
+  // Song 1: Nochmal mit Notiz – Tippen in die Notiz blättert nicht
+  await leiste.getByRole('button', { name: 'Nochmal' }).click();
+  await until(async () => (await leiste.locator('input.notiz').inputValue()) === 'nochmal üben', '„Nochmal“ setzt keine Notiz');
+  await leiste.locator('input.notiz').fill('Bridge wackelt');
+  await leiste.locator('input.notiz').press('ArrowLeft');
+  await leiste.locator('input.notiz').dispatchEvent('change');
+  expect((await buehne.locator('h1').innerText()).includes('Iris'), 'Tippen in die Notiz hat geblättert');
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zum zweiten Song klappt nicht');
+  // Song 2: Sitzt, zweimal gespielt
+  await leiste.getByRole('button', { name: 'Sitzt' }).click();
+  await leiste.getByRole('button', { name: 'Durchlauf zählen' }).click();
+  await leiste.getByRole('button', { name: 'Durchlauf zählen' }).click();
+  await until(async () => (await leiste.innerText()).includes('2× gespielt'), 'Durchläufe werden nicht gezählt');
+  // ans Ende: Zusammenfassung, Angels kam nicht dran
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await p.keyboard.press('ArrowRight');
+  const ende = buehne.locator('app-probe-ende');
+  await until(async () => /Sitzt \(1\)[\s\S]*Nochmal \(1\)[\s\S]*Nicht drangekommen \(1\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung am Ende fehlt');
+  await ende.locator('button', { hasText: 'auf die nächste Probe' }).click();
+  await until(async () => /2 Songs stehen jetzt auf dem Plan/.test(await ende.innerText()), 'Offene Songs gehen nicht auf die nächste Probe');
+  await ende.locator('button', { hasText: 'Probe-Modus beenden' }).click();
+  // Probenseite zeigt das Ergebnis; der Proben-Verlauf kennt „Nochmal“
+  const liste = p.locator('app-backstage-probe .list').first();
+  await until(async () => /Iris[\s\S]*nochmal[\s\S]*Africa[\s\S]*2×/.test(await liste.innerText()), 'Ergebnis fehlt auf der Probenseite');
+  const plan = await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)), datum);
+  expect(plan.songs[0].notiz === 'Bridge wackelt' && plan.songs[0].stand === 'nochmal' && plan.songs[1].durchlaeufe === 2, 'Probenplan nicht gespeichert');
+  return p;
+});
+
 test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', async () => {
   const p = await page();
   await p.go('/backstage/buehnenplan/');

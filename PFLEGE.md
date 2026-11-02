@@ -163,6 +163,25 @@ Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
 an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 
+**Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
+ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo
+(100 → 70 %), Einzählen, Stimmgerät, Schriftgröße; weiter per Pedal, Pfeiltaste, Tippen oder Wischen. Unter jedem Song
+die **Probe-Leiste**:
+
+- **Sitzt** / **Nochmal**: Song gilt als geprobt; „Nochmal“ ohne eigene Notiz trägt „nochmal üben“ ein. Beides zählt
+  im Proben-Verlauf des Songs (Song-Dialog) und im Probe-Vorschlag – „Nochmal“ als Baustelle.
+- **Durchlauf** zählt, wie oft der Song gespielt wurde (−1 nimmt einen zurück).
+- **Notiz** fürs Protokoll (erscheint im Song-Dialog unter „Zuletzt geprobt“); Tippen dort blättert nicht.
+- **Mikrofon**: Mitschnitt nur dieses Songs aufnehmen und nachhören.
+- Die **Notiz der letzten Probe** zum Song steht gelb darüber.
+- **Zeit:** wie lange der Song schon dran ist, und wie viel Zeit für jeden offenen Song bis zum Probenende bleibt. Oben
+  läuft die Uhr gegen die Probendauer (Beginn bis Ende aus `band.service.ts`). Die Zeit je Song wird mitgeschrieben.
+
+Am Ende eine **Zusammenfassung**: was sitzt, was nochmal dran muss, was nicht drankam, wie lange geprobt wurde – und
+ein Knopf, der „Nochmal“ und „Nicht drangekommen“ auf den Plan der **nächsten Probe** setzt. Auf der Probenseite
+stehen danach je Song „↻ nochmal“, Durchläufe und Minuten. Alles im Probenplan (`bn-probe-<Datum>`, wird mit OneDrive
+gespiegelt); Logik in `src/app/data/probe-modus.ts`.
+
 ## Bühnenplan ändern
 
 Im Backstage unter **Bühnenplan** (`/backstage/buehnenplan`) Geräte und Musiker an ihren Platz ziehen –

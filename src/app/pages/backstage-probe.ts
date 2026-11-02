@@ -9,33 +9,19 @@ import { BackstageSync } from './backstage-sync';
 import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
 import { ProbeVorschlag } from './probe-vorschlag';
+import { SetlistBuehne } from './setlist-buehne';
+import { ProbePlan, loadProbe, minutenText, speichereProbe } from '../data/probe-modus';
 
 // Backstage → Probe planen (/backstage/probe/<datum>): welche Songs geübt werden, Notizen und offene Punkte.
 // Gespeichert im Browser (bn-probe-<datum>) und wie Setlists über „An die Band schicken“ teilbar.
-export const PROBE_PREFIX = 'bn-probe-';
-
-interface ProbePlan {
-  /** done = geprobt; notiz = Protokoll („Bridge sitzt“, „Tempo zu schnell“) */
-  songs: { title: string; artist: string; done: boolean; notiz?: string }[];
-  notizen: string;
-  punkte: { text: string; done: boolean }[];
-}
 
 const leer = (): ProbePlan => ({ songs: [], notizen: '', punkte: [] });
-
-export function loadProbe(datum: string): ProbePlan {
-  try {
-    return { ...leer(), ...JSON.parse(localStorage.getItem(PROBE_PREFIX + datum) ?? '{}') };
-  } catch {
-    return leer();
-  }
-}
 
 const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
 @Component({
   selector: 'app-backstage-probe',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet, SetlistBuehne],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -49,11 +35,17 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
 
         <h3><mat-icon>queue_music</mat-icon> Songs zum Üben</h3>
         @if (plan().songs.length) {
+          <div class="probe-start">
+            <button type="button" class="primaer" (click)="modus.set(true)"><mat-icon>fit_screen</mat-icon> Probe-Modus starten</button>
+            <span>{{ stand() }}</span>
+          </div>
           <ul class="list">
             @for (s of plan().songs; track s.title + s.artist; let i = $index) {
               <li [class.done]="s.done">
                 <label><input type="checkbox" [checked]="s.done" (change)="toggleSong(i)" /> <span class="t">{{ s.title }}</span> <span class="a">{{ s.artist }}</span></label>
                 @if (info(s); as inf) { <span class="info">{{ inf }}</span> }
+                @if (s.stand === 'nochmal') { <span class="info nochmal">↻ nochmal</span> }
+                @if (s.durchlaeufe || s.zeit) { <span class="info">{{ s.durchlaeufe ? s.durchlaeufe + '×' : '' }}{{ s.durchlaeufe && s.zeit ? ' · ' : '' }}{{ s.zeit ? minutenText(s.zeit) : '' }}</span> }
                 <input class="protokoll" maxlength="80" [value]="s.notiz ?? ''" placeholder="Notiz: z. B. Bridge sitzt" [attr.aria-label]="'Notiz zu ' + s.title" (change)="notizSetzen(i, $any($event.target).value)" />
                 <button type="button" class="icon" [class.an]="aufnahme() === s.title + '|' + s.artist" (click)="aufnahme.set(aufnahme() === s.title + '|' + s.artist ? '' : s.title + '|' + s.artist)" [attr.aria-label]="'Mitschnitte von ' + s.title" title="Aufnehmen und nachhören"><mat-icon>mic</mat-icon></button>
                 <button type="button" class="icon" (click)="removeSong(i)" [attr.aria-label]="s.title + ' entfernen'"><mat-icon>close</mat-icon></button>
@@ -107,6 +99,9 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           <button type="submit"><mat-icon>add</mat-icon> Hinzufügen</button>
         </form>
 
+        @if (modus()) {
+          @defer { <app-setlist-buehne [entries]="modusSongs()" [start]="ersterOffener()" [probe]="datum()" (closed)="modusZu()" /> }
+        }
         <p class="hint">Gespeichert auf diesem Gerät. Mit der Band teilen:</p>
         <app-backstage-sync [show]="datum()" />
       } @else {
@@ -147,6 +142,9 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .add button:hover, .knopf:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .empty { color: var(--bn-fog); font-size: .9rem; padding: 8px 12px; }
     .hint { margin: 32px 0 8px; font-size: .85rem; color: var(--bn-fog); }
+    .probe-start { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 12px; color: var(--bn-fog); font-size: .85rem; }
+    .primaer { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: var(--bn-sunset); color: #2a1708; font: inherit; cursor: pointer; }
+    .info.nochmal { border-color: #e0b25a; color: #e0b25a; }
   `,
 })
 export class BackstageProbe {
@@ -159,6 +157,20 @@ export class BackstageProbe {
   protected readonly aufnahme = signal('');
   protected readonly stimmen = signal(false);
   protected readonly query = signal('');
+  protected readonly minutenText = minutenText;
+  // Probe-Modus: die geplanten Songs im Vollbild (Bühnen-Modus mit Probe-Leiste), ab dem ersten noch nicht geprobten
+  protected readonly modus = signal(false);
+  protected readonly modusSongs = computed(() => this.plan().songs.map((s) => ({ title: s.title, artist: s.artist })));
+  protected readonly ersterOffener = computed(() => Math.max(0, this.plan().songs.findIndex((s) => !s.done)));
+  protected readonly stand = computed(() => {
+    const songs = this.plan().songs;
+    const geprobt = songs.filter((s) => s.done).length;
+    return geprobt ? `${geprobt} von ${songs.length} geprobt` : `${songs.length} ${songs.length === 1 ? 'Song' : 'Songs'} – Sitzt/Nochmal, Durchläufe, Notizen und Zeit je Song`;
+  });
+  protected modusZu(): void {
+    this.modus.set(false);
+    this.plan.set(loadProbe(this.datum()));
+  }
 
   protected readonly treffer = computed(() => {
     const q = norm(this.query().trim());
@@ -188,11 +200,7 @@ export class BackstageProbe {
   private save(change: (p: ProbePlan) => ProbePlan): void {
     const next = change(this.plan());
     this.plan.set(next);
-    try {
-      localStorage.setItem(PROBE_PREFIX + this.datum(), JSON.stringify(next));
-    } catch {
-      // ohne Speicher (privater Modus) gilt die Planung nur bis zum Neuladen
-    }
+    speichereProbe(this.datum(), next);
   }
 
   /** Probenprotokoll je Song – erscheint im Song-Dialog unter „Zuletzt geprobt“ */

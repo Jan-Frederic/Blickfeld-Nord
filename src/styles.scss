@@ -467,3 +467,23 @@ app-noten-check mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-noten-check .meldung { margin-top: 8px; color: #5fb88a; }
 app-noten-check .knoepfe { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 app-noten-check button.gefahr { border-color: #e07a5a; color: #e07a5a; }
+
+// Probe-Modus: Leiste je Song und Zusammenfassung am Ende (probe-leiste.ts, im Bühnen-Modus)
+app-probe-leiste { display: block; margin: 18px auto 0; max-width: 760px; font-size: max(15px, calc(.5em * var(--zoom, 1))); }
+app-probe-leiste .probe-leiste { display: grid; gap: 10px; justify-items: center; }
+app-probe-leiste .knoepfe, app-probe-ende .probe-ende { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+app-probe-leiste button, app-probe-ende button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #3a3f45; border-radius: 999px; background: #1b1e22; color: #ece9e4; font: inherit; font-size: .95em; cursor: pointer; }
+app-probe-leiste button.klein { padding: 0 12px; }
+app-probe-leiste button.an { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-probe-leiste button.sitzt.an { border-color: #5fb88a; background: rgba(95, 184, 138, .15); color: #5fb88a; }
+app-probe-leiste button.nochmal.an { border-color: #e0b25a; background: rgba(224, 178, 90, .15); color: #e0b25a; }
+app-probe-leiste .notiz { width: min(100%, 520px); box-sizing: border-box; padding: 10px 12px; border: 1px solid #3a3f45; border-radius: 10px; background: #15171a; color: #ece9e4; font: inherit; font-size: .95em; }
+app-probe-leiste .vorher { margin: 0; color: #e0b25a; font-size: .9em; }
+app-probe-leiste .zeit { margin: 0; color: #9aa0a6; font-size: .85em; }
+app-probe-leiste app-song-mitschnitte { width: min(100%, 520px); text-align: left; }
+app-probe-ende .probe-ende { flex-direction: column; align-items: center; max-width: 760px; margin: 0 auto; text-align: center; }
+app-probe-ende h2 { margin: 0 0 8px; }
+app-probe-ende .zeile { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: #c9c6c1; text-align: left; }
+app-probe-ende .zeile.sitzt mat-icon { color: #5fb88a; }
+app-probe-ende .zeile.nochmal mat-icon { color: #e0b25a; }
+app-probe-ende button.zu { margin-top: 8px; }
