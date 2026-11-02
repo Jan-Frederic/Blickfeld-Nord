@@ -401,7 +401,9 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
 - **Schrift im Notenblatt:** in den Markier-Werkzeugen auf **T** tippen, dann auf die Stelle tippen und den Text ins
   Feld schreiben (z. B. „Bridge leise“) – **Enter macht eine neue Zeile**, „Übernehmen“ (oder Strg/Cmd+Enter) setzt den
   Text, Esc bricht ab. „A“ wählt die Größe (klein, mittel, groß), die Farbe gilt wie beim Stift (Textmarker wird zu
-  Schwarz). Tippen auf einen vorhandenen Text öffnet ihn zum Ändern oder Löschen; ↶ nimmt die letzte Markierung zurück. Texte haben einen weißen Rand, damit sie auf den Noten lesbar bleiben, und werden wie Striche
+  Schwarz). Tippen auf einen vorhandenen Text öffnet ihn zum Ändern oder Löschen; ↶ nimmt die letzte Markierung zurück. Die
+  Werkzeugleiste passt sich der Breite an (auf dem Handy zweizeilig, wenn nötig); ⤒/⤓ schiebt sie nach oben bzw.
+  unten, damit sie nicht verdeckt, was markiert werden soll. Texte haben einen weißen Rand, damit sie auf den Noten lesbar bleiben, und werden wie Striche
   mitsynchronisiert.
 - **Noten-Knopf und X:** Der Noten-Knopf (♫) bleibt auch in der Notenansicht oben rechts – noch einmal drücken führt
   zurück zur Titelanzeige. Das **X** beendet immer den Bühnen- bzw. Probe-Modus, auch aus der Notenansicht.

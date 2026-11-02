@@ -42,7 +42,7 @@ function ladePrivat(): boolean {
     <canvas #flaeche (pointerdown)="runter($event)" (pointermove)="ziehen($event)" (pointerup)="hoch($event)" (pointercancel)="hoch($event)"
       (click)="$event.stopPropagation()"></canvas>
     @if (aktiv()) {
-      <div class="werkzeuge" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+      <div class="werkzeuge" [class.oben]="oben()" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (click)="$event.stopPropagation()">
         <button type="button" class="modus" [class.an]="modus() === 'text'" (click)="modus.set(modus() === 'text' ? 'stift' : 'text')" [attr.aria-pressed]="modus() === 'text'"
           [attr.aria-label]="modus() === 'text' ? 'Schrift: auf die Stelle tippen' : 'Schrift einfügen'" title="Schrift"><mat-icon>title</mat-icon></button>
         @if (modus() === 'text') {
@@ -57,6 +57,7 @@ function ladePrivat(): boolean {
           <mat-icon>{{ privat() ? 'person' : 'groups' }}</mat-icon></button>
         <button type="button" (click)="rueckgaengig()" [disabled]="!striche().length" aria-label="Letzte Markierung entfernen"><mat-icon>undo</mat-icon></button>
         <button type="button" (click)="leeren()" [disabled]="!striche().length" aria-label="Alle Markierungen dieser Seite löschen"><mat-icon>delete</mat-icon></button>
+        <button type="button" (click)="oben.set(!oben())" [attr.aria-label]="oben() ? 'Werkzeuge nach unten' : 'Werkzeuge nach oben'" title="Werkzeuge verschieben"><mat-icon>{{ oben() ? 'vertical_align_bottom' : 'vertical_align_top' }}</mat-icon></button>
       </div>
     }
     @if (eingabe(); as e) {
@@ -85,9 +86,10 @@ function ladePrivat(): boolean {
     .schrift .knoepfe button { width: auto; height: 34px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: .85rem; }
     .schrift .ok { border-color: #e8a46a; color: #e8a46a; }
     .werkzeuge {
-      position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; padding: 6px; border-radius: 999px;
-      background: rgba(0, 0, 0, .8); pointer-events: auto;
+      position: absolute; right: 8px; bottom: 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; padding: 6px;
+      max-width: calc(100% - 16px); box-sizing: border-box; border-radius: 22px; background: rgba(0, 0, 0, .8); pointer-events: auto;
     }
+    .werkzeuge.oben { top: 8px; bottom: auto; }
     button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #444; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; }
     button:disabled { opacity: .4; }
     .farbe.an { outline: 3px solid #fff; outline-offset: 1px; }
@@ -104,6 +106,8 @@ export class NotenStift {
   protected readonly farbe = signal(FARBEN[0].farbe);
   /** zeichnen oder schreiben */
   protected readonly modus = signal<'stift' | 'text'>('stift');
+  /** Werkzeugleiste oben statt unten – damit sie nicht verdeckt, was man markieren will */
+  protected readonly oben = signal(false);
   protected readonly groessen = GROESSEN;
   protected readonly groesse = signal(1);
   protected groesseWeiter(): void {
