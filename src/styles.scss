@@ -487,3 +487,12 @@ app-probe-ende .zeile { display: flex; align-items: flex-start; gap: 8px; margin
 app-probe-ende .zeile.sitzt mat-icon { color: #5fb88a; }
 app-probe-ende .zeile.nochmal mat-icon { color: #e0b25a; }
 app-probe-ende button.zu { margin-top: 8px; }
+
+// Songs → Noten: Suche und Löschen-Frage (noten-verwaltung.ts)
+app-noten-verwaltung .suche { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 0 12px; border: 1px solid var(--bn-line); border-radius: 10px; color: var(--bn-fog); }
+app-noten-verwaltung .suche input { flex: 1; min-width: 0; padding: 9px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
+app-noten-verwaltung .suche input:focus { outline: none; }
+app-noten-verwaltung .suche:focus-within { border-color: var(--bn-sunset); }
+app-noten-verwaltung .frage { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+app-noten-verwaltung .frage button.gefahr { border-color: #e07a5a; color: #e07a5a; }
+app-noten-verwaltung li.leer { color: var(--bn-fog); border: 0; }

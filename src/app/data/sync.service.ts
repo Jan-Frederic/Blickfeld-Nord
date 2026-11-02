@@ -338,6 +338,25 @@ export class SyncService {
     this.geraete.set(geraeteListe(await Promise.all(dateien.map(async (d) => (await lokal!.lesen(d.pfad)).text()))));
   }
 
+  /**
+   * Dateien (gleicher Name und gleiche Größe) aus dem lokalen Sync-Ordner löschen und gleich abgleichen – damit auch
+   * aus OneDrive. Nur mit Berechtigung „Daten löschen“; Zahl der gelöschten Dateien.
+   */
+  async ausOneDriveLoeschen(dateien: { name: string; groesse: number }[]): Promise<number> {
+    if (!this.darfLoeschen()) throw new Error('Keine Berechtigung „Daten löschen“.');
+    const lokal = await this.lokal(true);
+    if (!lokal) throw new Error('Kein Zugriff auf den Sync-Ordner – unter Einstellungen → Synchronisation wählen.');
+    const passt = new Set(dateien.map((d) => `${d.name.toLocaleLowerCase('de')}|${d.groesse}`));
+    let n = 0;
+    for (const x of await lokal.liste())
+      if (passt.has(`${x.pfad.split('/').at(-1)!.toLocaleLowerCase('de')}|${x.groesse}`)) {
+        await lokal.loeschen(x.pfad);
+        n++;
+      }
+    if (n) void this.jetzt();
+    return n;
+  }
+
   /** die lokale Seite laut Einstellungen (ohne nach Erlaubnis zu fragen) – zum Ansehen und Einlesen */
   async lokal(schreiben = false): Promise<SyncOrdner | null> {
     if (syncEinstellungen().lokal === 'app') return appOrdner;

@@ -79,20 +79,9 @@ export class NotenCheckKarte {
     if (!this.oneDrive() || !confirm(frage)) return;
     this.laeuft.set(true);
     try {
-      let drueben = 0;
-      if (oneDrive) {
-        const lokal = await this.sync.lokal(true);
-        if (!lokal) throw new Error('Kein Zugriff auf den Sync-Ordner – unter Einstellungen → Synchronisation wählen.');
-        const passt = new Set(dateien.map((d) => `${d.name.toLocaleLowerCase('de')}|${d.groesse}`));
-        for (const x of await lokal.liste())
-          if (passt.has(`${x.pfad.split('/').at(-1)!.toLocaleLowerCase('de')}|${x.groesse}`)) {
-            await lokal.loeschen(x.pfad);
-            drueben++;
-          }
-      }
+      const drueben = oneDrive ? await this.sync.ausOneDriveLoeschen(dateien) : 0;
       for (const d of dateien) await notenDateiLoeschen(d.id);
       this.meldung.set(`„${name}“ von diesem Gerät gelöscht${oneDrive ? (drueben ? ` und aus dem Sync-Ordner (${drueben}) – wird jetzt mit OneDrive abgeglichen` : ' – im Sync-Ordner lag sie nicht (mehr)') : ''} ✓`);
-      if (drueben) void this.sync.jetzt();
       await this.pruefen();
       this.geaendert.emit();
     } catch (e) {

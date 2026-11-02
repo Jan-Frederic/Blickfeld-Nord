@@ -528,6 +528,63 @@ test('Backstage: Probe-Modus – Sitzt/Nochmal, Notiz und Durchläufe, Rest auf 
   return p;
 });
 
+test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer auch aus OneDrive', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/noten/');
+  const datei = (id, name) => ({ id, name, daten: new ArrayBuffer(7), groesse: 7, hinzugefuegt: '2026-01-01' });
+  await p.evaluate((dateien) => Promise.all([
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-noten', 2);
+      req.onupgradeneeded = () => {
+        for (const n of ['dateien', 'songs', 'markierungen']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n, n === 'dateien' ? { keyPath: 'id' } : undefined);
+      };
+      req.onsuccess = () => {
+        const t = req.result.transaction('dateien', 'readwrite');
+        for (const d of dateien) t.objectStore('dateien').put(d);
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-sync', 1);
+      req.onupgradeneeded = () => { for (const n of ['dateien', 'meta']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n); };
+      req.onsuccess = () => {
+        const t = req.result.transaction('dateien', 'readwrite');
+        t.objectStore('dateien').put({ inhalt: new Blob(['%PDF-12']), groesse: 7, geaendert: new Date().toISOString(), version: 'v1' }, 'Noten/Toto - Africa.pdf');
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+  ]), [datei('a', 'Toto - Africa.pdf'), datei('b', 'Robbie_Williams-Angels.pdf')]);
+  await p.reload({ waitUntil: 'networkidle' });
+  const v = p.locator('app-noten-verwaltung');
+  await until(async () => (await v.locator('li').count()) === 2, 'Noten-Liste fehlt');
+  // Suche (Unterstriche und Bindestriche zählen als Leerzeichen)
+  await v.locator('input[type=search]').fill('robbie angels');
+  await until(async () => (await v.locator('li').count()) === 1 && (await v.locator('.suche small').innerText()).includes('1 von 2'), 'Suche filtert nicht');
+  // ohne Berechtigung: nur vom Gerät, ohne Rückfrage nach OneDrive
+  await v.getByRole('button', { name: 'Robbie_Williams-Angels.pdf löschen' }).click();
+  await until(async () => (await v.locator('.meldung').innerText().catch(() => '')).includes('nur auf diesem Gerät'), 'Löschen vom Gerät klappt nicht');
+  await v.locator('input[type=search]').fill('');
+  await until(async () => (await v.locator('li').count()) === 1, 'Datei bleibt nach dem Löschen stehen');
+  // Besitzer des OneDrive-Ordners: Wahl „Nur vom Gerät“ / „Auch aus OneDrive“
+  await p.evaluate(() => {
+    localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
+    localStorage.setItem('bn-onedrive-konto', 'test@example.com');
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  await v.getByRole('button', { name: 'Toto - Africa.pdf löschen' }).click();
+  await until(async () => (await v.locator('.frage button').count()) === 3, 'Besitzer wird nicht gefragt');
+  await v.getByRole('button', { name: 'Auch aus OneDrive' }).click();
+  await until(async () => (await v.locator('.meldung').innerText().catch(() => '')).includes('auch aus OneDrive'), 'Löschen aus OneDrive meldet nichts');
+  expect(!(await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const k = req.result.transaction('dateien').objectStore('dateien').getAllKeys();
+      k.onsuccess = () => ok(k.result.includes('Noten/Toto - Africa.pdf'));
+    };
+  }))), 'Datei liegt noch im Sync-Ordner');
+  return p;
+});
+
 test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', async () => {
   const p = await page();
   await p.go('/backstage/buehnenplan/');

@@ -354,6 +354,12 @@ Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätt
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
 
+**Songs → Noten – suchen und löschen:** Die Suche filtert die PDFs nach Dateinamen (mehrere Wörter, „_“ und „-“ zählen
+als Leerzeichen). Der Mülleimer löscht für alle **nur von diesem Gerät** (in OneDrive bleibt die Datei). Wer den
+OneDrive-Ordner der Synchronisation besitzt (angemeldet, eigener Ordner – Berechtigung „Daten löschen“), wird gefragt:
+**Nur vom Gerät** oder **Auch aus OneDrive** – dann verschwindet die Datei (gleicher Name, gleiche Größe) aus dem
+Sync-Ordner, wird gleich abgeglichen und ist danach für die ganze Band weg.
+
 **Im Bühnen-Modus außerdem:**
 
 - **Markieren:** in der PDF-Ansicht auf ✏ tippen und mit Finger, Stift oder Maus ins Notenblatt zeichnen (Rot, Blau,
