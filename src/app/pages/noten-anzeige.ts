@@ -201,6 +201,8 @@ export class NotenAnzeige {
   });
   private gemerkt = ladeWahl();
   private vonHinten = false;
+  /** Song, zu dem noten/wahl gerade gehören – während des Ladens noch der vorige */
+  private geladenFuer: Song | undefined;
   protected readonly nurBreite = signal(ladeBreite());
   private readonly doc = signal<PdfDokument | null>(null);
   protected readonly index = signal(0);
@@ -305,6 +307,7 @@ export class NotenAnzeige {
     this.vonHinten = this.amEnde;
     this.amEnde = false;
     if (!s) {
+      this.geladenFuer = s;
       this.noten.set(undefined);
       return this.wahl.set('');
     }
@@ -312,6 +315,7 @@ export class NotenAnzeige {
     try {
       const n = await songNoten(`${s.title}|${s.artist}`);
       if (this.song() !== s) return;
+      this.geladenFuer = s;
       this.noten.set(n);
       this.wahl.set(n ? this.auswahl(n, `${s.title}|${s.artist}`) : '');
       // zurückgeblättert ins Akkordblatt: am Ende einsteigen
@@ -320,6 +324,7 @@ export class NotenAnzeige {
         requestAnimationFrame(() => requestAnimationFrame(() => this.flaeche()?.nativeElement.scrollTo(0, 1e6)));
       }
     } catch (e) {
+      if (this.song() === s) this.geladenFuer = s;
       this.fehler.set(`Noten lassen sich nicht öffnen: ${(e as Error).message || 'unbekannter Fehler'}`);
     } finally {
       if (this.song() === s && !this.aktivPdf()) this.laden.set(false);
@@ -360,6 +365,11 @@ export class NotenAnzeige {
    * ist), dann zur nächsten Seite. false = am Ende bzw. Anfang angekommen, der Bühnen-Modus wechselt den Song.
    */
   blaettern(richtung: number): boolean {
+    // Noten des Songs noch nicht geladen (gerade gewechselt): nicht im Blatt des vorigen Songs blättern
+    if (this.geladenFuer !== this.song()) {
+      this.amEnde = richtung < 0;
+      return false;
+    }
     // Akkordblatt scrollt mit: Pedal hält an bzw. lässt weiterlaufen, statt zu blättern
     if (this.ansicht() === 'akkorde' && (this.laeuft() || this.pausiert())) {
       if (this.laeuft()) {
