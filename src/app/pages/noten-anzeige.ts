@@ -49,7 +49,9 @@ const BREITE_KEY = 'bn-noten-breite';
             <button type="button" (click)="tempo(1, $event)" aria-label="Schneller scrollen">›</button>
           </span>
         }
-        <button type="button" class="zu" (click)="zu($event)" aria-label="Noten schließen"><mat-icon>close</mat-icon></button>
+        <!-- derselbe Noten-Knopf wie in der Titelanzeige: noch einmal drücken führt zurück; das X beendet den Bühnen-Modus -->
+        <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
+        <button type="button" class="zu" (click)="ende($event)" [attr.aria-label]="endeText()"><mat-icon>close</mat-icon></button>
       </header>
       <!-- Einstellungen weggewischt: Capo bleibt als kleines Schild sichtbar, Tippen holt die Leiste zurück -->
       @if (kopfWeg()) {
@@ -130,6 +132,9 @@ export class NotenAnzeige {
   readonly song = input<Song>();
   readonly info = input<SongInfo>();
   readonly schliessen = output<void>();
+  /** X: Bühnen- bzw. Probe-Modus ganz verlassen */
+  readonly beenden = output<void>();
+  readonly endeText = input('Bühnen-Modus beenden');
 
   // Einstellungen (Kopfleiste) nach oben wegwischen, nach unten wieder hervorholen – Touch-Ereignisse, weil der
   // Browser beim Scrollen im Blatt die Pointer-Ereignisse abbricht; mit der Maus über Pointer-Ereignisse
@@ -495,6 +500,11 @@ export class NotenAnzeige {
   protected zu(e: Event): void {
     e.stopPropagation();
     this.schliessen.emit();
+  }
+
+  protected ende(e: Event): void {
+    e.stopPropagation();
+    this.beenden.emit();
   }
 }
 

@@ -149,7 +149,7 @@ function ladeZoom(): number {
         </div>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" (schliessen)="notenOffen.set(false)" /> }
+      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `

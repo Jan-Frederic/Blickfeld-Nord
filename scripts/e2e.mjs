@@ -929,6 +929,20 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   }));
   await until(async () => (await markiert()) === 1, 'Markierung wird nicht gespeichert');
   expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Zeichnen hat umgeblättert');
+  // Schrift: „T“, auf die Stelle tippen, Text eingeben – blättert nicht um
+  await p.locator('app-noten-stift').getByRole('button', { name: 'Schrift einfügen' }).click();
+  p.promptAntwort = 'Bridge leise';
+  await p.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.7);
+  const texte = () => p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-noten');
+    req.onsuccess = () => {
+      const k = req.result.transaction('markierungen').objectStore('markierungen').getAll();
+      k.onsuccess = () => ok(k.result.flat().filter((x) => x.text).map((x) => x.text));
+    };
+  }));
+  await until(async () => (await texte()).includes('Bridge leise'), 'Schrift wird nicht gespeichert');
+  p.promptAntwort = undefined;
+  expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Schreiben hat umgeblättert');
   await kopf.locator('button.stift').click();
   await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
   await p.evaluate(() => ['bn-buehne-halbseite', 'bn-buehne-tasten'].forEach((k) => localStorage.removeItem(k)));
@@ -943,9 +957,12 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => !(await kopf.innerText()).includes('Iris'), 'Pfeiltaste blättert nicht zum nächsten Song der Liste');
   await p.keyboard.press('ArrowLeft');
   await until(async () => (await kopf.innerText()).includes('Iris') && (await p.locator('app-noten-anzeige .teil b').count()) > 0, 'Beim Zurückblättern wechselt die Ansicht');
-  await p.keyboard.press('Escape');
-  await p.keyboard.press('Escape');
-  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'Bühnen-Modus lässt sich nicht schließen');
+  // Noten-Knopf bleibt in der Notenansicht: noch einmal drücken → zurück zur Titelanzeige; das X beendet den Bühnen-Modus
+  await p.locator('app-noten-anzeige').getByRole('button', { name: 'Zurück zur Titelanzeige' }).click();
+  await until(async () => (await p.locator('app-noten-anzeige').count()) === 0 && (await p.locator('app-setlist-buehne').count()) === 1, 'Noten-Knopf führt nicht zurück zur Titelanzeige');
+  await p.locator('app-setlist-buehne .noten-knopf').click();
+  await p.locator('app-noten-anzeige').getByRole('button', { name: 'Bühnen-Modus beenden' }).click();
+  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'X in der Notenansicht beendet den Bühnen-Modus nicht');
 
   // Weitergabe: Datei exportieren und auf einem zweiten Gerät importieren
   await p.go('/backstage/songs/noten/');

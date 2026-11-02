@@ -6,11 +6,20 @@ import { Strich, markierungen, markierungenSetzen } from '../data/noten';
 // Gezeichnet wird mit Finger, Stift oder Maus; die Striche werden in Seitenanteilen (0–1) gespeichert und passen so
 // bei jeder Größe. Gespeichert je PDF-Datei und Seite auf diesem Gerät (data/noten.ts), im Notenpaket enthalten.
 // Markierungen gelten für alle in der Band (Synchronisation); mit dem Personen-Knopf nur für mich.
+// Schrift: mit „T“ auf Text umschalten, auf die Stelle tippen und den Text eingeben (drei Größen); Tippen auf einen
+// vorhandenen Text ändert ihn, leer gelassen wird er gelöscht.
 const FARBEN = [
   { farbe: '#d93025', name: 'Rot' },
   { farbe: '#1a73e8', name: 'Blau' },
   { farbe: '#188038', name: 'Grün' },
   { farbe: 'rgba(255, 213, 0, .45)', name: 'Textmarker' },
+];
+
+/** Schriftgrößen als Anteil der Seitenbreite */
+const GROESSEN = [
+  { wert: 0.022, name: 'klein' },
+  { wert: 0.032, name: 'mittel' },
+  { wert: 0.046, name: 'groß' },
 ];
 
 const PRIVAT_KEY = 'bn-noten-stift-privat';
@@ -25,19 +34,25 @@ function ladePrivat(): boolean {
 @Component({
   selector: 'app-noten-stift',
   imports: [MatIconModule],
-  host: { '[class.aktiv]': 'aktiv()' },
+  host: { '[class.aktiv]': 'aktiv()', '[class.text]': "aktiv() && modus() === 'text'" },
   template: `
     <canvas #flaeche (pointerdown)="runter($event)" (pointermove)="ziehen($event)" (pointerup)="hoch($event)" (pointercancel)="hoch($event)"
       (click)="$event.stopPropagation()"></canvas>
     @if (aktiv()) {
       <div class="werkzeuge" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+        <button type="button" class="modus" [class.an]="modus() === 'text'" (click)="modus.set(modus() === 'text' ? 'stift' : 'text')" [attr.aria-pressed]="modus() === 'text'"
+          [attr.aria-label]="modus() === 'text' ? 'Schrift: auf die Stelle tippen' : 'Schrift einfügen'" title="Schrift"><mat-icon>title</mat-icon></button>
+        @if (modus() === 'text') {
+          <button type="button" class="groesse" (click)="groesseWeiter()" [attr.aria-label]="'Schriftgröße ' + groessen[groesse()].name" title="Schriftgröße">
+            <span [style.font-size.px]="10 + groesse() * 4">A</span></button>
+        }
         @for (f of farben; track f.farbe) {
           <button type="button" class="farbe" [class.an]="farbe() === f.farbe" [style.background]="f.farbe" (click)="farbe.set(f.farbe)" [attr.aria-label]="f.name" [attr.aria-pressed]="farbe() === f.farbe"></button>
         }
         <button type="button" class="wer" [class.an]="privat()" (click)="privatUmschalten()" [attr.aria-pressed]="privat()"
           [attr.aria-label]="privat() ? 'Neue Markierungen nur für mich' : 'Neue Markierungen für alle'" [title]="privat() ? 'Nur für mich' : 'Für alle in der Band'">
           <mat-icon>{{ privat() ? 'person' : 'groups' }}</mat-icon></button>
-        <button type="button" (click)="rueckgaengig()" [disabled]="!striche().length" aria-label="Letzten Strich entfernen"><mat-icon>undo</mat-icon></button>
+        <button type="button" (click)="rueckgaengig()" [disabled]="!striche().length" aria-label="Letzte Markierung entfernen"><mat-icon>undo</mat-icon></button>
         <button type="button" (click)="leeren()" [disabled]="!striche().length" aria-label="Alle Markierungen dieser Seite löschen"><mat-icon>delete</mat-icon></button>
       </div>
     }
@@ -46,6 +61,9 @@ function ladePrivat(): boolean {
     :host { position: absolute; inset: 0; pointer-events: none; }
     canvas { position: absolute; inset: 0; width: 100%; height: 100%; background: none !important; }
     :host(.aktiv) canvas { pointer-events: auto; touch-action: none; cursor: crosshair; outline: 2px dashed #e8a46a; outline-offset: -2px; }
+    :host(.text) canvas { cursor: text; }
+    .modus.an { border-color: #e8a46a; color: #e8a46a; }
+    .groesse span { font-weight: 700; line-height: 1; }
     .werkzeuge {
       position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; padding: 6px; border-radius: 999px;
       background: rgba(0, 0, 0, .8); pointer-events: auto;
@@ -64,6 +82,13 @@ export class NotenStift {
   readonly aktiv = input(false);
   protected readonly farben = FARBEN;
   protected readonly farbe = signal(FARBEN[0].farbe);
+  /** zeichnen oder schreiben */
+  protected readonly modus = signal<'stift' | 'text'>('stift');
+  protected readonly groessen = GROESSEN;
+  protected readonly groesse = signal(1);
+  protected groesseWeiter(): void {
+    this.groesse.update((g) => (g + 1) % GROESSEN.length);
+  }
   protected readonly striche = signal<Strich[]>([]);
   /** neue Striche nur für mich (Standard: für alle in der Band) – je Person gemerkt */
   protected readonly privat = signal(ladePrivat());
@@ -114,6 +139,10 @@ export class NotenStift {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, b, h);
     for (const s of [...this.striche(), ...(this.aktuell ? [this.aktuell] : [])]) {
+      if (s.text) {
+        this.schreiben(ctx, s, b, h);
+        continue;
+      }
       ctx.strokeStyle = s.farbe;
       ctx.lineWidth = s.breite * b;
       ctx.lineCap = 'round';
@@ -130,6 +159,57 @@ export class NotenStift {
     }
   }
 
+  /** Text mit weißem Rand, damit er auf Noten lesbar bleibt (Textmarker-Farbe wird zu Schwarz) */
+  private schreiben(ctx: CanvasRenderingContext2D, s: Strich, b: number, h: number): void {
+    const px = Math.max(8, s.breite * b);
+    ctx.font = `600 ${px}px system-ui, sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = Math.max(2, px / 5);
+    ctx.strokeStyle = 'rgba(255, 255, 255, .9)';
+    const x = s.punkte[0] * b;
+    const y = s.punkte[1] * h;
+    ctx.strokeText(s.text!, x, y);
+    ctx.fillStyle = s.farbe.startsWith('rgba') ? '#111' : s.farbe;
+    ctx.fillText(s.text!, x, y);
+  }
+
+  /** Text unter dem Finger (für Ändern/Löschen) – Index in striche() oder -1 */
+  private textAn(x: number, y: number): number {
+    const c = this.flaeche().nativeElement;
+    const ctx = c.getContext('2d')!;
+    const b = c.clientWidth;
+    const h = c.clientHeight;
+    const liste = this.striche();
+    for (let i = liste.length - 1; i >= 0; i--) {
+      const s = liste[i];
+      if (!s.text) continue;
+      const px = Math.max(8, s.breite * b);
+      ctx.font = `600 ${px}px system-ui, sans-serif`;
+      const w = ctx.measureText(s.text).width;
+      const sx = s.punkte[0] * b;
+      const sy = s.punkte[1] * h;
+      if (x * b >= sx - 4 && x * b <= sx + w + 4 && Math.abs(y * h - sy) <= px * 0.7) return i;
+    }
+    return -1;
+  }
+
+  private textEingeben(x: number, y: number): void {
+    const i = this.textAn(x, y);
+    const alt = i >= 0 ? this.striche()[i] : null;
+    const eingabe = window.prompt(alt ? 'Text ändern (leer = löschen):' : 'Text für diese Stelle:', alt?.text ?? '');
+    if (eingabe === null) return;
+    const text = eingabe.trim().slice(0, 80);
+    const liste = [...this.striche()];
+    if (alt) {
+      if (text) liste[i] = { ...alt, text };
+      else liste.splice(i, 1);
+    } else if (text) {
+      liste.push({ farbe: this.farbe(), breite: GROESSEN[this.groesse()].wert, punkte: [x, y], text, ...(this.privat() ? { privat: true } : {}) });
+    } else return;
+    this.speichern(liste);
+  }
+
   private punkt(e: PointerEvent): [number, number] {
     const r = this.flaeche().nativeElement.getBoundingClientRect();
     return [Math.round(((e.clientX - r.left) / r.width) * 1e4) / 1e4, Math.round(((e.clientY - r.top) / r.height) * 1e4) / 1e4];
@@ -139,6 +219,12 @@ export class NotenStift {
     if (!this.aktiv()) return;
     e.stopPropagation();
     e.preventDefault();
+    if (this.modus() === 'text') {
+      const [x, y] = this.punkt(e);
+      // nach dem Loslassen fragen – sonst schluckt der Dialog das pointerup
+      setTimeout(() => this.textEingeben(x, y));
+      return;
+    }
     this.flaeche().nativeElement.setPointerCapture(e.pointerId);
     const textmarker = this.farbe().startsWith('rgba');
     this.aktuell = { farbe: this.farbe(), breite: textmarker ? 0.025 : 0.004, punkte: this.punkt(e), ...(this.privat() ? { privat: true } : {}) };
@@ -153,6 +239,8 @@ export class NotenStift {
   }
 
   protected hoch(e: PointerEvent): void {
+    // Schrift: Tippen setzt Text, blättert aber nicht
+    if (this.aktiv() && this.modus() === 'text') e.stopPropagation();
     if (!this.aktuell) return;
     e.stopPropagation();
     const fertig = this.aktuell;

@@ -398,6 +398,13 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
 - **Markieren:** in der PDF-Ansicht auf ✏ tippen und mit Finger, Stift oder Maus ins Notenblatt zeichnen (Rot, Blau,
   Grün, Textmarker; ↶ nimmt den letzten Strich zurück, 🗑 leert die Seite). Markierungen gelten **für alle** in der Band
   und werden mitsynchronisiert; mit dem Personen-Knopf (👥 → 👤) zeichnest du **nur für dich** (bleibt gemerkt).
+- **Schrift im Notenblatt:** in den Markier-Werkzeugen auf **T** tippen, dann auf die Stelle tippen und den Text
+  eingeben (z. B. „Bridge leise“). „A“ wählt die Größe (klein, mittel, groß), die Farbe gilt wie beim Stift (Textmarker
+  wird zu Schwarz). Tippen auf einen vorhandenen Text ändert ihn, leer lassen löscht ihn; ↶ nimmt die letzte
+  Markierung zurück. Texte haben einen weißen Rand, damit sie auf den Noten lesbar bleiben, und werden wie Striche
+  mitsynchronisiert.
+- **Noten-Knopf und X:** Der Noten-Knopf (♫) bleibt auch in der Notenansicht oben rechts – noch einmal drücken führt
+  zurück zur Titelanzeige. Das **X** beendet immer den Bühnen- bzw. Probe-Modus, auch aus der Notenansicht.
 - **Noten im Bühnen- und Probemodus:** Capo steht immer mit in der Kopfleiste, auch bei PDF-Noten. Nach oben
   wischen blendet die Einstellungen aus (mehr Platz fürs Blatt, Capo bleibt als kleines Schild oben rechts), nach
   unten wischen oder Tippen aufs Schild holt sie zurück. Waagerecht wischen blättert wie gewohnt.

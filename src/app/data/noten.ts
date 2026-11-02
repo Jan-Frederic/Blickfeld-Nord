@@ -152,11 +152,15 @@ export async function alleSongNoten(): Promise<Record<string, SongNoten>> {
 
 // ---- Markierungen (Zeichnungen im Notenblatt, je PDF-Datei und Seite) ----------------------------------------
 
-/** ein Strich: Farbe, Breite (Anteil der Seitenbreite), Punkte als x,y-Paare von 0 bis 1 */
+/**
+ * ein Strich: Farbe, Breite (Anteil der Seitenbreite), Punkte als x,y-Paare von 0 bis 1. Mit text ist es eine
+ * Beschriftung: punkte = Ankerpunkt (links, Mitte der Zeile), breite = Schriftgröße als Anteil der Seitenbreite.
+ */
 export interface Strich {
   farbe: string;
   breite: number;
   punkte: number[];
+  text?: string;
   /** nur für mich – sonst gilt die Markierung für alle (Synchronisation) */
   privat?: boolean;
 }
