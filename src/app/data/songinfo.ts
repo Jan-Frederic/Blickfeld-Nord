@@ -158,7 +158,6 @@ export const SONGINFO: SongInfo[] = [
   { title: 'Wir werden uns wiedersehen', artist: 'Selig', tonart: 'F#m', bpm: 154, quelle: 'Spotify-Analyse: Tunebat/Musicstax F#m, 154 (evtl. halb: 77)' },
   { title: 'Wish You Were Here', artist: 'Pink Floyd', tonart: 'G', bpm: 123, quelle: 'Spotify-Analyse: Tunebat/Musicstax/Songbpm G, 122–123' },
   { title: 'Wonderful Life', artist: 'Katie Melua', bpm: 106, quelle: 'Hooktheory 106; Tonart uneinig (A / F#m)' },
-  { title: 'Wonderful Life', artist: 'Seeed', tonart: 'G', bpm: 113, quelle: 'Spotify-Analyse: Tunebat/Musicstax G, 113' },
   { title: 'Wonderwall', artist: 'Oasis', tonart: 'F#m', bpm: 87, quelle: 'Musicnotes Original F#m; 87–88' },
   { title: 'Wonderwall', artist: 'Ryan Adams', tonart: 'Gm', bpm: 78, quelle: 'Spotify-Analyse: Tunebat/Songbpm Gm; 157 = doppelt gezählt → 78 (GetSongBPM 78)' },
   { title: 'Your House', artist: 'Jimmy Eat World', tonart: 'D', bpm: 93, quelle: 'Spotify-Analyse: Tunebat/Musicstax/Songbpm D, 93' },
