@@ -24,6 +24,10 @@ export interface ProbePlan {
   songs: ProbeSong[];
   notizen: string;
   punkte: { text: string; done: boolean }[];
+  /** Plan zuletzt an die Band geschickt (JJJJ-MM-TT) */
+  geschickt?: string;
+  /** Generalprobe: Auftritts-ID, deren Setlist am Stück durchgespielt wird */
+  generalprobe?: string;
 }
 
 export const PROBE_PREFIX = 'bn-probe-';
@@ -136,4 +140,48 @@ export function letzteNotiz(plaene: { tag: string; songs: { title: string; artis
 export function minutenText(sekunden: number): string {
   const m = Math.round(sekunden / 60);
   return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+}
+
+/** Plan als Nachricht an die Band: Termin, Songs mit Tonart/Tempo und Spotify-Link, offene Punkte */
+export function probeNachricht(
+  p: { date: string; time?: string; endTime?: string; place?: string },
+  plan: ProbePlan,
+  info: (s: { title: string; artist: string }) => string,
+  link: (s: { title: string; artist: string }) => string | undefined,
+): string {
+  const tag = new Date(`${p.date}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+  const zeit = p.time ? ` · ${p.time}${p.endTime ? '–' + p.endTime : ''} Uhr` : '';
+  const songs = plan.songs.map((s, i) => {
+    const werte = info(s);
+    const url = link(s);
+    return `${i + 1}. ${s.title} – ${s.artist}${werte ? ` (${werte})` : ''}${s.stand === 'nochmal' ? ' ↻' : ''}${url ? `\n   ${url}` : ''}`;
+  });
+  const punkte = plan.punkte.filter((x) => !x.done).map((x) => `• ${x.text}`);
+  return [
+    `🎸 Probe ${tag}${zeit}${p.place ? `, ${p.place}` : ''}`,
+    plan.generalprobe ? 'Generalprobe: Setlist am Stück durchspielen.' : '',
+    songs.length ? `\nDiese Songs üben wir${songs.length > 1 ? ' – bitte vorher anhören' : ''}:\n${songs.join('\n')}` : '\nSongs stehen noch nicht fest.',
+    punkte.length ? `\nOffene Punkte:\n${punkte.join('\n')}` : '',
+    plan.notizen.trim() ? `\n${plan.notizen.trim()}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/** Proben in den nächsten 7 Tagen, deren Plan noch nicht an die Band ging – für „Heute fällig“ */
+export function vorbereitungFaellig<T extends { date: string }>(proben: T[], heute: string, plan: (datum: string) => ProbePlan): { probe: T; songs: number; tage: number }[] {
+  return proben
+    .map((p) => ({ probe: p, tage: Math.round((Date.parse(p.date) - Date.parse(heute)) / 864e5) }))
+    .filter((x) => x.tage >= 1 && x.tage <= 7)
+    .map((x) => ({ ...x, plan: plan(x.probe.date) }))
+    .filter((x) => !x.plan.geschickt)
+    .map(({ probe, tage, plan: pl }) => ({ probe, tage, songs: pl.songs.length }));
+}
+
+/** Generalprobe: Songs der Setlist in ihrer Reihenfolge an den Anfang, Bisheriges (mit Notizen) bleibt dahinter */
+export function generalprobe(plan: ProbePlan, setlist: { title: string; artist: string }[], showId: string): ProbePlan {
+  const alt = new Map(plan.songs.map((s) => [songKeyVon(s), s]));
+  const vorne = setlist.map((s) => alt.get(songKeyVon(s)) ?? { title: s.title, artist: s.artist, done: false });
+  const drin = new Set(vorne.map(songKeyVon));
+  return { ...plan, generalprobe: showId, songs: [...vorne, ...plan.songs.filter((s) => !drin.has(songKeyVon(s)))] };
 }

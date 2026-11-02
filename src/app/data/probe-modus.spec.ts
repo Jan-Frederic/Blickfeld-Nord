@@ -1,9 +1,9 @@
-import { NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
+import { type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
 import { probenVerlauf } from './song-stand';
 
 const A = { title: 'Iris', artist: 'The Goo Goo Dolls' };
 const B = { title: 'Africa', artist: 'Toto' };
-const plan = () => ({ songs: [{ ...A, done: false }, { ...B, done: false }], notizen: '', punkte: [] });
+const plan = (): ProbePlan => ({ songs: [{ ...A, done: false }, { ...B, done: false }], notizen: '', punkte: [] });
 
 describe('probe-modus', () => {
   it('Sitzt und Nochmal: geprobt, „nochmal üben“ nur ohne eigene Notiz', () => {
@@ -62,5 +62,30 @@ describe('probe-modus', () => {
       { tag: '2026-11-20', songs: [{ ...A, done: true, stand: 'sitzt' as const, notiz: 'Tempo war noch wackelig' }] },
     ];
     expect(probenVerlauf(plaene, 'Iris|The Goo Goo Dolls', '2026-12-01').map((p) => p.stufe)).toEqual(['baustelle', 'sitzt']);
+  });
+
+  it('Nachricht an die Band', () => {
+    const p = { ...plan(), punkte: [{ text: 'Kabel besorgen', done: false }, { text: 'erledigt', done: true }], notizen: 'Bitte pünktlich' };
+    const t = probeNachricht({ date: '2026-11-20', time: '18:00', endTime: '21:00', place: 'Dingden' }, markieren(p, B, 'nochmal'), (s) => (s.title === 'Iris' ? 'D · 155 bpm' : ''), (s) => (s.title === 'Iris' ? 'https://open.spotify.com/track/x' : undefined));
+    expect(t).toContain('🎸 Probe Freitag, 20. November · 18:00–21:00 Uhr, Dingden');
+    expect(t).toContain('1. Iris – The Goo Goo Dolls (D · 155 bpm)\n   https://open.spotify.com/track/x');
+    expect(t).toContain('2. Africa – Toto ↻');
+    expect(t).toContain('• Kabel besorgen');
+    expect(t).not.toContain('erledigt');
+    expect(t).toContain('Bitte pünktlich');
+  });
+
+  it('Vorbereitung fällig: Proben in 1–7 Tagen, solange nicht geschickt', () => {
+    const plaene: Record<string, ReturnType<typeof plan>> = { '2026-11-20': plan(), '2026-11-15': { ...plan(), geschickt: '2026-11-10' } };
+    const f = vorbereitungFaellig([{ date: '2026-11-20' }, { date: '2026-11-15' }, { date: '2026-12-11' }, { date: '2026-11-13' }], '2026-11-13', (d) => plaene[d] ?? { songs: [], notizen: '', punkte: [] });
+    expect(f.map((x) => [x.probe.date, x.tage, x.songs])).toEqual([['2026-11-20', 7, 2]]);
+  });
+
+  it('Generalprobe: Setlist vorne in Reihenfolge, Bisheriges bleibt', () => {
+    const p = notizSetzen(plan(), B, 'Intro');
+    const g = generalprobe(p, [B, { title: 'Neu', artist: 'Z' }], '2026-12-04-rhede');
+    expect(g.generalprobe).toBe('2026-12-04-rhede');
+    expect(g.songs.map((s) => s.title)).toEqual(['Africa', 'Neu', 'Iris']);
+    expect(g.songs[0].notiz).toBe('Intro');
   });
 });

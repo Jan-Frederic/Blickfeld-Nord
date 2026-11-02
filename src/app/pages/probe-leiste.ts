@@ -21,6 +21,8 @@ import {
   zeitJeSong,
 } from '../data/probe-modus';
 import { SongMitschnitte } from './song-mitschnitte';
+import { gespielteTonart, songInfo } from '../data/songinfo';
+import { sprungHinweis } from '../data/tonart-uebergang';
 
 type Song = { title: string; artist: string };
 
@@ -49,8 +51,12 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
         <button type="button" class="nochmal" [class.an]="eintrag()?.stand === 'nochmal'" (click)="markiere('nochmal')" [attr.aria-pressed]="eintrag()?.stand === 'nochmal'"><mat-icon>replay</mat-icon> Nochmal</button>
         <button type="button" (click)="lauf(1)" aria-label="Durchlauf zählen"><mat-icon>repeat</mat-icon> {{ eintrag()?.durchlaeufe ? eintrag()!.durchlaeufe + '× gespielt' : 'Durchlauf' }}</button>
         @if (eintrag()?.durchlaeufe) { <button type="button" class="klein" (click)="lauf(-1)" aria-label="Durchlauf zurücknehmen">−1</button> }
+        @if (naechster()) {
+          <button type="button" [class.an]="uebergang()" (click)="uebergang.set(!uebergang())" [attr.aria-pressed]="uebergang()" title="Übergang zum nächsten Song üben"><mat-icon>trending_flat</mat-icon> Übergang</button>
+        }
         <button type="button" [class.an]="mitschnitt()" (click)="mitschnitt.set(!mitschnitt())" [attr.aria-pressed]="mitschnitt()" aria-label="Mitschnitt aufnehmen"><mat-icon>mic</mat-icon></button>
       </div>
+      @if (uebergang() && uebergangText(); as u) { <p class="uebergang" role="note">{{ u }}</p> }
       @if (vorher(); as v) { <p class="vorher">Letzte Probe ({{ datumText(v.tag) }}): {{ v.notiz }}</p> }
       <input class="notiz" maxlength="80" [value]="eintrag()?.notiz ?? ''" placeholder="Notiz fürs Protokoll, z. B. Bridge wackelt" aria-label="Notiz zu diesem Song" (change)="notiz($any($event.target).value)" />
       <p class="zeit">
@@ -64,6 +70,21 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
 export class ProbeLeiste {
   readonly datum = input.required<string>();
   readonly song = input.required<Song>();
+  /** Song danach (für „Übergang“) */
+  readonly naechster = input<Song>();
+  protected readonly uebergang = signal(false);
+  /** Ende dieses Songs → Anfang des nächsten: Tonart (mit Überleitung bei einem Sprung) und Tempo */
+  protected readonly uebergangText = computed(() => {
+    const b = this.naechster();
+    if (!b) return '';
+    const ia = songInfo(this.song().title, this.song().artist);
+    const ib = songInfo(b.title, b.artist);
+    const ta = gespielteTonart(ia);
+    const tb = gespielteTonart(ib);
+    const tonart = ta && tb ? (sprungHinweis(ta, tb) ?? (ta === tb ? `beide in ${ta}` : `${ta} → ${tb}`)) : 'Tonart fehlt';
+    const tempo = ia?.bpm && ib?.bpm ? `${ia.bpm} → ${ib.bpm} bpm${Math.abs(ia.bpm - ib.bpm) >= 25 ? ' (großer Tempowechsel – kurz absprechen, wer einzählt)' : ''}` : 'Tempo fehlt';
+    return `Übergang zu „${b.title}“: ${tonart} · ${tempo}${ib?.capo ? ` · danach Capo ${ib.capo}` : ''}. Letzte Takte spielen, dann direkt einsteigen.`;
+  });
   private readonly band = inject(BandService);
   protected readonly datumText = datumText;
   protected readonly minutenText = minutenText;
@@ -96,6 +117,7 @@ export class ProbeLeiste {
         this.aktuell = s;
         this.songStart = Date.now();
         this.mitschnitt.set(false);
+        this.uebergang.set(false);
         this.plan.set(loadProbe(d));
       });
     });

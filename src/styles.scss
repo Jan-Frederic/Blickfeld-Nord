@@ -496,3 +496,25 @@ app-noten-verwaltung .suche:focus-within { border-color: var(--bn-sunset); }
 app-noten-verwaltung .frage { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 app-noten-verwaltung .frage button.gefahr { border-color: #e07a5a; color: #e07a5a; }
 app-noten-verwaltung li.leer { color: var(--bn-fog); border: 0; }
+
+// Probe: „Wer kommt?“ (probe-zusagen.ts)
+app-probe-zusagen .zusagen { display: grid; gap: 10px; font-size: .9rem; }
+app-probe-zusagen .stand { margin: 0; color: var(--bn-fog); }
+app-probe-zusagen ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+app-probe-zusagen li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--bn-line); border-radius: 10px; }
+app-probe-zusagen li span { display: grid; }
+app-probe-zusagen li small { color: var(--bn-fog); font-size: .8rem; }
+app-probe-zusagen li mat-icon { color: var(--bn-fog); }
+app-probe-zusagen li.ja mat-icon { color: #5fb88a; }
+app-probe-zusagen li.nein mat-icon { color: #e07a5a; }
+app-probe-zusagen li.ich { border-color: var(--bn-sunset); }
+app-probe-zusagen .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+app-probe-zusagen button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; cursor: pointer; }
+app-probe-zusagen button.ja.an { border-color: #5fb88a; background: rgba(95, 184, 138, .15); color: #5fb88a; }
+app-probe-zusagen button.nein.an { border-color: #e07a5a; background: rgba(224, 122, 90, .15); color: #e07a5a; }
+app-probe-zusagen button.link { justify-self: start; padding: 0; border: 0; color: var(--bn-fog); font-size: .8rem; text-decoration: underline; }
+app-probe-zusagen input, app-probe-zusagen select { flex: 1; min-width: min(100%, 200px); padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 10px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+app-probe-zusagen .wer { display: grid; gap: 4px; max-width: 420px; color: var(--bn-fog); }
+app-probe-zusagen .wer small { font-size: .8rem; }
+app-probe-zusagen mat-icon { font-size: 20px; width: 20px; height: 20px; }
+app-probe-leiste .uebergang { margin: 0; max-width: 620px; padding: 8px 12px; border-left: 3px solid var(--bn-sunset); color: #ece9e4; font-size: .9em; text-align: left; }

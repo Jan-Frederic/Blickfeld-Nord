@@ -46,10 +46,10 @@ function ladeZoom(): number {
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
       <header>
-        <span class="set">{{ probe() ? 'Probe · ' + songNo() + ' / ' + songZahl() : 'Set ' + setNo() + ' / ' + sets().length }}</span>
+        <span class="set">{{ probe() && !generalprobe() ? 'Probe · ' + songNo() + ' / ' + songZahl() : (generalprobe() ? 'Generalprobe · ' : '') + 'Set ' + setNo() + ' / ' + sets().length }}</span>
         <span class="clock" [class.over]="remaining() < 0">
           <mat-icon>timer</mat-icon> {{ fmt(elapsed()) }}
-          @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
+          @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() && !generalprobe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
         </span>
         <span class="zoom" role="group" aria-label="Schriftgröße">
           <button type="button" (click)="zoomen(-1)" [disabled]="zoom() <= ZOOM_MIN" aria-label="Schrift kleiner">A−</button>
@@ -95,7 +95,7 @@ function ladeZoom(): number {
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
             }
-            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" /> }
+            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" [naechster]="naechsterSong()" /> }
             @if (show()) {
               <p class="stars" role="group" aria-label="Wie lief der Song heute?">
                 @for (n of [1, 2, 3, 4, 5]; track n) {
@@ -221,8 +221,14 @@ export class SetlistBuehne {
   readonly closed = output<void>();
   /** Probe-Modus: Datum der Probe – Probe-Leiste je Song, Uhr bis zum Probenende, kein Kürzen und keine Sterne */
   readonly probe = input<string>();
+  /** Generalprobe: Setlist mit Pausen, Uhr je Set wie auf der Bühne */
+  readonly generalprobe = input(false);
   protected readonly minutenText = minutenText;
   private readonly band = inject(BandService);
+  protected readonly naechsterSong = computed(() => {
+    const n = this.next();
+    return n && !isPause(n) ? n : undefined;
+  });
   protected readonly songZahl = computed(() => this.liste().filter((e) => !isPause(e)).length);
 
   protected readonly isPause = isPause;
@@ -262,7 +268,7 @@ export class SetlistBuehne {
   protected readonly elapsed = computed(() => Math.max(0, Math.round((this.now() - this.setStart) / 1000)));
   protected readonly planned = computed(() => {
     const d = this.probe();
-    return d ? probenDauer(this.band.rehearsals.find((r) => r.date === d)) : setLength(this.sets()[this.setNo() - 1] ?? []).seconds;
+    return d && !this.generalprobe() ? probenDauer(this.band.rehearsals.find((r) => r.date === d)) : setLength(this.sets()[this.setNo() - 1] ?? []).seconds;
   });
   protected readonly plannedText = computed(() => setTime(this.planned()));
   protected readonly remaining = computed(() => this.planned() - this.elapsed());

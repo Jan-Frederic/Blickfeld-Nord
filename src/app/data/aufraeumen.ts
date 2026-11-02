@@ -21,6 +21,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
   { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
   { id: 'probe', label: 'Probenplanung', praefixe: ['bn-probe-'], probe: true },
+  { id: 'band', label: 'Zusagen und „unsicher bei“', praefixe: ['bn-zusage-', 'bn-unsicher-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist' },
   { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
   { id: 'wackelt', label: '„Wackelt noch“-Liste', praefixe: ['bn-wackelt'], hinweis: 'deine Übe-Liste für den Probe-Vorschlag' },
@@ -29,7 +30,7 @@ export const BEREICHE: Bereich[] = [
     id: 'einstellungen',
     label: 'Einstellungen',
     hinweis: 'Schriftgröße, Klick-Ton, Noten-Ansicht, Filter, Sprache',
-    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-geraet-', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-'],
+    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-geraet-', 'bn-ich', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-'],
   },
 ];
 

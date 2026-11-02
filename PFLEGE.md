@@ -163,6 +163,26 @@ Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
 an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 
+**Wer kommt?** Oben auf der Probenseite einmal **Ich bin …** wählen (gilt für die Person auf allen ihren Geräten),
+dann **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
+Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2 kommen, 1 offen“).
+
+**Unsicher bei:** Mit „Ich bin …“ sieht die Band die eigene „Wackelt noch“-Liste (`bn-unsicher-<Person>`): auf der
+Probenseite je Song („unsicher: Fred“) und im Song-Dialog („Unsicher bei: …“).
+
+**Plan an die Band:** schickt den Probenplan als Nachricht – Songs mit Tonart/Tempo und Spotify-Link zum Vorher-Anhören,
+offene Punkte und Notizen (Teilen-Menü, z. B. WhatsApp; sonst Zwischenablage). Eine Woche vor der Probe erinnert
+**Heute fällig** daran („Probe in 7 Tagen: 6 Songs geplant – Plan an die Band schicken“), bis der Plan verschickt ist.
+**Für Spotify kopieren** kopiert die Track-Links der Probensongs für eine Übungs-Playlist (in Spotify am Computer
+einfügen).
+
+**Generalprobe:** „Generalprobe: Setlist … übernehmen“ setzt die Setlist des nächsten Auftritts (von diesem Gerät) in
+ihrer Reihenfolge an den Anfang des Plans. Der Probe-Modus spielt dann die Setlist mit Pausen durch – die Uhr läuft je
+Set gegen die geplante Spielzeit wie auf der Bühne.
+
+**Übergang** (Probe-Leiste): zeigt den Wechsel zum nächsten Song – Tonart (bei einem Sprung mit Überleitung), Tempo
+vorher/nachher (bei großem Wechsel: absprechen, wer einzählt) und Capo danach.
+
 **Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
 ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo
 (100 → 70 %), Einzählen, Stimmgerät, Schriftgröße; weiter per Pedal, Pfeiltaste, Tippen oder Wischen. Unter jedem Song
@@ -222,6 +242,12 @@ Die **offizielle** Playlist steht als Repertoire auf der Startseite (`repertoire
 dazu **Setlist, Probe, Repertoire, Wunschliste und Archiv** (`playlisten.json`). Beide holt GitHub täglich früh
 von Spotify (Actions → „Repertoire aktualisieren“, auch per Knopfdruck); die Listen-IDs stehen in
 `scripts/sync-repertoire.mjs`. Gibt Spotify eine Liste nicht heraus, bleibt ihr letzter Stand (Hinweis im Protokoll).
+
+**Repertoire-Check:** Nach jedem Abgleich steht in der Zusammenfassung des Workflow-Laufs (Actions → Lauf öffnen),
+was neu ist, was aus allen Listen verschwunden ist, welche neuen Songs noch keine Tonart/Tempo haben und welche
+Einträge in `songinfo.ts` zu keinem Song mehr gehören (`scripts/repertoire-check.mjs`). Solche verwaisten Einträge
+stoppen den Deploy nicht mehr; sie stehen unter **Backstage → Aufgaben** („Tonart/Tempo für … Songs, die in keiner
+Spotify-Liste mehr stehen“) – Song in Spotify wieder aufnehmen oder den Eintrag löschen.
 
 Unter **Songs → Liste** stehen alle Songs aller Listen, gegeneinander abgeglichen (gleicher Titel ohne Zusatz wie
 „Remastered“ und gleicher erster Interpret = derselbe Song). Je Song zeigen grüne Symbole, in welchen Listen er
@@ -353,6 +379,10 @@ urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unter *
 Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätter importieren**. Auf iPhone und iPad die
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
+
+**Wetter am Vortag:** Unter **Heute fällig** erscheint am Tag vor einem Auftritt eine Warnung bei Regen (ab 50 %),
+Kälte (bis 3 °C) oder Wind (ab 40 km/h) rund um die Auftrittszeit – die passenden Punkte (Pavillon, Abdeckplanen,
+warme Kleidung, Gewichte …) landen automatisch auf der Packliste des Auftritts.
 
 **Songs → Noten – suchen und löschen:** Die Suche filtert die PDFs nach Dateinamen (mehrere Wörter, „_“ und „-“ zählen
 als Leerzeichen). Der Mülleimer löscht für alle **nur von diesem Gerät** (in OneDrive bleibt die Datei). Wer den

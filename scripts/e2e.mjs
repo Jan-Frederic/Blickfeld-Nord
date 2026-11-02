@@ -585,6 +585,43 @@ test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer au
   return p;
 });
 
+test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalprobe mit Übergängen', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
+  const auftritt = concerts.map((c) => c.split('/')[2]).filter((id) => id >= datum).sort()[0];
+  await p.evaluate(({ d, a }) => {
+    localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }], notizen: '', punkte: [{ text: 'Kabel besorgen', done: false }] }));
+    localStorage.setItem('bn-unsicher-david-broeker', JSON.stringify(['Iris|The Goo Goo Dolls']));
+    localStorage.setItem('bn-setlist-' + a, JSON.stringify([{ title: 'Africa', artist: 'TOTO' }, { title: 'Iris', artist: 'The Goo Goo Dolls' }, { pause: true }, { title: 'Angels', artist: 'Robbie Williams' }]));
+  }, { d: datum, a: auftritt });
+  await p.reload({ waitUntil: 'networkidle' });
+  const seite = p.locator('app-backstage-probe');
+  // wer kommt
+  const zusagen = seite.locator('app-probe-zusagen');
+  await zusagen.locator('select').selectOption('jan-frederic-overbeck');
+  await zusagen.getByRole('button', { name: 'Ich komme' }).click();
+  await until(async () => (await zusagen.innerText()).includes('1 kommt, 2 offen'), 'Zusage wird nicht gezählt');
+  expect((await p.evaluate((d) => localStorage.getItem('bn-zusage-' + d + '-jan-frederic-overbeck'), datum)) === '{"kommt":true}', 'Zusage nicht in eigener Datei');
+  // unsicher bei
+  await until(async () => (await seite.locator('.info.unsicher').innerText().catch(() => '')).includes('David'), '„unsicher: David“ fehlt');
+  // Plan an die Band (ohne Teilen-Menü: in die Zwischenablage bzw. zum Kopieren)
+  await seite.getByRole('button', { name: 'Plan an die Band' }).click();
+  await until(async () => /Plan (kopiert|geteilt)/.test(await seite.locator('.teilen-meldung').innerText().catch(() => '')), 'Plan an die Band meldet nichts');
+  expect(!!(await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)).geschickt, datum)), '„geschickt“ wird nicht gemerkt');
+  // Generalprobe: Setlist des nächsten Auftritts in Reihenfolge, Probe-Modus mit Sets und Übergang
+  await seite.locator('button.general').click();
+  await until(async () => /Africa[\s\S]*Iris[\s\S]*Angels/.test(await seite.locator('.list').first().innerText()), 'Generalprobe übernimmt die Setlist nicht');
+  await seite.getByRole('button', { name: 'Probe-Modus starten' }).click();
+  const buehne = p.locator('app-setlist-buehne');
+  await until(async () => /generalprobe · set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
+  await buehne.locator('app-probe-leiste').getByRole('button', { name: 'Übergang' }).click();
+  await until(async () => (await buehne.locator('app-probe-leiste .uebergang').innerText().catch(() => '')).includes('Übergang zu „Iris“'), 'Übergang zum nächsten Song fehlt');
+  return p;
+});
+
 test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', async () => {
   const p = await page();
   await p.go('/backstage/buehnenplan/');

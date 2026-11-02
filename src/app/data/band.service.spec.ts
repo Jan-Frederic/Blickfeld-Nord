@@ -66,10 +66,10 @@ describe('Proben', () => {
 });
 
 describe('Tonart und Tempo (songinfo.ts)', () => {
-  it('passen zu Songs der Spotify-Listen und haben gültige Werte', () => {
-    const alle = [...repertoire.tracks, ...playlisten.listen.flatMap((l) => l.tracks)];
+  // Ein Song, der aus allen Spotify-Listen verschwindet (automatischer Abgleich), soll den Deploy nicht stoppen –
+  // solche Einträge zeigen Backstage → Aufgaben und der Repertoire-Check im Workflow.
+  it('haben gültige Werte', () => {
     for (const s of SONGINFO) {
-      expect(alle.some((t) => t.title === s.title && t.artist === s.artist), `${s.title} – ${s.artist} in keiner Spotify-Liste`).toBe(true);
       if (s.tonart) expect(s.tonart).toMatch(/^[A-H][#b]?m?$/);
       if (s.spielTonart) expect(s.spielTonart).toMatch(/^[A-H][#b]?m?$/);
       if (s.capo) expect(Number.isInteger(s.capo) && s.capo >= 1 && s.capo <= 12).toBe(true);

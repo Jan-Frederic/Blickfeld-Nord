@@ -28,6 +28,9 @@ jobs:
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
         run: node scripts/sync-repertoire.mjs
 
+      - name: Repertoire-Check (neu, weg, ohne Tonart/Tempo, verwaiste Einträge)
+        run: node scripts/repertoire-check.mjs
+
       - name: Änderungen speichern und neu deployen
         env:
           GH_TOKEN: ${{ github.token }}
