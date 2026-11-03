@@ -628,7 +628,8 @@ neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten.
 wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
 Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim richtigen Song eingelesen (abschaltbar);
 eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
-(„2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**).
+(„2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**). Dateien, die schon einmal als **Eigenständig** eingelesen
+wurden (gemerkte Zuordnung), kommen ohne Rückfrage wieder zu ihrem Song – auch wenn sie neu im Ordner auftauchen.
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
 **Synchronisierte Dateien einlesen** (PDFs, .pro). Backups und Notenpakete stehen dort nicht mehr, sondern unter
 Einstellungen → **Backup**. Noten, die schon einmal als **Eigenständig** eingelesen wurden, werden nicht mehr angeboten

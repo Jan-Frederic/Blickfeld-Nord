@@ -1297,6 +1297,11 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await until(async () => /eigenständig eingelesene Noten-Datei ausgeblendet[\s\S]*unter Einstellungen → Backup/.test(await status.innerText()), async () => 'Hinweis auf ausgeblendete Dateien fehlt: ' + (await status.innerText()).slice(-300));
   const funde = await status.locator('app-funde-liste').innerText();
   expect(!funde.includes('Eigenes_Lied') && !/Backup ·/.test(funde) && funde.includes('Scan 7.pro'), 'Eigenständiges oder Backup wird trotzdem angeboten: ' + funde.slice(0, 300));
+  // kommt eine schon eigenständig zugeordnete Datei wieder als offen an (anderes Gerät, neue Fassung): ohne Rückfrage einlesen
+  await p.evaluate(() => localStorage.setItem('bn-sync-offen', JSON.stringify(['Noten/Testband_-_Eigenes_Lied.pro'])));
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => (await status.innerText()).includes('1 schon eigenständig zugeordnete Noten-Datei eingelesen'), 'Eigenständig Zugeordnetes wartet weiter auf eine Zuordnung');
+  expect(!(await status.innerText()).includes('eine Zuordnung'), 'Zuordnung wird trotzdem verlangt');
   await p.go('/backstage/songs/');
   await p.locator('app-songs-liste .listen-chips button', { hasText: 'Ohne Liste' }).click();
   await until(async () => /Eigenes Lied[\s\S]*Testband[\s\S]*Akkorde/.test(await p.locator('app-songs-liste tbody').innerText()), 'Eigenständiger Song fehlt unter „Ohne Liste“');

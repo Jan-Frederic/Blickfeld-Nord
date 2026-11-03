@@ -3,7 +3,7 @@ import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt
 import { letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, ergebnisText, synchronisieren } from './sync';
-import { erkennen } from './erkennung';
+import { eigenstaendigerSong, erkennen } from './erkennung';
 import { NOTEN_GEAENDERT, NotenDateiInfo, NotenPdf, alleMarkierungen, alleSongNoten, markierungenSetzen, notenDateiLoeschen, notenDateiSpeichern, notenDateien, songNotenSetzen } from './noten';
 import { BAND, MarkDateiInhalt, NotenDateiInhalt, istNotenSpiegel, markTexte, markZusammen, notenPfad, notenText, pdfFinden } from './noten-spiegel';
 import type { Strich } from './noten';
@@ -313,7 +313,8 @@ export class SyncService {
       const name = pfad.split('/').at(-1)!;
       this.stand.set({ text: `Noten erkennen: ${name}`, fertig: i, gesamt: pfade.length });
       const daten = async () => (await lokal.lesen(pfad)).arrayBuffer();
-      const e = await erkennen(name, pfad, daten);
+      // schon einmal als „eigenständig“ eingelesen (Song in keiner Spotify-Liste): gleich wieder dorthin
+      const e = eigenstaendigerSong(name) ?? (await erkennen(name, pfad, daten));
       if (e.key) eindeutig.push({ name, pfad, groesse: groesse.get(pfad) ?? 0, daten, ziel: { key: e.key, fassung: e.fassung } });
       else offen.push(pfad);
     }
@@ -322,6 +323,27 @@ export class SyncService {
     this.offen.set(offeneNoten());
     const n = r.pdfs + r.aktualisiert + r.blaetter;
     return [n && ` · ${n} Noten eingelesen`, offen.length && ` · ${offen.length} Noten brauchen eine Zuordnung`].filter(Boolean).join('');
+  }
+
+  /**
+   * Offene Noten, die inzwischen als „eigenständig“ zugeordnet sind (z. B. auf einem anderen Gerät, gemerkt über die
+   * gespiegelten Zuordnungen), direkt einlesen – sie brauchen keine Zuordnung von Hand mehr. Zahl der eingelesenen.
+   */
+  async eigenstaendigeOffeneEinlesen(): Promise<number> {
+    const pfade = offeneNoten().filter((p) => eigenstaendigerSong(p.split('/').at(-1)!));
+    if (!pfade.length) return 0;
+    const lokal = await this.lokal();
+    if (!lokal) return 0;
+    const da = new Map((await lokal.liste()).map((d) => [d.pfad, d.groesse]));
+    const quellen: NotenQuelle[] = pfade
+      .filter((p) => da.has(p))
+      .map((pfad) => {
+        const name = pfad.split('/').at(-1)!;
+        return { name, pfad, groesse: da.get(pfad) ?? 0, daten: async () => (await lokal.lesen(pfad)).arrayBuffer(), ziel: eigenstaendigerSong(name)! };
+      });
+    if (quellen.length) await notenEinlesen(quellen, await notenDateien(), () => undefined);
+    this.offenErledigt(pfade);
+    return quellen.length;
   }
 
   /** offene Zuordnungen erledigt (eingelesen oder verworfen) */

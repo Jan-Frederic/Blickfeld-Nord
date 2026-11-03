@@ -50,8 +50,13 @@ export function zuordnungenMerken(neu: { name: string; key: string; fassung: str
 
 /** schon einmal als „eigenständig“ eingelesen (gemerkter Song steht in keiner Spotify-Liste) – muss nicht mehr gelistet werden */
 export function eigenstaendigGemerkt(name: string, songs: Song[] = SONGS): boolean {
+  return !!eigenstaendigerSong(name, songs);
+}
+
+/** gemerkter eigenständiger Song (nicht in den Spotify-Listen) zu diesem Dateinamen – wird beim Abgleich direkt eingelesen */
+export function eigenstaendigerSong(name: string, songs: Song[] = SONGS): { key: string; fassung: string } | undefined {
   const gemerkt = gemerkteZuordnungen()[namensSchluessel(name)];
-  return !!gemerkt?.key && !songs.some((s) => songKey(s) === gemerkt.key);
+  return gemerkt?.key && !songs.some((s) => songKey(s) === gemerkt.key) ? gemerkt : undefined;
 }
 
 const ohneEndung = (n: string) => n.replace(/\.[^.]+$/, '');

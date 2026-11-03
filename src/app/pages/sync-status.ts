@@ -124,7 +124,20 @@ export class SyncStatus {
 
   constructor() {
     this.sync.automatisch();
-    if (this.sync.bereit()) void this.sync.geraeteLesen().catch(() => undefined);
+    if (this.sync.bereit()) {
+      void this.sync.geraeteLesen().catch(() => undefined);
+      void this.eigenstaendigeEinlesen();
+    }
+  }
+
+  /** offene Noten, die schon als „eigenständig“ zugeordnet sind, ohne Rückfrage einlesen */
+  private async eigenstaendigeEinlesen(): Promise<number> {
+    const n = await this.sync.eigenstaendigeOffeneEinlesen().catch(() => 0);
+    if (n) {
+      this.meldung.set({ text: `${n} schon eigenständig zugeordnete ${n === 1 ? 'Noten-Datei' : 'Noten-Dateien'} eingelesen ✓` });
+      this.geaendert.emit();
+    }
+    return n;
   }
 
   protected nameSetzen(wert: string): void {
@@ -164,8 +177,9 @@ export class SyncStatus {
   }
 
   /** nur die offenen Noten-Dateien zur Zuordnung anzeigen */
-  protected zuordnen(): Promise<void> {
-    return this.einlesen(new Set(this.sync.offen()));
+  protected async zuordnen(): Promise<void> {
+    await this.eigenstaendigeEinlesen();
+    if (this.sync.offen().length) await this.einlesen(new Set(this.sync.offen()));
   }
 
   protected async einlesen(nur?: Set<string>): Promise<void> {
