@@ -531,6 +531,54 @@ test('Backstage: Probe-Modus – Sitzt/Nochmal, Notiz und Durchläufe, Rest auf 
   return p;
 });
 
+test('Backstage: Fortschritt je Person – Probe-Modus und „Wackelt noch“, Bühnenreife-Übersicht, Probe-Vorschlag', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
+  // Fred am Gerät; David hat im Probe-Modus auf seinem Gerät bei Africa schon „Nochmal“ gedrückt (gespiegelte Datei)
+  await p.evaluate((d) => {
+    localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }], notizen: '', punkte: [] }));
+    localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
+    localStorage.setItem('bn-fortschritt-david-broeker', JSON.stringify({ 'Africa|TOTO': [{ tag: d, stand: 'wackelt', quelle: 'probe' }] }));
+  }, datum);
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
+  const buehne = p.locator('app-setlist-buehne');
+  const leiste = buehne.locator('app-probe-leiste');
+  await until(async () => (await leiste.count()) === 1, 'Probe-Modus startet nicht');
+  // Iris: „Nochmal“ gilt für Fred – Fortschritt und eigene „Wackelt noch“-Liste, im Plan nur „geprobt“
+  await leiste.getByRole('button', { name: 'Nochmal' }).click();
+  await until(async () => (await leiste.getByRole('button', { name: 'Nochmal' }).getAttribute('aria-pressed')) === 'true', '„Nochmal“ wird nicht für mich angezeigt');
+  const daten = await p.evaluate((d) => ({ f: JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck') ?? '{}'), w: JSON.parse(localStorage.getItem('bn-wackelt') ?? '{}'), plan: JSON.parse(localStorage.getItem('bn-probe-' + d)) }), datum);
+  expect(daten.f['Iris|The Goo Goo Dolls']?.[0]?.stand === 'wackelt' && daten.f['Iris|The Goo Goo Dolls'][0].tag === datum, 'Nochmal fehlt im Fortschritt');
+  expect(!!daten.w['Iris|The Goo Goo Dolls'], 'Nochmal setzt „Wackelt noch“ nicht');
+  expect(daten.plan.songs[0].done && !daten.plan.songs[0].stand, 'Plan bekommt einen Stand für alle');
+  // Africa: Fred sitzt, David will nochmal – die Leiste zeigt David, die Zusammenfassung nennt die Namen
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zum zweiten Song klappt nicht');
+  await until(async () => (await leiste.innerText()).includes('David: nochmal'), 'Stand der anderen fehlt');
+  await leiste.getByRole('button', { name: 'Sitzt' }).click();
+  await p.keyboard.press('ArrowRight');
+  const ende = buehne.locator('app-probe-ende');
+  await until(async () => /Nochmal \(2\): Iris \(Fred\), Africa \(David\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung nennt nicht, wer nochmal will');
+  await ende.locator('button', { hasText: 'Probe-Modus beenden' }).click();
+  // Vorschlag (für eine Probe ohne diese Songs): was bei jemandem wackelt, zuerst – mit Namen
+  await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [], notizen: '', punkte: [] })), datum);
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => /wackelt bei Fred/.test(await p.locator('app-probe-vorschlag').innerText().catch(() => '')), 'Vorschlag nutzt die Bühnenreife nicht');
+  // Übersicht: Fred mit einem wackelnden und einem sitzenden Song, Iris als Baustelle
+  await p.go('/backstage/songs/reife/');
+  const reife = p.locator('app-songs-reife');
+  await until(async () => /Fred[\s\S]*✓ 1[\s\S]*↻ 1/i.test(await reife.locator('.person').filter({ hasText: 'Fred' }).innerText().catch(() => '')), 'Fortschritt je Person fehlt');
+  await reife.getByRole('button', { name: /^Baustellen/ }).click();
+  await until(async () => /Iris[\s\S]*Fred ↻/.test(await reife.locator('.songs').innerText()), 'Bühnenreife je Song fehlt');
+  expect(p.errors.length === 0, p.errors.join('\n'));
+  return p;
+});
+
 test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer auch aus OneDrive', async () => {
   const p = await page();
   await p.go('/backstage/songs/noten/');
@@ -1309,7 +1357,7 @@ test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichu
   await until(async () => (await p.locator('app-setlist .spielzeit button').count()) > 0, 'Keine Songs zum Auffüllen vorgeschlagen');
   // Kachel auf der Backstage-Übersicht
   await p.go('/backstage/');
-  await until(async () => /bühnenreif/.test(await p.locator('app-songs-karte').innerText().catch(() => '')), 'Songs-Kachel fehlt');
+  await until(async () => /spielbereit/.test(await p.locator('app-songs-karte').innerText().catch(() => '')), 'Songs-Kachel fehlt');
   return p;
 });
 

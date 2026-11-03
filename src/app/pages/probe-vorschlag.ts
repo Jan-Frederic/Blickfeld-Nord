@@ -4,7 +4,8 @@ import data from '../data/repertoire.json';
 import { BandService } from '../data/band.service';
 import { alleBewertungen, rangliste, songKey } from '../data/bewertung';
 import { Entry, SETLIST_PREFIX, Song, isPause, loadSetlist } from '../data/setlist-data';
-import { ProbeTipp, probeTipps, vorAuftritt } from '../data/probe-vorschlag';
+import { ProbeTipp, ReifeKurz, probeTipps, vorAuftritt } from '../data/probe-vorschlag';
+import { alleFortschritte, reife } from '../data/fortschritt';
 import { ladeWackelt } from '../data/wackelt';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
@@ -62,13 +63,18 @@ export class ProbeVorschlag {
       return { title: b.key.slice(0, i), artist: b.key.slice(i + 1) };
     });
     const geprobt = new Set(probenStand(probenAusSpeicher(), this.datum()).keys());
-    const songs = vorAuftritt(baustellen, setlist, geprobt, new Set(this.drin().map(songKey)));
+    const songs = vorAuftritt(baustellen, setlist, geprobt, new Set(this.drin().map(songKey)), this.reifeVon(setlist));
     return { name: show.private ? (show.publicName ?? show.venue) : show.venue, songs };
   });
   protected alleUebernehmen(songs: ProbeTipp[]): void {
     for (const s of songs) this.add.emit(s);
   }
   private readonly band = inject(BandService);
+  /** Bühnenreife je Song (Fortschritt aller Musiker) */
+  private reifeVon(songs: { title: string; artist: string }[]): Map<string, ReifeKurz> {
+    const alle = alleFortschritte(this.band.members);
+    return new Map(songs.map((s) => [songKey(s), reife(songKey(s), this.band.members, alle)]));
+  }
   /** Wunschlisten-Songs mit Noten und Tonart/Tempo, die noch nie geprobt wurden (Noten asynchron aus IndexedDB) */
   private readonly bereit = signal<{ title: string; artist: string }[]>([]);
   protected readonly tipps = computed(() => {
@@ -117,6 +123,6 @@ export class ProbeVorschlag {
       const i = b.key.lastIndexOf('|');
       return { song: { title: b.key.slice(0, i), artist: b.key.slice(i + 1) }, notiz: b.notiz };
     });
-    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())), bereit, baustellen);
+    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())), bereit, baustellen, this.reifeVon(data.tracks));
   }
 }

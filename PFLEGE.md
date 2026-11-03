@@ -170,6 +170,18 @@ Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2
 **Unsicher bei:** Mit „Ich bin …“ sieht die Band die eigene „Wackelt noch“-Liste (`bn-unsicher-<Person>`): auf der
 Probenseite je Song („unsicher: Fred“) und im Song-Dialog („Unsicher bei: …“).
 
+**Fortschritt je Person und Bühnenreife:** Mit „Ich bin …“ wird jede Angabe der Person festgehalten (eigene Datei
+`bn-fortschritt-<Person>`, mit der Band gespiegelt): „Wackelt noch“ an = wackelt, aus = sitzt; im Probe-Modus
+„Nochmal“ = wackelt, „Sitzt“ = sitzt (mit dem Datum der Probe). Je Musiker und Song ergibt das eine Stufe:
+**↻ wackelt**, **✓ sitzt**, **✓✓ sicher** (an zwei Tagen in Folge „sitzt“). Die **Bühnenreife** eines Songs ist der
+Schnitt über alle Musiker (wackelt 0, sitzt 70 %, sicher 100 %, ohne Angabe 50 %): **bühnenreif** = alle sicher,
+**Baustelle** = wackelt bei jemandem. Übersicht unter **Songs → Bühnenreife**: je Musiker sicher/sitzt/wackelt und was in
+den letzten 30 Tagen gefestigt wurde oder neu wackelt, darunter alle Songs mit Stufe je Musiker und Reife-Balken
+(Filter: Baustellen, fast bühnenreif, bühnenreif, ohne Angabe). Im Song-Dialog steht die Reife mit Stufe je Musiker.
+Der **Probe-Vorschlag** nimmt zuerst die Songs, die bei jemandem wackeln (geringste Reife vorn, „wackelt bei Fred,
+David · Bühnenreife 20 %“), später fast bühnenreife zum Festigen; für den nächsten Auftritt kommen Setlist-Songs dazu,
+die bei jemandem wackeln.
+
 **Plan an die Band:** schickt den Probenplan als Nachricht – Songs mit Tonart/Tempo und Spotify-Link zum Vorher-Anhören,
 offene Punkte und Notizen (Teilen-Menü, z. B. WhatsApp; sonst Zwischenablage). Eine Woche vor der Probe erinnert
 **Heute fällig** daran („Probe in 7 Tagen: 6 Songs geplant – Plan an die Band schicken“), bis der Plan verschickt ist.
@@ -188,8 +200,11 @@ ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart u
 (100 → 70 %), Einzählen, Stimmgerät, Schriftgröße; weiter per Pedal, Pfeiltaste, Tippen oder Wischen. Unter jedem Song
 die **Probe-Leiste**:
 
-- **Sitzt** / **Nochmal**: Song gilt als geprobt; „Nochmal“ ohne eigene Notiz trägt „nochmal üben“ ein. Beides zählt
-  im Proben-Verlauf des Songs (Song-Dialog) und im Probe-Vorschlag – „Nochmal“ als Baustelle.
+- **Sitzt** / **Nochmal**: gilt für die Person am Gerät („Ich bin …“, sonst direkt in der Leiste wählbar) – zählt in
+  ihrem Fortschritt und setzt bzw. löscht „Wackelt noch“. Darunter steht, was die anderen gedrückt haben („David:
+  nochmal“). Für die Band gilt der Song als „nochmal“, sobald eine Person nochmal will; im Plan wird er als geprobt
+  abgehakt, „nochmal üben“ kommt als Notiz dazu. Ohne gewählte Person gilt Sitzt/Nochmal wie früher für die Band.
+  Beides zählt im Proben-Verlauf des Songs (Song-Dialog) und im Probe-Vorschlag.
 - **Durchlauf** zählt, wie oft der Song gespielt wurde (−1 nimmt einen zurück).
 - **Notiz** fürs Protokoll (erscheint im Song-Dialog unter „Zuletzt geprobt“); Tippen dort blättert nicht.
 - **Mikrofon**: Mitschnitt nur dieses Songs aufnehmen und nachhören.
@@ -282,8 +297,9 @@ Dialog). Mit einem Listen-Chip gibt es die Reihenfolge **wie in Spotify**.
 **Spielzeit je Auftritt:** In der Setlist die geplante Spielzeit (Minuten Musik ohne Pausen) eintragen – angezeigt
 wird „noch … frei“ bzw. „… zu lang“, dazu bis zu drei Songs, die in die Lücke passen (Website-Liste zuerst). Wird
 mit der Band abgeglichen. Die Backstage-Übersicht zeigt eine Kachel **Songs**: je Liste, wie viele der Wunschliste
-**bühnenreif** sind (Noten, Tonart/Tempo, geprobt) und die Zahl der Hinweise. Der Probe-Vorschlag nimmt
-bühnenreife-bis-auf-Probe Wunschlisten-Songs (Noten und Tonart da, nie geprobt) gleich nach „wackelt noch“.
+**spielbereit** sind (Noten, Tonart/Tempo, geprobt) und die Zahl der Hinweise. Der Probe-Vorschlag nimmt
+Wunschlisten-Songs mit Noten und Tonart, die noch nie geprobt wurden, gleich nach „wackelt noch“. (Die **Bühnenreife**
+je Song misst dagegen, wie sicher die Musiker sind – siehe Probe.)
 
 **Eigenständige Songs umbenennen:** Im Song-Dialog „Titel oder Band ändern“ – Noten, Mitschnitte, Setlists,
 Proben, Tonart/Tempo-Entwurf und „Wackelt noch“ ziehen mit.
@@ -456,8 +472,9 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
 
 **In der Probe** (Song-Dialog unter Songs → Liste):
 
-- **Wackelt noch / Sitzt** (oben im Dialog): deine eigene Übe-Liste – je Gerät, also je Musiker. Der
-  **Probe-Vorschlag** nimmt diese Songs zuerst, „Zeigen → wackelt noch“ listet sie.
+- **Wackelt noch / Sitzt** (oben im Dialog): deine eigene Übe-Liste – je Musiker. Mit „Ich bin …“ zählt jede Änderung
+  in deinem Fortschritt (Bühnenreife, Songs → Bühnenreife). Der **Probe-Vorschlag** nimmt diese Songs zuerst,
+  „Zeigen → wackelt noch“ listet sie.
 - **Mitschnitte:** auf **Aufnehmen** tippen, die Band spielt, **Stopp** – die Aufnahme bleibt beim Song auf diesem Gerät,
   zum Nachhören zu Hause oder zum **Teilen** (Messenger, AirDrop). Beim ersten Mal fragt der Browser nach dem Mikrofon.
   Mit ☁ (**Mit der Band teilen**) landet sie im Ordner `Mitschnitte/` der OneDrive-Synchronisation und erscheint bei den

@@ -481,6 +481,9 @@ app-noten-check button.gefahr { border-color: #e07a5a; color: #e07a5a; }
 // Probe-Modus: Leiste je Song und Zusammenfassung am Ende (probe-leiste.ts, im Bühnen-Modus)
 app-probe-leiste { display: block; margin: 18px auto 0; max-width: 760px; font-size: max(15px, calc(.5em * var(--zoom, 1))); }
 app-probe-leiste .probe-leiste { display: grid; gap: 10px; justify-items: center; }
+app-probe-leiste .ich { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; font-size: .85em; color: var(--bn-fog); }
+app-probe-leiste .ich select { max-width: 100%; padding: 4px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+app-probe-leiste .andere { margin: 0; font-size: .85em; color: var(--bn-fog); text-align: center; }
 app-probe-leiste .knoepfe, app-probe-ende .probe-ende { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 app-probe-leiste button, app-probe-ende button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #3a3f45; border-radius: 999px; background: #1b1e22; color: #ece9e4; font: inherit; font-size: .95em; cursor: pointer; }
 app-probe-leiste button.klein { padding: 0 12px; }
@@ -548,3 +551,46 @@ app-band-ordner .fehler { color: #e07a5a; }
 // Bühnenplan: Beschriftung von Musikern und PA liegt neben dem Knopf (technik-aufbau.ts) – leuchtet trotzdem mit auf
 app-technik-aufbau .beschriftung { pointer-events: none; }
 app-technik-aufbau .hit:hover + .beschriftung text, app-technik-aufbau .hit:focus-visible + .beschriftung text { fill: var(--bn-sunset); stroke: none; }
+
+// Bühnenreife im Song-Dialog (data/fortschritt.ts)
+app-song-dialog .quelle.reife { color: #5fb88a; }
+app-song-dialog .quelle.reife.baustelle { color: #e0b25a; }
+
+// Backstage → Songs → Bühnenreife (songs-reife.ts)
+app-songs-reife { display: block; }
+app-songs-reife .info { max-width: 760px; margin: 0 0 16px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); }
+app-songs-reife .info b { color: var(--bn-ink); font-weight: 600; }
+app-songs-reife .hinweis { display: block; margin-top: 4px; color: #e0b25a; }
+app-songs-reife .personen { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 12px; margin-bottom: 20px; }
+app-songs-reife .person { min-width: 0; padding: 12px 16px; border: 1px solid var(--bn-line); border-radius: 12px; }
+app-songs-reife .person.ich { border-color: var(--bn-sunset); }
+app-songs-reife .person h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; }
+app-songs-reife .person p { margin: 0 0 4px; font-size: .84rem; overflow-wrap: anywhere; }
+app-songs-reife .zahlen { display: flex; gap: 12px; font-size: .95rem !important; }
+app-songs-reife .sicher, app-songs-reife .plus { color: #5fb88a; }
+app-songs-reife .sitzt { color: #9fd3b4; }
+app-songs-reife .wackelt, app-songs-reife .minus { color: #e0b25a; }
+app-songs-reife .klein { color: var(--bn-fog); font-size: .78rem !important; }
+app-songs-reife .filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+app-songs-reife .filter button { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .84rem; cursor: pointer; }
+app-songs-reife .filter button[aria-pressed='true'] { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
+app-songs-reife .songs { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+app-songs-reife .songs li { display: grid; grid-template-columns: minmax(0, 1fr) auto 90px 44px; align-items: center; gap: 6px 12px; padding: 7px 0; border-bottom: 1px solid rgba(255, 255, 255, .06); font-size: .88rem; }
+app-songs-reife .songs li.leer { display: block; color: var(--bn-fog); }
+app-songs-reife .titel { min-width: 0; overflow-wrap: anywhere; }
+app-songs-reife .titel small { color: var(--bn-fog); }
+app-songs-reife .wer { display: flex; flex-wrap: wrap; gap: 4px; }
+app-songs-reife .wer .p { padding: 1px 7px; border-radius: 999px; border: 1px solid var(--bn-line); font-size: .76rem; white-space: nowrap; color: var(--bn-fog); }
+app-songs-reife .wer .p.sicher { border-color: #5fb88a; color: #5fb88a; }
+app-songs-reife .wer .p.sitzt { border-color: #9fd3b4; color: #9fd3b4; }
+app-songs-reife .wer .p.wackelt { border-color: #e0b25a; color: #e0b25a; }
+app-songs-reife .balken { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+app-songs-reife .balken i { display: block; height: 100%; background: #e0b25a; }
+app-songs-reife li.fast .balken i { background: #9fd3b4; }
+app-songs-reife li.buehnenreif .balken i { background: #5fb88a; }
+app-songs-reife li.offen .balken i { background: var(--bn-fog); opacity: .4; }
+app-songs-reife .wert { text-align: right; font-size: .82rem; font-weight: 600; }
+@media (max-width: 640px) {
+  app-songs-reife .songs li { grid-template-columns: minmax(0, 1fr) 44px; }
+  app-songs-reife .wer, app-songs-reife .balken { grid-column: 1 / -1; }
+}

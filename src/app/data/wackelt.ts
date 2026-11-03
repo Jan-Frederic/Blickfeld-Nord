@@ -1,8 +1,10 @@
 // „Wackelt noch“: Songs, bei denen man selbst noch unsicher ist – je Gerät, also je Musiker. Markiert unter
 // Backstage → Songs (Dialog) oder in der Nachbereitung eines Auftritts; der Probe-Vorschlag nimmt sie zuerst,
 // unter Songs zeigt „Zeigen → wackelt noch“ die Liste. Gespeichert als „Titel|Interpret“ → Datum der Markierung.
-// Hat man unter Probe „Ich bin …“ gewählt, sieht die Band die Liste als „unsicher bei“ (data/band-ich.ts).
+// Hat man unter Probe „Ich bin …“ gewählt, sieht die Band die Liste als „unsicher bei“ (data/band-ich.ts), und jede
+// Änderung zählt im Fortschritt dieser Person (an = wackelt, aus = sitzt; data/fortschritt.ts → Bühnenreife).
 import { ladeIch, unsicherTeilen } from './band-ich';
+import { Stand, fortschrittEintragen } from './fortschritt';
 export const WACKELT_KEY = 'bn-wackelt';
 
 export function ladeWackelt(): Record<string, string> {
@@ -14,7 +16,7 @@ export function ladeWackelt(): Record<string, string> {
 }
 
 /** markiert bzw. entfernt einen Song und gibt die neue Liste zurück */
-export function wackeltSetzen(key: string, an: boolean, heute = new Date().toISOString().slice(0, 10)): Record<string, string> {
+export function wackeltSetzen(key: string, an: boolean, heute = new Date().toISOString().slice(0, 10), quelle: 'liste' | 'probe' = 'liste'): Record<string, string> {
   const { [key]: _, ...rest } = ladeWackelt();
   const neu = an ? { ...rest, [key]: heute } : rest;
   try {
@@ -24,6 +26,9 @@ export function wackeltSetzen(key: string, an: boolean, heute = new Date().toISO
     // ohne Speicher gilt die Markierung nicht
   }
   const ich = ladeIch();
-  if (ich) unsicherTeilen(ich, neu);
+  if (ich) {
+    unsicherTeilen(ich, neu);
+    if (quelle === 'liste') fortschrittEintragen(ich, key, (an ? 'wackelt' : 'sitzt') satisfies Stand, 'liste', heute);
+  }
   return neu;
 }

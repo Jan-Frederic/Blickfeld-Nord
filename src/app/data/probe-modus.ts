@@ -69,6 +69,19 @@ export function markieren(plan: ProbePlan, s: { title: string; artist: string },
   });
 }
 
+/**
+ * „Sitzt“ / „Nochmal“ einer Person (ihr Stand steht in ihrem Fortschritt, data/fortschritt.ts): im gemeinsamen Plan nur
+ * „geprobt“ und die Notiz „nochmal üben“, solange die Band (irgendwer) nochmal will – kein Stand, den eine andere
+ * Person sonst überschreiben würde.
+ */
+export function markierenPerson(plan: ProbePlan, s: { title: string; artist: string }, band: 'sitzt' | 'nochmal' | undefined): ProbePlan {
+  return songAendern(plan, s, (x) => {
+    const notiz = band === 'nochmal' ? x.notiz || NOCHMAL_NOTIZ : x.notiz === NOCHMAL_NOTIZ ? undefined : x.notiz;
+    const { stand: _, ...rest } = x;
+    return { ...rest, done: true, notiz };
+  });
+}
+
 export function durchlauf(plan: ProbePlan, s: { title: string; artist: string }, delta = 1): ProbePlan {
   return songAendern(plan, s, (x) => ({ ...x, durchlaeufe: Math.max(0, (x.durchlaeufe ?? 0) + delta) || undefined }));
 }
@@ -92,10 +105,12 @@ export interface ProbeErgebnis {
   zeit: number;
 }
 
-export function ergebnis(plan: ProbePlan): ProbeErgebnis {
-  const sitzt = plan.songs.filter((s) => s.done && s.stand !== 'nochmal');
-  const nochmal = plan.songs.filter((s) => s.stand === 'nochmal');
-  const offen = plan.songs.filter((s) => !s.done);
+/** Ergebnis der Probe; `stand` liefert den Stand der Band je Song aus den Fortschritten der Personen (sonst gilt der Plan) */
+export function ergebnis(plan: ProbePlan, stand: (s: ProbeSong) => 'sitzt' | 'nochmal' | undefined = () => undefined): ProbeErgebnis {
+  const von = (s: ProbeSong) => stand(s) ?? s.stand;
+  const sitzt = plan.songs.filter((s) => (s.done || stand(s)) && von(s) !== 'nochmal');
+  const nochmal = plan.songs.filter((s) => von(s) === 'nochmal');
+  const offen = plan.songs.filter((s) => !s.done && !stand(s));
   return { sitzt, nochmal, offen, zeit: plan.songs.reduce((n, s) => n + (s.zeit ?? 0), 0) };
 }
 

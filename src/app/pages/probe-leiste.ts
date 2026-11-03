@@ -10,6 +10,7 @@ import {
   letzteNotiz,
   loadProbe,
   markieren,
+  markierenPerson,
   minutenText,
   naechsteProbe,
   notizSetzen,
@@ -21,6 +22,9 @@ import {
   zeitJeSong,
 } from '../data/probe-modus';
 import { SongMitschnitte } from './song-mitschnitte';
+import { ichSetzen, ladeIch, rufname } from '../data/band-ich';
+import { alleFortschritte, bandStand, fortschrittEintragen, probeStaende } from '../data/fortschritt';
+import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { sprungHinweis } from '../data/tonart-uebergang';
 
@@ -37,7 +41,8 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
   return probenDauer(p) - Math.round((jetzt - start) / 1000);
 }
 
-// Probe-Modus (im Bühnen-Modus mit [probe]): Leiste unter dem Song – Sitzt / Nochmal, Durchläufe, Notiz, Mitschnitt,
+// Probe-Modus (im Bühnen-Modus mit [probe]): Leiste unter dem Song – Sitzt / Nochmal (für die Person am Gerät: zählt in
+// ihrem Fortschritt und ihrer „Wackelt noch“-Liste; die Stände der anderen stehen daneben), Durchläufe, Notiz, Mitschnitt,
 // Notiz der letzten Probe, Zeit am Song und wie viel Zeit für die restlichen Songs bleibt. Speichert sofort in den
 // Probenplan. Klicks und Tasten hier blättern nicht (der Bühnen-Modus reagiert sonst auf Tippen und Pfeiltasten).
 @Component({
@@ -47,8 +52,8 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
   template: `
     <div class="probe-leiste" role="group" aria-label="Probe">
       <div class="knoepfe">
-        <button type="button" class="sitzt" [class.an]="eintrag()?.stand === 'sitzt'" (click)="markiere('sitzt')" [attr.aria-pressed]="eintrag()?.stand === 'sitzt'"><mat-icon>check_circle</mat-icon> Sitzt</button>
-        <button type="button" class="nochmal" [class.an]="eintrag()?.stand === 'nochmal'" (click)="markiere('nochmal')" [attr.aria-pressed]="eintrag()?.stand === 'nochmal'"><mat-icon>replay</mat-icon> Nochmal</button>
+        <button type="button" class="sitzt" [class.an]="meinStand() === 'sitzt'" (click)="markiere('sitzt')" [attr.aria-pressed]="meinStand() === 'sitzt'"><mat-icon>check_circle</mat-icon> Sitzt</button>
+        <button type="button" class="nochmal" [class.an]="meinStand() === 'nochmal'" (click)="markiere('nochmal')" [attr.aria-pressed]="meinStand() === 'nochmal'"><mat-icon>replay</mat-icon> Nochmal</button>
         <button type="button" (click)="lauf(1)" aria-label="Durchlauf zählen"><mat-icon>repeat</mat-icon> {{ eintrag()?.durchlaeufe ? eintrag()!.durchlaeufe + '× gespielt' : 'Durchlauf' }}</button>
         @if (eintrag()?.durchlaeufe) { <button type="button" class="klein" (click)="lauf(-1)" aria-label="Durchlauf zurücknehmen">−1</button> }
         @if (naechster()) {
@@ -56,6 +61,14 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
         }
         <button type="button" [class.an]="mitschnitt()" (click)="mitschnitt.set(!mitschnitt())" [attr.aria-pressed]="mitschnitt()" aria-label="Mitschnitt aufnehmen"><mat-icon>mic</mat-icon></button>
       </div>
+      @if (!ich()) {
+        <label class="ich">Ich bin
+          <select (change)="ichWaehlen($any($event.target).value)" aria-label="Wer bist du? Sitzt/Nochmal zählt dann für dich">
+            <option value="">– wählen, damit Sitzt/Nochmal für dich zählt –</option>
+            @for (m of mitglieder; track m.slug) { <option [value]="m.slug">{{ rufname(m) }}</option> }
+          </select>
+        </label>
+      } @else if (andere(); as a) { <p class="andere">{{ a }}</p> }
       @if (uebergang() && uebergangText(); as u) { <p class="uebergang" role="note">{{ u }}</p> }
       @if (vorher(); as v) { <p class="vorher">Letzte Probe ({{ datumText(v.tag) }}): {{ v.notiz }}</p> }
       <input class="notiz" maxlength="80" [value]="eintrag()?.notiz ?? ''" placeholder="Notiz fürs Protokoll, z. B. Bridge wackelt" aria-label="Notiz zu diesem Song" (change)="notiz($any($event.target).value)" />
@@ -92,6 +105,28 @@ export class ProbeLeiste {
   protected readonly mitschnitt = signal(false);
   protected readonly key = computed(() => songKeyVon(this.song()));
   protected readonly eintrag = computed(() => this.plan().songs.find((s) => songKeyVon(s) === this.key()));
+  protected readonly mitglieder = this.band.members;
+  protected readonly rufname = rufname;
+  /** Person am Gerät (Probe → „Ich bin …“) – ohne gilt Sitzt/Nochmal für die Band wie bisher */
+  protected readonly ich = signal(ladeIch());
+  /** Stände dieser Probe je Song und Person (aus den Fortschritten) */
+  private readonly staende = computed(() => (this.plan(), probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder))));
+  protected readonly meinStand = computed(() => {
+    if (!this.ich()) return this.eintrag()?.stand;
+    const s = this.staende().get(this.key())?.get(this.ich());
+    return s === 'wackelt' ? 'nochmal' : s;
+  });
+  /** „Fred: sitzt · David: nochmal“ – die anderen in dieser Probe */
+  protected readonly andere = computed(() =>
+    this.mitglieder
+      .filter((m) => m.slug !== this.ich())
+      .map((m) => {
+        const s = this.staende().get(this.key())?.get(m.slug);
+        return s ? `${rufname(m)}: ${s === 'wackelt' ? 'nochmal' : 'sitzt'}` : '';
+      })
+      .filter(Boolean)
+      .join(' · '),
+  );
   private readonly plaene = probenPlaene();
   protected readonly vorher = computed(() => letzteNotiz(this.plaene, this.song(), this.datum()));
   private readonly probe = computed(() => this.band.rehearsals.find((r) => r.date === this.datum()));
@@ -105,7 +140,7 @@ export class ProbeLeiste {
     return Math.max(0, Math.round((this.jetzt() - this.songStart) / 1000));
   });
   protected readonly rest = computed(() => restZeit(this.probe(), this.start, this.jetzt()));
-  protected readonly proSong = computed(() => zeitJeSong(this.rest(), ergebnis(this.plan()).offen.filter((s) => songKeyVon(s) !== this.key()).length + (this.eintrag()?.done ? 0 : 1)));
+  protected readonly proSong = computed(() => zeitJeSong(this.rest(), ergebnis(this.plan(), (s) => bandStand(this.staende().get(songKeyVon(s)))).offen.filter((s) => songKeyVon(s) !== this.key()).length + (this.eintrag()?.done ? 0 : 1)));
 
   constructor() {
     const t = setInterval(() => this.jetzt.set(Date.now()), 1000);
@@ -143,7 +178,20 @@ export class ProbeLeiste {
     return `${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}`;
   }
   protected markiere(stand: 'sitzt' | 'nochmal'): void {
-    this.speichern(markieren(loadProbe(this.datum()), this.song(), stand));
+    const ich = this.ich();
+    if (!ich) {
+      this.speichern(markieren(loadProbe(this.datum()), this.song(), stand));
+      return;
+    }
+    // für mich: Fortschritt (Datum der Probe) und „Wackelt noch“-Liste; im Plan nur „geprobt“ und die Band-Notiz
+    fortschrittEintragen(ich, this.key(), stand === 'sitzt' ? 'sitzt' : 'wackelt', 'probe', this.datum());
+    wackeltSetzen(this.key(), stand === 'nochmal', undefined, 'probe');
+    const band = bandStand(probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder)).get(this.key()));
+    this.speichern(markierenPerson(loadProbe(this.datum()), this.song(), band));
+  }
+  protected ichWaehlen(slug: string): void {
+    ichSetzen(slug, ladeWackelt());
+    this.ich.set(ladeIch());
   }
   protected lauf(delta: number): void {
     this.speichern(durchlauf(loadProbe(this.datum()), this.song(), delta));
@@ -168,7 +216,7 @@ export class ProbeLeiste {
       <h2>Probe geschafft</h2>
       @let e = erg();
       <p class="zeile sitzt"><mat-icon>check_circle</mat-icon> Sitzt ({{ e.sitzt.length }}): {{ titel(e.sitzt) || '–' }}</p>
-      <p class="zeile nochmal"><mat-icon>replay</mat-icon> Nochmal ({{ e.nochmal.length }}): {{ titel(e.nochmal) || '–' }}</p>
+      <p class="zeile nochmal"><mat-icon>replay</mat-icon> Nochmal ({{ e.nochmal.length }}): {{ titel(e.nochmal, true) || '–' }}</p>
       <p class="zeile offen"><mat-icon>schedule</mat-icon> Nicht drangekommen ({{ e.offen.length }}): {{ titel(e.offen) || '–' }}</p>
       @if (e.zeit) { <p class="zeile">Geprobt: {{ minutenText(e.zeit) }}</p> }
       @if (naechste(); as n) {
@@ -189,15 +237,23 @@ export class ProbeEnde {
   protected readonly minutenText = minutenText;
   // einen Takt später neu lesen: die Leiste des letzten Songs bucht ihre Zeit beim Schließen
   private readonly tick = signal(0);
-  protected readonly erg = computed(() => (this.tick(), ergebnis(loadProbe(this.datum()))));
+  private readonly mitglieder = this.band.members;
+  /** wer bei welchem Song was gedrückt hat (aus den Fortschritten) */
+  private readonly wer = computed(() => (this.tick(), probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder))));
+  protected readonly erg = computed(() => (this.tick(), ergebnis(loadProbe(this.datum()), (s) => bandStand(this.wer().get(songKeyVon(s))))));
   constructor() {
     setTimeout(() => this.tick.set(1));
   }
   protected readonly naechste = computed(() => naechsteProbe(this.band.rehearsals, this.datum()));
   protected readonly meldung = signal('');
 
-  protected titel(songs: Song[]): string {
-    return songs.map((s) => s.title).join(', ');
+  protected titel(songs: Song[], nochmal = false): string {
+    return songs
+      .map((s) => {
+        const bei = nochmal ? this.mitglieder.filter((m) => this.wer().get(songKeyVon(s))?.get(m.slug) === 'wackelt').map(rufname) : [];
+        return bei.length ? `${s.title} (${bei.join(', ')})` : s.title;
+      })
+      .join(', ');
   }
 
   protected mitnehmen(): void {

@@ -1,4 +1,4 @@
-import { type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
+import { type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
 import { probenVerlauf } from './song-stand';
 
 const A = { title: 'Iris', artist: 'The Goo Goo Dolls' };
@@ -87,5 +87,15 @@ describe('probe-modus', () => {
     expect(g.generalprobe).toBe('2026-12-04-rhede');
     expect(g.songs.map((s) => s.title)).toEqual(['Africa', 'Neu', 'Iris']);
     expect(g.songs[0].notiz).toBe('Intro');
+  });
+
+  it('Sitzt/Nochmal je Person: Plan nur „geprobt“ und Band-Notiz, Ergebnis aus den Ständen der Personen', () => {
+    const plan: ProbePlan = { songs: [{ title: 'Iris', artist: 'X', done: false }, { title: 'Angels', artist: 'X', done: false }], notizen: '', punkte: [] };
+    const p1 = markierenPerson(plan, { title: 'Iris', artist: 'X' }, 'nochmal');
+    expect(p1.songs[0]).toEqual({ title: 'Iris', artist: 'X', done: true, notiz: NOCHMAL_NOTIZ });
+    expect(markierenPerson(p1, { title: 'Iris', artist: 'X' }, 'sitzt').songs[0].notiz).toBeUndefined();
+    const e = ergebnis(plan, (s) => (s.title === 'Iris' ? 'nochmal' : undefined));
+    expect(e.nochmal.map((x) => x.title)).toEqual(['Iris']);
+    expect(e.offen.map((x) => x.title)).toEqual(['Angels']);
   });
 });

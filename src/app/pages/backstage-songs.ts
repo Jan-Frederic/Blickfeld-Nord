@@ -5,18 +5,21 @@ import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
 import { NotenVerwaltung } from './noten-verwaltung';
 import { SongsListe } from './songs-liste';
 import { SongsSetlists } from './songs-setlists';
+import { SongsReife } from './songs-reife';
 
 // Backstage → Songs mit Unterseiten: Liste (Tonart, Tempo, Notiz und Noten je Song), Setlists (aller Auftritte)
-// und Noten (PDFs und Akkordblätter auf diesem Gerät: einlesen, an die Band weitergeben).
+// und Noten (PDFs und Akkordblätter auf diesem Gerät: einlesen, an die Band weitergeben), Bühnenreife (Fortschritt je
+// Musiker und Reife je Song).
 export const SONG_BEREICHE = [
   { path: '', teil: 'liste', label: 'Liste', icon: 'library_music' },
   { path: 'setlists', teil: 'setlists', label: 'Setlists', icon: 'queue_music' },
   { path: 'noten', teil: 'noten', label: 'Noten', icon: 'picture_as_pdf' },
+  { path: 'reife', teil: 'reife', label: 'Bühnenreife', icon: 'military_tech' },
 ] as const;
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists],
+  imports: [RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists, SongsReife],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -31,6 +34,7 @@ export const SONG_BEREICHE = [
       @switch (teil()) {
         <!-- Setlists und Noten-Verwaltung erst laden, wenn der Reiter gewählt ist -->
         @case ('setlists') { @defer { <app-songs-setlists /> } }
+        @case ('reife') { @defer { <app-songs-reife /> } }
         @case ('noten') { @defer { <app-noten-verwaltung [dateien]="dateien()" [songs]="mitNoten()" (geaendert)="laden()" /> } }
         @default { <app-songs-liste /> }
       }

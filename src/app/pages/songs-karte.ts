@@ -6,7 +6,7 @@ import { alleSongNoten } from '../data/noten';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { buehnenreif, doppelte, probenAusSpeicher, probenStand } from '../data/song-stand';
 
-// Backstage-Übersicht: Kachel „Songs“ – Songs je Spotify-Liste, wie viele der Wunschliste bühnenreif sind (Noten,
+// Backstage-Übersicht: Kachel „Songs“ – Songs je Spotify-Liste, wie viele der Wunschliste spielbereit sind (Noten,
 // Tonart/Tempo, geprobt) und Hinweise (Abweichungen zwischen den Listen, vermutlich Doppelte); führt zu Songs.
 @Component({
   selector: 'app-songs-karte',
@@ -20,7 +20,7 @@ import { buehnenreif, doppelte, probenAusSpeicher, probenStand } from '../data/s
         }
         @if (zahlen()['ohne']) { <span>Ohne Liste <b>{{ zahlen()['ohne'] }}</b></span> }
       </span>
-      <span class="stand">Wunschliste: <b>{{ reif() }} von {{ zahlen()['wunschliste'] || 0 }}</b> bühnenreif
+      <span class="stand">Wunschliste: <b>{{ reif() }} von {{ zahlen()['wunschliste'] || 0 }}</b> spielbereit
         @if (hinweise()) { · <span class="warn">{{ hinweise() }} {{ hinweise() === 1 ? 'Hinweis' : 'Hinweise' }} zu den Listen</span> }</span>
     </a>
   `,

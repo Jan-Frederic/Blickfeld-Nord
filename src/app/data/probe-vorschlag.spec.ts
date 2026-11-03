@@ -46,3 +46,18 @@ describe('vorAuftritt', () => {
     expect(r.map((t) => `${t.title}: ${t.grund}`)).toEqual(['a: Baustelle aus der letzten Probe', 'b: auf der Setlist, noch nie geprobt']);
   });
 });
+
+describe('probeTipps – Bühnenreife je Person', () => {
+  it('Songs, die bei jemandem wackeln, zuerst – geringste Reife vorn; fast bühnenreife zum Festigen', () => {
+    const reife = new Map([
+      ['A|X', { wert: 0.6, wackeltBei: ['Fred'], ampel: 'baustelle' as const }],
+      ['B|X', { wert: 0.2, wackeltBei: ['Fred', 'David'], ampel: 'baustelle' as const }],
+      ['C|X', { wert: 0.8, wackeltBei: [], ampel: 'fast' as const }],
+      ['D|X', { wert: 1, wackeltBei: [], ampel: 'buehnenreif' as const }],
+    ]);
+    const tipps = probeTipps([s('A'), s('B'), s('C'), s('D')], new Map(), new Map([['A|X', '2026-10-01'], ['B|X', '2026-10-01'], ['C|X', '2026-10-01'], ['D|X', '2026-10-01']]), '2026-10-24', 4, new Set(), [], [], reife);
+    expect(tipps.map((t) => t.title)).toEqual(['B', 'A', 'C']);
+    expect(tipps[0].grund).toBe('wackelt bei Fred, David · Bühnenreife 20 %');
+    expect(tipps[2].grund).toContain('fast bühnenreif');
+  });
+});

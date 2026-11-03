@@ -21,7 +21,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
   { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
   { id: 'probe', label: 'Probenplanung', praefixe: ['bn-probe-'], probe: true },
-  { id: 'band', label: 'Zusagen und „unsicher bei“', praefixe: ['bn-zusage-', 'bn-unsicher-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist' },
+  { id: 'band', label: 'Zusagen, „unsicher bei“ und Fortschritt', praefixe: ['bn-zusage-', 'bn-unsicher-', 'bn-fortschritt-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist, Fortschritt je Musiker (Bühnenreife)' },
   { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
   { id: 'wackelt', label: '„Wackelt noch“-Liste', praefixe: ['bn-wackelt'], hinweis: 'deine Übe-Liste für den Probe-Vorschlag' },
@@ -226,6 +226,7 @@ export function eintragBeschreiben(key: string, roh: string, auftritte: Map<stri
       link: verwaist ? undefined : ZIEL[bereich.id]?.(id),
     };
   }
+  if (key.startsWith('bn-fortschritt-')) return { key, bereich, bytes, titel: `Fortschritt · ${key.slice(15)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Song', 'Songs'), link: '/backstage/songs/reife' };
   return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link: ZIEL_FEST[key] };
 }
 

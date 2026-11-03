@@ -2,7 +2,8 @@ import { datumText } from '../data/datum';
 
 import { Component, ElementRef, afterNextRender, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { BandService } from '../data/band.service';
-import { unsicherJeSong } from '../data/band-ich';
+import { rufname, unsicherJeSong } from '../data/band-ich';
+import { alleFortschritte, plaeneMitStaenden, prozent, reife } from '../data/fortschritt';
 import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
@@ -94,7 +95,9 @@ export interface SongZeile {
           @else if (werte().tonart || werte().bpm) { <button type="button" class="stimmt" (click)="setzen.emit({ feld: 'geprueft', roh: '1' })">✓ Stimmt so</button> }
         </p>
       }
-      @if (unsicherBei(); as u) { <p class="quelle" style="color: #e0b25a"><mat-icon>warning</mat-icon> Unsicher bei: {{ u }}</p> }
+      @if (reifeText(); as r) {
+        <p class="quelle reife" [class.baustelle]="r.baustelle"><mat-icon>{{ r.baustelle ? 'warning' : 'military_tech' }}</mat-icon> {{ r.text }}</p>
+      } @else if (unsicherBei(); as u) { <p class="quelle" style="color: #e0b25a"><mat-icon>warning</mat-icon> Unsicher bei: {{ u }}</p> }
       @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ datumText(p.tag) }}: {{ p.notiz }}</p> }
       @if (verlauf().length) {
         <div class="proben-verlauf" role="img" [attr.aria-label]="verlaufText()">
@@ -169,7 +172,16 @@ export class SongDialog {
   /** letzte Notiz aus dem Probenprotokoll (Probenseite) */
   protected readonly probe = computed(() => probenNotizen().get(this.song().key));
   /** Proben-Verlauf: je Probe ein Punkt – grün sitzt, gelb Baustelle, grau nur geplant */
-  protected readonly verlauf = computed(() => probenVerlauf(probenPlaene(), this.song().key, new Date().toISOString().slice(0, 10)));
+  private readonly mitglieder = inject(BandService).members;
+  protected readonly verlauf = computed(() => (this.wackelt(), probenVerlauf(plaeneMitStaenden(probenPlaene(), this.mitglieder, alleFortschritte(this.mitglieder)), this.song().key, new Date().toISOString().slice(0, 10))));
+  /** Bühnenreife je Musiker (data/fortschritt.ts): „Bühnenreife 73 % · David sicher · Fred wackelt · Matthias –“ */
+  protected readonly reifeText = computed(() => {
+    this.wackelt();
+    const r = reife(this.song().key, this.mitglieder, alleFortschritte(this.mitglieder));
+    if (!r.mitAngabe) return null;
+    const wer = this.mitglieder.map((m) => `${rufname(m)} ${r.personen.get(m.slug) ?? '–'}`).join(' · ');
+    return { text: `Bühnenreife ${prozent(r.wert)} · ${wer}`, baustelle: r.ampel === 'baustelle' };
+  });
   protected readonly verlaufText = computed(() => {
     const v = this.verlauf();
     const geprobt = v.filter((p) => p.stufe !== 'geplant');
