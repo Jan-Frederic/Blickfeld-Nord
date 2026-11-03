@@ -3,11 +3,12 @@ import { datumText } from '../data/datum';
 import { Component, DestroyRef, afterNextRender, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { BandService } from '../data/band.service';
+import { BandService, Show } from '../data/band.service';
 import { PageMetaService } from '../page-meta';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
 import { kampagnenLink } from '../data/goatcounter';
+import { sharePresse } from '../data/share';
 import { posterFileName, renderPoster } from '../data/poster';
 import { TEXT_SCHRITTE, presseText } from '../data/presse-texte';
 import { TECHNIK_TEXT } from './technik';
@@ -25,7 +26,7 @@ const TEXT = tr(
     past: 'Dieses Konzert ist schon vorbei.',
     date: 'Datum', until: 'bis', start: 'Beginn', time: (t: string) => t + ' Uhr', tba: 'wird noch bekannt gegeben',
     place: 'Ort', entry: 'Eintritt', free: 'frei', soon: 'Infos folgen', arrival: 'Anfahrt & Parken',
-    page: 'Konzertseite', route: 'Anfahrt', rider: 'Technik & Rider', allesPdf: 'Alles als PDF (für E-Mails)', pdfLink: 'Konzertseite',
+    page: 'Konzertseite', route: 'Anfahrt', rider: 'Technik & Rider', allesPdf: 'Alles als PDF (für E-Mails)', teilen: 'Teilen', pdfLink: 'Konzertseite',
     bilder: 'Plakat & Story',
     bilderInfo: 'Mit QR-Code zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung im Kalender). Gern aushängen, posten und teilen.',
     plakat: 'Plakat (quadratisch, für Beitrag und Aushang)', story: 'Story / Status (Hochformat)',
@@ -47,7 +48,7 @@ const TEXT = tr(
     past: 'This show is already over.',
     date: 'Date', until: 'until', start: 'Start', time: (t: string) => t, tba: 'to be announced',
     place: 'Venue', entry: 'Entry', free: 'free', soon: 'details to follow', arrival: 'Getting there & parking',
-    page: 'Show page', route: 'Directions', rider: 'Tech & rider', allesPdf: 'Everything as PDF (for emails)', pdfLink: 'Show page',
+    page: 'Show page', route: 'Directions', rider: 'Tech & rider', allesPdf: 'Everything as PDF (for emails)', teilen: 'Share', pdfLink: 'Show page',
     bilder: 'Poster & story',
     bilderInfo: 'With a QR code to the show page (time, directions, calendar reminder). Feel free to put up, post and share.',
     plakat: 'Poster (square, for posts and notice boards)', story: 'Story / status (portrait)',
@@ -69,7 +70,7 @@ const TEXT = tr(
     past: 'Dit optreden is al voorbij.',
     date: 'Datum', until: 'tot', start: 'Aanvang', time: (t: string) => t + ' uur', tba: 'wordt nog bekendgemaakt',
     place: 'Locatie', entry: 'Entree', free: 'gratis', soon: 'info volgt', arrival: 'Bereikbaarheid & parkeren',
-    page: 'Optredenpagina', route: 'Route', rider: 'Techniek & rider', allesPdf: 'Alles als pdf (voor e-mails)', pdfLink: 'Optredenpagina',
+    page: 'Optredenpagina', route: 'Route', rider: 'Techniek & rider', allesPdf: 'Alles als pdf (voor e-mails)', teilen: 'Delen', pdfLink: 'Optredenpagina',
     bilder: 'Affiche & story',
     bilderInfo: 'Met QR-code naar de optredenpagina (tijd, route, herinnering in de agenda). Graag ophangen, posten en delen.',
     plakat: 'Affiche (vierkant, voor posts en ophangen)', story: 'Story / status (staand)',
@@ -108,6 +109,7 @@ const TEXT = tr(
         </dl>
         @if (s.anfahrt) { <p class="anfahrt"><mat-icon>local_parking</mat-icon><span><strong>{{ t().arrival }}:</strong> {{ content.t(s.anfahrt) }}</span></p> }
         <div class="links">
+          <button type="button" class="btn" (click)="teilen(s)"><mat-icon>share</mat-icon> {{ t().teilen }}</button>
           <a class="btn" [routerLink]="('/konzerte/' + id()) | loc"><mat-icon>open_in_new</mat-icon> {{ t().page }}</a>
           @if (s.mapsUrl) { <a class="btn" [href]="s.mapsUrl" target="_blank" rel="noopener"><mat-icon>map</mat-icon> {{ t().route }}</a> }
           <a class="btn" [routerLink]="'/technik' | loc"><mat-icon>tune</mat-icon> {{ t().rider }}</a>
@@ -198,6 +200,10 @@ export class PresseKonzertPage {
   private readonly band = inject(BandService);
   private readonly i18n = inject(I18n);
   protected readonly content = inject(Content);
+  /** Pressekit-Seite teilen (Teilen-Menü, sonst WhatsApp) – mit Herkunft „presse-geteilt“ */
+  protected teilen(s: Show): void {
+    sharePresse(s, this.id(), this.content.t(this.band.publicVenue(s)), this.i18n.lang());
+  }
   protected readonly t = this.i18n.t(TEXT);
   protected readonly show = computed(() => this.band.publicShows.find((s) => this.band.showId(s) === this.id()));
   protected readonly past = computed(() => {

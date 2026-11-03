@@ -264,6 +264,11 @@ test('Pressekit: anstehende Konzerte über dem Pressetext, Unterseite mit Plakat
   const [alles] = await Promise.all([p.waitForEvent('download'), seite.locator('button', { hasText: 'Alles als PDF' }).click()]);
   expect(alles.suggestedFilename().startsWith('blickfeld-nord-pressekit-'), 'Pressekit-PDF des Konzerts fehlt');
   expect((await import('node:fs')).readFileSync(await alles.path()).subarray(0, 5).toString() === '%PDF-', 'Pressekit-PDF ist kein PDF');
+  // Teilen: Link zur Pressekit-Seite mit Herkunft „presse-geteilt“
+  await p.evaluate(() => { window.__geteilt = null; navigator.share = async (d) => { window.__geteilt = d; }; });
+  await seite.getByRole('button', { name: 'Teilen' }).click();
+  await until(async () => /\/presse\/\d{4}-\d{2}-\d{2}[^/]*\/\?ref=presse-geteilt/.test((await p.evaluate(() => window.__geteilt?.url)) ?? ''), 'Teilen des Pressekits fehlt');
+  expect(/Pressekit Blickfeld Nord/.test(await p.evaluate(() => window.__geteilt.text)), 'Text beim Teilen fehlt');
   // Plakat zum Drucken (PDF), Was wir vor Ort brauchen
   const [pdf] = await Promise.all([p.waitForEvent('download'), seite.locator('.druck button').first().click()]);
   expect(pdf.suggestedFilename().endsWith('-a4.pdf'), 'Druck-PDF fehlt');

@@ -51,7 +51,8 @@ Aus „offen“ wird „geklärt“, indem ihr `confirmed: false` in `confirmed:
 ## Pressekit je Konzert
 
 Unter **Pressekit** stehen über dem Pressetext die **anstehenden öffentlichen Konzerte** (öffentlich und geklärt). Ein
-Klick führt zu `/presse/<datum>` – alles für den Veranstalter: Eckdaten, **Plakat und Story als Bild** (im Browser
+Klick führt zu `/presse/<datum>` – alles für den Veranstalter: Eckdaten, **Teilen** (Link zu dieser Pressekit-Seite
+mit Datum und Ort über das Teilen-Menü bzw. WhatsApp, Herkunft `presse-geteilt` in der Kampagne), **Plakat und Story als Bild** (im Browser
 gezeichnet, mit QR-Code zur Konzertseite; Downloads zählen in der Kampagne mit), **fertige Texte** zum Kopieren
 (Beitrag, zwei Wochen/eine Woche vorher, am Tag davor, am Auftrittstag – auf Deutsch) und die **Songliste**
 (Repertoire der offiziellen Playlist, kopieren oder als Textdatei – die Setlist des Abends bleibt im Backstage).
