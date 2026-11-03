@@ -15,7 +15,7 @@ export const KNOPF_HILFE: Record<Knopf, string> = {
     'Gleicht OneDrive und dieses Gerät ab: Was hier neu oder geändert ist, geht nach OneDrive, was dort neu ist, kommt hierher. Vorher werden deine Backstage-Daten und Einstellungen als kleine Dateien abgelegt, danach übernimmt das Gerät, was die Band geändert hat – und liest neue Noten automatisch ein (wenn eingestellt). Haben zwei Leute dieselbe Datei geändert, gewinnt die neuere; die andere bleibt als „(Konflikt …)“-Kopie erhalten.',
   dateien: 'Zeigt, was im lokalen Sync-Ordner liegt – jede Datei lässt sich öffnen, auch ohne Netz. Es wird nichts verändert.',
   einlesen:
-    'Sucht im Sync-Ordner nach Backups, Notenpaketen, PDFs und Akkordblättern (.pro) und zeigt sie zur Auswahl. Erst mit „Einlesen“ kommen sie in die Backstage-Daten bzw. zu den Noten der Songs – vorher ändert sich nichts.',
+    'Sucht im Sync-Ordner nach PDFs und Akkordblättern (.pro) und zeigt sie zur Auswahl. Erst mit „Einlesen“ kommen sie zu den Noten der Songs – vorher ändert sich nichts. Schon als „eigenständig“ eingelesene Noten werden nicht mehr angeboten; Backups stehen unter Einstellungen → Backup.',
   zuordnen: 'Zeigt nur die Noten-Dateien, die beim automatischen Einlesen keinem Song sicher zugeordnet werden konnten – dort den Song wählen und einlesen.',
   ignorieren: 'Blendet den Hinweis für diese Dateien aus. Die Dateien bleiben, wo sie sind, und lassen sich später über „Synchronisierte Dateien einlesen“ zuordnen.',
 };

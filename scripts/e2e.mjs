@@ -1173,6 +1173,10 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   }))), 'Backup erstellen legt keine Datei in den Sync-Ordner');
   await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup von diesem Gerät:'), 'Letztes Backup wird nicht angezeigt');
   await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Neuestes Backup in OneDrive:'), 'Backup in OneDrive wird nicht angezeigt');
+  // alle Backups aus OneDrive als Liste in den Einstellungen
+  await until(async () => /Backups in OneDrive \(\d+\)/.test(await p.locator('app-backup-karte').innerText()), 'Liste der Backups in OneDrive fehlt');
+  await p.locator('app-backup-karte details.liste summary').click();
+  expect(await p.locator('app-backup-karte details.liste li button', { hasText: 'Wiederherstellen' }).first().isVisible(), 'Backup in der Liste lässt sich nicht wiederherstellen');
   await p.go('/backstage/abgleich/');
   const status = p.locator('app-sync-status');
   // (i) erklärt den Knopf; Gerät benennen
@@ -1206,6 +1210,11 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await status.locator('app-funde-liste button', { hasText: 'Einlesen' }).click();
   await until(async () => (await status.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('2 Akkordblätter'), 'Zuordnen liest nicht ein');
   await until(async () => !(await status.innerText()).includes('eine Zuordnung'), 'Offene Zuordnung bleibt stehen');
+  // „Synchronisierte Dateien einlesen“: eigenständig Eingelesenes und Backups werden nicht mehr angeboten
+  await status.locator('button', { hasText: 'Synchronisierte Dateien einlesen' }).click();
+  await until(async () => /eigenständig eingelesene Noten-Datei ausgeblendet[\s\S]*unter Einstellungen → Backup/.test(await status.innerText()), async () => 'Hinweis auf ausgeblendete Dateien fehlt: ' + (await status.innerText()).slice(-300));
+  const funde = await status.locator('app-funde-liste').innerText();
+  expect(!funde.includes('Eigenes_Lied') && !/Backup ·/.test(funde) && funde.includes('Scan 7.pro'), 'Eigenständiges oder Backup wird trotzdem angeboten: ' + funde.slice(0, 300));
   await p.go('/backstage/songs/');
   await p.locator('app-songs-liste .listen-chips button', { hasText: 'Ohne Liste' }).click();
   await until(async () => /Eigenes Lied[\s\S]*Testband[\s\S]*Akkorde/.test(await p.locator('app-songs-liste tbody').innerText()), 'Eigenständiger Song fehlt unter „Ohne Liste“');

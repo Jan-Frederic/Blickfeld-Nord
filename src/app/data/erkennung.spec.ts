@@ -1,4 +1,4 @@
-import { erkennen, zuordnungenMerken } from './erkennung';
+import { eigenstaendigGemerkt, erkennen, zuordnungenMerken } from './erkennung';
 
 const songs = [
   { title: 'Iris', artist: 'The Goo Goo Dolls' },
@@ -64,5 +64,17 @@ describe('erkennen: alle Spotify-Listen', () => {
     const leer = async () => new ArrayBuffer(0);
     const e = await erkennen('Mumford & Sons - Hopeless Wanderer.pdf', '', leer);
     expect(e.key).toBe('Hopeless Wanderer|Mumford & Sons');
+  });
+
+  it('eigenständig Eingelesenes wird erkannt (gemerkter Song in keiner Spotify-Liste)', () => {
+    localStorage.clear();
+    zuordnungenMerken([
+      { name: 'Testband - Eigenes Lied.pdf', key: 'Eigenes Lied|Testband', fassung: '' },
+      { name: 'Iris Bass.pdf', key: 'Iris|The Goo Goo Dolls', fassung: 'Bass' },
+    ]);
+    expect(eigenstaendigGemerkt('Testband - Eigenes Lied.pdf')).toBe(true);
+    expect(eigenstaendigGemerkt('testband - eigenes lied.PDF'.replace('.PDF', '.pdf'))).toBe(true);
+    expect(eigenstaendigGemerkt('Iris Bass.pdf')).toBe(false);
+    expect(eigenstaendigGemerkt('Unbekannt.pdf')).toBe(false);
   });
 });

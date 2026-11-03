@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Fund, sichten } from '../data/einlesen';
+import { eigenstaendigGemerkt } from '../data/erkennung';
 import { mb } from '../data/aufraeumen';
 import { SyncDatei } from '../data/sync';
 import { SyncService } from '../data/sync.service';
@@ -170,12 +171,25 @@ export class SyncStatus {
   protected async einlesen(nur?: Set<string>): Promise<void> {
     try {
       const o = await this.lokal();
-      const liste = (await o.liste()).filter((d) => !nur || nur.has(d.pfad));
-      this.funde.set(
-        await sichten(
-          liste.map((d) => ({ name: d.pfad.split('/').at(-1)!, pfad: d.pfad, groesse: d.groesse, geaendert: d.geaendert, laden: async () => (await o.lesen(d.pfad)).arrayBuffer() })),
-          (s) => this.sync.stand.set(s),
-        ),
+      // schon als „eigenständig“ eingelesene Noten nicht noch einmal anbieten
+      const alle = (await o.liste()).filter((d) => !nur || nur.has(d.pfad));
+      const liste = alle.filter((d) => !eigenstaendigGemerkt(d.pfad.split('/').at(-1)!));
+      const funde = await sichten(
+        liste.map((d) => ({ name: d.pfad.split('/').at(-1)!, pfad: d.pfad, groesse: d.groesse, geaendert: d.geaendert, laden: async () => (await o.lesen(d.pfad)).arrayBuffer() })),
+        (s) => this.sync.stand.set(s),
+      );
+      // Backups und Notenpakete stehen unter Einstellungen → Backup
+      this.funde.set(funde.filter((f) => f.art !== 'backstage' && f.art !== 'noten'));
+      const eigen = alle.length - liste.length;
+      const backups = funde.length - this.funde()!.length;
+      this.meldung.set(
+        eigen || backups
+          ? {
+              text: [eigen && `${eigen} schon eigenständig eingelesene ${eigen === 1 ? 'Noten-Datei' : 'Noten-Dateien'} ausgeblendet`, backups && `${backups} ${backups === 1 ? 'Backup' : 'Backups'} unter Einstellungen → Backup`]
+                .filter(Boolean)
+                .join(' · '),
+            }
+          : null,
       );
     } catch (err) {
       this.meldung.set({ text: (err as Error).message, fehler: true });

@@ -519,7 +519,9 @@ Vorher sichern: **Einstellungen → Backup → Backup erstellen** (Backstage-Dat
 Ein **Backup** sichert alle Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
 Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen). Mitschnitte und Einstellungen
 gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup von diesem Gerät war und (mit Synchronisation) das neueste
-Backup im OneDrive-Ordner „Backup“. Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
+Backup im OneDrive-Ordner „Backup“. Unter **Backups in OneDrive (…)** stehen alle Backups dort (Daten und
+Notenblätter, neueste zuerst) – jedes lässt sich einzeln **wiederherstellen** (ergänzt die Daten des Geräts, vorher
+zeigt eine Rückfrage, was neu ist und was sich ändert). Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
 **Heute fällig**; nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
 
 - **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners (ein älteres
@@ -607,13 +609,12 @@ Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim rich
 eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
 („2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**).
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
-**Synchronisierte Dateien einlesen** (Backups, Notenpakete, PDFs, .pro). Das Backup in den Sync-Ordner steht unter
-Einstellungen → **Backup**.
+**Synchronisierte Dateien einlesen** (PDFs, .pro). Backups und Notenpakete stehen dort nicht mehr, sondern unter
+Einstellungen → **Backup**. Noten, die schon einmal als **Eigenständig** eingelesen wurden, werden nicht mehr angeboten
+(ein Hinweis sagt, wie viele ausgeblendet sind).
 
 Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
 
-- Das neueste Backup und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
-  ersetzt.
 - **Ohne Liste:** In der Song-Auswahl jeder Noten-Datei gibt es oben **Eigenständig: <Titel> – <Band>** – ein eigener
   Song aus dem Dateinamen `<Band> - <Titel>.pdf` (Rest = Fassung), der zu keiner Spotify-Liste gehört und unter
   Songs → „Ohne Liste“ steht – und, mit Berechtigung „Daten löschen“, **Löschen**: Die Datei verschwindet beim

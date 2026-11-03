@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { GESICHERT_KEY, backupDateien, backupEinlesen, backupGemerkt } from './backstage-sync';
+import { mb } from '../data/aufraeumen';
 
 // Backstage → Einstellungen → Backup: alle Backstage-Daten dieses Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne,
 // Werbeplan, Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen) sichern und
@@ -35,6 +36,20 @@ const DATEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup|backstage-
           <input type="file" accept=".json,application/json" multiple (change)="ausDatei($event, false)" [disabled]="laeuft()" />
         </label>
       </div>
+      @if (sync.bereit() && vorhanden().length) {
+        <details class="liste">
+          <summary>Backups in OneDrive ({{ vorhanden().length }})</summary>
+          <ul>
+            @for (d of vorhanden(); track d.pfad) {
+              <li>
+                <span><b>{{ d.art }}</b> {{ d.datum }} <small>{{ d.name }} · {{ d.groesse }}</small></span>
+                <button type="button" (click)="ausListe(d.pfad)" [disabled]="laeuft()"><mat-icon>restore</mat-icon> Wiederherstellen</button>
+              </li>
+            }
+          </ul>
+          <p class="klein">Ergänzt die Daten dieses Geräts – vorher zeigt eine Rückfrage, was neu ist und was sich ändert.</p>
+        </details>
+      }
       <details>
         <summary>Alles ersetzen statt ergänzen</summary>
         <p>Wie „Aus Datei wiederherstellen“, aber alle bisherigen Backstage-Daten werden vorher gelöscht – danach hat dieses
@@ -62,6 +77,9 @@ const DATEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup|backstage-
     details { margin-top: 14px; font-size: .88rem; }
     summary { cursor: pointer; color: var(--bn-fog); margin-bottom: 8px; }
     .meldung { margin: 12px 0 0; color: #5fb88a; }
+    .liste ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+    .liste li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 6px 0; border-bottom: 1px solid var(--bn-line); font-size: .86rem; }
+    .liste li span { overflow-wrap: anywhere; } .liste small, .klein { color: var(--bn-fog); font-size: .8rem; }
     .meldung.fehler { color: #e07a5a; }
   `,
 })
@@ -73,6 +91,8 @@ export class BackupKarte {
   protected readonly zuletzt = signal(this.letztes());
   /** neuestes Backup im Ordner „Backup“ des Sync-Ordners (Datum, Dateiname); '' = keins; undefined = unbekannt */
   protected readonly inOneDrive = signal<string | undefined>(undefined);
+  /** alle Backups im Ordner „Backup“ (auch frühere „Backstage“-Sicherungen und Notenpakete), neueste zuerst */
+  protected readonly vorhanden = signal<{ pfad: string; name: string; art: string; datum: string; groesse: string }[]>([]);
 
   constructor() {
     void this.oneDriveStand();
@@ -83,7 +103,15 @@ export class BackupKarte {
     try {
       const o = await this.sync.lokal();
       if (!o) return;
-      const d = (await o.liste()).filter((x) => DATEN_BACKUP.test(x.pfad)).sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))[0];
+      const alle = (await o.liste()).filter((x) => DATEN_BACKUP.test(x.pfad) || NOTEN_BACKUP.test(x.pfad));
+      const datum = (x: { pfad: string; geaendert: string }) =>
+        x.geaendert ? new Date(x.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : (x.pfad.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? '');
+      this.vorhanden.set(
+        [...alle]
+          .sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))
+          .map((x) => ({ pfad: x.pfad, name: x.pfad.split('/').at(-1)!, art: NOTEN_BACKUP.test(x.pfad) ? 'Notenblätter' : 'Daten', datum: datum(x), groesse: mb(x.groesse) })),
+      );
+      const d = alle.filter((x) => DATEN_BACKUP.test(x.pfad)).sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))[0];
       this.inOneDrive.set(d ? `${d.geaendert ? new Date(d.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : d.pfad.slice(-15, -5)} (${d.pfad.split('/').at(-1)})` : '');
     } catch {
       // ohne Zugriff auf den Ordner bleibt es unbekannt
@@ -192,6 +220,15 @@ export class BackupKarte {
       } catch {
         throw new Error('Das ist kein Backup von Blickfeld Nord.');
       }
+    });
+  }
+
+  /** ein bestimmtes Backup aus der Liste (ergänzen, mit Vorschau-Rückfrage) */
+  protected ausListe(pfad: string): Promise<void> {
+    return this.tun(async () => {
+      const o = await this.sync.lokal();
+      if (!o) throw new Error('Kein Zugriff auf den lokalen Ordner – unter Synchronisation wählen.');
+      return this.einlesen([await (await o.lesen(pfad)).text()], false);
     });
   }
 

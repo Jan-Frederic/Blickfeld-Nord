@@ -23,7 +23,7 @@ const LOESCHEN = '__loeschen';
   imports: [MatIconModule, Fortschritt],
   template: `
     <div class="funde">
-      @if (!funde().length) { <p>Hier ist nichts, was sich einlesen ließe (Backups, Notenpakete, PDFs, .pro).</p> }
+      @if (!funde().length) { <p>Hier ist nichts Neues zum Einlesen (PDFs, .pro). Backups stehen unter Einstellungen → Backup.</p> }
       @for (d of einzeln(); track d.pfad) {
         <label class="check"><input type="checkbox" [checked]="gewaehlt().has(d.pfad)" (change)="waehlen(d.pfad)" />
           {{ d.art === 'backstage' ? 'Backup' : 'Notenpaket' }} · {{ d.pfad }} <small>{{ datum(d.geaendert) }}</small></label>

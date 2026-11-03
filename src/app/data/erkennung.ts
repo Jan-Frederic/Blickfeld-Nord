@@ -48,6 +48,12 @@ export function zuordnungenMerken(neu: { name: string; key: string; fassung: str
   }
 }
 
+/** schon einmal als „eigenständig“ eingelesen (gemerkter Song steht in keiner Spotify-Liste) – muss nicht mehr gelistet werden */
+export function eigenstaendigGemerkt(name: string, songs: Song[] = SONGS): boolean {
+  const gemerkt = gemerkteZuordnungen()[namensSchluessel(name)];
+  return !!gemerkt?.key && !songs.some((s) => songKey(s) === gemerkt.key);
+}
+
 const ohneEndung = (n: string) => n.replace(/\.[^.]+$/, '');
 
 /** Erkennung aus einem Text; Fassung = übrige Wörter des Dateinamens */
