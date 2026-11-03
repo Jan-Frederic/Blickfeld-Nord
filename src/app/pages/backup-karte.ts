@@ -2,16 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
-import { GESICHERT_KEY, backupDateien, backupEinlesen, backupGemerkt } from './backstage-sync';
+import { GESICHERT_KEY, backupDatei, backupEinlesen, backupGemerkt } from './backstage-sync';
 import { mb } from '../data/aufraeumen';
+import { BACKUP_BEHALTEN, BACKUP_ORDNER, DATEN_BACKUP, NOTEN_BACKUP, backupZeit, backupsSortiert, backupsZuLoeschen } from '../data/backup-regeln';
 
-// Backstage → Einstellungen → Backup: alle Backstage-Daten dieses Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne,
-// Werbeplan, Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen) sichern und
-// wiederherstellen. Mit eingerichteter Synchronisation landet das Backup im Unterordner „Backup“ des OneDrive-Ordners,
-// sonst als Datei (Teilen bzw. Download). Ältere Noten-Backups werden dort ersetzt (sie sind groß).
-const ORDNER = 'Backup';
-const NOTEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup-)?noten-.*\.json$/;
-const DATEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup|backstage-alle)-\d{4}-\d{2}-\d{2}\.json$/;
+// Backstage → Einstellungen → Backup: alles dieses Geräts in einer Datei sichern und wiederherstellen – Backstage-Daten
+// (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan, Nachbereitungen, Songs-Entwurf …), Einstellungen und
+// Notenblätter (PDFs, Akkordblätter, Markierungen). Mit eingerichteter Synchronisation landet das Backup im Unterordner
+// „Backup“ des OneDrive-Ordners, sonst als Datei (Teilen bzw. Download). Dort bleiben Backups ein halbes Jahr, die
+// letzten 5 aber immer (backup-regeln.ts); ältere werden beim nächsten Backup gelöscht.
+const datum = (t: number) => (t ? new Date(t).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
 
 @Component({
   selector: 'app-backup-karte',
@@ -19,9 +19,9 @@ const DATEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup|backstage-
   template: `
     <div class="box">
       <h3><mat-icon>backup</mat-icon> Backup</h3>
-      <p>Alle Backstage-Daten dieses Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan, Nachbereitungen) und
-        die Notenblätter. {{ sync.bereit() ? 'Landet im OneDrive-Ordner der Synchronisation unter „Backup“.' : 'Ohne Synchronisation als Datei zum Teilen oder Speichern.' }}
-        Mitschnitte und Einstellungen gehören nicht dazu.</p>
+      <p>Immer alles in einer Datei: Backstage-Daten (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
+        Nachbereitungen …), Einstellungen und Notenblätter samt Markierungen. {{ sync.bereit() ? 'Landet im OneDrive-Ordner der Synchronisation unter „Backup“ – dort bleibt jedes Backup ein halbes Jahr, die letzten ' + behalten + ' immer.' : 'Ohne Synchronisation als Datei zum Teilen oder Speichern.' }}
+        Proben-Mitschnitte gehören nicht dazu (zu groß).</p>
       <p class="zuletzt" [class.alt]="!zuletzt()">{{ zuletzt() ? 'Letztes Backup von diesem Gerät: ' + zuletzt() : 'Noch kein Backup auf diesem Gerät.' }}</p>
       @if (sync.bereit() && inOneDrive() !== undefined) {
         <p class="zuletzt" [class.alt]="!inOneDrive()">{{ inOneDrive() ? 'Neuestes Backup in OneDrive: ' + inOneDrive() : 'In OneDrive liegt noch kein Backup.' }}</p>
@@ -42,7 +42,7 @@ const DATEN_BACKUP = /^(?:Backup|Backstage)\/blickfeld-nord-(?:backup|backstage-
           <ul>
             @for (d of vorhanden(); track d.pfad) {
               <li>
-                <span><b>{{ d.art }}</b> {{ d.datum }} <small>{{ d.name }} · {{ d.groesse }}</small></span>
+                <span><b>{{ d.datum }}</b> {{ d.art }} <small>{{ d.name }} · {{ d.groesse }}</small></span>
                 <button type="button" (click)="ausListe(d.pfad)" [disabled]="laeuft()"><mat-icon>restore</mat-icon> Wiederherstellen</button>
               </li>
             }
@@ -93,6 +93,7 @@ export class BackupKarte {
   protected readonly inOneDrive = signal<string | undefined>(undefined);
   /** alle Backups im Ordner „Backup“ (auch frühere „Backstage“-Sicherungen und Notenpakete), neueste zuerst */
   protected readonly vorhanden = signal<{ pfad: string; name: string; art: string; datum: string; groesse: string }[]>([]);
+  protected readonly behalten = BACKUP_BEHALTEN;
 
   constructor() {
     void this.oneDriveStand();
@@ -103,16 +104,12 @@ export class BackupKarte {
     try {
       const o = await this.sync.lokal();
       if (!o) return;
-      const alle = (await o.liste()).filter((x) => DATEN_BACKUP.test(x.pfad) || NOTEN_BACKUP.test(x.pfad));
-      const datum = (x: { pfad: string; geaendert: string }) =>
-        x.geaendert ? new Date(x.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : (x.pfad.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? '');
-      this.vorhanden.set(
-        [...alle]
-          .sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))
-          .map((x) => ({ pfad: x.pfad, name: x.pfad.split('/').at(-1)!, art: NOTEN_BACKUP.test(x.pfad) ? 'Notenblätter' : 'Daten', datum: datum(x), groesse: mb(x.groesse) })),
-      );
-      const d = alle.filter((x) => DATEN_BACKUP.test(x.pfad)).sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))[0];
-      this.inOneDrive.set(d ? `${d.geaendert ? new Date(d.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : d.pfad.slice(-15, -5)} (${d.pfad.split('/').at(-1)})` : '');
+      const alle = backupsSortiert(await o.liste());
+      // frühere Backups: Daten und Notenblätter getrennt; heutige (mit Uhrzeit im Namen) enthalten alles
+      const art = (pfad: string) => (NOTEN_BACKUP.test(pfad) ? 'nur Notenblätter (früher)' : /-\d{4}\.json$/.test(pfad) ? 'alles' : 'nur Daten (früher)');
+      this.vorhanden.set(alle.map((x) => ({ pfad: x.pfad, name: x.pfad.split('/').at(-1)!, art: art(x.pfad), datum: datum(backupZeit(x)), groesse: mb(x.groesse) })));
+      const d = alle.find((x) => DATEN_BACKUP.test(x.pfad));
+      this.inOneDrive.set(d ? `${datum(backupZeit(d))} (${d.pfad.split('/').at(-1)})` : '');
     } catch {
       // ohne Zugriff auf den Ordner bleibt es unbekannt
     }
@@ -144,10 +141,9 @@ export class BackupKarte {
 
   private async dateien(): Promise<File[]> {
     this.meldung.set({ text: 'Backup wird zusammengestellt …' });
-    const { backup, noten } = await backupDateien();
-    const liste = [backup, noten].filter((f): f is File => !!f);
-    if (!liste.length) throw new Error('Noch nichts gespeichert, was sich sichern ließe.');
-    return liste;
+    const { datei } = await backupDatei();
+    if (!datei) throw new Error('Noch nichts gespeichert, was sich sichern ließe.');
+    return [datei];
   }
 
   // mit Synchronisation: in den Ordner „Backup“ legen und gleich abgleichen; sonst als Datei
@@ -157,18 +153,16 @@ export class BackupKarte {
       const o = await this.sync.lokal(true);
       if (!o) throw new Error('Kein Zugriff auf den lokalen Ordner – unter Synchronisation wählen.');
       const liste = await this.dateien();
-      const neu = new Set(liste.map((f) => `${ORDNER}/${f.name}`));
-      // ältere Noten-Backups ersetzen statt ansammeln
-      if (liste.some((f) => f.name.includes('-noten-'))) {
-        for (const alt of await o.liste()) if (NOTEN_BACKUP.test(alt.pfad) && !neu.has(alt.pfad)) await o.loeschen(alt.pfad);
-      }
-      for (const f of liste) await o.schreiben(`${ORDNER}/${f.name}`, f);
+      for (const f of liste) await o.schreiben(`${BACKUP_ORDNER}/${f.name}`, f);
+      // Aufbewahrung: älter als ein halbes Jahr weg, die letzten 5 bleiben immer (Löschen geht beim Abgleich mit)
+      const weg = backupsZuLoeschen(await o.liste());
+      for (const alt of weg) await o.loeschen(alt.pfad);
       backupGemerkt();
       this.zuletzt.set(this.letztes());
       void this.oneDriveStand();
       this.meldung.set({ text: 'Backup erstellt – wird jetzt mit OneDrive abgeglichen …' });
       await this.sync.jetzt();
-      return 'Backup erstellt und in OneDrive unter „Backup“ abgelegt ✓';
+      return `Backup erstellt und in OneDrive unter „Backup“ abgelegt ✓${weg.length ? ` · ${weg.length} ${weg.length === 1 ? 'altes Backup' : 'alte Backups'} (über ein halbes Jahr) gelöscht` : ''}`;
     });
   }
 
@@ -197,7 +191,7 @@ export class BackupKarte {
   private readonly auftritte = () => new Map(this.band.shows.map((s) => [this.band.showId(s), s.venue]));
 
   private async einlesen(texte: string[], ersetzen: boolean): Promise<string | null> {
-    // Notenpaket zuerst, dann die Daten – bei „ersetzen“ betrifft das Löschen nur die Daten
+    // frühere getrennte Backups: Notenpaket zuerst, dann die Daten – bei „ersetzen“ betrifft das Löschen nur die Daten
     const sortiert = [...texte].sort((a, b) => Number(b.includes('"blickfeld-nord-noten"')) - Number(a.includes('"blickfeld-nord-noten"')));
     const meldungen: string[] = [];
     for (const t of sortiert) {
@@ -232,15 +226,16 @@ export class BackupKarte {
     });
   }
 
-  // neuestes Backup (und Noten-Backup) aus dem synchronisierten Ordner – auch die früheren „Backstage“-Sicherungen
+  // neuestes Backup aus dem synchronisierten Ordner (bei früheren, getrennten Backups dazu das neueste Notenpaket)
   protected ausOneDrive(): Promise<void> {
     return this.tun(async () => {
       await this.sync.jetzt();
       const o = await this.sync.lokal();
       if (!o) throw new Error('Kein Zugriff auf den lokalen Ordner – unter Synchronisation wählen.');
-      const alle = await o.liste();
-      const neuestes = (re: RegExp) => alle.filter((d) => re.test(d.pfad)).sort((a, b) => (b.pfad.slice(-15) + b.geaendert).localeCompare(a.pfad.slice(-15) + a.geaendert))[0];
-      const gefunden = [neuestes(NOTEN_BACKUP), neuestes(DATEN_BACKUP)].filter((d) => !!d);
+      const alle = backupsSortiert(await o.liste());
+      const daten = alle.find((d) => DATEN_BACKUP.test(d.pfad));
+      const noten = daten && /-\d{4}\.json$/.test(daten.pfad) ? undefined : alle.find((d) => NOTEN_BACKUP.test(d.pfad));
+      const gefunden = [noten, daten].filter((d) => !!d);
       if (!gefunden.length) throw new Error('Im OneDrive-Ordner liegt noch kein Backup.');
       const texte = await Promise.all(gefunden.map(async (d) => (await o.lesen(d.pfad)).text()));
       return this.einlesen(texte, false);

@@ -1159,7 +1159,18 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await p.evaluate(() => {
     localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
     localStorage.setItem('bn-probe-2099-04-04', JSON.stringify({ songs: [], notizen: 'x', punkte: [] }));
+    localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|Goo Goo Dolls': 1 }));
   });
+  // sechs alte Backups (vor über einem halben Jahr) liegen schon im Sync-Ordner
+  await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync', 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore('dateien'); req.result.createObjectStore('meta'); };
+    req.onsuccess = () => {
+      const t = req.result.transaction('dateien', 'readwrite');
+      for (let m = 1; m <= 6; m++) t.objectStore('dateien').put({ inhalt: new Blob(['{}']), groesse: 2, geaendert: '', version: 'v' + m }, `Backup/blickfeld-nord-backup-2025-0${m}-01.json`);
+      t.oncomplete = () => ok(null);
+    };
+  }));
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backup-karte button', { hasText: 'Backup erstellen' }).click();
   await until(async () => (await p.evaluate(() => new Promise((ok) => {
@@ -1171,6 +1182,24 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
     };
     req.onerror = () => ok(false);
   }))), 'Backup erstellen legt keine Datei in den Sync-Ordner');
+  // eine Datei mit allem (auch Einstellungen); von den alten bleiben nur so viele, dass es die letzten 5 sind
+  const backupsLesen = () => p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const st = req.result.transaction('dateien').objectStore('dateien');
+      const k = st.getAllKeys();
+      k.onsuccess = async () => {
+        const namen = k.result.map(String).filter((x) => x.startsWith('Backup/')).sort();
+        const neu = namen.find((x) => /-\d{4}\.json$/.test(x));
+        const g = st.get(neu);
+        g.onsuccess = async () => ok({ namen, inhalt: JSON.parse(await g.result.inhalt.text()) });
+      };
+    };
+  }));
+  let backups;
+  await until(async () => (backups = await backupsLesen()).namen.length === 5, 'alte Backups werden nicht gelöscht').catch(() => undefined);
+  expect(backups.namen.length === 5 && !backups.namen.includes('Backup/blickfeld-nord-backup-2025-01-01.json') && !backups.namen.includes('Backup/blickfeld-nord-backup-2025-02-01.json'), `Aufbewahrung stimmt nicht: ${backups.namen.join(', ')}`);
+  expect(backups.inhalt.data['bn-probe-2099-04-04'] && backups.inhalt.data['bn-wackelt'], 'Backup enthält nicht alles (Daten und Einstellungen)');
   await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup von diesem Gerät:'), 'Letztes Backup wird nicht angezeigt');
   await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Neuestes Backup in OneDrive:'), 'Backup in OneDrive wird nicht angezeigt');
   // alle Backups aus OneDrive als Liste in den Einstellungen

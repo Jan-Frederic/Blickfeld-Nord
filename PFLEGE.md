@@ -512,20 +512,23 @@ In derselben Karte darunter **Aufräumen**:
   und Setlist-Vorschlag sie brauchen.
 - **Alles löschen:** setzt die Website auf dem Gerät komplett zurück (Bestätigung durch Eintippen von „LÖSCHEN“).
 
-Vorher sichern: **Einstellungen → Backup → Backup erstellen** (Backstage-Daten und Notenblätter).
+Vorher sichern: **Einstellungen → Backup → Backup erstellen** (alles: Daten, Einstellungen, Notenblätter).
 
 ## Backup (Einstellungen)
 
-Ein **Backup** sichert alle Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
-Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen). Mitschnitte und Einstellungen
-gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup von diesem Gerät war und (mit Synchronisation) das neueste
-Backup im OneDrive-Ordner „Backup“. Unter **Backups in OneDrive (…)** stehen alle Backups dort (Daten und
-Notenblätter, neueste zuerst) – jedes lässt sich einzeln **wiederherstellen** (ergänzt die Daten des Geräts, vorher
+Ein **Backup** enthält immer alles in einer Datei: die Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort,
+Proben, Sterne, Werbeplan, Nachbereitungen, Songs-Entwurf, Zusagen …), die Einstellungen und die Notenblätter (PDFs,
+Akkordblätter, Markierungen). Nur die Proben-Mitschnitte gehören nicht dazu (zu groß). Beim Wiederherstellen werden
+persönliche Einstellungen nur ergänzt, nicht überschrieben (außer bei „Alles ersetzen“). Die Kachel zeigt, wann das letzte Backup von diesem Gerät war und (mit Synchronisation) das neueste
+Backup im OneDrive-Ordner „Backup“. Unter **Backups in OneDrive (…)** stehen alle Backups dort (neueste zuerst;
+frühere, getrennte Daten- bzw. Noten-Backups sind als solche markiert) – jedes lässt sich einzeln **wiederherstellen** (ergänzt die Daten des Geräts, vorher
 zeigt eine Rückfrage, was neu ist und was sich ändert). Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
 **Heute fällig**; nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
 
-- **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners (ein älteres
-  Noten-Backup wird dort ersetzt, die Daten-Backups bleiben als Verlauf) und gleich abgleichen; sonst als Datei zum
+- **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners
+  (`blickfeld-nord-backup-JJJJ-MM-TT-HHMM.json`) und gleich abgleichen. **Aufbewahrung:** ein halbes Jahr – die
+  letzten 5 Backups bleiben aber immer, auch wenn sie älter sind; ältere werden beim Erstellen eines neuen Backups
+  gelöscht (geht mit dem Abgleich auch in OneDrive weg, wenn „Löschungen übertragen“ an ist). Ohne Synchronisation als Datei zum
   Teilen oder Speichern. **Als Datei teilen** geht auch mit Synchronisation, z. B. für die WhatsApp-Gruppe.
 - **Aus OneDrive wiederherstellen:** gleicht ab und übernimmt das neueste Backup aus dem OneDrive-Ordner (auch frühere
   Sicherungen aus dem Ordner `Backstage`) – mit Vorschau, was neu ist und was sich ändert.
