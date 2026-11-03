@@ -81,7 +81,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           <ul class="songs">
             @for (t of available(); track t.title + t.artist) {
               <li>
-                <button type="button" (click)="add(t)" [attr.aria-label]="t.title + ' zur Setlist hinzufügen'">
+                <button type="button" (click)="add(t)" [attr.aria-label]="t.title + ' ' + t.artist + ' – zur Setlist hinzufügen'">
                   <span class="song"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}</span>@for (k of t.listen; track k) {<mat-icon class="liste" [attr.title]="listeVon(k).label" aria-hidden="true">{{ listeVon(k).icon }}</mat-icon>}</span><mat-icon>add</mat-icon>
                 </button>
               </li>

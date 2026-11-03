@@ -60,7 +60,7 @@ const LANG_LINK = { de: 'Auf Deutsch', en: 'In English', nl: 'In het Nederlands'
     @if (nextShow; as s) {
       <p class="claim">
         <span>{{ t().next }} <strong>{{ s.date | ldate: 'short' }}@if (s.time) {, {{ s.time }}{{ t().oclock }}}</strong></span>
-        <span><a class="zum-konzert" [routerLink]="konzertLink" [attr.aria-label]="t().zum + ': ' + s.venue">{{ s.venue }} {{ s.city ?? '' }}</a>@if (s.price === 0) { · {{ t().free }}}</span>
+        <span><a class="zum-konzert" [routerLink]="konzertLink">{{ s.venue }} {{ s.city ?? '' }}<span class="sr-only"> – {{ t().zum }}</span></a>@if (s.price === 0) { · {{ t().free }}}</span>
       </p>
       <!-- Countdown: Platz ist immer reserviert (kein Layout-Sprung), Zahlen erscheinen erst im Browser -->
       <div class="countdown" aria-live="off">

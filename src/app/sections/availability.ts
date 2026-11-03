@@ -21,7 +21,7 @@ const T = {
     pickFree: 'frei – Termin anfragen', states: { free: 'frei', booked: 'belegt', option: 'reserviert', past: 'vergangen' },
     legend: ['frei – zum Anfragen antippen', 'reserviert / angefragt', 'belegt'],
     label: (d: number, m: string, y: number) => `${d}. ${m} ${y}`,
-    samstage: 'Noch freie Wochen', springe: (m: string) => `${m} anzeigen`,
+    samstage: 'Noch freie Wochen', frei: 'freie Wochen',
   },
   en: {
     title: 'Availability', prev: 'Previous month', next: 'Next month',
@@ -31,7 +31,7 @@ const T = {
     pickFree: 'free – request this date', states: { free: 'free', booked: 'booked', option: 'reserved', past: 'past' },
     legend: ['free – tap to request', 'reserved / requested', 'booked'],
     label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
-    samstage: 'Weeks still free', springe: (m: string) => `show ${m}`,
+    samstage: 'Weeks still free', frei: 'free weeks',
   },
   nl: {
     title: 'Beschikbaarheid', prev: 'Vorige maand', next: 'Volgende maand',
@@ -41,7 +41,7 @@ const T = {
     pickFree: 'vrij – datum aanvragen', states: { free: 'vrij', booked: 'geboekt', option: 'gereserveerd', past: 'voorbij' },
     legend: ['vrij – tik om aan te vragen', 'gereserveerd / aangevraagd', 'geboekt'],
     label: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
-    samstage: 'Nog vrije weken', springe: (m: string) => `${m} tonen`,
+    samstage: 'Nog vrije weken', frei: 'vrije weken',
   },
 } satisfies Record<string, { states: Record<DayState, string> } & Record<string, unknown>>;
 // So weit lässt sich in die Zukunft blättern
@@ -74,7 +74,7 @@ function iso(y: number, m: number, d: number): string {
       @if (freieSamstage().length) {
         <p class="samstage"><span>{{ t().samstage }}:</span>
           @for (f of freieSamstage(); track f.offset) {
-            <button type="button" [class.an]="offset() === f.offset" (click)="offset.set(f.offset)" [attr.aria-label]="t().springe(f.name)">{{ f.name }} <b>{{ f.anzahl }}</b></button>
+            <button type="button" [class.an]="offset() === f.offset" (click)="offset.set(f.offset)" >{{ f.name }} <b>{{ f.anzahl }}</b><span class="sr-only"> {{ t().frei }}</span></button>
           }
         </p>
       }
