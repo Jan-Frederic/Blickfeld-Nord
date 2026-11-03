@@ -9,6 +9,7 @@ import { RUECKBLICK_AB, rueckblickJahre } from '../data/jahresrueckblick';
 import { UEBERSETZUNGEN } from '../data/uebersetzungen';
 import { markErledigt } from '../data/aufgaben-patch';
 import { SONGINFO } from '../data/songinfo';
+import { LISTEN } from '../data/playlisten';
 import { tageSeitBackup } from './backstage-sync';
 import { alleNachbereitungen, offeneMerkpunkte } from '../data/nachbereitung';
 import repertoire from '../data/repertoire.json';
@@ -322,6 +323,17 @@ export class BackstageAufgaben {
       const n = UEBERSETZUNGEN.filter((u) => !u.geprueft?.[lang]).length;
       if (n) out.push({ text: `${n} ${name} ${n === 1 ? 'Übersetzung' : 'Übersetzungen'} noch nicht gegengelesen`, details: [], link: '/backstage/uebersetzungen', icon: 'translate' });
     }
+
+    // Tonart/Tempo für Songs, die in keiner Spotify-Liste mehr stehen (z. B. nach dem täglichen Abgleich)
+    const inListen = new Set(LISTEN.flatMap((l) => l.tracks.map((t) => `${t.title}|${t.artist}`)));
+    const verwaist = SONGINFO.filter((s) => !inListen.has(`${s.title}|${s.artist}`));
+    if (verwaist.length)
+      out.push({
+        text: `Tonart/Tempo für ${verwaist.length} ${verwaist.length === 1 ? 'Song, der' : 'Songs, die'} in keiner Spotify-Liste mehr ${verwaist.length === 1 ? 'steht' : 'stehen'}`,
+        details: [...verwaist.map((s) => `${s.title} – ${s.artist}`), 'Song in Spotify wieder aufnehmen oder den Eintrag in src/app/data/songinfo.ts löschen'],
+        link: '/backstage/songs',
+        icon: 'music_off',
+      });
 
     const ohneInfo = repertoire.tracks.filter((t) => !SONGINFO.some((s) => s.title === t.title && s.artist === t.artist && (s.tonart || s.bpm))).length;
     if (ohneInfo)

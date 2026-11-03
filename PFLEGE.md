@@ -163,6 +163,45 @@ Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
 an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 
+**Wer kommt?** Oben auf der Probenseite einmal **Ich bin …** wählen (gilt für die Person auf allen ihren Geräten),
+dann **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
+Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2 kommen, 1 offen“).
+
+**Unsicher bei:** Mit „Ich bin …“ sieht die Band die eigene „Wackelt noch“-Liste (`bn-unsicher-<Person>`): auf der
+Probenseite je Song („unsicher: Fred“) und im Song-Dialog („Unsicher bei: …“).
+
+**Plan an die Band:** schickt den Probenplan als Nachricht – Songs mit Tonart/Tempo und Spotify-Link zum Vorher-Anhören,
+offene Punkte und Notizen (Teilen-Menü, z. B. WhatsApp; sonst Zwischenablage). Eine Woche vor der Probe erinnert
+**Heute fällig** daran („Probe in 7 Tagen: 6 Songs geplant – Plan an die Band schicken“), bis der Plan verschickt ist.
+**Für Spotify kopieren** kopiert die Track-Links der Probensongs für eine Übungs-Playlist (in Spotify am Computer
+einfügen).
+
+**Generalprobe:** „Generalprobe: Setlist … übernehmen“ setzt die Setlist des nächsten Auftritts (von diesem Gerät) in
+ihrer Reihenfolge an den Anfang des Plans. Der Probe-Modus spielt dann die Setlist mit Pausen durch – die Uhr läuft je
+Set gegen die geplante Spielzeit wie auf der Bühne.
+
+**Übergang** (Probe-Leiste): zeigt den Wechsel zum nächsten Song – Tonart (bei einem Sprung mit Überleitung), Tempo
+vorher/nachher (bei großem Wechsel: absprechen, wer einzählt) und Capo danach.
+
+**Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
+ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo
+(100 → 70 %), Einzählen, Stimmgerät, Schriftgröße; weiter per Pedal, Pfeiltaste, Tippen oder Wischen. Unter jedem Song
+die **Probe-Leiste**:
+
+- **Sitzt** / **Nochmal**: Song gilt als geprobt; „Nochmal“ ohne eigene Notiz trägt „nochmal üben“ ein. Beides zählt
+  im Proben-Verlauf des Songs (Song-Dialog) und im Probe-Vorschlag – „Nochmal“ als Baustelle.
+- **Durchlauf** zählt, wie oft der Song gespielt wurde (−1 nimmt einen zurück).
+- **Notiz** fürs Protokoll (erscheint im Song-Dialog unter „Zuletzt geprobt“); Tippen dort blättert nicht.
+- **Mikrofon**: Mitschnitt nur dieses Songs aufnehmen und nachhören.
+- Die **Notiz der letzten Probe** zum Song steht gelb darüber.
+- **Zeit:** wie lange der Song schon dran ist, und wie viel Zeit für jeden offenen Song bis zum Probenende bleibt. Oben
+  läuft die Uhr gegen die Probendauer (Beginn bis Ende aus `band.service.ts`). Die Zeit je Song wird mitgeschrieben.
+
+Am Ende eine **Zusammenfassung**: was sitzt, was nochmal dran muss, was nicht drankam, wie lange geprobt wurde – und
+ein Knopf, der „Nochmal“ und „Nicht drangekommen“ auf den Plan der **nächsten Probe** setzt. Auf der Probenseite
+stehen danach je Song „↻ nochmal“, Durchläufe und Minuten. Alles im Probenplan (`bn-probe-<Datum>`, wird mit OneDrive
+gespiegelt); Logik in `src/app/data/probe-modus.ts`.
+
 ## Bühnenplan ändern
 
 Im Backstage unter **Bühnenplan** (`/backstage/buehnenplan`) Geräte und Musiker an ihren Platz ziehen –
@@ -203,6 +242,12 @@ Die **offizielle** Playlist steht als Repertoire auf der Startseite (`repertoire
 dazu **Setlist, Probe, Repertoire, Wunschliste und Archiv** (`playlisten.json`). Beide holt GitHub täglich früh
 von Spotify (Actions → „Repertoire aktualisieren“, auch per Knopfdruck); die Listen-IDs stehen in
 `scripts/sync-repertoire.mjs`. Gibt Spotify eine Liste nicht heraus, bleibt ihr letzter Stand (Hinweis im Protokoll).
+
+**Repertoire-Check:** Nach jedem Abgleich steht in der Zusammenfassung des Workflow-Laufs (Actions → Lauf öffnen),
+was neu ist, was aus allen Listen verschwunden ist, welche neuen Songs noch keine Tonart/Tempo haben und welche
+Einträge in `songinfo.ts` zu keinem Song mehr gehören (`scripts/repertoire-check.mjs`). Solche verwaisten Einträge
+stoppen den Deploy nicht mehr; sie stehen unter **Backstage → Aufgaben** („Tonart/Tempo für … Songs, die in keiner
+Spotify-Liste mehr stehen“) – Song in Spotify wieder aufnehmen oder den Eintrag löschen.
 
 Unter **Songs → Liste** stehen alle Songs aller Listen, gegeneinander abgeglichen (gleicher Titel ohne Zusatz wie
 „Remastered“ und gleicher erster Interpret = derselbe Song). Je Song zeigen grüne Symbole, in welchen Listen er
@@ -335,11 +380,33 @@ Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätt
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
 
+**Wetter am Vortag:** Unter **Heute fällig** erscheint am Tag vor einem Auftritt eine Warnung bei Regen (ab 50 %),
+Kälte (bis 3 °C) oder Wind (ab 40 km/h) rund um die Auftrittszeit – die passenden Punkte (Pavillon, Abdeckplanen,
+warme Kleidung, Gewichte …) landen automatisch auf der Packliste des Auftritts.
+
+**Songs → Noten – suchen und löschen:** Die Suche filtert die PDFs nach Dateinamen (mehrere Wörter, „_“ und „-“ zählen
+als Leerzeichen). Der Mülleimer löscht für alle **nur von diesem Gerät** (in OneDrive bleibt die Datei). Wer den
+OneDrive-Ordner der Synchronisation besitzt (angemeldet, eigener Ordner – Berechtigung „Daten löschen“), wird gefragt:
+**Nur vom Gerät** oder **Auch aus OneDrive** – dann verschwindet die Datei (gleicher Name, gleiche Größe) aus dem
+Sync-Ordner, wird gleich abgeglichen und ist danach für die ganze Band weg. Auf den Geräten der anderen verschwindet
+beim nächsten Abgleich auch die schon eingelesene Kopie im Noten-Speicher – auch wenn dort „Löschungen übertragen“
+aus ist. Dafür merkt sich die Band die gelöschten Dateien (Name, Größe, Zeitpunkt; `bn-noten-geloescht`, 120 Tage).
+Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei später neu einliest, behält sie.
+
 **Im Bühnen-Modus außerdem:**
 
 - **Markieren:** in der PDF-Ansicht auf ✏ tippen und mit Finger, Stift oder Maus ins Notenblatt zeichnen (Rot, Blau,
   Grün, Textmarker; ↶ nimmt den letzten Strich zurück, 🗑 leert die Seite). Markierungen gelten **für alle** in der Band
   und werden mitsynchronisiert; mit dem Personen-Knopf (👥 → 👤) zeichnest du **nur für dich** (bleibt gemerkt).
+- **Schrift im Notenblatt:** in den Markier-Werkzeugen auf **T** tippen, dann auf die Stelle tippen und den Text ins
+  Feld schreiben (z. B. „Bridge leise“) – **Enter macht eine neue Zeile**, „Übernehmen“ (oder Strg/Cmd+Enter) setzt den
+  Text, Esc bricht ab. „A“ wählt die Größe (klein, mittel, groß), die Farbe gilt wie beim Stift (Textmarker wird zu
+  Schwarz). Tippen auf einen vorhandenen Text öffnet ihn zum Ändern oder Löschen; ↶ nimmt die letzte Markierung zurück. Die
+  Werkzeugleiste passt sich der Breite an (auf dem Handy zweizeilig, wenn nötig); ⤒/⤓ schiebt sie nach oben bzw.
+  unten, damit sie nicht verdeckt, was markiert werden soll. Texte haben einen weißen Rand, damit sie auf den Noten lesbar bleiben, und werden wie Striche
+  mitsynchronisiert.
+- **Noten-Knopf und X:** Der Noten-Knopf (♫) bleibt auch in der Notenansicht oben rechts – noch einmal drücken führt
+  zurück zur Titelanzeige. Das **X** beendet immer den Bühnen- bzw. Probe-Modus, auch aus der Notenansicht.
 - **Noten im Bühnen- und Probemodus:** Capo steht immer mit in der Kopfleiste, auch bei PDF-Noten. Nach oben
   wischen blendet die Einstellungen aus (mehr Platz fürs Blatt, Capo bleibt als kleines Schild oben rechts), nach
   unten wischen oder Tippen aufs Schild holt sie zurück. Waagerecht wischen blättert wie gewohnt.
@@ -372,6 +439,14 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 - **Bühnen-Modus ohne Netz** (ab einer Woche vorher in Bereit?): prüft, ob der Offline-Speicher aktiv ist und
   Backstage sowie die Noten-Anzeige (pdf.js) auf dem Gerät liegen. Fehlt etwas, holt **Jetzt vorladen** es nach;
   ohne aktiven Offline-Speicher die Seite einmal mit Netz neu laden.
+- **Vortag:** Am Tag vor einem Auftritt steht unter **Heute fällig** „Morgen: <Ort> – Bereit?, Packliste, Wetter,
+  Notenmappe und Offline prüfen“ und führt auf die Seite des Auftritts. Dort kommen in Bereit? zwei Punkte zum Abhaken
+  dazu: **Wetter angesehen** und **Notenmappe dabei** (gespiegelt für die Band, `bn-vorabend-<Auftritt>`).
+- **Für Spotify kopieren** (Setlist): kopiert die Spotify-Track-Links der Songs in Setlist-Reihenfolge – in Spotify am
+  Computer eine Playlist öffnen und mit Strg/Cmd+V einfügen. Songs ohne bekannten Link werden genannt. Stehen Songs der
+  Setlist nicht in der Spotify-Liste „Setlist“, sagt ein Hinweis unter der Setlist, welche.
+- **An die Band schicken** (Songs → Song bearbeiten): Steckbrief mit Tonart (und Band-Tonart), Capo, Tempo, Notiz und
+  Spotify-Link – übers Teilen-Menü (z. B. WhatsApp), sonst in die Zwischenablage.
 
 - **Auftritt vorbereiten** prüft für jeden Song, ob Noten in deiner Fassung (eigene Wahl bzw. Vorliebe wie „Bass“)
   auf dem Gerät sind, ob die PDF sich öffnen lässt und der Seitenbereich passt, und lädt alles für ohne Netz.
@@ -437,16 +512,23 @@ In derselben Karte darunter **Aufräumen**:
   und Setlist-Vorschlag sie brauchen.
 - **Alles löschen:** setzt die Website auf dem Gerät komplett zurück (Bestätigung durch Eintippen von „LÖSCHEN“).
 
-Vorher sichern: **Einstellungen → Backup → Backup erstellen** (Backstage-Daten und Notenblätter).
+Vorher sichern: **Einstellungen → Backup → Backup erstellen** (alles: Daten, Einstellungen, Notenblätter).
 
 ## Backup (Einstellungen)
 
-Ein **Backup** sichert alle Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
-Nachbereitungen, Songs-Entwurf) und die Notenblätter (PDFs, Akkordblätter, Markierungen). Mitschnitte und Einstellungen
-gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup war; nach 30 Tagen erinnert Backstage → Aufgaben.
+Ein **Backup** enthält immer alles in einer Datei: die Backstage-Daten des Geräts (Setlists, Packlisten, Vor Ort,
+Proben, Sterne, Werbeplan, Nachbereitungen, Songs-Entwurf, Zusagen …), die Einstellungen und die Notenblätter (PDFs,
+Akkordblätter, Markierungen). Nur die Proben-Mitschnitte gehören nicht dazu (zu groß). Beim Wiederherstellen werden
+persönliche Einstellungen nur ergänzt, nicht überschrieben (außer bei „Alles ersetzen“). Die Kachel zeigt, wann das letzte Backup von diesem Gerät war und (mit Synchronisation) das neueste
+Backup im OneDrive-Ordner „Backup“. Unter **Backups in OneDrive (…)** stehen alle Backups dort (neueste zuerst;
+frühere, getrennte Daten- bzw. Noten-Backups sind als solche markiert) – jedes lässt sich einzeln **wiederherstellen** (ergänzt die Daten des Geräts, vorher
+zeigt eine Rückfrage, was neu ist und was sich ändert). Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
+**Heute fällig**; nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
 
-- **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners (ein älteres
-  Noten-Backup wird dort ersetzt, die Daten-Backups bleiben als Verlauf) und gleich abgleichen; sonst als Datei zum
+- **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners
+  (`blickfeld-nord-backup-JJJJ-MM-TT-HHMM.json`) und gleich abgleichen. **Aufbewahrung:** ein halbes Jahr – die
+  letzten 5 Backups bleiben aber immer, auch wenn sie älter sind; ältere werden beim Erstellen eines neuen Backups
+  gelöscht (geht mit dem Abgleich auch in OneDrive weg, wenn „Löschungen übertragen“ an ist). Ohne Synchronisation als Datei zum
   Teilen oder Speichern. **Als Datei teilen** geht auch mit Synchronisation, z. B. für die WhatsApp-Gruppe.
 - **Aus OneDrive wiederherstellen:** gleicht ab und übernimmt das neueste Backup aus dem OneDrive-Ordner (auch frühere
   Sicherungen aus dem Ordner `Backstage`) – mit Vorschau, was neu ist und was sich ändert.
@@ -457,6 +539,27 @@ gehören nicht dazu. Die Kachel zeigt, wann das letzte Backup war; nach 30 Tagen
 Einzelne Auftritte oder Proben an die Band schicken: auf deren Seite **Diesen Termin an die Band**.
 
 ## Synchronisation OneDrive ↔ lokal (Einstellungen)
+
+**Hilfe im Abgleich:** Neben jedem Knopf (Jetzt synchronisieren, Lokale Dateien, Synchronisierte Dateien einlesen,
+Zuordnen, ignorieren) erklärt ein **(i)**, was er tut. Während des Abgleichs steht unter dem Fortschritt
+**„Was passiert gerade?“** in einfachen Worten (Daten vorbereiten, Listen lesen, Hoch-/Herunterladen, Konflikte, Noten
+erkennen). Texte: `src/app/data/sync-hilfe.ts`.
+
+**Geräte:** Unter **Abgleich → Geräte** bekommt jedes Gerät einen Namen (z. B. „Freds Handy“; ohne Namen ein Vorschlag
+wie „iPhone“). Beim Abgleich legt es höchstens stündlich eine kleine Datei `Geraete/<Kennung>.json` (Name, Person,
+Zeitpunkt) in den Sync-Ordner – die Liste zeigt, welches Gerät wann zuletzt abgeglichen hat. Name und Kennung bleiben auf
+dem Gerät (`bn-geraet-…`, nicht gespiegelt).
+
+**Zuordnen in einem Rutsch:** Beim Einlesen zeigt jede Noten-Datei „liegt schon bei …“, wenn eine gleichnamige Datei
+auf diesem Gerät schon bei einem anderen Song liegt. Hat man für eine Datei den Song gewählt, übernimmt
+**„für alle gleich benannten übernehmen“** die Wahl für alle Dateien mit gleichem Titel und Interpret im Namen (Fassung
+egal, z. B. „Toto - Africa - Bass.pdf“ und „Toto - Africa - Gitarre.pdf“).
+
+**Noten-Check** (Abgleich → Daten auf diesem Gerät, unter „Noten“): listet Noten-Dateien ohne Song und doppelte Dateien
+(gleicher Name, gleiche Größe). **Zusammenführen** lässt alle Songs auf eine Kopie zeigen, nimmt Markierungen mit und
+entfernt die übrigen Kopien von diesem Gerät – in OneDrive ändert sich nichts. Dateien ohne Song (auch doppelte ohne
+Song) lassen sich mit der Berechtigung „Daten löschen“ löschen: **Vom Gerät** (OneDrive bleibt) oder **Auch aus OneDrive**
+(gleicher Name und gleiche Größe im Sync-Ordner; der Abgleich löscht dort – betrifft die ganze Band).
 
 **Alle Einstellungen und Backstage-Daten wandern mit:** Ist man angemeldet und die Synchronisation eingerichtet, wird
 jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:
@@ -509,13 +612,12 @@ Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim rich
 eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
 („2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**).
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und
-**Synchronisierte Dateien einlesen** (Backups, Notenpakete, PDFs, .pro). Das Backup in den Sync-Ordner steht unter
-Einstellungen → **Backup**.
+**Synchronisierte Dateien einlesen** (PDFs, .pro). Backups und Notenpakete stehen dort nicht mehr, sondern unter
+Einstellungen → **Backup**. Noten, die schon einmal als **Eigenständig** eingelesen wurden, werden nicht mehr angeboten
+(ein Hinweis sagt, wie viele ausgeblendet sind).
 
 Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
 
-- Das neueste Backup und das neueste Notenpaket sind vorausgewählt; Backstage-Daten werden ergänzt, auf Wunsch
-  ersetzt.
 - **Ohne Liste:** In der Song-Auswahl jeder Noten-Datei gibt es oben **Eigenständig: <Titel> – <Band>** – ein eigener
   Song aus dem Dateinamen `<Band> - <Titel>.pdf` (Rest = Fassung), der zu keiner Spotify-Liste gehört und unter
   Songs → „Ohne Liste“ steht – und, mit Berechtigung „Daten löschen“, **Löschen**: Die Datei verschwindet beim
@@ -530,6 +632,25 @@ Beim **Einlesen** (Synchronisierte Dateien einlesen bzw. Zuordnen):
   Namens) oder nicht Erkanntes ist orange markiert: Song aus der Liste wählen, Fassung bei Bedarf ändern – eingelesen
   wird genau so, wie es in der Liste steht. Von Hand gewählte Zuordnungen merkt sich das Gerät je Dateiname – beim
   nächsten Mal steht dort „wie beim letzten Mal“.
+
+## Backstage nur für die Band (Sichtsperre)
+
+Das Backstage öffnet sich nur für Microsoft-Konten, die den **Band-Ordner** in OneDrive sehen dürfen – also für alle,
+mit denen der Ordner geteilt ist. Wer dazugehört, steuert allein die **OneDrive-Freigabe** (neues Mitglied: Ordner
+freigeben; jemand geht: Freigabe entfernen). Im Code stehen keine E-Mail-Adressen, nur die Kennung des Ordners.
+
+- **Einrichten (einmal, Besitzer des Ordners):** Backstage → Einstellungen → **Band-Ordner** → „Diesen Sync-Ordner als
+  Band-Ordner festlegen“. Die angezeigte Zeile `bandOrdner: { drive: '…', item: '…' },` in
+  `src/app/data/onedrive-config.ts` eintragen (statt `bandOrdner: null`). Ohne Eintrag gibt es keine Sperre.
+- **Neues Gerät:** Jede Backstage-Seite führt zuerst zu **Nur für die Band → Mit Microsoft anmelden**. Darf das Konto
+  den Ordner sehen, geht es weiter zur gewünschten Seite; sonst „Kein Zugang“ (mit „Mit anderem Konto anmelden“).
+- **Offline:** Ein Gerät, das einmal drin war, bleibt offen – auch ohne Netz (Bühnen-Modus). Nach 30 Tagen prüft es mit
+  Netz im Hintergrund neu; nur wenn OneDrive klar „nicht freigegeben“ sagt, geht es wieder zur Anmeldeseite.
+- **Was die Sperre ist:** eine Sichtsperre für die Oberfläche. Der Code der Website ist öffentlich, wer ihn gezielt
+  umgeht, sieht trotzdem nur eine leere Oberfläche – die Daten liegen nur auf euren Geräten und im freigegebenen
+  OneDrive-Ordner. Eine echte Sperre der Adresse bräuchte einen vorgeschalteten Dienst (z. B. Cloudflare Access).
+- Tests, Barrierefreiheits-Check und Screenshots verhalten sich wie ein freigeschaltetes Gerät
+  (`scripts/lib/zugang-test.mjs`).
 
 ## OneDrive einrichten (für die Synchronisation)
 

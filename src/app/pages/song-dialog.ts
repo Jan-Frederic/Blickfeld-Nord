@@ -1,6 +1,8 @@
 import { datumText } from '../data/datum';
 
-import { Component, ElementRef, afterNextRender, computed, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, computed, inject, input, output, signal, viewChild } from '@angular/core';
+import { BandService } from '../data/band.service';
+import { unsicherJeSong } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
@@ -8,6 +10,8 @@ import { NotenEditor } from './noten-editor';
 import { SongMitschnitte } from './song-mitschnitte';
 import { TonartHoeren } from './tonart-hoeren';
 import { TapTempo } from '../data/tap-tempo';
+import { steckbrief } from '../data/song-steckbrief';
+import { nachrichtSenden } from '../data/kontakte';
 import { probenNotizen, probenPlaene, probenVerlauf } from '../data/song-stand';
 
 // Dialog „Song bearbeiten“ (Backstage → Songs): Tonart (Original und wie die Band spielt), Capo, Tempo – auch per
@@ -90,6 +94,7 @@ export interface SongZeile {
           @else if (werte().tonart || werte().bpm) { <button type="button" class="stimmt" (click)="setzen.emit({ feld: 'geprueft', roh: '1' })">✓ Stimmt so</button> }
         </p>
       }
+      @if (unsicherBei(); as u) { <p class="quelle" style="color: #e0b25a"><mat-icon>warning</mat-icon> Unsicher bei: {{ u }}</p> }
       @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ datumText(p.tag) }}: {{ p.notiz }}</p> }
       @if (verlauf().length) {
         <div class="proben-verlauf" role="img" [attr.aria-label]="verlaufText()">
@@ -111,6 +116,7 @@ export interface SongZeile {
         <button type="button" (click)="blaettern.emit(-1)" [disabled]="!hatVorigen()"><mat-icon>chevron_left</mat-icon> Voriger</button>
         <span class="pos">{{ position() }}</span>
         <button type="button" (click)="blaettern.emit(1)" [disabled]="!hatNaechsten()">Nächster <mat-icon>chevron_right</mat-icon></button>
+        <button type="button" (click)="teilen()" title="Tonart, Capo, Tempo, Notiz und Spotify-Link per WhatsApp oder Teilen schicken"><mat-icon>{{ geteilt() ? 'check' : 'share' }}</mat-icon> {{ geteilt() || 'An die Band schicken' }}</button>
         <button type="button" class="primaer" (click)="buehne.emit()"><mat-icon>fit_screen</mat-icon> Im Bühnen-Modus ansehen</button>
       </footer>
     </dialog>
@@ -191,6 +197,17 @@ export class SongDialog {
   readonly blaettern = output<number>();
   readonly buehne = output<void>();
   readonly schliessen = output<void>();
+  /** wer in der Band bei diesem Song laut „Wackelt noch“ unsicher ist (Probe → „Ich bin …“) */
+  private readonly unsicher = unsicherJeSong(inject(BandService).members);
+  protected readonly unsicherBei = computed(() => (this.wackelt(), this.unsicher.get(this.song().key)?.join(', ') ?? ''));
+  /** Rückmeldung nach „An die Band schicken“ (kurz statt des Knopftexts) */
+  protected readonly geteilt = signal('');
+  protected async teilen(): Promise<void> {
+    const r = await nachrichtSenden(undefined, `${this.song().title} – Steckbrief`, steckbrief(this.song(), this.werte()));
+    if (r === 'abgebrochen') return;
+    this.geteilt.set(r === 'kopiert' ? 'Kopiert!' : 'Geteilt');
+    setTimeout(() => this.geteilt.set(''), 2000);
+  }
 
   protected readonly tonarten = [...TONARTEN, ...TONARTEN.map((t) => t + 'm')];
   protected readonly capos = Array.from({ length: 9 }, (_, i) => i + 1);

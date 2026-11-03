@@ -9,6 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { serve } from './lib/static-server.mjs';
+import { zugangFreischalten } from './lib/zugang-test.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
@@ -20,7 +21,7 @@ const pages = [...new Set([...sitemap.matchAll(/<loc>https:\/\/blickfeld-nord\.d
 const firstShow = pages.find((p) => p.startsWith('/konzerte/'))?.split('/')[2];
 // erste eingetragene Probe (für die Seite „Probe planen“)
 const firstProbe = readFileSync(join(ROOT, 'src', 'app', 'data', 'band.service.ts'), 'utf8').match(/readonly rehearsals: Rehearsal\[\] = \[\s*\{ date: '([\d-]+)'/)?.[1];
-pages.push('/backstage/', '/backstage/termine/', '/backstage/termine/saison/', '/backstage/termine/kontakte/', '/backstage/zahlen/', '/backstage/jahr/' + new Date().getFullYear() + '/', '/backstage/uebersetzungen/', '/backstage/material/', '/backstage/abgleich/', '/backstage/einstellungen/', '/backstage/aufgaben/', '/backstage/buehnenplan/', '/backstage/songs/', '/backstage/songs/setlists/', '/backstage/songs/noten/', ...(firstProbe ? [`/backstage/probe/${firstProbe}`] : []), ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), ...(firstShow ? [`/presse/${firstShow}/`] : []), '/wunsch', '/gibt-es-nicht');
+pages.push('/backstage/', '/backstage/zugang/', '/backstage/termine/', '/backstage/termine/saison/', '/backstage/termine/kontakte/', '/backstage/zahlen/', '/backstage/jahr/' + new Date().getFullYear() + '/', '/backstage/uebersetzungen/', '/backstage/material/', '/backstage/abgleich/', '/backstage/einstellungen/', '/backstage/aufgaben/', '/backstage/buehnenplan/', '/backstage/songs/', '/backstage/songs/setlists/', '/backstage/songs/noten/', ...(firstProbe ? [`/backstage/probe/${firstProbe}`] : []), ...(firstShow ? [`/backstage/${firstShow}`, `/backstage/${firstShow}/vorort`, `/backstage/${firstShow}/setlist`, `/backstage/${firstShow}/packliste`] : []), ...(firstShow ? [`/presse/${firstShow}/`] : []), '/wunsch', '/gibt-es-nicht');
 
 const browser = await chromium.launch();
 // Die Prüfung wartet fast nur (Laden, Scrollen) – mehrere Tabs gleichzeitig verkürzen sie deutlich.
@@ -54,6 +55,7 @@ async function scrollen(tab, pause) {
 
 // bypassCSP: axe wird als Skript in die Seite gelegt – das blockt die Content-Security-Policy der Seite sonst (zu Recht)
 const desktop = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'de-DE', bypassCSP: true });
+await zugangFreischalten(desktop);
 // Zählpixel und externe Einbettungen spielen für den Check keine Rolle
 await desktop.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 
@@ -78,6 +80,7 @@ async function axePruefung(page, path) {
 // Handy-Browser) und mit aufgeklappten Listen. Gemessen wird am Element, weil html/body überstehendes ohnehin abschneiden.
 // niederländischer Browser: deutsche Seiten zeigen dabei den Sprachhinweis – der darf auch nicht überstehen
 const handy = await browser.newContext({ viewport: { width: 360, height: 780 }, locale: 'nl-NL', bypassCSP: true });
+await zugangFreischalten(handy);
 await handy.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 // GoatCounter-Zähler mit Beispielzahlen beantworten – sonst bleiben Besucher- und Kampagnen-Tabellen im Backstage leer
 // und werden nie bei Handy-Breite geprüft
@@ -101,9 +104,16 @@ async function handyPruefung(phone, path) {
       }
       return false;
     };
-    return els
-      // „Blätter“ (ohne Kind-Elemente) und Bedienelemente wie Auswahllisten, deren Kinder (option) nicht gezeichnet werden
-      .filter((el) => (!el.children.length || ['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA'].includes(el.tagName)))
+    // sichtbare Kästen: Rahmen oder Hintergrund (z. B. eine Zeile mit Rand, deren Text selbst noch hineinpasst)
+    const kasten = (el) => {
+      const st = getComputedStyle(el);
+      return parseFloat(st.borderRightWidth) > 0 || (st.backgroundColor !== 'rgba(0, 0, 0, 0)' && st.backgroundColor !== 'transparent');
+    };
+    return [...document.querySelectorAll('body *')]
+      .filter((el) => getComputedStyle(el).position !== 'fixed')
+      // „Blätter“ (ohne Kind-Elemente), Symbole, Bedienelemente wie Auswahllisten (deren option nicht gezeichnet wird) und
+      // sichtbare Kästen
+      .filter((el) => !el.children.length || el.tagName === 'MAT-ICON' || ['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA'].includes(el.tagName) || kasten(el))
       .filter((el) => el.getBoundingClientRect().right > vw + 1 && !clippedInside(el))
       .slice(0, 3)
       .map((el) => `${el.tagName.toLowerCase()} „${el.textContent.trim().slice(0, 30)}“ bis ${Math.round(el.getBoundingClientRect().right)} px`);

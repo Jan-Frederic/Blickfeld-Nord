@@ -9,6 +9,11 @@ import { SAISON_UPDATE_KEY, saisonUpdateFaellig } from '../data/jahresplan';
 import { rueckblickFrist } from '../data/jahresrueckblick';
 import { DeployLauf, deployStatus } from '../data/deploy-status';
 import { kampagnenLink } from '../data/goatcounter';
+import { tageSeitBackup } from './backstage-sync';
+import { loadProbe, vorbereitungFaellig } from '../data/probe-modus';
+import { lageAus, wetterHinweis } from '../data/wetter-warnung';
+import { HOME, Ortsverzeichnis } from '../data/entfernung';
+import { PACKLISTE_PREFIX, loadPackliste } from './packliste';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
 // Backstage-Übersicht, ganz oben: was heute dran ist – Auftritt und Probe von heute sowie fällige, noch nicht
@@ -82,14 +87,61 @@ export class HeuteFaellig {
   /** letzter Deploy gescheitert? (GitHub, nur mit Netz) */
   protected readonly deploy = signal<DeployLauf | null>(null);
   constructor() {
-    if (typeof navigator !== 'undefined' && navigator.onLine) deployStatus().then((d) => this.deploy.set(d));
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      deployStatus().then((d) => this.deploy.set(d));
+      void this.wetterPruefen();
+    }
+  }
+
+  /** Vortag: Regen, Kälte oder Wind zur Auftrittszeit → Hinweis und Punkte auf die Packliste (einmal) */
+  protected readonly wetter = signal<{ icon: string; label: string; link: string[] }[]>([]);
+  private async wetterPruefen(): Promise<void> {
+    const shows = this.band.shows.filter((s) => s.date === this.morgen);
+    const out: { icon: string; label: string; link: string[] }[] = [];
+    for (const s of shows) {
+      try {
+        const orte = await Ortsverzeichnis.load();
+        const pos = (s.city && orte.locate(s.city)) || orte.locate(s.venue) || HOME;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${pos.lat}&longitude=${pos.lon}&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe%2FBerlin&start_date=${s.date}&end_date=${s.date}`;
+        const lage = lageAus(await (await fetch(url)).json(), s.time);
+        const h = lage && wetterHinweis(lage);
+        if (!h) continue;
+        const id = this.band.showId(s);
+        const pack = loadPackliste(PACKLISTE_PREFIX + id);
+        const neu = h.packen.filter((x) => !pack.custom.includes(x));
+        if (neu.length) {
+          try {
+            localStorage.setItem(PACKLISTE_PREFIX + id, JSON.stringify({ ...pack, custom: [...pack.custom, ...neu] }));
+          } catch {
+            // ohne Speicher nur der Hinweis
+          }
+        }
+        out.push({ icon: 'umbrella', label: `Wetter morgen in ${s.city ?? s.venue}: ${h.text} – ${h.packen.join(', ')} (steht auf der Packliste)`, link: ['/backstage', id, 'packliste'] });
+      } catch {
+        // ohne Vorhersage kein Hinweis
+      }
+    }
+    this.wetter.set(out);
   }
   protected seit(iso: string): string {
     const std = Math.round((Date.now() - Date.parse(iso)) / 36e5);
     return std < 1 ? 'gerade eben' : std < 24 ? `vor ${std} Std.` : `vor ${Math.round(std / 24)} Tagen`;
   }
 
+  private readonly morgen = new Date(Date.parse(this.heute) + 864e5).toISOString().slice(0, 10);
+
   protected readonly termine = computed(() => [
+    ...this.wetter(),
+    // Woche vor einer Probe: Plan an die Band (Songs zum Vorher-Anhören), solange er nicht geschickt wurde
+    ...vorbereitungFaellig(this.band.rehearsals, this.heute, loadProbe).map(({ probe, songs, tage }) => ({
+      icon: 'queue_music',
+      label: `Probe ${tage === 1 ? 'morgen' : 'in ' + tage + ' Tagen'} (${datumText(probe.date).slice(0, 6)}): ${songs ? songs + (songs === 1 ? ' Song' : ' Songs') + ' geplant – Plan an die Band schicken' : 'noch keine Songs geplant'}`,
+      link: ['/backstage/probe', probe.date],
+    })),
+    // Vortag: alles auf einer Seite prüfen – Bereit?, Packliste, Wetter, Notenmappe, Bühnen-Modus ohne Netz
+    ...this.band.shows
+      .filter((s) => s.date === this.morgen)
+      .map((s) => ({ icon: 'checklist', label: `Morgen: ${s.venue} – Bereit?, Packliste, Wetter, Notenmappe und Offline prüfen`, link: ['/backstage', this.band.showId(s)] })),
     ...this.band.shows
       .filter((s) => s.date <= this.heute && (s.endDate ?? s.date) >= this.heute)
       .map((s) => ({ icon: 'celebration', label: `Auftritt: ${s.venue}${s.time ? ' · ' + s.time + ' Uhr' : ''}`, link: ['/backstage', this.band.showId(s)] })),
@@ -106,6 +158,8 @@ export class HeuteFaellig {
       label: `Rückblick „${s.private ? (s.publicName ?? 'Private Feier') : s.venue}“ bis 14.12. schreiben – sonst fehlt er im Jahresrückblick`,
       link: ['/backstage', this.band.showId(s)],
     })),
+    // Backup älter als 14 Tage (oder noch nie) – Backstage-Daten liegen sonst nur auf diesem Gerät
+    ...this.backupFaellig(),
     // Anfragen ohne Antwort (seit 14 Tagen kein neuer Termin dort) – Kontakte unter Termine → Kontakte
     ...nachfragen(ladeKontakte(), this.band.shows, this.heute).map((n) => ({
       icon: 'call',
@@ -113,6 +167,12 @@ export class HeuteFaellig {
       link: ['/backstage/termine/kontakte'],
     })),
   ]);
+
+  private backupFaellig(): { icon: string; label: string; link: string[] }[] {
+    const tage = tageSeitBackup();
+    if (tage === undefined || (tage !== null && tage <= 14)) return [];
+    return [{ icon: 'backup', label: tage === null ? 'Noch kein Backup auf diesem Gerät – jetzt erstellen' : `Letztes Backup vor ${tage} Tagen – neues erstellen`, link: ['/backstage/einstellungen'] }];
+  }
 
   private gelesen(key: string): string | null {
     try {

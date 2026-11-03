@@ -31,7 +31,16 @@ export interface Punkt {
   ziel?: string;
   /** Knopf statt Link: „vorladen“ holt, was für den Bühnen-Modus ohne Netz fehlt */
   aktion?: 'vorladen';
+  /** zum Abhaken von Hand (Vorabend: Wetter, Notenmappe) – Kennung des Hakens */
+  haken?: string;
 }
+
+/** Punkte am Vortag und am Tag selbst, die sich nicht ablesen lassen – von Hand abhaken (bn-vorabend-<id>) */
+export const VORABEND = [
+  { id: 'wetter', text: 'Wetter angesehen', hinweis: 'siehe „Wetter“ auf dieser Seite – Jacke, Pavillon, Regenschutz fürs Equipment?' },
+  { id: 'mappe', text: 'Notenmappe dabei', hinweis: 'ausgedruckt oder als PDF auf dem Tablet (Setlist → Notenmappe)', ziel: 'setlist' },
+] as const;
+export const VORABEND_PREFIX = 'bn-vorabend-';
 
 export interface BereitschaftsDaten {
   show: Show;
@@ -49,6 +58,8 @@ export interface BereitschaftsDaten {
   setlistCheck?: { langsamStrecken: number; spruenge: number; baustellen: string[] };
   /** Offline-Speicher dieses Geräts – undefined, solange unbekannt oder ohne Service Worker */
   offline?: OfflineStand;
+  /** von Hand abgehakte Vorabend-Punkte (VORABEND) – undefined: nicht anzeigen */
+  vorabend?: string[];
 }
 
 const tageBis = (heute: string, datum: string) => Math.round((Date.parse(datum) - Date.parse(heute)) / 864e5);
@@ -124,5 +135,9 @@ export function bereitschaft(d: BereitschaftsDaten): Punkt[] {
     const { eingepackt, gesamt } = d.packliste;
     punkte.push({ text: 'Alles eingepackt', ok: gesamt > 0 && eingepackt >= gesamt, hinweis: `${eingepackt} / ${gesamt}`, ziel: 'packliste' });
   }
+
+  // Vortag und Tag selbst: Wetter und Notenmappe zum Abhaken
+  if (d.vorabend && tageBis(d.heute, show.date) <= 1)
+    for (const v of VORABEND) punkte.push({ text: v.text, ok: d.vorabend.includes(v.id), hinweis: v.hinweis, haken: v.id, ...('ziel' in v ? { ziel: v.ziel } : {}) });
   return punkte;
 }

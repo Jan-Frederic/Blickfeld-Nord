@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
 import { serve } from './lib/static-server.mjs';
+import { BAND_ORDNER_ITEM, zugangFreischalten } from './lib/zugang-test.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist', 'blickfeld-nord', 'browser');
@@ -32,8 +33,10 @@ async function until(check, message) {
 }
 
 async function page(options = {}) {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, locale: 'de-DE', ...options });
+  const { ohneZugang, ...rest } = options;
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, locale: 'de-DE', ...rest });
   await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+  if (!ohneZugang) await zugangFreischalten(context);
   const p = await context.newPage();
   p.setDefaultTimeout(10_000);
   p.on('dialog', (d) => (d.type() === 'prompt' ? d.accept(p.promptAntwort ?? 'Testvorlage') : d.accept()));
@@ -484,6 +487,169 @@ test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', asy
   return p;
 });
 
+test('Backstage: Probe-Modus – Sitzt/Nochmal, Notiz und Durchläufe, Rest auf die nächste Probe', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
+  await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }, { title: 'Angels', artist: 'Robbie Williams', done: false }], notizen: '', punkte: [] })), datum);
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
+  const buehne = p.locator('app-setlist-buehne');
+  await until(async () => /probe · 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
+  const leiste = buehne.locator('app-probe-leiste');
+  // Song 1: Nochmal mit Notiz – Tippen in die Notiz blättert nicht
+  await leiste.getByRole('button', { name: 'Nochmal' }).click();
+  await until(async () => (await leiste.locator('input.notiz').inputValue()) === 'nochmal üben', '„Nochmal“ setzt keine Notiz');
+  await leiste.locator('input.notiz').fill('Bridge wackelt');
+  await leiste.locator('input.notiz').press('ArrowLeft');
+  await leiste.locator('input.notiz').dispatchEvent('change');
+  expect((await buehne.locator('h1').innerText()).includes('Iris'), 'Tippen in die Notiz hat geblättert');
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zum zweiten Song klappt nicht');
+  // Song 2: Sitzt, zweimal gespielt
+  await leiste.getByRole('button', { name: 'Sitzt' }).click();
+  await leiste.getByRole('button', { name: 'Durchlauf zählen' }).click();
+  await leiste.getByRole('button', { name: 'Durchlauf zählen' }).click();
+  await until(async () => (await leiste.innerText()).includes('2× gespielt'), 'Durchläufe werden nicht gezählt');
+  // ans Ende: Zusammenfassung, Angels kam nicht dran
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await p.keyboard.press('ArrowRight');
+  const ende = buehne.locator('app-probe-ende');
+  await until(async () => /Sitzt \(1\)[\s\S]*Nochmal \(1\)[\s\S]*Nicht drangekommen \(1\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung am Ende fehlt');
+  await ende.locator('button', { hasText: 'auf die nächste Probe' }).click();
+  await until(async () => /2 Songs stehen jetzt auf dem Plan/.test(await ende.innerText()), 'Offene Songs gehen nicht auf die nächste Probe');
+  await ende.locator('button', { hasText: 'Probe-Modus beenden' }).click();
+  // Probenseite zeigt das Ergebnis; der Proben-Verlauf kennt „Nochmal“
+  const liste = p.locator('app-backstage-probe .list').first();
+  await until(async () => /Iris[\s\S]*nochmal[\s\S]*Africa[\s\S]*2×/.test(await liste.innerText()), 'Ergebnis fehlt auf der Probenseite');
+  const plan = await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)), datum);
+  expect(plan.songs[0].notiz === 'Bridge wackelt' && plan.songs[0].stand === 'nochmal' && plan.songs[1].durchlaeufe === 2, 'Probenplan nicht gespeichert');
+  return p;
+});
+
+test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer auch aus OneDrive', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/noten/');
+  const datei = (id, name) => ({ id, name, daten: new ArrayBuffer(7), groesse: 7, hinzugefuegt: '2026-01-01' });
+  await p.evaluate((dateien) => Promise.all([
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-noten', 2);
+      req.onupgradeneeded = () => {
+        for (const n of ['dateien', 'songs', 'markierungen']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n, n === 'dateien' ? { keyPath: 'id' } : undefined);
+      };
+      req.onsuccess = () => {
+        const t = req.result.transaction('dateien', 'readwrite');
+        for (const d of dateien) t.objectStore('dateien').put(d);
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-sync', 1);
+      req.onupgradeneeded = () => { for (const n of ['dateien', 'meta']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n); };
+      req.onsuccess = () => {
+        const t = req.result.transaction('dateien', 'readwrite');
+        t.objectStore('dateien').put({ inhalt: new Blob(['%PDF-12']), groesse: 7, geaendert: new Date().toISOString(), version: 'v1' }, 'Noten/Toto - Africa.pdf');
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+  ]), [datei('a', 'Toto - Africa.pdf'), datei('b', 'Robbie_Williams-Angels.pdf')]);
+  await p.reload({ waitUntil: 'networkidle' });
+  const v = p.locator('app-noten-verwaltung');
+  await until(async () => (await v.locator('li').count()) === 2, 'Noten-Liste fehlt');
+  // Suche (Unterstriche und Bindestriche zählen als Leerzeichen)
+  await v.locator('input[type=search]').fill('robbie angels');
+  await until(async () => (await v.locator('li').count()) === 1 && (await v.locator('.suche small').innerText()).includes('1 von 2'), 'Suche filtert nicht');
+  // ohne Berechtigung: nur vom Gerät, ohne Rückfrage nach OneDrive
+  await v.getByRole('button', { name: 'Robbie_Williams-Angels.pdf löschen' }).click();
+  await until(async () => (await v.locator('.meldung').innerText().catch(() => '')).includes('nur auf diesem Gerät'), 'Löschen vom Gerät klappt nicht');
+  await v.locator('input[type=search]').fill('');
+  await until(async () => (await v.locator('li').count()) === 1, 'Datei bleibt nach dem Löschen stehen');
+  // Besitzer des OneDrive-Ordners: Wahl „Nur vom Gerät“ / „Auch aus OneDrive“
+  await p.evaluate(() => {
+    localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
+    localStorage.setItem('bn-onedrive-konto', 'test@example.com');
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  await v.getByRole('button', { name: 'Toto - Africa.pdf löschen' }).click();
+  await until(async () => (await v.locator('.frage button').count()) === 3, 'Besitzer wird nicht gefragt');
+  await v.getByRole('button', { name: 'Auch aus OneDrive' }).click();
+  await until(async () => (await v.locator('.meldung').innerText().catch(() => '')).includes('auch aus OneDrive'), 'Löschen aus OneDrive meldet nichts');
+  // für die Band vermerkt: die anderen Geräte entfernen ihre Kopie beim nächsten Abgleich
+  expect((await p.evaluate(() => JSON.parse(localStorage.getItem('bn-noten-geloescht') ?? '[]'))).some((g) => g.name === 'Toto - Africa.pdf' && g.groesse === 7), 'Löschung wird nicht für die Band vermerkt');
+  await until(async () => !(await v.locator('ul').innerText().catch(() => '')).includes('Toto - Africa.pdf'), 'Datei steht nach dem Löschen noch in der Liste');
+  expect(!(await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const k = req.result.transaction('dateien').objectStore('dateien').getAllKeys();
+      k.onsuccess = () => ok(k.result.includes('Noten/Toto - Africa.pdf'));
+    };
+  }))), 'Datei liegt noch im Sync-Ordner');
+  return p;
+});
+
+test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalprobe mit Übergängen', async () => {
+  const p = await page();
+  await p.go('/backstage/termine/');
+  await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.waitForURL(/\/backstage\/probe\//);
+  const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
+  const auftritt = concerts.map((c) => c.split('/')[2]).filter((id) => id >= datum).sort()[0];
+  await p.evaluate(({ d, a }) => {
+    localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }], notizen: '', punkte: [{ text: 'Kabel besorgen', done: false }] }));
+    localStorage.setItem('bn-unsicher-david-broeker', JSON.stringify(['Iris|The Goo Goo Dolls']));
+    localStorage.setItem('bn-setlist-' + a, JSON.stringify([{ title: 'Africa', artist: 'TOTO' }, { title: 'Iris', artist: 'The Goo Goo Dolls' }, { pause: true }, { title: 'Angels', artist: 'Robbie Williams' }]));
+  }, { d: datum, a: auftritt });
+  await p.reload({ waitUntil: 'networkidle' });
+  const seite = p.locator('app-backstage-probe');
+  // wer kommt
+  const zusagen = seite.locator('app-probe-zusagen');
+  await zusagen.locator('select').selectOption('jan-frederic-overbeck');
+  await zusagen.getByRole('button', { name: 'Ich komme' }).click();
+  await until(async () => (await zusagen.innerText()).includes('1 kommt, 2 offen'), 'Zusage wird nicht gezählt');
+  expect((await p.evaluate((d) => localStorage.getItem('bn-zusage-' + d + '-jan-frederic-overbeck'), datum)) === '{"kommt":true}', 'Zusage nicht in eigener Datei');
+  // unsicher bei
+  await until(async () => (await seite.locator('.info.unsicher').innerText().catch(() => '')).includes('David'), '„unsicher: David“ fehlt');
+  // Plan an die Band (ohne Teilen-Menü: in die Zwischenablage bzw. zum Kopieren)
+  await seite.getByRole('button', { name: 'Plan an die Band' }).click();
+  await until(async () => /Plan (kopiert|geteilt)/.test(await seite.locator('.teilen-meldung').innerText().catch(() => '')), 'Plan an die Band meldet nichts');
+  expect(!!(await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)).geschickt, datum)), '„geschickt“ wird nicht gemerkt');
+  // Generalprobe: Setlist des nächsten Auftritts in Reihenfolge, Probe-Modus mit Sets und Übergang
+  await seite.locator('button.general').click();
+  await until(async () => /Africa[\s\S]*Iris[\s\S]*Angels/.test(await seite.locator('.list').first().innerText()), 'Generalprobe übernimmt die Setlist nicht');
+  await seite.getByRole('button', { name: 'Probe-Modus starten' }).click();
+  const buehne = p.locator('app-setlist-buehne');
+  await until(async () => /generalprobe · set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
+  await buehne.locator('app-probe-leiste').getByRole('button', { name: 'Übergang' }).click();
+  await until(async () => (await buehne.locator('app-probe-leiste .uebergang').innerText().catch(() => '')).includes('Übergang zu „Iris“'), 'Übergang zum nächsten Song fehlt');
+  return p;
+});
+
+test('Backstage: Sichtsperre – Anmeldeseite; mit Band-Ordner landet ein neues Gerät dort', async () => {
+  const p = await page({ ohneZugang: true });
+  await p.go('/backstage/zugang/');
+  const seite = p.locator('app-backstage-zugang');
+  await until(async () => /nur für die band/i.test(await seite.innerText().catch(() => '')), 'Anmeldeseite fehlt');
+  expect(await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).isVisible(), 'Anmelden-Knopf fehlt');
+  if (!BAND_ORDNER_ITEM) {
+    // ohne eingetragenen Band-Ordner keine Sperre: weiter ins Backstage
+    await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click();
+    await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', 'Ohne Band-Ordner geht es nicht weiter');
+  } else {
+    // neues Gerät: jede Backstage-Seite führt zur Anmeldeseite und merkt sich das Ziel
+    await p.go('/backstage/termine/');
+    await until(async () => decodeURIComponent(p.url()).includes('/backstage/zugang?ziel=/backstage/termine'), async () => 'Keine Umleitung zur Anmeldeseite: ' + p.url());
+    // schon geprüftes Gerät: kommt direkt rein
+    await p.evaluate((item) => localStorage.setItem('bn-zugang', JSON.stringify({ ordner: item, zeit: Date.now() })), BAND_ORDNER_ITEM);
+    await p.go('/backstage/termine/');
+    await until(async () => new URL(p.url()).pathname.startsWith('/backstage/termine'), 'Freigeschaltetes Gerät kommt nicht rein');
+  }
+  return p;
+});
+
 test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', async () => {
   const p = await page();
   await p.go('/backstage/buehnenplan/');
@@ -763,6 +929,26 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   }));
   await until(async () => (await markiert()) === 1, 'Markierung wird nicht gespeichert');
   expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Zeichnen hat umgeblättert');
+  // Schrift: „T“, auf die Stelle tippen, Text eingeben – blättert nicht um
+  await p.locator('app-noten-stift').getByRole('button', { name: 'Schrift einfügen' }).click();
+  await p.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.7);
+  // mehrzeilig: Enter macht eine neue Zeile (blättert nicht), „Übernehmen“ speichert
+  const feld = p.locator('app-noten-stift .schrift textarea');
+  await until(async () => await feld.isVisible().catch(() => false), 'Eingabefeld für Schrift erscheint nicht');
+  await feld.type('Bridge leise');
+  await feld.press('Enter');
+  await feld.type('ab Takt 9');
+  expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Enter im Schriftfeld hat geblättert');
+  await p.locator('app-noten-stift .schrift').getByRole('button', { name: 'Übernehmen' }).click();
+  const texte = () => p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-noten');
+    req.onsuccess = () => {
+      const k = req.result.transaction('markierungen').objectStore('markierungen').getAll();
+      k.onsuccess = () => ok(k.result.flat().filter((x) => x.text).map((x) => x.text));
+    };
+  }));
+  await until(async () => (await texte()).includes('Bridge leise\nab Takt 9'), async () => 'Mehrzeilige Schrift wird nicht gespeichert: ' + JSON.stringify(await texte()));
+  expect((await kopf.innerText()).includes('Seite 2 / 2'), 'Schreiben hat umgeblättert');
   await kopf.locator('button.stift').click();
   await kopf.locator('select.wahl').selectOption({ label: 'Akkorde' });
   await p.evaluate(() => ['bn-buehne-halbseite', 'bn-buehne-tasten'].forEach((k) => localStorage.removeItem(k)));
@@ -777,9 +963,12 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => !(await kopf.innerText()).includes('Iris'), 'Pfeiltaste blättert nicht zum nächsten Song der Liste');
   await p.keyboard.press('ArrowLeft');
   await until(async () => (await kopf.innerText()).includes('Iris') && (await p.locator('app-noten-anzeige .teil b').count()) > 0, 'Beim Zurückblättern wechselt die Ansicht');
-  await p.keyboard.press('Escape');
-  await p.keyboard.press('Escape');
-  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'Bühnen-Modus lässt sich nicht schließen');
+  // Noten-Knopf bleibt in der Notenansicht: noch einmal drücken → zurück zur Titelanzeige; das X beendet den Bühnen-Modus
+  await p.locator('app-noten-anzeige').getByRole('button', { name: 'Zurück zur Titelanzeige' }).click();
+  await until(async () => (await p.locator('app-noten-anzeige').count()) === 0 && (await p.locator('app-setlist-buehne').count()) === 1, 'Noten-Knopf führt nicht zurück zur Titelanzeige');
+  await p.locator('app-setlist-buehne .noten-knopf').click();
+  await p.locator('app-noten-anzeige').getByRole('button', { name: 'Bühnen-Modus beenden' }).click();
+  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'X in der Notenansicht beendet den Bühnen-Modus nicht');
 
   // Weitergabe: Datei exportieren und auf einem zweiten Gerät importieren
   await p.go('/backstage/songs/noten/');
@@ -872,6 +1061,43 @@ test('Backstage: Abgleich – Daten verwalten, vergangene Einträge aufräumen; 
   // Sync-Kompass: vorhanden, aber ausgeblendet, solange nicht abgeglichen wird
   await until(async () => (await p.locator('app-sync-kompass a.kompass').count()) === 1, 'Sync-Kompass fehlt');
   expect(!(await p.locator('app-sync-kompass a.kompass').isVisible()), 'Sync-Kompass sichtbar, obwohl nicht abgeglichen wird');
+  // Noten-Check: eine Datei ohne Song, auf dem Gerät und im Sync-Ordner → „Auch aus OneDrive“ löscht beides
+  await p.evaluate(() => Promise.all([
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-noten', 2);
+      req.onupgradeneeded = () => {
+        for (const n of ['dateien', 'songs', 'markierungen']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n, n === 'dateien' ? { keyPath: 'id' } : undefined);
+      };
+      req.onsuccess = () => {
+        const t = req.result.transaction('dateien', 'readwrite');
+        t.objectStore('dateien').put({ id: 'waise', name: 'Waise.pdf', daten: new ArrayBuffer(5), groesse: 5, hinzugefuegt: '2026-01-01' });
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+    new Promise((ok) => {
+      const req = indexedDB.open('bn-sync', 1);
+      req.onupgradeneeded = () => { for (const n of ['dateien', 'meta']) if (!req.result.objectStoreNames.contains(n)) req.result.createObjectStore(n); };
+      req.onsuccess = () => {
+        if (!req.result.objectStoreNames.contains('dateien')) return ok(null);
+        const t = req.result.transaction('dateien', 'readwrite');
+        t.objectStore('dateien').put({ inhalt: new Blob(['%PDF-']), groesse: 5, geaendert: new Date().toISOString(), version: 'v1' }, 'Noten/Waise.pdf');
+        t.oncomplete = () => { req.result.close(); ok(null); };
+      };
+    }),
+  ]));
+  await p.reload({ waitUntil: 'networkidle' });
+  const check = p.locator('app-noten-check');
+  await until(async () => (await check.innerText().catch(() => '')).includes('1 ohne Song'), 'Noten-Check zeigt die Datei ohne Song nicht');
+  await check.locator('summary').click();
+  await check.getByRole('button', { name: 'Waise.pdf auch aus OneDrive löschen' }).click();
+  await until(async () => (await check.innerText().catch(() => '')).includes('und aus dem Sync-Ordner (1)') || !(await check.locator('details').count()), 'Löschen aus OneDrive meldet nichts');
+  expect(!(await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const k = req.result.transaction('dateien').objectStore('dateien').getAllKeys();
+      k.onsuccess = () => ok(k.result.includes('Noten/Waise.pdf'));
+    };
+  }))), 'Datei liegt noch im Sync-Ordner');
   await daten.locator('input[type=search]').fill('vor ort');
   await until(async () => (await daten.locator('li').first().innerText().catch(() => '')).includes('Vor Ort ·'), 'Daten-Übersicht findet den Vor-Ort-Eintrag nicht');
   await daten.locator('input[type=search]').fill('Schriftgröße');
@@ -933,7 +1159,18 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await p.evaluate(() => {
     localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Blickfeld Nord', lokal: 'app', richtung: 'beide', loeschen: true, auto: false }));
     localStorage.setItem('bn-probe-2099-04-04', JSON.stringify({ songs: [], notizen: 'x', punkte: [] }));
+    localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|Goo Goo Dolls': 1 }));
   });
+  // sechs alte Backups (vor über einem halben Jahr) liegen schon im Sync-Ordner
+  await p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync', 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore('dateien'); req.result.createObjectStore('meta'); };
+    req.onsuccess = () => {
+      const t = req.result.transaction('dateien', 'readwrite');
+      for (let m = 1; m <= 6; m++) t.objectStore('dateien').put({ inhalt: new Blob(['{}']), groesse: 2, geaendert: '', version: 'v' + m }, `Backup/blickfeld-nord-backup-2025-0${m}-01.json`);
+      t.oncomplete = () => ok(null);
+    };
+  }));
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backup-karte button', { hasText: 'Backup erstellen' }).click();
   await until(async () => (await p.evaluate(() => new Promise((ok) => {
@@ -945,9 +1182,40 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
     };
     req.onerror = () => ok(false);
   }))), 'Backup erstellen legt keine Datei in den Sync-Ordner');
-  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup:'), 'Letztes Backup wird nicht angezeigt');
+  // eine Datei mit allem (auch Einstellungen); von den alten bleiben nur so viele, dass es die letzten 5 sind
+  const backupsLesen = () => p.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('bn-sync');
+    req.onsuccess = () => {
+      const st = req.result.transaction('dateien').objectStore('dateien');
+      const k = st.getAllKeys();
+      k.onsuccess = async () => {
+        const namen = k.result.map(String).filter((x) => x.startsWith('Backup/')).sort();
+        const neu = namen.find((x) => /-\d{4}\.json$/.test(x));
+        const g = st.get(neu);
+        g.onsuccess = async () => ok({ namen, inhalt: JSON.parse(await g.result.inhalt.text()) });
+      };
+    };
+  }));
+  let backups;
+  await until(async () => (backups = await backupsLesen()).namen.length === 5, 'alte Backups werden nicht gelöscht').catch(() => undefined);
+  expect(backups.namen.length === 5 && !backups.namen.includes('Backup/blickfeld-nord-backup-2025-01-01.json') && !backups.namen.includes('Backup/blickfeld-nord-backup-2025-02-01.json'), `Aufbewahrung stimmt nicht: ${backups.namen.join(', ')}`);
+  expect(backups.inhalt.data['bn-probe-2099-04-04'] && backups.inhalt.data['bn-wackelt'], 'Backup enthält nicht alles (Daten und Einstellungen)');
+  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Letztes Backup von diesem Gerät:'), 'Letztes Backup wird nicht angezeigt');
+  await until(async () => (await p.locator('app-backup-karte').innerText()).includes('Neuestes Backup in OneDrive:'), 'Backup in OneDrive wird nicht angezeigt');
+  // alle Backups aus OneDrive als Liste in den Einstellungen
+  await until(async () => /Backups in OneDrive \(\d+\)/.test(await p.locator('app-backup-karte').innerText()), 'Liste der Backups in OneDrive fehlt');
+  await p.locator('app-backup-karte details.liste summary').click();
+  expect(await p.locator('app-backup-karte details.liste li button', { hasText: 'Wiederherstellen' }).first().isVisible(), 'Backup in der Liste lässt sich nicht wiederherstellen');
   await p.go('/backstage/abgleich/');
   const status = p.locator('app-sync-status');
+  // (i) erklärt den Knopf; Gerät benennen
+  await status.getByRole('button', { name: 'Was macht „Jetzt synchronisieren“?' }).click();
+  await until(async () => (await status.locator('.hilfe').innerText().catch(() => '')).includes('Gleicht OneDrive und dieses Gerät ab'), '(i) erklärt „Jetzt synchronisieren“ nicht');
+  await status.locator('.geraete summary').click();
+  await status.locator('.geraet-name input').fill('Freds Handy');
+  await status.locator('.geraet-name input').dispatchEvent('change');
+  await until(async () => (await status.locator('.geraete summary').innerText()).includes('dieses: Freds Handy'), 'Gerätename wird nicht übernommen');
+  expect((await p.evaluate(() => localStorage.getItem('bn-geraet-name'))) === 'Freds Handy', 'Gerätename nicht gespeichert');
   // nach dem Abgleich nicht eindeutig erkannte Noten warten auf eine Zuordnung
   await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync', 1);
@@ -971,6 +1239,11 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await status.locator('app-funde-liste button', { hasText: 'Einlesen' }).click();
   await until(async () => (await status.locator('app-funde-liste .meldung').innerText().catch(() => '')).includes('2 Akkordblätter'), 'Zuordnen liest nicht ein');
   await until(async () => !(await status.innerText()).includes('eine Zuordnung'), 'Offene Zuordnung bleibt stehen');
+  // „Synchronisierte Dateien einlesen“: eigenständig Eingelesenes und Backups werden nicht mehr angeboten
+  await status.locator('button', { hasText: 'Synchronisierte Dateien einlesen' }).click();
+  await until(async () => /eigenständig eingelesene Noten-Datei ausgeblendet[\s\S]*unter Einstellungen → Backup/.test(await status.innerText()), async () => 'Hinweis auf ausgeblendete Dateien fehlt: ' + (await status.innerText()).slice(-300));
+  const funde = await status.locator('app-funde-liste').innerText();
+  expect(!funde.includes('Eigenes_Lied') && !/Backup ·/.test(funde) && funde.includes('Scan 7.pro'), 'Eigenständiges oder Backup wird trotzdem angeboten: ' + funde.slice(0, 300));
   await p.go('/backstage/songs/');
   await p.locator('app-songs-liste .listen-chips button', { hasText: 'Ohne Liste' }).click();
   await until(async () => /Eigenes Lied[\s\S]*Testband[\s\S]*Akkorde/.test(await p.locator('app-songs-liste tbody').innerText()), 'Eigenständiger Song fehlt unter „Ohne Liste“');
@@ -988,6 +1261,10 @@ test('Backstage: Setlist – Songs aus allen Spotify-Listen per Filter', async (
   const titel = (await erster.locator('.t').innerText()).trim();
   await erster.click();
   await until(async () => (await p.locator('app-setlist .list').innerText()).includes(titel), 'Song aus dem Archiv landet nicht auf der Setlist');
+  // fehlt in der Spotify-Liste „Setlist“ → Hinweis; Track-Links für Spotify
+  await until(async () => (await p.locator('app-setlist .spotify-hinweis.fehlt').innerText().catch(() => '')).includes(titel), 'Hinweis „nicht in der Spotify-Liste Setlist“ fehlt');
+  await p.locator('app-setlist button', { hasText: 'Für Spotify kopieren' }).click();
+  await until(async () => /Track-Links kopiert|Für keinen Song/.test(await p.locator('app-setlist .spotify-hinweis').first().innerText().catch(() => '')), 'Spotify-Export meldet nichts');
   return p;
 });
 

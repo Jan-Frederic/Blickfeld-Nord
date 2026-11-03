@@ -3,10 +3,12 @@
 // Termine, Konzertlisten und Kampagnen-Tabellen wachsen mit jedem Auftritt und bleiben deshalb draußen.
 // GoatCounter antwortet mit einer festen Zahl, damit die Besucherzahlen immer gleich aussehen.
 import { test, expect } from '@playwright/test';
+import { zugangFreischalten } from '../../scripts/lib/zugang-test.mjs';
 
 const NOW = new Date('2026-10-01T10:00:00+02:00');
 
 test.beforeEach(async ({ page }) => {
+  await zugangFreischalten(page.context());
   await page.clock.setFixedTime(NOW);
   await page.route(/goatcounter\.com\/counter\//, (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify({ count: '1.234' }) }),

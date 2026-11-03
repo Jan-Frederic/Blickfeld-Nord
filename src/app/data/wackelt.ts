@@ -1,6 +1,8 @@
 // „Wackelt noch“: Songs, bei denen man selbst noch unsicher ist – je Gerät, also je Musiker. Markiert unter
 // Backstage → Songs (Dialog) oder in der Nachbereitung eines Auftritts; der Probe-Vorschlag nimmt sie zuerst,
 // unter Songs zeigt „Zeigen → wackelt noch“ die Liste. Gespeichert als „Titel|Interpret“ → Datum der Markierung.
+// Hat man unter Probe „Ich bin …“ gewählt, sieht die Band die Liste als „unsicher bei“ (data/band-ich.ts).
+import { ladeIch, unsicherTeilen } from './band-ich';
 export const WACKELT_KEY = 'bn-wackelt';
 
 export function ladeWackelt(): Record<string, string> {
@@ -21,5 +23,7 @@ export function wackeltSetzen(key: string, an: boolean, heute = new Date().toISO
   } catch {
     // ohne Speicher gilt die Markierung nicht
   }
+  const ich = ladeIch();
+  if (ich) unsicherTeilen(ich, neu);
   return neu;
 }

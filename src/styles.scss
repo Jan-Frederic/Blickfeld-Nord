@@ -253,6 +253,16 @@ app-presse-termine .presse-termine-info { margin: 0 0 12px; color: var(--bn-fog)
 .presse-termine .datum { flex: none; min-width: 120px; color: var(--bn-sunset); font-size: .9rem; }
 .presse-termine .ort { flex: 1; font-weight: 600; }
 .presse-termine .stadt { font-weight: 400; color: var(--bn-fog); }
+// nichts über den Rand: Ort darf umbrechen; auf schmalen Bildschirmen Datum über dem Ort
+app-presse-termine { display: block; min-width: 0; }
+.presse-termine li, .presse-termine a { min-width: 0; }
+.presse-termine .ort { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .presse-termine a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+  .presse-termine .datum { min-width: 0; grid-column: 1; }
+  .presse-termine .ort { grid-column: 1; }
+  .presse-termine a mat-icon { grid-column: 2; grid-row: 1 / span 2; }
+}
 app-presse-konzert .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); text-decoration: none; font: 500 .92rem Inter, sans-serif; cursor: pointer; }
 app-presse-konzert .btn:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 app-presse-konzert .btn.small { padding: 6px 12px; font-size: .82rem; }
@@ -430,3 +440,107 @@ app-songs-liste .status.automatisch { background: transparent; border: 2px solid
 app-songs-liste .status.unsicher { background: #e0b25a; }
 app-song-dialog .stimmt { margin-left: 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid #5fb88a; background: none; color: #5fb88a; font: inherit; font-size: .8rem; cursor: pointer; }
 app-song-dialog .geprueft { color: #5fb88a; }
+
+// Abgleich → Synchronisation: (i)-Hilfe je Knopf, „Was passiert gerade?“, Geräte (sync-status.ts)
+app-sync-status .paar { display: inline-flex; align-items: center; gap: 4px; }
+app-sync-status button.info { padding: 4px; border: 0; border-radius: 50%; color: var(--bn-fog); }
+app-sync-status button.info.an { color: var(--bn-sunset); }
+app-sync-status .hilfe { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--bn-sunset); border-radius: 0 8px 8px 0; background: rgba(232, 164, 106, .08); color: var(--bn-ink); }
+app-sync-status .passiert { margin-top: 8px; font-size: .84rem; }
+app-sync-status .geraete { margin: 12px 0 0; font-size: .88rem; }
+app-sync-status .geraete summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--bn-fog); }
+app-sync-status .geraet-name { display: grid; gap: 4px; max-width: 320px; margin: 10px 0; color: var(--bn-fog); font-size: .84rem; }
+app-sync-status .geraet-name input { padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; }
+app-sync-status .geraete ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+app-sync-status .geraete li.ich { color: var(--bn-sunset); }
+
+// Einlesen: „liegt schon bei …“ und „für alle gleich benannten übernehmen“ (funde-liste.ts)
+app-funde-liste .datei small.schon { color: #e0b25a; }
+app-funde-liste button.alle { justify-self: start; margin: 2px 0; padding: 2px 10px; border-color: var(--bn-line); background: none; color: var(--bn-sunset); font-size: .78rem; }
+
+// Setlist: Spotify-Hinweise (setlist.ts)
+app-setlist .spotify-hinweis { margin: 10px 0 0; max-width: 760px; font-size: .84rem; line-height: 1.5; color: #8fd19e; }
+app-setlist .spotify-hinweis.fehlt { color: #e8a46a; }
+
+// Daten auf diesem Gerät → Noten-Check (noten-check.ts)
+app-noten-check { display: block; }
+app-noten-check .noten-check { margin: 8px 0 0; padding: 10px 14px; border: 1px solid #e0b25a; border-radius: 10px; font-size: .88rem; }
+app-noten-check summary { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #e0b25a; }
+app-noten-check h5 { margin: 12px 0 6px; font-size: .86rem; font-weight: 600; }
+app-noten-check p { margin: 0 0 8px; color: var(--bn-fog); font-size: .84rem; }
+app-noten-check ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+app-noten-check li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, .06); overflow-wrap: anywhere; }
+app-noten-check small { color: var(--bn-fog); }
+app-noten-check button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
+app-noten-check button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-noten-check mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-noten-check .meldung { margin-top: 8px; color: #5fb88a; }
+app-noten-check .knoepfe { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+app-noten-check button.gefahr { border-color: #e07a5a; color: #e07a5a; }
+
+// Probe-Modus: Leiste je Song und Zusammenfassung am Ende (probe-leiste.ts, im Bühnen-Modus)
+app-probe-leiste { display: block; margin: 18px auto 0; max-width: 760px; font-size: max(15px, calc(.5em * var(--zoom, 1))); }
+app-probe-leiste .probe-leiste { display: grid; gap: 10px; justify-items: center; }
+app-probe-leiste .knoepfe, app-probe-ende .probe-ende { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+app-probe-leiste button, app-probe-ende button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #3a3f45; border-radius: 999px; background: #1b1e22; color: #ece9e4; font: inherit; font-size: .95em; cursor: pointer; }
+app-probe-leiste button.klein { padding: 0 12px; }
+app-probe-leiste button.an { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-probe-leiste button.sitzt.an { border-color: #5fb88a; background: rgba(95, 184, 138, .15); color: #5fb88a; }
+app-probe-leiste button.nochmal.an { border-color: #e0b25a; background: rgba(224, 178, 90, .15); color: #e0b25a; }
+app-probe-leiste .notiz { width: min(100%, 520px); box-sizing: border-box; padding: 10px 12px; border: 1px solid #3a3f45; border-radius: 10px; background: #15171a; color: #ece9e4; font: inherit; font-size: .95em; }
+app-probe-leiste .vorher { margin: 0; color: #e0b25a; font-size: .9em; }
+app-probe-leiste .zeit { margin: 0; color: #9aa0a6; font-size: .85em; }
+app-probe-leiste app-song-mitschnitte { width: min(100%, 520px); text-align: left; }
+app-probe-ende .probe-ende { flex-direction: column; align-items: center; max-width: 760px; margin: 0 auto; text-align: center; }
+app-probe-ende h2 { margin: 0 0 8px; }
+app-probe-ende .zeile { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: #c9c6c1; text-align: left; }
+app-probe-ende .zeile.sitzt mat-icon { color: #5fb88a; }
+app-probe-ende .zeile.nochmal mat-icon { color: #e0b25a; }
+app-probe-ende button.zu { margin-top: 8px; }
+
+// Songs → Noten: Suche und Löschen-Frage (noten-verwaltung.ts)
+app-noten-verwaltung .suche { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 0 12px; border: 1px solid var(--bn-line); border-radius: 10px; color: var(--bn-fog); }
+app-noten-verwaltung .suche input { flex: 1; min-width: 0; padding: 9px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
+app-noten-verwaltung .suche input:focus { outline: none; }
+app-noten-verwaltung .suche:focus-within { border-color: var(--bn-sunset); }
+app-noten-verwaltung .frage { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+app-noten-verwaltung .frage button.gefahr { border-color: #e07a5a; color: #e07a5a; }
+app-noten-verwaltung li.leer { color: var(--bn-fog); border: 0; }
+
+// Probe: „Wer kommt?“ (probe-zusagen.ts)
+app-probe-zusagen .zusagen { display: grid; gap: 10px; font-size: .9rem; }
+app-probe-zusagen .stand { margin: 0; color: var(--bn-fog); }
+app-probe-zusagen ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+app-probe-zusagen li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--bn-line); border-radius: 10px; }
+app-probe-zusagen li span { display: grid; }
+app-probe-zusagen li small { color: var(--bn-fog); font-size: .8rem; }
+app-probe-zusagen li mat-icon { color: var(--bn-fog); }
+app-probe-zusagen li.ja mat-icon { color: #5fb88a; }
+app-probe-zusagen li.nein mat-icon { color: #e07a5a; }
+app-probe-zusagen li.ich { border-color: var(--bn-sunset); }
+app-probe-zusagen .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+app-probe-zusagen button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; cursor: pointer; }
+app-probe-zusagen button.ja.an { border-color: #5fb88a; background: rgba(95, 184, 138, .15); color: #5fb88a; }
+app-probe-zusagen button.nein.an { border-color: #e07a5a; background: rgba(224, 122, 90, .15); color: #e07a5a; }
+app-probe-zusagen button.link { justify-self: start; padding: 0; border: 0; color: var(--bn-fog); font-size: .8rem; text-decoration: underline; }
+app-probe-zusagen input, app-probe-zusagen select { flex: 1; min-width: min(100%, 200px); padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 10px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+app-probe-zusagen .wer { display: grid; gap: 4px; max-width: 420px; color: var(--bn-fog); }
+app-probe-zusagen .wer small { font-size: .8rem; }
+app-probe-zusagen mat-icon { font-size: 20px; width: 20px; height: 20px; }
+app-probe-leiste .uebergang { margin: 0; max-width: 620px; padding: 8px 12px; border-left: 3px solid var(--bn-sunset); color: #ece9e4; font-size: .9em; text-align: left; }
+
+// Einstellungen → Band-Ordner (band-ordner.ts)
+app-band-ordner .box { margin-top: 20px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
+app-band-ordner h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 400 .85rem var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; }
+app-band-ordner p { margin: 0 0 10px; max-width: 720px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); }
+app-band-ordner pre { margin: 0 0 10px; padding: 10px 12px; border-radius: 8px; background: #1b1e22; font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+app-band-ordner button { display: inline-flex; align-items: center; gap: 6px; margin: 0 8px 10px 0; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .86rem; cursor: pointer; }
+app-band-ordner button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-band-ordner mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-band-ordner .ok { color: #5fb88a; }
+app-band-ordner .fehler { color: #e07a5a; }
+
+// Orange gefüllte Knöpfe: der allgemeine Hover-Stil (orange Schrift) machte die Schrift unsichtbar – auf dem Handy
+// bleibt „hover“ nach dem Antippen hängen (leerer oranger Knopf). Schrift bleibt dunkel, der Knopf hellt nur auf.
+:is(button.primaer, .primaer, .btn.primary, button.primary, .actions .primary, .buttons .primary, .tabs a.active,
+  .chips button.on, .wahl button.on, .seg button.on, .art button.on):hover:not(:disabled) { color: #2a1708 !important; background-color: #f0b884 !important; border-color: #f0b884 !important; }

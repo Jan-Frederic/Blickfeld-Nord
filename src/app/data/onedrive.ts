@@ -127,6 +127,29 @@ async function graph(pfad: string, init: RequestInit = {}): Promise<Response> {
   return res;
 }
 
+/**
+ * Darf das angemeldete Konto diesen Ordner sehen? (Sichtsperre fürs Backstage, data/zugang.ts)
+ * ja = sichtbar; nein = nicht geteilt bzw. nicht vorhanden; unklar = keine Anmeldung, kein Netz oder Störung.
+ */
+export async function ordnerSichtbar(drive: string, item: string, still = false): Promise<'ja' | 'nein' | 'unklar'> {
+  try {
+    const t = still ? await oneDriveStill(token) : await token();
+    const res = await fetch(`${GRAPH}/drives/${encodeURIComponent(drive)}/items/${encodeURIComponent(item)}?$select=id`, { headers: { Authorization: `Bearer ${t}` } });
+    if (res.ok) return 'ja';
+    return res.status === 403 || res.status === 404 ? 'nein' : 'unklar';
+  } catch {
+    return 'unklar';
+  }
+}
+
+/** Kennung (Drive und Element) eines Ordners – für den Band-Ordner der Sichtsperre */
+export async function ordnerKennung(ort: CloudOrt): Promise<{ drive: string; item: string }> {
+  const i = (await (await graph(`${adresse(ort)}?$select=id,parentReference`)).json()) as { id: string; parentReference?: { driveId?: string } };
+  const drive = i.parentReference?.driveId ?? ort.wurzel?.drive;
+  if (!drive) throw new Error('Ordner ohne Drive-Kennung');
+  return { drive, item: i.id };
+}
+
 /** Pfad im OneDrive („Blickfeld Nord/Noten“) für Graph-Adressen kodieren */
 export const pfadKodieren = (pfad: string) => pfad.split('/').map((t) => t.trim()).filter(Boolean).map(encodeURIComponent).join('/');
 

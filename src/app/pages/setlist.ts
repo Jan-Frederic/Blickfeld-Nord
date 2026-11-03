@@ -4,7 +4,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
-import { LISTEN, ListenKey, ListenWahl, listeInReihenfolge, listenFiltern, listenZahlen, songAbgleich } from '../data/playlisten';
+import { LISTEN, ListenKey, ListenWahl, fehltInListe, spotifyLinks, listeInReihenfolge, listenFiltern, listenZahlen, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
 import { SetlistVorlagen } from './setlist-vorlagen';
 import { SetlistVorschlag } from './setlist-vorschlag';
@@ -54,6 +54,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           <button type="button" (click)="print()" [disabled]="!songCount()"><mat-icon>print</mat-icon> Drucken / PDF</button>
           <button type="button" (click)="share()" [disabled]="!songCount()"><mat-icon>{{ copied() ? 'check' : 'send' }}</mat-icon> {{ copied() ? 'Kopiert!' : 'An die Band' }}</button>
           <button type="button" (click)="linkTeilen()" [disabled]="!songCount()"><mat-icon>{{ linkKopiert() ? 'check' : 'link' }}</mat-icon> {{ linkKopiert() ? 'Link kopiert!' : 'Als Link' }}</button>
+          <button type="button" (click)="fuerSpotify()" [disabled]="!songCount()" title="Track-Links kopieren – in Spotify am Computer in eine Playlist einfügen (Strg/Cmd+V)"><mat-icon>{{ spotifyKopiert() ? 'check' : 'queue_music' }}</mat-icon> {{ spotifyKopiert() ? 'Links kopiert!' : 'Für Spotify kopieren' }}</button>
           <button type="button" (click)="clear()" [disabled]="!entries().length"><mat-icon>delete_sweep</mat-icon> Leeren</button>
         </div>
         <app-auftritt-vorbereiten [entries]="entries()" [titel]="title() || 'Setlist'" />
@@ -131,6 +132,10 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
           <button type="button" (click)="bogen()"><mat-icon>trending_up</mat-icon> Sets nach Tempo ordnen</button>
           @if (bogenMeldung(); as m) { <span role="status">{{ m }}</span> }
         </div>
+      }
+      @if (spotifyMeldung(); as m) { <p class="spotify-hinweis" role="status">{{ m }}</p> }
+      @if (nichtInSpotifySetlist().length) {
+        <p class="spotify-hinweis fehlt">♫ Nicht in der Spotify-Liste „Setlist“: {{ nichtInSpotifySetlistText() }} – in Spotify ergänzen, damit die Band zum Üben alles in einer Liste hat.</p>
       }
       @if (hierZahl(); as n) {
         <div class="tools uebergaenge" style="color: #e8a46a">
@@ -467,6 +472,33 @@ export class Setlist {
   }
 
   // Setlist als Text (Sets, nummerierte Songs mit Interpret) – Teilen-Menü, sonst Zwischenablage
+  // Setlist für Spotify: Track-Links in Setlist-Reihenfolge – in Spotify am Computer in eine Playlist einfügen
+  protected readonly spotifyKopiert = signal(false);
+  protected readonly spotifyMeldung = signal('');
+  protected async fuerSpotify(): Promise<void> {
+    const songs = this.entries().filter((e) => !isPause(e)) as { title: string; artist: string }[];
+    const { links, ohne } = spotifyLinks(songs);
+    this.spotifyMeldung.set(
+      (links.length ? `${links.length} Track-Links kopiert – in Spotify am Computer eine Playlist öffnen und mit Strg/Cmd+V einfügen.` : 'Für keinen Song ist ein Spotify-Link bekannt.') +
+        (ohne.length ? ` Ohne Link (von Hand suchen): ${ohne.join(', ')}.` : ''),
+    );
+    if (!links.length) return;
+    const text = links.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      this.spotifyKopiert.set(true);
+      setTimeout(() => this.spotifyKopiert.set(false), 2000);
+    } catch {
+      window.prompt('Links kopieren:', text);
+    }
+  }
+  /** Songs dieser Setlist, die in der Spotify-Liste „Setlist“ fehlen */
+  protected readonly nichtInSpotifySetlist = computed(() => fehltInListe(this.entries().filter((e) => !isPause(e)) as { title: string; artist: string }[], 'setlist'));
+  protected readonly nichtInSpotifySetlistText = computed(() => {
+    const t = this.nichtInSpotifySetlist().map((s) => s.title);
+    return t.slice(0, 5).join(', ') + (t.length > 5 ? ` und ${t.length - 5} weitere` : '');
+  });
+
   protected readonly copied = signal(false);
   protected async share(): Promise<void> {
     let n = 0;

@@ -122,9 +122,9 @@ const TEXT = tr(
   `,
   styles: `
     .hint { display: block; margin: -16px 0 20px; }
-    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); }
     .card {
-      display: flex; gap: 20px; align-items: flex-start; padding: 24px; border-radius: 12px;
+      display: flex; gap: 20px; align-items: flex-start; min-width: 0; padding: 24px; border-radius: 12px;
       border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72);
       color: var(--bn-ink); text-decoration: none; transition: border-color .2s, transform .2s;
     }
@@ -145,7 +145,7 @@ const TEXT = tr(
     .icon svg { width: 34px; height: 34px; }
     .icon.bild { overflow: hidden; background: #fff; }
     .icon img { width: 100%; height: 100%; object-fit: cover; }
-    .body { display: flex; flex-direction: column; gap: 6px; }
+    .body { display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
     .name { font-family: var(--bn-display); font-size: 1.05rem; line-height: 1.3; }
     .desc { line-height: 1.6; color: rgba(236, 233, 228, .82); }
     .url {

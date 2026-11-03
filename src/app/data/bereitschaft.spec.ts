@@ -57,4 +57,12 @@ describe('bereitschaft', () => {
     expect(p?.hinweis).toBe('1× mehr als zwei langsame Songs hintereinander · Baustelle laut letzter Probe: A');
     expect(bereitschaft({ ...basis, setlistCheck: { langsamStrecken: 0, spruenge: 0, baustellen: [] } }).find((x) => x.text === 'Setlist rund')?.ok).toBe(true);
   });
+
+  it('Vorabend: Wetter und Notenmappe zum Abhaken – erst am Vortag', () => {
+    expect(bereitschaft({ ...basis, vorabend: [] }).some((p) => p.haken)).toBe(false);
+    const p = bereitschaft({ ...basis, heute: '2026-12-03', vorabend: ['wetter'] });
+    const h = p.filter((x) => x.haken);
+    expect(h.map((x) => [x.haken, x.ok])).toEqual([['wetter', true], ['mappe', false]]);
+    expect(h[1].ziel).toBe('setlist');
+  });
 });

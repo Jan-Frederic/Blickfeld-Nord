@@ -1,3 +1,4 @@
+import { backstageZugang } from './data/zugang.guard';
 import { Routes } from '@angular/router';
 import { Home } from './pages/home';
 import { Lang, tr } from './i18n';
@@ -156,25 +157,27 @@ export const routes: Routes = [
   { path: 'booking/en', redirectTo: '/en/booking' },
   { path: 'booking/nl', redirectTo: '/nl/booking' },
   // Backstage: nur für die Band, nur auf Deutsch
+  // Sichtsperre: Anmeldeseite (ohne Wächter), alle anderen Backstage-Seiten mit Wächter (data/zugang.guard.ts)
+  { path: 'backstage/zugang', loadComponent: () => import('./pages/backstage-zugang').then((m) => m.BackstageZugang), title: 'Anmelden – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   // Backstage-Bereiche (vor backstage/:id, damit sie nicht als Auftritt gelten)
-  { path: 'backstage/termine/kontakte', loadComponent: () => import('./pages/termine-kontakte').then((m) => m.TermineKontakte), title: 'Kontakte – Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/termine/saison', loadComponent: () => import('./pages/termine-saison').then((m) => m.TermineSaison), title: 'Saison – Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/termine', loadComponent: () => import('./pages/backstage-termine').then((m) => m.BackstageTermine), title: 'Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/zahlen', loadComponent: () => import('./pages/backstage-zahlen').then((m) => m.BackstageZahlen), title: 'Zahlen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/material', loadComponent: () => import('./pages/backstage-material').then((m) => m.BackstageMaterial), title: 'Material – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/songs', loadComponent: () => import('./pages/backstage-songs').then((m) => m.BackstageSongs), title: 'Songs – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', teil: 'liste' } },
-  { path: 'backstage/songs/setlists', loadComponent: () => import('./pages/backstage-songs').then((m) => m.BackstageSongs), title: 'Setlists – Songs – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', teil: 'setlists' } },
-  { path: 'backstage/songs/noten', loadComponent: () => import('./pages/backstage-songs').then((m) => m.BackstageSongs), title: 'Noten – Songs – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', teil: 'noten' } },
-  { path: 'backstage/buehnenplan', loadComponent: () => import('./pages/backstage-buehnenplan').then((m) => m.BackstageBuehnenplan), title: 'Bühnenplan – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/aufgaben', loadComponent: () => import('./pages/backstage-aufgaben').then((m) => m.BackstageAufgaben), title: 'Aufgaben – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/einstellungen', loadComponent: () => import('./pages/backstage-einstellungen').then((m) => m.BackstageEinstellungen), title: 'Einstellungen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/abgleich', loadComponent: () => import('./pages/backstage-abgleich').then((m) => m.BackstageAbgleich), title: 'Abgleich – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/uebersetzungen', loadComponent: () => import('./pages/uebersetzungen-pruefen').then((m) => m.UebersetzungenPruefen), title: 'Übersetzungen prüfen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/jahr/:jahr', loadComponent: () => import('./pages/jahr').then((m) => m.JahrPage), title: 'Jahresrückblick-Vorschau – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', vorschau: true } },
-  { path: 'backstage/probe/:datum', loadComponent: () => import('./pages/backstage-probe').then((m) => m.BackstageProbe), title: 'Probe – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/:id/:teil', loadComponent: () => import('./pages/backstage-tool').then((m) => m.BackstageTool), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage/:id', loadComponent: () => import('./pages/backstage-show').then((m) => m.BackstageShow), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
-  { path: 'backstage', loadComponent: () => import('./pages/backstage').then((m) => m.Backstage), title: 'Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/termine/kontakte', canActivate: [backstageZugang], loadComponent: () => import('./pages/termine-kontakte').then((m) => m.TermineKontakte), title: 'Kontakte – Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/termine/saison', canActivate: [backstageZugang], loadComponent: () => import('./pages/termine-saison').then((m) => m.TermineSaison), title: 'Saison – Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/termine', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-termine').then((m) => m.BackstageTermine), title: 'Termine – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/zahlen', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-zahlen').then((m) => m.BackstageZahlen), title: 'Zahlen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/material', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-material').then((m) => m.BackstageMaterial), title: 'Material – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/songs', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-songs').then((m) => m.BackstageSongs), title: 'Songs – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', teil: 'liste' } },
+  { path: 'backstage/songs/setlists', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-songs').then((m) => m.BackstageSongs), title: 'Setlists – Songs – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', teil: 'setlists' } },
+  { path: 'backstage/songs/noten', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-songs').then((m) => m.BackstageSongs), title: 'Noten – Songs – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', teil: 'noten' } },
+  { path: 'backstage/buehnenplan', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-buehnenplan').then((m) => m.BackstageBuehnenplan), title: 'Bühnenplan – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/aufgaben', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-aufgaben').then((m) => m.BackstageAufgaben), title: 'Aufgaben – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/einstellungen', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-einstellungen').then((m) => m.BackstageEinstellungen), title: 'Einstellungen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/abgleich', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-abgleich').then((m) => m.BackstageAbgleich), title: 'Abgleich – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/uebersetzungen', canActivate: [backstageZugang], loadComponent: () => import('./pages/uebersetzungen-pruefen').then((m) => m.UebersetzungenPruefen), title: 'Übersetzungen prüfen – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/jahr/:jahr', canActivate: [backstageZugang], loadComponent: () => import('./pages/jahr').then((m) => m.JahrPage), title: 'Jahresrückblick-Vorschau – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow', vorschau: true } },
+  { path: 'backstage/probe/:datum', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-probe').then((m) => m.BackstageProbe), title: 'Probe – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/:id/:teil', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-tool').then((m) => m.BackstageTool), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage/:id', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage-show').then((m) => m.BackstageShow), title: 'Auftritt – Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
+  { path: 'backstage', canActivate: [backstageZugang], loadComponent: () => import('./pages/backstage').then((m) => m.Backstage), title: 'Backstage – Blickfeld Nord', data: { robots: 'noindex, nofollow' } },
   // Fehlerseite: /404 wird vorgerendert und beim Deploy als 404.html genutzt
   { path: '404', ...notFound() },
   { path: '**', ...notFound() },

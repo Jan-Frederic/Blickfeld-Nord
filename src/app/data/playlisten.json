@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-31",
+  "updated": "2026-11-01",
   "listen": [
     {
       "key": "setlist",
@@ -404,6 +404,20 @@
           "year": 2013,
           "duration": 301,
           "url": "https://open.spotify.com/track/1fu5IQSRgPxJL2OTP7FVLW"
+        },
+        {
+          "title": "It's Beginning to Look a Lot like Christmas",
+          "artist": "Michael Bublé",
+          "year": 2024,
+          "duration": 207,
+          "url": "https://open.spotify.com/track/3it2BvJfyhPEWF3kD2TZJ1"
+        },
+        {
+          "title": "Happy Xmas (War Is Over) - Remastered 2010",
+          "artist": "John Lennon, Yoko Ono",
+          "year": 2010,
+          "duration": 214,
+          "url": "https://open.spotify.com/track/27RYrbL6S02LNVhDWVl38b"
         }
       ]
     },
@@ -439,13 +453,6 @@
           "year": 2018,
           "duration": 244,
           "url": "https://open.spotify.com/track/1C0bWhNWIF3yBdjNh4GlCT"
-        },
-        {
-          "title": "Wonderful Life",
-          "artist": "Seeed",
-          "year": 2013,
-          "duration": 210,
-          "url": "https://open.spotify.com/track/4r2SODWafpRr8cvZkLF36m"
         },
         {
           "title": "Heaven - MTV Unplugged Version",
@@ -551,6 +558,62 @@
           "year": 2010,
           "duration": 265,
           "url": "https://open.spotify.com/track/63vgpb67R3yats9vrx0bEi"
+        },
+        {
+          "title": "It's Beginning to Look a Lot like Christmas",
+          "artist": "Michael Bublé",
+          "year": 2024,
+          "duration": 207,
+          "url": "https://open.spotify.com/track/3it2BvJfyhPEWF3kD2TZJ1"
+        },
+        {
+          "title": "Ich komm nach Haus (Wenn das Jahr zu Ende geht) (aus \"Sing meinen Song - die Weihnachtsparty, Vol. 6\")",
+          "artist": "Johannes Oerding",
+          "year": 2019,
+          "duration": 235,
+          "url": "https://open.spotify.com/track/18hTUNS5qw3pAFUyceOh5o"
+        },
+        {
+          "title": "Heiligabend",
+          "artist": "Matthias Reim",
+          "year": 2013,
+          "duration": 209,
+          "url": "https://open.spotify.com/track/22PrPcyLICfoR3mq8T2kwV"
+        },
+        {
+          "title": "Lasst uns froh und munter sein",
+          "artist": "Rolf Zuckowski",
+          "year": 2006,
+          "duration": 133,
+          "url": "https://open.spotify.com/track/6HP0iyfVlbahP8CfTTcmEE"
+        },
+        {
+          "title": "Mitten in der Nacht",
+          "artist": "Rolf Zuckowski",
+          "year": 1993,
+          "duration": 227,
+          "url": "https://open.spotify.com/track/3NRTMw0L2Kvhe4wRJIDnAO"
+        },
+        {
+          "title": "Christmas Time",
+          "artist": "Bryan Adams",
+          "year": 2019,
+          "duration": 243,
+          "url": "https://open.spotify.com/track/7LoFMtL7hxP9tr5HYyyUrJ"
+        },
+        {
+          "title": "Dust in the Wind",
+          "artist": "Kansas",
+          "year": 1977,
+          "duration": 206,
+          "url": "https://open.spotify.com/track/6zeE5tKyr8Nu882DQhhSQI"
+        },
+        {
+          "title": "Happy Xmas (War Is Over) - Remastered 2010",
+          "artist": "John Lennon, Yoko Ono",
+          "year": 2010,
+          "duration": 214,
+          "url": "https://open.spotify.com/track/27RYrbL6S02LNVhDWVl38b"
         }
       ]
     },
@@ -1134,13 +1197,6 @@
           "url": "https://open.spotify.com/track/0vnF3OrVAxdCh5EmDzLWqF"
         },
         {
-          "title": "Forever Young (Country Style)",
-          "artist": "Jundav Arrozev",
-          "year": 2025,
-          "duration": 288,
-          "url": "https://open.spotify.com/track/2bMOabH9NHgMgtV2aK8JkW"
-        },
-        {
           "title": "Fading into Life",
           "artist": "Takida",
           "year": 2019,
@@ -1405,6 +1461,41 @@
           "year": 2007,
           "duration": 240,
           "url": "https://open.spotify.com/track/3Z3QhZAZpqwZa1phsbQ3JZ"
+        },
+        {
+          "title": "To Be With You - 2021 Remastered",
+          "artist": "Mr. Big",
+          "year": 1991,
+          "duration": 208,
+          "url": "https://open.spotify.com/track/0eifvmNPHWaSh4IKNR4Xva"
+        },
+        {
+          "title": "It's Beginning to Look a Lot like Christmas",
+          "artist": "Michael Bublé",
+          "year": 2024,
+          "duration": 207,
+          "url": "https://open.spotify.com/track/3it2BvJfyhPEWF3kD2TZJ1"
+        },
+        {
+          "title": "Here I Am",
+          "artist": "Bryan Adams",
+          "year": 2002,
+          "duration": 272,
+          "url": "https://open.spotify.com/track/2pGH58HmgqdOcZTTO9Po7t"
+        },
+        {
+          "title": "Dust in the Wind",
+          "artist": "Kansas",
+          "year": 1977,
+          "duration": 206,
+          "url": "https://open.spotify.com/track/6zeE5tKyr8Nu882DQhhSQI"
+        },
+        {
+          "title": "Land unter",
+          "artist": "Herbert Grönemeyer",
+          "year": 2008,
+          "duration": 303,
+          "url": "https://open.spotify.com/track/1TVi0Ko9xDkXLbyfKTqXT5"
         }
       ]
     },
@@ -1433,6 +1524,20 @@
           "year": 1996,
           "duration": 233,
           "url": "https://open.spotify.com/track/0Uqs7ilt5kGX9NzFDWTBrP"
+        },
+        {
+          "title": "Nachtbaden",
+          "artist": "Madsen",
+          "year": 2008,
+          "duration": 152,
+          "url": "https://open.spotify.com/track/2pIFyeLRNl3o39DRnrhV53"
+        },
+        {
+          "title": "Land unter",
+          "artist": "Herbert Grönemeyer",
+          "year": 2008,
+          "duration": 303,
+          "url": "https://open.spotify.com/track/1TVi0Ko9xDkXLbyfKTqXT5"
         }
       ]
     }

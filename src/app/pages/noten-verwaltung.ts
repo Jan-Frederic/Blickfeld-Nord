@@ -1,4 +1,5 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { SyncService } from '../data/sync.service';
 import { MatIconModule } from '@angular/material/icon';
 import { CHORDPRO_ENDUNGEN } from '../data/chordpro';
 import { notenEinlesen, notenErgebnisText } from '../data/noten-import';
@@ -7,6 +8,8 @@ import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren 
 // Notenblätter auf diesem Gerät (Backstage → Songs → Noten): gespeicherte PDFs mit Größe, Löschen, viele Dateien oder
 // ganze Ordner (PDF und ChordPro) einlesen – jede wird über den Dateinamen bzw. {title:} ihrem Song zugeordnet –
 // und der Austausch in der Band als Datei, die direkt von Gerät zu Gerät geht (Teilen-Menü, z. B. AirDrop oder Messenger).
+// Suche über die Dateinamen. Löschen: alle nur von diesem Gerät; wer den OneDrive-Ordner besitzt (Berechtigung „Daten
+// löschen“), wird gefragt – nur vom Gerät oder auch aus OneDrive (betrifft dann die ganze Band).
 @Component({
   selector: 'app-noten-verwaltung',
   imports: [MatIconModule],
@@ -19,11 +22,24 @@ import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren 
         Im Bühnen-Modus oben auf <mat-icon class="inline">library_music</mat-icon> tippen.
       </p>
       @if (dateien().length) {
+        <label class="suche"><mat-icon>search</mat-icon>
+          <input type="search" placeholder="Noten suchen …" aria-label="Noten suchen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
+          @if (suche().trim()) { <small>{{ gefiltert().length }} von {{ dateien().length }}</small> }
+        </label>
         <ul>
-          @for (d of dateien(); track d.id) {
+          @for (d of gefiltert(); track d.id) {
             <li><span>{{ d.name }} <small>{{ groesse(d.groesse) }}</small></span>
-              <button type="button" class="icon" (click)="loeschen(d)" [attr.aria-label]="d.name + ' löschen'"><mat-icon>delete</mat-icon></button></li>
-          }
+              @if (frage() === d.id) {
+                <span class="frage" role="group" [attr.aria-label]="d.name + ' löschen'">
+                  <button type="button" (click)="loeschen(d, false)"><mat-icon>phone_android</mat-icon> Nur vom Gerät</button>
+                  <button type="button" class="gefahr" (click)="loeschen(d, true)"><mat-icon>delete_forever</mat-icon> Auch aus OneDrive</button>
+                  <button type="button" class="icon" (click)="frage.set(null)" aria-label="Abbrechen"><mat-icon>close</mat-icon></button>
+                </span>
+              } @else {
+                <button type="button" class="icon" (click)="loeschenFragen(d)" [attr.aria-label]="d.name + ' löschen'"><mat-icon>delete</mat-icon></button>
+              }
+            </li>
+          } @empty { <li class="leer">Keine Noten zu „{{ suche() }}“.</li> }
         </ul>
       }
       <div class="knoepfe">
@@ -84,10 +100,38 @@ export class NotenVerwaltung {
     return bytes >= 1e6 ? `${(bytes / 1e6).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MB` : `${Math.ceil(bytes / 1e3)} kB`;
   }
 
-  protected async loeschen(d: NotenDateiInfo): Promise<void> {
-    if (!confirm(`„${d.name}“ von diesem Gerät löschen? Songs, die es nutzen, haben dann kein PDF mehr.`)) return;
-    await notenDateiLoeschen(d.id);
-    this.geaendert.emit();
+  private readonly sync = inject(SyncService);
+  protected readonly suche = signal('');
+  protected readonly gefiltert = computed(() => {
+    const w = this.suche().trim().toLocaleLowerCase('de').split(/\s+/).filter(Boolean);
+    return this.dateien().filter((d) => w.every((x) => d.name.toLocaleLowerCase('de').replace(/[_-]+/g, ' ').includes(x)));
+  });
+  /** Datei, bei der gerade „nur vom Gerät / auch aus OneDrive“ gefragt wird */
+  protected readonly frage = signal<string | null>(null);
+
+  /** Besitzer des OneDrive-Ordners wählt, sonst gleich vom Gerät löschen */
+  protected loeschenFragen(d: NotenDateiInfo): void {
+    if (this.sync.darfLoeschen()) this.frage.set(d.id);
+    else void this.loeschen(d, false);
+  }
+
+  protected async loeschen(d: NotenDateiInfo, oneDrive: boolean): Promise<void> {
+    const text = oneDrive
+      ? `„${d.name}“ aus OneDrive und von diesem Gerät löschen? Das betrifft die ganze Band – beim nächsten Abgleich ist die Datei überall weg.`
+      : `„${d.name}“ von diesem Gerät löschen? Songs, die es nutzen, haben hier dann kein PDF mehr.${this.sync.bereit() ? ' In OneDrive bleibt die Datei.' : ''}`;
+    if (!confirm(text)) return;
+    this.frage.set(null);
+    try {
+      // erst vom Gerät (Songs verlieren den Verweis), dann aus OneDrive – der Abgleich danach schreibt den neuen Stand
+      await notenDateiLoeschen(d.id);
+      const drueben = oneDrive ? await this.sync.ausOneDriveLoeschen([d]) : 0;
+      this.meldung.set({
+        text: `„${d.name}“ gelöscht${oneDrive ? (drueben ? ' – auch aus OneDrive; die anderen Geräte entfernen sie beim nächsten Abgleich' : ' – im Sync-Ordner lag sie nicht (mehr); die anderen Geräte entfernen ihre Kopie beim nächsten Abgleich') : ' (nur auf diesem Gerät)'} ✓`,
+      });
+      this.geaendert.emit();
+    } catch (e) {
+      this.meldung.set({ text: `Löschen fehlgeschlagen: ${(e as Error).message || 'unbekannter Fehler'}`, fehler: true });
+    }
   }
 
   protected async teilen(): Promise<void> {

@@ -1,6 +1,12 @@
-import { abweichungen, gesamtDauer, pdfSong, pdfSongKey, songAbgleich, vergleichsKey } from './playlisten';
+import { abweichungen, fehltInListe, gesamtDauer, pdfSong, pdfSongKey, songAbgleich, spotifyLinks, vergleichsKey } from './playlisten';
 
 describe('playlisten', () => {
+  it('Setlist für Spotify: Links in Reihenfolge, ohne Link extra', () => {
+    const listen = [{ key: 'setlist' as const, tracks: [{ title: 'Africa', artist: 'TOTO', url: 'u1' }, { title: 'Iris - Remastered', artist: 'The Goo Goo Dolls', url: 'u2' }] }];
+    expect(spotifyLinks([{ title: 'Iris', artist: 'The Goo Goo Dolls' }, { title: 'Neu', artist: 'X' }, { title: 'Africa', artist: 'Toto' }], listen)).toEqual({ links: ['u2', 'u1'], ohne: ['Neu'] });
+    expect(fehltInListe([{ title: 'Africa', artist: 'Toto' }, { title: 'Neu', artist: 'X' }], 'setlist', listen).map((s) => s.title)).toEqual(['Neu']);
+  });
+
   it('vergleicht Titel ohne Zusatz und den ersten Interpreten', () => {
     expect(vergleichsKey('Angels - Remastered 2011', 'Robbie Williams')).toBe(vergleichsKey('Angels', 'Robbie Williams'));
     expect(vergleichsKey('Señorita (feat. X)', 'Shawn Mendes, Camila Cabello')).toBe(vergleichsKey('Senorita', 'Shawn Mendes'));

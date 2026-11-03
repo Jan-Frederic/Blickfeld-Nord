@@ -9,33 +9,25 @@ import { BackstageSync } from './backstage-sync';
 import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
 import { ProbeVorschlag } from './probe-vorschlag';
+import { SetlistBuehne } from './setlist-buehne';
+import { ProbePlan, generalprobe, loadProbe, minutenText, probeNachricht, speichereProbe } from '../data/probe-modus';
+import { ProbeZusagen } from './probe-zusagen';
+import { unsicherJeSong } from '../data/band-ich';
+import { spotifyLinks } from '../data/playlisten';
+import { spotifyUrl } from '../data/song-steckbrief';
+import { nachrichtSenden } from '../data/kontakte';
+import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 
 // Backstage → Probe planen (/backstage/probe/<datum>): welche Songs geübt werden, Notizen und offene Punkte.
 // Gespeichert im Browser (bn-probe-<datum>) und wie Setlists über „An die Band schicken“ teilbar.
-export const PROBE_PREFIX = 'bn-probe-';
-
-interface ProbePlan {
-  /** done = geprobt; notiz = Protokoll („Bridge sitzt“, „Tempo zu schnell“) */
-  songs: { title: string; artist: string; done: boolean; notiz?: string }[];
-  notizen: string;
-  punkte: { text: string; done: boolean }[];
-}
 
 const leer = (): ProbePlan => ({ songs: [], notizen: '', punkte: [] });
-
-export function loadProbe(datum: string): ProbePlan {
-  try {
-    return { ...leer(), ...JSON.parse(localStorage.getItem(PROBE_PREFIX + datum) ?? '{}') };
-  } catch {
-    return leer();
-  }
-}
 
 const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
 @Component({
   selector: 'app-backstage-probe',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet, SetlistBuehne, ProbeZusagen],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -47,13 +39,29 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           @if (p.note) { <br />{{ p.note }} }
         </p>
 
+        <h3><mat-icon>groups</mat-icon> Wer kommt?</h3>
+        <app-probe-zusagen [datum]="datum()" />
+
         <h3><mat-icon>queue_music</mat-icon> Songs zum Üben</h3>
         @if (plan().songs.length) {
+          <div class="probe-start">
+            <button type="button" class="primaer" (click)="modus.set(true)"><mat-icon>fit_screen</mat-icon> Probe-Modus starten</button>
+            <span>{{ stand() }}</span>
+          </div>
+          <div class="probe-teilen">
+            <button type="button" (click)="planSchicken()"><mat-icon>{{ geschickt() ? 'check' : 'send' }}</mat-icon> Plan an die Band</button>
+            <button type="button" (click)="fuerSpotify()" title="Track-Links kopieren – in Spotify am Computer in eine Playlist einfügen (Strg/Cmd+V)"><mat-icon>queue_music</mat-icon> Für Spotify kopieren</button>
+            @if (plan().geschickt) { <small>zuletzt geschickt am {{ plan().geschickt | date: 'd.M.' }}</small> }
+          </div>
+          @if (teilenMeldung(); as m) { <p class="teilen-meldung" role="status">{{ m }}</p> }
           <ul class="list">
             @for (s of plan().songs; track s.title + s.artist; let i = $index) {
               <li [class.done]="s.done">
                 <label><input type="checkbox" [checked]="s.done" (change)="toggleSong(i)" /> <span class="t">{{ s.title }}</span> <span class="a">{{ s.artist }}</span></label>
                 @if (info(s); as inf) { <span class="info">{{ inf }}</span> }
+                @if (unsicher().get(s.title + '|' + s.artist); as wer) { <span class="info unsicher" title="laut „Wackelt noch“">unsicher: {{ wer.join(', ') }}</span> }
+                @if (s.stand === 'nochmal') { <span class="info nochmal">↻ nochmal</span> }
+                @if (s.durchlaeufe || s.zeit) { <span class="info">{{ s.durchlaeufe ? s.durchlaeufe + '×' : '' }}{{ s.durchlaeufe && s.zeit ? ' · ' : '' }}{{ s.zeit ? minutenText(s.zeit) : '' }}</span> }
                 <input class="protokoll" maxlength="80" [value]="s.notiz ?? ''" placeholder="Notiz: z. B. Bridge sitzt" [attr.aria-label]="'Notiz zu ' + s.title" (change)="notizSetzen(i, $any($event.target).value)" />
                 <button type="button" class="icon" [class.an]="aufnahme() === s.title + '|' + s.artist" (click)="aufnahme.set(aufnahme() === s.title + '|' + s.artist ? '' : s.title + '|' + s.artist)" [attr.aria-label]="'Mitschnitte von ' + s.title" title="Aufnehmen und nachhören"><mat-icon>mic</mat-icon></button>
                 <button type="button" class="icon" (click)="removeSong(i)" [attr.aria-label]="s.title + ' entfernen'"><mat-icon>close</mat-icon></button>
@@ -63,6 +71,10 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           </ul>
         } @else {
           <p class="empty">Noch keine Songs ausgewählt.</p>
+        }
+        @if (naechsterAuftritt(); as a) {
+          <button type="button" class="general" (click)="generalprobeUebernehmen()" [disabled]="!a.songs"><mat-icon>theater_comedy</mat-icon>
+            {{ plan().generalprobe === a.id ? 'Generalprobe ' + a.name + ' – Setlist neu übernehmen' : 'Generalprobe: Setlist ' + a.name + ' übernehmen' }}{{ a.songs ? ' (' + a.songs + ' Songs)' : ' (noch keine Setlist auf diesem Gerät)' }}</button>
         }
         <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
         @if (ausProbeListe().length) {
@@ -107,6 +119,9 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           <button type="submit"><mat-icon>add</mat-icon> Hinzufügen</button>
         </form>
 
+        @if (modus()) {
+          @defer { <app-setlist-buehne [entries]="modusSongs()" [start]="ersterOffener()" [probe]="datum()" [generalprobe]="!!plan().generalprobe" (closed)="modusZu()" /> }
+        }
         <p class="hint">Gespeichert auf diesem Gerät. Mit der Band teilen:</p>
         <app-backstage-sync [show]="datum()" />
       } @else {
@@ -147,6 +162,15 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .add button:hover, .knopf:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .empty { color: var(--bn-fog); font-size: .9rem; padding: 8px 12px; }
     .hint { margin: 32px 0 8px; font-size: .85rem; color: var(--bn-fog); }
+    .probe-start { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 12px; color: var(--bn-fog); font-size: .85rem; }
+    .primaer { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: var(--bn-sunset); color: #2a1708; font: inherit; cursor: pointer; }
+    .info.nochmal, .info.unsicher { border-color: #e0b25a; color: #e0b25a; }
+    .probe-teilen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+    .probe-teilen button, .general { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+    .general { margin: 0 8px 10px 0; }
+    .general:disabled { opacity: .5; cursor: default; }
+    .probe-teilen small { color: var(--bn-fog); }
+    .teilen-meldung { margin: 0 0 12px; color: #5fb88a; font-size: .85rem; }
   `,
 })
 export class BackstageProbe {
@@ -159,6 +183,68 @@ export class BackstageProbe {
   protected readonly aufnahme = signal('');
   protected readonly stimmen = signal(false);
   protected readonly query = signal('');
+  protected readonly minutenText = minutenText;
+  // Probe-Modus: die geplanten Songs im Vollbild (Bühnen-Modus mit Probe-Leiste), ab dem ersten noch nicht geprobten
+  protected readonly modus = signal(false);
+  // Generalprobe: die Setlist mit Pausen (Uhr je Set wie im Bühnen-Modus); sonst die geplanten Songs
+  protected readonly modusSongs = computed<Entry[]>(() => {
+    const g = this.plan().generalprobe;
+    const setlist = g ? loadSetlist(g) : [];
+    return setlist.length ? setlist : this.plan().songs.map((s) => ({ title: s.title, artist: s.artist }));
+  });
+  protected readonly ersterOffener = computed(() => {
+    const offen = new Set(this.plan().songs.filter((s) => !s.done).map((s) => s.title + '|' + s.artist));
+    return Math.max(0, this.modusSongs().findIndex((e) => !isPause(e) && offen.has(e.title + '|' + e.artist)));
+  });
+  /** wer bei welchem Song noch unsicher ist (geteilte „Wackelt noch“-Listen) */
+  protected readonly unsicher = computed(() => (this.plan(), unsicherJeSong(this.band.members)));
+  // nächster Auftritt nach der Probe – für die Generalprobe
+  protected readonly naechsterAuftritt = computed(() => {
+    const s = this.band.shows.filter((x) => x.date >= this.datum()).sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (!s) return null;
+    const id = this.band.showId(s);
+    return { id, name: `${s.private ? (s.publicName ?? 'Private Feier') : s.venue} (${s.date.slice(8, 10)}.${s.date.slice(5, 7)}.)`, songs: loadSetlist(id).filter((e) => !isPause(e)).length };
+  });
+  protected generalprobeUebernehmen(): void {
+    const a = this.naechsterAuftritt();
+    if (!a) return;
+    this.save((p) => generalprobe(p, loadSetlist(a.id).filter((e) => !isPause(e)) as { title: string; artist: string }[], a.id));
+  }
+  // Plan an die Band: Songs mit Tonart/Tempo und Spotify-Link (WhatsApp über das Teilen-Menü)
+  protected readonly teilenMeldung = signal('');
+  protected readonly geschickt = signal(false);
+  protected async planSchicken(): Promise<void> {
+    const p = this.probe();
+    if (!p) return;
+    const text = probeNachricht(p, this.plan(), (s) => this.info(s), (s) => spotifyUrl(s.title, s.artist));
+    const r = await nachrichtSenden(undefined, 'Probe', text);
+    if (r === 'abgebrochen') return;
+    this.save((x) => ({ ...x, geschickt: new Date().toISOString().slice(0, 10) }));
+    this.geschickt.set(true);
+    this.teilenMeldung.set(r === 'kopiert' ? 'Plan kopiert – in die Band-Gruppe einfügen.' : 'Plan geteilt ✓');
+  }
+  protected async fuerSpotify(): Promise<void> {
+    const { links, ohne } = spotifyLinks(this.plan().songs);
+    this.teilenMeldung.set(
+      (links.length ? `${links.length} Track-Links kopiert – in Spotify am Computer eine Playlist (z. B. „Probe ${this.datum().slice(8, 10)}.${this.datum().slice(5, 7)}.“) öffnen und mit Strg/Cmd+V einfügen.` : 'Für keinen Song ist ein Spotify-Link bekannt.') +
+        (ohne.length ? ` Ohne Link: ${ohne.join(', ')}.` : ''),
+    );
+    if (!links.length) return;
+    try {
+      await navigator.clipboard.writeText(links.join('\n'));
+    } catch {
+      window.prompt('Links kopieren:', links.join('\n'));
+    }
+  }
+  protected readonly stand = computed(() => {
+    const songs = this.plan().songs;
+    const geprobt = songs.filter((s) => s.done).length;
+    return geprobt ? `${geprobt} von ${songs.length} geprobt` : `${songs.length} ${songs.length === 1 ? 'Song' : 'Songs'} – Sitzt/Nochmal, Durchläufe, Notizen und Zeit je Song`;
+  });
+  protected modusZu(): void {
+    this.modus.set(false);
+    this.plan.set(loadProbe(this.datum()));
+  }
 
   protected readonly treffer = computed(() => {
     const q = norm(this.query().trim());
@@ -188,11 +274,7 @@ export class BackstageProbe {
   private save(change: (p: ProbePlan) => ProbePlan): void {
     const next = change(this.plan());
     this.plan.set(next);
-    try {
-      localStorage.setItem(PROBE_PREFIX + this.datum(), JSON.stringify(next));
-    } catch {
-      // ohne Speicher (privater Modus) gilt die Planung nur bis zum Neuladen
-    }
+    speichereProbe(this.datum(), next);
   }
 
   /** Probenprotokoll je Song – erscheint im Song-Dialog unter „Zuletzt geprobt“ */

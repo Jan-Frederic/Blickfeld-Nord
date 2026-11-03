@@ -3,12 +3,14 @@ import { BandService } from '../data/band.service';
 import { vorschau, vorschauText } from '../data/aufraeumen';
 import { MatIconModule } from '@angular/material/icon';
 import { NOTEN_APP, notenExportieren, notenImportieren } from '../data/noten';
+import { spiegelArt } from '../data/spiegel';
+import { backupName } from '../data/backup-regeln';
 
 // Backstage-Daten (Setlists, Packlisten, Vor-Ort-Angaben, Probenplanung, Song-Sterne …) liegen nur im Browser des
-// jeweiligen Geräts. Backup (Einstellungen → Backup, backup-karte.ts): alles samt Notenblättern als Datei bzw. in den
-// OneDrive-Ordner der Synchronisation. Die Komponente unten teilt einzelne Auftritte bzw. Proben mit der Band.
+// jeweiligen Geräts. Backup (Einstellungen → Backup, backup-karte.ts): alles in einer Datei – Backstage-Daten,
+// Einstellungen und Notenblätter samt Markierungen – als Datei bzw. in den OneDrive-Ordner der Synchronisation. Die Komponente unten teilt einzelne Auftritte bzw. Proben mit der Band.
 
-export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-'];
+export const PREFIXES = ['bn-setlist-', 'bn-packliste-', 'bn-vorabend-', 'bn-vorort-', 'bn-probe-', 'bn-bewertung-', 'bn-ui-geprueft', 'bn-werbeplan-', 'bn-songinfo-entwurf', 'bn-nachbereitung-'];
 // Zeitpunkt des letzten Backups – für den Hinweis unter Aufgaben und in der Backup-Kachel
 export const GESICHERT_KEY = 'bn-gesichert';
 
@@ -38,7 +40,12 @@ interface Backup {
   version: 1;
   exported: string;
   data: Record<string, unknown>;
+  /** Notenpaket (PDFs, Akkordblätter, Zuordnung, Markierungen) – nur im Backup, nicht beim Teilen an die Band */
+  noten?: { app: typeof NOTEN_APP; songs?: Record<string, unknown> };
 }
+
+/** gehört der Eintrag in ein Backup? Bereiche der Band (auch zum Teilen) und alles, was mit OneDrive gespiegelt wird */
+const imBackup = (k: string) => PREFIXES.some((p) => k.startsWith(p)) || spiegelArt(k) !== null;
 
 /** Datei mit Backstage-Daten bauen und übers Teilen-Menü verschicken, sonst herunterladen; true = geteilt, false = gespeichert, null = abgebrochen */
 export async function backupTeilen(data: Record<string, unknown>, teil: string): Promise<boolean | null> {
@@ -63,7 +70,7 @@ export async function backupTeilen(data: Record<string, unknown>, teil: string):
 export function backupEintraege(text: string): [string, unknown][] {
   const backup = JSON.parse(text) as Partial<Backup>;
   if (backup.app !== APP || !backup.data) throw new Error('keine Backstage-Datei');
-  return Object.entries(backup.data).filter(([k]) => PREFIXES.some((p) => k.startsWith(p)));
+  return Object.entries(backup.data).filter(([k]) => imBackup(k));
 }
 
 /**
@@ -73,10 +80,12 @@ export function backupEintraege(text: string): [string, unknown][] {
 export function backstageImportieren(text: string, ersetzen = false): number {
   const eintraege = backupEintraege(text);
   if (ersetzen) {
-    const alt = Object.keys(localStorage).filter((k) => PREFIXES.some((p) => k.startsWith(p)));
+    const alt = Object.keys(localStorage).filter((k) => imBackup(k) && spiegelArt(k) !== 'person');
     for (const k of alt) localStorage.removeItem(k);
   }
   for (const [k, v] of eintraege) {
+    // persönliche Einstellungen nur ergänzen, nicht die eines anderen Geräts überschreiben
+    if (spiegelArt(k) === 'person' && !ersetzen && localStorage.getItem(k) !== null) continue;
     // Sterne mehrerer Geräte zusammenführen statt ersetzen – bei demselben Song gilt die importierte Bewertung
     const alt = !ersetzen && k.startsWith('bn-bewertung-') ? JSON.parse(localStorage.getItem(k) ?? '{}') : {};
     localStorage.setItem(k, JSON.stringify(k.startsWith('bn-bewertung-') ? { ...alt, ...(v as object) } : v));
@@ -84,16 +93,16 @@ export function backstageImportieren(text: string, ersetzen = false): number {
   return eintraege.length;
 }
 
-/** Backup dieses Geräts als Dateien: Backstage-Daten und Notenblätter (je null, wenn es nichts gibt) */
-export async function backupDateien(): Promise<{ backup: File | null; noten: File | null; anzahl: number }> {
-  const data = collect();
+/** Backup dieses Geräts als eine Datei mit allem: Daten, Einstellungen, Notenblätter (null, wenn es nichts gibt) */
+export async function backupDatei(): Promise<{ datei: File | null; anzahl: number; songs: number }> {
+  const data = collect(undefined, imBackup);
   const anzahl = Object.keys(data).length;
-  const tag = new Date().toISOString().slice(0, 10);
-  const inhalt: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data };
-  const backup = anzahl ? new File([JSON.stringify(inhalt, null, 1)], `blickfeld-nord-backup-${tag}.json`, { type: 'application/json' }) : null;
   const n = await notenExportieren();
-  const noten = n ? new File([n], `blickfeld-nord-backup-noten-${tag}.json`, { type: 'application/json' }) : null;
-  return { backup, noten, anzahl };
+  const noten = n ? (JSON.parse(await n.text()) as Backup['noten']) : undefined;
+  const songs = Object.keys(noten?.songs ?? {}).length;
+  if (!anzahl && !noten) return { datei: null, anzahl, songs };
+  const inhalt: Backup = { app: APP, version: 1, exported: new Date().toISOString(), data, ...(noten ? { noten } : {}) };
+  return { datei: new File([JSON.stringify(inhalt)], backupName(), { type: 'application/json' }), anzahl, songs };
 }
 
 /** Backup bzw. Notenpaket aus einer Datei übernehmen – mit Vorschau und Rückfrage; Text für die Meldung, null = abgebrochen */
@@ -104,18 +113,22 @@ export async function backupEinlesen(text: string, ersetzen: boolean, auftritte:
     return `Notenblätter für ${n} ${n === 1 ? 'Song' : 'Songs'} übernommen`;
   }
   const eintraege = backupEintraege(text);
+  const noten = (inhalt as Partial<Backup>).noten;
+  const songs = Object.keys(noten?.songs ?? {}).length;
+  const notenText = songs ? `Notenblätter für ${songs} ${songs === 1 ? 'Song' : 'Songs'}` : '';
   const v = vorschau(eintraege, auftritte);
   const zeilen = [...v.neu.map((e) => `+ ${e.titel}`), ...v.geaendert.map((e) => `~ ${e.titel}: ${e.was}`)];
   const liste = zeilen.slice(0, 12).join('\n') + (zeilen.length > 12 ? `\n… und ${zeilen.length - 12} weitere` : '');
   if (ersetzen) {
     const alt = Object.keys(localStorage).filter((k) => PREFIXES.some((p) => k.startsWith(p))).length;
-    if (!confirm(`${alt} vorhandene Einträge löschen und durch ${eintraege.length} aus dem Backup ersetzen?`)) return null;
+    if (!confirm(`${alt} vorhandene Einträge löschen und durch ${eintraege.length} aus dem Backup ersetzen?${notenText ? ` Dazu ${notenText}.` : ''}`)) return null;
   } else {
-    if (!v.neu.length && !v.geaendert.length) return 'Nichts Neues – alles ist schon auf dem Stand des Backups';
-    if (!confirm(`Übernehmen? ${vorschauText(v)}.\n\n${liste}`)) return null;
+    if (!v.neu.length && !v.geaendert.length && !songs) return 'Nichts Neues – alles ist schon auf dem Stand des Backups';
+    if (!confirm(`Übernehmen? ${vorschauText(v)}${notenText ? ` · ${notenText}` : ''}.\n\n${liste}`)) return null;
   }
   backstageImportieren(text, ersetzen);
-  return `Backup übernommen (${eintraege.length} Einträge)`;
+  if (noten) await notenImportieren(JSON.stringify(noten));
+  return `Backup übernommen (${eintraege.length} Einträge${notenText ? `, ${notenText}` : ''})`;
 }
 
 /** nach einem Backup (Datei, OneDrive) merken – für den Hinweis unter Aufgaben */
@@ -123,12 +136,12 @@ export function backupGemerkt(): void {
   merken();
 }
 
-function collect(show?: string): Record<string, unknown> {
+function collect(show?: string, passt?: (key: string) => boolean): Record<string, unknown> {
   const data: Record<string, unknown> = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)!;
     const prefix = PREFIXES.find((p) => key.startsWith(p));
-    if (!prefix || (show && key !== prefix + show)) continue;
+    if (passt ? !passt(key) : !prefix || (show && key !== prefix + show)) continue;
     try {
       data[key] = JSON.parse(localStorage.getItem(key)!);
     } catch {

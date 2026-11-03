@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
-import { bereitschaft, langsamStrecken } from '../data/bereitschaft';
+import { VORABEND_PREFIX, bereitschaft, langsamStrecken } from '../data/bereitschaft';
 import { isPause, loadSetlist } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { spruenge } from '../data/tonart-uebergang';
@@ -28,9 +28,16 @@ import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
       <ul>
         @for (p of punkte(); track p.text) {
           <li [class.ok]="p.ok">
-            <mat-icon>{{ p.ok ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+            @if (p.haken) {
+              <input type="checkbox" [id]="'vorabend-' + p.haken" [checked]="p.ok" (change)="haken(p.haken, $any($event.target).checked)" />
+            } @else {
+              <mat-icon>{{ p.ok ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+            }
             <span>
-              @if (p.aktion && !p.ok) {
+              @if (p.haken) {
+                <label [for]="'vorabend-' + p.haken">{{ p.text }}</label>
+                @if (p.ziel && !p.ok) { <a class="weiter" [routerLink]="['/backstage', id(), p.ziel]">öffnen</a> }
+              } @else if (p.aktion && !p.ok) {
                 {{ p.text }}
                 <button type="button" class="vorladen" (click)="vorladen()" [disabled]="laedt()">{{ laedt() ? 'Lädt …' : 'Jetzt vorladen' }}</button>
               } @else if (p.ziel !== undefined && !p.ok) { <a [routerLink]="p.ziel ? ['/backstage', id(), p.ziel] : ['/backstage', id()]">{{ p.text }}</a> } @else { {{ p.text }} }
@@ -54,6 +61,9 @@ import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
     li.ok { color: var(--bn-fog); }
     a { color: var(--bn-sunset); }
     .vorladen { margin-left: 8px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: none; color: var(--bn-sunset); font: inherit; font-size: .8rem; cursor: pointer; }
+    li input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: #5fb88a; }
+    label { cursor: pointer; }
+    .weiter { margin-left: 8px; font-size: .8rem; }
     small { display: block; color: var(--bn-fog); font-size: .8rem; }
   `,
 })
@@ -69,6 +79,27 @@ export class Bereitschaft {
   private readonly baustellen = new Set(notizBaustellen(probenNotizen()).map((b) => b.key));
   private readonly offline = signal<OfflineStand | undefined>(undefined);
   protected readonly laedt = signal(false);
+  /** von Hand abgehakte Vorabend-Punkte (Wetter, Notenmappe) – gespiegelt für die ganze Band */
+  private readonly vorabend = signal(0);
+  private vorabendLesen(id: string): string[] {
+    try {
+      const v = JSON.parse(localStorage.getItem(VORABEND_PREFIX + id) ?? '[]');
+      return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+  protected haken(h: string, an: boolean): void {
+    const id = this.id();
+    const neu = this.vorabendLesen(id).filter((x) => x !== h).concat(an ? [h] : []);
+    try {
+      if (neu.length) localStorage.setItem(VORABEND_PREFIX + id, JSON.stringify(neu));
+      else localStorage.removeItem(VORABEND_PREFIX + id);
+    } catch {
+      // ohne Speicher bleibt der Haken nur bis zum Neuladen
+    }
+    this.vorabend.update((n) => n + 1);
+  }
 
   constructor() {
     alleSongNoten()
@@ -93,6 +124,7 @@ export class Bereitschaft {
     const pack = loadPackliste(PACKLISTE_PREFIX + id);
     const gesamt = GROUPS.reduce((n, g) => n + g.items.length, 0) + pack.custom.length;
     const noten = this.notenKeys();
+    this.vorabend();
     return bereitschaft({
       show: this.show(),
       heute: new Date().toISOString().slice(0, 10),
@@ -103,6 +135,7 @@ export class Bereitschaft {
       werbungErledigt: erledigteSchritte(id),
       packliste: { eingepackt: Math.min(pack.checked.length, gesamt), gesamt },
       offline: this.offline(),
+      vorabend: this.vorabendLesen(id),
       setlistCheck: {
         langsamStrecken: langsamStrecken(setlist, (s) => songInfo(s.title, s.artist)?.bpm),
         spruenge: spruenge(setlist, (s) => gespielteTonart(songInfo(s.title, s.artist))),

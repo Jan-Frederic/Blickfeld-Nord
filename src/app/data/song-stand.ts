@@ -83,7 +83,7 @@ export interface ProbenPunkt {
  * (Notiz wie „wackelt“, „Tempo“), „geplant“ (stand auf dem Plan, wurde laut Häkchen aber nicht geprobt). Älteste zuerst.
  */
 export function probenVerlauf(
-  plaene: { tag: string; songs: { title: string; artist: string; done?: boolean; notiz?: string }[] }[],
+  plaene: { tag: string; songs: { title: string; artist: string; done?: boolean; notiz?: string; stand?: 'sitzt' | 'nochmal' }[] }[],
   key: string,
   heute: string,
 ): ProbenPunkt[] {
@@ -94,7 +94,9 @@ export function probenVerlauf(
       if (!s) return [];
       const mitHaken = p.songs.some((x) => x.done);
       const notiz = s.notiz?.trim() || undefined;
-      const stufe: ProbenStufe = mitHaken && !s.done ? 'geplant' : notiz && BAUSTELLE.test(notiz) ? 'baustelle' : 'sitzt';
+      // im Probe-Modus „Sitzt“/„Nochmal“ gedrückt: das gilt; sonst entscheidet die Notiz
+      const stufe: ProbenStufe =
+        mitHaken && !s.done ? 'geplant' : s.stand === 'nochmal' ? 'baustelle' : s.stand === 'sitzt' ? 'sitzt' : notiz && BAUSTELLE.test(notiz) ? 'baustelle' : 'sitzt';
       return [{ tag: p.tag, stufe, notiz }];
     })
     .sort((a, b) => a.tag.localeCompare(b.tag));

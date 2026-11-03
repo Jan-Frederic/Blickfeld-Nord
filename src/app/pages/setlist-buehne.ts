@@ -4,6 +4,9 @@ import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { alleSongNoten, pdfjsVorladen } from '../data/noten';
 import { NotenAnzeige } from './noten-anzeige';
+import { ProbeEnde, ProbeLeiste } from './probe-leiste';
+import { minutenText, probenDauer } from '../data/probe-modus';
+import { BandService } from '../data/band.service';
 import { Stimmgeraet } from './stimmgeraet';
 import { tasten } from '../data/buehne-einstellungen';
 import { BEWERTUNG_PREFIX, alleBewertungen, bewerten, ladeBewertungen, rangliste, songKey } from '../data/bewertung';
@@ -38,15 +41,15 @@ function ladeZoom(): number {
 
 @Component({
   selector: 'app-setlist-buehne',
-  imports: [MatIconModule, NotenAnzeige, Stimmgeraet],
+  imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde],
   host: { tabindex: '-1', '(keydown)': 'key($event)' },
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
       <header>
-        <span class="set">Set {{ setNo() }} / {{ sets().length }}</span>
+        <span class="set">{{ probe() && !generalprobe() ? 'Probe · ' + songNo() + ' / ' + songZahl() : (generalprobe() ? 'Generalprobe · ' : '') + 'Set ' + setNo() + ' / ' + sets().length }}</span>
         <span class="clock" [class.over]="remaining() < 0">
           <mat-icon>timer</mat-icon> {{ fmt(elapsed()) }}
-          @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + fmt(remaining()) }}</small> }
+          @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() && !generalprobe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
         </span>
         <span class="zoom" role="group" aria-label="Schriftgröße">
           <button type="button" (click)="zoomen(-1)" [disabled]="zoom() <= ZOOM_MIN" aria-label="Schrift kleiner">A−</button>
@@ -59,7 +62,7 @@ function ladeZoom(): number {
         }
         <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)"><mat-icon>search</mat-icon></button>
         <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät"><mat-icon>tune</mat-icon></button>
-        <button type="button" class="close" (click)="end($event)" aria-label="Bühnen-Modus beenden"><mat-icon>close</mat-icon></button>
+        <button type="button" class="close" (click)="end($event)" [attr.aria-label]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'"><mat-icon>close</mat-icon></button>
       </header>
 
       <main>
@@ -92,6 +95,7 @@ function ladeZoom(): number {
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
             }
+            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" [naechster]="naechsterSong()" /> }
             @if (show()) {
               <p class="stars" role="group" aria-label="Wie lief der Song heute?">
                 @for (n of [1, 2, 3, 4, 5]; track n) {
@@ -102,6 +106,8 @@ function ladeZoom(): number {
               </p>
             }
           }
+        } @else if (probe(); as d) {
+          <app-probe-ende [datum]="d" (schliessen)="closed.emit()" />
         } @else {
           <p class="pause">Ende – danke!</p>
         }
@@ -143,7 +149,7 @@ function ladeZoom(): number {
         </div>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" (schliessen)="notenOffen.set(false)" /> }
+      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -213,6 +219,17 @@ export class SetlistBuehne {
   /** gleich mit geöffneten Noten beginnen */
   readonly notenAuf = input(false);
   readonly closed = output<void>();
+  /** Probe-Modus: Datum der Probe – Probe-Leiste je Song, Uhr bis zum Probenende, kein Kürzen und keine Sterne */
+  readonly probe = input<string>();
+  /** Generalprobe: Setlist mit Pausen, Uhr je Set wie auf der Bühne */
+  readonly generalprobe = input(false);
+  protected readonly minutenText = minutenText;
+  private readonly band = inject(BandService);
+  protected readonly naechsterSong = computed(() => {
+    const n = this.next();
+    return n && !isPause(n) ? n : undefined;
+  });
+  protected readonly songZahl = computed(() => this.liste().filter((e) => !isPause(e)).length);
 
   protected readonly isPause = isPause;
   protected readonly stimmen = signal(false);
@@ -249,7 +266,10 @@ export class SetlistBuehne {
   protected readonly songNo = computed(() => this.liste().slice(0, this.index() + 1).filter((e) => !isPause(e)).length);
   protected readonly progress = computed(() => (this.liste().length ? ((this.index() + 1) / this.liste().length) * 100 : 0));
   protected readonly elapsed = computed(() => Math.max(0, Math.round((this.now() - this.setStart) / 1000)));
-  protected readonly planned = computed(() => setLength(this.sets()[this.setNo() - 1] ?? []).seconds);
+  protected readonly planned = computed(() => {
+    const d = this.probe();
+    return d && !this.generalprobe() ? probenDauer(this.band.rehearsals.find((r) => r.date === d)) : setLength(this.sets()[this.setNo() - 1] ?? []).seconds;
+  });
   protected readonly plannedText = computed(() => setTime(this.planned()));
   protected readonly remaining = computed(() => this.planned() - this.elapsed());
 
@@ -451,7 +471,7 @@ export class SetlistBuehne {
     const aktuell = c && !isPause(c) ? (durationOf(c) ?? 0) : 0;
     return this.planned() ? Math.round(ueberzug(this.elapsed() + aktuell / 2, this.rest().reduce((n, s) => n + s.dauer, 0), this.planned())) : 0;
   });
-  protected readonly streichen = computed(() => streichVorschlag(this.rest(), this.ueber()));
+  protected readonly streichen = computed(() => (this.probe() ? [] : streichVorschlag(this.rest(), this.ueber())));
   protected readonly streichText = computed(() => this.streichen().map((s) => s.title).join(', '));
   protected streichenJa(e: Event): void {
     e.stopPropagation();
