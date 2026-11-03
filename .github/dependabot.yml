@@ -17,6 +17,10 @@ updates:
         patterns: ['@angular/*', '@angular-devkit/*', 'typescript', 'zone.js']
       fonts:
         patterns: ['@fontsource/*', 'material-icons']
+      # Playwright (Prüfskripte) und @playwright/test (Screenshot-Vergleich) müssen dieselbe Version haben – sonst
+      # lädt die CI einen Browser, den die Skripte nicht finden
+      playwright:
+        patterns: ['playwright', '@playwright/test']
       werkzeuge:
         patterns: ['esbuild', 'vitest', 'jsdom', 'prettier', '@types/*']
     ignore:

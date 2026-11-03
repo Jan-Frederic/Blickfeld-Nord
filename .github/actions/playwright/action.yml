@@ -15,7 +15,10 @@ runs:
       id: pakete
       shell: bash
       run: |
-        alle=$(npx playwright install-deps --dry-run chromium | grep -o 'no-install-recommends .*' | cut -d' ' -f2- | tr -d '"')
+        # Ausgabe je nach Playwright-Version: früher der apt-Befehl („… --no-install-recommends pakete“), ab 1.6x eine
+        # Liste („Missing system dependencies (n):“, je Paket eine eingerückte Zeile) – beides verstehen
+        ausgabe=$(npx playwright install-deps --dry-run chromium 2>&1 || true)
+        alle=$(echo "$ausgabe" | sed -n -e 's/.*no-install-recommends //p' -e 's/^  \([a-z0-9][a-z0-9.+-]*\)$/\1/p' | tr -d '"' | xargs)
         fehlend=$(for p in $alle; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || echo "$p"; done | xargs)
         echo "Fehlend: ${fehlend:-keine}"
         echo "liste=$fehlend" >> "$GITHUB_OUTPUT"
