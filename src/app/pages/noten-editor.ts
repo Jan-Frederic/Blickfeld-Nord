@@ -2,6 +2,7 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { NotenDateiInfo, NotenPdf, SongNoten, notenDateiSpeichern, pdfjsVorladen, songNoten, songNotenSetzen } from '../data/noten';
 import { CHORDPRO_ENDUNGEN, chordproLesen, dateiText, dateinameZuordnen } from '../data/chordpro';
+import { istAkkordText, istChordPro, textZuChordPro } from '../data/text-zu-chordpro';
 
 // Noten eines Songs bearbeiten (Backstage → Songs): PDF wählen oder hochladen, Seitenbereich im Songbook, Akkordblatt
 // im ChordPro-Format. Alles bleibt auf diesem Gerät (IndexedDB) – siehe data/noten.ts.
@@ -56,8 +57,12 @@ const BEISPIEL = `{key: C}
         </label>
       </div>
       <label class="akkorde"><span class="unsichtbar">Akkordblatt</span>
-        <textarea rows="7" spellcheck="false" [placeholder]="beispiel" [value]="noten().chordpro ?? ''" (change)="akkorde($any($event.target).value)"></textarea>
+        <textarea #blatt rows="7" spellcheck="false" [placeholder]="beispiel" [value]="noten().chordpro ?? ''" (change)="akkorde($any($event.target).value)"></textarea>
       </label>
+      <div class="umwandeln">
+        <button type="button" class="hochladen" (click)="umwandeln(blatt.value)"><mat-icon>auto_fix_high</mat-icon> Text in ChordPro umwandeln</button>
+        <small>für „Akkorde über dem Text“ (z. B. aus Ultimate Guitar kopiert): Akkorde wandern in [ ] an die richtige Stelle, Titel, Interpret, Tonart und Capo kommen als Kopf dazu</small>
+      </div>
       @if (pruefung(); as p) { <p class="pruefung">{{ p }}</p> }
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
     </div>
@@ -186,11 +191,37 @@ export class NotenEditor {
     const datei = feld.files?.[0];
     feld.value = '';
     if (!datei) return;
-    const text = dateiText(await datei.arrayBuffer());
+    let text = dateiText(await datei.arrayBuffer());
     if (this.noten().chordpro?.trim() && !confirm('Das vorhandene Akkordblatt durch die Datei ersetzen?')) return;
+    // Text-Datei mit Akkorden über dem Text: gleich umwandeln
+    const umgewandelt = istAkkordText(text);
+    if (umgewandelt) text = textZuChordPro(text, this.meta()).text;
     const titel = chordproLesen(text).titel;
     const anderer = titel && !this.songKey().toLocaleLowerCase('de').startsWith(titel.toLocaleLowerCase('de').slice(0, 4));
-    await this.speichern({ ...this.noten(), chordpro: text }, `„${datei.name}“ übernommen ✓${anderer ? ` – Achtung, in der Datei steht „${titel}“` : ''}`);
+    await this.speichern({ ...this.noten(), chordpro: text }, `„${datei.name}“ ${umgewandelt ? 'in ChordPro umgewandelt und ' : ''}übernommen ✓${anderer ? ` – Achtung, in der Datei steht „${titel}“` : ''}`);
+  }
+
+  /** Titel und Interpret aus dem Song-Schlüssel (Kopf des Akkordblatts) */
+  private meta(): { title: string; artist: string } {
+    const i = this.songKey().lastIndexOf('|');
+    return { title: this.songKey().slice(0, i), artist: this.songKey().slice(i + 1) };
+  }
+
+  /** „Akkorde über dem Text“ im Feld in ChordPro umwandeln (data/text-zu-chordpro.ts) */
+  protected umwandeln(text: string): void {
+    if (istChordPro(text)) {
+      this.meldung.set('Das ist schon ChordPro (Akkorde in [ ] bzw. {…}) – nichts umgewandelt.');
+      return;
+    }
+    const u = textZuChordPro(text, this.meta());
+    if (!u.zusammengefuehrt && !u.akkordzeilen) {
+      this.meldung.set('Keine Akkordzeilen gefunden – Akkorde müssen in einer eigenen Zeile über dem Text stehen.');
+      return;
+    }
+    void this.speichern(
+      { ...this.noten(), chordpro: u.text },
+      `In ChordPro umgewandelt ✓ ${u.zusammengefuehrt} Textzeilen mit Akkorden${u.akkordzeilen ? `, ${u.akkordzeilen} reine Akkordzeilen` : ''}${u.abschnitte ? `, ${u.abschnitte} Abschnitte` : ''} – bitte kurz prüfen (nur auf diesem Gerät gespeichert)`,
+    );
   }
 
   protected akkorde(text: string): void {

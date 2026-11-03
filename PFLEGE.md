@@ -366,6 +366,13 @@ Unter **Songs → Liste** die Zeile des Songs antippen – im Dialog unten:
   `{key: G}` steht da, in welcher Tonart es geschrieben ist (sonst gilt die Originaltonart), `{soc}`/`{eoc}` umschließen den
   Refrain, `{c: Intro 2x}` ist ein Hinweis. Im Bühnen-Modus erscheinen die Akkorde automatisch in **eurer** Tonart –
   mit Capo als Griffbild (z. B. „Wir spielen E, Capo 2“ → Griffe in D). Mit − und + lässt es sich von Hand verschieben.
+- **Text in ChordPro umwandeln** (Knopf unter dem Akkordblatt): für „Akkorde über dem Text“, z. B. aus Ultimate Guitar
+  oder einer Word-Datei kopiert. Jede Akkordzeile über einer Textzeile wird spaltengenau zu `[G]Text [D]Text`, reine
+  Akkordzeilen (Intro, Zwischenspiel) zu `[G] [D] [Em]`; Taktstriche `|` und `x2` stören nicht, auch H, `m7b5`, `6/9`
+  oder `N.C.` werden erkannt. Abschnitte wie `[Chorus]`, `Refrain:`, `Strophe 2` werden zu `{comment: …}`, „Key:/Tonart:/
+  Tom:“ zu `{key: …}`, „Capo 2“ zu `{capo: 2}`, Titel und Interpret kommen vom Song. Steht schon ChordPro im Feld, bleibt
+  es, wie es ist. Eine **.txt-Datei** mit Akkorden über dem Text wird beim Laden gleich umgewandelt. Danach kurz
+  prüfen – Akkorde über Leerzeichen am Zeilenende landen hinter dem letzten Wort.
 - **.pro-Dateien** (ChordPro, auch `.cho`, `.chopro`, `.chordpro`, `.crd`) direkt einlesen: beim Song **.pro-Datei
   laden** im Dialog, oder viele auf einmal unter **Songs → Noten** (siehe unten). Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
   über den Dateinamen (auch „Interpret - Titel.pro“). Was sich nicht zuordnen lässt, wird genannt. Ältere Dateien mit

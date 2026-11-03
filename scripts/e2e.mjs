@@ -869,6 +869,12 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await zeile.locator('app-noten-editor input[type=number]').first().blur();
   await zeile.locator('app-noten-editor input[type=number]').nth(1).fill('3');
   await zeile.locator('app-noten-editor input[type=number]').nth(1).blur();
+  // „Akkorde über dem Text“ per Knopf in ChordPro umwandeln – mit Titel/Interpret vom Song und Tonart aus dem Text
+  await zeile.locator('app-noten-editor textarea').fill('Key: D\n[Chorus]\nD        G\nAnd I dont want');
+  await zeile.locator('app-noten-editor textarea').blur();
+  await zeile.locator('app-noten-editor button', { hasText: 'Text in ChordPro umwandeln' }).click();
+  await until(async () => (await zeile.locator('app-noten-editor textarea').inputValue()) === '{title: Iris}\n{artist: The Goo Goo Dolls}\n{key: D}\n\n{comment: Refrain}\n[D]And I don[G]t want', async () => 'Umwandlung in ChordPro stimmt nicht: ' + JSON.stringify(await zeile.locator('app-noten-editor textarea').inputValue()));
+  await until(async () => (await zeile.locator('app-noten-editor .meldung').innerText()).includes('In ChordPro umgewandelt'), 'Meldung nach dem Umwandeln fehlt');
   await zeile.locator('app-noten-editor textarea').fill('{key: D}\n[D]Iris [G/H]Text');
   await zeile.locator('app-noten-editor textarea').blur();
   await until(async () => (await zeile.locator('app-noten-editor .pruefung').innerText().catch(() => '')).includes('2 Akkorde'), 'Akkordblatt wird nicht erkannt');

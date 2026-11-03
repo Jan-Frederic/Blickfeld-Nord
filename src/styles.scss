@@ -594,3 +594,9 @@ app-songs-reife .wert { text-align: right; font-size: .82rem; font-weight: 600; 
   app-songs-reife .songs li { grid-template-columns: minmax(0, 1fr) 44px; }
   app-songs-reife .wer, app-songs-reife .balken { grid-column: 1 / -1; }
 }
+
+// Song-Dialog → Noten: Knopf „Text in ChordPro umwandeln“ unter dem Akkordblatt (noten-editor.ts)
+app-noten-editor .umwandeln { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+app-noten-editor .umwandeln button { background: none; font: inherit; }
+app-noten-editor .umwandeln button:disabled { opacity: .4; cursor: default; }
+app-noten-editor .umwandeln small { flex: 1 1 240px; min-width: 0; color: var(--bn-fog); font-size: .74rem; line-height: 1.4; }
