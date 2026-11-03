@@ -23,7 +23,8 @@ const TEXT = tr(
       <ul class="presse-termine">
         @for (k of kommend(); track k.id) {
           <li>
-            <a [routerLink]="('/presse/' + k.id) | loc" [attr.aria-label]="t().mehr + ': ' + k.show.venue">
+            <a [routerLink]="('/presse/' + k.id) | loc">
+              <span class="sr-only">{{ t().mehr }}: </span>
               <span class="datum">{{ k.show.date | ldate: 'mediumDate' }}@if (k.show.time) { · {{ k.show.time }} }</span>
               <span class="ort">{{ k.show.venue }}@if (k.show.city) { <span class="stadt">, {{ k.show.city }}</span> }</span>
               <mat-icon aria-hidden="true">chevron_right</mat-icon>

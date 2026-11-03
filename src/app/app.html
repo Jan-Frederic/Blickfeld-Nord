@@ -42,7 +42,7 @@
           [routerLink]="l.link" (click)="remember(l.lang)"
           [attr.lang]="l.lang"
           [attr.hreflang]="l.lang"
-          [attr.aria-label]="l.name"
+          [attr.aria-label]="l.lang.toUpperCase() + ' – ' + l.name"
           [attr.aria-current]="l.current ? 'true' : null"
           [class.current]="l.current"
         >{{ l.lang.toUpperCase() }}</a>

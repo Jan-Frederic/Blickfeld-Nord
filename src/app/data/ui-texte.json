@@ -281,6 +281,20 @@
  },
  {
   "datei": "app.ts",
+  "key": "share",
+  "de": "Seite teilen",
+  "en": "Share this page",
+  "nl": "Pagina delen"
+ },
+ {
+  "datei": "app.ts",
+  "key": "copied",
+  "de": "Link kopiert",
+  "en": "Link copied",
+  "nl": "Link gekopieerd"
+ },
+ {
+  "datei": "app.ts",
   "key": "install",
   "de": "Als App installieren",
   "en": "Install as app",
@@ -421,6 +435,13 @@
  },
  {
   "datei": "pages/historie.ts",
+  "key": "year",
+  "de": "Unser Jahr {1} in Zahlen",
+  "en": "Our year {1} in numbers",
+  "nl": "Ons jaar {1} in cijfers"
+ },
+ {
+  "datei": "pages/historie.ts",
   "key": "example",
   "de": "Beispiel",
   "en": "Example",
@@ -488,6 +509,125 @@
   "de": "oder direkt auf Instagram ansehen",
   "en": "or watch it directly on Instagram",
   "nl": "of bekijk hem direct op Instagram"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "kicker",
+  "de": "Jahresrückblick",
+  "en": "Year in review",
+  "nl": "Jaaroverzicht"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "title",
+  "de": "Unser Jahr {1}",
+  "en": "Our year {1}",
+  "nl": "Ons jaar {1}"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "lead",
+  "de": "{1} in Zahlen, Stationen und Momenten – danke an alle, die mit uns gefeiert, gesungen und getanzt haben!",
+  "en": "{1} in numbers, stops and moments – thank you to everyone who celebrated, sang and danced with us!",
+  "nl": "{1} in cijfers, plekken en momenten – bedankt aan iedereen die met ons heeft gefeest, gezongen en gedanst!"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "shows",
+  "de": "Auftritte",
+  "en": "Shows",
+  "nl": "Optredens"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "public",
+  "de": "davon öffentlich",
+  "en": "of which public",
+  "nl": "waarvan openbaar"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "places",
+  "de": "verschiedene Orte",
+  "en": "different places",
+  "nl": "verschillende plekken"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "rehearsals",
+  "de": "Proben",
+  "en": "Rehearsals",
+  "nl": "Repetities"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "stations",
+  "de": "Hier waren wir",
+  "en": "Where we played",
+  "nl": "Hier speelden we"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "highlights",
+  "de": "Momente",
+  "en": "Moments",
+  "nl": "Momenten"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "songOfNight",
+  "de": "Song des Abends:",
+  "en": "Song of the night:",
+  "nl": "Nummer van de avond:"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "more",
+  "de": "Zum Rückblick",
+  "en": "To the review",
+  "nl": "Naar de terugblik"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "outlook",
+  "de": "{1} stehen schon {2} Konzerte fest – wir freuen uns auf euch!",
+  "en": "{2} shows are already confirmed for {1} – we look forward to seeing you!",
+  "nl": "Voor {1} staan al {2} optredens vast – we kijken ernaar uit!"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "concerts",
+  "de": "Alle Konzerte",
+  "en": "All shows",
+  "nl": "Alle optredens"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "booking",
+  "de": "Auch bei euch? Zum Booking",
+  "en": "At your place too? Booking",
+  "nl": "Ook bij jullie? Naar boeken"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "metaTitle",
+  "de": "Unser Jahr {1} – Blickfeld Nord",
+  "en": "Our year {1} – Blickfeld Nord",
+  "nl": "Ons jaar {1} – Blickfeld Nord"
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "metaDescription",
+  "de": "Der Jahresrückblick {1} von Blickfeld Nord: {2} Auftritte, Stationen und die schönsten Momente.",
+  "en": "Blickfeld Nord's year in review {1}: {2} shows, stops and the best moments.",
+  "nl": "Het jaaroverzicht {1} van Blickfeld Nord: {2} optredens, plekken en de mooiste momenten."
+ },
+ {
+  "datei": "pages/jahr.ts",
+  "key": "fallback",
+  "de": "Jahresrückblick – Blickfeld Nord",
+  "en": "Year in review – Blickfeld Nord",
+  "nl": "Jaaroverzicht – Blickfeld Nord"
  },
  {
   "datei": "pages/konzert.ts",
@@ -589,10 +729,31 @@
  },
  {
   "datei": "pages/konzert.ts",
+  "key": "story",
+  "de": "Als Story teilen",
+  "en": "Share as story",
+  "nl": "Delen als story"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "bald",
+  "de": "Noch {1} Tage – wir freuen uns auf euch!",
+  "en": "{1} days to go – we can't wait to see you!",
+  "nl": "Nog {1} dagen – we kijken ernaar uit!"
+ },
+ {
+  "datei": "pages/konzert.ts",
   "key": "route",
   "de": "Anfahrt",
   "en": "Directions",
   "nl": "Route"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "arrival",
+  "de": "Anfahrt & Parken",
+  "en": "Getting there & parking",
+  "nl": "Bereikbaarheid & parkeren"
  },
  {
   "datei": "pages/konzert.ts",
@@ -621,6 +782,13 @@
   "de": "Gespielt an diesem Abend",
   "en": "Played that night",
   "nl": "Gespeeld die avond"
+ },
+ {
+  "datei": "pages/konzert.ts",
+  "key": "listen",
+  "de": "auf Spotify anhören",
+  "en": "listen on Spotify",
+  "nl": "beluisteren op Spotify"
  },
  {
   "datei": "pages/konzert.ts",
@@ -768,6 +936,307 @@
   "de": "Historie",
   "en": "History",
   "nl": "Geschiedenis"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "back",
+  "de": "Pressekit",
+  "en": "Press kit",
+  "nl": "Perskit"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "kicker",
+  "de": "Pressekit · Konzert",
+  "en": "Press kit · Show",
+  "nl": "Perskit · Optreden"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "lead",
+  "de": "Alles für die Ankündigung dieses Auftritts: Eckdaten, Plakat und Story als Bild, fertige Texte zum Kopieren und unsere Songliste.",
+  "en": "Everything for announcing this show: key facts, poster and story as images, ready-made texts to copy and our song list.",
+  "nl": "Alles voor de aankondiging van dit optreden: gegevens, affiche en story als afbeelding, kant-en-klare teksten en onze nummerlijst."
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "past",
+  "de": "Dieses Konzert ist schon vorbei.",
+  "en": "This show is already over.",
+  "nl": "Dit optreden is al voorbij."
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "date",
+  "de": "Datum",
+  "en": "Date",
+  "nl": "Datum"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "until",
+  "de": "bis",
+  "en": "until",
+  "nl": "tot"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "start",
+  "de": "Beginn",
+  "en": "Start",
+  "nl": "Aanvang"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "time",
+  "de": "{1} Uhr",
+  "en": "{1}",
+  "nl": "{1} uur"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "tba",
+  "de": "wird noch bekannt gegeben",
+  "en": "to be announced",
+  "nl": "wordt nog bekendgemaakt"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "place",
+  "de": "Ort",
+  "en": "Venue",
+  "nl": "Locatie"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "entry",
+  "de": "Eintritt",
+  "en": "Entry",
+  "nl": "Entree"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "free",
+  "de": "frei",
+  "en": "free",
+  "nl": "gratis"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "soon",
+  "de": "Infos folgen",
+  "en": "details to follow",
+  "nl": "info volgt"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "arrival",
+  "de": "Anfahrt & Parken",
+  "en": "Getting there & parking",
+  "nl": "Bereikbaarheid & parkeren"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "page",
+  "de": "Konzertseite",
+  "en": "Show page",
+  "nl": "Optredenpagina"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "route",
+  "de": "Anfahrt",
+  "en": "Directions",
+  "nl": "Route"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "rider",
+  "de": "Technik & Rider",
+  "en": "Tech & rider",
+  "nl": "Techniek & rider"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "allesPdf",
+  "de": "Alles als PDF (für E-Mails)",
+  "en": "Everything as PDF (for emails)",
+  "nl": "Alles als pdf (voor e-mails)"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "pdfLink",
+  "de": "Konzertseite",
+  "en": "Show page",
+  "nl": "Optredenpagina"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "bilder",
+  "de": "Plakat & Story",
+  "en": "Poster & story",
+  "nl": "Affiche & story"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "bilderInfo",
+  "de": "Mit QR-Code zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung im Kalender). Gern aushängen, posten und teilen.",
+  "en": "With a QR code to the show page (time, directions, calendar reminder). Feel free to put up, post and share.",
+  "nl": "Met QR-code naar de optredenpagina (tijd, route, herinnering in de agenda). Graag ophangen, posten en delen."
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "plakat",
+  "de": "Plakat (quadratisch, für Beitrag und Aushang)",
+  "en": "Poster (square, for posts and notice boards)",
+  "nl": "Affiche (vierkant, voor posts en ophangen)"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "story",
+  "de": "Story / Status (Hochformat)",
+  "en": "Story / status (portrait)",
+  "nl": "Story / status (staand)"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "laden",
+  "de": "Bild wird erstellt …",
+  "en": "Creating image …",
+  "nl": "Afbeelding wordt gemaakt …"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "download",
+  "de": "Herunterladen",
+  "en": "Download",
+  "nl": "Downloaden"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "druck",
+  "de": "Plakat zum Drucken",
+  "en": "Poster to print",
+  "nl": "Affiche om te printen"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "vorOrt",
+  "de": "Was wir vor Ort brauchen",
+  "en": "What we need on site",
+  "nl": "Wat we ter plaatse nodig hebben"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "riderPdf",
+  "de": "Technik-Rider (PDF)",
+  "en": "Tech rider (PDF)",
+  "nl": "Techniek-rider (pdf)"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "texte",
+  "de": "Texte zum Kopieren",
+  "en": "Texts to copy",
+  "nl": "Teksten om te kopiëren"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "texteInfo",
+  "de": "Fertige Texte mit Link zur Konzertseite – für Beitrag, Story oder Status.",
+  "en": "Ready-made texts with a link to the show page – for posts, stories or status.",
+  "nl": "Kant-en-klare teksten met link naar de optredenpagina – voor post, story of status."
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "beitrag",
+  "de": "Beitrag zum Plakat",
+  "en": "Post for the poster",
+  "nl": "Post bij de affiche"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "story1",
+  "de": "Zwei Wochen vorher",
+  "en": "Two weeks before",
+  "nl": "Twee weken ervoor"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "woche",
+  "de": "Eine Woche vorher",
+  "en": "One week before",
+  "nl": "Een week ervoor"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "morgen",
+  "de": "Am Tag davor",
+  "en": "The day before",
+  "nl": "De dag ervoor"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "heute",
+  "de": "Am Auftrittstag",
+  "en": "On the day",
+  "nl": "Op de dag zelf"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "copy",
+  "de": "Kopieren",
+  "en": "Copy",
+  "nl": "Kopiëren"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "copied",
+  "de": "Kopiert!",
+  "en": "Copied!",
+  "nl": "Gekopieerd!"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "songs",
+  "de": "Songliste",
+  "en": "Song list",
+  "nl": "Nummerlijst"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "songsInfo",
+  "de": "Unser Repertoire ({1} Songs) – die Setlist für den Abend stellen wir passend zum Publikum zusammen.",
+  "en": "Our repertoire ({1} songs) – we put together the setlist for the night to suit the audience.",
+  "nl": "Ons repertoire ({1} nummers) – de setlist voor de avond stellen we samen passend bij het publiek."
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "songsCopy",
+  "de": "Liste kopieren",
+  "en": "Copy list",
+  "nl": "Lijst kopiëren"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "songsTxt",
+  "de": "Als Textdatei",
+  "en": "As text file",
+  "nl": "Als tekstbestand"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "notFound",
+  "de": "Konzert nicht gefunden",
+  "en": "Show not found",
+  "nl": "Optreden niet gevonden"
+ },
+ {
+  "datei": "pages/presse-konzert.ts",
+  "key": "notFoundText",
+  "de": "Diesen Termin gibt es nicht (mehr). Alles Weitere findet ihr im",
+  "en": "This date doesn't exist (any more). Everything else is in the",
+  "nl": "Deze datum bestaat niet (meer). Al het andere vinden jullie in de"
  },
  {
   "datei": "pages/repertoire.ts",
@@ -1065,6 +1534,13 @@
  },
  {
   "datei": "pages/technik.ts",
+  "key": "bannerValue",
+  "de": "4 × 2 m mit Ösen – zum Aufhängen hinter der Bühne (Wand, Zaun oder Traverse)",
+  "en": "4 × 2 m with eyelets – hung behind the stage (wall, fence or truss)",
+  "nl": "4 × 2 m met ogen – opgehangen achter het podium (muur, hek of truss)"
+ },
+ {
+  "datei": "pages/technik.ts",
   "key": "schedule",
   "de": "Zeitplan",
   "en": "Schedule",
@@ -1321,6 +1797,41 @@
   "de": "Outlook zeigt abonnierte Termine nur bis ein Jahr im Voraus – spätere erscheinen automatisch, sobald sie näher rücken.",
   "en": "Outlook only shows subscribed dates up to one year ahead – later ones appear automatically as they get closer.",
   "nl": "Outlook toont geabonneerde data maar tot een jaar vooruit – latere verschijnen vanzelf zodra ze dichterbij komen."
+ },
+ {
+  "datei": "sections/bald-leiste.ts",
+  "key": "heute",
+  "de": "Heute live:",
+  "en": "Live today:",
+  "nl": "Vandaag live:"
+ },
+ {
+  "datei": "sections/bald-leiste.ts",
+  "key": "morgen",
+  "de": "Morgen live:",
+  "en": "Live tomorrow:",
+  "nl": "Morgen live:"
+ },
+ {
+  "datei": "sections/bald-leiste.ts",
+  "key": "noch",
+  "de": "Noch {1} Tage:",
+  "en": "{1} days to go:",
+  "nl": "Nog {1} dagen:"
+ },
+ {
+  "datei": "sections/bald-leiste.ts",
+  "key": "mehr",
+  "de": "Zum Konzert",
+  "en": "Show details",
+  "nl": "Naar het optreden"
+ },
+ {
+  "datei": "sections/bald-leiste.ts",
+  "key": "zu",
+  "de": "Hinweis schließen",
+  "en": "Close",
+  "nl": "Sluiten"
  },
  {
   "datei": "sections/band.ts",
@@ -1603,6 +2114,13 @@
   "nl": "Sluiten"
  },
  {
+  "datei": "sections/gallery.ts",
+  "key": "band",
+  "de": "Band & Porträts",
+  "en": "Band & portraits",
+  "nl": "Band & portretten"
+ },
+ {
   "datei": "sections/hardware-dialog.ts",
   "key": "close",
   "de": "Schließen",
@@ -1650,6 +2168,13 @@
   "de": "Jetzt live!",
   "en": "Live now!",
   "nl": "Nu live!"
+ },
+ {
+  "datei": "sections/hero.ts",
+  "key": "zum",
+  "de": "Zum Konzert",
+  "en": "Go to the show",
+  "nl": "Naar het optreden"
  },
  {
   "datei": "sections/hero.ts",
@@ -1895,6 +2420,27 @@
   "de": "Ganzen Rückblick lesen",
   "en": "Read the full story",
   "nl": "Lees de hele terugblik"
+ },
+ {
+  "datei": "sections/presse-termine.ts",
+  "key": "titel",
+  "de": "Anstehende Konzerte",
+  "en": "Upcoming shows",
+  "nl": "Komende optredens"
+ },
+ {
+  "datei": "sections/presse-termine.ts",
+  "key": "info",
+  "de": "Für Veranstalter: je Auftritt Plakat, Story, fertige Texte und unsere Songliste.",
+  "en": "For organisers: poster, story, ready-made texts and our song list for each show.",
+  "nl": "Voor organisatoren: per optreden affiche, story, kant-en-klare teksten en onze nummerlijst."
+ },
+ {
+  "datei": "sections/presse-termine.ts",
+  "key": "mehr",
+  "de": "Pressekit zum Auftritt",
+  "en": "Press kit for this show",
+  "nl": "Perskit voor dit optreden"
  },
  {
   "datei": "sections/referenzen.ts",
@@ -2170,6 +2716,20 @@
   "nl": "Verzoeknummer"
  },
  {
+  "datei": "sections/stimmen.ts",
+  "key": "kicker",
+  "de": "Stimmen",
+  "en": "Feedback",
+  "nl": "Reacties"
+ },
+ {
+  "datei": "sections/stimmen.ts",
+  "key": "title",
+  "de": "Das sagen Veranstalter",
+  "en": "What hosts say",
+  "nl": "Wat organisatoren zeggen"
+ },
+ {
   "datei": "sections/technik-aufbau.ts",
   "key": "plan",
   "de": "Bühnenplan",
@@ -2238,6 +2798,13 @@
   "de": "Steckdose",
   "en": "Power socket",
   "nl": "Stopcontact"
+ },
+ {
+  "datei": "sections/technik-aufbau.ts",
+  "key": "legend.banner",
+  "de": "Banner (Ösen)",
+  "en": "Banner (eyelets)",
+  "nl": "Banner (ogen)"
  },
  {
   "datei": "sections/technik-aufbau.ts",

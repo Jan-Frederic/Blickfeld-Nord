@@ -544,3 +544,7 @@ app-band-ordner .fehler { color: #e07a5a; }
 // bleibt „hover“ nach dem Antippen hängen (leerer oranger Knopf). Schrift bleibt dunkel, der Knopf hellt nur auf.
 :is(button.primaer, .primaer, .btn.primary, button.primary, .actions .primary, .buttons .primary, .tabs a.active,
   .chips button.on, .wahl button.on, .seg button.on, .art button.on):hover:not(:disabled) { color: #2a1708 !important; background-color: #f0b884 !important; border-color: #f0b884 !important; }
+
+// Bühnenplan: Beschriftung von Musikern und PA liegt neben dem Knopf (technik-aufbau.ts) – leuchtet trotzdem mit auf
+app-technik-aufbau .beschriftung { pointer-events: none; }
+app-technik-aufbau .hit:hover + .beschriftung text, app-technik-aufbau .hit:focus-visible + .beschriftung text { fill: var(--bn-sunset); stroke: none; }

@@ -76,9 +76,10 @@ const TEXT = tr(
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>{{ t().date }}</th>
             <td mat-cell *matCellDef="let s" class="date">
-              <a class="details" [routerLink]="['/konzerte', band.showId(s)] | loc" [attr.aria-label]="(s.date | ldate: 'long') + ', ' + s.venue + ' – ' + t().detailsLabel">
+              <a class="details" [routerLink]="['/konzerte', band.showId(s)] | loc">
               <span class="long">{{ s.date | ldate: 'weekday' }}@if (s.time) {<span class="time">{{ s.time }}{{ t().oclock }}</span>}@if (s.endDate) {<br />– {{ s.endDate | ldate: 'weekday' }}}</span>
               <span class="short">{{ s.date | ldate: 'tiny' }}@if (s.time) {<span class="time">{{ s.time }}{{ t().oclock }}</span>}@if (s.endDate) {<br />– {{ s.endDate | ldate: 'tiny' }}}</span>
+              <span class="sr-only">, {{ s.venue }} – {{ t().detailsLabel }}</span>
               </a>
             </td>
           </ng-container>

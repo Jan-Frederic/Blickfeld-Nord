@@ -175,7 +175,7 @@ const py = (m: number) => PAD_TOP + m * M;
 
         @for (it of items(); track it.id) {
           <g [class.hit]="it.hw || bearbeiten()" [attr.role]="it.hw || bearbeiten() ? 'button' : null" [attr.tabindex]="it.hw || bearbeiten() ? 0 : null"
-             [attr.aria-label]="bearbeiten() ? ct.t(it.label) + ' verschieben (Pfeiltasten)' : it.hw ? ct.t(it.label) + ' – ' + t().details : null"
+             [attr.aria-label]="bearbeiten() ? name(it) + ' verschieben (Pfeiltasten)' : it.hw ? name(it) + ' – ' + t().details : null"
              [style.cursor]="bearbeiten() ? 'grab' : null"
              (click)="!bearbeiten() && it.hw && open(it.hw)" (keydown.enter)="!bearbeiten() && it.hw && open(it.hw)" (keydown.space)="!bearbeiten() && it.hw && open(it.hw, $event)"
              (pointerdown)="bearbeiten() && greifen($event, it)" (keydown)="bearbeiten() && schieben($event, it)">
@@ -194,11 +194,6 @@ const py = (m: number) => PAD_TOP + m * M;
             }
             @case ('person') {
               <circle class="person" [attr.cx]="px(it.x)" [attr.cy]="py(it.y)" r="21" />
-              <text class="initial" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 6" text-anchor="middle">{{ ct.t(it.label)[0] }}</text>
-              @if (it.id !== 'matthias') {
-                <text class="label" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 42" text-anchor="middle">{{ ct.t(it.label) }}</text>
-                <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 58" text-anchor="middle">{{ ct.t(it.rolle) }}</text>
-              }
             }
             @case ('amp') {
               <rect class="box" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="4" />
@@ -225,9 +220,7 @@ const py = (m: number) => PAD_TOP + m * M;
               @if (it.sub) {
                 <rect class="pa" [attr.x]="px(it.x) - 30" [attr.y]="py(it.y) - 6" width="60" height="62" rx="4" />
                 <circle class="cone" [attr.cx]="px(it.x)" [attr.cy]="py(it.y) + 25" r="22" />
-                <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 72" text-anchor="middle">Sub</text>
               }
-              <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 94" text-anchor="middle">PA</text>
             }
             @case ('pedalboard') {
               <rect class="box" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="3" />
@@ -265,6 +258,22 @@ const py = (m: number) => PAD_TOP + m * M;
             }
           }
           </g>
+          <!-- Beschriftung aus mehreren Zeilen neben dem Knopf statt darin: der Knopf heißt wie sein aria-label (sonst
+               läse die Barrierefreiheitsprüfung „DDavidGesang …“ als sichtbaren Text, der nicht zum Namen passt) -->
+          @if (it.typ === 'person' || it.typ === 'pa') {
+            <g class="beschriftung" aria-hidden="true">
+              @if (it.typ === 'person') {
+                <text class="initial" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 6" text-anchor="middle">{{ ct.t(it.label)[0] }}</text>
+                @if (it.id !== 'matthias') {
+                  <text class="label" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 42" text-anchor="middle">{{ ct.t(it.label) }}</text>
+                  <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 58" text-anchor="middle">{{ ct.t(it.rolle) }}</text>
+                }
+              } @else {
+                @if (it.sub) { <text class="tiny" [attr.x]="px(it.x)" [attr.y]="py(it.y) + 72" text-anchor="middle">Sub</text> }
+                <text class="small" [attr.x]="px(it.x)" [attr.y]="py(it.y) - 94" text-anchor="middle">PA</text>
+              }
+            </g>
+          }
         }
       </svg>
       <figcaption>
@@ -476,6 +485,14 @@ export class TechnikAufbau {
   protected readonly kanaele = data.kanaele;
   protected readonly monitore = data.monitore as Monitor[];
   // Ösen des Banners: an beiden Enden und etwa jeden Meter
+  /** Name eines Elements: beginnt mit der sichtbaren Beschriftung (Barrierefreiheit: sichtbarer Text im Namen), dann die Bezeichnung */
+  protected name(it: Item): string {
+    const label = this.ct.t(it.label);
+    // Musiker und PA: Beschriftung liegt neben dem Knopf; Bass-Amp und Strom zeigen einen anderen Text als die Bezeichnung
+    const text = it.typ === 'amp' ? this.t().bassAmp : it.typ === 'strom' ? `⚡ ${label}` : '';
+    return !text || text.includes(label) ? text || label : `${text} – ${label}`;
+  }
+
   protected oesen(it: Item): number[] {
     const b = it.b ?? 0;
     const n = Math.max(1, Math.round(b));
