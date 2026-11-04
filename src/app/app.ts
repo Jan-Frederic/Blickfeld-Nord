@@ -8,6 +8,7 @@ import { enableOffline, install, installable, iosHint, setupPwa, updateReady } f
 import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
 import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
 import { SyncKompass } from './pages/sync-kompass';
+import { ansichtAus } from './data/neu-zeichnen';
 import { SprachHinweis } from './sections/sprach-hinweis';
 import { BaldLeiste } from './sections/bald-leiste';
 
@@ -88,6 +89,8 @@ const TEXT = tr(
 })
 export class App {
   protected readonly i18n = inject(I18n);
+  /** geroutete Seite kurz ausblenden, damit sie neue Daten aus dem Abgleich liest (data/neu-zeichnen.ts) */
+  protected readonly ansichtAus = ansichtAus;
   protected readonly t = this.i18n.t(TEXT);
   // Symbole erscheinen nur im Handy-Menü (wie im Backstage), die Desktop-Leiste bleibt reine Schrift
   protected readonly nav = computed((): { id?: string; link?: string; label: string; icon: string }[] => {

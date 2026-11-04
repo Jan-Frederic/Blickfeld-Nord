@@ -93,7 +93,7 @@
 </header>
 
 <main>
-  <router-outlet />
+  @if (!ansichtAus()) { <router-outlet /> }
 </main>
 
 <!-- Sync-Status unten rechts (nur Backstage, erst bei Bedarf geladen) -->

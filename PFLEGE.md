@@ -589,11 +589,17 @@ Song) lassen sich mit der Berechtigung „Daten löschen“ löschen: **Vom Ger�
 **Alle Einstellungen und Backstage-Daten wandern mit:** Ist man angemeldet und die Synchronisation eingerichtet, wird
 jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:
 
-- `Daten/` – für die ganze Band: Setlists (samt Notizen und Vorlagen), Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
-  Nachbereitungen, Songs-Entwurf, Prüf-Häkchen.
+- `Daten/` – für die ganze Band: Setlists (samt Notizen und Vorlagen), Spielzeiten, Packlisten, Vor Ort, Vorabend,
+  Proben, Zusagen, „unsicher bei“, Fortschritt je Musiker, Sterne, Werbeplan-Häkchen, Nachbereitungen, Kontakte,
+  Saison-Stand, Songs-Entwurf, für alle gelöschte Noten, Prüf-Häkchen.
 - `Einstellungen/<Name>/` – je Person: Bühnen-Modus (Schriftgröße, Klick-Ton, Pedal-Tasten, Halbseite), gewählte
   Noten-Fassung (PDF bzw. Akkorde), volle Breite, von Hand verschobene Akkorde und Mitscroll-Tempo je Song, gemerkte
   Zuordnungen, Wackelt-Liste, Aufgaben-Häkchen, Filter, Sprache.
+- Nicht gespiegelt wird nur, was zum Gerät gehört: Sync-Einstellungen, Anmeldung, Gerätename, Zugangssperre, letzter
+  Backup-Zeitpunkt.
+- **Neue Daten erscheinen sofort:** Bringt ein Abgleich Änderungen anderer Geräte (z. B. einen Haken im Werbeplan), baut
+  sich die offene Backstage-Seite neu auf (gleiche Scroll-Position). Tippt man gerade etwas, ist ein Dialog offen oder
+  läuft der Bühnen- bzw. Probe-Modus, erscheint stattdessen unten „Neue Daten der Band – anzeigen“.
 - `Noten/` – je Song, welche PDFs (mit Fassung und Seitenbereich) und welches Akkordblatt dazugehören. PDFs werden
   über Name und Größe gefunden; fehlt eines auf dem Gerät, holt die App es aus dem Sync-Ordner (z. B. `Sheets/`).
 - `Markierungen/Band/` – Zeichnungen im Notenblatt für alle (Standard), `Markierungen/<Name>/` – die nur für dich
@@ -627,7 +633,8 @@ automatisch. Eingerichtet wird unter **Backstage → Einstellungen** (die App-Re
      Browser (nicht in der Dateien-App sichtbar); unter Abgleich → **Lokale Dateien** lassen sie sich öffnen.
    - **Ordner auf diesem Computer** – nur Chrome/Edge am Mac oder PC: ein echter Ordner auf der Festplatte.
 4. **Optionen:** Richtung (beide / nur herunter / nur hoch), **Löschungen übertragen** (in OneDrive landen sie im
-   Papierkorb), **Automatisch** (beim Öffnen des Backstage und alle 15 Minuten, solange er offen ist).
+   Papierkorb), **Automatisch** (beim Öffnen des Backstage, alle 15 Minuten, solange er offen ist, sobald man die App
+   wieder in den Vordergrund holt, und 5 Sekunden nach jeder eigenen Änderung).
 
 So wird abgeglichen: Der Stand nach jedem Abgleich wird gemerkt. Neues und Geändertes wandert auf die andere Seite,
 Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf beiden Seiten geändert, gewinnt die

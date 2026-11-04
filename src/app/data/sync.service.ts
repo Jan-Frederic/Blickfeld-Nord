@@ -40,6 +40,9 @@ export class SyncService {
   /** zuletzt heruntergeladene Dateien (zum Einlesen anbieten) */
   readonly neu = signal<string[]>([]);
   private timer: ReturnType<typeof setInterval> | undefined;
+  /** zählt hoch, wenn ein Abgleich Daten anderer Geräte übernommen hat – offene Seiten bauen sich dann neu auf */
+  readonly neueDaten = signal(0);
+  private letzterLauf = 0;
   /** online (für die Anzeige unten rechts) */
   readonly online = signal(typeof navigator === 'undefined' || navigator.onLine);
   /** Stand der gespiegelten Einstellungen und Daten (data/spiegel.ts) – für den Sync-Status im Abgleich */
@@ -420,6 +423,8 @@ export class SyncService {
     setTimeout(los, 3000);
     this.timer = setInterval(los, 15 * 60_000);
     addEventListener('online', los);
+    // App wieder im Vordergrund (Handy entsperrt, Tab gewechselt): gleich abgleichen statt bis zu 15 Minuten zu warten
+    document.addEventListener('visibilitychange', () => !document.hidden && Date.now() - this.letzterLauf > 60_000 && los());
   }
 
   /**
@@ -430,6 +435,7 @@ export class SyncService {
     if (this.laeuft() || !this.bereit()) return;
     const e = syncEinstellungen();
     this.laeuft.set(true);
+    this.letzterLauf = Date.now();
     try {
       const konto = (await oneDriveKonto()) ?? (await oneDriveAnmelden(still));
       if (!konto) return;
@@ -469,6 +475,8 @@ export class SyncService {
       const daten = uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
       const mit = (aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '') + (weg ? ` · ${weg} für alle gelöschte ${weg === 1 ? 'Noten-Datei' : 'Noten-Dateien'} entfernt` : '');
       letzterSyncSetzen(ergebnisText(ergebnis) + daten + mit + noten + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
+      // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
+      if (uebernommen + notenSync + aufnahmen + weg + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {
       letzterSyncSetzen(`Abgebrochen: ${(err as Error).message || 'unbekannter Fehler'}`, true);
     } finally {
