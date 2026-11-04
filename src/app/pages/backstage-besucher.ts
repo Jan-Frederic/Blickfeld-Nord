@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { HERKUNFT } from '../analytics';
 import { GC, kampagne, zaehler as count } from '../data/goatcounter';
 import { BandService } from '../data/band.service';
-import { WEGE } from './konzert-kampagne';
+import { GRUPPEN } from './konzert-kampagne';
 
 // Besucherzahlen aus GoatCounter (öffentlicher Zähler, siehe data/goatcounter.ts)
 const DASHBOARD = GC;
@@ -126,8 +126,9 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
                 </tbody>
               </table>
             </div>
-            <p class="foot">Seite = Aufrufe der Konzertseite (DE/EN/NL); die übrigen Spalten zählen Besucher über Plakat, Story,
-              Beitragstext und geteilte Links mit der Kampagne des Konzerts.</p>
+            <p class="foot">Seite = Aufrufe der Konzertseite (DE/EN/NL); die übrigen Spalten zählen Besucher über Plakat, Stories
+              (alle zusammen), Reel, Beitragstext und geteilte Links mit der Kampagne des Konzerts – Einzelzahlen je Story auf der
+              Seite des Auftritts unter „Kampagne“.</p>
             @if (wirkung().gesamt) {
               <h3>Was wirkt am besten · alle Konzerte</h3>
               <p class="text">
@@ -210,7 +211,8 @@ export class BackstageBesucher implements OnInit {
   protected readonly anfrageHerkunft = signal<{ ref: string; label: string; count: number }[]>([]);
   protected readonly herkunftMax = signal(0);
   private readonly band = inject(BandService);
-  protected readonly wege = WEGE.map((w) => ({ ...w, kurz: ({ plakat: 'Plakat', story: 'Story', text: 'Text', geteilt: 'Geteilt', 'presse-geteilt': 'Pressekit', 'story-1': 'Story −14', 'story-woche': 'Story −7', 'story-morgen': 'Story −1', 'story-heute': 'Story 0' } as Record<string, string>)[w.ref] ?? w.ref }));
+  // Spalten je Gruppe (Plakat, Stories, Reel, Text, Geteilt) – Einzelzahlen stehen auf der Seite des Auftritts
+  protected readonly wege = GRUPPEN.map((g) => ({ ref: g.id, label: g.label, kurz: g.kurz }));
   // Wochentrend: letzte 7 Tage (inkl. heute) gegen die 7 Tage davor
   protected readonly trend = signal<{ jetzt: number; vorher: number; diff: number; prozent: number } | null>(null);
   protected readonly kampagnen = signal<{ id: string; datum: string; name: string; seite: number; wege: number[] }[]>([]);
@@ -265,7 +267,7 @@ export class BackstageBesucher implements OnInit {
           konzerte.map(async (s) => {
             const id = this.band.showId(s);
             const seiten = await Promise.all(['', '/en', '/nl'].map((l) => n(`${l}/konzerte/${id}`)));
-            const wege = await Promise.all(WEGE.map((w) => n(`kampagne-${kampagne(id)}-${w.ref}`)));
+            const wege = await Promise.all(GRUPPEN.map(async (g) => (await Promise.all(g.wege.map((w) => n(`kampagne-${kampagne(id)}-${w.ref}`)))).reduce((a, b) => a + b, 0)));
             return { id, datum: datumText(s.date), name: s.venue, seite: seiten.reduce((a, b) => a + b, 0), wege };
           }),
         ),

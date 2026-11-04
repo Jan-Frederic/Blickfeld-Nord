@@ -8,7 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
-import { PosterFormat, postText, renderDanke, shareImage, sharePoster } from '../data/poster';
+import { postText, renderDanke, shareImage } from '../data/poster';
+import { InstagramFormate } from './instagram-formate';
 import { kontaktVon, nachrichtSenden } from '../data/kontakte';
 import { KontaktKarte } from './kontakt-karte';
 import { TOOLS } from './backstage-tool';
@@ -32,7 +33,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte, InstagramFormate],
   template: `
     <section class="section">
       <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
@@ -95,8 +96,6 @@ const DAY = 24 * 60 * 60 * 1000;
           <button mat-stroked-button (click)="mixerZettel()"><mat-icon>tune</mat-icon> Mixer-Zettel</button>
           <button mat-stroked-button (click)="etiketten()"><mat-icon>label</mat-icon> Kabel-Etiketten</button>
           @if (posterAllowed()) {
-            <button mat-stroked-button (click)="poster()"><mat-icon>image</mat-icon> Plakat</button>
-            <button mat-stroked-button (click)="poster('story')"><mat-icon>smartphone</mat-icon> Story</button>
             <button mat-stroked-button (click)="copyText()">
               <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
               {{ copied() ? 'Kopiert!' : 'Text kopieren' }}
@@ -116,6 +115,7 @@ const DAY = 24 * 60 * 60 * 1000;
             <button mat-stroked-button (click)="dankeStory()"><mat-icon>smartphone</mat-icon> Danke-Story</button>
           </div>
         }
+        @if (posterAllowed()) { @defer (on idle) { <app-instagram-formate [show]="s" [id]="id()" /> } }
         @if (!s.private && s.confirmed) {
           @if (werbeplanAktiv(s.date, heute, s.endDate)) { <app-werbeplan [show]="s" [id]="id()" /> }
           @defer (on viewport) { <app-konzert-kampagne [id]="id()" /> } @placeholder { <div style="min-height: 80px"></div> }
@@ -270,13 +270,6 @@ export class BackstageShow implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
-  }
-
-  // Plakat als Instagram-Beitrag (4:5) oder als Story / WhatsApp-Status (9:16)
-  protected poster(format: PosterFormat = 'feed'): void {
-    // QR-Code unten rechts führt zur Konzertseite (Uhrzeit, Anfahrt, Erinnerung, Songwunsch); ?ref= zählt die Herkunft
-    // (Backstage → Besucher)
-    sharePoster(this.show()!, format, kampagnenLink(this.id(), format === 'story' ? 'story' : 'plakat')).catch((err) => console.error(err));
   }
 
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage

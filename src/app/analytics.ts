@@ -35,6 +35,7 @@ export const HERKUNFT = [
   { ref: 'story-morgen', label: 'Story am Tag davor' },
   { ref: 'story-heute', label: 'Story am Auftrittstag' },
   { ref: 'story-danke', label: 'Danke-Story' },
+  { ref: 'reel', label: 'Reel (Bildunterschrift)' },
 ] as const;
 
 function herkunft(): string | undefined {

@@ -845,14 +845,33 @@ verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht m
   `utm_campaign=konzert-<ID>` an (z. B. `konzert-2026-12-04`). GoatCounter listet sie unter „Campaigns“; im Backstage
   zeigt die Seite des Auftritts unter „Kampagne“, wie oft die Konzertseite aufgerufen wurde und wie viele über Plakat,
   Story, den Beitragstext oder einen geteilten Link kamen (12 Monate). Plakat und Story deshalb immer frisch im Backstage erzeugen.
-- **Werbeplan → Story teilen** (Seite des Auftritts im Backstage): Schritte mit Bild haben neben „Text kopieren“ einen
-  zweiten Knopf (📱 Story, 🖼 Plakat). Ein Tipp zeichnet das passende Bild – Story mit Countdown-Kopf („IN 2 WOCHEN“,
-  „NOCH 7 TAGE“, „MORGEN“, „HEUTE“), am Tag danach die Danke-Story, beim ersten Schritt das Plakat –, legt den Text mit
-  Link in die Zwischenablage, öffnet das Teilen-Menü (dort Instagram → Story oder WhatsApp → Status) und hakt den Schritt
-  ab; am Rechner wird das Bild gespeichert. Direkt posten kann die Website nicht (Instagram erlaubt das nur einer
-  geprüften App mit geheimem Schlüssel auf einem Server). Jede Story hat ihre eigene Herkunft (`story-1`, `story-woche`,
-  `story-morgen`, `story-heute`, `story-danke`; das geteilte Pressekit `presse-geteilt`) – die Kampagnen-Kachel und
-  „Was wirkt am besten“ zeigen, welche Story Besucher bringt.
+- **Instagram-Formate** (Seite eines kommenden, öffentlichen Auftritts → Kachel „Instagram“): jedes Format mit eigenen
+  Maßen und eigenem Umgang mit Text und Link – darunter Maße, was in die Zwischenablage kommt und ein Tipp.
+  - **Beitrag (Feed):** Plakat 1080 × 1350 (4:5, im Profil-Raster 3:4 angeschnitten), Bildunterschrift mit Hashtags
+    und Link (im Beitrag nicht klickbar → „Link in Bio“). Bleibt im Profil – 3–4 Wochen vorher.
+  - **Story:** eigenes Layout 1080 × 1920 mit großer Schrift und Countdown-Kopf („IN 2 WOCHEN“, „NOCH 7 TAGE“, „MORGEN“,
+    „HEUTE“), oben ~220 px und unten ~340 px frei (dort liegen Instagrams Bedienelemente), darüber eine freie Fläche für
+    den **Link-Sticker** – in der Zwischenablage liegt nur der Link. Kein QR-Code (eine Story sieht man am Handy).
+    Tipp: Instagrams Countdown-Sticker aufs Datum setzen.
+  - **Reel:** 8-Sekunden-Video (720 × 1280, MP4/H.264, ohne Ton – Musik in Instagram dazu): Logo-Motiv zoomt, die Zeilen
+    blenden nacheinander ein, am Ende „Link in Bio“. Wird auf Wunsch in Echtzeit aufgenommen (Seite offen lassen), dann
+    „Jetzt teilen“. Braucht Chrome oder Safari, die H.264 aufnehmen (sonst ein Hinweis).
+  - **Highlight-Cover:** Kompass mit Beschriftung (LIVE, TERMINE, BACKSTAGE, Jahr oder ohne Text) mittig – Instagram zeigt
+    nur den runden Ausschnitt. Einmalig fürs Profil.
+  Die Bilder werden beim Öffnen der Seite im Hintergrund vorbereitet, damit das Teilen-Menü direkt beim Tippen aufgeht
+  (der Browser erlaubt Teilen nur unmittelbar nach einem Tipp). Ist eins noch nicht fertig, ein zweites Mal tippen
+  („Jetzt teilen“). Am Rechner wird gespeichert statt geteilt. Direkt posten kann die Website nicht (Instagram erlaubt das
+  nur einer geprüften App mit geheimem Schlüssel auf einem Server).
+- **Werbeplan → Story teilen:** Schritte mit Bild haben neben „Text kopieren“ einen zweiten Knopf: 🖼 Beitrag (Plakat mit
+  Bildunterschrift) bzw. 📱 Story mit Countdown, am Tag danach die Danke-Story – Link für den Link-Sticker in der
+  Zwischenablage, Teilen-Menü, Schritt abgehakt. Gleicher Vorrat wie oben (zweiter Tipp, falls noch nicht fertig).
+  Jede Story hat ihre eigene Herkunft (`story-1`, `story-woche`, `story-morgen`, `story-heute`, `story-danke`; Kachel
+  „Instagram“: `story`, Reel: `reel`, geteiltes Pressekit: `presse-geteilt`).
+- **Kampagne (Kachel auf der Seite des Auftritts):** oben Summen mit Einzelzahlen – Aufrufe der Konzertseite und des
+  Pressekits je Sprache (DE/EN/NL) und „über die Werbung insgesamt“; darunter je Weg die Summe und, wo es mehrere gibt,
+  die Einzelzahlen: Plakat (QR-Code), Stories (Kachel, 2 Wochen, 1 Woche, Tag davor, Auftrittstag, Danke), Reel,
+  Beitragstext, geteilte Links (Konzertseite, Pressekit). Unter Besucher → Kampagnen der Konzerte stehen dieselben
+  Gruppen als Spalten (Stories zusammengezählt).
 - **Banner mit QR-Code** (Pressekit): führt auf `https://blickfeld-nord.de/?ref=banner`. Für weitere eigene
   Druckstücke einen der erlaubten Vermerke verwenden oder die Liste ergänzen.
 

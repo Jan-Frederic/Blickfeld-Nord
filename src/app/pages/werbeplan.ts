@@ -2,6 +2,7 @@ import { Component, computed, inject, input, linkedSignal, signal } from '@angul
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { kampagnenLink } from '../data/goatcounter';
+import { bereit, imLeerlauf, vorbereiten } from '../data/instagram';
 import { BILD_SCHRITTE, erledigteSchritte, schrittText, setzeSchritt, storyKopf, werbeplan } from '../data/werbeplan';
 
 // Backstage eines öffentlichen Auftritts: Werbeplan mit festen Terminen (4 Wochen vorher bis eine Woche danach).
@@ -24,8 +25,8 @@ import { BILD_SCHRITTE, erledigteSchritte, schrittText, setzeSchritt, storyKopf,
             <span class="was"><strong>{{ x.schritt.titel }}</strong> {{ x.schritt.text }}</span>
             <span class="knoepfe">
               @if (bild[x.schritt.id]; as art) {
-                <button type="button" class="kopieren teilen" (click)="teilen(x.schritt.id)" [disabled]="laeuft()" [attr.aria-label]="(art === 'feed' ? 'Plakat' : art === 'danke' ? 'Danke-Story' : 'Story') + ' für „' + x.schritt.titel + '“ teilen'" [attr.title]="art === 'feed' ? 'Plakat teilen' : 'Story teilen'">
-                  <mat-icon>{{ geteilt() === x.schritt.id ? 'check' : art === 'feed' ? 'image' : 'smartphone' }}</mat-icon>
+                <button type="button" class="kopieren teilen" [class.bereit]="bereitFuer() === x.schritt.id" (click)="teilen(x.schritt.id)" [disabled]="laeuft()" [attr.aria-label]="(bereitFuer() === x.schritt.id ? 'Jetzt teilen: ' : '') + (art === 'feed' ? 'Beitrag' : art === 'danke' ? 'Danke-Story' : 'Story') + ' für „' + x.schritt.titel + '“ teilen'" [attr.title]="art === 'feed' ? 'Plakat teilen' : 'Story teilen'">
+                  <mat-icon>{{ geteilt() === x.schritt.id ? 'check' : bereitFuer() === x.schritt.id ? 'ios_share' : art === 'feed' ? 'image' : 'smartphone' }}</mat-icon>
                 </button>
               }
               <button type="button" class="kopieren" (click)="kopieren(x.schritt.id)" [attr.aria-label]="'Text für „' + x.schritt.titel + '“ kopieren'">
@@ -36,8 +37,10 @@ import { BILD_SCHRITTE, erledigteSchritte, schrittText, setzeSchritt, storyKopf,
         }
       </ol>
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
-      <p class="foot">📱 teilt das passende Bild (Story mit Countdown, Danke-Story; 🖼 Plakat) und legt den Text mit Link in die
-        Zwischenablage – im Teilen-Menü Instagram → Story oder WhatsApp → Status wählen, der Schritt wird abgehakt.
+      <p class="foot">📱 teilt die passende Story (großer Countdown, Danke-Story) und legt den Link für den Link-Sticker in die
+        Zwischenablage; 🖼 teilt den Beitrag (Plakat) mit Bildunterschrift. Die Bilder werden vorab vorbereitet – ist eins noch
+        nicht fertig, ein zweites Mal tippen („Jetzt teilen“). Der Schritt wird danach abgehakt. Reel und Highlight-Cover: Kachel
+        „Instagram“ oben.
         Haken setzen, wenn erledigt – dann verschwindet der Schritt aus den Aufgaben.</p>
     </section>
   `,
@@ -60,6 +63,7 @@ import { BILD_SCHRITTE, erledigteSchritte, schrittText, setzeSchritt, storyKopf,
     .kopieren mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .knoepfe { display: flex; gap: 6px; }
     .teilen { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+    .teilen.bereit { background: var(--bn-sunset); color: #2a1708; }
     .kopieren:disabled { opacity: .4; cursor: default; }
     .meldung { margin: 10px 0 0; font-size: .82rem; color: #5fb88a; }
     @media (max-width: 520px) {
@@ -83,40 +87,82 @@ export class Werbeplan {
   protected readonly bild = BILD_SCHRITTE;
   private readonly band = inject(BandService);
 
-  /** Bild zum Schritt zeichnen, Text in die Zwischenablage, teilen (bzw. speichern) und abhaken */
+  /** Schritt, dessen Bild nach dem Vorbereiten auf den zweiten Tipp („Jetzt teilen“) wartet */
+  protected readonly bereitFuer = signal<string | null>(null);
+  private readonly heute = new Date().toLocaleDateString('sv-SE');
+
+  constructor() {
+    // Bilder der nächsten offenen Schritte im Hintergrund vorbereiten – dann geht das Teilen-Menü direkt beim Tippen auf
+    imLeerlauf(() => {
+      const offen = this.schritte()
+        .filter((x) => BILD_SCHRITTE[x.schritt.id] && x.status !== 'vorbei' && !this.erledigt().includes(x.schritt.id))
+        .slice(0, 2);
+      // ein „jetzt“ fälliger Schritt kann auch schon „vorbei“ markiert sein, wenn sein Tag heute ist – der zählt mit
+      const jetzt = this.schritte().find((x) => x.status === 'jetzt' && BILD_SCHRITTE[x.schritt.id] && !this.erledigt().includes(x.schritt.id));
+      for (const x of [...(jetzt ? [jetzt] : []), ...offen]) void this.vorrat(x.schritt.id).catch(() => undefined);
+    });
+  }
+
+  /** Herkunft je Bild: plakat, story-1, story-woche, story-morgen, story-heute, story-danke */
+  private link(schritt: string): string {
+    return kampagnenLink(this.id(), BILD_SCHRITTE[schritt] === 'feed' ? 'plakat' : schritt.startsWith('story') ? schritt : `story-${schritt}`);
+  }
+
+  private schluessel(schritt: string): string {
+    const s = this.show();
+    const art = BILD_SCHRITTE[schritt];
+    return art === 'feed' ? `beitrag|${this.id()}|${s.time ?? ''}|${s.venue}` : `werbeplan-${schritt}|${this.id()}|${storyKopf(s.date, this.heute)}|${s.time ?? ''}|${s.venue}`;
+  }
+
+  private async vorrat(schritt: string): Promise<Blob> {
+    const s = this.show();
+    const art = BILD_SCHRITTE[schritt];
+    const poster = await import('../data/poster');
+    return vorbereiten(this.schluessel(schritt), () => {
+      if (art === 'feed') return poster.renderPoster(s, 'feed', kampagnenLink(this.id(), 'plakat'));
+      if (art === 'danke') {
+        const h = this.band.history.find((x) => x.date === s.date && !x.example);
+        return poster.renderDanke(s, this.band.publicVenue(s), h?.highlight, h?.images?.[0]?.src);
+      }
+      return poster.renderStory(s, storyKopf(s.date, this.heute));
+    });
+  }
+
+  /**
+   * Teilen: Zwischenablage (Beitrag: Bildunterschrift, Story: nur der Link für den Link-Sticker), Bild aus dem Vorrat
+   * sofort teilen – ist es noch nicht fertig, erst vorbereiten und auf „Jetzt teilen“ warten (der Browser lässt das
+   * Teilen nur direkt nach einem Tipp zu). Danach abhaken.
+   */
   protected async teilen(schritt: string): Promise<void> {
     const s = this.show();
     const art = BILD_SCHRITTE[schritt];
-    // Herkunft je Bild: plakat, story-1, story-woche, story-morgen, story-heute, story-danke
-    const link = kampagnenLink(this.id(), art === 'feed' ? 'plakat' : schritt.startsWith('story') ? schritt : `story-${schritt}`);
-    this.laeuft.set(true);
-    try {
-      // Text zuerst – solange der Klick noch „frisch“ ist, darf die Seite in die Zwischenablage schreiben
-      const text = schrittText(schritt, s, link);
-      const kopiert = await navigator.clipboard.writeText(text).then(() => true, () => false);
-      const poster = await import('../data/poster');
-      const heute = new Date().toLocaleDateString('sv-SE');
-      const blob =
-        art === 'danke'
-          ? await (() => {
-              const h = this.band.history.find((x) => x.date === s.date && !x.example);
-              return poster.renderDanke(s, this.band.publicVenue(s), h?.highlight, h?.images?.[0]?.src);
-            })()
-          : await poster.renderPoster(s, art, link, art === 'story' ? storyKopf(s.date, heute) : 'LIVE');
-      const name = art === 'danke' ? `blickfeld-nord-danke-${this.id()}.png` : poster.posterFileName(s, art);
-      const r = await poster.shareImage(blob, name, art === 'danke' ? 'Danke! – Blickfeld Nord' : `Blickfeld Nord live – ${s.venue}`);
-      if (r === 'abgebrochen') return this.meldung.set('');
-      this.haken(schritt, true);
-      this.geteilt.set(schritt);
-      setTimeout(() => this.geteilt.set(null), 2000);
-      this.meldung.set(
-        `${r === 'geteilt' ? 'Geteilt' : 'Bild gespeichert'} und abgehakt ✓${kopiert ? ' – der Text mit Link ist in der Zwischenablage (in der Story als Text oder Link-Sticker einfügen)' : ''}`,
-      );
-    } catch {
-      this.meldung.set('Das Bild ließ sich nicht erstellen.');
-    } finally {
-      this.laeuft.set(false);
+    const text = art === 'feed' ? schrittText(schritt, s, this.link(schritt)) : this.link(schritt);
+    const kopiert = await navigator.clipboard.writeText(text).then(() => true, () => false);
+    const blob = bereit(this.schluessel(schritt));
+    if (!blob) {
+      this.laeuft.set(true);
+      this.meldung.set('Bild wird vorbereitet …');
+      try {
+        await this.vorrat(schritt);
+        this.bereitFuer.set(schritt);
+        this.meldung.set('Fertig – jetzt auf „Jetzt teilen“ tippen.');
+      } catch {
+        this.meldung.set('Das Bild ließ sich nicht erstellen.');
+      } finally {
+        this.laeuft.set(false);
+      }
+      return;
     }
+    const { shareImage, posterFileName } = await import('../data/poster');
+    const name = art === 'danke' ? `blickfeld-nord-danke-${this.id()}.png` : art === 'feed' ? posterFileName(s, 'feed') : `blickfeld-nord-story-${schritt}-${this.id()}.png`;
+    const r = await shareImage(blob, name, art === 'danke' ? 'Danke! – Blickfeld Nord' : `Blickfeld Nord live – ${s.venue}`);
+    this.bereitFuer.set(null);
+    if (r === 'abgebrochen') return this.meldung.set('');
+    this.haken(schritt, true);
+    this.geteilt.set(schritt);
+    setTimeout(() => this.geteilt.set(null), 2000);
+    const ablage = kopiert ? (art === 'feed' ? ' – die Bildunterschrift liegt in der Zwischenablage' : ' – der Link liegt in der Zwischenablage: in Instagram als Link-Sticker in die freie Fläche unten einfügen') : '';
+    this.meldung.set(`${r === 'geteilt' ? 'Geteilt' : 'Bild gespeichert'} und abgehakt ✓${ablage}`);
   }
 
   protected haken(schritt: string, an: boolean): void {

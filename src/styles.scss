@@ -600,3 +600,41 @@ app-noten-editor .umwandeln { display: flex; flex-wrap: wrap; align-items: cente
 app-noten-editor .umwandeln button { background: none; font: inherit; }
 app-noten-editor .umwandeln button:disabled { opacity: .4; cursor: default; }
 app-noten-editor .umwandeln small { flex: 1 1 240px; min-width: 0; color: var(--bn-fog); font-size: .74rem; line-height: 1.4; }
+
+// Backstage-Auftritt → Instagram: Beitrag, Story, Reel, Highlight-Cover (instagram-formate.ts)
+app-instagram-formate { display: block; }
+app-instagram-formate .ig { margin: 24px 0; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
+app-instagram-formate h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 1rem; }
+app-instagram-formate h3 mat-icon { color: var(--bn-sunset); }
+app-instagram-formate ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+app-instagram-formate li { min-width: 0; padding: 12px 14px; border-radius: 10px; background: rgba(255, 255, 255, .04); }
+app-instagram-formate .kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+app-instagram-formate .kopf strong { margin-right: auto; font-weight: 600; }
+app-instagram-formate select { padding: 4px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .82rem; color-scheme: dark; }
+app-instagram-formate .teilen { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: none; color: var(--bn-sunset); font: inherit; font-size: .84rem; cursor: pointer; }
+app-instagram-formate .teilen.bereit { background: var(--bn-sunset); color: #2a1708; }
+app-instagram-formate .teilen:disabled { opacity: .6; cursor: default; }
+app-instagram-formate .teilen mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-instagram-formate p { margin: 4px 0 0; font-size: .8rem; line-height: 1.45; color: var(--bn-fog); overflow-wrap: anywhere; }
+app-instagram-formate .masse { color: var(--bn-ink); }
+app-instagram-formate .tipp { font-style: italic; }
+app-instagram-formate mat-icon.klein { font-size: 14px; width: 14px; height: 14px; vertical-align: -2px; }
+app-instagram-formate .meldung { margin-top: 10px; color: #5fb88a; }
+
+// Backstage-Auftritt → Kampagne: Summen mit Einzelzahlen (konzert-kampagne.ts)
+app-konzert-kampagne { display: block; }
+app-konzert-kampagne .kampagne { margin: 24px 0; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
+app-konzert-kampagne h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 1rem; }
+app-konzert-kampagne h3 mat-icon { color: var(--bn-sunset); }
+app-konzert-kampagne ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); }
+app-konzert-kampagne li { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .04); }
+app-konzert-kampagne .summen li { background: rgba(232, 164, 106, .08); }
+app-konzert-kampagne li.gesamt { outline: 1px solid rgba(232, 164, 106, .5); }
+app-konzert-kampagne li.null .wert { color: var(--bn-fog); }
+app-konzert-kampagne .wert { font: 600 1.3rem/1.2 Inter, sans-serif; }
+app-konzert-kampagne .was, app-konzert-kampagne .note, app-konzert-kampagne .foot { font-size: .8rem; color: var(--bn-fog); }
+app-konzert-kampagne .einzeln { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; font-size: .74rem; color: var(--bn-ink); }
+app-konzert-kampagne .einzeln .null { color: var(--bn-fog); opacity: .7; }
+app-konzert-kampagne .note { margin: 0; }
+app-konzert-kampagne .foot { margin: 12px 0 0; }
+app-konzert-kampagne a { color: var(--bn-sunset); }

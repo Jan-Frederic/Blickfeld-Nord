@@ -473,11 +473,49 @@ test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne
   await p.go(`/backstage/${id}/`);
   await until(async () => await p.locator('#wp-story-1').isChecked(), 'Haken fehlt im Werbeplan des Auftritts');
   // „Story teilen“ im Werbeplan: Bild mit Countdown (am Rechner als Download), Text mit Herkunft in der Zwischenablage, abgehakt
-  const [story] = await Promise.all([p.waitForEvent('download'), p.getByRole('button', { name: 'Story für „Eine Woche vorher“ teilen' }).click()]);
+  // Bild ist meist schon vorbereitet (ein Tipp); sonst erscheint „Jetzt teilen“ für den zweiten Tipp
+  const storyKnopf = p.locator('app-werbeplan button[aria-label$="Story für „Eine Woche vorher“ teilen"]');
+  const [story] = await Promise.all([
+    p.waitForEvent('download'),
+    (async () => {
+      await storyKnopf.click();
+      await until(async () => (await p.evaluate(() => document.querySelector('app-werbeplan')?.textContent ?? '')).length > 0 && !(await storyKnopf.isDisabled()), 'Story wird nicht vorbereitet');
+      if (/^Jetzt teilen/.test((await storyKnopf.getAttribute('aria-label')) ?? '')) await storyKnopf.click();
+    })(),
+  ]);
   expect(story.suggestedFilename().endsWith('.png'), 'Story-Bild fehlt');
   await until(async () => await p.locator('#wp-woche').isChecked(), 'Geteilter Schritt wird nicht abgehakt');
-  expect((await p.evaluate(() => navigator.clipboard.readText())).includes('ref=story-woche'), 'Text mit Link fehlt in der Zwischenablage');
+  expect(/^https:\/\/blickfeld-nord\.de\/konzerte\/[^ ]*ref=story-woche&utm_campaign=konzert-/.test(await p.evaluate(() => navigator.clipboard.readText())), 'Link für den Link-Sticker fehlt in der Zwischenablage');
   await until(async () => (await p.locator('app-werbeplan .meldung').innerText().catch(() => '')).includes('abgehakt'), 'Meldung nach dem Teilen fehlt');
+  // Kachel „Instagram“: Beitrag, Story, Reel, Highlight-Cover – Highlight-Cover teilen (am Rechner Download)
+  const ig = p.locator('app-instagram-formate');
+  await until(async () => (await ig.locator('li').count()) === 4, 'Instagram-Formate fehlen');
+  const cover = ig.getByRole('button', { name: /Highlight-Cover$/ });
+  const [bild] = await Promise.all([
+    p.waitForEvent('download'),
+    (async () => {
+      await cover.click();
+      await until(async () => !(await cover.isDisabled()), 'Highlight-Cover wird nicht vorbereitet');
+      if (/^Jetzt teilen/.test((await cover.getAttribute('aria-label')) ?? '')) await cover.click();
+    })(),
+  ]);
+  expect(bild.suggestedFilename().startsWith('blickfeld-nord-highlight-'), 'Highlight-Cover fehlt');
+  // Kampagne: Summen mit Einzelzahlen (ohne GoatCounter im Test: Hinweis statt Zahlen)
+  // mit nachgestellten GoatCounter-Zahlen: Summe je Gruppe und Einzelzahlen
+  const zahlen = { [`kampagne-konzert-${id}-story-1`]: 2, [`kampagne-konzert-${id}-story-woche`]: 3, [`kampagne-konzert-${id}-geteilt`]: 4, [`/konzerte/${id}`]: 10, [`/en/konzerte/${id}`]: 1 };
+  await p.route(/goatcounter\.com\/counter\//, (route) => {
+    const pfad = decodeURIComponent(new URL(route.request().url()).pathname.replace(/^\/counter\//, '').replace(/\.json$/, ''));
+    return zahlen[pfad] ? route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ count: String(zahlen[pfad]) }) }) : route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, body: '' });
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  const kachel = p.locator('app-konzert-kampagne');
+  // Kachel lädt erst im sichtbaren Bereich (@defer on viewport)
+  await until(async () => (await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)), (await kachel.count()) > 0), 'Kampagnen-Kachel wird nicht geladen');
+  await kachel.scrollIntoViewIfNeeded();
+  await until(async () => /11\s*Aufrufe der Konzertseite[\s\S]*DE 10[\s\S]*EN 1/.test(await kachel.innerText().catch(() => '')), async () => 'Konzertseite ohne Summe und Sprachen: ' + (await kachel.innerText().catch(() => '')));
+  const kText = await kachel.innerText();
+  expect(/9\s*über die Werbung insgesamt/.test(kText), 'Summe aller Wege fehlt: ' + kText);
+  expect(/5\s*über Stories[\s\S]*2 Wochen vorher 2[\s\S]*1 Woche vorher 3/.test(kText), 'Stories ohne Summe und Einzelzahlen: ' + kText);
   await p.go('/backstage/aufgaben/');
   await p.locator('app-backstage-aufgaben .item').first().waitFor();
   expect(!(await p.locator('app-backstage-aufgaben').innerText()).includes('Erste Story'), 'abgehakter Schritt steht noch unter Aufgaben');

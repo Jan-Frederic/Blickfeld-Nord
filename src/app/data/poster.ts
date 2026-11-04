@@ -3,7 +3,9 @@ import { Show } from './band.service';
 
 // Gig-Plakat im Logo-Design, direkt im Browser gezeichnet (Canvas) – zwei Formate:
 //  - feed:  1080 × 1350 (Instagram-Beitrag, Hochformat 4:5)
-//  - story: 1080 × 1920 (Instagram-/WhatsApp-Status, 9:16) – oben und unten Platz für die Bedienelemente der App
+//  - story: 1080 × 1920 (Plakat hochkant: WhatsApp-Status, Druck A4/A3) – oben und unten Platz für die Bedienelemente
+// Dazu eigene Instagram-Formate: renderStory (Story, große Schrift, Platz für den Link-Sticker), renderReel (8-s-Video),
+// renderHighlight (Cover für Story-Highlights) und renderDanke (Danke-Story).
 // Auf dem Handy öffnet sich das Teilen-Menü (z. B. direkt Instagram), am Rechner wird das Bild heruntergeladen.
 
 export type PosterFormat = 'feed' | 'story';
@@ -11,6 +13,8 @@ export type PosterFormat = 'feed' | 'story';
 const W = 1080;
 const FORMAT = {
   feed: { h: 1350, heroY: 60, gap: 1, footer: 70 },
+  // Instagram-Story (renderStory): Logo-Motiv knapp unter dem Profilbalken, unten bleibt frei
+  'story-ig': { h: 1920, heroY: 110, gap: 1, footer: 340 },
   // Instagram blendet oben ca. 250 px und unten ca. 250 px Bedienelemente ein – dort steht nichts Wichtiges
   story: { h: 1920, heroY: 250, gap: 1.25, footer: 270 },
 };
@@ -87,7 +91,7 @@ function drawQr(ctx: CanvasRenderingContext2D, text: string, x: number, y: numbe
 }
 
 /** Hintergrund mit Logo-Motiv (oder einem Foto) und Schimmer – gemeinsam für Plakat, Story und Danke-Story */
-async function leinwand(format: PosterFormat, foto?: string, skala = 1) {
+async function leinwand(format: PosterFormat | 'story-ig', foto?: string, skala = 1) {
   const { h: H, heroY, gap, footer } = FORMAT[format];
   // Schriften der Website sicher geladen, bevor gezeichnet wird
   await Promise.all([
@@ -127,8 +131,8 @@ async function leinwand(format: PosterFormat, foto?: string, skala = 1) {
   ctx.fillStyle = fade;
   ctx.fillRect(0, heroY + heroH * 0.62, W, heroH * 0.38 + 2);
   // oberer Bildrand weich ausblenden (im Story-Format steht das Bild tiefer)
-  const fadeTop = format === 'story' ? heroY : 0;
-  const fadeEnd = heroY + (format === 'story' ? 160 : 80);
+  const fadeTop = format !== 'feed' ? heroY : 0;
+  const fadeEnd = heroY + (format !== 'feed' ? 160 : 80);
   const top = ctx.createLinearGradient(0, fadeTop, 0, fadeEnd);
   top.addColorStop(0, NIGHT);
   top.addColorStop(1, 'rgba(20, 22, 25, 0)');
@@ -230,40 +234,204 @@ export async function renderPoster(s: Show, format: PosterFormat = 'feed', link?
   return alsPng(canvas);
 }
 
+/**
+ * Instagram-Story (1080 × 1920) – eigenes Layout statt des hochkant gestellten Plakats: große Schrift für das Handy,
+ * nichts Wichtiges in den Bereichen, die Instagram verdeckt (oben ~220 px Fortschrittsbalken und Profil, unten ~340 px
+ * Antwortfeld), und eine freie Fläche über dem unteren Rand für den Link-Sticker (der Link liegt in der Zwischenablage).
+ * Kein QR-Code: eine Story sieht man auf dem Handy, das man nicht mit sich selbst scannen kann.
+ */
+export async function renderStory(s: Show, kopf = 'LIVE'): Promise<Blob> {
+  const base = await leinwand('story-ig');
+  storyText(base.ctx, s, kopf, base.y);
+  // darunter bleibt frei: Platz für den Link-Sticker (über dem verdeckten unteren Rand)
+  return alsPng(base.canvas);
+}
+
+/**
+ * Texte der Story (auch für das Reel): Countdown, Wochentag, Datum, Uhrzeit, Ort, „Eintritt frei“. `sichtbar(i)` gibt
+ * je Zeile die Deckkraft 0–1 (fürs Reel: Zeilen nacheinander einblenden).
+ */
+function storyText(ctx: CanvasRenderingContext2D, s: Show, kopf: string, start: number, sichtbar: (zeile: number) => number = () => 1): void {
+  const cx = W / 2;
+  const alpha = (i: number) => (ctx.globalAlpha = Math.max(0, Math.min(1, sichtbar(i))));
+  let y = start + 70;
+  alpha(0);
+  ctx.fillStyle = SUNSET;
+  fit(ctx, kopf, (px) => `400 ${px}px Michroma`, 104, W - 140);
+  ctx.fillText(kopf, cx, y);
+  const { weekday, day } = formatDate(s.date);
+  const end = s.endDate ? formatDate(s.endDate) : null;
+  y += 92;
+  alpha(1);
+  ctx.fillStyle = FOG;
+  ctx.font = '300 46px Montserrat';
+  spaced(ctx, (end ? `${weekday} bis ${end.weekday}` : weekday).toUpperCase(), cx, y, 12);
+  y += 128;
+  ctx.fillStyle = INK;
+  const dateText = end ? `${day.slice(0, 6)} – ${end.day}` : day;
+  fit(ctx, dateText, (px) => `400 ${px}px Michroma`, 118, W - 110);
+  ctx.fillText(dateText, cx, y);
+  if (s.time) {
+    y += 92;
+    ctx.fillStyle = SUNSET;
+    ctx.font = '400 60px Montserrat';
+    spaced(ctx, `${s.time} UHR`, cx, y, 10);
+  }
+  y += 136;
+  alpha(2);
+  ctx.fillStyle = INK;
+  fit(ctx, s.venue, (px) => `600 ${px}px Inter`, 82, W - 120);
+  ctx.fillText(s.venue, cx, y);
+  if (s.city) {
+    y += 72;
+    ctx.fillStyle = FOG;
+    ctx.font = '400 54px Inter';
+    ctx.fillText(s.city, cx, y);
+  }
+  if (s.price === 0) {
+    y += 96;
+    alpha(3);
+    ctx.font = '400 40px Montserrat';
+    const label = 'EINTRITT FREI';
+    const w = [...label].reduce((a, ch) => a + ctx.measureText(ch).width, 0) + 8 * (label.length - 1) + 80;
+    ctx.strokeStyle = '#7fc29b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(cx - w / 2, y - 56, w, 80, 40);
+    ctx.stroke();
+    ctx.fillStyle = '#7fc29b';
+    spaced(ctx, label, cx, y, 8);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** Videoformate fürs Reel, die Instagram annimmt (H.264 in MP4) – undefined, wenn der Browser keins aufnehmen kann */
+export function reelFormat(): string | undefined {
+  if (typeof MediaRecorder === 'undefined' || typeof HTMLCanvasElement === 'undefined' || !('captureStream' in HTMLCanvasElement.prototype)) return undefined;
+  return ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1.4D401F', 'video/mp4;codecs=avc1', 'video/mp4;codecs=h264'].find((t) => MediaRecorder.isTypeSupported(t));
+}
+
+/**
+ * Reel (9:16, 8 Sekunden, 720 × 1280, ohne Ton – Musik kommt in Instagram dazu): das Logo-Motiv zoomt langsam, die
+ * Zeilen der Story blenden nacheinander ein, am Ende „Link in Bio · blickfeld-nord.de“. Aufnahme in Echtzeit über
+ * MediaRecorder (Seite muss so lange offen bleiben). `fortschritt` meldet 0–1.
+ */
+export async function renderReel(s: Show, kopf: string, fortschritt: (anteil: number) => void = () => undefined, dauer = 8000): Promise<Blob> {
+  const typ = reelFormat();
+  if (!typ) throw new Error('Dieser Browser kann kein MP4-Video aufnehmen (Chrome oder Safari auf dem Handy nehmen).');
+  const bg = (await leinwand('story-ig')).canvas;
+  const start = FORMAT['story-ig'].heroY + Math.round((W * 1125) / 2000) + 20;
+  const out = document.createElement('canvas');
+  out.width = 720;
+  out.height = 1280;
+  const ctx = out.getContext('2d')!;
+  ctx.scale(720 / W, 1280 / 1920);
+  ctx.textAlign = 'center';
+  const teile: BlobPart[] = [];
+  const rec = new MediaRecorder(out.captureStream(30), { mimeType: typ, videoBitsPerSecond: 5_000_000 });
+  rec.ondataavailable = (e) => e.data.size && teile.push(e.data);
+  const fertig = new Promise<void>((ok) => (rec.onstop = () => ok()));
+  rec.start(500);
+  const t0 = performance.now();
+  await new Promise<void>((ok) => {
+    const bild = () => {
+      const t = performance.now() - t0;
+      const zoom = 1 + 0.08 * Math.min(1, t / dauer);
+      ctx.fillStyle = NIGHT;
+      ctx.fillRect(0, 0, W, 1920);
+      ctx.globalAlpha = Math.min(1, t / 600);
+      ctx.drawImage(bg, (W - W * zoom) / 2, (1920 - 1920 * zoom) / 2, W * zoom, 1920 * zoom);
+      ctx.globalAlpha = 1;
+      // Zeilen nacheinander (0,8 s / 2,0 s / 3,4 s / 4,4 s), je 0,6 s Einblenden
+      // „Eintritt frei“ macht ab 5,6 s Platz für „Link in Bio“ (unten ab ~1500 px verdecken Instagrams Knöpfe)
+      const ab = [800, 2000, 3400, 4400];
+      storyText(ctx, s, kopf, start, (i) => (i === 3 && t > 5600 ? 1 - (t - 5600) / 400 : (t - ab[i]) / 600));
+      if (t > 5800) {
+        ctx.globalAlpha = Math.min(1, (t - 5800) / 600);
+        ctx.fillStyle = INK;
+        ctx.font = '400 44px Montserrat';
+        spaced(ctx, 'LINK IN BIO', W / 2, 1400, 10);
+        ctx.fillStyle = FOG;
+        ctx.font = '400 38px Inter';
+        ctx.fillText('blickfeld-nord.de · @blickfeldnord', W / 2, 1462);
+        ctx.globalAlpha = 1;
+      }
+      fortschritt(Math.min(1, t / dauer));
+      if (t < dauer) requestAnimationFrame(bild);
+      else ok();
+    };
+    requestAnimationFrame(bild);
+  });
+  rec.stop();
+  await fertig;
+  return new Blob(teile, { type: 'video/mp4' });
+}
+
+/**
+ * Highlight-Cover (1080 × 1920): Kompass und Beschriftung mittig – Instagram zeigt davon nur einen runden Ausschnitt
+ * in der Mitte, deshalb steht alles im inneren Kreis. Für die Story-Highlights im Profil („LIVE“, „TERMINE“ …).
+ */
+export async function renderHighlight(label: string): Promise<Blob> {
+  await document.fonts.load('400 64px Michroma');
+  // kräftiger Kompass (auch im kleinen Kreis gut erkennbar) – ohne das dunkle Quadrat dahinter
+  const svg = (await (await fetch('presse/blickfeld-nord-kompass.svg')).text()).replace(/<rect[^>]*\/>/, '');
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  const kompass = await loadImage(url).finally(() => URL.revokeObjectURL(url));
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = 1920;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = NIGHT;
+  ctx.fillRect(0, 0, W, 1920);
+  const glow = ctx.createRadialGradient(W / 2, 960, 60, W / 2, 960, 620);
+  glow.addColorStop(0, 'rgba(232, 164, 106, .22)');
+  glow.addColorStop(1, 'rgba(232, 164, 106, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 300, W, 1320);
+  const k = label ? 520 : 680;
+  ctx.drawImage(kompass, (W - k) / 2, 960 - k / 2 - (label ? 90 : 0), k, k);
+  if (label) {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = SUNSET;
+    fit(ctx, label.toUpperCase(), (px) => `400 ${px}px Michroma`, 84, 620);
+    ctx.fillText(label.toUpperCase(), W / 2, 960 + k / 2 - 20);
+  }
+  return alsPng(canvas);
+}
+
 /** „Danke, Rhede!“ als Story nach dem Auftritt – mit Song des Abends und optional dem ersten Rückblick-Foto */
 export async function renderDanke(s: Show, name: string, highlight?: string, foto?: string): Promise<Blob> {
-  const { canvas, ctx, H, footer, cx, y: start } = await leinwand('story', foto);
-  // Textblock senkrecht mittig zwischen Bild und Fußzeile
-  const hoehe = 280 + (highlight ? 200 : 0);
-  let y = start + Math.max(70, (H - footer - 80 - start - hoehe) / 2 + 70);
+  // Instagram-Story: große Schrift, unten frei für Sticker und Antwortfeld
+  const { canvas, ctx, cx, y: start } = await leinwand('story-ig', foto);
+  let y = start + 90;
   const ort = s.private ? '' : (s.city ?? '').split('-').pop()!.trim();
+  const titel = ort ? `DANKE, ${ort.toUpperCase()}!` : 'DANKE!';
   ctx.fillStyle = INK;
-  fit(ctx, ort ? `DANKE, ${ort.toUpperCase()}!` : 'DANKE!', (px) => `400 ${px}px Michroma`, 96, W - 120);
-  ctx.fillText(ort ? `DANKE, ${ort.toUpperCase()}!` : 'DANKE!', cx, y);
-  y += 90;
+  fit(ctx, titel, (px) => `400 ${px}px Michroma`, 104, W - 110);
+  ctx.fillText(titel, cx, y);
+  y += 100;
   ctx.fillStyle = FOG;
-  ctx.font = '300 34px Montserrat';
+  ctx.font = '300 44px Montserrat';
   const { weekday, day } = formatDate(s.date);
   spaced(ctx, `${weekday} · ${day}`.toUpperCase(), cx, y, 8);
-  y += 70;
+  y += 92;
   ctx.fillStyle = INK;
-  fit(ctx, name, (px) => `600 ${px}px Inter`, 52, W - 120);
+  fit(ctx, name, (px) => `600 ${px}px Inter`, 70, W - 120);
   ctx.fillText(name, cx, y);
   if (highlight) {
     y += 130;
     ctx.fillStyle = SUNSET;
-    ctx.font = '400 28px Montserrat';
+    ctx.font = '400 38px Montserrat';
     spaced(ctx, '★ SONG DES ABENDS ★', cx, y, 8);
-    y += 70;
+    y += 86;
     ctx.fillStyle = INK;
-    fit(ctx, highlight, (px) => `600 ${px}px Inter`, 58, W - 120);
+    fit(ctx, highlight, (px) => `600 ${px}px Inter`, 72, W - 120);
     ctx.fillText(highlight, cx, y);
   }
   y += 120;
   ctx.fillStyle = FOG;
-  ctx.font = '400 34px Inter';
+  fit(ctx, 'Ihr wart großartig – bis zum nächsten Mal!', (px) => `400 ${px}px Inter`, 46, W - 120);
   ctx.fillText('Ihr wart großartig – bis zum nächsten Mal!', cx, y);
-  fusszeile(ctx, H, footer);
   return alsPng(canvas);
 }
 
@@ -306,7 +474,7 @@ export async function renderJahr(jahr: number, zahlen: [string, number][], zeile
 
 /** Bild teilen (Handy: Teilen-Menü) oder herunterladen (Rechner); Ergebnis: geteilt, gespeichert oder abgebrochen */
 export async function shareImage(blob: Blob, name: string, title: string): Promise<'geteilt' | 'gespeichert' | 'abgebrochen'> {
-  const file = new File([blob], name, { type: 'image/png' });
+  const file = new File([blob], name, { type: blob.type || 'image/png' });
   if (navigator.canShare?.({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {
     try {
       await navigator.share({ files: [file], title });

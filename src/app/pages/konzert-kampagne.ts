@@ -3,21 +3,67 @@ import { DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { GC, kampagne, zaehler } from '../data/goatcounter';
 
-// Backstage eines öffentlichen Auftritts: Wie viele sind über Plakat, Story oder einen geteilten Link zur Konzertseite
-// gekommen? Ereignisse „kampagne-konzert-<ID>-<Herkunft>“ aus analytics.ts, dazu die Aufrufe der Konzertseite.
-export const WEGE = [
-  { ref: 'plakat', label: 'Plakat (QR-Code)' },
-  { ref: 'story', label: 'Story / Status (QR-Code)' },
-  { ref: 'text', label: 'Link im Beitragstext' },
-  { ref: 'geteilt', label: 'Geteilter Link' },
-  { ref: 'presse-geteilt', label: 'geteiltes Pressekit' },
-  { ref: 'story-1', label: 'Story 2 Wochen vorher' },
-  { ref: 'story-woche', label: 'Story 1 Woche vorher' },
-  { ref: 'story-morgen', label: 'Story am Tag davor' },
-  { ref: 'story-heute', label: 'Story am Auftrittstag' },
+// Backstage eines öffentlichen Auftritts: Wie viele sind über Plakat, Stories, Reel, Beitragstext oder geteilte Links
+// gekommen? Ereignisse „kampagne-konzert-<ID>-<Herkunft>“ aus analytics.ts, dazu die Aufrufe der Konzertseite und des
+// Pressekits je Sprache. Angezeigt als Summe je Gruppe, darunter die Einzelzahlen (z. B. welche Story wie viel brachte).
+export interface Weg {
+  ref: string;
+  label: string;
+}
+export interface WegGruppe {
+  id: string;
+  label: string;
+  /** kurze Spaltenüberschrift (Besucher-Tabelle) */
+  kurz: string;
+  wege: Weg[];
+}
+export const GRUPPEN: WegGruppe[] = [
+  { id: 'plakat', label: 'Plakat (QR-Code)', kurz: 'Plakat', wege: [{ ref: 'plakat', label: 'Plakat, Beitrag, Druck' }] },
+  {
+    id: 'story',
+    label: 'Stories',
+    kurz: 'Stories',
+    wege: [
+      { ref: 'story', label: 'Story' },
+      { ref: 'story-1', label: '2 Wochen vorher' },
+      { ref: 'story-woche', label: '1 Woche vorher' },
+      { ref: 'story-morgen', label: 'am Tag davor' },
+      { ref: 'story-heute', label: 'am Auftrittstag' },
+      { ref: 'story-danke', label: 'Danke-Story' },
+    ],
+  },
+  { id: 'reel', label: 'Reel', kurz: 'Reel', wege: [{ ref: 'reel', label: 'Reel' }] },
+  { id: 'text', label: 'Beitragstext', kurz: 'Text', wege: [{ ref: 'text', label: 'Link im Beitragstext' }] },
+  {
+    id: 'geteilt',
+    label: 'Geteilte Links',
+    kurz: 'Geteilt',
+    wege: [
+      { ref: 'geteilt', label: 'Konzertseite' },
+      { ref: 'presse-geteilt', label: 'Pressekit' },
+    ],
+  },
+];
+/** alle Herkünfte einzeln (für die Zählung) */
+export const WEGE: Weg[] = GRUPPEN.flatMap((g) => g.wege);
+const SPRACHEN = [
+  { pfad: '', label: 'DE' },
+  { pfad: '/en', label: 'EN' },
+  { pfad: '/nl', label: 'NL' },
 ];
 
 type State = 'loading' | 'ok' | 'aus';
+interface Zahl {
+  label: string;
+  count: number;
+}
+interface Block {
+  label: string;
+  summe: number;
+  einzeln: Zahl[];
+}
+
+const block = (label: string, einzeln: Zahl[]): Block => ({ label, summe: einzeln.reduce((a, z) => a + z.count, 0), einzeln });
 
 @Component({
   selector: 'app-konzert-kampagne',
@@ -29,32 +75,34 @@ type State = 'loading' | 'ok' | 'aus';
         @case ('loading') { <p class="note">Zahlen werden geladen …</p> }
         @case ('aus') { <p class="note">Keine Zahlen – offline, Werbeblocker oder öffentlicher Zähler in GoatCounter nicht freigeschaltet (siehe Besucher).</p> }
         @default {
-          <ul>
-            <li><span class="wert">{{ seite() | number: '1.0-0' }}</span><span class="was">Aufrufe der Konzertseite (DE/EN/NL)</span></li>
-            <li><span class="wert">{{ presse() | number: '1.0-0' }}</span><span class="was">Aufrufe des Pressekits (Veranstalter)</span></li>
-            @for (w of wege(); track w.ref) {
-              <li><span class="wert">{{ w.count | number: '1.0-0' }}</span><span class="was">über {{ w.label }}</span></li>
+          <ul class="summen">
+            @for (b of seiten(); track b.label) {
+              <li>
+                <span class="wert">{{ b.summe | number: '1.0-0' }}</span><span class="was">{{ b.label }}</span>
+                <span class="einzeln">@for (z of b.einzeln; track z.label) { <span [class.null]="!z.count">{{ z.label }} {{ z.count | number: '1.0-0' }}</span> }</span>
+              </li>
+            }
+            <li class="gesamt"><span class="wert">{{ werbung() | number: '1.0-0' }}</span><span class="was">über die Werbung insgesamt</span>
+              <span class="einzeln">Summe aller Wege unten</span></li>
+          </ul>
+          <ul class="gruppen">
+            @for (b of gruppen(); track b.label) {
+              <li [class.null]="!b.summe">
+                <span class="wert">{{ b.summe | number: '1.0-0' }}</span><span class="was">über {{ b.label }}</span>
+                @if (b.einzeln.length > 1) {
+                  <span class="einzeln">@for (z of b.einzeln; track z.label) { <span [class.null]="!z.count">{{ z.label }} {{ z.count | number: '1.0-0' }}</span> }</span>
+                }
+              </li>
             }
           </ul>
         }
       }
       <p class="foot">
-        Plakat, Story, kopierter Beitragstext und „Teilen“ auf der Konzertseite tragen die Kampagne im Link · 12 Monate, aktualisiert alle paar
-        Stunden · <a [href]="gc + '/campaigns'" target="_blank" rel="noopener">alle Kampagnen in GoatCounter</a>
+        Plakat, Stories, Reel, kopierter Beitragstext und „Teilen“ tragen die Kampagne im Link · 12 Monate, aktualisiert alle
+        paar Stunden · gezählt wird der erste Aufruf mit dem Link, Besucher mit Werbeblocker fehlen ·
+        <a [href]="gc + '/campaigns'" target="_blank" rel="noopener">alle Kampagnen in GoatCounter</a>
       </p>
     </section>
-  `,
-  styles: `
-    .kampagne { margin: 24px 0; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
-    h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 1rem; }
-    h3 mat-icon { color: var(--bn-sunset); }
-    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-    li { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .04); }
-    .wert { font: 600 1.3rem/1.2 Inter, sans-serif; }
-    .was, .note, .foot { font-size: .8rem; color: var(--bn-fog); }
-    .note { margin: 0; }
-    .foot { margin: 12px 0 0; }
-    a { color: var(--bn-sunset); }
   `,
 })
 export class KonzertKampagne {
@@ -63,24 +111,25 @@ export class KonzertKampagne {
   protected readonly gc = GC;
   protected readonly name = () => kampagne(this.id());
   protected readonly state = signal<State>('loading');
-  protected readonly seite = signal(0);
-  /** Aufrufe von /presse/<id> – hat der Veranstalter ins Pressekit geschaut? */
-  protected readonly presse = signal(0);
-  protected readonly wege = signal<{ ref: string; label: string; count: number }[]>([]);
+  /** Konzertseite und Pressekit: Summe und je Sprache */
+  protected readonly seiten = signal<Block[]>([]);
+  protected readonly gruppen = signal<Block[]>([]);
+  protected readonly werbung = signal(0);
 
   constructor() {
     effect(() => {
       const id = this.id();
       this.state.set('loading');
+      const jeSprache = (pfad: string) => Promise.all(SPRACHEN.map(async (l) => ({ label: l.label, count: await zaehler(`${l.pfad}/${pfad}/${id}`, 'year') })));
       Promise.all([
-        Promise.all(['', '/en', '/nl'].map((l) => zaehler(`${l}/konzerte/${id}`, 'year'))).then((z) => z.reduce((a, b) => a + b, 0)),
-        Promise.all(WEGE.map(async (w) => ({ ...w, count: await zaehler(`kampagne-${kampagne(id)}-${w.ref}`, 'year') }))),
-        Promise.all(['', '/en', '/nl'].map((l) => zaehler(`${l}/presse/${id}`, 'year'))).then((z) => z.reduce((a, b) => a + b, 0)),
+        jeSprache('konzerte'),
+        jeSprache('presse'),
+        Promise.all(GRUPPEN.map(async (g) => block(g.label, await Promise.all(g.wege.map(async (w) => ({ label: w.label, count: await zaehler(`kampagne-${kampagne(id)}-${w.ref}`, 'year') })))))),
       ])
-        .then(([seite, wege, presse]) => {
-          this.seite.set(seite);
-          this.presse.set(presse);
-          this.wege.set(wege);
+        .then(([seite, presse, gruppen]) => {
+          this.seiten.set([block('Aufrufe der Konzertseite', seite), block('Aufrufe des Pressekits (Veranstalter)', presse)]);
+          this.gruppen.set(gruppen);
+          this.werbung.set(gruppen.reduce((a, g) => a + g.summe, 0));
           this.state.set('ok');
         })
         .catch(() => this.state.set('aus'));
