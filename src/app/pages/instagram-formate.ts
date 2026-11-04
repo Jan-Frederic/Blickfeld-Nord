@@ -12,6 +12,8 @@ import { postText, renderHighlight, renderPoster, renderReel, renderStory, share
 // Wunsch aufgenommen (8 s) und dann mit einem zweiten Tipp geteilt.
 type Stand = 'frei' | 'laeuft' | 'bereit';
 const HIGHLIGHTS = ['LIVE', 'TERMINE', 'BACKSTAGE', String(new Date().getFullYear())];
+// Symbole je Zustand des Knopfs (als „icon:“-Liste, damit scripts/subset-icons.py sie in die Icon-Schrift aufnimmt)
+const SYMBOLE = { laeuft: { icon: 'hourglass_top' }, bereit: { icon: 'ios_share' }, aufnehmen: { icon: 'videocam' }, teilen: { icon: 'share' } };
 
 @Component({
   selector: 'app-instagram-formate',
@@ -32,7 +34,7 @@ const HIGHLIGHTS = ['LIVE', 'TERMINE', 'BACKSTAGE', String(new Date().getFullYea
               }
               <button type="button" class="teilen" [class.bereit]="stand()[f.format] === 'bereit'" (click)="teilen(f.format)" [disabled]="stand()[f.format] === 'laeuft'"
                 [attr.aria-label]="(stand()[f.format] === 'bereit' ? 'Jetzt teilen: ' : f.format === 'reel' && !reelFertig() ? 'Reel aufnehmen: ' : 'Teilen: ') + f.titel">
-                <mat-icon>{{ stand()[f.format] === 'laeuft' ? 'hourglass_top' : stand()[f.format] === 'bereit' ? 'ios_share' : f.format === 'reel' && !reelFertig() ? 'videocam' : 'share' }}</mat-icon>
+                <mat-icon>{{ symbol(f.format) }}</mat-icon>
                 {{ stand()[f.format] === 'laeuft' ? (f.format === 'reel' ? 'Aufnahme ' + reelProzent() + ' %' : 'wird vorbereitet …') : stand()[f.format] === 'bereit' ? 'Jetzt teilen' : f.format === 'reel' && !reelFertig() ? 'Reel aufnehmen' : 'Teilen' }}
               </button>
             </div>
@@ -68,6 +70,11 @@ export class InstagramFormate {
         await this.vorrat(f).catch(() => undefined);
       }
     });
+  }
+
+  protected symbol(f: IgFormat): string {
+    const st = this.stand()[f];
+    return (st === 'laeuft' ? SYMBOLE.laeuft : st === 'bereit' ? SYMBOLE.bereit : f === 'reel' && !this.reelFertig() ? SYMBOLE.aufnehmen : SYMBOLE.teilen).icon;
   }
 
   private schluessel(f: IgFormat): string {
