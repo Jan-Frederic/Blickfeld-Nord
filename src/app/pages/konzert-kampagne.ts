@@ -10,6 +10,11 @@ export const WEGE = [
   { ref: 'story', label: 'Story / Status (QR-Code)' },
   { ref: 'text', label: 'Link im Beitragstext' },
   { ref: 'geteilt', label: 'Geteilter Link' },
+  { ref: 'presse-geteilt', label: 'geteiltes Pressekit' },
+  { ref: 'story-1', label: 'Story 2 Wochen vorher' },
+  { ref: 'story-woche', label: 'Story 1 Woche vorher' },
+  { ref: 'story-morgen', label: 'Story am Tag davor' },
+  { ref: 'story-heute', label: 'Story am Auftrittstag' },
 ];
 
 type State = 'loading' | 'ok' | 'aus';

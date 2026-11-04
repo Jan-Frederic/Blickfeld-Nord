@@ -472,6 +472,12 @@ test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne
   await until(async () => (await p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).count()) === 0, 'Schritt bleibt nach dem Abhaken in „Heute fällig“');
   await p.go(`/backstage/${id}/`);
   await until(async () => await p.locator('#wp-story-1').isChecked(), 'Haken fehlt im Werbeplan des Auftritts');
+  // „Story teilen“ im Werbeplan: Bild mit Countdown (am Rechner als Download), Text mit Herkunft in der Zwischenablage, abgehakt
+  const [story] = await Promise.all([p.waitForEvent('download'), p.getByRole('button', { name: 'Story für „Eine Woche vorher“ teilen' }).click()]);
+  expect(story.suggestedFilename().endsWith('.png'), 'Story-Bild fehlt');
+  await until(async () => await p.locator('#wp-woche').isChecked(), 'Geteilter Schritt wird nicht abgehakt');
+  expect((await p.evaluate(() => navigator.clipboard.readText())).includes('ref=story-woche'), 'Text mit Link fehlt in der Zwischenablage');
+  await until(async () => (await p.locator('app-werbeplan .meldung').innerText().catch(() => '')).includes('abgehakt'), 'Meldung nach dem Teilen fehlt');
   await p.go('/backstage/aufgaben/');
   await p.locator('app-backstage-aufgaben .item').first().waitFor();
   expect(!(await p.locator('app-backstage-aufgaben').innerText()).includes('Erste Story'), 'abgehakter Schritt steht noch unter Aufgaben');

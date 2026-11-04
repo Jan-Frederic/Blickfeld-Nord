@@ -210,7 +210,7 @@ export class BackstageBesucher implements OnInit {
   protected readonly anfrageHerkunft = signal<{ ref: string; label: string; count: number }[]>([]);
   protected readonly herkunftMax = signal(0);
   private readonly band = inject(BandService);
-  protected readonly wege = WEGE.map((w) => ({ ...w, kurz: { plakat: 'Plakat', story: 'Story', text: 'Text', geteilt: 'Geteilt' }[w.ref] ?? w.ref }));
+  protected readonly wege = WEGE.map((w) => ({ ...w, kurz: ({ plakat: 'Plakat', story: 'Story', text: 'Text', geteilt: 'Geteilt', 'presse-geteilt': 'Pressekit', 'story-1': 'Story −14', 'story-woche': 'Story −7', 'story-morgen': 'Story −1', 'story-heute': 'Story 0' } as Record<string, string>)[w.ref] ?? w.ref }));
   // Wochentrend: letzte 7 Tage (inkl. heute) gegen die 7 Tage davor
   protected readonly trend = signal<{ jetzt: number; vorher: number; diff: number; prozent: number } | null>(null);
   protected readonly kampagnen = signal<{ id: string; datum: string; name: string; seite: number; wege: number[] }[]>([]);

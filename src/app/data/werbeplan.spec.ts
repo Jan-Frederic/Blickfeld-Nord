@@ -45,3 +45,15 @@ describe('werbeplan – Texte', () => {
     expect(schrittText('story-1', show, 'x')).toContain('Freitag, 04.12.2026');
   });
 });
+
+describe('Werbeplan – Story-Kopf', () => {
+  it('Countdown je nach Abstand zum Auftritt', async () => {
+    const { storyKopf } = await import('./werbeplan');
+    expect(storyKopf('2026-12-04', '2026-11-20')).toBe('IN 2 WOCHEN');
+    expect(storyKopf('2026-12-04', '2026-11-25')).toBe('IN EINER WOCHE');
+    expect(storyKopf('2026-12-04', '2026-11-27')).toBe('NOCH 7 TAGE');
+    expect(storyKopf('2026-12-04', '2026-12-03')).toBe('MORGEN');
+    expect(storyKopf('2026-12-04', '2026-12-04')).toBe('HEUTE');
+    expect(storyKopf('2026-12-04', '2026-12-05')).toBe('LIVE');
+  });
+});

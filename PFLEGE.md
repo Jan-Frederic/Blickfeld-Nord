@@ -845,6 +845,14 @@ verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht m
   `utm_campaign=konzert-<ID>` an (z. B. `konzert-2026-12-04`). GoatCounter listet sie unter „Campaigns“; im Backstage
   zeigt die Seite des Auftritts unter „Kampagne“, wie oft die Konzertseite aufgerufen wurde und wie viele über Plakat,
   Story, den Beitragstext oder einen geteilten Link kamen (12 Monate). Plakat und Story deshalb immer frisch im Backstage erzeugen.
+- **Werbeplan → Story teilen** (Seite des Auftritts im Backstage): Schritte mit Bild haben neben „Text kopieren“ einen
+  zweiten Knopf (📱 Story, 🖼 Plakat). Ein Tipp zeichnet das passende Bild – Story mit Countdown-Kopf („IN 2 WOCHEN“,
+  „NOCH 7 TAGE“, „MORGEN“, „HEUTE“), am Tag danach die Danke-Story, beim ersten Schritt das Plakat –, legt den Text mit
+  Link in die Zwischenablage, öffnet das Teilen-Menü (dort Instagram → Story oder WhatsApp → Status) und hakt den Schritt
+  ab; am Rechner wird das Bild gespeichert. Direkt posten kann die Website nicht (Instagram erlaubt das nur einer
+  geprüften App mit geheimem Schlüssel auf einem Server). Jede Story hat ihre eigene Herkunft (`story-1`, `story-woche`,
+  `story-morgen`, `story-heute`, `story-danke`; das geteilte Pressekit `presse-geteilt`) – die Kampagnen-Kachel und
+  „Was wirkt am besten“ zeigen, welche Story Besucher bringt.
 - **Banner mit QR-Code** (Pressekit): führt auf `https://blickfeld-nord.de/?ref=banner`. Für weitere eigene
   Druckstücke einen der erlaubten Vermerke verwenden oder die Liste ergänzen.
 

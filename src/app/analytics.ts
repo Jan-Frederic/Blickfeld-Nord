@@ -28,6 +28,13 @@ export const HERKUNFT = [
   { ref: 'banner', label: 'Banner' },
   { ref: 'geteilt', label: 'Geteilter Konzert-Link' },
   { ref: 'text', label: 'Link im Beitragstext' },
+  { ref: 'presse-geteilt', label: 'Geteiltes Pressekit' },
+  // Werbeplan → „Story teilen“: je Schritt eine eigene Herkunft, damit sich sieht, welche Story wirkt
+  { ref: 'story-1', label: 'Story 2 Wochen vorher' },
+  { ref: 'story-woche', label: 'Story 1 Woche vorher' },
+  { ref: 'story-morgen', label: 'Story am Tag davor' },
+  { ref: 'story-heute', label: 'Story am Auftrittstag' },
+  { ref: 'story-danke', label: 'Danke-Story' },
 ] as const;
 
 function herkunft(): string | undefined {

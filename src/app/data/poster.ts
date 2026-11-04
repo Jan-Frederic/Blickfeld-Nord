@@ -304,15 +304,15 @@ export async function renderJahr(jahr: number, zahlen: [string, number][], zeile
   return alsPng(canvas);
 }
 
-/** Bild teilen (Handy: Teilen-Menü) oder herunterladen (Rechner) */
-export async function shareImage(blob: Blob, name: string, title: string): Promise<void> {
+/** Bild teilen (Handy: Teilen-Menü) oder herunterladen (Rechner); Ergebnis: geteilt, gespeichert oder abgebrochen */
+export async function shareImage(blob: Blob, name: string, title: string): Promise<'geteilt' | 'gespeichert' | 'abgebrochen'> {
   const file = new File([blob], name, { type: 'image/png' });
   if (navigator.canShare?.({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {
     try {
       await navigator.share({ files: [file], title });
-      return;
+      return 'geteilt';
     } catch (err) {
-      if ((err as Error).name === 'AbortError') return;
+      if ((err as Error).name === 'AbortError') return 'abgebrochen';
     }
   }
   const url = URL.createObjectURL(blob);
@@ -321,6 +321,7 @@ export async function shareImage(blob: Blob, name: string, title: string): Promi
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return 'gespeichert';
 }
 
 export async function sharePoster(s: Show, format: PosterFormat = 'feed', link?: string): Promise<void> {

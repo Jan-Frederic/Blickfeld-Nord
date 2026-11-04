@@ -6,6 +6,21 @@
 import { datumText } from './datum';
 import { Show } from './band.service';
 import { postText } from './poster';
+import { countdownKopf } from './countdown';
+import { tageZwischen } from './datum';
+
+/** Schritte mit Bild zum Teilen: Plakat als Beitrag (4:5), Stories (9:16) mit Countdown-Kopf, Danke-Story */
+export const BILD_SCHRITTE: Readonly<Record<string, 'feed' | 'story' | 'danke'>> = { plakat: 'feed', 'story-1': 'story', woche: 'story', morgen: 'story', heute: 'story', danke: 'danke' };
+
+/** Kopfzeile der Story je nach Abstand zum Auftritt: „IN 2 WOCHEN“, „NOCH 5 TAGE“, „MORGEN“, „HEUTE“ (danach „LIVE“) */
+export function storyKopf(datum: string, heute: string): string {
+  const k = countdownKopf(datum, heute);
+  if (k !== 'LIVE') return k;
+  const tage = tageZwischen(heute, datum);
+  if (tage < 8) return 'LIVE';
+  const wochen = Math.round(tage / 7);
+  return wochen <= 1 ? 'IN EINER WOCHE' : `IN ${wochen} WOCHEN`;
+}
 
 export interface WerbeSchritt {
   id: string;
