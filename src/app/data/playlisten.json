@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03",
+  "updated": "2026-11-05",
   "listen": [
     {
       "key": "setlist",
@@ -418,6 +418,13 @@
           "year": 2010,
           "duration": 214,
           "url": "https://open.spotify.com/track/27RYrbL6S02LNVhDWVl38b"
+        },
+        {
+          "title": "Winterkinder",
+          "artist": "Rolf Zuckowski",
+          "year": 1987,
+          "duration": 166,
+          "url": "https://open.spotify.com/track/5OapdFATwLvxpKn6pcb2P4"
         }
       ]
     },
@@ -621,6 +628,13 @@
           "year": 2006,
           "duration": 237,
           "url": "https://open.spotify.com/track/47LnxB0B2b3LrdY4YsJ9is"
+        },
+        {
+          "title": "Winterkinder",
+          "artist": "Rolf Zuckowski",
+          "year": 1987,
+          "duration": 166,
+          "url": "https://open.spotify.com/track/5OapdFATwLvxpKn6pcb2P4"
         }
       ]
     },
@@ -1503,6 +1517,13 @@
           "year": 2008,
           "duration": 303,
           "url": "https://open.spotify.com/track/1TVi0Ko9xDkXLbyfKTqXT5"
+        },
+        {
+          "title": "Winterkinder",
+          "artist": "Rolf Zuckowski",
+          "year": 1987,
+          "duration": 166,
+          "url": "https://open.spotify.com/track/5OapdFATwLvxpKn6pcb2P4"
         }
       ]
     },
