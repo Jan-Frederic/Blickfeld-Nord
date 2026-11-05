@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt } from './spiegel';
 import { letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
-import { SyncOrdner, SyncStand, ergebnisText, synchronisieren } from './sync';
+import { SyncOrdner, SyncStand, ergebnisText, istDatenPfad, synchronisieren } from './sync';
 import { eigenstaendigerSong, erkennen } from './erkennung';
 import { NOTEN_GEAENDERT, NotenDateiInfo, NotenPdf, alleMarkierungen, alleSongNoten, markierungenSetzen, notenDateiLoeschen, notenDateiSpeichern, notenDateien, songNotenSetzen } from './noten';
 import { BAND, MarkDateiInhalt, NotenDateiInhalt, istNotenSpiegel, markTexte, markZusammen, notenPfad, notenText, pdfFinden } from './noten-spiegel';
@@ -32,6 +32,9 @@ import {
 // Führt die Synchronisation OneDrive ↔ lokal aus (Backstage → Einstellungen legt fest, was womit): nie zweimal
 // gleichzeitig, automatisch beim Öffnen des Backstage und alle 15 Minuten, solange eine Backstage-Seite offen ist.
 // Fortschritt und letztes Ergebnis als Signale für die Anzeige im Abgleich.
+/** schnell: nur Einstellungen und Daten; voll: alles (PDFs, Mitschnitte …) */
+export type SyncArt = 'schnell' | 'voll';
+
 @Injectable({ providedIn: 'root' })
 export class SyncService {
   readonly laeuft = signal(false);
@@ -43,6 +46,12 @@ export class SyncService {
   /** zählt hoch, wenn ein Abgleich Daten anderer Geräte übernommen hat – offene Seiten bauen sich dann neu auf */
   readonly neueDaten = signal(0);
   private letzterLauf = 0;
+  /** letzter voller Abgleich (mit PDFs, Mitschnitten …) */
+  private letzterVoll = 0;
+  /** während eines Laufs angefordert: danach gleich noch einmal (schnell bzw. voll) */
+  private nochmal: SyncArt | null = null;
+  /** gelesene Geräte-Dateien je Version – nur Geänderte neu lesen */
+  private readonly geraeteTexte = new Map<string, { version: string; text: string }>();
   /** online (für die Anzeige unten rechts) */
   readonly online = signal(typeof navigator === 'undefined' || navigator.onLine);
   /** Stand der gespiegelten Einstellungen und Daten (data/spiegel.ts) – für den Sync-Status im Abgleich */
@@ -98,7 +107,8 @@ export class SyncService {
     this.ausstehendZaehlen();
     if (!this.bereit() || !syncEinstellungen().auto) return;
     clearTimeout(this.nachAenderung);
-    this.nachAenderung = setTimeout(() => navigator.onLine && void this.jetzt(true), 5000);
+    // eigene Änderung (Häkchen, Setlist …): nur Einstellungen und Daten abgleichen – das geht in Sekunden
+    this.nachAenderung = setTimeout(() => navigator.onLine && void this.jetzt(true, 'schnell'), 5000);
   }
 
   /** gespiegelte Einträge, deren Inhalt sich seit dem letzten Spiegeln geändert hat */
@@ -266,9 +276,9 @@ export class SyncService {
   }
 
   // nach dem Abgleich: neue/geänderte Dateien in localStorage übernehmen, verschwundene Einträge entfernen
-  private async spiegelnNachher(lokal: SyncOrdner, person: string): Promise<number> {
+  private async spiegelnNachher(lokal: SyncOrdner, person: string, liste: SyncDatei[]): Promise<number> {
     const z: SpiegelZustand = { ...(await spiegelZustandLaden()) };
-    const plan = planNachher(await lokal.liste(), z, person);
+    const plan = planNachher(liste, z, person);
     let n = 0;
     this.spiegelt = true;
     try {
@@ -306,10 +316,10 @@ export class SyncService {
 
   // neue/geänderte Noten-Dateien aus dem Abgleich gleich beim Song einlesen: eindeutig Erkanntes direkt, der Rest
   // wartet in der Sync-Karte auf eine Zuordnung von Hand. Ergebnis als Zusatz für „letzter Abgleich“.
-  private async notenEinlesen(lokal: SyncOrdner, neu: string[]): Promise<string> {
+  private async notenEinlesen(lokal: SyncOrdner, neu: string[], liste: SyncDatei[]): Promise<string> {
     const pfade = neu.filter((p) => istPdf(p) || istAkkordblatt(p));
     if (!pfade.length) return '';
-    const groesse = new Map((await lokal.liste()).map((d) => [d.pfad, d.groesse]));
+    const groesse = new Map(liste.map((d) => [d.pfad, d.groesse]));
     const eindeutig: NotenQuelle[] = [];
     const offen: string[] = [];
     for (const [i, pfad] of pfade.entries()) {
@@ -361,7 +371,16 @@ export class SyncService {
     if (!lokal) return;
     liste ??= await lokal.liste();
     const dateien = liste.filter((d) => d.pfad.startsWith(GERAETE_ORDNER + '/') && d.pfad.endsWith('.json') && d.groesse < 10_000);
-    this.geraete.set(geraeteListe(await Promise.all(dateien.map(async (d) => (await lokal!.lesen(d.pfad)).text()))));
+    const texte = await Promise.all(
+      dateien.map(async (d) => {
+        const alt = this.geraeteTexte.get(d.pfad);
+        if (alt?.version === d.version) return alt.text;
+        const text = await (await lokal!.lesen(d.pfad)).text();
+        this.geraeteTexte.set(d.pfad, { version: d.version, text });
+        return text;
+      }),
+    );
+    this.geraete.set(geraeteListe(texte));
   }
 
   /**
@@ -417,25 +436,39 @@ export class SyncService {
   /** automatische Synchronisation starten (mehrfacher Aufruf schadet nicht) */
   automatisch(): void {
     if (this.timer || typeof window === 'undefined') return;
-    const los = () => {
-      if (syncEinstellungen().auto && this.bereit() && navigator.onLine && !document.hidden) void this.jetzt(true);
+    const los = (art: SyncArt) => {
+      if (syncEinstellungen().auto && this.bereit() && navigator.onLine && !document.hidden) void this.jetzt(true, art);
     };
-    setTimeout(los, 3000);
-    this.timer = setInterval(los, 15 * 60_000);
-    addEventListener('online', los);
-    // App wieder im Vordergrund (Handy entsperrt, Tab gewechselt): gleich abgleichen statt bis zu 15 Minuten zu warten
-    document.addEventListener('visibilitychange', () => !document.hidden && Date.now() - this.letzterLauf > 60_000 && los());
+    // beim Öffnen: erst die Daten (schnell sichtbar), Neues darüber hinaus lädt der Schnellabgleich gleich nach
+    setTimeout(() => los(this.vollFaellig() ? 'voll' : 'schnell'), 3000);
+    this.timer = setInterval(() => los('voll'), VOLL_ALLE_MS);
+    addEventListener('online', () => los('schnell'));
+    // App wieder im Vordergrund (Handy entsperrt, Tab gewechselt): gleich die Daten abgleichen statt bis zu 15 Minuten zu warten
+    document.addEventListener('visibilitychange', () => !document.hidden && Date.now() - this.letzterLauf > 60_000 && los(this.vollFaellig() ? 'voll' : 'schnell'));
+  }
+
+  private vollFaellig(): boolean {
+    return Date.now() - this.letzterVoll > VOLL_ALLE_MS;
   }
 
   /**
    * Jetzt abgleichen. still=true (automatisch): keine Rückfragen, kein Popup – fehlt die Anmeldung oder die
    * Erlaubnis für den Ordner, wird es beim nächsten Klick auf „Jetzt synchronisieren“ nachgeholt.
+   * art 'schnell': nur Einstellungen und Daten (JSON in Daten/, Einstellungen/, Noten/, Markierungen/, Geraete/) –
+   * liegen in OneDrive neue PDFs oder Mitschnitte, folgt gleich danach der volle Abgleich.
    */
-  async jetzt(still = false): Promise<void> {
-    if (this.laeuft() || !this.bereit()) return;
+  async jetzt(still = false, art: SyncArt = 'voll'): Promise<void> {
+    if (!this.bereit()) return;
+    if (this.laeuft()) {
+      // nicht verlieren: nach dem laufenden Abgleich noch einmal
+      if (art === 'voll' || !this.nochmal) this.nochmal = art;
+      return;
+    }
     const e = syncEinstellungen();
+    const schnell = art === 'schnell';
     this.laeuft.set(true);
     this.letzterLauf = Date.now();
+    let danach: SyncArt | null = null;
     try {
       const konto = (await oneDriveKonto()) ?? (await oneDriveAnmelden(still));
       if (!konto) return;
@@ -458,23 +491,26 @@ export class SyncService {
       const zustand = await syncZustand();
       const cloud = cloudOrdner({ pfad: e.cloud, wurzel: e.wurzel });
       const lauf = () =>
-        synchronisieren(cloud, lokal, zustand, e, {
+        synchronisieren(cloud, lokal, zustand, { ...e, ...(schnell ? { nur: istDatenPfad } : {}) }, {
           melden: (s) => this.stand.set(s),
           bestaetigen: (text) => !still && confirm(text),
           speichern: (z) => syncZustandSetzen(z).then(() => undefined),
         });
-      const { ergebnis } = still ? await oneDriveStill(lauf) : await lauf();
+      const { ergebnis, lokal: nachListe } = still ? await oneDriveStill(lauf) : await lauf();
       this.neu.set(ergebnis.neu);
-      const uebernommen = await this.spiegelnNachher(lokal, person);
-      const noten = e.notenAuto ? await this.notenEinlesen(lokal, ergebnis.neu) : '';
-      const nachListe = await lokal.liste();
+      // die Liste nach dem Abgleich kommt aus dem Abgleich selbst – der Ordner muss nicht noch einmal gelesen werden
+      const uebernommen = await this.spiegelnNachher(lokal, person, nachListe);
+      const noten = !schnell && e.notenAuto ? await this.notenEinlesen(lokal, ergebnis.neu, nachListe) : '';
       const notenSync = await this.notenNachher(lokal, person, nachListe);
-      const aufnahmen = await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
-      const weg = await this.geloeschteAnwenden(lokal, cloud, nachListe).catch(() => 0);
+      const aufnahmen = schnell ? 0 : await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
+      const weg = schnell ? 0 : await this.geloeschteAnwenden(lokal, cloud, nachListe).catch(() => 0);
       await this.geraeteLesen(lokal, nachListe).catch(() => undefined);
+      if (!schnell) this.letzterVoll = Date.now();
       const daten = uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
       const mit = (aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '') + (weg ? ` · ${weg} für alle gelöschte ${weg === 1 ? 'Noten-Datei' : 'Noten-Dateien'} entfernt` : '');
-      letzterSyncSetzen(ergebnisText(ergebnis) + daten + mit + noten + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
+      const offen = ergebnis.ausstehend?.dateien ? ` · ${ausstehendText(ergebnis.ausstehend)} werden geladen` : '';
+      if (offen || (schnell && this.vollFaellig())) danach = 'voll';
+      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {
@@ -484,5 +520,20 @@ export class SyncService {
       this.stand.set(null);
       this.laeuft.set(false);
     }
+    // angefordert während des Laufs oder PDFs warten: gleich weiter (still – ohne Rückfragen)
+    const weiter = this.nochmal === 'voll' || danach === 'voll' ? 'voll' : this.nochmal;
+    this.nochmal = null;
+    if (weiter && navigator.onLine) void this.jetzt(true, weiter);
   }
 }
+
+/** voller Abgleich (PDFs, Mitschnitte …) automatisch höchstens so oft – Daten gehen nach jeder Änderung sofort */
+const VOLL_ALLE_MS = 15 * 60_000;
+
+/** „3 Dateien (12 MB)“ */
+function ausstehendText(a: { dateien: number; bytes: number }): string {
+  const mb = a.bytes / 1e6;
+  const groesse = a.bytes ? ` (${mb < 1 ? '< 1' : Math.round(mb).toLocaleString('de-DE')} MB)` : '';
+  return `${a.dateien} ${a.dateien === 1 ? 'Datei' : 'Dateien'}${groesse}`;
+}
+

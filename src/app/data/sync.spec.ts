@@ -1,4 +1,4 @@
-import { SyncDatei, SyncOrdner, Zustand, ignorieren, konfliktName, planen, synchronisieren } from './sync';
+import { SyncDatei, SyncOrdner, Zustand, ausstehendInCloud, ignorieren, istDatenPfad, konfliktName, planen, synchronisieren } from './sync';
 
 // Ordner im Speicher: Version = Zähler, der bei jedem Schreiben steigt
 function speicherOrdner(name: string, start: Record<string, string> = {}): SyncOrdner & { inhalt: Map<string, { text: string; version: string; geaendert: string }> } {
@@ -135,8 +135,58 @@ describe('Synchronisation', () => {
     const cloud = { ...speicherOrdner('c', dateien), lesen: async () => { throw new TypeError('Failed to fetch'); } };
     const lokal = speicherOrdner('l');
     const { ergebnis } = await synchronisieren(cloud, lokal, {}, BEIDE);
-    expect(ergebnis.fehler.length).toBe(11);
+    // 10 Fehler + Abbruch-Hinweis; die bis dahin gleichzeitig laufenden Übertragungen (höchstens 3) enden noch
+    expect(ergebnis.fehler.length).toBeGreaterThanOrEqual(11);
+    expect(ergebnis.fehler.length).toBeLessThanOrEqual(14);
     expect(ergebnis.fehler[0]).toBe('Abgebrochen nach 10 gleichen Fehlern in Folge: Failed to fetch');
     expect(ergebnis.runter).toBe(0);
+  });
+
+  it('Schnellabgleich: nur Einstellungen und Daten, PDFs bleiben samt Stand für den vollen Abgleich liegen', async () => {
+    const cloud = speicherOrdner('c', { 'Daten/bn-setlist-1.json': 'S', 'Noten/Iris.pdf': 'PDF' });
+    const lokal = speicherOrdner('l', { 'Einstellungen/Ich/bn-wackelt.json': 'W', 'neu.pdf': 'N' });
+    const r = await synchronisieren(cloud, lokal, {}, { ...BEIDE, nur: istDatenPfad });
+    expect(r.ergebnis).toMatchObject({ runter: 1, hoch: 1 });
+    expect(r.ergebnis.ausstehend).toEqual({ dateien: 1, bytes: 3 });
+    expect(Object.keys(r.zustand).sort()).toEqual(['Daten/bn-setlist-1.json', 'Einstellungen/Ich/bn-wackelt.json']);
+    // die Liste nach dem Abgleich enthält das Heruntergeladene
+    expect(r.lokal.map((d) => d.pfad).sort()).toEqual(['Daten/bn-setlist-1.json', 'Einstellungen/Ich/bn-wackelt.json', 'neu.pdf']);
+    // voller Abgleich danach holt den Rest; ein weiterer Schnellabgleich lässt den Stand der PDFs in Ruhe
+    const voll = await synchronisieren(cloud, lokal, r.zustand, BEIDE);
+    expect(voll.ergebnis).toMatchObject({ runter: 1, hoch: 1 });
+    const schnell = await synchronisieren(cloud, lokal, voll.zustand, { ...BEIDE, nur: istDatenPfad });
+    expect(schnell.ergebnis).toMatchObject({ runter: 0, hoch: 0, geloescht: 0, ausstehend: { dateien: 0, bytes: 0 } });
+    expect(schnell.zustand).toEqual(voll.zustand);
+  });
+
+  it('erkennt Daten-Pfade', () => {
+    expect(istDatenPfad('Daten/bn-werbeplan-x.json')).toBe(true);
+    expect(istDatenPfad('Markierungen/Band/Iris-123.json')).toBe(true);
+    expect(istDatenPfad('Noten/Iris.pdf')).toBe(false);
+    expect(istDatenPfad('Daten.json')).toBe(false);
+    expect(istDatenPfad('Mitschnitte/Iris/song.txt')).toBe(false);
+    // in OneDrive gelöschtes PDF zählt ebenfalls als ausstehend
+    expect(ausstehendInCloud([], { 'a.pdf': { cloud: '1', lokal: '1' }, 'Daten/x.json': { cloud: '1', lokal: '1' } }, istDatenPfad)).toEqual({ dateien: 1, bytes: 0 });
+  });
+
+  it('überträgt mehrere Dateien gleichzeitig und kommt zum selben Ergebnis', async () => {
+    const start = Object.fromEntries(Array.from({ length: 23 }, (_, i) => [`n/${i}.pdf`, `inhalt ${i}`]));
+    const cloud = speicherOrdner('c', start);
+    const lokal = speicherOrdner('l');
+    let gleichzeitig = 0;
+    let hoechstens = 0;
+    const lesen = cloud.lesen.bind(cloud);
+    cloud.lesen = async (p) => {
+      hoechstens = Math.max(hoechstens, ++gleichzeitig);
+      await new Promise((r) => setTimeout(r, 2));
+      gleichzeitig--;
+      return lesen(p);
+    };
+    const r = await synchronisieren(cloud, lokal, {}, BEIDE);
+    expect(r.ergebnis.runter).toBe(23);
+    expect(hoechstens).toBeGreaterThan(1);
+    expect(hoechstens).toBeLessThanOrEqual(4);
+    expect(texte(lokal)).toEqual(texte(cloud));
+    expect(Object.keys(r.zustand)).toHaveLength(23);
   });
 });

@@ -1,4 +1,5 @@
-import { CloudDatei, CloudOrt, CloudWurzel, cloudBaum, cloudLaden, cloudLoeschen, cloudSchreiben } from './onedrive';
+import { CloudDatei, CloudOrt, CloudWurzel, cloudBaum, cloudDelta, cloudLaden, cloudLoeschen, cloudSchreiben, ortSchluessel } from './onedrive';
+import { DELTA_VOLL_NACH_MS, type DeltaStand } from './cloud-delta';
 import { OrdnerHandle } from './ordner';
 import { Richtung, SyncDatei, SyncOrdner, Zustand } from './sync';
 import type { SpiegelZustand } from './spiegel';
@@ -113,7 +114,12 @@ export const syncZustandLoeschen = async () => {
   await idb('meta', 'readwrite', (s) => s.delete('zustand'));
   // gespiegelte Einstellungen beim nächsten Abgleich neu in den (anderen) Ordner schreiben
   await idb('meta', 'readwrite', (s) => s.delete('spiegel'));
+  await idb('meta', 'readwrite', (s) => s.delete('delta'));
 };
+
+/** gemerkter Stand der OneDrive-Änderungsliste (data/cloud-delta.ts) */
+const deltaLaden = async (): Promise<DeltaStand | undefined> => idb<DeltaStand | undefined>('meta', 'readonly', (s) => s.get('delta')).catch(() => undefined);
+const deltaMerken = (d: DeltaStand | null) => idb('meta', 'readwrite', (s) => (d ? s.put(d, 'delta') : s.delete('delta'))).catch(() => undefined);
 
 /** Stand der gespiegelten Einstellungen (data/spiegel.ts) */
 export const spiegelZustandLaden = async (): Promise<SpiegelZustand> => (await idb<SpiegelZustand | undefined>('meta', 'readonly', (s) => s.get('spiegel')).catch(() => undefined)) ?? {};
@@ -136,13 +142,33 @@ export const cloudGewaehlt = (e: Pick<SyncEinstellungen, 'cloud' | 'wurzel'>) =>
 /** „Blickfeld Nord/Noten“ bzw. „Sync (geteilt)/Noten“ */
 export const cloudName = (e: Pick<SyncEinstellungen, 'cloud' | 'wurzel'>) => [e.wurzel && `${e.wurzel.name} (geteilt)`, e.cloud].filter(Boolean).join('/');
 
-/** OneDrive-Ordner */
+/**
+ * OneDrive-Ordner. Gelesen wird über die Änderungsliste (nur, was sich seit dem letzten Mal geändert hat); geht das
+ * nicht (Verknüpfung zu einem fremden Ordner im Sync-Ordner, Fehler), wie früher Ordner für Ordner – im
+ * Schnellabgleich dann nur die Daten-Ordner.
+ */
 export function cloudOrdner(ort: CloudOrt): SyncOrdner {
   const dateien = new Map<string, CloudDatei>();
   return {
     name: cloudName({ cloud: ort.pfad, wurzel: ort.wurzel }) || 'OneDrive',
-    async liste(gefunden) {
-      const liste = await cloudBaum(ort, gefunden);
+    async liste(gefunden, ordner) {
+      let liste: CloudDatei[] | undefined;
+      const schluessel = ortSchluessel(ort);
+      try {
+        const alt = await deltaLaden();
+        // ging hier zuletzt nicht (ohne Link gemerkt): einen Tag lang nicht wieder versuchen
+        const aus = alt?.ort === schluessel && !alt.link && Date.now() - Date.parse(alt.voll) < DELTA_VOLL_NACH_MS;
+        const d = aus ? null : await cloudDelta(ort, alt, gefunden);
+        if (d) {
+          await deltaMerken(d.stand);
+          liste = d.dateien;
+        } else if (!aus) await deltaMerken({ ort: schluessel, wurzel: '', drive: '', link: '', voll: new Date().toISOString(), eintraege: {} });
+      } catch (e) {
+        // z. B. Ordner (noch) nicht da, Netzproblem – unten wie bisher. Lehnt OneDrive die Änderungsliste ab (bei
+        // diesem Ordner nicht erlaubt), einen Tag lang nicht wieder fragen.
+        if (/antwortet mit 4(?!29)\d\d/.test((e as Error).message ?? '')) await deltaMerken({ ort: schluessel, wurzel: '', drive: '', link: '', voll: new Date().toISOString(), eintraege: {} });
+      }
+      liste ??= await cloudBaum(ort, gefunden, ordner);
       dateien.clear();
       for (const d of liste) dateien.set(d.pfad, d);
       return liste;
@@ -223,10 +249,12 @@ export function festplattenOrdner(h: OrdnerHandle): SyncOrdner {
   const alsSync = (pfad: string, f: File): SyncDatei => ({ pfad, groesse: f.size, geaendert: new Date(f.lastModified).toISOString(), version: `${f.size}-${f.lastModified}` });
   return {
     name: h.name,
-    async liste(gefunden) {
+    async liste(gefunden, ordner) {
       const out: SyncDatei[] = [];
       const lesen = async (o: OrdnerHandle, praefix: string): Promise<void> => {
         for await (const e of o.values()) {
+          // Schnellabgleich: oben nur die Daten-Ordner
+          if (ordner && !praefix && (e.kind !== 'directory' || !ordner.includes(e.name))) continue;
           if (e.kind === 'directory') await lesen(e as OrdnerHandle, `${praefix}${e.name}/`);
           else out.push(alsSync(praefix + e.name, await (e as unknown as DateiHandle).getFile()));
         }

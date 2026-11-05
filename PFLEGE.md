@@ -640,6 +640,16 @@ So wird abgeglichen: Der Stand nach jedem Abgleich wird gemerkt. Neues und Geän
 Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf beiden Seiten geändert, gewinnt die
 neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten. Würden auf einmal viele Dateien gelöscht,
 wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
+
+Schnell- und Vollabgleich: Nach einer eigenen Änderung, beim Öffnen und beim Zurückholen der App werden nur
+**Einstellungen und Daten** abgeglichen (die kleinen JSON-Dateien in `Daten/`, `Einstellungen/`, `Noten/`,
+`Markierungen/`, `Geraete/`) – das dauert Sekunden. Liegen in OneDrive neue oder geänderte PDFs bzw. Mitschnitte,
+steht das im letzten Abgleich („3 Dateien (12 MB) werden geladen“) und der **volle Abgleich** folgt gleich danach; sonst
+läuft er alle 15 Minuten und bei **Jetzt synchronisieren**. Änderungen während eines Abgleichs werden danach nachgeholt.
+OneDrive wird über die **Änderungsliste** gelesen (Microsoft Graph „delta“, `data/cloud-delta.ts`): eine Anfrage für
+„was ist seit dem letzten Mal neu“ statt einer je Ordner; der Dateibaum wird je Gerät gemerkt und einmal am Tag
+komplett neu gelesen. Klappt das nicht (Verknüpfung zu einem fremden Ordner im Sync-Ordner, OneDrive lehnt ab), wird
+wie früher Ordner für Ordner gelesen. Übertragen wird mit bis zu vier Dateien gleichzeitig.
 Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim richtigen Song eingelesen (abschaltbar);
 eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
 („2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**). Dateien, die schon einmal als **Eigenständig** eingelesen

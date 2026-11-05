@@ -1,5 +1,6 @@
 import type { AccountInfo, IPublicClientApplication } from '@azure/msal-browser';
 import { ONEDRIVE, clientId } from './onedrive-config';
+import { DeltaItem, DeltaStand, deltaAnwenden, deltaDateien, deltaGueltig } from './cloud-delta';
 
 // OneDrive über Microsoft Graph – Anmeldung mit MSAL (Microsoft Authentication Library), nur im Browser, ohne Server.
 // Ist man im Browser schon bei Microsoft angemeldet (Windows/Edge mit Firmenkonto, Office im Browser …), klappt
@@ -224,14 +225,18 @@ const alsCloudDatei = (i: GraphDatei, pfad: string, drive?: string): CloudDatei 
   downloadUrl: i['@microsoft.graph.downloadUrl'],
 });
 
-/** alle Dateien unter dem Ordner (rekursiv, ohne Tiefengrenze; höchstens 20 000) mit Versionsangabe */
-export async function cloudBaum(ort: CloudOrt, gefunden?: (anzahl: number) => void): Promise<CloudDatei[]> {
+/**
+ * alle Dateien unter dem Ordner (rekursiv, ohne Tiefengrenze; höchstens 20 000) mit Versionsangabe.
+ * ordner: nur diese obersten Unterordner lesen (Schnellabgleich ohne Änderungsliste).
+ */
+export async function cloudBaum(ort: CloudOrt, gefunden?: (anzahl: number) => void, ordner?: string[]): Promise<CloudDatei[]> {
   const out: CloudDatei[] = [];
   const lesen = async (url: string, praefix: string, drive?: string): Promise<void> => {
     let naechste: string | undefined = url;
     while (naechste && out.length < 20000) {
       const seite = (await (await graph(naechste)).json()) as { value: GraphDatei[]; '@odata.nextLink'?: string };
       for (const i of seite.value) {
+        if (ordner && !praefix && (!ordner.includes(i.name) || !(i.folder || i.remoteItem?.folder))) continue;
         const w = alsWurzel(i);
         if (w) await lesen(`${perId(w.item, w.drive)}/children?$top=500`, `${praefix}${i.name}/`, w.drive);
         else if (i.folder) await lesen(`${perId(i.id, drive)}/children?$top=500`, `${praefix}${i.name}/`, drive);
@@ -250,6 +255,52 @@ export async function cloudBaum(ort: CloudOrt, gefunden?: (anzahl: number) => vo
   return out;
 }
 
+/** Ort als Schlüssel für den gemerkten Stand der Änderungsliste */
+export const ortSchluessel = (ort: CloudOrt) => JSON.stringify([ort.pfad, ort.wurzel?.drive ?? '', ort.wurzel?.item ?? '']);
+
+/**
+ * Dateien über die Änderungsliste (data/cloud-delta.ts): mit gemerktem Stand nur die Änderungen seitdem, sonst einmal
+ * alles. null = taugt hier nicht (Verknüpfung zu einem fremden Ordner im Sync-Ordner) – dann wie bisher Ordner lesen.
+ * Der neue Stand kommt zurück und wird vom Aufrufer gemerkt.
+ */
+export async function cloudDelta(
+  ort: CloudOrt,
+  alt: DeltaStand | undefined,
+  gefunden?: (anzahl: number) => void,
+): Promise<{ dateien: CloudDatei[]; stand: DeltaStand } | null> {
+  const schluessel = ortSchluessel(ort);
+  const weiter = deltaGueltig(alt, schluessel);
+  let stand: DeltaStand;
+  if (weiter) stand = { ...alt, eintraege: { ...alt.eintraege } };
+  else {
+    const k = await ordnerKennung(ort);
+    stand = { ort: schluessel, wurzel: k.item, drive: k.drive, link: `/drives/${k.drive}/items/${k.item}/delta`, voll: new Date().toISOString(), eintraege: {} };
+  }
+  const links = new Map<string, string>();
+  let naechste: string | undefined = stand.link;
+  let link = '';
+  try {
+    while (naechste) {
+      const seite = (await (await graph(naechste)).json()) as { value: DeltaItem[]; '@odata.nextLink'?: string; '@odata.deltaLink'?: string };
+      if (deltaAnwenden(stand.eintraege, seite.value, stand.wurzel)) return null;
+      for (const i of seite.value) if (i['@microsoft.graph.downloadUrl']) links.set(i.id, i['@microsoft.graph.downloadUrl']);
+      gefunden?.(Object.keys(stand.eintraege).length);
+      if (Object.keys(stand.eintraege).length > 20000) return null;
+      naechste = seite['@odata.nextLink'];
+      link = seite['@odata.deltaLink'] ?? link;
+    }
+  } catch (e) {
+    // gemerkter Link abgelaufen (410) oder sonst unbrauchbar → einmal komplett neu
+    if (weiter) return cloudDelta(ort, undefined, gefunden);
+    throw e;
+  }
+  if (!link) return null;
+  stand.link = link;
+  const drive = ort.wurzel?.drive;
+  const dateien = deltaDateien(stand.eintraege, stand.wurzel).map((d): CloudDatei => ({ ...d, drive, downloadUrl: links.get(d.id) }));
+  return { dateien, stand };
+}
+
 /** Inhalt einer Cloud-Datei */
 export async function cloudLaden(d: CloudDatei): Promise<Blob> {
   if (d.downloadUrl) {
@@ -261,6 +312,13 @@ export async function cloudLaden(d: CloudDatei): Promise<Blob> {
     }
   }
   try {
+    // ohne Link (z. B. aus der Änderungsliste): frischen Download-Link holen – der Umweg über /content scheitert in
+    // manchen Browsern an der Weiterleitung
+    const link = ((await (await graph(perId(d.id, d.drive))).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
+    if (link) {
+      const res = await fetch(link);
+      if (res.ok) return res.blob();
+    }
     return await (await graph(`${perId(d.id, d.drive)}/content`)).blob();
   } catch (e) {
     throw (e as Error).name === 'TypeError' ? new Error('Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert)', { cause: e }) : e;
@@ -272,7 +330,14 @@ export async function cloudSchreiben(ort: CloudOrt, pfad: string, inhalt: Blob):
   const ziel = adresse(ort, pfad);
   let item: GraphDatei;
   if (inhalt.size <= 4e6) {
-    item = (await (await graph(`${ziel}/content`, { method: 'PUT', body: inhalt, headers: { 'Content-Type': 'application/octet-stream' } })).json()) as GraphDatei;
+    const hoch = () => graph(`${ziel}/content`, { method: 'PUT', body: inhalt, headers: { 'Content-Type': 'application/octet-stream' } });
+    // mehrere gleichzeitige Uploads legen denselben neuen Ordner an → OneDrive meldet einmal 409; dann noch einmal
+    const res = await hoch().catch(async (e: Error) => {
+      if (!e.message.endsWith(' 409')) throw e;
+      await new Promise((r) => setTimeout(r, 500));
+      return hoch();
+    });
+    item = (await res.json()) as GraphDatei;
   } else {
     const sitzung = (await (
       await graph(`${ziel}/createUploadSession`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'replace' } }) })
