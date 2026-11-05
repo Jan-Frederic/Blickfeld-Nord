@@ -168,13 +168,6 @@
           "url": "https://open.spotify.com/track/2ladamWCFAfQbgIIdkewAx"
         },
         {
-          "title": "Ich wollte nie erwachsen sein (Nessajas Lied) - aus \"Tabaluga & Lilli\" - Live",
-          "artist": "Peter Maffay",
-          "year": 1994,
-          "duration": 291,
-          "url": "https://open.spotify.com/track/3ScAPPKK8crBQ7E2yUacjk"
-        },
-        {
           "title": "Plötzlich perfekt",
           "artist": "Johannes Oerding",
           "year": 2015,
@@ -425,6 +418,13 @@
           "year": 1987,
           "duration": 166,
           "url": "https://open.spotify.com/track/5OapdFATwLvxpKn6pcb2P4"
+        },
+        {
+          "title": "Nessaja",
+          "artist": "Peter Maffay, Tabaluga",
+          "year": 1983,
+          "duration": 252,
+          "url": "https://open.spotify.com/track/5NIl5fux02EnUJKKb8PKa0"
         }
       ]
     },
@@ -824,13 +824,6 @@
           "year": 2016,
           "duration": 217,
           "url": "https://open.spotify.com/track/2ladamWCFAfQbgIIdkewAx"
-        },
-        {
-          "title": "Ich wollte nie erwachsen sein (Nessajas Lied) - aus \"Tabaluga & Lilli\" - Live",
-          "artist": "Peter Maffay",
-          "year": 1994,
-          "duration": 291,
-          "url": "https://open.spotify.com/track/3ScAPPKK8crBQ7E2yUacjk"
         },
         {
           "title": "Won’t Forget These Days",
