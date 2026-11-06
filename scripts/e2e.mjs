@@ -1115,7 +1115,9 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await q.locator('app-backstage-songs input[type=search]').fill('');
   await q.locator('app-backstage-songs tbody tr', { hasText: 'Iris' }).locator('.start button').click();
   const wahl = q.locator('app-noten-anzeige select.wahl');
-  await until(async () => (await wahl.locator('option').allInnerTexts()).join('|') === 'songbook|Bass|Gitarre v2|Akkorde', async () => 'Fassungen fehlen: ' + (await wahl.locator('option').allInnerTexts().catch(() => [])).join('|'));
+  // die Notenansicht lädt erst die drei frisch eingelesenen PDFs – auf einem ausgelasteten Rechner dauert das länger
+  await wahl.waitFor({ timeout: 15000 }).catch(() => undefined);
+  await until(async () => (await wahl.locator('option').allInnerTexts()).join('|') === 'songbook|Bass|Gitarre v2|Akkorde', async () => 'Fassungen fehlen: ' + (await wahl.locator('option').allInnerTexts().catch(() => [])).join('|') + ((await q.locator('app-noten-anzeige').count()) ? '' : ' (Notenansicht nicht offen)'));
   await wahl.selectOption({ label: 'Bass' });
   await until(async () => (await q.locator('app-noten-anzeige header').innerText()).includes('Seite 1 /'), 'Fassung „Bass“ (ganzes PDF) wird nicht angezeigt');
   // durch alle Seiten der Fassung bis zum nächsten Song
