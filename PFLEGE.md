@@ -651,7 +651,7 @@ OneDrive wird über die **Änderungsliste** gelesen (Microsoft Graph „delta“
 komplett neu gelesen. Klappt das nicht (Verknüpfung zu einem fremden Ordner im Sync-Ordner, OneDrive lehnt ab), wird
 wie früher Ordner für Ordner gelesen. Übertragen wird mit bis zu vier Dateien gleichzeitig.
 Neue oder geänderte Noten (PDF, .pro) werden nach dem Abgleich gleich beim richtigen Song eingelesen (abschaltbar);
-eine geänderte PDF gleichen Namens ersetzt die bisherige. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
+eine geänderte PDF gleichen Namens ersetzt die bisherige (verglichen wird der Inhalt, nicht nur die Größe), eine unveränderte wird nicht ein zweites Mal an den Song gehängt – auch nicht beim Einlesen von Hand oder beim Hochladen im Song-Dialog; doppelte Verweise aus früheren Abgleichen räumt der volle Abgleich auf. Gelöschtes: Unter Abgleich → Daten verwalten fragt der Mülleimer bei PDFs „für die ganze Band“ (OneDrive und alle Geräte) oder „nur hier“. Für alle gelöschte PDFs werden auf keinem Gerät wieder eingelesen und lösen keine Rückfrage „viele Dateien würden gelöscht“ aus; andere Löschungen, die die Rückfrage im automatischen Abgleich zurückhält, stehen im letzten Abgleich („… warten auf „Jetzt synchronisieren““). Im Song-Dialog stehen die Dateinamen der PDFs orange. Was sich nicht eindeutig zuordnen ließ, meldet die Sync-Karte
 („2 Noten-Dateien brauchen eine Zuordnung“ → **Zuordnen**). Dateien, die schon einmal als **Eigenständig** eingelesen
 wurden (gemerkte Zuordnung), kommen ohne Rückfrage wieder zu ihrem Song – auch wenn sie neu im Ordner auftauchen.
 Unter **Abgleich → Synchronisation** stehen der letzte Abgleich, **Jetzt synchronisieren** (mit Fortschritt) und

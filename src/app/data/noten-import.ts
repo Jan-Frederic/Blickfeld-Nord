@@ -1,10 +1,11 @@
 import { CHORDPRO_ENDUNGEN, dateiText } from './chordpro';
 import { erkennen } from './erkennung';
-import { NotenDateiInfo, notenDateiSpeichern, songNoten, songNotenSetzen } from './noten';
+import { NotenDateiInfo, doppelteVerweise, notenDatei, notenDateiSpeichern, songNoten, songNotenSetzen } from './noten';
 
 // Viele Noten-Dateien auf einmal einlesen – von der Festplatte (Dateien/Ordner wählen) oder aus OneDrive.
 // PDFs über Titel und Interpret im Dateinamen (der Rest ist die Fassung wie „Bass“) – kommen als weiteres PDF zum
-// Song dazu, dieselbe Datei nicht doppelt. Akkordblätter ersetzen ein vorhandenes. Zuordnung: vorher gewählt (ziel)
+// Song dazu. Hat der Song schon ein PDF gleichen Namens, wird es bei gleichem Inhalt nicht noch einmal angehängt und
+// bei geändertem Inhalt ersetzt (auch bei gleicher Größe – verglichen wird der Inhalt). Akkordblätter ersetzen ein vorhandenes. Zuordnung: vorher gewählt (ziel)
 // oder automatisch erkannt – Dateiname, Ordner („Goo Goo Dolls/Iris - Bass.pdf“), Inhalt, Tippfehler.
 
 export interface NotenQuelle {
@@ -56,25 +57,32 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
       }
       const key = z.key;
       const vorher = (await songNoten(key)) ?? {};
-      let id = vorhanden.find((d) => d.name === datei.name && d.groesse === datei.groesse)?.id;
-      // gleiche Datei in neuer Fassung (z. B. in OneDrive geändert): die vorhandene beim Song aktualisieren statt
-      // ein zweites PDF anzuhängen
-      const alt = !id && vorhanden.find((d) => d.name === datei.name && vorher.pdfs?.some((p) => p.datei === d.id));
-      if (alt) {
-        await notenDateiSpeichern(datei.name, await datei.daten(), alt.id);
-        alt.groesse = datei.groesse;
-        r.aktualisiert++;
+      const daten = await datei.daten();
+      const gleicherName = (d: NotenDateiInfo) => d.name.toLowerCase() === datei.name.toLowerCase();
+      // 1. der Song hat schon ein PDF dieses Namens: gleicher Inhalt → nichts tun, geänderter Inhalt → ersetzen
+      const amSong = (vorher.pdfs ?? []).map((p) => vorhanden.find((d) => d.id === p.datei)).find((d): d is NotenDateiInfo => !!d && gleicherName(d));
+      if (amSong) {
+        if (await gleicherInhalt(amSong, daten)) r.doppelt++;
+        else {
+          await notenDateiSpeichern(amSong.name, daten, amSong.id);
+          amSong.groesse = daten.byteLength;
+          r.aktualisiert++;
+        }
         continue;
+      }
+      // 2. dieselbe Datei liegt schon auf dem Gerät (z. B. bei einem anderen Song): wiederverwenden statt doppelt speichern
+      let id: string | undefined;
+      for (const d of vorhanden.filter((x) => gleicherName(x) && x.groesse === daten.byteLength)) {
+        if (await gleicherInhalt(d, daten)) {
+          id = d.id;
+          break;
+        }
       }
       if (!id) {
-        id = await notenDateiSpeichern(datei.name, await datei.daten());
-        vorhanden.push({ id, name: datei.name, groesse: datei.groesse, hinzugefuegt: '' });
+        id = await notenDateiSpeichern(datei.name, daten);
+        vorhanden.push({ id, name: datei.name, groesse: daten.byteLength, hinzugefuegt: '' });
       }
-      if (vorher.pdfs?.some((p) => p.datei === id)) {
-        r.doppelt++;
-        continue;
-      }
-      await songNotenSetzen(key, { ...vorher, pdfs: [...(vorher.pdfs ?? []), { datei: id, name: z.fassung || undefined }] });
+      await songNotenSetzen(key, doppelteVerweise({ ...vorher, pdfs: [...(vorher.pdfs ?? []), { datei: id, name: z.fassung || undefined }] }, vorhanden));
       r.pdfs++;
     } else if (istAkkordblatt(datei.name)) {
       const text = dateiText(await datei.daten());
@@ -91,6 +99,17 @@ export async function notenEinlesen(dateien: NotenQuelle[], bekannt: NotenDateiI
   }
   fortschritt?.(liste.length, liste.length, '');
   return r;
+}
+
+/** gespeicherte Datei und neue Daten gleich? Erst die Größe, dann Byte für Byte */
+async function gleicherInhalt(d: NotenDateiInfo, daten: ArrayBuffer): Promise<boolean> {
+  if (d.groesse !== daten.byteLength) return false;
+  const alt = (await notenDatei(d.id))?.daten;
+  if (!alt || alt.byteLength !== daten.byteLength) return false;
+  const a = new Uint8Array(alt);
+  const b = new Uint8Array(daten);
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 /** Meldung zum Ergebnis; fehler = nichts zugeordnet */

@@ -371,10 +371,13 @@ export class BackstageDaten {
     this.fertig('Noten gelöscht ✓');
   }
 
+  // Löschen für die ganze Band (OneDrive und alle Geräte, über die Liste „für alle gelöscht“) oder nur hier
   protected async pdfLoeschen(d: NotenDateiInfo): Promise<void> {
-    if (!confirm(`„${d.name}“ löschen? Songs, die es nutzen, verlieren dieses PDF.`)) return;
+    const alle = confirm(`„${d.name}“ für die ganze Band löschen – aus OneDrive und auf allen Geräten beim nächsten Abgleich?\n\nAbbrechen = nur auf diesem Gerät löschen (nächste Frage).`);
+    if (!alle && !confirm(`„${d.name}“ nur auf diesem Gerät löschen? Songs, die es nutzen, verlieren hier dieses PDF; in OneDrive bleibt es.`)) return;
     await notenDateiLoeschen(d.id);
+    const drueben = alle ? await this.sync.ausOneDriveLoeschen([d]).catch(() => 0) : 0;
     this.notenLaden();
-    this.fertig('PDF gelöscht ✓');
+    this.fertig(alle ? `PDF für alle gelöscht ✓${drueben ? '' : ' (im Sync-Ordner lag es nicht – die anderen Geräte entfernen ihre Kopie beim nächsten Abgleich)'}` : 'PDF auf diesem Gerät gelöscht ✓');
   }
 }

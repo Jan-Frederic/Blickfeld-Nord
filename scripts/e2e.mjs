@@ -1105,6 +1105,13 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   writeFileSync(join(ordner, 'liesmich.md'), 'x');
   await q.locator('app-noten-verwaltung input.ordner').setInputFiles(ordner);
   await until(async () => (await q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '')).includes('2 PDFs eingelesen'), async () => 'Ordner wird nicht eingelesen: ' + (await q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '')));
+  // noch einmal einlesen: Unverändertes wird nicht doppelt angehängt, eine geänderte Datei gleichen Namens ersetzt die alte
+  const meldungNoten = () => q.locator('app-noten-verwaltung .meldung').first().innerText().catch(() => '');
+  await q.locator('app-noten-verwaltung input.ordner').setInputFiles(ordner);
+  await until(async () => (await meldungNoten()).includes('2 schon vorhanden'), async () => 'Unveränderte Dateien werden erneut angehängt: ' + (await meldungNoten()));
+  copyFileSync(join(DIST, 'presse', 'blickfeld-nord-buehnenplan.pdf'), join(ordner, 'Iris - The Goo Goo Dolls - Bass.pdf'));
+  await q.locator('app-noten-verwaltung input.ordner').setInputFiles(ordner);
+  await until(async () => (await meldungNoten()).includes('1 PDF aktualisiert'), async () => 'Geänderte Datei gleichen Namens wird nicht ersetzt: ' + (await meldungNoten()));
   // Setlists aller Auftritte als eigene Unterseite
   await q.locator('app-backstage-songs nav a', { hasText: 'Setlists' }).click();
   await until(async () => (await q.locator('app-songs-setlists').count()) === 1, 'Unterseite Setlists fehlt');

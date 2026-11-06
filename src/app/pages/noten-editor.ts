@@ -33,7 +33,7 @@ const BEISPIEL = `{key: C}
               <input type="number" min="1" inputmode="numeric" placeholder="Ende" [value]="p.bis ?? ''" (change)="pdfAendern(i, { bis: seite($any($event.target).value) })" />
             </label>
             <button type="button" class="weg" (click)="pdfEntfernen(i)" [attr.aria-label]="'PDF ' + (p.name || i + 1) + ' entfernen'"><mat-icon>delete</mat-icon></button>
-            <small class="datei">{{ dateiName(p.datei) }}</small>
+            <small class="datei" [class.fehlt]="!dateiDa(p.datei)">{{ dateiName(p.datei) }}</small>
           </div>
         }
         <div class="pdf">
@@ -81,7 +81,8 @@ const BEISPIEL = `{key: C}
     .name { flex: 1 1 160px; }
     .zahl { width: 80px; }
     @media (max-width: 520px) { .name { flex-basis: 100%; } }
-    .datei { flex-basis: 100%; color: var(--bn-fog); font-size: .75rem; overflow-wrap: anywhere; }
+    .datei { flex-basis: 100%; color: var(--bn-sunset); font-size: .75rem; overflow-wrap: anywhere; }
+    .datei.fehlt { color: var(--bn-fog); }
     .weg { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--bn-line); border-radius: 8px; background: none; color: var(--bn-fog); cursor: pointer; }
     .weg:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .weg mat-icon { font-size: 18px; width: 18px; height: 18px; }
@@ -136,6 +137,10 @@ export class NotenEditor {
     return this.dateien().find((d) => d.id === id)?.name ?? 'Datei fehlt auf diesem Gerät';
   }
 
+  protected dateiDa(id: string): boolean {
+    return this.dateien().some((d) => d.id === id);
+  }
+
   protected seite(roh: string): number | undefined {
     const n = Math.round(Number(roh));
     return n >= 1 ? n : undefined;
@@ -174,6 +179,12 @@ export class NotenEditor {
       if (datei.type && datei.type !== 'application/pdf') {
         this.meldung.set('Bitte PDF-Dateien wählen.');
         return;
+      }
+      // gleicher Name schon an diesem Song: ersetzen (geänderte Datei) statt ein zweites PDF anzuhängen
+      const amSong = pdfs.map((p) => this.dateien().find((d) => d.id === p.datei)).find((d) => d?.name.toLowerCase() === datei.name.toLowerCase());
+      if (amSong) {
+        await notenDateiSpeichern(amSong.name, await datei.arrayBuffer(), amSong.id);
+        continue;
       }
       // dieselbe Datei nicht doppelt speichern
       const da = this.dateien().find((d) => d.name === datei.name && d.groesse === datei.size);

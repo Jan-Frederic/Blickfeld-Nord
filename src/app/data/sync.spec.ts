@@ -189,4 +189,23 @@ describe('Synchronisation', () => {
     expect(texte(lokal)).toEqual(texte(cloud));
     expect(Object.keys(r.zustand)).toHaveLength(23);
   });
+
+  it('gewollte Löschungen (für alle gelöscht) brauchen keine Rückfrage, die übrigen warten und werden gemeldet', async () => {
+    const start = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`n/${i}.pdf`, 'x']));
+    const cloud = speicherOrdner('c', start);
+    const lokal = speicherOrdner('l');
+    const { zustand } = await synchronisieren(cloud, lokal, {}, BEIDE);
+    // in OneDrive 8 von 10 gelöscht: 6 davon „für alle gelöscht“, 2 ohne Vermerk
+    for (let i = 0; i < 8; i++) cloud.inhalt.delete(`n/${i}.pdf`);
+    const gewollt = (d: SyncDatei) => Number(d.pfad.match(/\d+/)![0]) < 6;
+    const r = await synchronisieren(cloud, lokal, zustand, { ...BEIDE, gewollt }, { bestaetigen: () => false });
+    expect(r.ergebnis.geloescht).toBe(8);
+    const ohne = speicherOrdner('l2');
+    const c2 = speicherOrdner('c2', start);
+    const z2 = (await synchronisieren(c2, ohne, {}, BEIDE)).zustand;
+    for (let i = 0; i < 8; i++) c2.inhalt.delete(`n/${i}.pdf`);
+    const r2 = await synchronisieren(c2, ohne, z2, BEIDE, { bestaetigen: () => false });
+    expect(r2.ergebnis.geloescht).toBe(0);
+    expect(r2.ergebnis.uebersprungen).toBe(8);
+  });
 });

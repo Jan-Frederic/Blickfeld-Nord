@@ -99,6 +99,40 @@ export async function notenDateiLoeschen(id: string): Promise<void> {
   }
 }
 
+/**
+ * Doppelte Verweise eines Songs entfernen: dieselbe Datei – oder zwei gespeicherte Kopien gleichen Namens und gleicher
+ * Größe – mit gleicher Fassung und gleichem Seitenbereich nur einmal. Dieselbe Datei mit anderem Seitenbereich bzw.
+ * anderer Fassung bleibt (z. B. ein Songbook mit mehreren Songs).
+ */
+export function doppelteVerweise(noten: SongNoten, dateien: Pick<NotenDateiInfo, 'id' | 'name' | 'groesse'>[]): SongNoten {
+  if (!noten.pdfs?.length) return noten;
+  const info = new Map(dateien.map((d) => [d.id, d]));
+  const gesehen = new Set<string>();
+  const pdfs = noten.pdfs.filter((p) => {
+    const d = info.get(p.datei);
+    const datei = d ? `${d.name.toLowerCase()}|${d.groesse}` : p.datei;
+    const k = `${datei}|${p.name ?? ''}|${p.von ?? ''}|${p.bis ?? ''}`;
+    if (gesehen.has(k)) return false;
+    gesehen.add(k);
+    return true;
+  });
+  return pdfs.length === noten.pdfs.length ? noten : { ...noten, pdfs };
+}
+
+/** doppelte Verweise bei allen Songs entfernen (siehe doppelteVerweise); Zahl der bereinigten Songs */
+export async function alleDoppeltenVerweiseEntfernen(): Promise<number> {
+  const dateien = await notenDateien();
+  let n = 0;
+  for (const [key, noten] of Object.entries(await alleSongNoten())) {
+    const neu = doppelteVerweise(noten, dateien);
+    if (neu !== noten) {
+      await songNotenSetzen(key, neu);
+      n++;
+    }
+  }
+  return n;
+}
+
 export async function songNoten(key: string): Promise<SongNoten | undefined> {
   const n = await anfrage<SongNoten | undefined>(SONGS, 'readonly', (s) => s.get(key));
   return n && notenNormal(n);

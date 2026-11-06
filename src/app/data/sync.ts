@@ -46,6 +46,8 @@ export interface PlanOptionen {
   loeschen: boolean;
   /** nur diese Pfade abgleichen (Schnellabgleich), alle anderen samt ihrem Stand bleiben unberührt */
   nur?: (pfad: string) => boolean;
+  /** gewollte Löschungen (z. B. „für alle gelöscht“) – zählen nicht für die Rückfrage bei vielen Löschungen */
+  gewollt?: (d: SyncDatei) => boolean;
 }
 
 /** was zu tun ist – ohne etwas zu verändern */
@@ -100,6 +102,8 @@ export interface SyncErgebnis {
   fehler: string[];
   /** Pfade, die heruntergeladen oder neu angelegt wurden */
   neu: string[];
+  /** Löschungen, die wegen der Rückfrage (viele auf einmal) diesmal nicht ausgeführt wurden */
+  uebersprungen?: number;
   /** Schnellabgleich: in OneDrive Neues/Geändertes außerhalb der Daten (PDFs, Mitschnitte …) – für den vollen Abgleich */
   ausstehend?: { dateien: number; bytes: number };
 }
@@ -150,15 +154,21 @@ export async function synchronisieren(
   const l = new Map(lListe.map((d) => [d.pfad, d]));
   let aktionen = planen(cListe, lListe, zustand, o);
 
-  const loeschungen = aktionen.filter((a) => a.art === 'loeschenCloud' || a.art === 'loeschenLokal').length;
+  const istLoeschung = (a: Aktion) => a.art === 'loeschenCloud' || a.art === 'loeschenLokal';
+  const gewollt = (a: Aktion) => !!o.gewollt && !!(l.get(a.pfad) ?? c.get(a.pfad)) && o.gewollt((l.get(a.pfad) ?? c.get(a.pfad))!);
+  const loeschungen = aktionen.filter((a) => istLoeschung(a) && !gewollt(a)).length;
   const gesamtDateien = new Set([...c.keys(), ...l.keys()]).size;
+  let uebersprungen = 0;
   if (loeschungen > 5 && loeschungen > gesamtDateien * 0.2) {
     const ok = await (hilfen.bestaetigen?.(`${loeschungen} von ${gesamtDateien} Dateien würden gelöscht. Wirklich löschen?`) ?? false);
-    if (!ok) aktionen = aktionen.filter((a) => a.art !== 'loeschenCloud' && a.art !== 'loeschenLokal');
+    if (!ok) {
+      uebersprungen = loeschungen;
+      aktionen = aktionen.filter((a) => !istLoeschung(a) || gewollt(a));
+    }
   }
 
   const z: Zustand = { ...zustand };
-  const e: SyncErgebnis = { runter: 0, hoch: 0, geloescht: 0, konflikte: 0, fehler: [], neu: [] };
+  const e: SyncErgebnis = { runter: 0, hoch: 0, geloescht: 0, konflikte: 0, fehler: [], neu: [], ...(uebersprungen ? { uebersprungen } : {}) };
   const arbeit = aktionen.filter((a) => a.art !== 'merken' && a.art !== 'vergessen');
   let fertig = 0;
   const uebertragen = async (von: SyncOrdner, nach: SyncOrdner, pfad: string, inhalt?: Blob) => nach.schreiben(pfad, inhalt ?? (await von.lesen(pfad)));
@@ -257,6 +267,7 @@ export function ergebnisText(e: SyncErgebnis): string {
     e.geloescht && `${e.geloescht} gelöscht`,
     e.konflikte && `${e.konflikte} ${e.konflikte === 1 ? 'Konflikt' : 'Konflikte'} (Kopie behalten)`,
     e.fehler.length && `${e.fehler.length} ${e.fehler.length === 1 ? 'Fehler' : 'Fehler'}`,
+    e.uebersprungen && `${e.uebersprungen} ${e.uebersprungen === 1 ? 'Löschung wartet' : 'Löschungen warten'} auf „Jetzt synchronisieren“`,
   ].filter(Boolean);
   return teile.length ? teile.join(', ') : 'Alles auf dem neuesten Stand';
 }

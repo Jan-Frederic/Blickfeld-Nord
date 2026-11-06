@@ -4,7 +4,7 @@ import { letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, on
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, ergebnisText, istDatenPfad, synchronisieren } from './sync';
 import { eigenstaendigerSong, erkennen } from './erkennung';
-import { NOTEN_GEAENDERT, NotenDateiInfo, NotenPdf, alleMarkierungen, alleSongNoten, markierungenSetzen, notenDateiLoeschen, notenDateiSpeichern, notenDateien, songNotenSetzen } from './noten';
+import { NOTEN_GEAENDERT, NotenDateiInfo, NotenPdf, alleDoppeltenVerweiseEntfernen, alleMarkierungen, alleSongNoten, markierungenSetzen, notenDateiLoeschen, notenDateiSpeichern, notenDateien, songNoten, songNotenSetzen } from './noten';
 import { BAND, MarkDateiInhalt, NotenDateiInhalt, istNotenSpiegel, markTexte, markZusammen, notenPfad, notenText, pdfFinden } from './noten-spiegel';
 import type { Strich } from './noten';
 import type { SyncDatei } from './sync';
@@ -215,12 +215,18 @@ export class SyncService {
   private async notenNachher(lokal: SyncOrdner, person: string, liste: SyncDatei[]): Promise<number> {
     const z: SpiegelZustand = { ...(await spiegelZustandLaden()) };
     let infos: NotenDateiInfo[] = await notenDateien();
-    const holen = async (name: string, groesse: number): Promise<NotenDateiInfo | undefined> => {
+    const weg = ladeGeloescht();
+    const holen = async (name: string, groesse: number, song?: string): Promise<NotenDateiInfo | undefined> => {
       const gefunden = pdfFinden(name, groesse, infos);
       if (gefunden) return gefunden;
       const quelle = liste.find((d) => d.groesse === groesse && d.pfad.split('/').at(-1)?.toLowerCase() === name.toLowerCase());
       if (!quelle) return undefined;
-      await notenDateiSpeichern(name, await (await lokal.lesen(quelle.pfad)).arrayBuffer());
+      // für alle gelöscht (und die Datei hier ist nicht neuer): nicht wieder einlesen
+      if (giltLoeschung(weg, { name, groesse, zeit: quelle.geaendert })) return undefined;
+      // der Song hat hier schon ein PDF dieses Namens (ältere Fassung): ersetzen statt eine zweite Kopie zu speichern
+      const ids = new Set(((song && (await songNoten(song))?.pdfs) || []).map((p) => p.datei));
+      const alt = infos.find((d) => ids.has(d.id) && d.name.toLowerCase() === name.toLowerCase());
+      await notenDateiSpeichern(alt?.name ?? name, await (await lokal.lesen(quelle.pfad)).arrayBuffer(), alt?.id);
       infos = await notenDateien();
       return pdfFinden(name, groesse, infos);
     };
@@ -238,7 +244,7 @@ export class SyncService {
           const inhalt = JSON.parse(text) as NotenDateiInhalt;
           const pdfs: NotenPdf[] = [];
           for (const p of inhalt.pdfs ?? []) {
-            const f = await holen(p.name, p.groesse);
+            const f = await holen(p.name, p.groesse, inhalt.song);
             if (f) pdfs.push({ datei: f.id, ...(p.fassung ? { name: p.fassung } : {}), ...(p.von ? { von: p.von } : {}), ...(p.bis ? { bis: p.bis } : {}) });
           }
           await songNotenSetzen(inhalt.song, { pdfs, ...(inhalt.chordpro ? { chordpro: inhalt.chordpro } : {}) });
@@ -317,7 +323,10 @@ export class SyncService {
   // neue/geänderte Noten-Dateien aus dem Abgleich gleich beim Song einlesen: eindeutig Erkanntes direkt, der Rest
   // wartet in der Sync-Karte auf eine Zuordnung von Hand. Ergebnis als Zusatz für „letzter Abgleich“.
   private async notenEinlesen(lokal: SyncOrdner, neu: string[], liste: SyncDatei[]): Promise<string> {
-    const pfade = neu.filter((p) => istPdf(p) || istAkkordblatt(p));
+    const weg = ladeGeloescht();
+    const info = new Map(liste.map((d) => [d.pfad, d]));
+    // für alle Gelöschtes nicht wieder einlesen (kommt es z. B. von einem Gerät, das die Löschung noch nicht kennt)
+    const pfade = neu.filter((p) => (istPdf(p) || istAkkordblatt(p)) && !(info.get(p) && giltLoeschung(weg, { name: p, groesse: info.get(p)!.groesse, zeit: info.get(p)!.geaendert })));
     if (!pfade.length) return '';
     const groesse = new Map(liste.map((d) => [d.pfad, d.groesse]));
     const eindeutig: NotenQuelle[] = [];
@@ -491,7 +500,7 @@ export class SyncService {
       const zustand = await syncZustand();
       const cloud = cloudOrdner({ pfad: e.cloud, wurzel: e.wurzel });
       const lauf = () =>
-        synchronisieren(cloud, lokal, zustand, { ...e, ...(schnell ? { nur: istDatenPfad } : {}) }, {
+        synchronisieren(cloud, lokal, zustand, { ...e, gewollt: gewollteLoeschung, ...(schnell ? { nur: istDatenPfad } : {}) }, {
           melden: (s) => this.stand.set(s),
           bestaetigen: (text) => !still && confirm(text),
           speichern: (z) => syncZustandSetzen(z).then(() => undefined),
@@ -505,6 +514,8 @@ export class SyncService {
       const aufnahmen = schnell ? 0 : await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
       const weg = schnell ? 0 : await this.geloeschteAnwenden(lokal, cloud, nachListe).catch(() => 0);
       await this.geraeteLesen(lokal, nachListe).catch(() => undefined);
+      // doppelte PDF-Verweise an Songs (aus früheren Abgleichen) aufräumen
+      const bereinigt = schnell ? 0 : await alleDoppeltenVerweiseEntfernen().catch(() => 0);
       if (!schnell) this.letzterVoll = Date.now();
       const daten = uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
       const mit = (aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '') + (weg ? ` · ${weg} für alle gelöschte ${weg === 1 ? 'Noten-Datei' : 'Noten-Dateien'} entfernt` : '');
@@ -512,7 +523,7 @@ export class SyncService {
       if (offen || (schnell && this.vollFaellig())) danach = 'voll';
       letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
-      if (uebernommen + notenSync + aufnahmen + weg + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
+      if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {
       letzterSyncSetzen(`Abgebrochen: ${(err as Error).message || 'unbekannter Fehler'}`, true);
     } finally {
@@ -525,6 +536,11 @@ export class SyncService {
     this.nochmal = null;
     if (weiter && navigator.onLine) void this.jetzt(true, weiter);
   }
+}
+
+/** in OneDrive bzw. im Sync-Ordner verschwundene PDF, die die Band „für alle gelöscht“ hat – kein Grund zur Rückfrage */
+function gewollteLoeschung(d: SyncDatei): boolean {
+  return /\.pdf$/i.test(d.pfad) && giltLoeschung(ladeGeloescht(), { name: d.pfad, groesse: d.groesse });
 }
 
 /** voller Abgleich (PDFs, Mitschnitte …) automatisch höchstens so oft – Daten gehen nach jeder Änderung sofort */
