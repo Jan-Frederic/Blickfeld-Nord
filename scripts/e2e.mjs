@@ -880,13 +880,19 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   await p.locator('app-setlist .uebergaenge button').click();
   await until(async () => (await p.locator('app-setlist .sprung').count()) < vorher, 'Glätten verringert die Tonartsprünge nicht');
   expect((await p.locator('app-setlist .list li .t').first().innerText()) === 'Hey Jude', 'Opener wurde beim Glätten verschoben');
-  // feste Vorlage „Weihnachtslieder“ ist auf jedem Gerät da
-  await p.locator('app-setlist-vorlagen select').selectOption({ label: /Weihnachtslieder \(fest\)/ }).catch(async () => {
-    const i = await p.locator('app-setlist-vorlagen option').evaluateAll((o) => o.findIndex((x) => x.textContent.includes('Weihnachtslieder')));
-    await p.locator('app-setlist-vorlagen select').selectOption(String(i));
-  });
-  await p.locator('app-setlist-vorlagen button', { hasText: 'Übernehmen' }).click();
-  await until(async () => (await p.locator('app-setlist .list li .t').allInnerTexts()).join('|') === 'In der Weihnachtsbäckerei|Kleine Kinder, große Kinder (Das Adventskalenderlied)|Weihnacht, was bist du', 'Vorlage „Weihnachtslieder“ fehlt');
+  // feste Sammlung „Weihnachtslieder“ ist auf jedem Gerät da: erst anhängen (hinter die 6 Songs), dann ersetzen
+  const weihnacht = async () => {
+    const i = await p.locator('app-setlist-sammlungen option').evaluateAll((o) => o.findIndex((x) => x.textContent.includes('Weihnachtslieder')));
+    await p.locator('app-setlist-sammlungen select').selectOption(String(i));
+  };
+  await weihnacht();
+  await p.locator('app-setlist-sammlungen button', { hasText: 'Anhängen' }).click();
+  await until(async () => (await p.locator('app-setlist .list li .no').count()) === 9, 'Sammlung wird nicht angehängt');
+  expect((await p.locator('app-setlist .list li .t').first().innerText()) === 'Hey Jude', 'Anhängen hat die Setlist ersetzt');
+  await p.locator('app-setlist-sammlungen button', { hasText: 'Anhängen' }).click();
+  await until(async () => (await p.locator('app-setlist-sammlungen .meldung').innerText().catch(() => '')).includes('3 schon in der Setlist'), 'Anhängen nimmt Songs doppelt');
+  await p.locator('app-setlist-sammlungen button', { hasText: 'Ersetzen' }).click();
+  await until(async () => (await p.locator('app-setlist .list li .t').allInnerTexts()).join('|') === 'In der Weihnachtsbäckerei|Kleine Kinder, große Kinder (Das Adventskalenderlied)|Weihnacht, was bist du', 'Sammlung „Weihnachtslieder“ ersetzt die Setlist nicht');
   // „Letztes Set auffüllen“ ergänzt bis zur gewählten Länge (45 min), die Vorlage bleibt vorn
   await p.locator('app-setlist-vorschlag button', { hasText: 'auffüllen' }).click();
   await until(async () => (await p.locator('app-setlist .list li .no').count()) >= 8, 'Auffüllen ergänzt das Set nicht');
@@ -1367,6 +1373,38 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   return p;
 });
 
+test('Backstage: Songs – Sammlung als Chip anlegen und bearbeiten, in der Setlist anhängen', async () => {
+  const p = await page();
+  await p.go('/backstage/songs/');
+  p.promptAntwort = 'Kneipe Test';
+  await p.locator('app-songs-liste .sammlung-chips button.neu').click();
+  await until(async () => (await p.locator('app-songs-liste .sammlung-leiste').count()) === 1, 'Neue Sammlung wird nicht zur Bearbeitung gewählt');
+  const knopf = p.locator('app-songs-liste tbody tr .in-sammlung');
+  const titel = [];
+  for (let i = 0; i < 3; i++) {
+    titel.push((await p.locator('app-songs-liste tbody tr .oeffnen').nth(i).innerText()).trim());
+    await knopf.nth(i).click();
+  }
+  await until(async () => (await p.locator('app-songs-liste .sammlung-chips button', { hasText: 'Kneipe Test' }).locator('.n').innerText()) === '3', 'Songs kommen nicht in die Sammlung');
+  // nur die Songs der Sammlung, in ihrer Reihenfolge; Pfeil sortiert, ✓ nimmt heraus
+  await p.locator('app-songs-liste .sammlung-leiste input[type=checkbox]').uncheck();
+  const zeilen = () => p.locator('app-songs-liste tbody tr .oeffnen').allInnerTexts();
+  await until(async () => (await zeilen()).join('|') === titel.join('|'), async () => 'Sammlung zeigt nicht ihre Songs: ' + (await zeilen()).join('|'));
+  await p.locator('app-songs-liste tbody tr').first().getByRole('button', { name: /nach hinten/ }).click();
+  await until(async () => (await zeilen()).join('|') === [titel[1], titel[0], titel[2]].join('|'), 'Umsortieren in der Sammlung klappt nicht');
+  await p.locator('app-songs-liste tbody tr').last().locator('.in-sammlung').click();
+  await until(async () => (await zeilen()).length === 2, 'Herausnehmen aus der Sammlung klappt nicht');
+  // in der Setlist eines Auftritts anhängen
+  const id = concerts[concerts.length - 1].split('/')[2];
+  await p.go(`/backstage/${id}/setlist`);
+  const i = await p.locator('app-setlist-sammlungen option').evaluateAll((o) => o.findIndex((x) => x.textContent.startsWith('Kneipe Test · 2 Songs')));
+  expect(i >= 0, 'Bearbeitete Sammlung fehlt in der Setlist');
+  await p.locator('app-setlist-sammlungen select').selectOption(String(i));
+  await p.locator('app-setlist-sammlungen button', { hasText: 'Anhängen' }).click();
+  await until(async () => (await p.locator('app-setlist .list li .t').allInnerTexts()).join('|') === [titel[1], titel[0]].join('|'), 'Sammlung wird nicht in ihrer Reihenfolge angehängt');
+  return p;
+});
+
 test('Backstage: Setlist – Songs aus allen Spotify-Listen per Filter', async () => {
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page();
@@ -1463,11 +1501,12 @@ test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async 
   const id = concerts[concerts.length - 1].split('/')[2];
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });
   await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Alle' }).click();
   const add = p.locator('app-setlist .pick li button');
   const songs = (x) => x.locator('app-setlist .list li .no').count();
   // nach jedem Klick warten, bis die Liste nachgezogen hat – sonst trifft der nächste Klick denselben Song
   for (let i = 1; i <= 4; i++) {
-    if (i === 4) await p.locator('app-setlist button', { hasText: 'Pause' }).click();
+    if (i === 4) await p.locator('app-setlist button', { hasText: 'Pause einfügen' }).click();
     await add.first().click();
     await until(async () => (await songs(p)) === i, `Song ${i} nicht hinzugefügt`);
   }
@@ -1546,17 +1585,34 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   const p = await page();
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
+  // einzelne Songs erst nach Wahl einer Liste (oder Suche) – die Setlist bleibt übersichtlich
+  expect((await p.locator('app-setlist .pick li button').count()) === 0, 'Songliste ist ohne Suche oder Liste sichtbar');
+  await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Alle' }).click();
   const add = p.locator('app-setlist .pick li button');
   for (let i = 0; i < 4; i++) await add.first().click();
-  await p.locator('app-setlist button', { hasText: 'Pause' }).click();
+  await p.locator('app-setlist button', { hasText: 'Pause einfügen' }).click();
   await add.first().click();
   await until(async () => /\d+ min/.test(await p.locator('app-setlist .count').innerText()), 'keine Spieldauer in der Setlist');
   expect((await p.locator('app-setlist .pause-label').innerText()).includes('Set davor'), 'Pause ohne Set-Dauer');
-  await p.locator('app-setlist-vorlagen button', { hasText: 'Als Vorlage speichern' }).click();
-  // neben der festen Vorlage „Weihnachtslieder“ die eben gespeicherte
-  await until(async () => (await p.locator('app-setlist-vorlagen option').allInnerTexts()).some((t) => t.startsWith('Testvorlage · 5 Songs')), 'Vorlage nicht gespeichert');
+  await p.locator('app-setlist-sammlungen button', { hasText: 'Als Sammlung speichern' }).click();
+  // neben der festen Sammlung „Weihnachtslieder“ die eben gespeicherte
+  await until(async () => (await p.locator('app-setlist-sammlungen option').allInnerTexts()).some((t) => t.startsWith('Testvorlage · 5 Songs')), 'Sammlung nicht gespeichert');
   await p.locator('app-setlist-vorschlag button', { hasText: 'vorschlagen' }).click();
   await until(async () => (await p.locator('app-setlist .pause-label').count()) === 1 && (await p.locator('app-setlist .list li .no').count()) > 10, 'Setlist-Vorschlag ohne zwei Sets');
+  // Pausen nach Wunsch-Länge: kurze Sets → mehr Pausen; die Songs bleiben
+  const songsVorher = await p.locator('app-setlist .list li .no').count();
+  await p.locator('app-setlist .pausen input').fill('20');
+  await p.locator('app-setlist .pausen input').blur();
+  await p.locator('app-setlist .pausen button', { hasText: 'Pausen neu setzen' }).click();
+  await until(async () => (await p.locator('app-setlist .pause-label').count()) >= 2, 'Pausen werden nicht nach der Set-Länge gesetzt');
+  expect((await p.locator('app-setlist .list li .no').count()) === songsVorher, 'Pausen neu setzen verändert die Songs');
+  expect(/\d+ Sets: /.test(await p.locator('app-setlist .pausen .meldung').innerText()), 'Set-Längen werden nicht gemeldet');
+  await p.locator('app-setlist .pausen input').fill('120');
+  await p.locator('app-setlist .pausen input').blur();
+  await p.locator('app-setlist .pausen button', { hasText: 'Pausen neu setzen' }).click();
+  await until(async () => (await p.locator('app-setlist .pause-label').count()) <= 1, 'Längere Sets verringern die Pausen nicht');
+  await p.locator('app-setlist-vorschlag button', { hasText: 'vorschlagen' }).click();
+  await until(async () => (await p.locator('app-setlist .pause-label').count()) === 1, 'Setlist-Vorschlag ohne zwei Sets');
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await p.getByRole('button', { name: '4 Sterne' }).click();
   await p.keyboard.press('Escape');
@@ -1645,6 +1701,7 @@ test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung
   // Nachbereitung eines vergangenen Auftritts
   const id = '2026-08-22';
   await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Alle' }).click();
   await p.locator('app-setlist .pick li button').first().click();
   await p.go(`/backstage/${id}`);
   await p.locator('app-nachbereitung summary').click();

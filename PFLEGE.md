@@ -340,8 +340,20 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
   wenige Sprünge gibt – erster und letzter Song je Set bleiben.
 - **Letztes Set auffüllen** (unter der Setlist, Länge links wählen): ergänzt das letzte Set bis zur gewählten Länge –
   die besten Songs zuerst, in der Tonart passend zum vorigen; die bisherigen Songs bleiben.
-- **Vorlage „Weihnachtslieder“** (unter der Setlist, fest auf jedem Gerät): die drei Zuckowski-Lieder als Grundstock
-  für den Weihnachtsmarkt – übernehmen und mit weiteren Songs ergänzen. Auf der öffentlichen Repertoire- und
+- **Sammlungen** (früher „Vorlagen“, oben in der Setlist): benannte Songfolgen, z. B. eine bewährte Setlist oder ein
+  Kneipen-Set. **Ersetzen** setzt die Sammlung als ganze Setlist, **Anhängen** hängt sie hinten an (Songs, die schon
+  drin sind, nicht doppelt). **Als Sammlung speichern** merkt sich die aktuelle Setlist. Bearbeitet werden Sammlungen
+  unter **Songs → Liste**: Chip der Sammlung wählen (oder **Neue Sammlung**) – ⊕ nimmt einen Song auf, ✓ nimmt ihn
+  heraus, die Pfeile sortieren; „alle Songs zeigen“ zum Hinzufügen; Umbenennen, Löschen. Gespiegelt wie alle
+  Band-Daten (`bn-setlist-vorlagen`, `src/app/data/sammlungen.ts`).
+- **Pausen neu setzen** (oben in der Setlist): gewünschte Set-Länge in Minuten eingeben – die Pausen werden neu
+  zwischen die Songs gelegt, so viele Sets wie am besten passen, alle etwa gleich lang; die Reihenfolge der Songs
+  bleibt (`src/app/data/pausen.ts`). Die Set-Länge merkt sich das Gerät.
+- **Einzelne Songs** stehen in der Setlist erst nach einer Suche oder einem Listen-Chip (Alle, Setlist, Probe …) –
+  sonst bleibt die Seite übersichtlich; „Songliste schließen“ klappt sie wieder zu.
+- **Sammlung „Weihnachtslieder“** (fest auf jedem Gerät): die drei Zuckowski-Lieder als Grundstock
+  für den Weihnachtsmarkt – anhängen oder ersetzen und ergänzen; bearbeitet wird eine eigene Kopie (Zurücksetzen holt
+  die feste wieder). Auf der öffentlichen Repertoire- und
   Songwunsch-Seite stehen die Weihnachtslieder vom 1. bis 24. Dezember automatisch oben.
 - Im Bühnen-Modus unter jedem Song 1–5 **Sterne** antippen (oder Taste 1–5), wie er an dem Abend lief. Die
   **Top 100** stehen im Backstage unter **Zahlen**. Sterne anderer Handys kommen über die Synchronisation bzw. ein Backup dazu.
@@ -589,7 +601,7 @@ Song) lassen sich mit der Berechtigung „Daten löschen“ löschen: **Vom Ger�
 **Alle Einstellungen und Backstage-Daten wandern mit:** Ist man angemeldet und die Synchronisation eingerichtet, wird
 jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:
 
-- `Daten/` – für die ganze Band: Setlists (samt Notizen und Vorlagen), Spielzeiten, Packlisten, Vor Ort, Vorabend,
+- `Daten/` – für die ganze Band: Setlists (samt Notizen und Sammlungen), Spielzeiten, Packlisten, Vor Ort, Vorabend,
   Proben, Zusagen, „unsicher bei“, Fortschritt je Musiker, Sterne, Werbeplan-Häkchen, Nachbereitungen, Kontakte,
   Saison-Stand, Songs-Entwurf, für alle gelöschte Noten, Prüf-Häkchen.
 - `Einstellungen/<Name>/` – je Person: Bühnen-Modus (Schriftgröße, Klick-Ton, Pedal-Tasten, Halbseite), gewählte

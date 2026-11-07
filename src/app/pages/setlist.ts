@@ -6,7 +6,8 @@ import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
 import { LISTEN, ListenKey, ListenWahl, fehltInListe, spotifyLinks, listeInReihenfolge, listenFiltern, listenZahlen, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
-import { SetlistVorlagen } from './setlist-vorlagen';
+import { SetlistSammlungen } from './setlist-sammlungen';
+import { pausenSetzen } from '../data/pausen';
 import { SetlistVorschlag } from './setlist-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
 import { TempoVerlauf } from './tempo-verlauf';
@@ -27,7 +28,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-setlist',
-  imports: [AuftrittVorbereiten, MatIconModule, SetlistVorlagen, SetlistVorschlag, SetlistBuehne, TempoVerlauf],
+  imports: [AuftrittVorbereiten, MatIconModule, SetlistSammlungen, SetlistVorschlag, SetlistBuehne, TempoVerlauf],
   template: `
     <section class="setlist" aria-labelledby="setlist-title">
       <div class="head">
@@ -61,16 +62,26 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       </div>
 
       @if (importiert()) { <p class="importiert"><mat-icon>check_circle</mat-icon> Setlist aus dem Link übernommen.</p> }
+      <!-- Bausteine: ganze Sammlungen statt einzelner Songs, Pausen nach Wunsch-Länge der Sets -->
+      <div class="bausteine">
+        <app-setlist-sammlungen [entries]="entries()" (apply)="replace($event)" />
+        <div class="pausen">
+          <span class="label"><mat-icon>coffee</mat-icon> Pausen</span>
+          <label>Set-Länge <input type="number" min="10" max="240" step="5" inputmode="numeric" aria-label="Gewünschte Länge je Set in Minuten" [value]="setLaenge()" (change)="setLaengeSetzen($any($event.target).value)" /> Min.</label>
+          <button type="button" (click)="pausenNeu()" [disabled]="songCount() < 2"><mat-icon>auto_fix_high</mat-icon> Pausen neu setzen</button>
+          @if (pausenMeldung(); as m) { <span class="meldung" role="status">{{ m }}</span> }
+        </div>
+      </div>
       <div class="cols">
         <div class="pick">
           <div class="listen-chips" role="group" aria-label="Songs nach Spotify-Liste filtern">
-            <button type="button" [attr.aria-pressed]="liste() === ''" (click)="liste.set('')">Alle</button>
+            <button type="button" [attr.aria-pressed]="chip() && liste() === ''" (click)="waehlen('')">Alle</button>
             @for (l of listen; track l.key) {
-              <button type="button" [attr.aria-pressed]="liste() === l.key" (click)="liste.set(l.key)" [attr.aria-label]="l.label + ' (' + (zahlen()[l.key] || 0) + ')'"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }}</button>
+              <button type="button" [attr.aria-pressed]="chip() && liste() === l.key" (click)="waehlen(l.key)" [attr.aria-label]="l.label + ' (' + (zahlen()[l.key] || 0) + ')'"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }}</button>
             }
-            <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste</button>
+            <button type="button" [attr.aria-pressed]="chip() && liste() === 'ohne'" (click)="waehlen('ohne')">Ohne Liste</button>
           </div>
-          @if (liste() === 'setlist' || liste() === 'probe') {
+          @if (chip() && (liste() === 'setlist' || liste() === 'probe')) {
             <button type="button" class="aus-liste" (click)="listeUebernehmen()"><mat-icon>playlist_add</mat-icon> Ganze Liste „{{ listeVon($any(liste())).label }}“ in dieser Reihenfolge übernehmen</button>
           }
           <label class="search">
@@ -78,6 +89,10 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
             <input type="search" placeholder="Song suchen …" aria-label="Songs durchsuchen"
                    [value]="query()" (input)="query.set($any($event.target).value)" />
           </label>
+          @if (!auswahlOffen()) {
+            <p class="zu">Einzelne Songs: suchen oder oben eine Liste wählen.</p>
+          } @else {
+          <button type="button" class="zu-knopf" (click)="auswahlSchliessen()"><mat-icon>expand_less</mat-icon> Songliste schließen</button>
           <ul class="songs">
             @for (t of available(); track t.title + t.artist) {
               <li>
@@ -89,6 +104,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
               <li class="none">Keine weiteren Songs gefunden.</li>
             }
           </ul>
+          }
         </div>
 
         <ol class="list">
@@ -112,7 +128,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
               </span>
             </li>
           } @empty {
-            <li class="empty">Noch leer – links Songs antippen, um sie hinzuzufügen.</li>
+            <li class="empty">Noch leer – oben eine Sammlung übernehmen oder einzelne Songs suchen.</li>
           }
           @if (sets().length > 1 && lastSet(); as l) {
             <li class="set-end"><span class="set-time">Letztes Set {{ time(l.seconds) }}</span></li>
@@ -145,7 +161,6 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       }
       <app-tempo-verlauf [sets]="sets()" />
       <app-setlist-vorschlag [entries]="entries()" [show]="show()" (apply)="replace($event)" />
-      <app-setlist-vorlagen [entries]="entries()" (apply)="replace($event)" />
       @if (stage()) { @defer { <app-setlist-buehne [entries]="entries()" [show]="show()" (geaendert)="ausBuehne($event)" (closed)="stage.set(false)" /> } }
       <p class="hint">Die Setlist wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>
     </section>
@@ -405,6 +420,44 @@ export class Setlist {
     if (!songs.length) return;
     if (this.songCount() && !confirm(`Setlist durch die ${songs.length} Songs der Spotify-Liste „${this.listeVon(l).label}“ ersetzen?`)) return;
     this.update(() => songs.map(({ title, artist }) => ({ title, artist })));
+  }
+
+  // Einzelne Songs nur auf Wunsch: Liste erscheint beim Suchen oder nach Wahl eines Listen-Chips
+  protected readonly chip = signal(false);
+  protected readonly auswahlOffen = computed(() => this.chip() || !!this.query().trim());
+  protected waehlen(l: ListenWahl): void {
+    this.liste.set(l);
+    this.chip.set(true);
+  }
+  protected auswahlSchliessen(): void {
+    this.chip.set(false);
+    this.query.set('');
+  }
+
+  // Pausen neu setzen nach gewünschter Set-Länge (Gerät, „bn-setlaenge“)
+  protected readonly setLaenge = signal(((): number => {
+    try {
+      return Number(localStorage.getItem('bn-setlaenge')) || 45;
+    } catch {
+      return 45;
+    }
+  })());
+  protected readonly pausenMeldung = signal('');
+  protected setLaengeSetzen(roh: string): void {
+    const min = Math.round(Number(roh));
+    if (!(min >= 10 && min <= 240)) return;
+    this.setLaenge.set(min);
+    try {
+      localStorage.setItem('bn-setlaenge', String(min));
+    } catch {
+      // gilt bis zum Neuladen
+    }
+  }
+  protected pausenNeu(): void {
+    const neu = pausenSetzen(this.entries(), this.setLaenge() * 60, durationOf);
+    const sets = setsOf(neu);
+    this.replace(neu);
+    this.pausenMeldung.set(`${sets.length} ${sets.length === 1 ? 'Set' : 'Sets'}: ${sets.map((x) => setTime(setLength(x).seconds)).join(' · ')}`);
   }
 
   protected readonly available = computed(() => {

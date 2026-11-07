@@ -638,3 +638,43 @@ app-konzert-kampagne .einzeln .null { color: var(--bn-fog); opacity: .7; }
 app-konzert-kampagne .note { margin: 0; }
 app-konzert-kampagne .foot { margin: 12px 0 0; }
 app-konzert-kampagne a { color: var(--bn-sunset); }
+
+/* Setlist: Bausteine (Sammlungen, Pausen nach Set-Länge) und Songauswahl nur auf Wunsch (pages/setlist.ts) */
+app-setlist .bausteine { display: grid; gap: 10px; margin: 0 0 18px; padding: 12px 14px; border: 1px solid var(--bn-line); border-radius: 10px; }
+app-setlist .pausen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: .88rem; }
+app-setlist .pausen .label { display: inline-flex; align-items: center; gap: 6px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; color: var(--bn-fog); }
+app-setlist .pausen mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-setlist .pausen input { width: 4.5em; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--bn-line); background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+app-setlist .pausen button, app-setlist .zu-knopf {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .85rem;
+}
+app-setlist .pausen button:hover:not(:disabled), app-setlist .zu-knopf:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-setlist .pausen button:disabled { opacity: .4; cursor: default; }
+app-setlist .pausen .meldung { color: var(--bn-sunset); }
+app-setlist .zu { margin: 10px 0 0; font-size: .85rem; color: var(--bn-fog); }
+app-setlist .zu-knopf { margin-top: 10px; }
+app-setlist .zu-knopf mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+/* Songs → Liste: Sammlungen als Chips, Bearbeiten-Leiste und ⊕/✓ je Song (pages/songs-liste.ts) */
+app-songs-liste .sammlung-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 12px; }
+app-songs-liste .sammlung-chips .label { display: inline-flex; align-items: center; gap: 4px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .68rem; color: var(--bn-fog); margin-right: 4px; }
+app-songs-liste .sammlung-chips button { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .82rem; cursor: pointer; }
+app-songs-liste .sammlung-chips button:hover { color: var(--bn-ink); }
+app-songs-liste .sammlung-chips button[aria-pressed='true'] { border-color: var(--bn-sunset); background: var(--bn-sunset); color: #2a1708; }
+app-songs-liste .sammlung-chips button.neu { border-style: dashed; }
+app-songs-liste .sammlung-chips mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-songs-liste .sammlung-chips .n { opacity: .7; font-size: .75rem; }
+app-songs-liste .sammlung-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--bn-sunset); border-radius: 10px; font-size: .85rem; }
+app-songs-liste .sammlung-leiste button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
+app-songs-liste .sammlung-leiste button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-songs-liste .sammlung-leiste mat-icon { font-size: 16px; width: 16px; height: 16px; }
+app-songs-liste .sammlung-leiste .meldung { flex-basis: 100%; color: #5fb88a; }
+app-songs-liste .sammlung-knoepfe { display: inline-flex; vertical-align: middle; margin-right: 4px; }
+app-songs-liste .sammlung-knoepfe button { display: grid; place-items: center; padding: 2px; border: 0; background: none; color: var(--bn-fog); cursor: pointer; }
+app-songs-liste .sammlung-knoepfe button.drin { color: var(--bn-sunset); }
+app-songs-liste .sammlung-knoepfe button:disabled { opacity: .3; cursor: default; }
+app-songs-liste .sammlung-knoepfe mat-icon { font-size: 20px; width: 20px; height: 20px; }
+app-setlist .bausteine > *, app-setlist-sammlungen { display: block; min-width: 0; }
+app-setlist .bausteine .pausen { display: flex; }
+@media (max-width: 520px) { app-setlist-sammlungen select { flex-basis: 100%; } }
