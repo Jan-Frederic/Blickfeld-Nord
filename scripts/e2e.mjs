@@ -1488,7 +1488,8 @@ test('Backstage: Bühnen-Modus – Lupe holt Wünsche an die aktuelle Stelle, Ba
   await p.locator('app-setlist button', { hasText: 'Bühnen-Modus' }).first().click();
   const buehne = p.locator('app-setlist-buehne');
   const titel = buehne.locator('main h1');
-  await titel.waitFor();
+  // der Bühnen-Modus wird nachgeladen – auf einem ausgelasteten Rechner dauert das
+  await schritt('Bühnen-Modus erscheint', () => titel.waitFor({ timeout: 20000 }));
   const erster = (await titel.innerText()).trim();
   // Song, der schon drinsteht, wird an die aktuelle Stelle gezogen
   await buehne.locator('button.lupe').click();

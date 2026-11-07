@@ -120,8 +120,8 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           <button type="submit"><mat-icon>add</mat-icon> Hinzufügen</button>
         </form>
 
-        @if (modus()) {
-          @defer { <app-setlist-buehne [entries]="modusSongs()" [start]="ersterOffener()" [probe]="datum()" [generalprobe]="!!plan().generalprobe" (closed)="modusZu()" /> }
+        @defer (when modus(); prefetch on idle) {
+          @if (modus()) { <app-setlist-buehne [entries]="modusSongs()" [start]="ersterOffener()" [probe]="datum()" [generalprobe]="!!plan().generalprobe" (closed)="modusZu()" /> }
         }
         <p class="hint">Gespeichert auf diesem Gerät. Mit der Band teilen:</p>
         <app-backstage-sync [show]="datum()" />

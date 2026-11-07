@@ -230,7 +230,7 @@ import { alleSammlungen, sammlungLoeschen, sammlungSetzen, sammlungSongs, sammlu
         }
       }
       <!-- Dialog und Bühnen-Modus erst laden, wenn sie gebraucht werden (kleinerer Start der Songs-Seite) -->
-      @if (buehne(); as b) { @defer { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenAuf]="true" (closed)="buehneZu()" /> } }
+      @defer (when buehne(); prefetch on idle) { @if (buehne(); as b) { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenAuf]="true" (closed)="buehneZu()" /> } }
 
       <div class="apply">
         @if (geaendert().length) {
