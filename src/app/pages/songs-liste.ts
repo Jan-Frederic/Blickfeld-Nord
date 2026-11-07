@@ -200,6 +200,7 @@ import { alleSammlungen, sammlungLoeschen, sammlungSetzen, sammlungSongs, sammlu
                 @if (w.tonart || w.spielTonart) { <span>{{ w.spielTonart ?? w.tonart }}@if (w.spielTonart && w.tonart) { <span class="a"> ({{ w.tonart }})</span> }</span> }
                 @if (w.capo) { <span class="a">Capo {{ w.capo }}</span> }
                 @if (w.bpm) { <span class="a">{{ w.bpm }} bpm</span> }
+                @if (w.takt && w.takt !== '4/4') { <span class="a">{{ w.takt }}</span> }
                 @if (!w.tonart && !w.spielTonart && !w.bpm) { <span class="a">–</span> }
                 }
               </td>

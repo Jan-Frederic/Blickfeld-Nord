@@ -5,13 +5,14 @@ import type { SongInfo } from './songinfo';
 
 const q = (s: string) => `'${s.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 
-/** Eine Zeile im Stil der Datei: { title: '…', artist: '…', tonart: 'G', spielTonart: 'A', capo: 2, bpm: 120, notiz: '…', quelle: '…' }, */
+/** Eine Zeile im Stil der Datei: { title: '…', artist: '…', tonart: 'G', spielTonart: 'A', capo: 2, bpm: 120, takt: '3/4', notiz: '…', quelle: '…' }, */
 export function songInfoZeile(s: SongInfo): string {
   const teile = [`title: ${q(s.title)}`, `artist: ${q(s.artist)}`];
   if (s.tonart) teile.push(`tonart: ${q(s.tonart)}`);
   if (s.spielTonart) teile.push(`spielTonart: ${q(s.spielTonart)}`);
   if (s.capo) teile.push(`capo: ${s.capo}`);
   if (s.bpm) teile.push(`bpm: ${s.bpm}`);
+  if (s.takt && s.takt !== '4/4') teile.push(`takt: ${q(s.takt)}`);
   if (s.notiz?.trim()) teile.push(`notiz: ${q(s.notiz)}`);
   if (s.geprueft) teile.push('geprueft: true');
   if (s.quelle?.trim()) teile.push(`quelle: ${q(s.quelle)}`);
@@ -22,6 +23,6 @@ export function songInfoZeile(s: SongInfo): string {
 export function patchSongInfo(source: string, liste: SongInfo[]): string | null {
   const re = /(export const SONGINFO: SongInfo\[\] = \[)[\s\S]*?(\];)/;
   if (!re.test(source)) return null;
-  const zeilen = liste.filter((s) => s.tonart || s.spielTonart || s.capo || s.bpm || s.notiz?.trim()).map(songInfoZeile);
+  const zeilen = liste.filter((s) => s.tonart || s.spielTonart || s.capo || s.bpm || (s.takt && s.takt !== '4/4') || s.notiz?.trim()).map(songInfoZeile);
   return source.replace(re, (_, start: string, end: string) => (zeilen.length ? `${start}\n${zeilen.join('\n')}\n${end}` : `${start}${end}`));
 }

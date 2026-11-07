@@ -39,6 +39,7 @@ function ladeZoom(): number {
   }
 }
 
+import { einzaehlFolge, einzaehlText, schlaegeJeTakt, taktHinweis } from '../data/takt';
 @Component({
   selector: 'app-setlist-buehne',
   imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde],
@@ -81,10 +82,10 @@ function ladeZoom(): number {
                 @if (tonart(i); as t) { <span class="key" title="Tonart">{{ t }}</span> }
                 @if (i.capo) { <span class="capo">Capo {{ i.capo }}</span> }
                 @if (i.bpm) {
-                  <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
-                    {{ klickBpm() }} bpm · Klick
+                  <button type="button" class="bpm" [class.on]="klick()" [class.beat]="beat()" [class.eins]="eins()" (click)="toggleKlick($event)" [attr.aria-pressed]="klick()">
+                    {{ klickBpm() }} bpm@if (taktText(); as t) { · {{ t }}} · Klick
                   </button>
-                  <button type="button" class="ton" (click)="einzaehlen($event)" aria-label="Einzählen" title="Vier Schläge im Tempo des Songs vorzählen">1-2-3-4</button>
+                  <button type="button" class="ton" (click)="einzaehlen($event)" [attr.aria-label]="'Einzählen ' + (taktText() || '4/4')" [title]="'Im Takt des Songs vorzählen (' + (taktText() || '4/4') + ')'">{{ einzaehlKnopf() }}</button>
                   @if (klick()) {
                     <button type="button" class="ton tempo" [class.on]="faktor() < 1" (click)="langsamer($event)" [attr.aria-label]="'Übungstempo ' + faktorText() + ', antippen für langsamer'" title="Zum Üben langsamer: 100 → 90 → 80 → 70 %">{{ faktorText() }}</button>
                     <button type="button" class="ton" [class.on]="ton()" (click)="toggleTon($event)" [attr.aria-pressed]="ton()" [attr.aria-label]="ton() ? 'Ton aus' : 'Ton an'">
@@ -188,6 +189,7 @@ function ladeZoom(): number {
     .bpm { padding: 4px 14px; border-radius: 8px; border: 1px solid #555; background: transparent; color: #fff; font: inherit; cursor: pointer; }
     .bpm.on { border-color: #e8a46a; }
     .bpm.on.beat { background: #e8a46a; color: #000; }
+    .bpm.on.beat.eins { background: #fff; }
     .capo { padding: 4px 14px; border-radius: 8px; border: 1px solid #e8a46a; color: #e8a46a; }
     .ton { display: grid; place-items: center; padding: 4px 10px; border-radius: 8px; border: 1px solid #555; background: transparent; color: #9aa0a6; cursor: pointer; }
     .ton.on { border-color: #e8a46a; color: #e8a46a; }
@@ -397,14 +399,22 @@ export class SetlistBuehne {
     this.startKlick();
   }
 
+  // Taktart des Songs (data/takt.ts): Klick betont die Eins (heller, höherer Ton), Einzählen zählt passend ein
+  protected readonly taktText = computed(() => taktHinweis(this.info()?.takt));
+  protected readonly einzaehlKnopf = computed(() => einzaehlText(this.info()?.takt));
+  protected readonly eins = signal(false);
   private startKlick(): void {
     this.stopKlick();
     const bpm = this.klickBpm();
     if (!this.klick() || !bpm) return;
+    const schlaege = schlaegeJeTakt(this.info()?.takt);
+    let n = 0;
     this.klickTimer = setInterval(() => {
+      const erster = n++ % schlaege === 0;
+      this.eins.set(erster);
       this.beat.set(true);
       setTimeout(() => this.beat.set(false), 90);
-      if (this.ton()) this.piep(1000);
+      if (this.ton()) this.piep(erster ? 1500 : 1000);
     }, 60000 / bpm);
   }
 
@@ -426,7 +436,7 @@ export class SetlistBuehne {
     this.beat.set(false);
   }
 
-  // Einzählen: vier Schläge im Tempo des Songs (beim Üben im gewählten Übungstempo) groß über dem Bildschirm,
+  // Einzählen: ein Takt (4/4: vier Schläge, 3/4: zweimal drei) im Tempo des Songs (beim Üben im gewählten Übungstempo) groß über dem Bildschirm,
   // mit Ton, wenn er eingeschaltet ist – die Eins höher. Danach läuft der Klick weiter, falls er an war.
   protected readonly zaehler = signal(0);
   private zaehlTimer: ReturnType<typeof setInterval> | undefined;
@@ -436,15 +446,18 @@ export class SetlistBuehne {
     if (!bpm) return;
     this.stopKlick();
     this.stopZaehlen();
+    // ein Takt (bei 3/4, 2/4, 6/8 zwei Takte), die Eins jedes Takts höher
+    const folge = einzaehlFolge(this.info()?.takt);
     let n = 0;
     const schlag = () => {
-      if (++n > 4) {
+      if (n >= folge.length) {
         this.stopZaehlen();
         this.startKlick();
         return;
       }
-      this.zaehler.set(n);
-      if (this.ton()) this.piep(n === 1 ? 1500 : 1000);
+      const z = folge[n++];
+      this.zaehler.set(z);
+      if (this.ton()) this.piep(z === 1 ? 1500 : 1000);
     };
     schlag();
     this.zaehlTimer = setInterval(schlag, 60000 / bpm);

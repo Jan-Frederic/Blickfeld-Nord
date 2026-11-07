@@ -3,7 +3,8 @@
 // deshalb stehen sie hier. Titel und Interpret müssen genau wie im Repertoire geschrieben sein.
 //
 // Beispiel: { title: '80 Millionen', artist: 'Max Giesinger', tonart: 'C', spielTonart: 'D', capo: 2, bpm: 120 },
-// tonart: Dur als Großbuchstabe (C, F#, Bb), Moll mit kleinem m (Am, C#m); bpm: Schläge pro Minute;
+// tonart: Dur als Großbuchstabe (C, F#, Bb), Moll mit kleinem m (Am, C#m); bpm: Schläge pro Minute; takt: nur wenn
+// nicht 4/4, z. B. '3/4' oder '6/8' (bpm zählt dann die punktierte Viertel);
 // tonart ist die Originalaufnahme, spielTonart/capo die Band-Version (nur eintragen, wenn sie abweicht)
 export interface SongInfo {
   title: string;
@@ -15,6 +16,8 @@ export interface SongInfo {
   /** Capo-Bund der Gitarre in der Band-Version */
   capo?: number;
   bpm?: number;
+  /** Taktart, z. B. '3/4' oder '6/8' – ohne Angabe 4/4 (data/takt.ts: Einzählen und Betonung im Klick) */
+  takt?: string;
   /** kurzer Hinweis für die Bühne, z. B. „Intro nur Gitarre“ */
   notiz?: string;
   /** von der Band am Instrument geprüft bzw. selbst eingetragen (Backstage → Songs) */
@@ -70,9 +73,9 @@ export const SONGINFO: SongInfo[] = [
   { title: 'Good Riddance (Time of Your Life)', artist: 'Green Day', tonart: 'G', bpm: 95, quelle: 'Karaoke-Version G, 95; Mixmeister 94,7' },
   { title: 'Grosse Freiheit - MTV Unplugged', artist: 'Unheilig', tonart: 'F', bpm: 132, quelle: 'Spotify-Analyse: Tunebat-Empfehlungslisten F, 132 (keine eigene Seite)' },
   { title: 'Gutes Gefühl', artist: 'Fargo', tonart: 'B', bpm: 128, quelle: 'Spotify-Analyse: Songbpm B, 128 (nur eine Quelle)' },
-  { title: 'Hallelujah', artist: 'Leonard Cohen', tonart: 'C', bpm: 57, quelle: 'Musicnotes Signature Artist C; Tempo: Musicstax 171 im 3er-Takt zur Spotify-Fassung, also ca. 57 Takte je Minute (ein Schlag je Takt) – am Instrument prüfen' },
-  { title: 'Happy Xmas (War Is Over) - Remastered 2010', artist: 'John Lennon, Yoko Ono', tonart: 'D', bpm: 146, quelle: 'Spotify-Analyse: Tunebat/Songbpm/Musicstax D, 146 (3er-Takt) zur Spotify-Fassung' },
-  { title: 'Hear You Me', artist: 'Jimmy Eat World', tonart: 'E', bpm: 136, quelle: 'Spotify-Analyse: Tunebat/Musicstax E, 136 (3/4-Takt)' },
+  { title: 'Hallelujah', artist: 'Leonard Cohen', tonart: 'C', bpm: 57, takt: '6/8', quelle: 'Musicnotes Signature Artist C; Tempo: Musicstax 171 im 3er-Takt zur Spotify-Fassung, also ca. 57 Takte je Minute (ein Schlag je Takt) – am Instrument prüfen; Takt 6/8 (Musicnotes, Sony/ATV) – punktierte Viertel = 57' },
+  { title: 'Happy Xmas (War Is Over) - Remastered 2010', artist: 'John Lennon, Yoko Ono', tonart: 'D', bpm: 49, takt: '12/8', quelle: 'Spotify-Analyse: Tunebat/Songbpm/Musicstax D, 146 Achtel (3er-Takt) zur Spotify-Fassung; Takt 12/8 laut Musicnotes (Klavier/Gesang, punktierte Viertel = 49, dort A-Dur) – Grundschlag 146 ÷ 3 ≈ 49' },
+  { title: 'Hear You Me', artist: 'Jimmy Eat World', tonart: 'E', bpm: 136, takt: '3/4', quelle: 'Spotify-Analyse: Tunebat/Musicstax E, 136 (3/4-Takt); 3/4 auch laut Tabs (chords-and-tabs.net)' },
   { title: 'Heaven - MTV Unplugged Version', artist: 'Bryan Adams', tonart: 'C', bpm: 65, quelle: 'AcousticBrainz C (automatisch); Tempo unsicher; Tempo: Tunebat/Musicstax 130 = doppelt gezählt → 65 (C bestätigt)' },
   { title: 'Heimat', artist: 'Johannes Oerding', tonart: 'Bb', bpm: 139, quelle: 'Spotify-Analyse: Tunebat Bb, Musicstax A#; 139' },
   { title: 'Heimathafen', artist: 'Thomas Godoj', bpm: 172, quelle: 'Spotify-Analyse: GetSongBPM 172; Tonart nicht gefunden' },
@@ -95,7 +98,7 @@ export const SONGINFO: SongInfo[] = [
   { title: 'In der Weihnachtsbäckerei', artist: 'Rolf Zuckowski', tonart: 'C', bpm: 146, quelle: 'Spotify-Analyse: Tunebat C, 146; Musicstax/Songbpm 147' },
   { title: 'Indigo Girl', artist: 'Watershed', tonart: 'Eb', bpm: 114, quelle: 'Spotify-Analyse: Songbpm/Musicstax D#/Eb, 114' },
   { title: 'Into The Great Wide Open', artist: 'Tom Petty and the Heartbreakers', tonart: 'Em', bpm: 82, quelle: 'Spotify-Analyse: Tunebat/Musicstax Em, 82' },
-  { title: 'Iris', artist: 'The Goo Goo Dolls', tonart: 'D', bpm: 155, quelle: 'Musicnotes/Karaoke-Version Original D; 153–156' },
+  { title: 'Iris', artist: 'The Goo Goo Dolls', tonart: 'D', bpm: 155, quelle: 'Musicnotes/Karaoke-Version Original D; 153–156; Takt wechselt: Intro und Zwischenspiele 4/4, Strophe und Refrain 6/8 (Wikipedia) – eingezählt wird das Intro (4/4)' },
   { title: "It's Beginning to Look a Lot like Christmas", artist: 'Michael Bublé', tonart: 'E', bpm: 95, quelle: 'Spotify-Analyse: Tunebat/Musicstax E, 95 (GetSongBPM 93)' },
   { title: "It's My Life - 2003 Acoustic Version", artist: 'Bon Jovi', tonart: 'Am', bpm: 115, quelle: 'Spotify-Analyse: Songbpm Am, 115 (nur eine Quelle)' },
   { title: 'Junimond', artist: 'Echt', tonart: 'F#', bpm: 83, quelle: 'Spotify-Analyse: Tunebat F#, 83' },
@@ -128,7 +131,7 @@ export const SONGINFO: SongInfo[] = [
   { title: 'Nur nach vorne gehen', artist: 'Broilers', tonart: 'Bb', bpm: 140, quelle: 'Spotify-Analyse: Musicstax A#, Tunebat 6B; 140' },
   { title: 'Ooh La', artist: 'The Kooks', tonart: 'A#m', bpm: 151, quelle: 'Spotify-Analyse: Tunebat/Songbpm A#m (= Bbm), Songbpm/Musicstax 151' },
   { title: 'Over My Shoulder', artist: 'Mike + The Mechanics', tonart: 'Fm', bpm: 92, quelle: 'Spotify-Analyse: Tunebat/Musicstax Fm, 92' },
-  { title: 'Perfect', artist: 'Ed Sheeran', tonart: 'Ab', bpm: 63, quelle: 'Musicnotes Ab, 12/8 mit punktierter Viertel = 63' },
+  { title: 'Perfect', artist: 'Ed Sheeran', tonart: 'Ab', bpm: 63, takt: '12/8', quelle: 'Musicnotes Ab, 12/8 mit punktierter Viertel = 63' },
   { title: 'Plötzlich perfekt', artist: 'Johannes Oerding', tonart: 'E', bpm: 95, quelle: 'Akkorde Ultimate Guitar (Key E, ohne Capo); Tempo: Musicstax 95, GetSongBPM 94 (Analyse dort A statt E)' },
   { title: 'Quit Playing Games (With My Heart)', artist: 'Backstreet Boys', tonart: 'Bm', bpm: 100, quelle: 'Spotify-Analyse: Tunebat/Songbpm/Musicstax Bm, 100' },
   { title: 'Radio Nowhere', artist: 'Bruce Springsteen', tonart: 'A', bpm: 140, quelle: 'Spotify-Analyse: Tunebat/Songbpm A, 140' },
@@ -179,8 +182,8 @@ export const SONGINFO: SongInfo[] = [
 export const SONGINFO_ENTWURF_KEY = 'bn-songinfo-entwurf';
 
 /** im Backstage änderbare Felder (die Quelle kommt nur aus der Recherche) */
-export type SongWerte = Pick<SongInfo, 'tonart' | 'spielTonart' | 'capo' | 'bpm' | 'notiz' | 'geprueft'>;
-export const SONG_FELDER = ['tonart', 'spielTonart', 'capo', 'bpm', 'notiz', 'geprueft'] as const;
+export type SongWerte = Pick<SongInfo, 'tonart' | 'spielTonart' | 'capo' | 'bpm' | 'takt' | 'notiz' | 'geprueft'>;
+export const SONG_FELDER = ['tonart', 'spielTonart', 'capo', 'bpm', 'takt', 'notiz', 'geprueft'] as const;
 
 /**
  * Wie verlässlich sind Tonart und Tempo? „geprueft“ (Band), „recherche“ (Notenausgaben, Akkordseiten),
@@ -226,8 +229,8 @@ export function gespielteTonart(s: SongInfo | undefined): string | undefined {
   return s?.spielTonart || s?.tonart;
 }
 
-/** z. B. „G · Capo 2 · 120 bpm · Intro nur Gitarre“ – leer, wenn nichts eingetragen ist */
+/** z. B. „G · Capo 2 · 120 bpm · 3/4 · Intro nur Gitarre“ (4/4 steht nicht dabei) – leer, wenn nichts eingetragen ist */
 export function songInfoText(title: string, artist: string): string {
   const s = songInfo(title, artist);
-  return s ? [gespielteTonart(s), s.capo && `Capo ${s.capo}`, s.bpm && `${s.bpm} bpm`, s.notiz].filter(Boolean).join(' · ') : '';
+  return s ? [gespielteTonart(s), s.capo && `Capo ${s.capo}`, s.bpm && `${s.bpm} bpm`, s.takt && s.takt !== '4/4' && s.takt, s.notiz].filter(Boolean).join(' · ') : '';
 }

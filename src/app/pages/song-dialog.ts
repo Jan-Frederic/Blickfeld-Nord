@@ -27,6 +27,7 @@ export interface SongZeile {
   key: string;
 }
 
+import { TAKTARTEN } from '../data/takt';
 @Component({
   selector: 'app-song-dialog',
   imports: [MatIconModule, NotenEditor, SongMitschnitte, TonartHoeren],
@@ -79,6 +80,12 @@ export interface SongZeile {
               @if (tapZahl() > 0) { {{ tapBpm() ?? tapZahl() + '/4' }} } @else { <mat-icon>touch_app</mat-icon> }
             </button>
           </span>
+        </label>
+        <label>Takt
+          <select (change)="setzen.emit({ feld: 'takt', roh: $any($event.target).value })">
+            <option value="" [selected]="!werte().takt || werte().takt === '4/4'">4/4</option>
+            @for (t of taktarten; track t) { <option [value]="t" [selected]="werte().takt === t">{{ t }}</option> }
+          </select>
         </label>
         <label class="notiz">Notiz
           <input maxlength="40" placeholder="z. B. Intro Gitarre" [value]="werte().notiz ?? ''" (change)="setzen.emit({ feld: 'notiz', roh: $any($event.target).value })" />
@@ -223,6 +230,8 @@ export class SongDialog {
 
   protected readonly tonarten = [...TONARTEN, ...TONARTEN.map((t) => t + 'm')];
   protected readonly capos = Array.from({ length: 9 }, (_, i) => i + 1);
+  /** Taktarten außer 4/4 (das ist der Standard ohne Eintrag) */
+  protected readonly taktarten = TAKTARTEN.filter((t) => t !== '4/4');
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   constructor() {

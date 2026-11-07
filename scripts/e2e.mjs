@@ -1675,6 +1675,24 @@ test('Backstage: Notiz je Auftritt und Einzählen im Bühnen-Modus, „Bereit?�
   await until(async () => (await p.locator('app-setlist-buehne .einzaehlen').count()) === 1, 'Einzählen zeigt nichts');
   await until(async () => (await p.locator('app-setlist-buehne .einzaehlen').count()) === 0, 'Einzählen hört nicht auf');
   await p.keyboard.press('Escape');
+  // Taktart des Songs: im 3/4-Takt „1-2-3 · 1-2-3“ – nie bis 4; Klick zeigt den Takt
+  const titel = (await p.locator('app-setlist .list li .t').first().innerText()).trim();
+  const interpret = (await p.locator('app-setlist .list li .a').first().innerText()).trim();
+  await p.evaluate(([k]) => localStorage.setItem('bn-songinfo-entwurf', JSON.stringify({ [k]: { bpm: 180, takt: '3/4' } })), [`${titel}|${interpret}`]);
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
+  const zaehlKnopf = p.getByRole('button', { name: 'Einzählen 3/4' });
+  await until(async () => (await zaehlKnopf.innerText().catch(() => '')).trim() === '1-2-3 · 1-2-3', 'Einzähl-Knopf zeigt den 3/4-Takt nicht');
+  expect((await p.locator('app-setlist-buehne button.bpm').innerText()).includes('3/4'), 'Klick-Knopf zeigt den Takt nicht');
+  const gezaehlt = new Set();
+  await zaehlKnopf.click();
+  for (let i = 0; i < 40 && (gezaehlt.size === 0 || (await p.locator('app-setlist-buehne .einzaehlen').count())); i++) {
+    const z = (await p.locator('app-setlist-buehne .einzaehlen').innerText().catch(() => '')).trim();
+    if (z) gezaehlt.add(z);
+    await p.waitForTimeout(50);
+  }
+  expect([...gezaehlt].sort().join() === '1,2,3', `Im 3/4-Takt gezählt: ${[...gezaehlt].join(',')}`);
+  await p.keyboard.press('Escape');
   // Seite des Auftritts: Setlist steht, Vor-Ort-Angaben fehlen noch
   await p.go(`/backstage/${id}`);
   const bereit = p.locator('app-bereitschaft');

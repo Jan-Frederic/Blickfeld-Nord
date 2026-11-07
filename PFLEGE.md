@@ -332,6 +332,12 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 - Titel und Interpret genau wie im Repertoire schreiben (am besten von `/repertoire` kopieren).
 - Tonart: Dur als Großbuchstabe (`C`, `F#`, `Bb`), Moll mit kleinem `m` (`Am`, `C#m`). Alles ist optional.
+- **Takt** (Song-Dialog, neben bpm; `takt` in `songinfo.ts`, ohne Angabe 4/4): bestimmt das Einzählen im Bühnen- und
+  Probe-Modus – 4/4 „1-2-3-4“, 3/4 „1-2-3 · 1-2-3“ (bei kurzen Takten zwei), 6/8 „1-2 · 1-2“ – und die Betonung im
+  Klick (die Eins heller und höher). Bei 6/8 und 12/8 zählt bpm die punktierte Viertel. Recherchiert (November 2026):
+  Perfect 12/8, Happy Xmas 12/8 (Tempo dafür auf 49 umgerechnet), Hallelujah 6/8, Hear You Me 3/4; Iris wechselt
+  zwischen 4/4 (Intro) und 6/8 – bleibt 4/4 zum Einzählen. Alle anderen nach Notenausgaben bzw. ohne Hinweis 4/4.
+  In Setlist und Laufzettel steht der Takt nur, wenn er nicht 4/4 ist.
 - Im Bühnen-Modus blinkt **Klick** im Tempo – praktisch zum Einzählen. Daneben schaltet 🔈 einen leisen Ton dazu,
   und **100 %** stellt das Übungstempo auf 90, 80 oder 70 % (zum langsamen Einüben in der Probe).
 - **Tonartsprünge:** Liegen zwei Songs in einem Set im Quintenzirkel weit auseinander (z. B. Ab → E), markiert die
