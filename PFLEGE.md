@@ -659,8 +659,11 @@ Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf
 neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten. Würden auf einmal viele Dateien gelöscht,
 wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
 
-Neue Daten anderer Geräte auf einer offenen Seite: **Songs → Liste** und die **Setlist** lesen sie selbst ein – Suche,
-Filter, Sammlung und Scrollposition bleiben. Andere Seiten werden nur neu aufgebaut, wenn seit einer Minute niemand
+Neue Daten anderer Geräte auf einer offenen Seite: **Songs → Liste**, die **Setlist**, die **Probe-Planung** (Plan,
+Zusagen, Stand der Band) und die **Auftrittsseite** (Werbeplan, Bereitschaft, Kurzstatus, Kontakt, Nachbereitung,
+Rückblick) lesen sie selbst ein – Suche, Filter, Sammlung, aufgeklappte Bereiche und Scrollposition bleiben. Technik:
+Die Seite meldet sich mit `auffrischenAnmelden` an; Bereiche, die beim Öffnen aus dem Speicher lesen, lesen in ihren
+`computed`/`linkedSignal` zusätzlich `datenStand()` mit (`src/app/data/neu-zeichnen.ts`). Andere Seiten werden nur neu aufgebaut, wenn seit einer Minute niemand
 tippt, klickt oder scrollt; sonst erscheint unten „Neue Daten der Band – anzeigen“. Gezählt werden nur echte
 Änderungen (ein Noten-Eintrag, dessen PDF auf dem Gerät noch fehlt, löst nicht bei jedem Abgleich einen Neuaufbau aus).
 

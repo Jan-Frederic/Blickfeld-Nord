@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { datenStand } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { kampagnenLink } from '../data/goatcounter';
@@ -79,7 +80,7 @@ export class Werbeplan {
   /** Auftritts-ID (Datum, ggf. mit laufender Nummer) */
   readonly id = input.required<string>();
   protected readonly schritte = computed(() => werbeplan(this.show().date, new Date().toISOString().slice(0, 10), this.show().endDate));
-  protected readonly erledigt = linkedSignal(() => erledigteSchritte(this.id()));
+  protected readonly erledigt = linkedSignal(() => (datenStand(), erledigteSchritte(this.id())));
   protected readonly kopiert = signal<string | null>(null);
   protected readonly geteilt = signal<string | null>(null);
   protected readonly laeuft = signal(false);

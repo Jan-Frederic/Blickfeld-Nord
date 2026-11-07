@@ -1,4 +1,5 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -207,6 +208,7 @@ export class BackstageProbe {
   protected readonly unsicher = computed(() => (this.plan(), unsicherJeSong(this.band.members)));
   // nächster Auftritt nach der Probe – für die Generalprobe
   protected readonly naechsterAuftritt = computed(() => {
+    this.plan(); // nach neuen Daten (Abgleich) auch die Setlist neu zählen
     const s = this.band.shows.filter((x) => x.date >= this.datum()).sort((a, b) => a.date.localeCompare(b.date))[0];
     if (!s) return null;
     const id = this.band.showId(s);
@@ -272,6 +274,8 @@ export class BackstageProbe {
   constructor() {
     // beim Öffnen (und beim Wechsel zu einer anderen Probe) den gespeicherten Stand laden
     effect(() => this.plan.set(loadProbe(this.datum())));
+    // neue Daten der Band (Abgleich): Plan neu lesen, ohne die Seite neu aufzubauen (Suche und Scrollstand bleiben)
+    inject(DestroyRef).onDestroy(auffrischenAnmelden(() => this.plan.set(loadProbe(this.datum()))));
   }
 
   protected info(s: { title: string; artist: string }): string {

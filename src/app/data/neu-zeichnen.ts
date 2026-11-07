@@ -25,6 +25,11 @@ export function neuZeichnen(): void {
 // Seiten, die neue Daten selbst einlesen können (Suche, Filter, Scrollposition bleiben): sie melden sich hier an –
 // dann baut der Abgleich die Seite nicht neu auf, sondern ruft nur das Auffrischen auf.
 const auffrischer = new Set<() => void>();
+/**
+ * zählt hoch, sobald neue Daten selbst eingelesen werden – Bereiche, die beim Öffnen aus dem Speicher lesen, lesen
+ * ihn in ihren computed/linkedSignal mit und laden so neu (z. B. alle Bereiche der Auftrittsseite)
+ */
+export const datenStand = signal(0);
 export function auffrischenAnmelden(fn: () => void): () => void {
   auffrischer.add(fn);
   return () => auffrischer.delete(fn);
@@ -32,6 +37,7 @@ export function auffrischenAnmelden(fn: () => void): () => void {
 /** true, wenn die offene Seite selbst auffrischt (dann kein Neuaufbau nötig) */
 export function selbstAuffrischen(): boolean {
   if (!auffrischer.size) return false;
+  datenStand.update((n) => n + 1);
   for (const fn of auffrischer) fn();
   return true;
 }

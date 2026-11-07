@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { datenStand } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ichSetzen, ladeIch, rufname, zusageSetzen, zusagen, zusagenText } from '../data/band-ich';
@@ -47,7 +48,7 @@ export class ProbeZusagen {
   protected readonly rufname = rufname;
   protected readonly ich = signal(ladeIch());
   private readonly stand = signal(0);
-  protected readonly liste = computed(() => (this.stand(), zusagen(this.datum(), this.mitglieder)));
+  protected readonly liste = computed(() => (this.stand(), datenStand(), zusagen(this.datum(), this.mitglieder)));
   protected readonly meine = computed(() => this.liste().get(this.ich()));
   protected readonly text = computed(() => zusagenText(this.liste(), this.mitglieder.length) || 'Noch keine Antworten');
   protected readonly ichName = computed(() => {

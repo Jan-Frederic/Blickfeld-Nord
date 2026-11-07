@@ -1,6 +1,7 @@
 import { datumText } from '../data/datum';
 
-import { Component, OnDestroy, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, computed, inject, input, signal } from '@angular/core';
+import { auffrischenAnmelden, datenStand } from '../data/neu-zeichnen';
 import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
@@ -229,6 +230,7 @@ export class BackstageShow implements OnDestroy {
 
   // Kurzstatus der Unterseiten aus dem Browser-Speicher (Vor Ort, Setlist, Packliste)
   protected readonly status = computed<Record<string, string>>(() => {
+    datenStand();
     const read = <T>(key: string, fallback: T): T => {
       try {
         return (JSON.parse(localStorage.getItem(key + this.id()) ?? 'null') as T) ?? fallback;
@@ -270,6 +272,8 @@ export class BackstageShow implements OnDestroy {
   constructor() {
     // Suchmaschinen sollen die Seite nicht aufnehmen
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    // neue Daten der Band (Abgleich): die Bereiche lesen sie über datenStand selbst ein – kein Neuaufbau der Seite
+    inject(DestroyRef).onDestroy(auffrischenAnmelden(() => undefined));
   }
 
   // Instagram-Text (Datum, Ort, Eintritt, Hashtags) in die Zwischenablage

@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { datenStand } from '../data/neu-zeichnen';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
@@ -125,6 +126,7 @@ export class Bereitschaft {
     const gesamt = GROUPS.reduce((n, g) => n + g.items.length, 0) + pack.custom.length;
     const noten = this.notenKeys();
     this.vorabend();
+    datenStand();
     return bereitschaft({
       show: this.show(),
       heute: new Date().toISOString().slice(0, 10),

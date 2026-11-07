@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { datenStand } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { isPause, loadSetlist } from '../data/setlist-data';
@@ -139,7 +140,7 @@ export class RueckblickFormular {
 
   // Setlist und Sterne dieses Auftritts aus dem Browser
   private readonly id = computed(() => this.band.showId(this.show()));
-  protected readonly songs = computed(() => loadSetlist(this.id()).filter((e) => !isPause(e)) as { title: string; artist: string }[]);
+  protected readonly songs = computed(() => (datenStand(), loadSetlist(this.id())).filter((e) => !isPause(e)) as { title: string; artist: string }[]);
   protected readonly mitSetlist = signal(true);
   /** „Was lief gut“ aus der Nachbereitung – öffentlich erst nach dem Umformulieren */
   // bei jedem Zeichnen frisch gelesen – die Nachbereitung steht gleich darüber und ändert sich nebenher
@@ -158,6 +159,7 @@ export class RueckblickFormular {
     return absaetze.join('\n\n');
   }
   protected readonly highlight = linkedSignal(() => {
+    datenStand();
     const sterne = ladeBewertungen(this.id());
     let best: { title: string; n: number } | null = null;
     for (const s of this.songs()) {

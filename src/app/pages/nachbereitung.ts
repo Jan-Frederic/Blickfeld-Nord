@@ -1,4 +1,5 @@
 import { Component, computed, input, linkedSignal, signal } from '@angular/core';
+import { datenStand } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
 import { isPause, loadSetlist } from '../data/setlist-data';
 import { LISTEN, songAbgleich } from '../data/playlisten';
@@ -99,7 +100,7 @@ export class Nachbereitung {
   readonly id = input.required<string>();
   protected readonly offen = signal(false);
   protected readonly songs = computed(() =>
-    loadSetlist(this.id())
+    (datenStand(), loadSetlist(this.id()))
       .filter((e) => !isPause(e))
       .map((e) => ({ ...(e as { title: string; artist: string }), key: songKey(e as { title: string; artist: string }) })),
   );
@@ -107,9 +108,9 @@ export class Nachbereitung {
   protected readonly websiteUrl = LISTEN[0].url;
   private readonly website = new Set(songAbgleich(LISTEN).filter((s) => s.listen.includes('website')).map((s) => s.key));
   protected readonly nichtAufWebsite = computed(() => this.songs().filter((s) => !this.website.has(s.key)).map((s) => s.title));
-  protected readonly sterne = linkedSignal<Bewertungen>(() => ladeBewertungen(this.id()));
-  protected readonly wackelt = signal(ladeWackelt());
-  protected readonly daten = linkedSignal<Daten>(() => ladeNachbereitung(this.id()));
+  protected readonly sterne = linkedSignal<Bewertungen>(() => (datenStand(), ladeBewertungen(this.id())));
+  protected readonly wackelt = linkedSignal(() => (datenStand(), ladeWackelt()));
+  protected readonly daten = linkedSignal<Daten>(() => (datenStand(), ladeNachbereitung(this.id())));
   protected readonly neu = signal('');
 
   protected readonly zusammenfassung = computed(() => {

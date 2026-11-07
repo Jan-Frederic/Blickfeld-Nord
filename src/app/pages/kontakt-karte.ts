@@ -1,4 +1,5 @@
 import { Component, computed, input, linkedSignal } from '@angular/core';
+import { datenStand } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
 import { Show } from '../data/band.service';
 import { Kontakt, adressbuchDa, ausAdressbuch, bewertungText, kontaktSetzen, kontaktVon, ortKey } from '../data/kontakte';
@@ -28,7 +29,7 @@ import { KontaktBewertung } from './kontakt-bewertung';
 })
 export class KontaktKarte {
   readonly show = input.required<Show>();
-  protected readonly k = linkedSignal<Kontakt>(() => kontaktVon(this.show()) ?? {});
+  protected readonly k = linkedSignal<Kontakt>(() => (datenStand(), kontaktVon(this.show()) ?? {}));
   protected readonly key = computed(() => ortKey(this.show()));
   protected readonly bewertung = computed(() => bewertungText(this.k()));
   protected readonly adressbuch = adressbuchDa();
