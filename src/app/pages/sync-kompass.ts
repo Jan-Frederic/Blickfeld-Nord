@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SyncService } from '../data/sync.service';
-import { neuZeichnen } from '../data/neu-zeichnen';
+import { kuerzlichAktiv, neuZeichnen, selbstAuffrischen } from '../data/neu-zeichnen';
 
 // Sync-Anzeige unten rechts im Backstage: ein Kompass (public/kompass-sync.svg, transparent), der nur erscheint,
 // solange mit OneDrive abgeglichen wird – er blendet sich ein, dreht sich und blendet sich danach wieder aus.
@@ -58,15 +58,17 @@ export class SyncKompass {
     effect(() => {
       this.sync.neueDaten();
       if (erster) return void (erster = false);
-      untracked(() => (this.ungestoert() ? this.anzeigen() : this.hinweis.set(true)));
+      // Seiten, die selbst auffrischen (Songs, Setlist), übernehmen die Daten ohne Neuaufbau; sonst nur neu aufbauen,
+      // wenn gerade niemand auf der Seite arbeitet – andernfalls der Knopf „Neue Daten … anzeigen“
+      untracked(() => (selbstAuffrischen() ? undefined : this.ungestoert() ? this.anzeigen() : this.hinweis.set(true)));
     });
   }
 
-  /** Neuaufbau stört nicht: kein Eingabefeld im Fokus, kein Dialog, kein Bühnen- bzw. Probe-Modus */
+  /** Neuaufbau stört nicht: seit einer Minute nichts getan, kein Eingabefeld im Fokus, kein Dialog, kein Bühnen- bzw. Probe-Modus */
   private ungestoert(): boolean {
     const a = document.activeElement as HTMLElement | null;
     const tippt = !!a && (a.matches('input, textarea, select') || a.isContentEditable);
-    return !tippt && !document.querySelector('dialog[open], app-setlist-buehne, app-daten-editor, .cdk-overlay-pane');
+    return !tippt && !kuerzlichAktiv() && !document.querySelector('dialog[open], app-setlist-buehne, app-daten-editor, .cdk-overlay-pane');
   }
 
   protected anzeigen(): void {

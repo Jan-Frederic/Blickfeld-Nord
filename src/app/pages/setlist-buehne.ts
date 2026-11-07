@@ -39,7 +39,7 @@ function ladeZoom(): number {
   }
 }
 
-import { einzaehlFolge, einzaehlText, schlaegeJeTakt, taktHinweis } from '../data/takt';
+import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, taktHinweis } from '../data/takt';
 @Component({
   selector: 'app-setlist-buehne',
   imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde],
@@ -446,7 +446,7 @@ export class SetlistBuehne {
     if (!bpm) return;
     this.stopKlick();
     this.stopZaehlen();
-    // ein Takt (bei 3/4, 2/4, 6/8 zwei Takte), die Eins jedes Takts höher
+    // ein Takt (bei 3/4 und 2/4 zwei Takte, bei 6/8 alle sechs Achtel), die Eins jedes Takts höher
     const folge = einzaehlFolge(this.info()?.takt);
     let n = 0;
     const schlag = () => {
@@ -460,7 +460,8 @@ export class SetlistBuehne {
       if (this.ton()) this.piep(z === 1 ? 1500 : 1000);
     };
     schlag();
-    this.zaehlTimer = setInterval(schlag, 60000 / bpm);
+    // bei 6/8 usw. zählt bpm die punktierte Viertel – eingezählt werden die Achtel (dreimal so schnell)
+    this.zaehlTimer = setInterval(schlag, 60000 / bpm / einzaehlUnterteilung(this.info()?.takt));
   }
   private stopZaehlen(): void {
     clearInterval(this.zaehlTimer);

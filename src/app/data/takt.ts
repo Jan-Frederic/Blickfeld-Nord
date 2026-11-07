@@ -16,18 +16,29 @@ export function schlaegeJeTakt(takt?: string): number {
   return nenner === 8 && zaehler % 3 === 0 && zaehler > 3 ? zaehler / 3 : zaehler;
 }
 
+/** Achteltakt (6/8, 9/8, 12/8, 7/8 …)? Dann wird in Achteln eingezählt */
+const achtel = (takt?: string) => /^\d+\/8$/.test(takt?.trim() ?? '');
+const zaehlerVon = (takt?: string) => Number(/^(\d+)\//.exec(takt?.trim() ?? '')?.[1]) || 4;
+
 /**
- * Einzählen: ein Takt, bei kurzen Takten (bis 3 Schläge) zwei – „1-2-3 · 1-2-3“ beim Walzer, „1-2 · 1-2“ bei 2/4 und
- * 6/8. Ergebnis: die Zahlen in Reihenfolge.
+ * Einzählen: ein Takt. Achteltakte zählen alle Achtel („1-2-3-4-5-6“ bei 6/8), kurze Vierteltakte (bis 3 Schläge)
+ * zwei Takte – „1-2-3 · 1-2-3“ beim Walzer, „1-2 · 1-2“ bei 2/4. Ergebnis: die Zahlen in Reihenfolge.
  */
 export function einzaehlFolge(takt?: string): number[] {
+  if (achtel(takt)) return Array.from({ length: zaehlerVon(takt) }, (_, i) => i + 1);
   const n = schlaegeJeTakt(takt);
   const takte = n <= 3 ? 2 : 1;
   return Array.from({ length: n * takte }, (_, i) => (i % n) + 1);
 }
 
-/** Beschriftung des Einzähl-Knopfs, z. B. „1-2-3-4“ oder „1-2-3 · 1-2-3“ */
+/** Zählzeiten je Grundschlag beim Einzählen: bei 6/8, 9/8, 12/8 drei Achtel je punktierter Viertel, sonst 1 */
+export function einzaehlUnterteilung(takt?: string): number {
+  return achtel(takt) && schlaegeJeTakt(takt) !== zaehlerVon(takt) ? 3 : 1;
+}
+
+/** Beschriftung des Einzähl-Knopfs, z. B. „1-2-3-4“, „1-2-3 · 1-2-3“ oder „1-2-3-4-5-6“ */
 export function einzaehlText(takt?: string): string {
+  if (achtel(takt)) return einzaehlFolge(takt).join('-');
   const n = schlaegeJeTakt(takt);
   const takt1 = Array.from({ length: n }, (_, i) => i + 1).join('-');
   return n <= 3 ? `${takt1} · ${takt1}` : takt1;

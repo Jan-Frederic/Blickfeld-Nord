@@ -333,7 +333,7 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 - Titel und Interpret genau wie im Repertoire schreiben (am besten von `/repertoire` kopieren).
 - Tonart: Dur als Großbuchstabe (`C`, `F#`, `Bb`), Moll mit kleinem `m` (`Am`, `C#m`). Alles ist optional.
 - **Takt** (Song-Dialog, neben bpm; `takt` in `songinfo.ts`, ohne Angabe 4/4): bestimmt das Einzählen im Bühnen- und
-  Probe-Modus – 4/4 „1-2-3-4“, 3/4 „1-2-3 · 1-2-3“ (bei kurzen Takten zwei), 6/8 „1-2 · 1-2“ – und die Betonung im
+  Probe-Modus – 4/4 „1-2-3-4“, 3/4 „1-2-3 · 1-2-3“ (bei kurzen Takten zwei), 6/8 „1-2-3-4-5-6“ (alle Achtel) – und die Betonung im
   Klick (die Eins heller und höher). Bei 6/8 und 12/8 zählt bpm die punktierte Viertel. Recherchiert (November 2026):
   Perfect 12/8, Happy Xmas 12/8 (Tempo dafür auf 49 umgerechnet), Hallelujah 6/8, Hear You Me 3/4; Iris wechselt
   zwischen 4/4 (Intro) und 6/8 – bleibt 4/4 zum Einzählen. Alle anderen nach Notenausgaben bzw. ohne Hinweis 4/4.
@@ -658,6 +658,11 @@ So wird abgeglichen: Der Stand nach jedem Abgleich wird gemerkt. Neues und Geän
 Gelöschtes wird (wenn eingeschaltet) drüben auch gelöscht. Ist eine Datei auf beiden Seiten geändert, gewinnt die
 neuere; die ältere bleibt als `Name (Konflikt Gerät 2026-10-27).pdf` erhalten. Würden auf einmal viele Dateien gelöscht,
 wird vorher gefragt. Beim ersten Abgleich und nach einem Ordnerwechsel gelten gleich große Dateien als gleich.
+
+Neue Daten anderer Geräte auf einer offenen Seite: **Songs → Liste** und die **Setlist** lesen sie selbst ein – Suche,
+Filter, Sammlung und Scrollposition bleiben. Andere Seiten werden nur neu aufgebaut, wenn seit einer Minute niemand
+tippt, klickt oder scrollt; sonst erscheint unten „Neue Daten der Band – anzeigen“. Gezählt werden nur echte
+Änderungen (ein Noten-Eintrag, dessen PDF auf dem Gerät noch fehlt, löst nicht bei jedem Abgleich einen Neuaufbau aus).
 
 Schnell- und Vollabgleich: Nach einer eigenen Änderung, beim Öffnen und beim Zurückholen der App werden nur
 **Einstellungen und Daten** abgeglichen (die kleinen JSON-Dateien in `Daten/`, `Einstellungen/`, `Noten/`,

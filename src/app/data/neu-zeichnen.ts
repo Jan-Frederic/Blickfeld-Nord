@@ -21,3 +21,25 @@ export function neuZeichnen(): void {
     requestAnimationFrame(zurueck);
   });
 }
+
+// Seiten, die neue Daten selbst einlesen können (Suche, Filter, Scrollposition bleiben): sie melden sich hier an –
+// dann baut der Abgleich die Seite nicht neu auf, sondern ruft nur das Auffrischen auf.
+const auffrischer = new Set<() => void>();
+export function auffrischenAnmelden(fn: () => void): () => void {
+  auffrischer.add(fn);
+  return () => auffrischer.delete(fn);
+}
+/** true, wenn die offene Seite selbst auffrischt (dann kein Neuaufbau nötig) */
+export function selbstAuffrischen(): boolean {
+  if (!auffrischer.size) return false;
+  for (const fn of auffrischer) fn();
+  return true;
+}
+
+// Wann hat die Person zuletzt etwas getan (tippen, klicken, scrollen)? Während der Arbeit kein Neuaufbau
+let zuletztAktiv = 0;
+if (typeof window !== 'undefined') {
+  for (const art of ['pointerdown', 'keydown', 'wheel', 'touchmove', 'scroll', 'input'])
+    window.addEventListener(art, () => (zuletztAktiv = Date.now()), { passive: true, capture: true });
+}
+export const kuerzlichAktiv = (ms = 60_000) => Date.now() - zuletztAktiv < ms;

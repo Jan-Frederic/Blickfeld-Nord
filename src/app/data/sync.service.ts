@@ -201,14 +201,20 @@ export class SyncService {
     return out;
   }
 
-  private async markierungenUebernehmen(datei: string, seiten: Record<string, Strich[]>, privat: boolean): Promise<void> {
+  /** true, wenn sich dadurch etwas geändert hat */
+  private async markierungenUebernehmen(datei: string, seiten: Record<string, Strich[]>, privat: boolean): Promise<boolean> {
     const alle = await alleMarkierungen();
     const nummern = new Set([...Object.keys(seiten), ...Object.keys(alle).filter((k) => k.startsWith(datei + ':')).map((k) => k.slice(datei.length + 1))]);
+    let geaendert = false;
     for (const n of nummern) {
       const lokal = alle[`${datei}:${n}`] ?? [];
       const neu = markZusammen(lokal, seiten[n] ?? [], privat);
-      if (JSON.stringify(neu) !== JSON.stringify(lokal)) await markierungenSetzen(datei, Number(n), neu);
+      if (JSON.stringify(neu) !== JSON.stringify(lokal)) {
+        await markierungenSetzen(datei, Number(n), neu);
+        geaendert = true;
+      }
     }
+    return geaendert;
   }
 
   // Noten aus dem Sync-Ordner übernehmen: PDFs über Name und Größe finden, fehlende aus dem Ordner (z. B. Sheets/) holen
@@ -247,7 +253,10 @@ export class SyncService {
             const f = await holen(p.name, p.groesse, inhalt.song);
             if (f) pdfs.push({ datei: f.id, ...(p.fassung ? { name: p.fassung } : {}), ...(p.von ? { von: p.von } : {}), ...(p.bis ? { bis: p.bis } : {}) });
           }
+          // nur zählen, wenn sich am Song wirklich etwas ändert – erneute Versuche (PDF fehlt noch) sind keine neuen Daten
+          const vorher = JSON.stringify((await songNoten(inhalt.song)) ?? {});
           await songNotenSetzen(inhalt.song, { pdfs, ...(inhalt.chordpro ? { chordpro: inhalt.chordpro } : {}) });
+          if (JSON.stringify((await songNoten(inhalt.song)) ?? {}) !== vorher) n++;
           // Stand = was dieses Gerät jetzt selbst schreiben würde – fehlt ein PDF hier, bleibt die Datei trotzdem unverändert
           const map = new Map(infos.map((x) => [x.id, { name: x.name, groesse: x.groesse }]));
           const teilweise = pdfs.length < (inhalt.pdfs ?? []).length;
@@ -256,22 +265,22 @@ export class SyncService {
           // Markierungen für alle (Band) bzw. die eigenen privaten: diese Art je Seite ersetzen, die andere bleibt
           const inhalt = JSON.parse(text) as MarkDateiInhalt;
           const f = await holen(inhalt.name, inhalt.groesse);
-          if (f) await this.markierungenUebernehmen(f.id, inhalt.seiten ?? {}, !d.pfad.startsWith(`Markierungen/${BAND}/`));
+          if (f && (await this.markierungenUebernehmen(f.id, inhalt.seiten ?? {}, !d.pfad.startsWith(`Markierungen/${BAND}/`)))) n++;
           z[d.pfad] = { hash: hash(text), version: d.version, key: `${inhalt.groesse}|${inhalt.name}`, ...(f ? {} : { teilweise: true }) };
         }
-        n++;
       }
       for (const [pfad, s] of Object.entries(z)) {
         if (!istNotenSpiegel(pfad, person) || da.has(pfad)) continue;
-        if (pfad.startsWith('Noten/') && s.key) await songNotenSetzen(s.key, {});
-        else if (pfad.startsWith('Markierungen/') && s.key) {
+        if (pfad.startsWith('Noten/') && s.key) {
+          if (await songNoten(s.key)) n++;
+          await songNotenSetzen(s.key, {});
+        } else if (pfad.startsWith('Markierungen/') && s.key) {
           // Datei verschwunden: diese Art Markierungen des PDFs entfernen
           const [groesse, ...name] = s.key.split('|');
           const f = pdfFinden(name.join('|'), Number(groesse), infos);
-          if (f) await this.markierungenUebernehmen(f.id, {}, !pfad.startsWith(`Markierungen/${BAND}/`));
+          if (f && (await this.markierungenUebernehmen(f.id, {}, !pfad.startsWith(`Markierungen/${BAND}/`)))) n++;
         }
         delete z[pfad];
-        n++;
       }
     } finally {
       this.spiegelt = false;

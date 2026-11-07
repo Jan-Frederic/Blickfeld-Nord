@@ -1,6 +1,8 @@
 import { datumText } from '../data/datum';
 
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { auffrischenAnmelden } from '../data/neu-zeichnen';
+import { sammlungenNeuLaden } from '../data/sammlungen';
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
 import data from '../data/repertoire.json';
@@ -246,6 +248,13 @@ export class Setlist {
   private linkListe = typeof location === 'undefined' ? null : setlistAusHash(location.hash, data.tracks);
 
   constructor() {
+    // neue Daten der Band: Setlist und Sammlungen neu einlesen statt die Seite neu aufzubauen (Suche bleibt)
+    inject(DestroyRef).onDestroy(
+      auffrischenAnmelden(() => {
+        this.entries.set(loadSetlist(this.show()));
+        sammlungenNeuLaden();
+      }),
+    );
     alleSongNoten()
       .then((n) => this.notenKeys.set(Object.entries(n).filter(([, x]) => x.pdfs?.length || x.chordpro).map(([k]) => k)))
       .catch(() => undefined);

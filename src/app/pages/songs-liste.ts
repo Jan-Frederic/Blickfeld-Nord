@@ -1,5 +1,6 @@
 import { ActivatedRoute } from '@angular/router';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
 import { LISTEN, ListenKey, SongEintrag, abweichungen, gesamtDauer, listeInReihenfolge, pdfSong, pdfSongKey, songAbgleich } from '../data/playlisten';
 import { songUmbenennen } from '../data/song-umbenennen';
@@ -36,7 +37,7 @@ function ladeEntwurf(): Record<string, Werte> {
   }
 }
 
-import { alleSammlungen, sammlungLoeschen, sammlungSetzen, sammlungSongs, sammlungUmbenennen, sammlungen, songKey, songUmschalten, songVerschieben } from '../data/sammlungen';
+import { alleSammlungen, sammlungenNeuLaden, sammlungLoeschen, sammlungSetzen, sammlungSongs, sammlungUmbenennen, sammlungen, songKey, songUmschalten, songVerschieben } from '../data/sammlungen';
 @Component({
   selector: 'app-songs-liste',
   imports: [MatIconModule, SongDialog, SetlistBuehne, WunschPassung],
@@ -547,6 +548,16 @@ export class SongsListe {
   protected readonly mitNoten = signal(new Map<string, { pdfs: number; akkorde: boolean; fassungen: string[] }>());
   protected readonly notenDateien = signal<NotenDateiInfo[]>([]);
   constructor() {
+    // neue Daten der Band (Abgleich): hier einlesen statt die Seite neu aufzubauen – Suche, Filter, Sammlung und
+    // Scrollposition bleiben
+    inject(DestroyRef).onDestroy(
+      auffrischenAnmelden(() => {
+        this.entwurf.set(ladeEntwurf());
+        this.wackelt.set(ladeWackelt());
+        sammlungenNeuLaden();
+        this.notenLaden();
+      }),
+    );
     this.notenLaden();
   }
   protected notenLaden(): void {
