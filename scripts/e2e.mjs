@@ -32,6 +32,15 @@ async function until(check, message) {
   throw new Error(typeof message === 'function' ? await message() : message);
 }
 
+/** Schritt mit Namen: scheitert er, steht der Name in der Meldung (statt nur „locator.click: Timeout“) */
+async function schritt(name, fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    throw new Error(`${name}: ${String(e.message).split('\n')[0]}`);
+  }
+}
+
 async function page(options = {}) {
   const { ohneZugang, ...rest } = options;
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', acceptDownloads: true, locale: 'de-DE', ...rest });
@@ -1589,9 +1598,13 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   expect((await p.locator('app-setlist .pick li button').count()) === 0, 'Songliste ist ohne Suche oder Liste sichtbar');
   await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Alle' }).click();
   const add = p.locator('app-setlist .pick li button');
-  for (let i = 0; i < 4; i++) await add.first().click();
-  await p.locator('app-setlist button', { hasText: 'Pause einfügen' }).click();
-  await add.first().click();
+  // nach jedem Klick warten, bis die Setlist nachgezogen hat
+  const nummern = () => p.locator('app-setlist .list li .no').count();
+  for (let i = 1; i <= 5; i++) {
+    if (i === 5) await schritt('Pause einfügen', () => p.locator('app-setlist button', { hasText: 'Pause einfügen' }).click());
+    await schritt(`Song ${i} hinzufügen`, () => add.first().click());
+    await until(async () => (await nummern()) === i, `Song ${i} nicht hinzugefügt`);
+  }
   await until(async () => /\d+ min/.test(await p.locator('app-setlist .count').innerText()), 'keine Spieldauer in der Setlist');
   expect((await p.locator('app-setlist .pause-label').innerText()).includes('Set davor'), 'Pause ohne Set-Dauer');
   await p.locator('app-setlist-sammlungen button', { hasText: 'Als Sammlung speichern' }).click();
@@ -1613,13 +1626,14 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   await until(async () => (await p.locator('app-setlist .pause-label').count()) <= 1, 'Längere Sets verringern die Pausen nicht');
   await p.locator('app-setlist-vorschlag button', { hasText: 'vorschlagen' }).click();
   await until(async () => (await p.locator('app-setlist .pause-label').count()) === 1, 'Setlist-Vorschlag ohne zwei Sets');
-  await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
-  await p.getByRole('button', { name: '4 Sterne' }).click();
+  await schritt('Bühnen-Modus öffnen', () => p.getByRole('button', { name: /Bühnen-Modus/ }).first().click());
+  // der Bühnen-Modus wird erst beim Öffnen nachgeladen (@defer) – auf einem ausgelasteten Rechner dauert das
+  await schritt('Sterne im Bühnen-Modus', () => p.getByRole('button', { name: '4 Sterne' }).click({ timeout: 20000 }));
   await p.keyboard.press('Escape');
   await p.go('/backstage/zahlen');
   await until(async () => (await p.locator('app-song-rangliste .top li').count()) === 1, 'Sterne aus dem Bühnen-Modus fehlen in der Rangliste');
   await p.go(`/backstage/${id}`);
-  const [win] = await Promise.all([p.context().waitForEvent('page'), p.locator('button', { hasText: 'Laufzettel' }).click()]);
+  const [win] = await schritt('Laufzettel öffnen', () => Promise.all([p.context().waitForEvent('page', { timeout: 20000 }), p.locator('button', { hasText: 'Laufzettel' }).click({ timeout: 20000 })]));
   await win.waitForLoadState();
   expect((await win.title()).startsWith('Laufzettel'), 'Laufzettel öffnet sich nicht');
   expect((await win.locator('.set').count()) === 2, 'Laufzettel ohne die zwei Sets');
