@@ -2,8 +2,9 @@ import { datumText } from '../data/datum';
 
 import { Component, ElementRef, afterNextRender, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { BandService } from '../data/band.service';
-import { rufname, unsicherJeSong } from '../data/band-ich';
-import { alleFortschritte, plaeneMitStaenden, prozent, reife } from '../data/fortschritt';
+import { ladeIch, rufname, unsicherJeSong } from '../data/band-ich';
+import { alleFortschritte, plaeneMitStaenden, prozent } from '../data/fortschritt';
+import { STATUS, UebeStatus, alleStatus, buehnenreife, eigenerStatus, statusLabel, statusSetzen } from '../data/uebe-status';
 import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
@@ -18,7 +19,7 @@ import { probenNotizen, probenPlaene, probenVerlauf } from '../data/song-stand';
 // Dialog „Song bearbeiten“ (Backstage → Songs): Tonart (Original und wie die Band spielt), Capo, Tempo – auch per
 // Tippen im Takt –, Notiz, Recherche-Quelle sowie Noten (PDF, Akkordblatt). Mit „Voriger/Nächster“ lässt sich die
 // Liste durchgehen, „Im Bühnen-Modus“ öffnet den Song zur Kontrolle so, wie er auf der Bühne erscheint.
-// Dazu: „Wackelt noch“ (eigene Übe-Liste) und Proben-Mitschnitte (nur auf diesem Gerät).
+// Dazu: der eigene Übe-Status (Auswahl oben, data/uebe-status.ts) und Proben-Mitschnitte (nur auf diesem Gerät).
 const TONARTEN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'H'];
 
 export interface SongZeile {
@@ -48,9 +49,11 @@ import { TAKTARTEN } from '../data/takt';
             </details>
           }
         </div>
-        <button type="button" class="wackelt" [class.an]="wackelt()" [attr.aria-pressed]="wackelt()" (click)="wackeltUmschalten.emit()" title="Nur für dich: Songs, bei denen du unsicher bist, schlägt die Probe-Planung zuerst vor">
-          <mat-icon>{{ wackelt() ? 'warning' : 'check' }}</mat-icon> {{ wackelt() ? 'Wackelt noch' : 'Sitzt' }}
-        </button>
+        <select [class]="'status ' + meinStatus()" aria-label="Mein Übe-Status" [disabled]="!ich"
+          [title]="ich ? 'Dein Übe-Status – zählt in Karteikasten, Probe-Vorschlag und Bühnenreife' : 'Erst unter Einstellungen „Ich bin …“ wählen'"
+          (change)="statusWaehlen($any($event.target).value)">
+          @for (s of status; track s.id) { <option [value]="s.id" [selected]="s.id === meinStatus()">{{ s.zeichen }} {{ s.label }}</option> }
+        </select>
         <button type="button" class="icon" (click)="zu()" aria-label="Schließen"><mat-icon>close</mat-icon></button>
       </header>
 
@@ -157,8 +160,9 @@ import { TAKTARTEN } from '../data/takt';
     button:hover:not(:disabled), .tap.aktiv { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     button:disabled { opacity: .4; cursor: default; }
     button.icon, .tap { flex: none; padding: 0 8px; border-radius: 8px; }
-    .wackelt { flex: none; color: var(--bn-fog); }
-    .wackelt.an { border-color: #e0b25a; color: #e0b25a; }
+    .status { flex: none; width: auto; min-height: 36px; border-radius: 999px; }
+    .status.ueben, .status.wackelt { border-color: #e0b25a; color: #e0b25a; }
+    .status.sitzt, .status.eingenordet { border-color: #6fbf73; color: #6fbf73; }
     button.primaer { margin-left: auto; background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .quelle { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: .78rem; color: var(--bn-fog); }
@@ -177,16 +181,16 @@ export class SongDialog {
   readonly werte = input.required<SongWerte>();
   readonly quelle = input<string>();
   /** letzte Notiz aus dem Probenprotokoll (Probenseite) */
-  protected readonly probe = computed(() => probenNotizen().get(this.song().key));
+  protected readonly probe = computed(() => probenNotizen(this.mitglieder).get(this.song().key));
   /** Proben-Verlauf: je Probe ein Punkt – grün sitzt, gelb Baustelle, grau nur geplant */
   private readonly mitglieder = inject(BandService).members;
-  protected readonly verlauf = computed(() => (this.wackelt(), probenVerlauf(plaeneMitStaenden(probenPlaene(), this.mitglieder, alleFortschritte(this.mitglieder)), this.song().key, new Date().toISOString().slice(0, 10))));
-  /** Bühnenreife je Musiker (data/fortschritt.ts): „Bühnenreife 73 % · David sicher · Fred wackelt · Matthias –“ */
+  protected readonly verlauf = computed(() => (this.statusStand(), probenVerlauf(plaeneMitStaenden(probenPlaene(), this.mitglieder, alleFortschritte(this.mitglieder)), this.song().key, new Date().toISOString().slice(0, 10))));
+  /** Bühnenreife aus dem Übe-Status aller Musiker: „Bühnenreife 73 % · David Eingenordet · Fred Wackelt noch · Matthias Nicht gelernt“ */
   protected readonly reifeText = computed(() => {
-    this.wackelt();
-    const r = reife(this.song().key, this.mitglieder, alleFortschritte(this.mitglieder));
+    this.statusStand();
+    const r = buehnenreife(this.song().key, this.mitglieder, alleStatus(this.mitglieder));
     if (!r.mitAngabe) return null;
-    const wer = this.mitglieder.map((m) => `${rufname(m)} ${r.personen.get(m.slug) ?? '–'}`).join(' · ');
+    const wer = this.mitglieder.map((m) => `${rufname(m)} ${statusLabel(r.personen.get(m.slug) ?? 'nicht')}`).join(' · ');
     return { text: `Bühnenreife ${prozent(r.wert)} · ${wer}`, baustelle: r.ampel === 'baustelle' };
   });
   protected readonly verlaufText = computed(() => {
@@ -205,9 +209,18 @@ export class SongDialog {
   readonly position = input('');
   readonly hatVorigen = input(false);
   readonly hatNaechsten = input(false);
-  /** auf der eigenen „Wackelt noch“-Liste */
-  readonly wackelt = input(false);
-  readonly wackeltUmschalten = output<void>();
+  /** eigener Übe-Status (Person am Gerät, Einstellungen → „Ich bin …“) */
+  protected readonly status = STATUS;
+  protected readonly ich = ladeIch();
+  private readonly statusStand = signal(0);
+  protected readonly meinStatus = computed(() => (this.statusStand(), eigenerStatus(this.song().key)));
+  /** eigener Status geändert (z. B. für den Filter „wackelt noch“) */
+  readonly statusGeaendert = output<void>();
+  protected statusWaehlen(s: UebeStatus): void {
+    statusSetzen(this.song().key, s, 'liste');
+    this.statusStand.update((n) => n + 1);
+    this.statusGeaendert.emit();
+  }
   /** eigenständiger Song (in keiner Spotify-Liste): Titel und Band lassen sich ändern – alles zieht mit */
   readonly umbenennbar = input(false);
   readonly umbenennen = output<{ title: string; artist: string }>();
@@ -216,9 +229,9 @@ export class SongDialog {
   readonly blaettern = output<number>();
   readonly buehne = output<void>();
   readonly schliessen = output<void>();
-  /** wer in der Band bei diesem Song laut „Wackelt noch“ unsicher ist (Probe → „Ich bin …“) */
+  /** wer in der Band bei diesem Song noch übt bzw. unsicher ist (alter Stand ohne Übe-Status) */
   private readonly unsicher = unsicherJeSong(inject(BandService).members);
-  protected readonly unsicherBei = computed(() => (this.wackelt(), this.unsicher.get(this.song().key)?.join(', ') ?? ''));
+  protected readonly unsicherBei = computed(() => (this.statusStand(), this.unsicher.get(this.song().key)?.join(', ') ?? ''));
   /** Rückmeldung nach „An die Band schicken“ (kurz statt des Knopftexts) */
   protected readonly geteilt = signal('');
   protected async teilen(): Promise<void> {

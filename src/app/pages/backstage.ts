@@ -7,8 +7,7 @@ import { BackstageSuche } from './backstage-suche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { ladeIch } from '../data/band-ich';
-import { ladeFortschritt } from '../data/fortschritt';
-import { ladeWackelt } from '../data/wackelt';
+import { statusMigrieren } from '../data/uebe-status';
 import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
@@ -85,18 +84,19 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
 })
 export class Backstage {
   private readonly router = inject(Router);
-  /** Übemodus-Karte: wie viele Songs wackeln, wie viele heute dran sind (persönlich, data/ueben.ts) */
+  /** Üben-Karte: wie viele Songs im Karteikasten liegen, wie viele heute dran sind (persönlich, data/ueben.ts) */
   protected readonly ueben = (() => {
     const ich = ladeIch();
     if (!ich) return { text: 'Songs lernen wie mit Karteikarten – persönlich, „Ich bin …“ unter Einstellungen wählen' };
+    statusMigrieren();
     const heute = new Date().toLocaleDateString('sv-SE');
-    const k = karten(ladeWackelt(), ladeFortschritt(ich), ladeUeben(), new Map(), heute);
+    const k = karten(ladeUeben(), new Map(), heute);
     const geuebt = heuteGeuebt(heute);
     const rest = nochHeute(ladeTagesziel(), geuebt.length);
-    const dran = Math.min(k.filter((x) => x.dran && !geuebt.includes(x.key)).length, rest);
-    // Tagesziel erreicht bzw. heute nichts fällig: das sagen statt „0 heute dran“
+    const dran = k.filter((x) => x.dran && !geuebt.includes(x.key)).length;
+    // Tagesziel ist nur eine Empfehlung: erreicht → sagen, sonst die fälligen Karten
     const heuteText = !rest ? `Tagesziel geschafft (${geuebt.length} geübt)` : dran ? `${dran} heute dran` : 'heute nichts fällig';
-    return { text: k.length ? `${k.length} ${k.length === 1 ? 'Song wackelt' : 'Songs wackeln'} · ${heuteText}` : 'Nichts wackelt gerade – Songs lassen sich dort hinzufügen' };
+    return { text: k.length ? `${k.length} ${k.length === 1 ? 'Song' : 'Songs'} im Karteikasten · ${heuteText}` : 'Karteikasten leer – Songs lassen sich dort hinzufügen' };
   })();
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));

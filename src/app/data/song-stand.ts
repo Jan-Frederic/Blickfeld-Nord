@@ -1,3 +1,5 @@
+import type { Mitglied } from './band-ich';
+import { letzteNotizen } from './probe-notiz';
 import type { SongEintrag } from './playlisten';
 import { vergleichsKey } from './playlisten';
 import type { SongHistorie } from './song-historie';
@@ -43,8 +45,11 @@ export function probenAusSpeicher(): { tag: string; songs: { title: string; arti
   return out;
 }
 
-/** letzte Probennotiz je Song (Probenprotokoll auf der Probenseite), neueste zuerst */
-export function probenNotizen(): Map<string, { tag: string; notiz: string }> {
+/** letzte Probennotiz je Song: Protokoll im Probenplan und die Notizen der Musiker im Probe-Modus (data/probe-notiz.ts) */
+export function probenNotizen(mitglieder: Mitglied[] = []): Map<string, { tag: string; notiz: string }> {
+  return letzteNotizen(mitglieder, planNotizen());
+}
+function planNotizen(): Map<string, { tag: string; notiz: string }> {
   const out = new Map<string, { tag: string; notiz: string }>();
   try {
     for (let i = 0; i < localStorage.length; i++) {

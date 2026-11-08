@@ -1,6 +1,7 @@
 // Probe-Modus (Backstage → Probe → „Probe-Modus starten“): die eingeplanten Songs im Vollbild wie im Bühnen-Modus
-// (Noten, Tonart/Capo, Klick mit Übungstempo, Einzählen, Stimmgerät) – dazu je Song eine Probe-Leiste: „Sitzt“ oder
-// „Nochmal“, Durchläufe zählen, Notiz fürs Protokoll, Mitschnitt, die Notiz der letzten Probe und die Zeit je Song.
+// (Noten, Tonart/Capo, Klick mit Übungstempo, Einzählen, Stimmgerät) – dazu je Song eine Probe-Leiste: der eigene
+// Übe-Status (fünf Stufen, data/uebe-status.ts), die eigene Notiz (data/probe-notiz.ts), Mitschnitt, die Notizen der
+// letzten Probe und die Zeit je Song. „Nochmal“ im Plan: solange der Song bei jemandem noch nicht sitzt.
 // Am Ende eine Zusammenfassung; was nicht geschafft wurde oder nochmal dran muss, geht mit einem Klick auf den Plan
 // der nächsten Probe. Alles landet im Probenplan (bn-probe-<datum>) und damit im Proben-Verlauf der Songs.
 // Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.

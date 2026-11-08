@@ -8,7 +8,7 @@ import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
 import { Nachbereitung as Daten, ladeNachbereitung, nachbereitungSpeichern, punkteAusText } from '../data/nachbereitung';
 
 // „Nachbereitung“ auf der Backstage-Seite eines vergangenen Auftritts – in einem Rutsch: Sterne je Song (wie im
-// Bühnen-Modus), unsichere Songs auf die eigene „Wackelt noch“-Liste, was gut lief und was schiefging, und Merkpunkte,
+// Bühnen-Modus), unsichere Songs auf „Wackelt noch“ (eigener Übe-Status), was gut lief und was schiefging, und Merkpunkte,
 // die bis zum Abhaken unter Backstage → Aufgaben stehen. „Was lief gut“ lässt sich in den Rückblick übernehmen.
 @Component({
   selector: 'app-nachbereitung',
@@ -18,7 +18,7 @@ import { Nachbereitung as Daten, ladeNachbereitung, nachbereitungSpeichern, punk
       <summary><mat-icon>rate_review</mat-icon> Nachbereitung @if (zusammenfassung(); as z) { <small>{{ z }}</small> }</summary>
 
       @if (songs().length) {
-        <p class="label">Wie liefen die Songs? <small>Sterne wie im Bühnen-Modus · ⚠ = wackelt noch (deine Übe-Liste)</small></p>
+        <p class="label">Wie liefen die Songs? <small>Sterne wie im Bühnen-Modus · ⚠ = wackelt noch (dein Übe-Status)</small></p>
         <ul class="songs">
           @for (s of songs(); track s.key) {
             <li>

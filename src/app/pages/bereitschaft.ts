@@ -85,7 +85,7 @@ export class Bereitschaft {
   protected readonly id = computed(() => this.band.showId(this.show()));
   private readonly notenKeys = signal<Set<string> | undefined>(undefined);
   /** Songs, deren letzte Probennotiz nach Baustelle klingt */
-  private readonly baustellen = new Set(notizBaustellen(probenNotizen()).map((b) => b.key));
+  private readonly baustellen = new Set(notizBaustellen(probenNotizen(inject(BandService).members)).map((b) => b.key));
   private readonly offline = signal<OfflineStand | undefined>(undefined);
   protected readonly laedt = signal(false);
   /** von Hand abgehakte Vorabend-Punkte (Wetter, Notenmappe) – gespiegelt für die ganze Band */

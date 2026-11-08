@@ -15,7 +15,7 @@ import { TapTempo } from '../data/tap-tempo';
 import { Song, durationOf, loadSetlist, setTime } from '../data/setlist-data';
 import { BandService } from '../data/band.service';
 import { historieText, songHistorie } from '../data/song-historie';
-import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
+import { ladeWackelt } from '../data/wackelt';
 
 // Backstage → Songs → Liste: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // „Original“ ist die Tonart der Aufnahme, „wir spielen“ und Capo die Band-Version; das Tempo lässt sich im Proberaum
@@ -106,7 +106,7 @@ function ladeEntwurf(): Record<string, Werte> {
             <option value="akkorde">ohne Akkorde</option>
             @for (f of fassungen(); track f) { <option [value]="'fassung:' + f">ohne {{ f }}</option> }
             <option value="nie">noch nie gespielt</option>
-            <option value="wackelt">wackelt noch (deine Liste)</option>
+            <option value="wackelt">wackelt noch (dein Status)</option>
           </select>
         </label>
         <label>Reihenfolge
@@ -196,7 +196,7 @@ function ladeEntwurf(): Record<string, Werte> {
       @if (offen(); as k) {
         @defer {
         <app-song-dialog [song]="zeile(k)" [werte]="wert(k)" [quelle]="quelle(k)" [dateien]="notenDateien()"
-          [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1" [wackelt]="!!wackelt()[k]" (wackeltUmschalten)="wackeltUmschalten(k)"
+          [position]="(dialogIndex() + 1) + ' / ' + dialogListe().length" [hatVorigen]="dialogIndex() > 0" [hatNaechsten]="dialogIndex() < dialogListe().length - 1" (statusGeaendert)="wackeltNeu()"
           [umbenennbar]="!zeile(k).listen.length" (umbenennen)="umbenennen(k, $event)"
           (setzen)="setzen(k, $event.feld, $event.roh)" (notenGeaendert)="notenLaden()" (blaettern)="dialogBlaettern($event)"
           (buehne)="buehneAusDialog()" (schliessen)="offen.set(null)" />
@@ -352,8 +352,11 @@ export class SongsListe {
     return liste;
   });
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
-  /** eigene „Wackelt noch“-Liste (data/wackelt.ts) */
+  /** eigene Songs mit Status „Üben“ oder „Wackelt noch“ (data/wackelt.ts) */
   protected readonly wackelt = signal(ladeWackelt());
+  protected wackeltNeu(): void {
+    this.wackelt.set(ladeWackelt());
+  }
   // Lücken je Liste: „Zeigen“ und Reihenfolge wirken zusätzlich zu den Chips (z. B. Setlist + ohne Bass)
   // Dauer, Notenmappe, Abweichungen, Stand der Wunschliste
   protected readonly aktualisierenUrl = 'https://github.com/Jan-Frederic/Blickfeld-Nord/actions/workflows/repertoire.yml';
@@ -439,9 +442,6 @@ export class SongsListe {
     if (this.songsNachKey().has(neuKey)) this.offen.set(neuKey);
   }
 
-  protected wackeltUmschalten(k: string): void {
-    this.wackelt.set(wackeltSetzen(k, !this.wackelt()[k]));
-  }
   /** Fortschritt für den gewählten Listen-Filter (Alle, eine Spotify-Liste oder „ohne Liste“) */
   protected readonly fortschrittListe = computed(() => {
     this.entwurf();

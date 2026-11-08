@@ -35,10 +35,10 @@ const schreiben = (k: string, v: string | null): void => {
 
 export const ladeIch = (): string => lesen(ICH_KEY) ?? '';
 
-/** Person wählen – teilt gleich die eigene „Wackelt noch“-Liste */
-export function ichSetzen(slug: string, wackelt: Record<string, string>): void {
+/** Person wählen – teilt gleich die angegebenen unsicheren Songs (ohne Angabe bleibt „unsicher bei“, wie es ist) */
+export function ichSetzen(slug: string, wackelt?: Record<string, string>): void {
   schreiben(ICH_KEY, slug || null);
-  if (slug) unsicherTeilen(slug, wackelt);
+  if (slug && wackelt) unsicherTeilen(slug, wackelt);
 }
 
 export interface Zusage {

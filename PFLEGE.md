@@ -105,28 +105,32 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
 - **Backstage-Übersicht:** oben eine **Suche über alles** (Auftritte, Proben, Songs aller Spotify-Listen, Kontakte,
   Sammlungen, Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche, Sammlungen ihre Seite). Danach Heute fällig,
-  der **Übemodus** und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
+  **Üben** (rechts daneben der Übe-Modus) und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
   Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
   Backstage → Zahlen. Die Bereiche (Termine, Zahlen, Songs, …) stehen im Menü oben – Kacheln gibt es in der
   Übersicht nicht mehr.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
-- **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht): persönlich (Einstellungen → „Ich bin …“) – deine Songs, die
-  noch wackeln („Wackelt noch“ und Fortschritt), als **Karteikarten** in fünf Kästen. Reihenfolge: heute dran, Songs
-  des nächsten Auftritts zuerst. Karte: Titel → im Kopf durchspielen → **Aufdecken** (Tonart, Capo, Tempo, Takt,
-  Notiz, Noten) → **Sitzt** (einen Kasten weiter, wieder dran nach 1, 3, 7, 14 Tagen) oder **Wackelt noch** (zurück in
-  Kasten 1, gleich noch einmal). Sitzt eine Karte im letzten Kasten, ist der Song gelernt und verschwindet aus
-  „Wackelt noch“. Die Pfeile links und rechts der Karte blättern zur vorigen bzw. nächsten Karte (ohne zu bewerten).
-  Tasten: ← → blättern, Leertaste deckt auf, 1 wackelt, 2 sitzt. **Übe-Modus:** dieselben Karten in der Notenansicht
-  (wie Bühnen-/Probe-Modus), „Wackelt noch“ und „Sitzt“ oben rechts – danach kommt die nächste fällige Karte, eine
-  wackelnde später noch einmal; Blättern wie im Bühnen-Modus. **Mitschnitt** (oben in der Notenansicht, auf der Karte
-  unter „Mitschnitte“): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen.
-  **Mit der Band geteilt** (`bn-kasten-<Person>`): welche Songs in welchem Kasten liegen und was gelernt wurde – unter
-  **Songs → Bühnenreife** steht je Musiker der Karteikasten (Karten je Kasten, in 30 Tagen gelernt, zuletzt geübt), und
-  der **Probe-Vorschlag** nimmt Songs, die bei mindestens zwei Leuten noch in Kasten 1 hängen, ganz nach vorn. **Tagesziel:** unter Einstellungen → Ich bin …
-  „Karteikarten am Tag“ (Standard 10) – „Üben starten“ nimmt höchstens so viele (schon geübte zählen mit), „Alle üben“
-  geht darüber hinaus. Jede Bewertung zählt im Fortschritt und damit in der **Bühnenreife**. Stand je Person
-  (`bn-ueben`, `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).
+- **Übe-Status:** Jeder Song hat je Musiker einen von fünf Status – **Nicht gelernt** (jeder neue Song und alle ohne
+  Angabe), **Üben**, **Wackelt noch**, **Sitzt**, **Eingenordet** (früher „sicher“). Gesetzt im Song-Dialog (Auswahl
+  oben), im Probe-Modus (Umschalter mit den fünf Stufen), in der Nachbereitung (⚠ = Wackelt noch) oder über den
+  Übe-Modus. Der Status ist eng mit dem **Karteikasten** verbunden: Kasten 1 = Üben, Kasten 2 und 3 = Wackelt noch,
+  Kasten 4 und 5 = Sitzt; eingenordete Songs fallen aus dem Karteikasten heraus. Logik: `src/app/data/uebe-status.ts`
+  (Kästen: `src/app/data/ueben.ts`). Der alte Stand („Wackelt noch“-Liste, Fortschritt mit sitzt/wackelt/sicher)
+  wird je Person beim ersten Öffnen einmalig umgestellt: sicher → Eingenordet, sitzt → Kasten 4, wackelt → Kasten 2.
+- **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht):
+  persönlich (Einstellungen → „Ich bin …“). Oben die fünf Kästen mit ihrem Status, darunter **ein** großer Knopf
+  **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus), „Wackelt noch“ und „Sitzt“ oben rechts –
+  **Sitzt** schiebt die Karte einen Kasten weiter (wieder dran nach 1, 3, 7, 14 Tagen), im letzten Kasten ist der Song
+  **eingenordet**; **Wackelt noch** zurück in Kasten 1, die Karte kommt später noch einmal. Reihenfolge: heute fällige
+  zuerst (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
+  Notenansicht): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen. Darunter alle Songs
+  im Karteikasten mit ihrem Status (dort direkt änderbar) und eine Suche, um Songs zum Üben hinzuzufügen (Kasten 1).
+  **Tagesziel:** unter Einstellungen → Ich bin … „Karteikarten am Tag“ (Standard 10) – nur eine **Empfehlung**, sie
+  hält niemanden vom Üben ab. **Mit der Band geteilt** (`bn-kasten-<Person>`, Version 2: Kästen und eingenordete
+  Songs): daraus lesen alle den Status der anderen (Bühnenreife, Probe-Modus, Probe-Vorschlag); der Probe-Vorschlag
+  nimmt Songs, die bei mindestens zwei Leuten in Kasten 1 hängen, ganz nach vorn. Stand je Person (`bn-ueben`,
+  `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).
 - **Veranstalter bewerten** (Ansprechpartner beim Auftritt bzw. Termine → Kontakte): Technik, Publikum, Bezahlung
   pünktlich/spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ (Saisonplanung, Termine → Saison) –
   gelb, wenn zwei Punkte schlecht waren. Wie die Kontakte nur auf den Geräten und im OneDrive.
@@ -189,21 +193,20 @@ an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 Geräten), dann auf der Probenseite **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
 Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2 kommen, 1 offen“).
 
-**Unsicher bei:** Mit „Ich bin …“ sieht die Band die eigene „Wackelt noch“-Liste (`bn-unsicher-<Person>`): auf der
-Probenseite je Song („unsicher: Fred“) und im Song-Dialog („Unsicher bei: …“).
+**Unsicher bei:** Mit „Ich bin …“ sieht die Band, welche Songs bei dir auf Üben oder Wackelt noch stehen
+(`bn-unsicher-<Person>`, wird aus dem Karteikasten nachgezogen): auf der Probenseite je Song („unsicher: Fred“).
 
-**Fortschritt je Person und Bühnenreife:** Mit „Ich bin …“ wird jede Angabe der Person festgehalten (eigene Datei
-`bn-fortschritt-<Person>`, mit der Band gespiegelt): „Wackelt noch“ an = wackelt, aus = sitzt; im Probe-Modus
-„Nochmal“ = wackelt, „Sitzt“ = sitzt (mit dem Datum der Probe); im Übemodus jede Karte: „Wackelt noch“ = wackelt,
-„Sitzt“ = sitzt (am selben Tag zählt die Probe vor dem Übemodus vor der Liste). Je Musiker und Song ergibt das eine Stufe:
-**↻ wackelt**, **✓ sitzt**, **✓✓ sicher** (an zwei Tagen in Folge „sitzt“). Die **Bühnenreife** eines Songs ist der
-Schnitt über alle Musiker (wackelt 0, sitzt 70 %, sicher 100 %, ohne Angabe 50 %): **bühnenreif** = alle sicher,
-**Baustelle** = wackelt bei jemandem. Übersicht unter **Songs → Bühnenreife**: je Musiker sicher/sitzt/wackelt und was in
-den letzten 30 Tagen gefestigt wurde oder neu wackelt, darunter alle Songs mit Stufe je Musiker und Reife-Balken
-(Filter: Baustellen, fast bühnenreif, bühnenreif, ohne Angabe). Im Song-Dialog steht die Reife mit Stufe je Musiker.
-Der **Probe-Vorschlag** nimmt zuerst die Songs, die bei jemandem wackeln (geringste Reife vorn, „wackelt bei Fred,
-David · Bühnenreife 20 %“), später fast bühnenreife zum Festigen; für den nächsten Auftritt kommen Setlist-Songs dazu,
-die bei jemandem wackeln.
+**Übe-Status und Bühnenreife:** Der aktuelle Status je Musiker steht im Karteikasten (siehe Üben); jede Änderung kommt
+zusätzlich als Verlauf in die eigene Datei `bn-fortschritt-<Person>` (mit Datum und Quelle: Liste, Probe, Übe-Modus –
+daraus „in 30 Tagen gefestigt / neu wackelig“ und die Stände einer Probe). Die **Bühnenreife** eines Songs ist der
+Schnitt über alle Musiker (Nicht gelernt 0, Üben 15 %, Wackelt noch 40 %, Sitzt 75 %, Eingenordet 100 %):
+**bühnenreif** = bei allen eingenordet, **fast bühnenreif** = bei allen mindestens Sitzt, **Baustelle** = bei
+jemandem noch nicht so weit, **ohne Angabe** = niemand hat einen Status. Übersicht unter **Songs → Bühnenreife**: je
+Musiker die Songs je Status, was in den letzten 30 Tagen gefestigt wurde oder neu wackelt und der Karteikasten, darunter
+alle Songs mit Status je Musiker und Reife-Balken (Filter: Baustellen, fast bühnenreif, bühnenreif, ohne Angabe). Im
+Song-Dialog steht die Reife mit Status je Musiker. Der **Probe-Vorschlag** nimmt zuerst die Songs, die bei jemandem auf
+Üben oder Wackelt noch stehen (geringste Reife vorn, „wackelt bei Fred, David · Bühnenreife 20 %“), später fast
+bühnenreife zum Festigen; für den nächsten Auftritt kommen Setlist-Songs dazu, die bei jemandem wackeln.
 
 **Plan an die Band:** schickt den Probenplan als Nachricht – Songs mit Tonart/Tempo und Spotify-Link zum Vorher-Anhören,
 offene Punkte und Notizen (Teilen-Menü, z. B. WhatsApp; sonst Zwischenablage). Eine Woche vor der Probe erinnert
@@ -215,29 +218,27 @@ einfügen).
 ihrer Reihenfolge an den Anfang des Plans. Der Probe-Modus spielt dann die Setlist mit Pausen durch – die Uhr läuft je
 Set gegen die geplante Spielzeit wie auf der Bühne.
 
-**Übergang** (Probe-Leiste): zeigt den Wechsel zum nächsten Song – Tonart (bei einem Sprung mit Überleitung), Tempo
-vorher/nachher (bei großem Wechsel: absprechen, wer einzählt) und Capo danach.
-
 **Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
 ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo
 (100 → 70 %), Einzählen, Stimmgerät, Schriftgröße; weiter per Pedal, Pfeiltaste, Tippen oder Wischen. Unter jedem Song
 die **Probe-Leiste**:
 
-- **Sitzt** / **Nochmal**: gilt für die Person am Gerät („Ich bin …“, sonst direkt in der Leiste wählbar) – zählt in
-  ihrem Fortschritt und setzt bzw. löscht „Wackelt noch“. Darunter steht, was die anderen gedrückt haben („David:
-  nochmal“). Für die Band gilt der Song als „nochmal“, sobald eine Person nochmal will; im Plan wird er als geprobt
-  abgehakt, „nochmal üben“ kommt als Notiz dazu. Ohne gewählte Person gilt Sitzt/Nochmal wie früher für die Band.
-  Beides zählt im Proben-Verlauf des Songs (Song-Dialog) und im Probe-Vorschlag.
-- **Durchlauf** zählt, wie oft der Song gespielt wurde (−1 nimmt einen zurück).
-- **Notiz** fürs Protokoll (erscheint im Song-Dialog unter „Zuletzt geprobt“); Tippen dort blättert nicht.
+- **Übe-Status** als Umschalter mit fünf Stufen (Nicht gelernt, Üben, Wackelt noch, Sitzt, Eingenordet): gilt für die
+  Person am Gerät (Einstellungen → „Ich bin …“, ohne ist er gesperrt) – landet in ihrem Karteikasten und in der
+  Bühnenreife. Darunter steht der Status der anderen („David: Wackelt noch“). Für die Band gilt der Song als „nochmal“,
+  solange er bei einer Person in dieser Probe noch nicht sitzt; im Plan wird er als geprobt abgehakt, „nochmal üben“
+  kommt als Notiz dazu. Zählt im Proben-Verlauf des Songs (Song-Dialog) und im Probe-Vorschlag.
+- **Notiz je Person** (eigene Datei `bn-probenotiz-<Person>`, mit der Band gespiegelt): steht auf der Probenseite beim
+  Song („Fred: Bridge wackelt“) und im Song-Dialog unter „Zuletzt geprobt“; die Notizen der anderen aus dieser Probe
+  stehen darüber. Tippen dort blättert nicht. Ohne „Ich bin …“ geht die Notiz ins gemeinsame Protokoll des Plans.
 - **Mikrofon**: Mitschnitt nur dieses Songs aufnehmen und nachhören.
-- Die **Notiz der letzten Probe** zum Song steht gelb darüber.
+- Die **Notizen der letzten Probe** zum Song (Protokoll und alle Musiker) stehen gelb darüber.
 - **Zeit:** wie lange der Song schon dran ist, und wie viel Zeit für jeden offenen Song bis zum Probenende bleibt. Oben
   läuft die Uhr gegen die Probendauer (Beginn bis Ende aus `band.service.ts`). Die Zeit je Song wird mitgeschrieben.
 
 Am Ende eine **Zusammenfassung**: was sitzt, was nochmal dran muss, was nicht drankam, wie lange geprobt wurde – und
-ein Knopf, der „Nochmal“ und „Nicht drangekommen“ auf den Plan der **nächsten Probe** setzt. Auf der Probenseite
-stehen danach je Song „↻ nochmal“, Durchläufe und Minuten. Alles im Probenplan (`bn-probe-<Datum>`, wird mit OneDrive
+ein Knopf, der „Nochmal“ und „Nicht drangekommen“ auf den Plan der **nächsten Probe** setzt (bei „Nochmal“ steht, bei
+wem es noch nicht sitzt: „Iris (Fred: Üben)“). Auf der Probenseite stehen danach je Song „↻ nochmal“, Notizen und Minuten. Alles im Probenplan (`bn-probe-<Datum>`, wird mit OneDrive
 gespiegelt); Logik in `src/app/data/probe-modus.ts`.
 
 ## Bühnenplan ändern
@@ -526,9 +527,9 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
 
 **In der Probe** (Song-Dialog unter Songs → Liste):
 
-- **Wackelt noch / Sitzt** (oben im Dialog): deine eigene Übe-Liste – je Musiker. Mit „Ich bin …“ zählt jede Änderung
-  in deinem Fortschritt (Bühnenreife, Songs → Bühnenreife). Der **Probe-Vorschlag** nimmt diese Songs zuerst,
-  „Zeigen → wackelt noch“ listet sie.
+- **Übe-Status** (Auswahl oben im Dialog): dein eigener Status zum Song – Nicht gelernt, Üben, Wackelt noch, Sitzt,
+  Eingenordet (braucht „Ich bin …“). Landet im Karteikasten und in der Bühnenreife; der **Probe-Vorschlag** nimmt Songs
+  mit Üben/Wackelt noch zuerst, „Zeigen → wackelt noch“ listet deine (Üben und Wackelt noch).
 - **Mitschnitte:** auf **Aufnehmen** tippen, die Band spielt, **Stopp** – die Aufnahme bleibt beim Song auf diesem Gerät,
   zum Nachhören zu Hause oder zum **Teilen** (Messenger, AirDrop). Beim ersten Mal fragt der Browser nach dem Mikrofon.
   Mit ☁ (**Mit der Band teilen**) landet sie im Ordner `Mitschnitte/` der OneDrive-Synchronisation und erscheint bei den
@@ -539,7 +540,7 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
   aufnehmen** nimmt die Probe am Stück auf (gehört zur Probe, nicht zu einem Song); dazu das **Stimmgerät**.
 
 **Nach dem Auftritt** (Seite des Auftritts, sobald er vorbei ist): **Nachbereitung** aufklappen – Sterne je Song (wie im
-Bühnen-Modus), ⚠ setzt einen Song auf die eigene „Wackelt noch“-Liste, dazu „Was lief gut?“ und „Was ging schief?“.
+Bühnen-Modus), ⚠ setzt deinen Übe-Status eines Songs auf „Wackelt noch“ (aus: Sitzt), dazu „Was lief gut?“ und „Was ging schief?“.
 **Merkpunkte** (eine Zeile je Punkt, z. B. „Kabel für Keys kaufen“) stehen unter **Aufgaben**, bis sie abgehakt sind.
 „Was lief gut“ lässt sich im Rückblick-Formular darunter als Entwurf übernehmen – vor dem Veröffentlichen umformulieren.
 Die Nachbereitung steckt im Backup (Einstellungen → Backup).
@@ -636,11 +637,11 @@ Song) lassen sich mit der Berechtigung „Daten löschen“ löschen: **Vom Ger�
 jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern zwei Leute selten dieselbe Datei:
 
 - `Daten/` – für die ganze Band: Setlists (samt Notizen und Sammlungen), Spielzeiten, Packlisten, Vor Ort, Vorabend,
-  Proben, Zusagen, „unsicher bei“, Fortschritt je Musiker, Sterne, Werbeplan-Häkchen, Nachbereitungen, Kontakte,
+  Proben, Zusagen, „unsicher bei“, Übe-Status und Verlauf je Musiker (Karteikasten), Probe-Notizen je Musiker, Sterne, Werbeplan-Häkchen, Nachbereitungen, Kontakte,
   Saison-Stand, Songs-Entwurf, für alle gelöschte Noten, Prüf-Häkchen.
 - `Einstellungen/<Name>/` – je Person: Bühnen-Modus (Schriftgröße, Klick-Ton, Pedal-Tasten, Halbseite), gewählte
   Noten-Fassung (PDF bzw. Akkorde), volle Breite, von Hand verschobene Akkorde und Mitscroll-Tempo je Song, gemerkte
-  Zuordnungen, Wackelt-Liste, Aufgaben-Häkchen, Filter, Sprache.
+  Zuordnungen, eigener Karteikasten (mit Fälligkeit, Tagesziel), Aufgaben-Häkchen, Filter, Sprache.
 - Nicht gespiegelt wird nur, was zum Gerät gehört: Sync-Einstellungen, Anmeldung, Gerätename, Zugangssperre, letzter
   Backup-Zeitpunkt.
 - **Neue Daten erscheinen sofort:** Bringt ein Abgleich Änderungen anderer Geräte (z. B. einen Haken im Werbeplan), baut
@@ -968,7 +969,7 @@ Bevor etwas online geht, prüft GitHub unter anderem:
 
 **Auf dem eigenen Rechner prüfen** (für Entwickler): `npm run pruefen` baut die Seite genau wie GitHub (inklusive
 Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Breiten-Check, Linkcheck und Tests aus.
-Nur einzelne Klicktests (nach dem Build): `NUR="Sammlungen|Übemodus" node scripts/e2e.mjs` – Teile der Testnamen,
+Nur einzelne Klicktests (nach dem Build): `NUR="Sammlungen|Karteikasten" node scripts/e2e.mjs` – Teile der Testnamen,
 mehrere mit `|`.
 
 **Tote Links:** Einmal pro Woche (montags) prüft GitHub alle externen Links, etwa zu Freunden, Instagram oder Spotify.

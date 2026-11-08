@@ -16,6 +16,7 @@ import { ProbePlan, generalprobe, loadProbe, minutenText, probeNachricht, speich
 import { ProbeZusagen } from './probe-zusagen';
 import { unsicherJeSong } from '../data/band-ich';
 import { alleFortschritte, bandStand, probeStaende } from '../data/fortschritt';
+import { notizenDerProbe } from '../data/probe-notiz';
 import { spotifyLinks } from '../data/playlisten';
 import { spotifyUrl } from '../data/song-steckbrief';
 import { nachrichtSenden } from '../data/kontakte';
@@ -62,9 +63,10 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
               <li [class.done]="s.done">
                 <label><input type="checkbox" [checked]="s.done" (change)="toggleSong(i)" /> <span class="t">{{ s.title }}</span> <span class="a">{{ s.artist }}</span></label>
                 @if (info(s); as inf) { <span class="info">{{ inf }}</span> }
-                @if (unsicher().get(s.title + '|' + s.artist); as wer) { <span class="info unsicher" title="laut „Wackelt noch“">unsicher: {{ wer.join(', ') }}</span> }
+                @if (unsicher().get(s.title + '|' + s.artist); as wer) { <span class="info unsicher" title="Übe-Status Üben oder Wackelt noch">unsicher: {{ wer.join(', ') }}</span> }
                 @if (bandStaende().get(s.title + '|' + s.artist) ?? s.stand; as st) { @if (st === 'nochmal') { <span class="info nochmal">↻ nochmal</span> } }
                 @if (s.durchlaeufe || s.zeit) { <span class="info">{{ s.durchlaeufe ? s.durchlaeufe + '×' : '' }}{{ s.durchlaeufe && s.zeit ? ' · ' : '' }}{{ s.zeit ? minutenText(s.zeit) : '' }}</span> }
+                @if (personNotizen().get(s.title + '|' + s.artist); as pn) { <span class="info">{{ pn.join(' · ') }}</span> }
                 <input class="protokoll" maxlength="80" [value]="s.notiz ?? ''" placeholder="Notiz: z. B. Bridge sitzt" [attr.aria-label]="'Notiz zu ' + s.title" (change)="notizSetzen(i, $any($event.target).value)" />
                 <button type="button" class="icon" [class.an]="aufnahme() === s.title + '|' + s.artist" (click)="aufnahme.set(aufnahme() === s.title + '|' + s.artist ? '' : s.title + '|' + s.artist)" [attr.aria-label]="'Mitschnitte von ' + s.title" title="Aufnehmen und nachhören"><mat-icon>mic</mat-icon></button>
                 <button type="button" class="icon" (click)="removeSong(i)" [attr.aria-label]="s.title + ' entfernen'"><mat-icon>close</mat-icon></button>
@@ -205,8 +207,10 @@ export class BackstageProbe {
     const staende = probeStaende(this.datum(), this.band.members, alleFortschritte(this.band.members));
     return new Map([...staende].map(([k, v]) => [k, bandStand(v)]));
   });
-  /** wer bei welchem Song noch unsicher ist (geteilte „Wackelt noch“-Listen) */
+  /** wer bei welchem Song noch unsicher ist (Übe-Status „Üben“ / „Wackelt noch“, je Person geteilt) */
   protected readonly unsicher = computed(() => (this.plan(), unsicherJeSong(this.band.members)));
+  /** Notizen der Musiker aus dem Probe-Modus (je Person, data/probe-notiz.ts) */
+  protected readonly personNotizen = computed(() => (this.plan(), notizenDerProbe(this.datum(), this.band.members)));
   // nächster Auftritt nach der Probe – für die Generalprobe
   protected readonly naechsterAuftritt = computed(() => {
     this.plan(); // nach neuen Daten (Abgleich) auch die Setlist neu zählen

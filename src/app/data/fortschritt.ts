@@ -1,20 +1,17 @@
-// Fortschritt je Person und Bühnenreife je Song. Jede Person schreibt ihre eigene Datei (bn-fortschritt-<slug>, wird
-// mit der Band gespiegelt – so ändern nie zwei Leute dieselbe Datei): je Song ein kurzer Verlauf „sitzt“ / „wackelt“
-// mit Datum und Quelle. Einträge entstehen über
-// – „Wackelt noch“ (Songs-Dialog, Nachbereitung): an = wackelt, aus = sitzt („liste“),
-// – den Probe-Modus: „Sitzt“ / „Nochmal“ gilt für die Person am Gerät („probe“, Datum der Probe),
-// – den Übemodus (Karteikasten): „Sitzt“ / „Wackelt noch“ je Karte („ueben“, Tag des Übens).
-// Daraus: Stufe je Person (wackelt, sitzt, sicher = zweimal in Folge an verschiedenen Tagen sitzt), Bühnenreife je Song
-// (Schnitt über alle Musiker, ohne Angabe zählt neutral) und der Fortschritt je Person (was in den letzten Wochen
-// gefestigt wurde bzw. neu wackelt). Übersicht: Backstage → Songs → Bühnenreife; der Probe-Vorschlag nimmt die Songs mit
-// der geringsten Reife zuerst. Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
-import { Mitglied, rufname } from './band-ich';
+// Verlauf des Übe-Status je Person. Jede Person schreibt ihre eigene Datei (bn-fortschritt-<slug>, wird mit der Band
+// gespiegelt – so ändern nie zwei Leute dieselbe Datei): je Song ein kurzer Verlauf der Status mit Datum und Quelle
+// („liste“: Song-Dialog/Nachbereitung, „probe“: Probe-Modus mit Datum der Probe, „ueben“: Übe-Modus). Der aktuelle Status
+// selbst steht im Karteikasten (data/uebe-status.ts); der Verlauf dient für „in 30 Tagen gefestigt“ (Bühnenreife) und
+// die Stände einer Probe (Proben-Verlauf, Ergebnis). Ältere Einträge kennen nur „sitzt“ / „wackelt“ (Stufe mit „sicher“ =
+// zweimal in Folge an verschiedenen Tagen sitzt) – daraus wird einmalig der neue Status (statusMigrieren).
+// Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
+import { Mitglied } from './band-ich';
 
 export const FORTSCHRITT_PREFIX = 'bn-fortschritt-';
 /** so viele Einträge je Song und Person bleiben (ältere fallen weg) */
 const VERLAUF_MAX = 20;
 
-export type Stand = 'sitzt' | 'wackelt';
+export type Stand = 'nicht' | 'ueben' | 'wackelt' | 'sitzt' | 'eingenordet';
 export interface FortschrittEintrag {
   /** JJJJ-MM-TT */
   tag: string;
@@ -24,10 +21,8 @@ export interface FortschrittEintrag {
 /** je Song („Titel|Interpret“) der Verlauf, älteste zuerst */
 export type Fortschritt = Record<string, FortschrittEintrag[]>;
 
+/** alte Stufe (vor den fünf Übe-Status) */
 export type Stufe = 'wackelt' | 'sitzt' | 'sicher';
-/** Punkte je Stufe für die Bühnenreife; ohne Angabe zählt neutral */
-const PUNKTE: Record<Stufe, number> = { wackelt: 0, sitzt: 0.7, sicher: 1 };
-const OHNE_ANGABE = 0.5;
 
 const lesen = (k: string): string | null => {
   try {
@@ -63,9 +58,13 @@ export function fortschrittEintragen(slug: string, key: string, stand: Stand, qu
   }
 }
 
-/** Stufe aus dem Verlauf: zuletzt wackelt → wackelt; zuletzt sitzt → sitzt, an zwei Tagen in Folge → sicher */
+/** alte Stufe aus dem Verlauf: zuletzt wackelt → wackelt; zuletzt sitzt → sitzt, an zwei Tagen in Folge → sicher */
 export function stufe(verlauf: FortschrittEintrag[] | undefined): Stufe | undefined {
   if (!verlauf?.length) return undefined;
+  const letzter = [...verlauf].sort((a, b) => a.tag.localeCompare(b.tag)).at(-1)!.stand;
+  if (letzter === 'eingenordet') return 'sicher';
+  if (letzter === 'ueben') return 'wackelt';
+  if (letzter === 'nicht') return undefined;
   // je Tag zählt der letzte Eintrag; am selben Tag gilt Probe vor Übemodus vor Liste
   const rang = { liste: 0, ueben: 1, probe: 2 } as const;
   const jeTag = new Map<string, Stand>();
@@ -75,71 +74,12 @@ export function stufe(verlauf: FortschrittEintrag[] | undefined): Stufe | undefi
   return staende.length >= 2 && staende.at(-2) === 'sitzt' ? 'sicher' : 'sitzt';
 }
 
-export interface Reife {
-  /** 0–1: Schnitt über alle Musiker (wackelt 0, sitzt 0,7, sicher 1, ohne Angabe 0,5) */
-  wert: number;
-  /** Stufe je Person (slug), nur mit Angabe */
-  personen: Map<string, Stufe>;
-  /** Rufnamen, bei denen der Song wackelt */
-  wackeltBei: string[];
-  /** so viele Musiker haben eine Angabe */
-  mitAngabe: number;
-  ampel: 'buehnenreif' | 'fast' | 'baustelle' | 'offen';
-}
-
-/** Bühnenreife eines Songs über alle Mitglieder */
-export function reife(key: string, mitglieder: Mitglied[], alle: Map<string, Fortschritt>): Reife {
-  const personen = new Map<string, Stufe>();
-  let summe = 0;
-  for (const m of mitglieder) {
-    const s = stufe(alle.get(m.slug)?.[key]);
-    if (s) personen.set(m.slug, s);
-    summe += s ? PUNKTE[s] : OHNE_ANGABE;
-  }
-  const wert = mitglieder.length ? summe / mitglieder.length : 0;
-  const wackeltBei = mitglieder.filter((m) => personen.get(m.slug) === 'wackelt').map(rufname);
-  const ampel = !personen.size ? 'offen' : wackeltBei.length ? 'baustelle' : personen.size === mitglieder.length && wert >= 0.9 ? 'buehnenreif' : wert >= 0.6 ? 'fast' : 'baustelle';
-  return { wert, personen, wackeltBei, mitAngabe: personen.size, ampel };
-}
-
 /** Fortschritt aller Mitglieder (aus dem Speicher) */
 export function alleFortschritte(mitglieder: Mitglied[]): Map<string, Fortschritt> {
   return new Map(mitglieder.map((m) => [m.slug, ladeFortschritt(m.slug)]));
 }
 
-export interface PersonFortschritt {
-  slug: string;
-  name: string;
-  sicher: number;
-  sitzt: number;
-  wackelt: number;
-  /** in den letzten `tage` Tagen von „wackelt“ zu „sitzt“ gekommen */
-  gefestigt: string[];
-  /** in den letzten `tage` Tagen neu „wackelt“ */
-  neuWackelig: string[];
-  /** letzter Eintrag */
-  zuletzt?: string;
-}
-
-/** Fortschritt einer Person: Stufen über alle Songs und was sich in den letzten Wochen bewegt hat */
-export function personFortschritt(m: Mitglied, f: Fortschritt, heute: string, tage = 30): PersonFortschritt {
-  const grenze = new Date(Date.parse(heute) - tage * 864e5).toISOString().slice(0, 10);
-  const out: PersonFortschritt = { slug: m.slug, name: rufname(m), sicher: 0, sitzt: 0, wackelt: 0, gefestigt: [], neuWackelig: [] };
-  for (const [key, verlauf] of Object.entries(f)) {
-    const s = stufe(verlauf);
-    if (!s) continue;
-    out[s]++;
-    const vorher = stufe(verlauf.filter((e) => e.tag < grenze));
-    const titel = key.slice(0, key.lastIndexOf('|'));
-    if (s !== 'wackelt' && vorher === 'wackelt') out.gefestigt.push(titel);
-    if (s === 'wackelt' && vorher !== 'wackelt') out.neuWackelig.push(titel);
-    const letzter = verlauf.at(-1)?.tag;
-    if (letzter && (!out.zuletzt || letzter > out.zuletzt)) out.zuletzt = letzter;
-  }
-  return out;
-}
-
-/** Stände aus dem Probe-Modus für eine Probe: je Song, wer „sitzt“ bzw. „nochmal“ gedrückt hat */
+/** Stände aus dem Probe-Modus für eine Probe: je Song der Status, den jede Person gesetzt hat */
 export function probeStaende(datum: string, mitglieder: Mitglied[], alle: Map<string, Fortschritt>): Map<string, Map<string, Stand>> {
   const out = new Map<string, Map<string, Stand>>();
   for (const m of mitglieder) {
@@ -153,10 +93,10 @@ export function probeStaende(datum: string, mitglieder: Mitglied[], alle: Map<st
   return out;
 }
 
-/** Stand eines Songs in der Probe für die Band: „nochmal“, sobald eine Person nochmal will; sonst „sitzt“ */
+/** Stand eines Songs in der Probe für die Band: „nochmal“, sobald er bei einer Person noch nicht sitzt; sonst „sitzt“ */
 export function bandStand(staende: Map<string, Stand> | undefined): 'sitzt' | 'nochmal' | undefined {
   if (!staende?.size) return undefined;
-  return [...staende.values()].includes('wackelt') ? 'nochmal' : 'sitzt';
+  return [...staende.values()].every((s) => s === 'sitzt' || s === 'eingenordet') ? 'sitzt' : 'nochmal';
 }
 
 /** Probenpläne mit dem Stand der Band aus den Fortschritten (für Proben-Verlauf und Ergebnis) */

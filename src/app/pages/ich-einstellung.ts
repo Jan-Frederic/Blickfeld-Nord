@@ -2,11 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ichSetzen, ladeIch, rufname } from '../data/band-ich';
-import { ladeWackelt } from '../data/wackelt';
+import { statusMigrieren } from '../data/uebe-status';
 import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
 
-// Backstage → Einstellungen: „Ich bin …“ – wer dieses Gerät benutzt. Gilt für Probe (Zusagen, Sitzt/Nochmal im
-// Probe-Modus), „Wackelt noch“ und den Übemodus; dazu das Tagesziel des Übemodus (Karten je Tag). Beides wird mit den
+// Backstage → Einstellungen: „Ich bin …“ – wer dieses Gerät benutzt. Gilt für Probe (Zusagen, Status und Notizen im
+// Probe-Modus), den Übe-Status je Song und den Übe-Modus; dazu das Tagesziel (Empfehlung, Karten je Tag). Beides wird mit den
 // Einstellungen der Person gespiegelt (data/band-ich.ts, data/ueben.ts).
 @Component({
   selector: 'app-ich-einstellung',
@@ -20,11 +20,11 @@ import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
           @for (m of mitglieder; track m.slug) { <option [value]="m.slug" [selected]="m.slug === ich()">{{ rufname(m) }}</option> }
         </select>
       </label>
-      <p class="hinweis">Damit zählen Zusagen zur Probe, Sitzt/Nochmal im Probe-Modus, „Wackelt noch“ und der Übemodus für dich.</p>
-      <label class="ziel">Karteikarten am Tag (Übemodus)
+      <p class="hinweis">Damit zählen Zusagen zur Probe, dein Übe-Status je Song (Song-Dialog, Probe-Modus, Übe-Modus) und deine Probe-Notizen für dich.</p>
+      <label class="ziel">Karteikarten am Tag (Empfehlung)
         <input type="number" min="1" max="100" inputmode="numeric" aria-label="Karteikarten am Tag" [value]="ziel()" (change)="zielSetzen($any($event.target).value)" />
       </label>
-      <p class="hinweis">So viele Karten schlägt der Übemodus je Tag vor – gilt für dich auf allen deinen Geräten.@if (gespeichert()) { <span class="ok"> Gespeichert ✓</span> }</p>
+      <p class="hinweis">So viele Karten empfiehlt der Übe-Modus je Tag – mehr üben geht immer. Gilt für dich auf allen deinen Geräten.@if (gespeichert()) { <span class="ok"> Gespeichert ✓</span> }</p>
     </div>
   `,
   styles: `
@@ -52,7 +52,9 @@ export class IchEinstellung {
     this.gespeichert.set(true);
   }
   protected waehlen(slug: string): void {
-    ichSetzen(slug, ladeWackelt());
+    ichSetzen(slug);
     this.ich.set(slug);
+    // Übe-Status dieser Person: einmalig aus dem alten Stand umstellen, dann „unsicher bei“ aus den Kästen
+    statusMigrieren();
   }
 }

@@ -97,7 +97,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
             }
-            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" [naechster]="naechsterSong()" /> }
+            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" /> }
             @if (show()) {
               <p class="stars" role="group" aria-label="Wie lief der Song heute?">
                 @for (n of [1, 2, 3, 4, 5]; track n) {
@@ -259,10 +259,6 @@ export class SetlistBuehne {
   }
   protected readonly minutenText = minutenText;
   private readonly band = inject(BandService);
-  protected readonly naechsterSong = computed(() => {
-    const n = this.next();
-    return n && !isPause(n) ? n : undefined;
-  });
   // links oben: wofür der Modus läuft – Name des Auftritts bzw. „Probe 12.11.“ (danach Set bzw. Song)
   protected readonly anlass = computed(() => {
     const d = this.probe();

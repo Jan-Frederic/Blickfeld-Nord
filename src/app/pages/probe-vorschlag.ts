@@ -6,8 +6,7 @@ import { rufname } from '../data/band-ich';
 import { alleBewertungen, rangliste, songKey } from '../data/bewertung';
 import { Entry, SETLIST_PREFIX, Song, isPause, loadSetlist } from '../data/setlist-data';
 import { ProbeTipp, ReifeKurz, probeTipps, vorAuftritt } from '../data/probe-vorschlag';
-import { alleFortschritte, reife } from '../data/fortschritt';
-import { ladeWackelt } from '../data/wackelt';
+import { alleStatus, buehnenreife, unsicher } from '../data/uebe-status';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { alleSongNoten } from '../data/noten';
 import { SONGINFO, SONGINFO_ENTWURF_KEY } from '../data/songinfo';
@@ -60,7 +59,7 @@ export class ProbeVorschlag {
     const show = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date)).find((s) => s.date >= this.datum());
     if (!show) return null;
     const setlist = loadSetlist(this.band.showId(show)).filter((e) => !isPause(e)) as Song[];
-    const baustellen = notizBaustellen(probenNotizen()).map((b) => {
+    const baustellen = notizBaustellen(probenNotizen(this.band.members)).map((b) => {
       const i = b.key.lastIndexOf('|');
       return { title: b.key.slice(0, i), artist: b.key.slice(i + 1) };
     });
@@ -72,10 +71,16 @@ export class ProbeVorschlag {
     for (const s of songs) this.add.emit(s);
   }
   private readonly band = inject(BandService);
-  /** Bühnenreife je Song (Fortschritt aller Musiker) */
+  /** Bühnenreife je Song (Übe-Status aller Musiker) */
   private reifeVon(songs: { title: string; artist: string }[]): Map<string, ReifeKurz> {
-    const alle = alleFortschritte(this.band.members);
-    return new Map(songs.map((s) => [songKey(s), reife(songKey(s), this.band.members, alle)]));
+    const alle = alleStatus(this.band.members);
+    return new Map(songs.map((s) => [songKey(s), buehnenreife(songKey(s), this.band.members, alle)]));
+  }
+  /** Songs, die bei mindestens einer Person auf „Üben“ oder „Wackelt noch“ stehen */
+  private unsicherBand(): Set<string> {
+    const out = new Set<string>();
+    for (const st of alleStatus(this.band.members).values()) for (const [k, s] of st) if (unsicher(s)) out.add(k);
+    return out;
   }
   /** Wunschlisten-Songs mit Noten und Tonart/Tempo, die noch nie geprobt wurden (Noten asynchron aus IndexedDB) */
   private readonly bereit = signal<{ title: string; artist: string }[]>([]);
@@ -121,13 +126,13 @@ export class ProbeVorschlag {
     } catch {
       // ohne Speicher nur nach Sternen
     }
-    const baustellen = notizBaustellen(probenNotizen()).map((b) => {
+    const baustellen = notizBaustellen(probenNotizen(this.band.members)).map((b) => {
       const i = b.key.lastIndexOf('|');
       return { song: { title: b.key.slice(0, i), artist: b.key.slice(i + 1) }, notiz: b.notiz };
     });
     // Karteikästen der Band (bn-kasten-<Person>): bei mindestens zwei in Kasten 1
     const kaesten = new Map(this.band.members.map((m) => [m.slug, ladeKastenGeteilt(m.slug)]));
     const kastenEins = kastenEinsBei(kaesten, new Map(this.band.members.map((m) => [m.slug, rufname(m)])));
-    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, new Set(Object.keys(ladeWackelt())), bereit, baustellen, this.reifeVon(data.tracks), kastenEins);
+    return probeTipps(data.tracks, sterne, zuletzt, new Date().toISOString().slice(0, 10), 4, this.unsicherBand(), bereit, baustellen, this.reifeVon(data.tracks), kastenEins);
   }
 }

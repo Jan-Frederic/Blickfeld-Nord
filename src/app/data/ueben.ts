@@ -1,13 +1,10 @@
-// Übemodus (Backstage → Übersicht → Üben): die Songs, die bei mir noch wackeln, als Karteikarten (Leitner-System).
-// Jede Karte liegt in einem von fünf Kästen; „Sitzt“ schiebt sie einen Kasten weiter (seltener wieder dran),
-// „Wackelt noch“ zurück in Kasten 1 (gleich wieder dran). Sitzt eine Karte im letzten Kasten noch einmal, ist der Song
-// gelernt: er verschwindet aus „Wackelt noch“ und zählt im Fortschritt als „sitzt“.
-// Persönlich: je Person ein Stand (bn-ueben, mit den Einstellungen der Person gespiegelt), Grundlage ist die eigene
-// „Wackelt noch“-Liste und der eigene Fortschritt (data/wackelt.ts, data/fortschritt.ts). Jede Bewertung zählt im
-// Fortschritt (Quelle „ueben“) und damit in der Bühnenreife; je Tag höchstens so viele Karten wie eingestellt
-// (Einstellungen → Ich bin …, Standard 10).
+// Karteikasten (Leitner) für den Übe-Modus (Backstage → Übersicht → Üben). Jede Karte liegt in einem von fünf Kästen;
+// „Sitzt“ schiebt sie einen Kasten weiter (seltener wieder dran), „Wackelt noch“ zurück in Kasten 1 (gleich wieder dran).
+// Sitzt eine Karte im letzten Kasten noch einmal, ist der Song eingenordet und fällt aus dem Kasten. Die Kästen bilden
+// den Übe-Status (data/uebe-status.ts): Kasten 1 Üben, 2–3 Wackelt noch, 4–5 Sitzt.
+// Persönlich: je Person ein Stand (bn-ueben, mit den Einstellungen der Person gespiegelt). Das Tagesziel (Einstellungen,
+// Standard 10) ist nur eine Empfehlung.
 // Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
-import { Fortschritt, stufe } from './fortschritt';
 
 export const UEBEN_KEY = 'bn-ueben';
 /** Karten je Tag (Einstellung je Person) und heute schon geübte Karten – beide mit den Einstellungen gespiegelt */
@@ -38,8 +35,6 @@ export interface Karte {
   dran: boolean;
   /** nächster Auftritt, auf dessen Setlist der Song steht */
   auftritt?: string;
-  /** seit wann er wackelt (Markierung) */
-  seit?: string;
 }
 
 const plusTage = (tag: string, n: number) => {
@@ -102,29 +97,25 @@ export function alsGeuebtMerken(key: string, heute: string): string[] {
 export const nochHeute = (ziel: number, geuebt: number) => Math.max(0, ziel - geuebt);
 
 /**
- * Karten: alle Songs aus „Wackelt noch“ und alle, die im eigenen Fortschritt zuletzt wackelten. Reihenfolge: heute dran
- * zuerst, darin die Songs des nächsten Auftritts vorn, dann der niedrigste Kasten, dann die am längsten wackelnden.
+ * Karten: alle Songs im eigenen Karteikasten. Reihenfolge: heute dran zuerst, darin die Songs des nächsten Auftritts
+ * vorn, dann der niedrigste Kasten, dann am längsten nicht geübt.
  */
-export function karten(wackelt: Record<string, string>, fortschritt: Fortschritt, stand: UebenStand, auftritte: Map<string, string>, heute: string): Karte[] {
-  // dazu Karten, die schon im Kasten liegen (bleiben bis „gelernt“, auch wenn der Fortschritt zwischendurch „sitzt“ zeigt)
-  const keys = new Set([...Object.keys(wackelt), ...Object.keys(fortschritt).filter((k) => stufe(fortschritt[k]) === 'wackelt'), ...Object.keys(stand)]);
-  const out = [...keys].map((key): Karte => {
+export function karten(stand: UebenStand, auftritte: Map<string, string>, heute: string): Karte[] {
+  const out = Object.entries(stand).map(([key, s]): Karte => {
     const i = key.lastIndexOf('|');
-    const s = stand[key];
-    const faellig = s?.faellig ?? heute;
-    return { key, title: key.slice(0, i), artist: key.slice(i + 1), kasten: s?.kasten ?? 1, faellig, zuletzt: s?.zuletzt, dran: faellig <= heute, auftritt: auftritte.get(key), seit: wackelt[key] };
+    return { key, title: key.slice(0, i), artist: key.slice(i + 1), kasten: s.kasten, faellig: s.faellig, zuletzt: s.zuletzt, dran: s.faellig <= heute, auftritt: auftritte.get(key) };
   });
   return out.sort(
     (a, b) =>
       Number(b.dran) - Number(a.dran) ||
       (a.auftritt ?? '9999').localeCompare(b.auftritt ?? '9999') ||
       a.kasten - b.kasten ||
-      (a.seit ?? '9999').localeCompare(b.seit ?? '9999') ||
+      (a.zuletzt ?? '').localeCompare(b.zuletzt ?? '') ||
       a.title.localeCompare(b.title, 'de'),
   );
 }
 
-/** Karte bewerten: sitzt → nächster Kasten (im letzten: gelernt), wackelt → Kasten 1, gleich wieder dran */
+/** Karte bewerten: sitzt → nächster Kasten (im letzten: eingenordet), wackelt → Kasten 1, gleich wieder dran */
 export function bewerten(stand: UebenStand, key: string, sitzt: boolean, heute: string): { stand: UebenStand; gelernt: boolean } {
   const alt = stand[key]?.kasten ?? 1;
   if (sitzt && alt >= KAESTEN) {
@@ -140,14 +131,18 @@ export function jeKasten(k: Karte[]): number[] {
   return KASTEN_TAGE.map((_, i) => k.filter((x) => x.kasten === i + 1).length);
 }
 
-// ---- Mit der Band geteilt: je Person die Kästen (Song → Kasten) und was wann gelernt wurde ----
-// Datei bn-kasten-<Person> (wie bn-unsicher-<Person>: jede Person schreibt nur ihre eigene). Daraus zeigt Songs →
-// Bühnenreife die Übe-Statistik je Musiker, und der Probe-Vorschlag nimmt Songs, die bei mehreren in Kasten 1 hängen.
+// ---- Mit der Band geteilt: je Person die Kästen (Song → Kasten) und die eingenordeten Songs ----
+// Datei bn-kasten-<Person> (wie bn-unsicher-<Person>: jede Person schreibt nur ihre eigene; geschrieben über
+// data/uebe-status.ts). Daraus lesen alle den Übe-Status der anderen (Bühnenreife, Probe-Vorschlag, Probe-Modus).
 export const KASTEN_PREFIX = 'bn-kasten-';
 export interface KastenGeteilt {
+  /** 2: Übe-Status mit fünf Stufen (Kästen + eingenordet); fehlt: alter Stand, Status aus dem Fortschritt */
+  v?: number;
   /** Song-Key → Kasten (1–5) */
   kaesten: Record<string, number>;
-  /** Song-Key → Tag, an dem er gelernt wurde (aus dem letzten Kasten heraus) */
+  /** Song-Key → Tag, an dem er eingenordet wurde (Übe-Modus aus dem letzten Kasten oder direkt gesetzt) */
+  eingenordet?: Record<string, string>;
+  /** alter Stand (vor Version 2): aus dem letzten Kasten gelernt */
   gelernt: Record<string, string>;
   /** zuletzt geübt */
   zuletzt?: string;
@@ -156,29 +151,9 @@ export interface KastenGeteilt {
 export function ladeKastenGeteilt(slug: string): KastenGeteilt {
   try {
     const v = JSON.parse(localStorage.getItem(KASTEN_PREFIX + slug) ?? 'null') as KastenGeteilt | null;
-    return { kaesten: v?.kaesten ?? {}, gelernt: v?.gelernt ?? {}, zuletzt: v?.zuletzt };
+    return { v: v?.v, kaesten: v?.kaesten ?? {}, eingenordet: v?.eingenordet, gelernt: v?.gelernt ?? {}, zuletzt: v?.zuletzt };
   } catch {
     return { kaesten: {}, gelernt: {} };
-  }
-}
-
-/**
- * eigenen Stand für die Band ablegen: alle Karten mit ihrem Kasten (auch noch nie bewertete – Kasten 1);
- * geuebt: heute geübt (setzt „zuletzt“); gelernt: Song, der eben aus dem letzten Kasten kam
- */
-export function kastenTeilen(slug: string, karten: { key: string; kasten: number }[], heute: string, was: { geuebt?: boolean; gelernt?: string } = {}): void {
-  if (!slug) return;
-  const alt = ladeKastenGeteilt(slug);
-  const neu: KastenGeteilt = {
-    kaesten: Object.fromEntries(karten.map((k) => [k.key, k.kasten])),
-    gelernt: was.gelernt ? { ...alt.gelernt, [was.gelernt]: heute } : alt.gelernt,
-    zuletzt: was.geuebt ? heute : alt.zuletzt,
-  };
-  if (JSON.stringify(neu) === JSON.stringify(alt)) return;
-  try {
-    localStorage.setItem(KASTEN_PREFIX + slug, JSON.stringify(neu));
-  } catch {
-    // ohne Speicher sieht die Band es nicht
   }
 }
 
@@ -189,12 +164,12 @@ export function kastenEinsBei(geteilt: Map<string, KastenGeteilt>, namen: Map<st
   return new Map([...bei].filter(([, n]) => n.length >= ab).sort((a, b) => b[1].length - a[1].length));
 }
 
-/** Übe-Statistik einer Person: Karten je Kasten, in den letzten `tage` Tagen gelernt */
+/** Übe-Statistik einer Person: Karten je Kasten, in den letzten `tage` Tagen eingenordet */
 export function uebeStatistik(g: KastenGeteilt, heute: string, tage = 30): { jeKasten: number[]; gelernt: string[]; zuletzt?: string } {
   const grenze = new Date(Date.parse(heute) - tage * 864e5).toISOString().slice(0, 10);
   return {
     jeKasten: KASTEN_TAGE.map((_, i) => Object.values(g.kaesten).filter((k) => k === i + 1).length),
-    gelernt: Object.entries(g.gelernt).filter(([, t]) => t >= grenze).sort((a, b) => b[1].localeCompare(a[1])).map(([k]) => k.slice(0, k.lastIndexOf('|'))),
+    gelernt: Object.entries({ ...g.gelernt, ...(g.eingenordet ?? {}) }).filter(([, t]) => t >= grenze).sort((a, b) => b[1].localeCompare(a[1])).map(([k]) => k.slice(0, k.lastIndexOf('|'))),
     zuletzt: g.zuletzt,
   };
 }

@@ -476,8 +476,18 @@ app-probe-leiste .knoepfe, app-probe-ende .probe-ende { display: flex; flex-wrap
 app-probe-leiste button, app-probe-ende button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #3a3f45; border-radius: 999px; background: #1b1e22; color: #ece9e4; font: inherit; font-size: .95em; cursor: pointer; }
 app-probe-leiste button.klein { padding: 0 12px; }
 app-probe-leiste button.an { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-app-probe-leiste button.sitzt.an { border-color: #5fb88a; background: rgba(95, 184, 138, .15); color: #5fb88a; }
-app-probe-leiste button.nochmal.an { border-color: #e0b25a; background: rgba(224, 178, 90, .15); color: #e0b25a; }
+// eigener Übe-Status als Umschalter mit fünf Stufen
+app-probe-leiste .status-wahl { display: inline-flex; flex-wrap: wrap; justify-content: center; border: 1px solid #3a3f45; border-radius: 999px; overflow: hidden; }
+app-probe-leiste .status-wahl button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 0; border-left: 1px solid #3a3f45; background: #1b1e22; font-size: .85em; }
+app-probe-leiste .status-wahl button:first-child { border-left: 0; }
+app-probe-leiste .status-wahl button:disabled { opacity: .45; cursor: default; }
+app-probe-leiste .status-wahl button.an { color: #2a1708; }
+app-probe-leiste .status-wahl button.nicht.an { background: #9aa0a6; }
+app-probe-leiste .status-wahl button.ueben.an { background: #e08a5a; }
+app-probe-leiste .status-wahl button.wackelt.an { background: #e0b25a; }
+app-probe-leiste .status-wahl button.sitzt.an { background: #9fd3b4; }
+app-probe-leiste .status-wahl button.eingenordet.an { background: #5fb88a; }
+@media (max-width: 560px) { app-probe-leiste .status-wahl { border-radius: 12px; } }
 app-probe-leiste .notiz { width: min(100%, 520px); box-sizing: border-box; padding: 10px 12px; border: 1px solid #3a3f45; border-radius: 10px; background: #15171a; color: #ece9e4; font: inherit; font-size: .95em; }
 app-probe-leiste .vorher { margin: 0; color: #e0b25a; font-size: .9em; }
 app-probe-leiste .zeit { margin: 0; color: #9aa0a6; font-size: .85em; }
@@ -518,7 +528,6 @@ app-probe-zusagen input, app-probe-zusagen select { flex: 1; min-width: min(100%
 app-probe-zusagen .wer { display: grid; gap: 4px; max-width: 420px; color: var(--bn-fog); }
 app-probe-zusagen .wer small { font-size: .8rem; }
 app-probe-zusagen mat-icon { font-size: 20px; width: 20px; height: 20px; }
-app-probe-leiste .uebergang { margin: 0; max-width: 620px; padding: 8px 12px; border-left: 3px solid var(--bn-sunset); color: #ece9e4; font-size: .9em; text-align: left; }
 
 // Einstellungen → Band-Ordner (band-ordner.ts)
 app-band-ordner .box { margin-top: 20px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
@@ -554,10 +563,11 @@ app-songs-reife .person { min-width: 0; padding: 12px 16px; border: 1px solid va
 app-songs-reife .person.ich { border-color: var(--bn-sunset); }
 app-songs-reife .person h3 { margin: 0 0 6px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; }
 app-songs-reife .person p { margin: 0 0 4px; font-size: .84rem; overflow-wrap: anywhere; }
-app-songs-reife .zahlen { display: flex; gap: 12px; font-size: .95rem !important; }
-app-songs-reife .sicher, app-songs-reife .plus { color: #5fb88a; }
+app-songs-reife .zahlen { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .95rem !important; }
+app-songs-reife .eingenordet, app-songs-reife .plus { color: #5fb88a; }
 app-songs-reife .sitzt { color: #9fd3b4; }
 app-songs-reife .wackelt, app-songs-reife .minus { color: #e0b25a; }
+app-songs-reife .ueben { color: #e08a5a; }
 app-songs-reife .klein { color: var(--bn-fog); font-size: .78rem !important; }
 app-songs-reife .filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 app-songs-reife .filter button { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .84rem; cursor: pointer; }
@@ -569,9 +579,10 @@ app-songs-reife .titel { min-width: 0; overflow-wrap: anywhere; }
 app-songs-reife .titel small { color: var(--bn-fog); }
 app-songs-reife .wer { display: flex; flex-wrap: wrap; gap: 4px; }
 app-songs-reife .wer .p { padding: 1px 7px; border-radius: 999px; border: 1px solid var(--bn-line); font-size: .76rem; white-space: nowrap; color: var(--bn-fog); }
-app-songs-reife .wer .p.sicher { border-color: #5fb88a; color: #5fb88a; }
+app-songs-reife .wer .p.eingenordet { border-color: #5fb88a; color: #5fb88a; }
 app-songs-reife .wer .p.sitzt { border-color: #9fd3b4; color: #9fd3b4; }
 app-songs-reife .wer .p.wackelt { border-color: #e0b25a; color: #e0b25a; }
+app-songs-reife .wer .p.ueben { border-color: #e08a5a; color: #e08a5a; }
 app-songs-reife .balken { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .08); overflow: hidden; }
 app-songs-reife .balken i { display: block; height: 100%; background: #e0b25a; }
 app-songs-reife li.fast .balken i { background: #9fd3b4; }
@@ -785,7 +796,7 @@ app-besucher-verlauf {
   .tabelle td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
-// Backstage → Üben: Karteikasten (fünf Kästen), Lernkarte, Liste der wackelnden Songs (pages/backstage-ueben.ts)
+// Backstage → Üben: Karteikasten (fünf Kästen), Übe-Modus-Knopf, Songs im Kasten mit Status (pages/backstage-ueben.ts)
 app-backstage-ueben {
   display: block;
   ul, ol { list-style: none; margin: 0; padding: 0; }
@@ -797,33 +808,21 @@ app-backstage-ueben {
   .kaesten .n { font-size: 1.4rem; font-weight: 700; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
   .kaesten .leer .n { color: var(--bn-fog); }
   .kaesten .l { font-size: .78rem; }
+  .kaesten .s { font-size: .72rem; color: var(--bn-sunset); }
+  .kaesten .leer .s { color: var(--bn-fog); }
+  .eingenordet { display: flex; align-items: center; gap: 6px; margin: -8px 0 16px; color: #5fb88a; font-size: .9rem; }
+  .hinweis { margin: 0 0 12px; color: #e0b25a; font-size: .9rem; }
+  .liste select { flex: none; max-width: 9.5rem; padding: 5px 8px; border: 1px solid var(--bn-line); border-radius: 999px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .8rem; color-scheme: dark; }
+  .liste select.ueben, .liste select.wackelt { border-color: #e0b25a; color: #e0b25a; }
+  .liste select.sitzt { border-color: #9fd3b4; color: #9fd3b4; }
   .kaesten small { font-size: .68rem; color: var(--bn-fog); }
   button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .9rem; cursor: pointer; }
   button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
   button:disabled { opacity: .4; cursor: default; }
   button.primaer { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
   button.primaer:hover:not(:disabled) { color: #2a1708; filter: brightness(1.08); }
-  button.gross { padding: 12px 22px; font-size: 1rem; }
-  button.rund { width: 36px; height: 36px; padding: 0; border-radius: 50%; flex: none; }
-  .start { display: flex; flex-wrap: wrap; gap: 10px; }
+  button.gross { padding: 14px 28px; font-size: 1.05rem; font-weight: 600; }
   .ergebnis { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: #5fb88a; }
-  .karte { max-width: 560px; margin: 0 auto; padding: 18px 22px 22px; border: 1px solid var(--bn-sunset); border-radius: 16px; background: rgba(27, 30, 34, .72); text-align: center; }
-  .karte-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--bn-fog); font-size: .8rem; text-align: left; }
-  .titel { margin: 18px 0 4px; font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
-  .interpret { margin: 0; color: var(--bn-fog); font-size: 1.05rem; }
-  .auftritt { margin: 8px 0 0; color: var(--bn-sunset); font-size: .85rem; }
-  .tipp { margin: 18px 0; color: var(--bn-fog); font-size: .9rem; }
-  .rueckseite { display: grid; gap: 6px; margin: 18px auto 12px; max-width: 360px; text-align: left; }
-  .rueckseite li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--bn-line); font-size: .95rem; }
-  .rueckseite li span { color: var(--bn-fog); }
-  .rueckseite li strong { text-align: right; overflow-wrap: anywhere; }
-  .rueckseite .leer { color: var(--bn-fog); border: 0; }
-  .noten { margin-bottom: 16px; }
-  .wertung { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .wertung button { padding: 14px 10px; font-size: 1rem; border-radius: 12px; }
-  .wertung .wackelt { border-color: #e0b25a; color: #e0b25a; }
-  .wertung .sitzt { border-color: #5fb88a; color: #5fb88a; }
-  .tasten { margin: 10px 0 0; font-size: .75rem; color: var(--bn-fog); }
   .liste { border: 1px solid var(--bn-line); border-radius: 10px; padding: 2px 12px; }
   .liste li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--bn-line); }
   .liste li:last-child { border-bottom: 0; }
@@ -842,7 +841,7 @@ app-backstage-ueben {
   .treffer button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: baseline; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--bn-line); cursor: pointer; }
   .treffer button:hover, .treffer button:focus-visible { color: var(--bn-sunset); }
   .treffer mat-icon { margin-left: auto; align-self: center; color: var(--bn-fog); }
-  @media (max-width: 480px) { .kaesten small { display: none; } .karte { padding: 14px 14px 18px; } }
+  @media (max-width: 480px) { .kaesten small { display: none; } .kaesten .s { font-size: .62rem; } }
 }
 
 // Pfeil „zurück“ (zurueck.ts): zur vorigen Seite, sonst zum festen Ziel; Titel der vorigen Seite als Text
@@ -851,9 +850,8 @@ app-zurueck .back { display: inline-flex; align-items: center; gap: 6px; margin-
 app-zurueck .back:hover { color: var(--bn-sunset); }
 app-zurueck .back mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-zurueck.gross .back { margin-bottom: 32px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .18em; font-size: .75rem; }
-app-backstage-ueben .tagesziel { margin: 0 0 12px; font-size: .9rem; color: var(--bn-fog); }
+app-backstage-ueben .tagesziel { margin: 10px 0 12px; font-size: .9rem; color: var(--bn-fog); }
 app-backstage-ueben .tagesziel a { margin-left: 8px; color: var(--bn-sunset); font-size: .82rem; }
-app-backstage-ueben .geschafft { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #5fb88a; }
 
 // Keine unnötigen Scrollleisten (Prüfung aller Seiten in 360–1280 px):
 // Referenzen „Bisher live bei“: Blättern über die Pfeile und Wischen – die Leiste selbst braucht es nicht
@@ -893,12 +891,6 @@ app-noten-anzeige header button.wertung.wackelt { border-color: #e0b25a; color: 
 app-noten-anzeige header button.wertung.sitzt { border-color: #5fb88a; color: #5fb88a; }
 app-noten-anzeige header .wertung mat-icon { font-size: 18px; width: 18px; height: 18px; }
 @media (max-width: 520px) { app-noten-anzeige header .wertung { padding: 0 10px; font-size: .78rem; } }
-// Üben: Karteikarte mit Pfeilen links und rechts zum Blättern
-app-backstage-ueben .karten-reihe { display: flex; align-items: center; justify-content: center; gap: 10px; }
-app-backstage-ueben .karten-reihe .karte { flex: 1; min-width: 0; margin: 0; }
-app-backstage-ueben .blaettern { width: 44px; height: 44px; }
-app-backstage-ueben .blaettern mat-icon { font-size: 26px; width: 26px; height: 26px; }
-@media (max-width: 480px) { app-backstage-ueben .tasten { display: none; } app-backstage-ueben .karten-reihe { gap: 4px; } app-backstage-ueben .blaettern { width: 34px; height: 34px; } }
 // Bühnenreife: Karteikasten je Person (Kasten 1–5, Zahl der Karten)
 app-songs-reife .kasten { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 6px 0 2px; }
 app-songs-reife .kasten span { padding: 2px 0; border: 1px solid var(--bn-sunset); border-radius: 4px; text-align: center; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--bn-sunset); }
@@ -907,8 +899,6 @@ app-songs-reife .kasten span.leer { border-color: var(--bn-line); color: var(--b
 app-noten-anzeige header button.mitschnitt-knopf[aria-pressed='true'] { border-color: #7fb3e0; color: #7fb3e0; }
 app-noten-anzeige .mitschnitt-panel { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 6; width: min(640px, 94vw); max-height: 45vh; overflow-y: auto; transform: translateX(-50%); padding: 4px 14px 12px; border: 1px solid #444; border-radius: 14px; background: #111; box-shadow: 0 12px 40px rgba(0, 0, 0, .6); color: #fff; }
 app-noten-anzeige .mitschnitt-panel .mitschnitte { border-top: 0; }
-app-backstage-ueben .mitschnitte-auf { margin: 0 0 16px; text-align: left; }
-app-backstage-ueben .mitschnitte-auf summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--bn-fog); font-size: .9rem; }
 app-besucher-verlauf .wirkung { margin: 18px 0 0; }
 app-besucher-verlauf .wirkung h3 { margin: 0 0 8px !important; }
 app-besucher-verlauf .empfehlung { margin: 0 0 8px; font-size: .9rem; line-height: 1.5; }

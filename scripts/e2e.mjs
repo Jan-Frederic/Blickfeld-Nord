@@ -546,21 +546,27 @@ test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', asy
   return p;
 });
 
-test('Backstage: Probe-Modus – Sitzt/Nochmal, Notiz und Durchläufe, Rest auf die nächste Probe', async () => {
+test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, Rest auf die nächste Probe', async () => {
   const p = await page();
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
   await p.waitForURL(/\/backstage\/probe\//);
   const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
-  await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }, { title: 'Angels', artist: 'Robbie Williams', done: false }], notizen: '', punkte: [] })), datum);
+  await p.evaluate((d) => {
+    localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }, { title: 'Angels', artist: 'Robbie Williams', done: false }], notizen: '', punkte: [] }));
+    localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
+  }, datum);
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
   await until(async () => /probe · 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
   const leiste = buehne.locator('app-probe-leiste');
-  // Song 1: Nochmal mit Notiz – Tippen in die Notiz blättert nicht
-  await leiste.getByRole('button', { name: 'Nochmal' }).click();
-  await until(async () => (await leiste.locator('input.notiz').inputValue()) === 'nochmal üben', '„Nochmal“ setzt keine Notiz');
+  // fünf Stufen statt Sitzt/Nochmal; Durchlauf und Übergang gibt es nicht mehr
+  expect((await leiste.locator('.status-wahl button').allInnerTexts()).map((t) => t.trim()).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Status-Umschalter hat nicht die fünf Stufen');
+  expect((await leiste.getByRole('button', { name: /Durchlauf|Übergang/ }).count()) === 0, 'Durchlauf/Übergang sind noch da');
+  // Song 1: Wackelt noch und eigene Notiz – Tippen in die Notiz blättert nicht
+  await leiste.getByRole('button', { name: 'Wackelt noch', exact: true }).click();
+  await until(async () => (await leiste.getByRole('button', { name: 'Wackelt noch', exact: true }).getAttribute('aria-pressed')) === 'true', 'Status wird nicht angezeigt');
   await leiste.locator('input.notiz').fill('Bridge wackelt');
   await leiste.locator('input.notiz').press('ArrowLeft');
   await leiste.locator('input.notiz').dispatchEvent('change');
@@ -568,35 +574,33 @@ test('Backstage: Probe-Modus – Sitzt/Nochmal, Notiz und Durchläufe, Rest auf 
   await buehne.focus();
   await p.keyboard.press('ArrowRight');
   await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zum zweiten Song klappt nicht');
-  // Song 2: Sitzt, zweimal gespielt
-  await leiste.getByRole('button', { name: 'Sitzt' }).click();
-  await leiste.getByRole('button', { name: 'Durchlauf zählen' }).click();
-  await leiste.getByRole('button', { name: 'Durchlauf zählen' }).click();
-  await until(async () => (await leiste.innerText()).includes('2× gespielt'), 'Durchläufe werden nicht gezählt');
+  // Song 2: Sitzt
+  await leiste.getByRole('button', { name: 'Sitzt', exact: true }).click();
   // ans Ende: Zusammenfassung, Angels kam nicht dran
   await buehne.focus();
   await p.keyboard.press('ArrowRight');
   await p.keyboard.press('ArrowRight');
   const ende = buehne.locator('app-probe-ende');
-  await until(async () => /Sitzt \(1\)[\s\S]*Nochmal \(1\)[\s\S]*Nicht drangekommen \(1\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung am Ende fehlt');
+  await until(async () => /Sitzt \(1\)[\s\S]*Nochmal \(1\): Iris \(Fred: Wackelt noch\)[\s\S]*Nicht drangekommen \(1\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung am Ende fehlt');
   await ende.locator('button', { hasText: 'auf die nächste Probe' }).click();
   await until(async () => /2 Songs stehen jetzt auf dem Plan/.test(await ende.innerText()), 'Offene Songs gehen nicht auf die nächste Probe');
   await ende.locator('button', { hasText: 'Probe-Modus beenden' }).click();
-  // Probenseite zeigt das Ergebnis; der Proben-Verlauf kennt „Nochmal“
+  // Probenseite zeigt das Ergebnis und die Notiz der Person
   const liste = p.locator('app-backstage-probe .list').first();
-  await until(async () => /Iris[\s\S]*nochmal[\s\S]*Africa[\s\S]*2×/.test(await liste.innerText()), 'Ergebnis fehlt auf der Probenseite');
-  const plan = await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)), datum);
-  expect(plan.songs[0].notiz === 'Bridge wackelt' && plan.songs[0].stand === 'nochmal' && plan.songs[1].durchlaeufe === 2, 'Probenplan nicht gespeichert');
+  await until(async () => /Iris[\s\S]*nochmal[\s\S]*Fred: Bridge wackelt/.test(await liste.innerText()), 'Ergebnis oder Notiz fehlt auf der Probenseite');
+  const d = await p.evaluate((dt) => ({ plan: JSON.parse(localStorage.getItem('bn-probe-' + dt)), notiz: JSON.parse(localStorage.getItem('bn-probenotiz-jan-frederic-overbeck') ?? '{}'), ueben: JSON.parse(localStorage.getItem('bn-ueben') ?? '{}') }), datum);
+  expect(d.notiz[datum]?.['Iris|The Goo Goo Dolls'] === 'Bridge wackelt', 'Notiz nicht in der eigenen Datei');
+  expect(d.plan.songs[0].done && d.plan.songs[0].notiz !== 'Bridge wackelt', 'Notiz landet im gemeinsamen Plan');
+  expect(d.ueben['Iris|The Goo Goo Dolls']?.kasten === 2 && d.ueben['Africa|TOTO']?.kasten === 4, `Status nicht im Karteikasten: ${JSON.stringify(d.ueben)}`);
   return p;
 });
-
-test('Backstage: Fortschritt je Person – Probe-Modus und „Wackelt noch“, Bühnenreife-Übersicht, Probe-Vorschlag', async () => {
+test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Bühnenreife-Übersicht, Probe-Vorschlag', async () => {
   const p = await page();
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
   await p.waitForURL(/\/backstage\/probe\//);
   const datum = p.url().match(/probe\/(\d{4}-\d{2}-\d{2})/)[1];
-  // Fred am Gerät; David hat im Probe-Modus auf seinem Gerät bei Africa schon „Nochmal“ gedrückt (gespiegelte Datei)
+  // Fred am Gerät; David hat im Probe-Modus auf seinem Gerät bei Africa „Nochmal“ gedrückt (alter Stand, gespiegelte Datei)
   await p.evaluate((d) => {
     localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }], notizen: '', punkte: [] }));
     localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
@@ -607,37 +611,46 @@ test('Backstage: Fortschritt je Person – Probe-Modus und „Wackelt noch“, B
   const buehne = p.locator('app-setlist-buehne');
   const leiste = buehne.locator('app-probe-leiste');
   await until(async () => (await leiste.count()) === 1, 'Probe-Modus startet nicht');
-  // Iris: „Nochmal“ gilt für Fred – Fortschritt und eigene „Wackelt noch“-Liste, im Plan nur „geprobt“
-  await leiste.getByRole('button', { name: 'Nochmal' }).click();
-  await until(async () => (await leiste.getByRole('button', { name: 'Nochmal' }).getAttribute('aria-pressed')) === 'true', '„Nochmal“ wird nicht für mich angezeigt');
-  const daten = await p.evaluate((d) => ({ f: JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck') ?? '{}'), w: JSON.parse(localStorage.getItem('bn-wackelt') ?? '{}'), plan: JSON.parse(localStorage.getItem('bn-probe-' + d)) }), datum);
-  expect(daten.f['Iris|The Goo Goo Dolls']?.[0]?.stand === 'wackelt' && daten.f['Iris|The Goo Goo Dolls'][0].tag === datum, 'Nochmal fehlt im Fortschritt');
-  expect(!!daten.w['Iris|The Goo Goo Dolls'], 'Nochmal setzt „Wackelt noch“ nicht');
+  // Iris: „Üben“ gilt für Fred – Verlauf und Karteikasten, im Plan nur „geprobt“
+  await leiste.getByRole('button', { name: 'Üben', exact: true }).click();
+  await until(async () => (await leiste.getByRole('button', { name: 'Üben', exact: true }).getAttribute('aria-pressed')) === 'true', '„Üben“ wird nicht für mich angezeigt');
+  const daten = await p.evaluate((d) => ({ f: JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck') ?? '{}'), k: JSON.parse(localStorage.getItem('bn-kasten-jan-frederic-overbeck') ?? '{}'), plan: JSON.parse(localStorage.getItem('bn-probe-' + d)) }), datum);
+  expect(daten.f['Iris|The Goo Goo Dolls']?.at(-1)?.stand === 'ueben' && daten.f['Iris|The Goo Goo Dolls'].at(-1).tag === datum, 'Status fehlt im Verlauf');
+  expect(daten.k.v === 2 && daten.k.kaesten['Iris|The Goo Goo Dolls'] === 1, `„Üben“ liegt nicht in Kasten 1: ${JSON.stringify(daten.k)}`);
   expect(daten.plan.songs[0].done && !daten.plan.songs[0].stand, 'Plan bekommt einen Stand für alle');
-  // Africa: Fred sitzt, David will nochmal – die Leiste zeigt David, die Zusammenfassung nennt die Namen
+  // Africa: Fred sitzt, bei David wackelt er – die Leiste zeigt David, die Zusammenfassung nennt die Namen
   await buehne.focus();
   await p.keyboard.press('ArrowRight');
   await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zum zweiten Song klappt nicht');
-  await until(async () => (await leiste.innerText()).includes('David: nochmal'), 'Stand der anderen fehlt');
-  await leiste.getByRole('button', { name: 'Sitzt' }).click();
+  await until(async () => (await leiste.innerText()).includes('David: Wackelt noch'), 'Status der anderen fehlt');
+  await leiste.getByRole('button', { name: 'Sitzt', exact: true }).click();
   await p.keyboard.press('ArrowRight');
   const ende = buehne.locator('app-probe-ende');
-  await until(async () => /Nochmal \(2\): Iris \(Fred\), Africa \(David\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung nennt nicht, wer nochmal will');
+  await until(async () => /Nochmal \(2\): Iris \(Fred: Üben\), Africa \(David: Wackelt noch\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung nennt nicht, bei wem es noch nicht sitzt');
   await ende.locator('button', { hasText: 'Probe-Modus beenden' }).click();
   // Vorschlag (für eine Probe ohne diese Songs): was bei jemandem wackelt, zuerst – mit Namen
   await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [], notizen: '', punkte: [] })), datum);
   await p.reload({ waitUntil: 'networkidle' });
   await until(async () => /wackelt bei Fred/.test(await p.locator('app-probe-vorschlag').innerText().catch(() => '')), 'Vorschlag nutzt die Bühnenreife nicht');
-  // Übersicht: Fred mit einem wackelnden und einem sitzenden Song, Iris als Baustelle
+  // Übersicht: Fred mit einem Song in „Üben“ und einem, der sitzt; Iris als Baustelle
   await p.go('/backstage/songs/reife/');
   const reife = p.locator('app-songs-reife');
-  await until(async () => /Fred[\s\S]*✓ 1[\s\S]*↻ 1/i.test(await reife.locator('.person').filter({ hasText: 'Fred' }).innerText().catch(() => '')), 'Fortschritt je Person fehlt');
+  await until(async () => /✎ 1[\s\S]*✓ 1/.test(await reife.locator('.person').filter({ hasText: 'Fred' }).innerText().catch(() => '')), 'Übe-Status je Person fehlt');
   await reife.getByRole('button', { name: /^Baustellen/ }).click();
-  await until(async () => /Iris[\s\S]*Fred ↻/.test(await reife.locator('.songs').innerText()), 'Bühnenreife je Song fehlt');
+  await until(async () => /Iris[\s\S]*Fred ✎/.test(await reife.locator('.songs').innerText()), 'Bühnenreife je Song fehlt');
+  // Song-Dialog: eigener Status als Auswahl mit den fünf Stufen
+  await p.go('/backstage/songs/');
+  await p.locator('app-backstage-songs input[type=search]').fill('Iris');
+  await p.locator('app-backstage-songs tbody tr').first().click();
+  const status = p.locator('app-song-dialog dialog[open] header select');
+  expect((await status.inputValue()) === 'ueben', 'Song-Dialog zeigt den eigenen Status nicht');
+  expect((await status.locator('option').allInnerTexts()).join('|').replace(/[^A-Za-zÜü|ä ]/g, '').trim().split('|').map((t) => t.trim()).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Auswahl hat nicht die fünf Status');
+  await status.selectOption('eingenordet');
+  await until(async () => JSON.parse((await p.evaluate(() => localStorage.getItem('bn-kasten-jan-frederic-overbeck'))) ?? '{}').eingenordet?.['Iris|The Goo Goo Dolls'], 'Eingenordet aus dem Dialog fehlt');
+  await until(async () => /Bühnenreife[\s\S]*Fred Eingenordet/.test(await p.locator('app-song-dialog dialog[open] .reife').innerText().catch(() => '')), 'Bühnenreife im Dialog zieht nicht nach');
   expect(p.errors.length === 0, p.errors.join('\n'));
   return p;
 });
-
 test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer auch aus OneDrive', async () => {
   const p = await page();
   await p.go('/backstage/songs/noten/');
@@ -698,7 +711,7 @@ test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer au
   return p;
 });
 
-test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalprobe mit Übergängen', async () => {
+test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalprobe', async () => {
   const p = await page();
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
@@ -728,14 +741,13 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   await seite.getByRole('button', { name: 'Plan an die Band' }).click();
   await until(async () => /Plan (kopiert|geteilt)/.test(await seite.locator('.teilen-meldung').innerText().catch(() => '')), 'Plan an die Band meldet nichts');
   expect(!!(await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)).geschickt, datum)), '„geschickt“ wird nicht gemerkt');
-  // Generalprobe: Setlist des nächsten Auftritts in Reihenfolge, Probe-Modus mit Sets und Übergang
+  // Generalprobe: Setlist des nächsten Auftritts in Reihenfolge, Probe-Modus mit Sets
   await seite.locator('button.general').click();
   await until(async () => /Africa[\s\S]*Iris[\s\S]*Angels/.test(await seite.locator('.list').first().innerText()), 'Generalprobe übernimmt die Setlist nicht');
   await seite.getByRole('button', { name: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
   await until(async () => /generalprobe · set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
-  await buehne.locator('app-probe-leiste').getByRole('button', { name: 'Übergang' }).click();
-  await until(async () => (await buehne.locator('app-probe-leiste .uebergang').innerText().catch(() => '')).includes('Übergang zu „Iris“'), 'Übergang zum nächsten Song fehlt');
+  await until(async () => (await buehne.locator('app-probe-leiste .status-wahl button').count()) === 5, 'Status-Umschalter fehlt in der Generalprobe');
   return p;
 });
 
@@ -812,7 +824,7 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   // Zeile der Tabelle anklicken öffnet den Dialog
   await p.locator('app-backstage-songs tbody tr').first().click();
   const zeile = p.locator('app-song-dialog dialog[open]');
-  await zeile.locator('select').first().selectOption('G');
+  await zeile.locator('.felder select').first().selectOption('G');
   await zeile.locator('input[type=number]').fill('120');
   await zeile.locator('input[type=number]').blur();
   await until(async () => (await p.locator('app-backstage-songs .apply').innerText()).includes('1 Song geändert'), 'Änderung wird nicht gezählt');
@@ -820,7 +832,7 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
   await until(async () => (await p.locator('app-backstage-songs tbody tr').first().innerText()).includes('120 bpm'), 'Entwurf nach Neuladen nicht in der Tabelle');
   await p.locator('app-backstage-songs tbody tr .oeffnen').first().click();
-  await until(async () => (await zeile.locator('select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
+  await until(async () => (await zeile.locator('.felder select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
   // der Entwurf gilt auf diesem Gerät sofort im Bühnen-Modus
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -866,8 +878,8 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   const zeile = p.locator('app-song-dialog dialog[open]');
   await until(async () => (await zeile.count()) === 1, 'Dialog öffnet nicht');
   expect((await zeile.innerText()).includes('Recherche:'), 'Quelle der recherchierten Werte fehlt');
-  await zeile.locator('select').nth(1).selectOption('C');
-  await zeile.locator('select').nth(2).selectOption('2');
+  await zeile.locator('.felder select').nth(1).selectOption('C');
+  await zeile.locator('.felder select').nth(2).selectOption('2');
   // fünfmal im Abstand von 500 ms tippen = 120 bpm
   for (let i = 0; i < 5; i++) {
     await zeile.locator('button.tap').click();
@@ -927,7 +939,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await zeile.waitFor();
   // „Wir spielen E“ – erst weiter, wenn der Entwurf wirklich gespeichert ist (sonst bleibt das Akkordblatt später in D)
   await until(async () => {
-    await zeile.locator('select').nth(1).selectOption('E');
+    await zeile.locator('.felder select').nth(1).selectOption('E');
     return p.evaluate(() => JSON.parse(localStorage.getItem('bn-songinfo-entwurf') ?? '{}')['Iris|The Goo Goo Dolls']?.spielTonart === 'E');
   }, '„Wir spielen E“ wird nicht gespeichert');
   // Pressekit (mehrseitig) als Notenblatt, davon Seite 2–3
@@ -1564,7 +1576,7 @@ test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufga
   return p;
 });
 
-test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikarten', async () => {
+test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Übe-Modus', async () => {
   const p = await page();
   await p.go('/backstage/');
   await p.locator('app-backstage-suche input').fill('Nenna');
@@ -1573,12 +1585,12 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   expect((await p.locator('app-backstage-show app-zurueck').innerText()).includes('Backstage'), 'Zurück nennt nicht die vorige Seite');
   await p.locator('app-backstage-show app-zurueck a').click();
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Zurück führt nach ${p.url()} statt in die Übersicht`);
-  // Übemodus: persönlich – mit „Ich bin …“ und zwei wackelnden Songs
+  // Üben: persönlich – mit „Ich bin …“ und drei Songs aus der alten „Wackelt noch“-Liste (werden auf Kasten 2 umgestellt)
   await p.evaluate(() => {
     localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
     localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|The Goo Goo Dolls': '2026-10-01', 'Angels|Robbie Williams': '2026-10-02', 'Africa|TOTO': '2026-10-03' }));
   });
-  // Tagesziel in den Einstellungen: 2 Karten am Tag
+  // Tagesziel in den Einstellungen: 2 Karten am Tag (nur eine Empfehlung)
   await p.go('/backstage/einstellungen/');
   await p.locator('app-ich-einstellung input[type=number]').fill('2');
   await p.locator('app-ich-einstellung input[type=number]').dispatchEvent('change');
@@ -1586,36 +1598,24 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   await p.go('/backstage/');
   const karte = p.locator('app-backstage a.ueben-karte');
   const karteText = await karte.innerText();
-  expect(karteText.includes('3 Songs wackeln · 2 heute dran'), 'Übemodus-Karte zählt nicht mit Tagesziel: ' + karteText);
+  expect(karteText.includes('3 Songs im Karteikasten · 3 heute dran'), 'Üben-Karte zählt nicht: ' + karteText);
   await karte.click();
   const ueben = p.locator('app-backstage-ueben');
-  await ueben.getByRole('button', { name: /Üben starten \(2 Karten\)/ }).click();
-  // Karten mit den Pfeilen durchblättern, ohne zu bewerten
-  const titel = () => ueben.locator('.karte .titel').innerText();
-  const erste = await titel();
-  await ueben.getByRole('button', { name: 'Nächste Karte' }).click();
-  await until(async () => (await titel()) !== erste, 'Pfeil rechts blättert nicht');
-  await ueben.getByRole('button', { name: 'Vorige Karte' }).click();
-  await until(async () => (await titel()) === erste, 'Pfeil links blättert nicht zurück');
-  await ueben.getByRole('button', { name: 'Aufdecken' }).click();
-  await ueben.getByRole('button', { name: 'Sitzt' }).click();
-  await ueben.getByRole('button', { name: 'Aufdecken' }).click();
-  await ueben.getByRole('button', { name: 'Wackelt noch' }).click();
-  // wackelnde Karte kommt noch einmal dran
-  await ueben.getByRole('button', { name: 'Aufdecken' }).click();
-  await ueben.getByRole('button', { name: 'Sitzt' }).click();
-  await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('2 gesessen, 1× wackelt noch'), 'Übe-Ergebnis fehlt');
-  const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
-  expect(Object.values(stand).every((k) => k.kasten === 2), `Karten nicht in Kasten 2: ${JSON.stringify(stand)}`);
-  expect((await ueben.locator('.kaesten li').nth(1).locator('.n').innerText()) === '2', 'Kasten 2 zählt nicht');
-  // Tagesziel erreicht; jede Bewertung steht im Fortschritt (Bühnenreife)
-  expect((await ueben.locator('.geschafft').count()) === 1, 'Tagesziel nicht als geschafft gemeldet');
-  const f = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')));
-  expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length === 2, `Übemodus fehlt im Fortschritt: ${JSON.stringify(f)}`);
-  // Übe-Modus aus der Übersicht: Notenansicht mit „Wackelt noch“ / „Sitzt“ oben rechts, weiter zur nächsten Karte
-  await p.go('/backstage/');
-  expect((await p.locator('app-backstage .ueben-karte strong').innerText()).trim() === 'Üben', 'Übersicht nennt es nicht „Üben“');
-  await p.locator('app-backstage .ueben-reihe a.modus').click();
+  await ueben.locator('.liste li select').first().waitFor();
+  // nur noch ein Knopf: Übe-Modus (keine Lernkarte, kein „Üben starten“ / „Alle üben“)
+  expect((await ueben.locator('button').filter({ hasText: /Üben starten|Alle \d+ üben|Aufdecken/ }).count()) === 0, 'alte Knöpfe sind noch da');
+  expect((await ueben.locator('.kaesten li').nth(1).locator('.n').innerText()) === '3', 'alte Liste nicht in Kasten 2 umgestellt');
+  expect((await ueben.locator('.kaesten li').nth(0).locator('.s').innerText()) === 'Üben' && (await ueben.locator('.kaesten li').nth(3).locator('.s').innerText()) === 'Sitzt', 'Kästen nennen den Status nicht');
+  expect((await ueben.locator('.tagesziel').innerText()).includes('Empfehlung: 2 Karten'), 'Tagesziel nicht als Empfehlung');
+  // Status direkt ändern: Angels eingenordet → fällt aus dem Kasten; über die Suche wieder zum Üben (Kasten 1)
+  await ueben.locator('.liste li', { hasText: 'Angels' }).locator('select').selectOption('eingenordet');
+  await until(async () => (await ueben.locator('.liste li select').count()) === 2, 'Eingenordet bleibt im Karteikasten');
+  await until(async () => (await ueben.locator('.eingenordet').innerText().catch(() => '')).includes('1 Song eingenordet'), 'Eingenordet wird nicht gezählt');
+  await ueben.locator('.suche input').fill('Angels');
+  await ueben.locator('.treffer button', { hasText: 'Eingenordet' }).first().click();
+  await until(async () => (await ueben.locator('.kaesten li').nth(0).locator('.n').innerText()) === '1', 'Hinzufügen legt nicht in Kasten 1');
+  // Übe-Modus: Notenansicht mit „Wackelt noch“ / „Sitzt“ oben rechts, weiter zur nächsten Karte
+  await ueben.getByRole('button', { name: 'Übe-Modus' }).click();
   const noten = p.locator('app-setlist-buehne app-noten-anzeige');
   await schritt('Übe-Modus öffnet die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
   // Mitschnitte des Songs zum Mitspielen
@@ -1625,17 +1625,25 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   const songA = (await noten.locator('header .titel').innerText()).trim();
   await noten.locator('header .wertung.sitzt').click();
   await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Sitzt wechselt nicht zur nächsten Karte');
-  await until(async () => Object.values(await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')))).flat().filter((e) => e.quelle === 'ueben').length >= 3, 'Wertung im Übe-Modus fehlt im Fortschritt');
-  // weiter bis zum Ende: zurück in die Übersicht
+  for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
+  await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('3 gesessen'), 'Übe-Ergebnis fehlt');
+  const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
+  expect(stand['Iris|The Goo Goo Dolls'].kasten === 3 && stand['Angels|Robbie Williams'].kasten === 2, `Karten nicht weitergeschoben: ${JSON.stringify(stand)}`);
+  const f = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')));
+  expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length === 3, `Übe-Modus fehlt im Verlauf: ${JSON.stringify(f)}`);
+  // Tagesziel erreicht – der Übe-Modus geht trotzdem, aus der Übersicht und zurück dorthin
+  await p.go('/backstage/');
+  expect((await p.locator('app-backstage .ueben-karte').innerText()).includes('Tagesziel geschafft'), 'Tagesziel nicht als geschafft gemeldet');
+  await p.locator('app-backstage .ueben-reihe a.modus').click();
+  await schritt('Übe-Modus öffnet trotz Tagesziel', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
   for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
   // mit der Band geteilt: Übe-Statistik unter Bühnenreife
-  expect(!!(await p.evaluate(() => localStorage.getItem('bn-kasten-jan-frederic-overbeck'))), 'Karteikasten wird nicht mit der Band geteilt');
+  expect((await p.evaluate(() => JSON.parse(localStorage.getItem('bn-kasten-jan-frederic-overbeck') ?? '{}').v)) === 2, 'Karteikasten wird nicht mit der Band geteilt');
   await p.go('/backstage/songs/reife/');
   await until(async () => (await p.locator('app-songs-reife .person.ich .kasten span').count()) === 5, 'Übe-Statistik (Karteikasten) fehlt unter Bühnenreife');
   return p;
 });
-
 test('Backstage: Besucher-Verlauf mit Zeitlinie und Ereignissen', async () => {
   const p = await page();
   await p.context().route(/goatcounter\.com\/counter\//, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"count":"12"}' }));
@@ -1851,14 +1859,16 @@ test('Backstage: Notiz je Auftritt und Einzählen im Bühnen-Modus, „Bereit?�
   return p;
 });
 
-test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung mit Merkpunkten', async () => {
+test('Backstage: Übe-Status „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung mit Merkpunkten', async () => {
   const p = await page({ permissions: ['microphone'] });
+  await p.go('/backstage/');
+  await p.evaluate(() => localStorage.setItem('bn-ich', 'jan-frederic-overbeck'));
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
   await p.locator('app-backstage-songs tbody tr .oeffnen').first().click();
   const dialog = p.locator('app-song-dialog dialog[open]');
-  await dialog.getByRole('button', { name: 'Sitzt' }).click();
-  await until(async () => (await dialog.locator('.wackelt').innerText()).includes('Wackelt noch'), '„Wackelt noch“ lässt sich nicht setzen');
+  await dialog.locator('header select').selectOption('wackelt');
+  await until(async () => (await dialog.locator('header select').getAttribute('class'))?.includes('wackelt'), '„Wackelt noch“ lässt sich nicht setzen');
   await dialog.getByRole('button', { name: 'Aufnehmen' }).click();
   await p.waitForTimeout(1500);
   await dialog.getByRole('button', { name: /Stopp/ }).click();
@@ -1873,7 +1883,7 @@ test('Backstage: „Wackelt noch“ und Proben-Mitschnitt im Song, Nachbereitung
   // Probe-Vorschlag nimmt den Song zuerst
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
-  await until(async () => (await p.locator('app-probe-vorschlag li').first().innerText()).includes('wackelt noch'), 'Probe-Vorschlag ohne „wackelt noch“');
+  await until(async () => /wackelt bei Fred/.test(await p.locator('app-probe-vorschlag li').first().innerText()), 'Probe-Vorschlag ohne „wackelt bei Fred“');
   // Abgleich: Mitschnitte zählen mit
   await p.go('/backstage/abgleich/');
   await until(async () => (await p.locator('app-backstage-daten summary', { hasText: 'Proben-Mitschnitte' }).innerText().catch(() => '')).includes('1 ·'), 'Mitschnitt fehlt unter Daten auf diesem Gerät');
