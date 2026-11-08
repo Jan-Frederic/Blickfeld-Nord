@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-07",
+  "updated": "2026-11-08",
   "listen": [
     {
       "key": "setlist",
@@ -425,6 +425,13 @@
           "year": 1983,
           "duration": 252,
           "url": "https://open.spotify.com/track/5NIl5fux02EnUJKKb8PKa0"
+        },
+        {
+          "title": "Breakaway",
+          "artist": "Kelly Clarkson",
+          "year": 2004,
+          "duration": 237,
+          "url": "https://open.spotify.com/track/4PFAm88FBkY7IFtvCaGctZ"
         }
       ]
     },
