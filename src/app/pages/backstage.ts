@@ -91,8 +91,12 @@ export class Backstage {
     if (!ich) return { text: 'Songs lernen wie mit Karteikarten – persönlich, „Ich bin …“ unter Einstellungen wählen' };
     const heute = new Date().toLocaleDateString('sv-SE');
     const k = karten(ladeWackelt(), ladeFortschritt(ich), ladeUeben(), new Map(), heute);
-    const dran = Math.min(k.filter((x) => x.dran && !heuteGeuebt(heute).includes(x.key)).length, nochHeute(ladeTagesziel(), heuteGeuebt(heute).length));
-    return { text: k.length ? `${k.length} ${k.length === 1 ? 'Song wackelt' : 'Songs wackeln'} · ${dran} heute dran` : 'Nichts wackelt gerade – Songs lassen sich dort hinzufügen' };
+    const geuebt = heuteGeuebt(heute);
+    const rest = nochHeute(ladeTagesziel(), geuebt.length);
+    const dran = Math.min(k.filter((x) => x.dran && !geuebt.includes(x.key)).length, rest);
+    // Tagesziel erreicht bzw. heute nichts fällig: das sagen statt „0 heute dran“
+    const heuteText = !rest ? `Tagesziel geschafft (${geuebt.length} geübt)` : dran ? `${dran} heute dran` : 'heute nichts fällig';
+    return { text: k.length ? `${k.length} ${k.length === 1 ? 'Song wackelt' : 'Songs wackeln'} · ${heuteText}` : 'Nichts wackelt gerade – Songs lassen sich dort hinzufügen' };
   })();
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));

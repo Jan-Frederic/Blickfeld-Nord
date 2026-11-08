@@ -167,7 +167,29 @@ export class App {
       } catch {
         // ohne Speicher eben nicht
       }
+      this.leisteBeobachten();
     });
+  }
+
+  // Volle Leiste nur, wenn sie wirklich passt: Die Punkte (je Sprache, Backstage mit mehr Bereichen, angemeldet mit
+  // Backstage-Link) brauchen unterschiedlich viel Platz. Passt sie nicht, übernimmt das Menü (Klasse „eng“) – sonst
+  // wird die Leiste links und rechts abgeschnitten (z. B. Backstage bei 1366–1450 px).
+  private leisteBeobachten(): void {
+    const kopf = document.querySelector<HTMLElement>('header.topbar');
+    if (!kopf) return;
+    let geplant = 0;
+    const pruefen = () => {
+      cancelAnimationFrame(geplant);
+      geplant = requestAnimationFrame(() => {
+        kopf.classList.remove('eng');
+        kopf.classList.toggle('eng', kopf.scrollWidth > kopf.clientWidth + 1);
+      });
+    };
+    pruefen();
+    addEventListener('resize', pruefen, { passive: true });
+    document.fonts?.ready.then(pruefen).catch(() => undefined);
+    // nach jedem Seitenwechsel (Backstage-Leiste, Sprache, Anmeldung) neu messen
+    this.router.events.subscribe(() => pruefen());
   }
 
   private logoClicks: number[] = [];

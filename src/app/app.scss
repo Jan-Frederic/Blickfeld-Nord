@@ -42,6 +42,9 @@
   .desktop-nav { display: none; }
   .mobile-nav { display: inline-flex; }
 }
+// darüber misst app.ts, ob die Leiste passt (z. B. Backstage mit mehr Bereichen) – sonst ebenfalls das Menü
+.topbar.eng .desktop-nav { display: none; }
+.topbar.eng .mobile-nav { display: inline-flex; }
 // auf schmalen Handys passt der Umschalter nicht neben Logo und Menü – dort im Menü und in der Fußzeile
 @media (max-width: 640px) {
   .languages, .sprachwahl { display: none; }
