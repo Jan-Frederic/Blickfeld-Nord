@@ -115,7 +115,10 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   des nächsten Auftritts zuerst. Karte: Titel → im Kopf durchspielen → **Aufdecken** (Tonart, Capo, Tempo, Takt,
   Notiz, Noten) → **Sitzt** (einen Kasten weiter, wieder dran nach 1, 3, 7, 14 Tagen) oder **Wackelt noch** (zurück in
   Kasten 1, gleich noch einmal). Sitzt eine Karte im letzten Kasten, ist der Song gelernt und verschwindet aus
-  „Wackelt noch“. Tasten: Leertaste deckt auf, ← wackelt, → sitzt. Stand je Person (`bn-ueben`, gespiegelt).
+  „Wackelt noch“. Tasten: Leertaste deckt auf, ← wackelt, → sitzt. **Tagesziel:** unter Einstellungen → Ich bin …
+  „Karteikarten am Tag“ (Standard 10) – „Üben starten“ nimmt höchstens so viele (schon geübte zählen mit), „Alle üben“
+  geht darüber hinaus. Jede Bewertung zählt im Fortschritt und damit in der **Bühnenreife**. Stand je Person
+  (`bn-ueben`, `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).
 - **Veranstalter bewerten** (Ansprechpartner beim Auftritt bzw. Termine → Kontakte): Technik, Publikum, Bezahlung
   pünktlich/spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ (Saisonplanung, Termine → Saison) –
   gelb, wenn zwei Punkte schlecht waren. Wie die Kontakte nur auf den Geräten und im OneDrive.
@@ -183,7 +186,8 @@ Probenseite je Song („unsicher: Fred“) und im Song-Dialog („Unsicher bei: 
 
 **Fortschritt je Person und Bühnenreife:** Mit „Ich bin …“ wird jede Angabe der Person festgehalten (eigene Datei
 `bn-fortschritt-<Person>`, mit der Band gespiegelt): „Wackelt noch“ an = wackelt, aus = sitzt; im Probe-Modus
-„Nochmal“ = wackelt, „Sitzt“ = sitzt (mit dem Datum der Probe). Je Musiker und Song ergibt das eine Stufe:
+„Nochmal“ = wackelt, „Sitzt“ = sitzt (mit dem Datum der Probe); im Übemodus jede Karte: „Wackelt noch“ = wackelt,
+„Sitzt“ = sitzt (am selben Tag zählt die Probe vor dem Übemodus vor der Liste). Je Musiker und Song ergibt das eine Stufe:
 **↻ wackelt**, **✓ sitzt**, **✓✓ sicher** (an zwei Tagen in Folge „sitzt“). Die **Bühnenreife** eines Songs ist der
 Schnitt über alle Musiker (wackelt 0, sitzt 70 %, sicher 100 %, ohne Angabe 50 %): **bühnenreif** = alle sicher,
 **Baustelle** = wackelt bei jemandem. Übersicht unter **Songs → Bühnenreife**: je Musiker sicher/sitzt/wackelt und was in

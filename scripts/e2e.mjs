@@ -1576,14 +1576,20 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   // Übemodus: persönlich – mit „Ich bin …“ und zwei wackelnden Songs
   await p.evaluate(() => {
     localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
-    localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|The Goo Goo Dolls': '2026-10-01', 'Angels|Robbie Williams': '2026-10-02' }));
+    localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|The Goo Goo Dolls': '2026-10-01', 'Angels|Robbie Williams': '2026-10-02', 'Africa|TOTO': '2026-10-03' }));
   });
+  // Tagesziel in den Einstellungen: 2 Karten am Tag
+  await p.go('/backstage/einstellungen/');
+  await p.locator('app-ich-einstellung input[type=number]').fill('2');
+  await p.locator('app-ich-einstellung input[type=number]').dispatchEvent('change');
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-ueben-tagesziel'))) === '2', 'Tagesziel wird nicht gespeichert');
   await p.go('/backstage/');
   const karte = p.locator('app-backstage a.ueben-karte');
-  expect((await karte.innerText()).includes('2 Songs wackeln'), 'Übemodus-Karte zählt die wackelnden Songs nicht');
+  const karteText = await karte.innerText();
+  expect(karteText.includes('3 Songs wackeln · 2 heute dran'), 'Übemodus-Karte zählt nicht mit Tagesziel: ' + karteText);
   await karte.click();
   const ueben = p.locator('app-backstage-ueben');
-  await ueben.getByRole('button', { name: /Üben starten \(2 dran\)/ }).click();
+  await ueben.getByRole('button', { name: /Üben starten \(2 Karten\)/ }).click();
   await ueben.getByRole('button', { name: 'Aufdecken' }).click();
   await ueben.getByRole('button', { name: 'Sitzt' }).click();
   await ueben.getByRole('button', { name: 'Aufdecken' }).click();
@@ -1595,6 +1601,10 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
   expect(Object.values(stand).every((k) => k.kasten === 2), `Karten nicht in Kasten 2: ${JSON.stringify(stand)}`);
   expect((await ueben.locator('.kaesten li').nth(1).locator('.n').innerText()) === '2', 'Kasten 2 zählt nicht');
+  // Tagesziel erreicht; jede Bewertung steht im Fortschritt (Bühnenreife)
+  expect((await ueben.locator('.geschafft').count()) === 1, 'Tagesziel nicht als geschafft gemeldet');
+  const f = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')));
+  expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length === 2, `Übemodus fehlt im Fortschritt: ${JSON.stringify(f)}`);
   return p;
 });
 

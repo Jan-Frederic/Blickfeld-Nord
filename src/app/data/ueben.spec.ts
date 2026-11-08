@@ -46,3 +46,24 @@ describe('ueben', () => {
     expect(jeKasten(k)).toEqual([1, 0, 1, 0, 0]);
   });
 });
+
+describe('ueben – Tagesziel und Kasten-Karten', () => {
+  it('Karten im Kasten bleiben, auch wenn sie nicht mehr wackeln', () => {
+    const k = karten({}, {}, { 'A|x': { kasten: 2, faellig: '2026-11-09' } }, new Map(), '2026-11-08');
+    expect(k.map((x) => x.title)).toEqual(['A']);
+  });
+  it('nochHeute zählt das Tagesziel herunter, nie unter 0', async () => {
+    const { nochHeute } = await import('./ueben');
+    expect(nochHeute(10, 3)).toBe(7);
+    expect(nochHeute(5, 9)).toBe(0);
+  });
+});
+
+describe('ueben – zählt in der Bühnenreife', () => {
+  it('zweimal „sitzt“ an verschiedenen Tagen im Übemodus → sicher; am selben Tag geht die Probe vor', async () => {
+    const { stufe } = await import('./fortschritt');
+    expect(stufe([{ tag: '2026-11-01', stand: 'sitzt', quelle: 'ueben' }, { tag: '2026-11-02', stand: 'sitzt', quelle: 'ueben' }])).toBe('sicher');
+    expect(stufe([{ tag: '2026-11-02', stand: 'wackelt', quelle: 'probe' }, { tag: '2026-11-02', stand: 'sitzt', quelle: 'ueben' }])).toBe('wackelt');
+    expect(stufe([{ tag: '2026-11-02', stand: 'wackelt', quelle: 'liste' }, { tag: '2026-11-02', stand: 'sitzt', quelle: 'ueben' }])).toBe('sitzt');
+  });
+});

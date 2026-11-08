@@ -3,11 +3,17 @@
 // „Wackelt noch“ zurück in Kasten 1 (gleich wieder dran). Sitzt eine Karte im letzten Kasten noch einmal, ist der Song
 // gelernt: er verschwindet aus „Wackelt noch“ und zählt im Fortschritt als „sitzt“.
 // Persönlich: je Person ein Stand (bn-ueben, mit den Einstellungen der Person gespiegelt), Grundlage ist die eigene
-// „Wackelt noch“-Liste und der eigene Fortschritt (data/wackelt.ts, data/fortschritt.ts).
+// „Wackelt noch“-Liste und der eigene Fortschritt (data/wackelt.ts, data/fortschritt.ts). Jede Bewertung zählt im
+// Fortschritt (Quelle „ueben“) und damit in der Bühnenreife; je Tag höchstens so viele Karten wie eingestellt
+// (Einstellungen → Ich bin …, Standard 10).
 // Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
 import { Fortschritt, stufe } from './fortschritt';
 
 export const UEBEN_KEY = 'bn-ueben';
+/** Karten je Tag (Einstellung je Person) und heute schon geübte Karten – beide mit den Einstellungen gespiegelt */
+export const TAGESZIEL_KEY = 'bn-ueben-tagesziel';
+export const HEUTE_KEY = 'bn-ueben-heute';
+export const TAGESZIEL_STANDARD = 10;
 /** Tage bis zur nächsten Wiederholung je Kasten (Kasten 1 = sofort) */
 export const KASTEN_TAGE = [0, 1, 3, 7, 14] as const;
 export const KAESTEN = KASTEN_TAGE.length;
@@ -59,12 +65,49 @@ export function speichereUeben(stand: UebenStand): void {
   }
 }
 
+export function ladeTagesziel(): number {
+  try {
+    const n = Number(localStorage.getItem(TAGESZIEL_KEY));
+    return n >= 1 && n <= 100 ? Math.round(n) : TAGESZIEL_STANDARD;
+  } catch {
+    return TAGESZIEL_STANDARD;
+  }
+}
+export function speichereTagesziel(n: number): void {
+  try {
+    localStorage.setItem(TAGESZIEL_KEY, String(Math.min(100, Math.max(1, Math.round(n)))));
+  } catch {
+    // ohne Speicher gilt der Standard
+  }
+}
+/** heute schon geübte Karten (Song-Keys) – von einem anderen Tag zählt nichts */
+export function heuteGeuebt(heute: string): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(HEUTE_KEY) ?? 'null') as { tag?: string; keys?: string[] } | null;
+    return v?.tag === heute && Array.isArray(v.keys) ? v.keys : [];
+  } catch {
+    return [];
+  }
+}
+export function alsGeuebtMerken(key: string, heute: string): string[] {
+  const keys = [...new Set([...heuteGeuebt(heute), key])];
+  try {
+    localStorage.setItem(HEUTE_KEY, JSON.stringify({ tag: heute, keys }));
+  } catch {
+    // ohne Speicher zählt es nicht
+  }
+  return keys;
+}
+/** wie viele Karten heute noch gehen (Tagesziel minus schon geübte, nie unter 0) */
+export const nochHeute = (ziel: number, geuebt: number) => Math.max(0, ziel - geuebt);
+
 /**
  * Karten: alle Songs aus „Wackelt noch“ und alle, die im eigenen Fortschritt zuletzt wackelten. Reihenfolge: heute dran
  * zuerst, darin die Songs des nächsten Auftritts vorn, dann der niedrigste Kasten, dann die am längsten wackelnden.
  */
 export function karten(wackelt: Record<string, string>, fortschritt: Fortschritt, stand: UebenStand, auftritte: Map<string, string>, heute: string): Karte[] {
-  const keys = new Set([...Object.keys(wackelt), ...Object.keys(fortschritt).filter((k) => stufe(fortschritt[k]) === 'wackelt')]);
+  // dazu Karten, die schon im Kasten liegen (bleiben bis „gelernt“, auch wenn der Fortschritt zwischendurch „sitzt“ zeigt)
+  const keys = new Set([...Object.keys(wackelt), ...Object.keys(fortschritt).filter((k) => stufe(fortschritt[k]) === 'wackelt'), ...Object.keys(stand)]);
   const out = [...keys].map((key): Karte => {
     const i = key.lastIndexOf('|');
     const s = stand[key];

@@ -3,9 +3,9 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
-import { ladeFortschritt } from '../data/fortschritt';
+import { fortschrittEintragen, ladeFortschritt } from '../data/fortschritt';
 import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
-import { KAESTEN, KASTEN_TAGE, Karte, bewerten, jeKasten, karten, ladeUeben, speichereUeben } from '../data/ueben';
+import { KASTEN_TAGE, Karte, alsGeuebtMerken, bewerten, heuteGeuebt, jeKasten, karten, ladeTagesziel, ladeUeben, nochHeute, speichereUeben } from '../data/ueben';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { taktHinweis } from '../data/takt';
@@ -70,9 +70,15 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
           @if (ergebnis(); as e) {
             <p class="ergebnis" role="status"><mat-icon>task_alt</mat-icon> Fertig: {{ e.sitzt }} gesessen, {{ e.wackelt }}× wackelt noch{{ e.gelernt ? ', ' + e.gelernt + ' gelernt 🎉' : '' }}.</p>
           }
+          <p class="tagesziel">Heute {{ geuebt().length }} von {{ ziel }} Karten geübt
+            <a routerLink="/backstage/einstellungen">Tagesziel ändern</a></p>
           <div class="start">
-            <button type="button" class="primaer gross" (click)="starten(false)" [disabled]="!dran().length"><mat-icon>play_arrow</mat-icon> Üben starten ({{ dran().length }} dran)</button>
-            @if (alle().length > dran().length) { <button type="button" (click)="starten(true)"><mat-icon>style</mat-icon> Alle {{ alle().length }} üben</button> }
+            @if (rest()) {
+              <button type="button" class="primaer gross" (click)="starten(false)" [disabled]="!tagesKarten().length"><mat-icon>play_arrow</mat-icon> Üben starten ({{ tagesKarten().length }} {{ tagesKarten().length === 1 ? 'Karte' : 'Karten' }})</button>
+            } @else {
+              <p class="geschafft"><mat-icon>task_alt</mat-icon> Tagesziel geschafft.</p>
+            }
+            @if (alle().length > tagesKarten().length) { <button type="button" (click)="starten(true)"><mat-icon>style</mat-icon> Alle {{ alle().length }} üben</button> }
           </div>
           <h3>Deine wackelnden Songs</h3>
           <ul class="liste">
@@ -129,6 +135,11 @@ export class BackstageUeben {
   })();
   protected readonly alle = computed(() => karten(this.wackelt(), this.fortschritt(), this.stand(), this.auftritte, this.heute));
   protected readonly dran = computed(() => this.alle().filter((k) => k.dran));
+  // Tagesziel je Person (Einstellungen): heute höchstens so viele Karten; „Alle üben“ geht darüber hinaus
+  protected readonly ziel = ladeTagesziel();
+  protected readonly geuebt = signal(heuteGeuebt(this.heute));
+  protected readonly rest = computed(() => nochHeute(this.ziel, this.geuebt().length));
+  protected readonly tagesKarten = computed(() => this.dran().filter((k) => !this.geuebt().includes(k.key)).slice(0, this.rest()));
   protected readonly kastenZahlen = computed(() => jeKasten(this.alle()));
 
   // Sitzung: Reihe der Karten (wackelnde kommen hinten wieder dran), aktuelle Position, aufgedeckt?
@@ -186,7 +197,7 @@ export class BackstageUeben {
   }
 
   protected starten(alle: boolean): void {
-    this.schlange.set((alle ? this.alle() : this.dran()).map((k) => k.key));
+    this.schlange.set((alle ? this.alle() : this.tagesKarten()).map((k) => k.key));
     this.pos.set(0);
     this.offen.set(false);
     this.ergebnis.set(null);
@@ -203,6 +214,10 @@ export class BackstageUeben {
     const r = bewerten(this.stand(), k.key, sitzt, this.heute);
     this.stand.set(r.stand);
     speichereUeben(r.stand);
+    // zählt im Fortschritt (Quelle „ueben“) und damit in der Bühnenreife; heute geübt fürs Tagesziel
+    fortschrittEintragen(this.ich(), k.key, sitzt ? 'sitzt' : 'wackelt', 'ueben', this.heute);
+    this.fortschritt.set(ladeFortschritt(this.ich()));
+    this.geuebt.set(alsGeuebtMerken(k.key, this.heute));
     if (sitzt) this.zaehler.sitzt++;
     else this.zaehler.wackelt++;
     if (r.gelernt) {

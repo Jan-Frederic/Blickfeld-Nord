@@ -2,7 +2,8 @@
 // mit der Band gespiegelt – so ändern nie zwei Leute dieselbe Datei): je Song ein kurzer Verlauf „sitzt“ / „wackelt“
 // mit Datum und Quelle. Einträge entstehen über
 // – „Wackelt noch“ (Songs-Dialog, Nachbereitung): an = wackelt, aus = sitzt („liste“),
-// – den Probe-Modus: „Sitzt“ / „Nochmal“ gilt für die Person am Gerät („probe“, Datum der Probe).
+// – den Probe-Modus: „Sitzt“ / „Nochmal“ gilt für die Person am Gerät („probe“, Datum der Probe),
+// – den Übemodus (Karteikasten): „Sitzt“ / „Wackelt noch“ je Karte („ueben“, Tag des Übens).
 // Daraus: Stufe je Person (wackelt, sitzt, sicher = zweimal in Folge an verschiedenen Tagen sitzt), Bühnenreife je Song
 // (Schnitt über alle Musiker, ohne Angabe zählt neutral) und der Fortschritt je Person (was in den letzten Wochen
 // gefestigt wurde bzw. neu wackelt). Übersicht: Backstage → Songs → Bühnenreife; der Probe-Vorschlag nimmt die Songs mit
@@ -18,7 +19,7 @@ export interface FortschrittEintrag {
   /** JJJJ-MM-TT */
   tag: string;
   stand: Stand;
-  quelle: 'probe' | 'liste';
+  quelle: 'probe' | 'liste' | 'ueben';
 }
 /** je Song („Titel|Interpret“) der Verlauf, älteste zuerst */
 export type Fortschritt = Record<string, FortschrittEintrag[]>;
@@ -65,9 +66,10 @@ export function fortschrittEintragen(slug: string, key: string, stand: Stand, qu
 /** Stufe aus dem Verlauf: zuletzt wackelt → wackelt; zuletzt sitzt → sitzt, an zwei Tagen in Folge → sicher */
 export function stufe(verlauf: FortschrittEintrag[] | undefined): Stufe | undefined {
   if (!verlauf?.length) return undefined;
-  // je Tag zählt der letzte Eintrag (Probe-Modus geht der Liste am selben Tag vor)
+  // je Tag zählt der letzte Eintrag; am selben Tag gilt Probe vor Übemodus vor Liste
+  const rang = { liste: 0, ueben: 1, probe: 2 } as const;
   const jeTag = new Map<string, Stand>();
-  for (const e of [...verlauf].sort((a, b) => a.tag.localeCompare(b.tag) || (a.quelle === b.quelle ? 0 : a.quelle === 'probe' ? 1 : -1))) jeTag.set(e.tag, e.stand);
+  for (const e of [...verlauf].sort((a, b) => a.tag.localeCompare(b.tag) || (rang[a.quelle] ?? 0) - (rang[b.quelle] ?? 0))) jeTag.set(e.tag, e.stand);
   const staende = [...jeTag.values()];
   if (staende.at(-1) === 'wackelt') return 'wackelt';
   return staende.length >= 2 && staende.at(-2) === 'sitzt' ? 'sicher' : 'sitzt';

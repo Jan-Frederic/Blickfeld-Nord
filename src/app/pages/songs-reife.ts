@@ -8,7 +8,7 @@ import { datumText } from '../data/datum';
 
 // Backstage → Songs → Bühnenreife: Fortschritt je Musiker (sicher / sitzt / wackelt, was in den letzten 30 Tagen
 // gefestigt wurde oder neu wackelt) und je Song die Bühnenreife über alle Musiker (data/fortschritt.ts). Quellen:
-// „Wackelt noch“ (Songs-Dialog, Nachbereitung) und „Sitzt“ / „Nochmal“ im Probe-Modus – je Person.
+// „Wackelt noch“ (Songs-Dialog, Nachbereitung), „Sitzt“ / „Nochmal“ im Probe-Modus und die Karten im Übemodus – je Person.
 type Filter = 'alle' | 'baustelle' | 'fast' | 'buehnenreif' | 'offen';
 const AMPEL: Record<Reife['ampel'], string> = { buehnenreif: 'bühnenreif', fast: 'fast bühnenreif', baustelle: 'Baustelle', offen: 'ohne Angabe' };
 const ZEICHEN: Record<Stufe, string> = { sicher: '✓✓', sitzt: '✓', wackelt: '↻' };
@@ -17,8 +17,8 @@ const ZEICHEN: Record<Stufe, string> = { sicher: '✓✓', sitzt: '✓', wackelt
   selector: 'app-songs-reife',
   imports: [MatIconModule],
   template: `
-    <p class="info">Je Musiker: <b>↻ wackelt</b> („Wackelt noch“ an oder im Probe-Modus „Nochmal“), <b>✓ sitzt</b>, <b>✓✓ sicher</b>
-      (an zwei Tagen in Folge „sitzt“). Die Bühnenreife eines Songs ist der Schnitt über alle – ohne Angabe zählt neutral.
+    <p class="info">Je Musiker: <b>↻ wackelt</b> („Wackelt noch“ an, im Probe-Modus „Nochmal“ oder im Übemodus „Wackelt noch“), <b>✓ sitzt</b>,
+      <b>✓✓ sicher</b> (an zwei Tagen in Folge „sitzt“ – Probe, Übemodus oder Liste). Die Bühnenreife eines Songs ist der Schnitt über alle – ohne Angabe zählt neutral.
       @if (!ich()) { <span class="hinweis">Wähle unter Einstellungen „Ich bin …“, damit deine Angaben zählen.</span> }</p>
 
     <div class="personen">

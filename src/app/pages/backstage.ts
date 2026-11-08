@@ -10,7 +10,7 @@ import { SyncService } from '../data/sync.service';
 import { ladeIch } from '../data/band-ich';
 import { ladeFortschritt } from '../data/fortschritt';
 import { ladeWackelt } from '../data/wackelt';
-import { karten, ladeUeben } from '../data/ueben';
+import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
 // Die Übersicht zeigt Suche, Fälliges und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
@@ -109,7 +109,7 @@ export class Backstage {
     if (!ich) return { text: 'Songs lernen wie mit Karteikarten – persönlich, „Ich bin …“ unter Einstellungen wählen' };
     const heute = new Date().toLocaleDateString('sv-SE');
     const k = karten(ladeWackelt(), ladeFortschritt(ich), ladeUeben(), new Map(), heute);
-    const dran = k.filter((x) => x.dran).length;
+    const dran = Math.min(k.filter((x) => x.dran && !heuteGeuebt(heute).includes(x.key)).length, nochHeute(ladeTagesziel(), heuteGeuebt(heute).length));
     return { text: k.length ? `${k.length} ${k.length === 1 ? 'Song wackelt' : 'Songs wackeln'} · ${dran} heute dran` : 'Nichts wackelt gerade – Songs lassen sich dort hinzufügen' };
   })();
   protected readonly band = inject(BandService);

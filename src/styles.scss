@@ -851,3 +851,6 @@ app-zurueck .back { display: inline-flex; align-items: center; gap: 6px; margin-
 app-zurueck .back:hover { color: var(--bn-sunset); }
 app-zurueck .back mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-zurueck.gross .back { margin-bottom: 32px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .18em; font-size: .75rem; }
+app-backstage-ueben .tagesziel { margin: 0 0 12px; font-size: .9rem; color: var(--bn-fog); }
+app-backstage-ueben .tagesziel a { margin-left: 8px; color: var(--bn-sunset); font-size: .82rem; }
+app-backstage-ueben .geschafft { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #5fb88a; }
