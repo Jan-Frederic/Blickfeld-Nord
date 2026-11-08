@@ -6,6 +6,7 @@ import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { MatButtonModule } from '@angular/material/button';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { BandService } from '../data/band.service';
@@ -34,10 +35,10 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte, InstagramFormate],
+  imports: [Zurueck, DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte, InstagramFormate],
   template: `
     <section class="section">
-      <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
+      <app-zurueck ziel="/backstage/termine" text="Alle Termine" />
 
       @if (show(); as s) {
         <p class="kicker">Backstage · Auftritt</p>

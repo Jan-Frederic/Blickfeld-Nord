@@ -3,6 +3,7 @@ import { datumText } from '../data/datum';
 import { Component, DestroyRef, afterNextRender, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { BandService, Show } from '../data/band.service';
 import { PageMetaService } from '../page-meta';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
@@ -91,10 +92,10 @@ const TEXT = tr(
   selector: 'app-presse-konzert',
   // „vorbei“ und die Bilder hängen vom Browser ab – komplett im Browser aufbauen
   host: { ngSkipHydration: 'true' },
-  imports: [RouterLink, MatIconModule, LDatePipe, LocPipe],
+  imports: [Zurueck, RouterLink, MatIconModule, LDatePipe, LocPipe],
   template: `
     <section class="section presse-konzert">
-      <a class="back" [routerLink]="'/presse' | loc"><mat-icon>arrow_back</mat-icon> {{ t().back }}</a>
+      <app-zurueck [ziel]="'/presse' | loc" [text]="t().back" [titel]="false" />
       @if (show(); as s) {
         <p class="kicker">{{ t().kicker }}</p>
         <h2>{{ s.venue }}</h2>

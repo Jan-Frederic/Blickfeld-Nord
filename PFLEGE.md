@@ -104,9 +104,18 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Saison-Update:** In der ersten Woche jedes Monats steht unter „Heute fällig“ „Saison-Update an die Band
   schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
 - **Backstage-Übersicht:** oben eine **Suche über alles** (Auftritte, Proben, Songs aller Spotify-Listen, Kontakte,
-  Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche). Danach Heute fällig und Als Nächstes – rechts neben jedem
-  Termin startet **Bühnen-Modus** (Auftritt, mit dessen Setlist) bzw. **Probe-Modus** (Probe) direkt;
-  „Zahlen und Songs“ lässt sich zuklappen (je Gerät gemerkt, zugeklappt wird es gar nicht erst geladen).
+  Sammlungen, Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche, Sammlungen ihre Seite). Danach Heute fällig,
+  der **Übemodus** und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
+  Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
+  Backstage → Zahlen.
+- **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
+  der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
+- **Übemodus** (Übersicht → Übemodus, `/backstage/ueben`): persönlich (Einstellungen → „Ich bin …“) – deine Songs, die
+  noch wackeln („Wackelt noch“ und Fortschritt), als **Karteikarten** in fünf Kästen. Reihenfolge: heute dran, Songs
+  des nächsten Auftritts zuerst. Karte: Titel → im Kopf durchspielen → **Aufdecken** (Tonart, Capo, Tempo, Takt,
+  Notiz, Noten) → **Sitzt** (einen Kasten weiter, wieder dran nach 1, 3, 7, 14 Tagen) oder **Wackelt noch** (zurück in
+  Kasten 1, gleich noch einmal). Sitzt eine Karte im letzten Kasten, ist der Song gelernt und verschwindet aus
+  „Wackelt noch“. Tasten: Leertaste deckt auf, ← wackelt, → sitzt. Stand je Person (`bn-ueben`, gespiegelt).
 - **Veranstalter bewerten** (Ansprechpartner beim Auftritt bzw. Termine → Kontakte): Technik, Publikum, Bezahlung
   pünktlich/spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ (Saisonplanung, Termine → Saison) –
   gelb, wenn zwei Punkte schlecht waren. Wie die Kontakte nur auf den Geräten und im OneDrive.
@@ -165,8 +174,8 @@ Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
 an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 
-**Wer kommt?** Oben auf der Probenseite einmal **Ich bin …** wählen (gilt für die Person auf allen ihren Geräten),
-dann **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
+**Wer kommt?** Einmal unter **Einstellungen → Ich bin …** die eigene Person wählen (gilt für die Person auf allen ihren
+Geräten), dann auf der Probenseite **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
 Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2 kommen, 1 offen“).
 
 **Unsicher bei:** Mit „Ich bin …“ sieht die Band die eigene „Wackelt noch“-Liste (`bn-unsicher-<Person>`): auf der
@@ -350,8 +359,9 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 - **Sammlungen** (früher „Vorlagen“, oben in der Setlist): benannte Songfolgen, z. B. eine bewährte Setlist oder ein
   Kneipen-Set. **Ersetzen** setzt die Sammlung als ganze Setlist, **Anhängen** hängt sie hinten an (Songs, die schon
   drin sind, nicht doppelt). **Als Sammlung speichern** merkt sich die aktuelle Setlist. Bearbeitet werden Sammlungen
-  unter **Songs → Liste**: Chip der Sammlung wählen (oder **Neue Sammlung**) – ⊕ nimmt einen Song auf, ✓ nimmt ihn
-  heraus, die Pfeile sortieren; „alle Songs zeigen“ zum Hinzufügen; Umbenennen, Löschen. Gespiegelt wie alle
+  unter **Songs → Sammlungen**: alle Sammlungen als Karten, **Neue Sammlung** anlegen; jede Sammlung hat eine eigene
+  Seite (`…/sammlungen?name=…`) wie die Setlist eines Auftritts – Songs suchen oder per Listen-Chip hinzufügen,
+  Pfeile sortieren, ✕ entfernt, Pause einfügen, Umbenennen, Löschen (feste: Zurücksetzen). Gespiegelt wie alle
   Band-Daten (`bn-setlist-vorlagen`, `src/app/data/sammlungen.ts`).
 - **Pausen neu setzen** (oben in der Setlist): gewünschte Set-Länge in Minuten eingeben – die Pausen werden neu
   zwischen die Songs gelegt, so viele Sets wie am besten passen, alle etwa gleich lang; die Reihenfolge der Songs
@@ -371,9 +381,10 @@ unter `export const SONGINFO: SongInfo[] = [` eine Zeile je Song einfügen:
 
 ## Notenblätter und Akkordblätter im Bühnen-Modus
 
-Der Bereich **Songs** im Backstage hat drei Unterseiten: **Liste** (Tonart, Tempo, Noten je Song), **Setlists** (die
-Setlists aller Auftritte auf diesem Gerät – kommende zuerst, mit Tonart/Tempo, Link zur Setlist und Bühnen-Modus) und
-**Noten** (alle PDFs auf dem Gerät, Einlesen und Weitergabe).
+Der Bereich **Songs** im Backstage hat diese Unterseiten: **Liste** (Tonart, Tempo, Noten je Song), **Setlists** (die
+Setlists aller Auftritte auf diesem Gerät – kommende zuerst, zugeklappt; ⌄ zeigt die Songs mit Tonart/Tempo, dazu Link
+zur Setlist und Bühnen-Modus), **Sammlungen** (anlegen und bearbeiten, je Sammlung eine Seite), **Noten** (alle PDFs
+auf dem Gerät, Einlesen und Weitergabe) und **Bühnenreife**.
 
 Unter **Songs → Liste** die Zeile des Songs antippen – im Dialog unten:
 
@@ -878,7 +889,9 @@ Zitate mit Freigabe; bei privaten Feiern ohne Namen der Gastgeber.
 
 Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an die Adresse, z. B.
 `https://blickfeld-nord.de/konzerte/2026-12-04/?ref=plakat`. GoatCounter zeigt den Wert im Dashboard unter
-„Referrers“; im Backstage unter **Besucher** steht „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
+„Referrers“; im Backstage unter **Besucher** steht der **Verlauf** (Aufrufe je Tag, Woche, Monat oder Jahr – Standard
+Monat – mit den Auftritten ● und Werbemaßnahmen aus dem Werbeplan ◆ auf der Zeitlinie; Balken antippen zeigt Zahl und
+Ereignisse, „Als Tabelle“ alles in Zahlen) und „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
 verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht mitzählen.
 
 > **Selbst testen:** GoatCounter wertet `ref` und `utm_campaign` selbst aus, zählt sie aber nur beim **ersten Aufruf

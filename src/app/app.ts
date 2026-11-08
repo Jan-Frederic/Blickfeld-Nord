@@ -9,6 +9,7 @@ import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr 
 import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
 import { SyncKompass } from './pages/sync-kompass';
 import { ansichtAus } from './data/neu-zeichnen';
+import { Verlauf } from './zurueck';
 import { SprachHinweis } from './sections/sprach-hinweis';
 import { BaldLeiste } from './sections/bald-leiste';
 
@@ -89,6 +90,8 @@ const TEXT = tr(
 })
 export class App {
   protected readonly i18n = inject(I18n);
+  /** Verlauf für „zurück“ ab der ersten Navigation mitschreiben (zurueck.ts) */
+  private readonly verlauf = inject(Verlauf);
   /** geroutete Seite kurz ausblenden, damit sie neue Daten aus dem Abgleich liest (data/neu-zeichnen.ts) */
   protected readonly ansichtAus = ansichtAus;
   protected readonly t = this.i18n.t(TEXT);

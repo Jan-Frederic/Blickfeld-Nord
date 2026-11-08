@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { BandService } from '../data/band.service';
 import { Packliste } from './packliste';
 import { Setlist } from './setlist';
@@ -18,13 +19,11 @@ export const TOOLS = [
 
 @Component({
   selector: 'app-backstage-tool',
-  imports: [DatePipe, RouterLink, MatIconModule, Packliste, Setlist, VorOrt, BackstageSync],
+  imports: [Zurueck, DatePipe, RouterLink, MatIconModule, Packliste, Setlist, VorOrt, BackstageSync],
   template: `
     <section class="section">
       @if (show(); as s) {
-        <a class="back" [routerLink]="['/backstage', id()]">
-          <mat-icon>arrow_back</mat-icon> {{ s.venue }} · {{ s.date | date: 'dd.MM.yyyy' : '' : 'de' }}
-        </a>
+        <app-zurueck [ziel]="['/backstage', id()]" [text]="s.venue + ' · ' + (s.date | date: 'dd.MM.yyyy' : '' : 'de')" />
 
         <nav class="tabs" aria-label="Bereiche dieses Auftritts">
           @for (t of tools; track t.path) {

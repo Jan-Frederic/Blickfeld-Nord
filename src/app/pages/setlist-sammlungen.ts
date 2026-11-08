@@ -24,7 +24,7 @@ import { Sammlung, alleSammlungen, anhaengen, sammlungSetzen, sammlungSongs, sam
         <span class="none">Noch keine – eine fertige Setlist hier als Sammlung speichern.</span>
       }
       <button type="button" class="save" (click)="save()" [disabled]="!songCount()"><mat-icon>bookmark_add</mat-icon> Als Sammlung speichern</button>
-      <a class="bearbeiten" routerLink="/backstage/songs" [queryParams]="list()[selected()] ? { sammlung: list()[selected()].name } : {}"><mat-icon>edit</mat-icon> bearbeiten</a>
+      <a class="bearbeiten" routerLink="/backstage/songs/sammlungen" [queryParams]="list()[selected()] ? { name: list()[selected()].name } : {}"><mat-icon>edit</mat-icon> bearbeiten</a>
       @if (meldung(); as m) { <span class="meldung" role="status">{{ m }}</span> }
     </div>
   `,

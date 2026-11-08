@@ -8,6 +8,7 @@ import { HERKUNFT } from '../analytics';
 import { GC, kampagne, zaehler as count } from '../data/goatcounter';
 import { BandService } from '../data/band.service';
 import { GRUPPEN } from './konzert-kampagne';
+import { BesucherVerlauf } from './besucher-verlauf';
 
 // Besucherzahlen aus GoatCounter (öffentlicher Zähler, siehe data/goatcounter.ts)
 const DASHBOARD = GC;
@@ -37,7 +38,7 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
 
 @Component({
   selector: 'app-backstage-besucher',
-  imports: [DecimalPipe, MatIconModule, RouterLink],
+  imports: [DecimalPipe, MatIconModule, RouterLink, BesucherVerlauf],
   template: `
     <section class="besucher" aria-labelledby="besucher-titel">
       <h2 id="besucher-titel"><mat-icon>insights</mat-icon> Besucher der Webseite</h2>
@@ -71,6 +72,7 @@ type State = 'loading' | 'ok' | 'disabled' | 'offline';
                 gegenüber den 7 Tagen davor ({{ tr.vorher | number: '1.0-0' }})</span>
             </p>
           }
+          <app-besucher-verlauf />
           <h3>Beliebteste Seiten · 30 Tage</h3>
           <ol class="pages">
             @for (p of pages(); track p.path) {

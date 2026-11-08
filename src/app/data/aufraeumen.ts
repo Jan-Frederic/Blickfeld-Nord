@@ -24,7 +24,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'band', label: 'Zusagen, „unsicher bei“ und Fortschritt', praefixe: ['bn-zusage-', 'bn-unsicher-', 'bn-fortschritt-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist, Fortschritt je Musiker (Bühnenreife)' },
   { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
-  { id: 'wackelt', label: '„Wackelt noch“-Liste', praefixe: ['bn-wackelt'], hinweis: 'deine Übe-Liste für den Probe-Vorschlag' },
+  { id: 'wackelt', label: '„Wackelt noch“-Liste und Übemodus', praefixe: ['bn-wackelt', 'bn-ueben'], hinweis: 'deine Übe-Liste für Probe-Vorschlag und Karteikasten' },
   { id: 'aufgaben', label: 'Aufgaben und Prüf-Häkchen', praefixe: ['bn-aufgaben', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'] },
   {
     id: 'einstellungen',
@@ -139,6 +139,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-sync-letzter': 'Synchronisation: letzter Abgleich',
   'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',
   'bn-wackelt': '„Wackelt noch“-Liste',
+  'bn-ueben': 'Übemodus (Karteikasten)',
   'bn-aufgaben': 'Aufgaben-Häkchen',
   'bn-ui-geprueft': 'Geprüfte Oberflächentexte',
   'bn-uebersetzung-pruefung': 'Geprüfte Übersetzungen',
@@ -157,6 +158,7 @@ const ZIEL: Record<string, (id: string) => string> = {
 const ZIEL_FEST: Record<string, string> = {
   'bn-songinfo-entwurf': '/backstage/songs',
   'bn-wackelt': '/backstage/songs',
+  'bn-ueben': '/backstage/ueben',
   'bn-aufgaben': '/backstage/aufgaben',
   'bn-ui-geprueft': '/backstage/uebersetzungen',
   'bn-uebersetzung-pruefung': '/backstage/uebersetzungen',

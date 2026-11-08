@@ -3,6 +3,7 @@ import { MONATE, datumText } from '../data/datum';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { BandService, Show } from '../data/band.service';
 import { KontaktBewertung } from './kontakt-bewertung';
 import { Kontakt, veranstalterRangliste, adressbuchDa, ausAdressbuch, bewertungSchwach, bewertungText, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
@@ -26,10 +27,10 @@ interface Zeile {
 
 @Component({
   selector: 'app-termine-kontakte',
-  imports: [RouterLink, MatIconModule, KontaktBewertung],
+  imports: [Zurueck, RouterLink, MatIconModule, KontaktBewertung],
   template: `
     <section class="section termine-kontakte">
-      <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Termine</a>
+      <app-zurueck ziel="/backstage/termine" text="Termine" />
       <p class="kicker">Backstage · Termine</p>
       <h2>Kontakte</h2>
       <p class="lead">Ansprechpartner der Veranstalter – nur auf euren Geräten und im OneDrive, nie auf der Website.

@@ -37,7 +37,6 @@ function ladeEntwurf(): Record<string, Werte> {
   }
 }
 
-import { alleSammlungen, sammlungenNeuLaden, sammlungLoeschen, sammlungSetzen, sammlungSongs, sammlungUmbenennen, sammlungen, songKey, songUmschalten, songVerschieben } from '../data/sammlungen';
 @Component({
   selector: 'app-songs-liste',
   imports: [MatIconModule, SongDialog, SetlistBuehne, WunschPassung],
@@ -58,23 +57,6 @@ import { alleSammlungen, sammlungenNeuLaden, sammlungLoeschen, sammlungSetzen, s
         }
         <button type="button" [attr.aria-pressed]="liste() === 'ohne'" (click)="liste.set('ohne')">Ohne Liste <span class="n">{{ anzahl()['ohne'] }}</span></button>
       </div>
-      <!-- Sammlungen (data/sammlungen.ts): als Chip wählen und bearbeiten – Songs hinzufügen, entfernen, umsortieren -->
-      <div class="sammlung-chips" role="group" aria-label="Sammlungen wählen und bearbeiten">
-        <span class="label"><mat-icon>bookmarks</mat-icon> Sammlungen</span>
-        @for (c of sammlungenListe(); track c.name) {
-          <button type="button" [attr.aria-pressed]="sammlung() === c.name" (click)="sammlungWaehlen(c.name)">{{ c.name }} <span class="n">{{ anzahlIn(c) }}</span></button>
-        }
-        <button type="button" class="neu" (click)="neueSammlung()"><mat-icon>add</mat-icon> Neue Sammlung</button>
-      </div>
-      @if (aktiveSammlung(); as sm) {
-        <div class="sammlung-leiste">
-          <span>„{{ sm.name }}“ bearbeiten: <mat-icon class="inline">add_circle</mat-icon> nimmt einen Song auf, <mat-icon class="inline">check_circle</mat-icon> nimmt ihn wieder heraus, Pfeile sortieren.</span>
-          <label><input type="checkbox" [checked]="alleZeigen()" (change)="alleZeigen.set($any($event.target).checked)" /> alle Songs zeigen (zum Hinzufügen)</label>
-          <button type="button" (click)="sammlungUmbenennenFragen(sm.name)"><mat-icon>edit</mat-icon> Umbenennen</button>
-          <button type="button" (click)="sammlungLoeschenFragen(sm.name, !!sm.fest)"><mat-icon>{{ sm.fest ? 'restart_alt' : 'delete' }}</mat-icon> {{ sm.fest ? 'Zurücksetzen' : 'Löschen' }}</button>
-          @if (sammlungMeldung(); as m) { <span class="meldung" role="status">{{ m }}</span> }
-        </div>
-      }
       <!-- Fortschritt je Filter: Anteil der Songs der gewählten Liste mit Tonart, Tempo oder Notiz -->
       @let fs = fortschrittListe();
       <p class="fortschritt-text">{{ fs.name }}: Angaben bei {{ fs.fertig }} von {{ fs.gesamt }} Songs ({{ fs.prozent }} %)</p>
@@ -154,16 +136,6 @@ import { alleSammlungen, sammlungenNeuLaden, sammlungLoeschen, sammlungSetzen, s
           @for (s of gefiltert(); track s.key; let i = $index) {
             <tr [class.changed]="geaendert().includes(s.key)" (click)="oeffnen(s.key)">
               <td class="song">
-                @if (aktiveSammlung(); as sm) {
-                  @let drin = inSammlung().has(sk(s));
-                  <span class="sammlung-knoepfe">
-                    <button type="button" class="in-sammlung" [class.drin]="drin" (click)="umschalten(s, $event)" [attr.aria-pressed]="drin" [attr.aria-label]="(drin ? 'Aus „' : 'In „') + sm.name + (drin ? '“ herausnehmen: ' : '“ aufnehmen: ') + s.title"><mat-icon>{{ drin ? 'check_circle' : 'add_circle' }}</mat-icon></button>
-                    @if (drin && !alleZeigen()) {
-                      <button type="button" (click)="schieben(s, -1, $event)" [disabled]="i === 0" [attr.aria-label]="s.title + ' nach vorn'"><mat-icon>arrow_upward</mat-icon></button>
-                      <button type="button" (click)="schieben(s, 1, $event)" [disabled]="i === gefiltert().length - 1" [attr.aria-label]="s.title + ' nach hinten'"><mat-icon>arrow_downward</mat-icon></button>
-                    }
-                  </span>
-                }
                 <button type="button" class="oeffnen" (click)="oeffnen(s.key, $event)" [attr.aria-label]="s.title + ' bearbeiten'">{{ s.title }}</button>
                 <span class="a">{{ s.artist }}</span>
                 @if (s.listen.length) {
@@ -352,9 +324,7 @@ export class SongsListe {
 
   protected readonly gefiltert = computed(() => {
     const q = norm(this.suche().trim());
-    // gewählte Sammlung: ihre Songs in ihrer Reihenfolge (Songs, die in keiner Liste stehen, trotzdem) – oder alle zum Hinzufügen
-    const sm = this.aktiveSammlung();
-    const basis = sm && !this.alleZeigen() ? sammlungSongs(sm).map((e) => this.songs().find((x) => this.sk(x) === songKey(e)) ?? { key: songKey(e), title: e.title, artist: e.artist, listen: [] }) : this.songs();
+    const basis = this.songs();
     let liste = q ? basis.filter((s) => norm(`${s.title} ${s.artist}`).includes(q)) : basis;
     const l = this.liste();
     if (l === 'ohne') liste = liste.filter((s) => !s.listen.length);
@@ -381,64 +351,6 @@ export class SongsListe {
     if (this.sortierung() === 'lange') liste = [...liste].sort((a, b) => (h.get(a.key)?.zuletzt ?? '').localeCompare(h.get(b.key)?.zuletzt ?? ''));
     return liste;
   });
-  // ---- Sammlungen ----
-  protected readonly sammlungenListe = computed(() => sammlungen());
-  protected readonly sammlung = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('sammlung') ?? '');
-  protected readonly alleZeigen = signal(false);
-  protected readonly sammlungMeldung = signal('');
-  protected readonly aktiveSammlung = computed(() => this.sammlungenListe().find((x) => x.name === this.sammlung()));
-  protected readonly inSammlung = computed(() => new Set((this.aktiveSammlung() ? sammlungSongs(this.aktiveSammlung()!) : []).map(songKey)));
-  protected sk(s: { title: string; artist: string }): string {
-    return songKey(s);
-  }
-  protected anzahlIn(c: Parameters<typeof sammlungSongs>[0]): number {
-    return sammlungSongs(c).length;
-  }
-  protected sammlungWaehlen(name: string): void {
-    this.sammlung.set(this.sammlung() === name ? '' : name);
-    this.alleZeigen.set(false);
-    this.sammlungMeldung.set('');
-  }
-  protected neueSammlung(): void {
-    const name = prompt('Name der neuen Sammlung (z. B. „Kneipe Set 1“):')?.trim();
-    if (!name) return;
-    if (alleSammlungen().some((x) => x.name.toLowerCase() === name.toLowerCase())) {
-      alert(`„${name}“ gibt es schon.`);
-      return;
-    }
-    sammlungSetzen(name, []);
-    this.sammlung.set(name);
-    this.alleZeigen.set(true);
-    this.sammlungMeldung.set(`„${name}“ angelegt – jetzt Songs mit ⊕ aufnehmen.`);
-  }
-  protected umschalten(s: SongEintrag, e: Event): void {
-    e.stopPropagation();
-    const name = this.sammlung();
-    const drin = this.inSammlung().has(this.sk(s));
-    songUmschalten(name, { title: s.title, artist: s.artist });
-    this.sammlungMeldung.set(`${s.title} ${drin ? 'aus' : 'in'} „${name}“ ${drin ? 'herausgenommen' : 'aufgenommen'} ✓`);
-  }
-  protected schieben(s: SongEintrag, richtung: -1 | 1, e: Event): void {
-    e.stopPropagation();
-    songVerschieben(this.sammlung(), { title: s.title, artist: s.artist }, richtung);
-  }
-  protected sammlungUmbenennenFragen(alt: string): void {
-    const neu = prompt('Neuer Name der Sammlung:', alt)?.trim();
-    if (!neu || neu === alt) return;
-    if (alleSammlungen().some((x) => x.name.toLowerCase() === neu.toLowerCase())) {
-      alert(`„${neu}“ gibt es schon.`);
-      return;
-    }
-    sammlungUmbenennen(alt, neu);
-    this.sammlung.set(neu);
-  }
-  protected sammlungLoeschenFragen(name: string, fest: boolean): void {
-    if (!confirm(fest ? `Änderungen an der festen Sammlung „${name}“ verwerfen?` : `Sammlung „${name}“ löschen? Setlists, die sie übernommen haben, bleiben.`)) return;
-    sammlungLoeschen(name);
-    if (!fest) this.sammlung.set('');
-    this.sammlungMeldung.set(fest ? 'Zurückgesetzt ✓' : '');
-  }
-
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
   /** eigene „Wackelt noch“-Liste (data/wackelt.ts) */
   protected readonly wackelt = signal(ladeWackelt());
@@ -548,13 +460,12 @@ export class SongsListe {
   protected readonly mitNoten = signal(new Map<string, { pdfs: number; akkorde: boolean; fassungen: string[] }>());
   protected readonly notenDateien = signal<NotenDateiInfo[]>([]);
   constructor() {
-    // neue Daten der Band (Abgleich): hier einlesen statt die Seite neu aufzubauen – Suche, Filter, Sammlung und
+    // neue Daten der Band (Abgleich): hier einlesen statt die Seite neu aufzubauen – Suche, Filter und
     // Scrollposition bleiben
     inject(DestroyRef).onDestroy(
       auffrischenAnmelden(() => {
         this.entwurf.set(ladeEntwurf());
         this.wackelt.set(ladeWackelt());
-        sammlungenNeuLaden();
         this.notenLaden();
       }),
     );

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { sammlungSongs, sammlungen } from '../data/sammlungen';
 import { BandService } from '../data/band.service';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { LISTEN, songAbgleich } from '../data/playlisten';
@@ -61,6 +62,10 @@ export class BackstageSuche {
       ...this.songs
         .filter((s) => passt(s.title, s.artist))
         .map((s) => ({ icon: 'library_music', text: s.title, info: s.artist, link: '/backstage/songs', query: { suche: s.title } })),
+      // Sammlungen: Name oder ein Song darin → Seite der Sammlung
+      ...sammlungen()
+        .filter((m) => passt(m.name, ...sammlungSongs(m).map((x) => x.title)))
+        .map((m) => ({ icon: 'bookmarks', text: m.name, info: `Sammlung · ${sammlungSongs(m).length} Songs`, link: '/backstage/songs/sammlungen', query: { name: m.name } })),
       ...BACKSTAGE_BEREICHE.filter((b) => passt(b.label, b.text)).map((b) => ({ icon: b.icon, text: b.label, info: b.text, link: b.path })),
     ];
     return out.slice(0, 12);

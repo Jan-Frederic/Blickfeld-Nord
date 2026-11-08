@@ -1,15 +1,15 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { datenStand } from '../data/neu-zeichnen';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { BandService } from '../data/band.service';
-import { ichSetzen, ladeIch, rufname, zusageSetzen, zusagen, zusagenText } from '../data/band-ich';
-import { ladeWackelt } from '../data/wackelt';
+import { ladeIch, rufname, zusageSetzen, zusagen, zusagenText } from '../data/band-ich';
 
-// Backstage → Probe: „Wer kommt?“ – einmal „Ich bin …“ wählen (gilt für die Person, auf allen ihren Geräten), dann
+// Backstage → Probe: „Wer kommt?“ – einmal unter Einstellungen „Ich bin …“ wählen (gilt für die Person, auf allen ihren Geräten), dann
 // zusagen oder absagen (mit Notiz wie „komme später“). Jede Person schreibt ihre eigene Datei, gespiegelt über OneDrive.
 @Component({
   selector: 'app-probe-zusagen',
-  imports: [MatIconModule],
+  imports: [MatIconModule, RouterLink],
   template: `
     <div class="zusagen">
       <p class="stand">{{ text() }}</p>
@@ -29,15 +29,9 @@ import { ladeWackelt } from '../data/wackelt';
           <button type="button" class="nein" [class.an]="meine()?.kommt === false" (click)="setzen(false)"><mat-icon>close</mat-icon> Ich kann nicht</button>
           <input maxlength="80" placeholder="Notiz, z. B. komme 30 min später" aria-label="Notiz zur Zusage" [value]="meine()?.notiz ?? ''" (change)="notiz($any($event.target).value)" />
         </div>
-        <button type="button" class="link" (click)="ich.set('')">nicht {{ ichName() }}?</button>
       } @else {
-        <label class="wer">Ich bin
-          <select aria-label="Wer bist du?" (change)="ichWaehlen($any($event.target).value)">
-            <option value="">– wählen –</option>
-            @for (m of mitglieder; track m.slug) { <option [value]="m.slug">{{ rufname(m) }}</option> }
-          </select>
-          <small>einmal je Person – dann siehst du hier deine Zusage, und die Band sieht, wo du unsicher bist</small>
-        </label>
+        <p class="wer">Wähle unter <a routerLink="/backstage/einstellungen">Einstellungen</a> „Ich bin …“ – dann kannst du hier
+          zusagen, und die Band sieht, wo du unsicher bist.</p>
       }
     </div>
   `,
@@ -51,15 +45,7 @@ export class ProbeZusagen {
   protected readonly liste = computed(() => (this.stand(), datenStand(), zusagen(this.datum(), this.mitglieder)));
   protected readonly meine = computed(() => this.liste().get(this.ich()));
   protected readonly text = computed(() => zusagenText(this.liste(), this.mitglieder.length) || 'Noch keine Antworten');
-  protected readonly ichName = computed(() => {
-    const m = this.mitglieder.find((x) => x.slug === this.ich());
-    return m ? rufname(m) : '';
-  });
 
-  protected ichWaehlen(slug: string): void {
-    ichSetzen(slug, ladeWackelt());
-    this.ich.set(slug);
-  }
   protected setzen(kommt: boolean): void {
     zusageSetzen(this.datum(), this.ich(), { kommt, notiz: this.meine()?.notiz });
     this.stand.update((n) => n + 1);

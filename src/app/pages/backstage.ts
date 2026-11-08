@@ -1,21 +1,23 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { BackstageStats } from './backstage-stats';
 import { HeuteFaellig } from './heute-faellig';
-import { SongsKarte } from './songs-karte';
 import { BackstageSuche } from './backstage-suche';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
+import { ladeIch } from '../data/band-ich';
+import { ladeFortschritt } from '../data/fortschritt';
+import { ladeWackelt } from '../data/wackelt';
+import { karten, ladeUeben } from '../data/ueben';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
-// Die Übersicht zeigt Kennzahlen und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
+// Die Übersicht zeigt Suche, Fälliges und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, SongsKarte, BackstageSuche],
+  imports: [DatePipe, RouterLink, MatIconModule, HeuteFaellig, BackstageSuche],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
@@ -23,10 +25,16 @@ import { SyncService } from '../data/sync.service';
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
 
       <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, die nächsten Termine (je mit Bühnen- bzw. Probe-Modus);
-           Zahlen und Songs einklappbar (Zustand je Gerät gemerkt), zuletzt die Bereiche. Die Bereit-Checks der
+           zuletzt die Bereiche (Zahlen stehen unter Backstage → Zahlen). Die Bereit-Checks der
            kommenden Auftritte stehen unter Aufgaben. -->
       <app-backstage-suche />
       <app-heute-faellig />
+      <!-- Übemodus: persönlicher Karteikasten mit den Songs, die noch wackeln -->
+      <a class="ueben-karte" routerLink="/backstage/ueben">
+        <mat-icon>style</mat-icon>
+        <span><strong>Übemodus</strong> <small>{{ ueben.text }}</small></span>
+        <mat-icon class="weiter">chevron_right</mat-icon>
+      </a>
 
       <h3>Als Nächstes</h3>
       @if (next.length) {
@@ -45,14 +53,6 @@ import { SyncService } from '../data/sync.service';
         <p class="empty">Keine kommenden Termine eingetragen.</p>
       }
 
-      <details class="zahlen" [open]="zahlenOffen()" (toggle)="zahlenUmschalten($any($event.target).open)">
-        <summary><mat-icon>insights</mat-icon> Zahlen und Songs</summary>
-        @if (zahlenOffen()) {
-          <app-backstage-stats [shows]="shows" [rehearsals]="rehearsals" />
-          @defer { <app-songs-karte /> }
-        }
-      </details>
-
       <ul class="tiles">
         @for (b of bereiche; track b.path) {
           <li>
@@ -69,6 +69,11 @@ import { SyncService } from '../data/sync.service';
   styles: `
     h3 { margin: 32px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .next { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .ueben-karte { display: flex; align-items: center; gap: 12px; margin: 20px 0 0; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--bn-sunset); color: var(--bn-ink); text-decoration: none; }
+    .ueben-karte:hover { background: rgba(232, 164, 106, .08); }
+    .ueben-karte mat-icon { color: var(--bn-sunset); flex: none; }
+    .ueben-karte span { flex: 1; min-width: 0; }
+    .ueben-karte small { display: block; color: var(--bn-fog); font-size: .82rem; }
     .next li { display: flex; align-items: stretch; gap: 8px; }
     .termin {
       flex: 1; min-width: 0; display: grid; grid-template-columns: 9em 1fr; align-items: center; gap: 12px; padding: 12px 16px;
@@ -97,25 +102,16 @@ import { SyncService } from '../data/sync.service';
   `,
 })
 export class Backstage {
-  // „Zahlen und Songs“ auf- oder zugeklappt – je Gerät gemerkt (Standard: offen)
-  protected readonly zahlenOffen = signal(Backstage.ansicht() !== 'zu');
-  private static ansicht(): string | null {
-    try {
-      return localStorage.getItem('bn-backstage-ansicht');
-    } catch {
-      return null;
-    }
-  }
-  protected zahlenUmschalten(offen: boolean): void {
-    this.zahlenOffen.set(offen);
-    try {
-      localStorage.setItem('bn-backstage-ansicht', offen ? 'offen' : 'zu');
-    } catch {
-      // ohne Speicher gilt es bis zum Neuladen
-    }
-  }
-
   private readonly router = inject(Router);
+  /** Übemodus-Karte: wie viele Songs wackeln, wie viele heute dran sind (persönlich, data/ueben.ts) */
+  protected readonly ueben = (() => {
+    const ich = ladeIch();
+    if (!ich) return { text: 'Songs lernen wie mit Karteikarten – persönlich, „Ich bin …“ unter Einstellungen wählen' };
+    const heute = new Date().toLocaleDateString('sv-SE');
+    const k = karten(ladeWackelt(), ladeFortschritt(ich), ladeUeben(), new Map(), heute);
+    const dran = k.filter((x) => x.dran).length;
+    return { text: k.length ? `${k.length} ${k.length === 1 ? 'Song wackelt' : 'Songs wackeln'} · ${dran} heute dran` : 'Nichts wackelt gerade – Songs lassen sich dort hinzufügen' };
+  })();
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
   protected readonly rehearsals = [...this.band.rehearsals].sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''));
@@ -150,6 +146,8 @@ export class Backstage {
     const query = inject(ActivatedRoute).snapshot.queryParamMap;
     const id = query.get('auftritt');
     const teil = query.get('teil');
-    if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true, preserveFragment: true });
+    // weitere Parameter (z. B. ?name= einer Sammlung) kommen mit
+    const rest = Object.fromEntries(query.keys.filter((k) => k !== 'auftritt' && k !== 'teil').map((k) => [k, query.get(k)]));
+    if (id) this.router.navigate(['/backstage', id, ...(teil ? [teil] : [])], { replaceUrl: true, preserveFragment: true, queryParams: rest });
   }
 }

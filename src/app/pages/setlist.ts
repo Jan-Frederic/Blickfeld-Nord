@@ -2,6 +2,7 @@ import { datumText } from '../data/datum';
 
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
+import { Verlauf } from '../zurueck';
 import { ActivatedRoute, Router } from '@angular/router';
 import { sammlungenNeuLaden } from '../data/sammlungen';
 import { MatIconModule } from '@angular/material/icon';
@@ -165,7 +166,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       <app-tempo-verlauf [sets]="sets()" />
       <app-setlist-vorschlag [entries]="entries()" [show]="show()" (apply)="replace($event)" />
       <!-- Bühnen-Modus im Leerlauf vorladen: öffnet sich dann sofort (auch offline) -->
-      @defer (when stage(); prefetch on idle) { @if (stage()) { <app-setlist-buehne [entries]="entries()" [show]="show()" (geaendert)="ausBuehne($event)" (closed)="stage.set(false)" /> } }
+      @defer (when stage(); prefetch on idle) { @if (stage()) { <app-setlist-buehne [entries]="entries()" [show]="show()" (geaendert)="ausBuehne($event)" (closed)="buehneZu()" /> } }
       <p class="hint">Die Setlist wird pro Auftritt nur in diesem Browser auf diesem Gerät gespeichert.</p>
     </section>
   `,
@@ -242,6 +243,16 @@ export class Setlist {
 
   protected readonly query = signal('');
   protected readonly stage = signal(false);
+  /** Bühnen-Modus kam über einen Link (Übersicht → Als Nächstes): Schließen führt dorthin zurück */
+  private buehneVonLink = false;
+  private readonly verlauf = inject(Verlauf);
+  protected buehneZu(): void {
+    this.stage.set(false);
+    if (this.buehneVonLink) {
+      this.buehneVonLink = false;
+      this.verlauf.zurueck();
+    }
+  }
   protected readonly entries = signal<Entry[]>([]);
   private readonly key = computed(() => SETLIST_PREFIX + this.show());
 
@@ -261,7 +272,10 @@ export class Setlist {
     if (route.snapshot.queryParamMap.get('buehne')) {
       const router = inject(Router);
       queueMicrotask(() => {
-        if (loadSetlist(this.show()).some((e) => !isPause(e))) this.stage.set(true);
+        if (loadSetlist(this.show()).some((e) => !isPause(e))) {
+          this.stage.set(true);
+          this.buehneVonLink = true;
+        }
         void router.navigate([], { relativeTo: route, queryParams: { buehne: null }, queryParamsHandling: 'merge', replaceUrl: true, preserveFragment: true });
       });
     }

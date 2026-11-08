@@ -3,6 +3,7 @@ import { PageMetaService } from '../page-meta';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { BandService } from '../data/band.service';
 import { I18n, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
@@ -37,10 +38,10 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-member',
-  imports: [RouterLink, MatButtonModule, MatIconModule, LocPipe, UebersetzungHinweis],
+  imports: [Zurueck, RouterLink, MatButtonModule, MatIconModule, LocPipe, UebersetzungHinweis],
   template: `
     <article class="section member">
-      <a class="back" [routerLink]="'/' | loc" fragment="band"><mat-icon>arrow_back</mat-icon> {{ t().back }}</a>
+      <app-zurueck class="gross" [ziel]="'/' | loc" fragment="band" [text]="t().back" [titel]="false" />
 
       @if (member(); as m) {
         <header>

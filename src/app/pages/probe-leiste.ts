@@ -22,9 +22,9 @@ import {
   zeitJeSong,
 } from '../data/probe-modus';
 import { SongMitschnitte } from './song-mitschnitte';
-import { ichSetzen, ladeIch, rufname } from '../data/band-ich';
+import { ladeIch, rufname } from '../data/band-ich';
 import { alleFortschritte, bandStand, fortschrittEintragen, probeStaende } from '../data/fortschritt';
-import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
+import { wackeltSetzen } from '../data/wackelt';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { sprungHinweis } from '../data/tonart-uebergang';
 
@@ -62,12 +62,7 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
         <button type="button" [class.an]="mitschnitt()" (click)="mitschnitt.set(!mitschnitt())" [attr.aria-pressed]="mitschnitt()" aria-label="Mitschnitt aufnehmen"><mat-icon>mic</mat-icon></button>
       </div>
       @if (!ich()) {
-        <label class="ich">Ich bin
-          <select (change)="ichWaehlen($any($event.target).value)" aria-label="Wer bist du? Sitzt/Nochmal zählt dann für dich">
-            <option value="">– wählen, damit Sitzt/Nochmal für dich zählt –</option>
-            @for (m of mitglieder; track m.slug) { <option [value]="m.slug">{{ rufname(m) }}</option> }
-          </select>
-        </label>
+        <p class="andere">Unter Einstellungen „Ich bin …“ wählen, damit Sitzt/Nochmal für dich zählt.</p>
       } @else if (andere(); as a) { <p class="andere">{{ a }}</p> }
       @if (uebergang() && uebergangText(); as u) { <p class="uebergang" role="note">{{ u }}</p> }
       @if (vorher(); as v) { <p class="vorher">Letzte Probe ({{ datumText(v.tag) }}): {{ v.notiz }}</p> }
@@ -188,10 +183,6 @@ export class ProbeLeiste {
     wackeltSetzen(this.key(), stand === 'nochmal', undefined, 'probe');
     const band = bandStand(probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder)).get(this.key()));
     this.speichern(markierenPerson(loadProbe(this.datum()), this.song(), band));
-  }
-  protected ichWaehlen(slug: string): void {
-    ichSetzen(slug, ladeWackelt());
-    this.ich.set(ladeIch());
   }
   protected lauf(delta: number): void {
     this.speichern(durchlauf(loadProbe(this.datum()), this.song(), delta));

@@ -171,7 +171,7 @@ mat-icon, .material-icons { flex-shrink: 0; }
 .menu-sprachen .menu-item.unter { padding-left: 56px; min-height: 40px; }
 
 // Backstage → Songs und Setlist: Filter nach Spotify-Liste und Listen-Symbole je Song (Budget der Komponenten)
-app-songs-liste, app-setlist {
+app-songs-liste, app-setlist, app-songs-sammlungen {
   .listen-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .listen-chips button { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .82rem; cursor: pointer; }
   .listen-chips button:hover { color: var(--bn-ink); }
@@ -218,15 +218,6 @@ app-setlist .spielzeit button { display: inline-flex; align-items: center; gap: 
 app-setlist .spielzeit button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 app-setlist .spielzeit mat-icon { font-size: 16px; width: 16px; height: 16px; }
 // Backstage-Übersicht: Kachel Songs
-app-songs-karte .songs-karte { display: grid; gap: 8px; margin: 16px 0 0; padding: 14px 18px; border: 1px solid var(--bn-line); border-radius: 12px; color: var(--bn-ink); text-decoration: none; }
-app-songs-karte .songs-karte:hover { border-color: var(--bn-sunset); }
-app-songs-karte .kopf { display: flex; align-items: center; gap: 8px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .8rem; }
-app-songs-karte .zahlen { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--bn-fog); }
-app-songs-karte .zahlen span { display: inline-flex; align-items: center; gap: 4px; }
-app-songs-karte .zahlen mat-icon { font-size: 16px; width: 16px; height: 16px; color: #1db954; }
-app-songs-karte b { color: var(--bn-ink); font-weight: 600; }
-app-songs-karte .stand { font-size: .85rem; color: var(--bn-fog); }
-app-songs-karte .warn { color: #e8a46a; }
 app-nachbereitung mat-icon.spotify { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; color: #1db954; }
 app-nachbereitung .hint a { color: var(--bn-sunset); }
 // Bühnen-Modus: Lupe für spontane Wünsche (Budget von setlist-buehne)
@@ -395,9 +386,6 @@ app-backstage-suche li a:hover, app-backstage-suche li a:focus-visible { backgro
 app-backstage-suche li mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--bn-sunset); }
 app-backstage-suche .i { color: var(--bn-fog); font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 app-backstage-suche .leer { padding: 8px 10px; color: var(--bn-fog); }
-app-backstage .zahlen { margin: 28px 0 0; }
-app-backstage .zahlen > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
-app-backstage .zahlen > summary mat-icon { color: var(--bn-sunset); font-size: 20px; width: 20px; height: 20px; }
 app-backstage-zahlen .vorschau-link { margin: 12px 0 0; font-size: .9rem; color: var(--bn-fog); }
 app-backstage-zahlen .vorschau-link a { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); }
 app-backstage-zahlen .vorschau-link mat-icon { font-size: 18px; width: 18px; height: 18px; }
@@ -645,11 +633,11 @@ app-setlist .pausen { display: flex; flex-wrap: wrap; align-items: center; gap: 
 app-setlist .pausen .label { display: inline-flex; align-items: center; gap: 6px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; color: var(--bn-fog); }
 app-setlist .pausen mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-setlist .pausen input { width: 4.5em; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--bn-line); background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
-app-setlist .pausen button, app-setlist .zu-knopf {
+app-setlist .pausen button, app-setlist .zu-knopf, app-songs-sammlungen .zu-knopf {
   display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; cursor: pointer;
   border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .85rem;
 }
-app-setlist .pausen button:hover:not(:disabled), app-setlist .zu-knopf:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-setlist .pausen button:hover:not(:disabled), app-setlist .zu-knopf:hover, app-songs-sammlungen .zu-knopf:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 app-setlist .pausen button:disabled { opacity: .4; cursor: default; }
 app-setlist .pausen .meldung { color: var(--bn-sunset); }
 app-setlist .zu { margin: 10px 0 0; font-size: .85rem; color: var(--bn-fog); }
@@ -657,24 +645,6 @@ app-setlist .zu-knopf { margin-top: 10px; }
 app-setlist .zu-knopf mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
 /* Songs → Liste: Sammlungen als Chips, Bearbeiten-Leiste und ⊕/✓ je Song (pages/songs-liste.ts) */
-app-songs-liste .sammlung-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 12px; }
-app-songs-liste .sammlung-chips .label { display: inline-flex; align-items: center; gap: 4px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .68rem; color: var(--bn-fog); margin-right: 4px; }
-app-songs-liste .sammlung-chips button { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .82rem; cursor: pointer; }
-app-songs-liste .sammlung-chips button:hover { color: var(--bn-ink); }
-app-songs-liste .sammlung-chips button[aria-pressed='true'] { border-color: var(--bn-sunset); background: var(--bn-sunset); color: #2a1708; }
-app-songs-liste .sammlung-chips button.neu { border-style: dashed; }
-app-songs-liste .sammlung-chips mat-icon { font-size: 16px; width: 16px; height: 16px; }
-app-songs-liste .sammlung-chips .n { opacity: .7; font-size: .75rem; }
-app-songs-liste .sammlung-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--bn-sunset); border-radius: 10px; font-size: .85rem; }
-app-songs-liste .sammlung-leiste button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
-app-songs-liste .sammlung-leiste button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-app-songs-liste .sammlung-leiste mat-icon { font-size: 16px; width: 16px; height: 16px; }
-app-songs-liste .sammlung-leiste .meldung { flex-basis: 100%; color: #5fb88a; }
-app-songs-liste .sammlung-knoepfe { display: inline-flex; vertical-align: middle; margin-right: 4px; }
-app-songs-liste .sammlung-knoepfe button { display: grid; place-items: center; padding: 2px; border: 0; background: none; color: var(--bn-fog); cursor: pointer; }
-app-songs-liste .sammlung-knoepfe button.drin { color: var(--bn-sunset); }
-app-songs-liste .sammlung-knoepfe button:disabled { opacity: .3; cursor: default; }
-app-songs-liste .sammlung-knoepfe mat-icon { font-size: 20px; width: 20px; height: 20px; }
 app-setlist .bausteine > *, app-setlist-sammlungen { display: block; min-width: 0; }
 app-setlist .bausteine .pausen { display: flex; }
 @media (max-width: 520px) { app-setlist-sammlungen select { flex-basis: 100%; } }
@@ -715,3 +685,169 @@ app-backstage-aufgaben .anstehend app-bereitschaft .bereit { margin: 0; }
   app-setlist-buehne .stage header .close, app-setlist-buehne .stage header .noten-knopf { width: 40px; height: 40px; }
   app-setlist-buehne .stage header .zoom button { min-width: 40px; height: 40px; }
 }
+
+// Backstage → Songs → Sammlungen: Übersicht als Karten, je Sammlung eine Seite wie die Setlist eines Auftritts
+app-songs-sammlungen {
+  display: block;
+  ul, ol { list-style: none; margin: 0; padding: 0; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  .karten { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin-top: 16px; }
+  .karten a { display: grid; gap: 4px; height: 100%; box-sizing: border-box; padding: 14px 16px; border: 1px solid var(--bn-line); border-radius: 12px; color: var(--bn-ink); text-decoration: none; }
+  .karten a:hover { border-color: var(--bn-sunset); }
+  .karten .titel { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .karten .titel mat-icon { color: var(--bn-sunset); }
+  .karten .info { font-size: .82rem; color: var(--bn-sunset); }
+  .karten .vorschau { font-size: .82rem; color: var(--bn-fog); overflow-wrap: anywhere; }
+  .neu { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-top: 18px; }
+  .neu label { display: grid; gap: 4px; font-size: .8rem; color: var(--bn-fog); }
+  .neu input { padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; min-width: 220px; }
+  .neu button, .tools button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+  .neu button:hover, .tools button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+  .tools button:disabled { opacity: .4; cursor: default; }
+  .meldung { margin: 10px 0 0; font-size: .85rem; color: #5fb88a; }
+  .meldung.fehlt { color: #e0b25a; }
+  .zurueck { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--bn-sunset); text-decoration: none; font-size: .9rem; }
+  .sammlung { padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); }
+  .head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 24px; margin-bottom: 18px; }
+  .head .kicker { margin-bottom: 4px; }
+  .head .meldung { flex-basis: 100%; margin: 0; }
+  h3 { font-family: var(--bn-display); font-weight: 400; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .08em; margin: 0; overflow-wrap: anywhere; }
+  .count { font-size: .85rem; color: var(--bn-fog); }
+  .count strong { color: var(--bn-sunset); font-weight: 600; }
+  .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+  .cols { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+  .search { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bn-line); }
+  .search:focus-within { border-color: var(--bn-sunset); }
+  .search mat-icon { color: var(--bn-fog); }
+  .search input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--bn-ink); font: inherit; padding: 9px 0; outline: none; }
+  .zu { margin: 10px 0 0; font-size: .85rem; color: var(--bn-fog); }
+  .zu-knopf { margin-top: 10px; }
+  .songs { margin-top: 10px; max-height: 420px; overflow-y: auto; border-top: 1px solid var(--bn-line); }
+  .songs button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: baseline; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--bn-line); cursor: pointer; }
+  .songs button:hover, .songs button:focus-visible { color: var(--bn-sunset); }
+  .songs mat-icon { margin-left: auto; align-self: center; color: var(--bn-fog); }
+  .t { font-weight: 500; }
+  .t, .a { min-width: 0; overflow-wrap: anywhere; }
+  .a { color: var(--bn-fog); font-size: .88rem; }
+  .list { border: 1px solid var(--bn-line); border-radius: 10px; padding: 4px 12px; min-height: 120px; }
+  .list li { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bn-line); }
+  .list li:last-child { border-bottom: 0; }
+  .song { flex: 1; min-width: 0; }
+  .song .info { display: block; margin-top: 2px; font-size: .78rem; color: var(--bn-sunset); }
+  .no { min-width: 1.8em; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
+  .dur { margin-left: auto; font-size: .78rem; color: var(--bn-fog); font-variant-numeric: tabular-nums; }
+  .pause-label { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); font-family: var(--bn-wide); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; }
+  .row-tools { margin-left: auto; display: inline-flex; gap: 2px; align-self: center; }
+  .dur + .row-tools { margin-left: 8px; }
+  .row-tools button { display: grid; place-items: center; padding: 3px; border: 0; background: transparent; color: var(--bn-fog); cursor: pointer; }
+  .row-tools button:hover:not(:disabled) { color: var(--bn-sunset); }
+  .row-tools button:disabled { opacity: .3; cursor: default; }
+  .empty, .none { color: var(--bn-fog); font-size: .9rem; padding: 12px 0; }
+  @media (max-width: 760px) { .cols { grid-template-columns: minmax(0, 1fr); } .tools { margin-left: 0; } .sammlung { padding: 16px; } }
+  @media (max-width: 520px) {
+    .list li { flex-wrap: wrap; row-gap: 0; }
+    .list li .song { flex-basis: calc(100% - 90px); }
+    .list li .row-tools, .dur + .row-tools { flex-basis: 100%; justify-content: flex-end; margin: -4px 0 0; }
+  }
+}
+
+// Backstage → Zahlen → Besucher: Verlauf als Balken (eine Reihe, neutral) mit Ereignis-Marken – Auftritt ● orange,
+// Werbemaßnahme ◆ blau (Farben geprüft: Helligkeit, Farbfehlsichtigkeit, Kontrast auf der dunklen Fläche)
+app-besucher-verlauf {
+  display: block; margin: 22px 0 0;
+  .kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  h3 { margin: 0 !important; }
+  .einheiten { display: inline-flex; gap: 4px; }
+  .einheiten button { padding: 4px 12px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-fog); font: inherit; font-size: .82rem; cursor: pointer; }
+  .einheiten button:hover { color: var(--bn-ink); }
+  .einheiten button[aria-pressed='true'] { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+  .legende { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 8px 0 4px; font-size: .78rem; color: var(--bn-fog); }
+  .legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .diagramm { display: block; width: 100%; height: auto; overflow: visible; }
+  .gitter { stroke: #2c3138; stroke-width: 1; }
+  .achse { fill: var(--bn-fog); font-size: 11px; font-family: Inter, sans-serif; }
+  .balken { fill: #7f8a96; }
+  .spalte { cursor: pointer; outline: none; }
+  .spalte .treffer { fill: transparent; }
+  .spalte:hover .balken, .spalte.aktiv .balken, .spalte:focus-visible .balken { fill: #b9c1ca; }
+  .spalte:focus-visible .treffer { fill: rgba(255, 255, 255, .06); }
+  .m-auftritt { fill: #cc7a35; stroke: #1b1e22; stroke-width: 2; }
+  .m-werbung { fill: #3d8fdb; stroke: #1b1e22; stroke-width: 2; }
+  .m-werbung.offen { fill: none; stroke: #3d8fdb; stroke-width: 2; }
+  .info { min-height: 1.5em; margin: 6px 0 0; font-size: .85rem; color: var(--bn-fog); }
+  .info strong { color: var(--bn-ink); }
+  .ev { display: block; margin-top: 2px; }
+  .hinweis { font-size: .85rem; color: var(--bn-fog); }
+  .tabelle { margin-top: 8px; font-size: .82rem; }
+  .tabelle summary { cursor: pointer; color: var(--bn-fog); }
+  .tabelle table { width: 100%; margin-top: 6px; border-collapse: collapse; }
+  .tabelle th, .tabelle td { padding: 4px 6px; border-bottom: 1px solid var(--bn-line); text-align: left; font-weight: 400; }
+  .tabelle td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+// Backstage → Üben: Karteikasten (fünf Kästen), Lernkarte, Liste der wackelnden Songs (pages/backstage-ueben.ts)
+app-backstage-ueben {
+  display: block;
+  ul, ol { list-style: none; margin: 0; padding: 0; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  h3 { margin: 28px 0 10px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+  .kaesten { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 16px 0 20px; }
+  .kaesten li { display: grid; justify-items: center; gap: 2px; padding: 10px 4px; border: 1px solid var(--bn-line); border-radius: 10px; text-align: center; }
+  .kaesten li:not(.leer) { border-color: var(--bn-sunset); }
+  .kaesten .n { font-size: 1.4rem; font-weight: 700; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
+  .kaesten .leer .n { color: var(--bn-fog); }
+  .kaesten .l { font-size: .78rem; }
+  .kaesten small { font-size: .68rem; color: var(--bn-fog); }
+  button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: transparent; color: var(--bn-ink); font: inherit; font-size: .9rem; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primaer { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
+  button.primaer:hover:not(:disabled) { color: #2a1708; filter: brightness(1.08); }
+  button.gross { padding: 12px 22px; font-size: 1rem; }
+  button.rund { width: 36px; height: 36px; padding: 0; border-radius: 50%; flex: none; }
+  .start { display: flex; flex-wrap: wrap; gap: 10px; }
+  .ergebnis { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: #5fb88a; }
+  .karte { max-width: 560px; margin: 0 auto; padding: 18px 22px 22px; border: 1px solid var(--bn-sunset); border-radius: 16px; background: rgba(27, 30, 34, .72); text-align: center; }
+  .karte-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--bn-fog); font-size: .8rem; text-align: left; }
+  .titel { margin: 18px 0 4px; font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+  .interpret { margin: 0; color: var(--bn-fog); font-size: 1.05rem; }
+  .auftritt { margin: 8px 0 0; color: var(--bn-sunset); font-size: .85rem; }
+  .tipp { margin: 18px 0; color: var(--bn-fog); font-size: .9rem; }
+  .rueckseite { display: grid; gap: 6px; margin: 18px auto 12px; max-width: 360px; text-align: left; }
+  .rueckseite li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--bn-line); font-size: .95rem; }
+  .rueckseite li span { color: var(--bn-fog); }
+  .rueckseite li strong { text-align: right; overflow-wrap: anywhere; }
+  .rueckseite .leer { color: var(--bn-fog); border: 0; }
+  .noten { margin-bottom: 16px; }
+  .wertung { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .wertung button { padding: 14px 10px; font-size: 1rem; border-radius: 12px; }
+  .wertung .wackelt { border-color: #e0b25a; color: #e0b25a; }
+  .wertung .sitzt { border-color: #5fb88a; color: #5fb88a; }
+  .tasten { margin: 10px 0 0; font-size: .75rem; color: var(--bn-fog); }
+  .liste { border: 1px solid var(--bn-line); border-radius: 10px; padding: 2px 12px; }
+  .liste li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--bn-line); }
+  .liste li:last-child { border-bottom: 0; }
+  .liste .kasten { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--bn-line); color: var(--bn-fog); font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .liste li.dran .kasten { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+  .liste .song { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .liste small { display: block; color: var(--bn-fog); font-size: .78rem; }
+  .liste .leer { color: var(--bn-fog); font-size: .9rem; }
+  .t { font-weight: 500; }
+  .a { color: var(--bn-fog); font-size: .88rem; }
+  .suche { display: flex; align-items: center; gap: 6px; margin-top: 14px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bn-line); max-width: 420px; }
+  .suche:focus-within { border-color: var(--bn-sunset); }
+  .suche mat-icon { color: var(--bn-fog); }
+  .suche input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--bn-ink); font: inherit; padding: 9px 0; outline: none; }
+  .treffer { max-width: 420px; margin-top: 6px; }
+  .treffer button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: baseline; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--bn-line); cursor: pointer; }
+  .treffer button:hover, .treffer button:focus-visible { color: var(--bn-sunset); }
+  .treffer mat-icon { margin-left: auto; align-self: center; color: var(--bn-fog); }
+  @media (max-width: 480px) { .kaesten small { display: none; } .karte { padding: 14px 14px 18px; } }
+}
+
+// Pfeil „zurück“ (zurueck.ts): zur vorigen Seite, sonst zum festen Ziel; Titel der vorigen Seite als Text
+app-zurueck { display: block; }
+app-zurueck .back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; color: var(--bn-fog); text-decoration: none; font-size: .9rem; }
+app-zurueck .back:hover { color: var(--bn-sunset); }
+app-zurueck .back mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-zurueck.gross .back { margin-bottom: 32px; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .18em; font-size: .75rem; }

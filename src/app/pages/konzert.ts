@@ -4,6 +4,7 @@ import repertoire from '../data/repertoire.json';
 import { Component, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { BandService, Show } from '../data/band.service';
 import { downloadIcs, icsFileName } from '../data/calendar';
 import { PageMetaService, SITE_URL } from '../page-meta';
@@ -133,10 +134,10 @@ const TEXT = tr(
   selector: 'app-konzert',
   // „vorbei“ hängt vom Besuchstag ab, nicht vom Build-Tag – im Browser komplett neu aufbauen
   host: { ngSkipHydration: 'true' },
-  imports: [RouterLink, MatIconModule, LDatePipe, LocPipe, UebersetzungHinweis, KonzertExtras],
+  imports: [Zurueck, RouterLink, MatIconModule, LDatePipe, LocPipe, UebersetzungHinweis, KonzertExtras],
   template: `
     <section class="section">
-      <a class="back" [routerLink]="'/' | loc" fragment="tour"><mat-icon>arrow_back</mat-icon> {{ t().back }}</a>
+      <app-zurueck [ziel]="'/' | loc" fragment="tour" [text]="t().back" [titel]="false" />
 
       @if (show(); as s) {
         <p class="kicker">{{ past() ? t().recap : 'Live' }}</p>

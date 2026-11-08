@@ -4,17 +4,19 @@ import { SyncEinstellungenSeite } from './sync-einstellungen';
 import { BuehneEinstellungen } from './buehne-einstellungen';
 import { BackupKarte } from './backup-karte';
 import { BandOrdner } from './band-ordner';
+import { IchEinstellung } from './ich-einstellung';
 
-// Backstage → Einstellungen: Synchronisation mit OneDrive (sync-einstellungen.ts), Backup (backup-karte.ts) und Bühnen-Modus
+// Backstage → Einstellungen: „Ich bin …“ (ich-einstellung.ts), Synchronisation mit OneDrive (sync-einstellungen.ts), Backup (backup-karte.ts) und Bühnen-Modus
 // (Halbseiten-Blättern, Pedal-Tasten – buehne-einstellungen.ts)
 @Component({
   selector: 'app-backstage-einstellungen',
-  imports: [SyncEinstellungenSeite, BandOrdner, BackupKarte, BuehneEinstellungen],
+  imports: [IchEinstellung, SyncEinstellungenSeite, BandOrdner, BackupKarte, BuehneEinstellungen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Einstel&shy;lungen</h2>
       <p class="lead">Gelten für dieses Gerät. Was hier gespeichert ist, steht auch unter Abgleich → Daten auf diesem Gerät.</p>
+      <app-ich-einstellung />
       <app-sync-einstellungen />
       <app-band-ordner />
       <app-backup-karte />

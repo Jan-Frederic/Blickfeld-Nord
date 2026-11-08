@@ -3,6 +3,7 @@ import { datumText, monatText } from '../data/datum';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Zurueck } from '../zurueck';
 import { BandService } from '../data/band.service';
 import { PlanMonat, SAISON_UPDATE_KEY, jahresplan } from '../data/jahresplan';
 import { wiederAnfragen } from '../data/saison';
@@ -18,10 +19,10 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-termine-saison',
-  imports: [RouterLink, MatIconModule],
+  imports: [Zurueck, RouterLink, MatIconModule],
   template: `
     <section class="section termine-saison">
-      <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Termine</a>
+      <app-zurueck ziel="/backstage/termine" text="Termine" />
       <p class="kicker">Backstage · Termine</p>
       <h2>Saison</h2>
       <p class="lead">Die nächsten 12 Monate auf einen Blick: Auftritte, Proben und wer wann nicht kann. Freie Monate sind

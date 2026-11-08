@@ -354,7 +354,7 @@ test('Backstage: Übersicht führt in die Bereiche, Direktaufruf eines Bereichs 
   return p;
 });
 
-test('Backstage: Suche über alles, „Zahlen und Songs“ bleibt zugeklappt', async () => {
+test('Backstage: Suche über alles, Übersicht ohne „Zahlen und Songs“', async () => {
   const p = await page();
   await p.go('/backstage/');
   const suche = p.locator('app-backstage-suche input');
@@ -368,13 +368,14 @@ test('Backstage: Suche über alles, „Zahlen und Songs“ bleibt zugeklappt', a
   await p.locator('app-backstage-suche input').fill('small things');
   await p.locator('app-backstage-suche li a', { hasText: 'All The Small Things' }).first().click();
   await until(async () => (await p.locator('input[aria-label="Songs durchsuchen"]').inputValue().catch(() => '')) === 'All The Small Things', 'Songs-Liste ohne vorbelegte Suche');
-  // Zahlen zuklappen – nach dem Neuladen weiter zu, die Zahlen werden gar nicht erst geladen
+  // Sammlung finden → ihre Seite unter Songs → Sammlungen
   await p.go('/backstage/');
-  await p.locator('app-backstage-stats').waitFor();
-  await p.locator('app-backstage details.zahlen > summary').click();
-  await until(async () => !(await p.locator('app-backstage-stats').count()), 'Zahlen bleiben nach dem Zuklappen sichtbar');
+  await p.locator('app-backstage-suche input').fill('Weihnachtslieder');
+  await p.locator('app-backstage-suche li a', { hasText: 'Sammlung' }).first().click();
+  await until(async () => (await p.locator('app-songs-sammlungen h3').innerText().catch(() => '')).toLowerCase().includes('weihnachtslieder'), 'Sammlung aus der Suche öffnet nicht ihre Seite');
+  // „Zahlen und Songs“ steht nicht mehr in der Übersicht (eigene Unterseite Zahlen)
   await p.go('/backstage/');
-  expect(!(await p.locator('app-backstage-stats').count()), 'Zahlen nach dem Neuladen wieder geladen');
+  expect(!(await p.locator('app-backstage details.zahlen').count()), '„Zahlen und Songs“ steht noch in der Übersicht');
   return p;
 });
 
@@ -713,7 +714,11 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   const seite = p.locator('app-backstage-probe');
   // wer kommt
   const zusagen = seite.locator('app-probe-zusagen');
-  await zusagen.locator('select').selectOption('jan-frederic-overbeck');
+  // „Ich bin …“ steht unter Einstellungen – die Probe verweist dorthin
+  expect((await zusagen.innerText()).includes('Einstellungen'), 'Probe verweist nicht auf „Ich bin …“ in den Einstellungen');
+  await p.go('/backstage/einstellungen/');
+  await p.locator('app-ich-einstellung select').selectOption('jan-frederic-overbeck');
+  await p.go('/backstage/probe/' + datum);
   await zusagen.getByRole('button', { name: 'Ich komme' }).click();
   await until(async () => (await zusagen.innerText()).includes('1 kommt, 2 offen'), 'Zusage wird nicht gezählt');
   expect((await p.evaluate((d) => localStorage.getItem('bn-zusage-' + d + '-jan-frederic-overbeck'), datum)) === '{"kommt":true}', 'Zusage nicht in eigener Datei');
@@ -841,6 +846,10 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   // Songs → Setlists listet die Setlist dieses Auftritts mit Tonart und Tempo
   await p.keyboard.press('Escape');
   await p.go('/backstage/songs/setlists/');
+  // zugeklappt: nur der Kopf; ⌄ zeigt die Songs
+  await p.locator('app-songs-setlists article').first().waitFor();
+  expect(!(await p.locator('app-songs-setlists article ol').count()), 'Setlists sind nicht zugeklappt');
+  await p.locator('app-songs-setlists article button.auf').first().click();
   await until(async () => (await p.locator('app-songs-setlists article').first().innerText().catch(() => '')).includes('G · 120 bpm'), 'Setlist fehlt unter Songs → Setlists');
   // Song-Historie in der Tabelle (Auftritt vorbei → „gespielt“, kommend → „geplant“)
   await p.go('/backstage/songs/');
@@ -1382,27 +1391,35 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   return p;
 });
 
-test('Backstage: Songs – Sammlung als Chip anlegen und bearbeiten, in der Setlist anhängen', async () => {
+test('Backstage: Songs → Sammlungen – anlegen, eigene Seite bearbeiten, in der Setlist anhängen', async () => {
   const p = await page();
   await p.go('/backstage/songs/');
-  p.promptAntwort = 'Kneipe Test';
-  await p.locator('app-songs-liste .sammlung-chips button.neu').click();
-  await until(async () => (await p.locator('app-songs-liste .sammlung-leiste').count()) === 1, 'Neue Sammlung wird nicht zur Bearbeitung gewählt');
-  const knopf = p.locator('app-songs-liste tbody tr .in-sammlung');
+  expect(!(await p.locator('app-songs-liste .sammlung-chips').count()), 'Sammlungen stehen noch in der Songs-Liste');
+  await schritt('Reiter Sammlungen', () => p.locator('app-backstage-songs .tabs a', { hasText: 'Sammlungen' }).click());
+  const seite = p.locator('app-songs-sammlungen');
+  await schritt('Übersicht der Sammlungen', () => seite.locator('.karten').waitFor({ timeout: 20000 }));
+  expect((await seite.locator('.karten li', { hasText: 'Weihnachtslieder' }).count()) === 1, 'feste Sammlung fehlt in der Übersicht');
+  await seite.locator('.neu input').fill('Kneipe Test');
+  await schritt('Anlegen', () => seite.locator('.neu button').click());
+  // eigene Seite je Sammlung (…/sammlungen?name=…), bearbeitet wie eine Setlist
+  await until(async () => new URL(p.url()).searchParams.get('name') === 'Kneipe Test', 'Neue Sammlung öffnet nicht ihre Seite');
+  await schritt('Chip Alle', () => seite.locator('.listen-chips button', { hasText: 'Alle' }).click());
   const titel = [];
   for (let i = 0; i < 3; i++) {
-    titel.push((await p.locator('app-songs-liste tbody tr .oeffnen').nth(i).innerText()).trim());
-    await knopf.nth(i).click();
+    const knopf = seite.locator('.songs li button').first();
+    titel.push((await knopf.locator('.t').innerText()).trim());
+    await schritt(`Song ${i + 1} hinzufügen`, () => knopf.click());
+    await until(async () => (await seite.locator('.list li .t').count()) === i + 1, `Song ${i + 1} kommt nicht in die Sammlung`);
   }
-  await until(async () => (await p.locator('app-songs-liste .sammlung-chips button', { hasText: 'Kneipe Test' }).locator('.n').innerText()) === '3', 'Songs kommen nicht in die Sammlung');
-  // nur die Songs der Sammlung, in ihrer Reihenfolge; Pfeil sortiert, ✓ nimmt heraus
-  await p.locator('app-songs-liste .sammlung-leiste input[type=checkbox]').uncheck();
-  const zeilen = () => p.locator('app-songs-liste tbody tr .oeffnen').allInnerTexts();
-  await until(async () => (await zeilen()).join('|') === titel.join('|'), async () => 'Sammlung zeigt nicht ihre Songs: ' + (await zeilen()).join('|'));
-  await p.locator('app-songs-liste tbody tr').first().getByRole('button', { name: /nach hinten/ }).click();
+  const zeilen = () => seite.locator('.list li .t').allInnerTexts();
+  expect((await zeilen()).join('|') === titel.join('|'), 'Reihenfolge stimmt nicht');
+  await schritt('Nach unten', () => seite.locator('.list li').first().getByRole('button', { name: 'Nach unten' }).click());
   await until(async () => (await zeilen()).join('|') === [titel[1], titel[0], titel[2]].join('|'), 'Umsortieren in der Sammlung klappt nicht');
-  await p.locator('app-songs-liste tbody tr').last().locator('.in-sammlung').click();
-  await until(async () => (await zeilen()).length === 2, 'Herausnehmen aus der Sammlung klappt nicht');
+  await schritt('Entfernen', () => seite.locator('.list li').last().getByRole('button', { name: 'Entfernen' }).click());
+  await until(async () => (await zeilen()).length === 2, 'Entfernen aus der Sammlung klappt nicht');
+  // zurück zur Übersicht: Karte mit 2 Songs
+  await schritt('Zurück zur Übersicht', () => seite.locator('app-zurueck a').click());
+  await until(async () => (await seite.locator('.karten li', { hasText: 'Kneipe Test' }).innerText().catch(() => '')).includes('2 Songs'), 'Übersicht zeigt die Sammlung nicht');
   // in der Setlist eines Auftritts anhängen
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
@@ -1471,9 +1488,6 @@ test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichu
   await p.locator('app-setlist .spielzeit input').blur();
   await until(async () => /noch .* frei/.test(await p.locator('app-setlist .spielzeit').innerText()), 'Spielzeit zeigt nichts Freies');
   await until(async () => (await p.locator('app-setlist .spielzeit button').count()) > 0, 'Keine Songs zum Auffüllen vorgeschlagen');
-  // Kachel auf der Backstage-Übersicht
-  await p.go('/backstage/');
-  await until(async () => /spielbereit/.test(await p.locator('app-songs-karte').innerText().catch(() => '')), 'Songs-Kachel fehlt');
   return p;
 });
 
@@ -1537,6 +1551,8 @@ test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufga
   expect((await buehne.locator('header .set').innerText()).toLowerCase().includes('set 2'), 'Set-Nummer folgt nicht dem Sprung');
   await p.keyboard.press('Escape');
   await p.keyboard.press('Escape');
+  // Schließen führt dorthin zurück, woher der Bühnen-Modus kam: in die Übersicht
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Schließen führt nach ${p.url()} statt in die Übersicht`);
   // Aufgaben: „Bereit?“ je kommendem Auftritt, zugeklappt mit Haken-Reihe
   await p.go('/backstage/aufgaben/');
   const listen = p.locator('app-backstage-aufgaben app-bereitschaft');
@@ -1545,6 +1561,55 @@ test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufga
   expect((await listen.first().locator('summary .haken-reihe mat-icon').count()) > 2, 'zugeklappt keine Haken-Reihe');
   await listen.first().locator('summary').click();
   await until(async () => (await listen.first().locator('summary .haken-reihe').count()) === 0, 'Haken-Reihe bleibt aufgeklappt stehen');
+  return p;
+});
+
+test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikarten', async () => {
+  const p = await page();
+  await p.go('/backstage/');
+  await p.locator('app-backstage-suche input').fill('Nenna');
+  await p.locator('app-backstage-suche li a', { hasText: 'Café Nenna' }).first().click();
+  await p.locator('app-backstage-show app-zurueck').waitFor();
+  expect((await p.locator('app-backstage-show app-zurueck').innerText()).includes('Backstage'), 'Zurück nennt nicht die vorige Seite');
+  await p.locator('app-backstage-show app-zurueck a').click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Zurück führt nach ${p.url()} statt in die Übersicht`);
+  // Übemodus: persönlich – mit „Ich bin …“ und zwei wackelnden Songs
+  await p.evaluate(() => {
+    localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
+    localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|The Goo Goo Dolls': '2026-10-01', 'Angels|Robbie Williams': '2026-10-02' }));
+  });
+  await p.go('/backstage/');
+  const karte = p.locator('app-backstage a.ueben-karte');
+  expect((await karte.innerText()).includes('2 Songs wackeln'), 'Übemodus-Karte zählt die wackelnden Songs nicht');
+  await karte.click();
+  const ueben = p.locator('app-backstage-ueben');
+  await ueben.getByRole('button', { name: /Üben starten \(2 dran\)/ }).click();
+  await ueben.getByRole('button', { name: 'Aufdecken' }).click();
+  await ueben.getByRole('button', { name: 'Sitzt' }).click();
+  await ueben.getByRole('button', { name: 'Aufdecken' }).click();
+  await ueben.getByRole('button', { name: 'Wackelt noch' }).click();
+  // wackelnde Karte kommt noch einmal dran
+  await ueben.getByRole('button', { name: 'Aufdecken' }).click();
+  await ueben.getByRole('button', { name: 'Sitzt' }).click();
+  await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('2 gesessen, 1× wackelt noch'), 'Übe-Ergebnis fehlt');
+  const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
+  expect(Object.values(stand).every((k) => k.kasten === 2), `Karten nicht in Kasten 2: ${JSON.stringify(stand)}`);
+  expect((await ueben.locator('.kaesten li').nth(1).locator('.n').innerText()) === '2', 'Kasten 2 zählt nicht');
+  return p;
+});
+
+test('Backstage: Besucher-Verlauf mit Zeitlinie und Ereignissen', async () => {
+  const p = await page();
+  await p.context().route(/goatcounter\.com\/counter\//, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"count":"12"}' }));
+  await p.go('/backstage/zahlen/');
+  const verlauf = p.locator('app-besucher-verlauf');
+  await verlauf.waitFor();
+  expect((await verlauf.locator('.einheiten button[aria-pressed=true]').innerText()).trim() === 'Monat', 'Standard ist nicht Monat');
+  await until(async () => (await verlauf.locator('path.balken').count()) === 12, 'keine 12 Monatsbalken');
+  await verlauf.locator('.einheiten button', { hasText: 'Woche' }).click();
+  await until(async () => (await verlauf.locator('path.balken').count()) === 16, 'keine 16 Wochenbalken');
+  await verlauf.locator('.einheiten button', { hasText: 'Jahr' }).click();
+  await until(async () => (await verlauf.locator('.m-auftritt').count()) > 1, 'keine Auftritte auf der Zeitlinie');
   return p;
 });
 

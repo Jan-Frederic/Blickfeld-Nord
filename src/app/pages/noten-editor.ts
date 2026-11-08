@@ -86,7 +86,7 @@ const BEISPIEL = `{key: C}
     .weg { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--bn-line); border-radius: 8px; background: none; color: var(--bn-fog); cursor: pointer; }
     .weg:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .weg mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .akkorde-kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+    .akkorde-kopf { padding-top: 10px; border-top: 1px solid var(--bn-line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
     .unsichtbar { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .hochladen {
       display: inline-flex !important; flex-direction: row; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px;

@@ -8,7 +8,7 @@ import { gespielteTonart, songInfo } from '../data/songinfo';
 import { SetlistBuehne } from './setlist-buehne';
 
 // Backstage → Songs → Setlists: die Setlists aller Auftritte auf diesem Gerät auf einen Blick – kommende zuerst
-// (nächster oben), dann die vergangenen (neueste oben). Je Auftritt Sets mit Länge, Tonart/Tempo je Song, der Weg
+// (nächster oben), dann die vergangenen (neueste oben), zugeklappt – die Songs zeigt ⌄. Je Auftritt Sets mit Länge, Tonart/Tempo je Song, der Weg
 // zur Setlist des Auftritts und der Bühnen-Modus.
 @Component({
   selector: 'app-songs-setlists',
@@ -29,13 +29,19 @@ import { SetlistBuehne } from './setlist-buehne';
           <span class="knoepfe">
             <a [routerLink]="['/backstage', a.id, 'setlist']"><mat-icon>edit</mat-icon> Setlist</a>
             <button type="button" (click)="buehne.set(a)"><mat-icon>fit_screen</mat-icon> Bühnen-Modus</button>
+            <button type="button" class="auf" (click)="umschalten(a.id)" [attr.aria-expanded]="offen().has(a.id)" [attr.aria-label]="(offen().has(a.id) ? 'Songs ausblenden: ' : 'Songs zeigen: ') + a.venue">
+              <mat-icon>{{ offen().has(a.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
           </span>
         </header>
-        @for (set of a.sets; track $index; let n = $index) {
-          @if (a.sets.length > 1) { <p class="set">Set {{ n + 1 }}</p> }
-          <ol>
-            @for (s of set; track $index) { <li><span class="t">{{ s.title }}</span> <span class="k">{{ s.artist }}</span>@if (info(s); as i) { <span class="ton">{{ i }}</span> }</li> }
-          </ol>
+        <!-- zugeklappt: nur Kopf mit Zahl und Länge; die Songs erst nach Antippen von ⌄ -->
+        @if (offen().has(a.id)) {
+          @for (set of a.sets; track $index; let n = $index) {
+            @if (a.sets.length > 1) { <p class="set">Set {{ n + 1 }}</p> }
+            <ol>
+              @for (s of set; track $index) { <li><span class="t">{{ s.title }}</span> <span class="k">{{ s.artist }}</span>@if (info(s); as i) { <span class="ton">{{ i }}</span> }</li> }
+            </ol>
+          }
         }
       </article>
     }
@@ -49,6 +55,7 @@ import { SetlistBuehne } from './setlist-buehne';
     h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
     .info { color: var(--bn-fog); font-size: .85rem; }
     .knoepfe { display: flex; gap: 8px; margin-left: auto; }
+    .knoepfe .auf { padding: 5px 8px; }
     .knoepfe a, .knoepfe button {
       display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border: 1px solid var(--bn-line); border-radius: 999px;
       background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; text-decoration: none; cursor: pointer;
@@ -65,6 +72,15 @@ import { SetlistBuehne } from './setlist-buehne';
 export class SongsSetlists {
   private readonly band = inject(BandService);
   protected readonly buehne = signal<{ id: string; entries: Entry[] } | null>(null);
+  /** aufgeklappte Setlists (Auftritts-ID) – anfangs alle zu */
+  protected readonly offen = signal(new Set<string>());
+  protected umschalten(id: string): void {
+    this.offen.update((o) => {
+      const n = new Set(o);
+      if (!n.delete(id)) n.add(id);
+      return n;
+    });
+  }
 
   protected readonly liste = computed(() => {
     const heute = new Date().toISOString().slice(0, 10);

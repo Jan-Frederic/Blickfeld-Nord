@@ -19,7 +19,7 @@ const ZEICHEN: Record<Stufe, string> = { sicher: '✓✓', sitzt: '✓', wackelt
   template: `
     <p class="info">Je Musiker: <b>↻ wackelt</b> („Wackelt noch“ an oder im Probe-Modus „Nochmal“), <b>✓ sitzt</b>, <b>✓✓ sicher</b>
       (an zwei Tagen in Folge „sitzt“). Die Bühnenreife eines Songs ist der Schnitt über alle – ohne Angabe zählt neutral.
-      @if (!ich()) { <span class="hinweis">Wähle unter Probe „Ich bin …“, damit deine Angaben zählen.</span> }</p>
+      @if (!ich()) { <span class="hinweis">Wähle unter Einstellungen „Ich bin …“, damit deine Angaben zählen.</span> }</p>
 
     <div class="personen">
       @for (p of personen(); track p.slug) {

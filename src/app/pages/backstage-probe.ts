@@ -3,6 +3,7 @@ import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Verlauf, Zurueck } from '../zurueck';
 import { BandService } from '../data/band.service';
 import { songInfoText } from '../data/songinfo';
 import { LISTEN, listeInReihenfolge, songAbgleich } from '../data/playlisten';
@@ -29,10 +30,10 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
 
 @Component({
   selector: 'app-backstage-probe',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet, SetlistBuehne, ProbeZusagen],
+  imports: [Zurueck, DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet, SetlistBuehne, ProbeZusagen],
   template: `
     <section class="section">
-      <a class="back" routerLink="/backstage/termine"><mat-icon>arrow_back</mat-icon> Alle Termine</a>
+      <app-zurueck ziel="/backstage/termine" text="Alle Termine" />
       @if (probe(); as p) {
         <p class="kicker">Probe</p>
         <h2>{{ p.date | date: 'EEEE, d. MMMM yyyy' : '' : 'de' }}</h2>
@@ -250,8 +251,15 @@ export class BackstageProbe {
     const geprobt = songs.filter((s) => s.done).length;
     return geprobt ? `${geprobt} von ${songs.length} geprobt` : `${songs.length} ${songs.length === 1 ? 'Song' : 'Songs'} – Sitzt/Nochmal, Durchläufe, Notizen und Zeit je Song`;
   });
+  /** Probe-Modus kam über einen Link (Übersicht → Als Nächstes): Schließen führt dorthin zurück */
+  private ausLink = false;
+  private readonly verlauf = inject(Verlauf);
   protected modusZu(): void {
     this.modus.set(false);
+    if (this.ausLink) {
+      this.ausLink = false;
+      if (this.verlauf.zurueck()) return;
+    }
     this.plan.set(loadProbe(this.datum()));
   }
 
@@ -282,7 +290,10 @@ export class BackstageProbe {
       const router = inject(Router);
       queueMicrotask(() => {
         this.plan.set(loadProbe(this.datum()));
-        if (this.modusSongs().length) this.modus.set(true);
+        if (this.modusSongs().length) {
+          this.modus.set(true);
+          this.ausLink = true;
+        }
         void router.navigate([], { relativeTo: route, queryParams: { modus: null }, queryParamsHandling: 'merge', replaceUrl: true });
       });
     }

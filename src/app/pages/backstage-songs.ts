@@ -6,20 +6,23 @@ import { NotenVerwaltung } from './noten-verwaltung';
 import { SongsListe } from './songs-liste';
 import { SongsSetlists } from './songs-setlists';
 import { SongsReife } from './songs-reife';
+import { SongsSammlungen } from './songs-sammlungen';
 
-// Backstage → Songs mit Unterseiten: Liste (Tonart, Tempo, Notiz und Noten je Song), Setlists (aller Auftritte)
+// Backstage → Songs mit Unterseiten: Liste (Tonart, Tempo, Notiz und Noten je Song), Setlists (aller Auftritte),
+// Sammlungen (anlegen und bearbeiten, je Sammlung eine Seite)
 // und Noten (PDFs und Akkordblätter auf diesem Gerät: einlesen, an die Band weitergeben), Bühnenreife (Fortschritt je
 // Musiker und Reife je Song).
 export const SONG_BEREICHE = [
   { path: '', teil: 'liste', label: 'Liste', icon: 'library_music' },
   { path: 'setlists', teil: 'setlists', label: 'Setlists', icon: 'queue_music' },
+  { path: 'sammlungen', teil: 'sammlungen', label: 'Sammlungen', icon: 'bookmarks' },
   { path: 'noten', teil: 'noten', label: 'Noten', icon: 'picture_as_pdf' },
   { path: 'reife', teil: 'reife', label: 'Bühnenreife', icon: 'military_tech' },
 ] as const;
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists, SongsReife],
+  imports: [RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists, SongsReife, SongsSammlungen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -34,6 +37,7 @@ export const SONG_BEREICHE = [
       @switch (teil()) {
         <!-- Setlists und Noten-Verwaltung erst laden, wenn der Reiter gewählt ist -->
         @case ('setlists') { @defer { <app-songs-setlists /> } }
+        @case ('sammlungen') { @defer { <app-songs-sammlungen [name]="name()" /> } }
         @case ('reife') { @defer { <app-songs-reife /> } }
         @case ('noten') { @defer { <app-noten-verwaltung [dateien]="dateien()" [songs]="mitNoten()" (geaendert)="laden()" /> } }
         @default { <app-songs-liste /> }
@@ -55,6 +59,8 @@ export const SONG_BEREICHE = [
 export class BackstageSongs {
   /** Unterseite aus den Routendaten (/backstage/songs, …/setlists, …/noten) */
   readonly teil = input<string>('liste');
+  /** Sammlungen: gewählte Sammlung (?name=…) – eigene Unterseite je Sammlung */
+  readonly name = input<string>('');
   protected readonly bereiche = SONG_BEREICHE;
 
   // für „Noten“: gespeicherte PDFs und Anzahl Songs mit Noten
