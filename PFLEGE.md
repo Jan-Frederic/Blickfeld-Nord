@@ -111,12 +111,15 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Übersicht nicht mehr.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
-- **Übemodus** (Übersicht → Übemodus, `/backstage/ueben`): persönlich (Einstellungen → „Ich bin …“) – deine Songs, die
+- **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht): persönlich (Einstellungen → „Ich bin …“) – deine Songs, die
   noch wackeln („Wackelt noch“ und Fortschritt), als **Karteikarten** in fünf Kästen. Reihenfolge: heute dran, Songs
   des nächsten Auftritts zuerst. Karte: Titel → im Kopf durchspielen → **Aufdecken** (Tonart, Capo, Tempo, Takt,
   Notiz, Noten) → **Sitzt** (einen Kasten weiter, wieder dran nach 1, 3, 7, 14 Tagen) oder **Wackelt noch** (zurück in
   Kasten 1, gleich noch einmal). Sitzt eine Karte im letzten Kasten, ist der Song gelernt und verschwindet aus
-  „Wackelt noch“. Tasten: Leertaste deckt auf, ← wackelt, → sitzt. **Tagesziel:** unter Einstellungen → Ich bin …
+  „Wackelt noch“. Die Pfeile links und rechts der Karte blättern zur vorigen bzw. nächsten Karte (ohne zu bewerten).
+  Tasten: ← → blättern, Leertaste deckt auf, 1 wackelt, 2 sitzt. **Übe-Modus:** dieselben Karten in der Notenansicht
+  (wie Bühnen-/Probe-Modus), „Wackelt noch“ und „Sitzt“ oben rechts – danach kommt die nächste fällige Karte, eine
+  wackelnde später noch einmal; Blättern wie im Bühnen-Modus. **Tagesziel:** unter Einstellungen → Ich bin …
   „Karteikarten am Tag“ (Standard 10) – „Üben starten“ nimmt höchstens so viele (schon geübte zählen mit), „Alle üben“
   geht darüber hinaus. Jede Bewertung zählt im Fortschritt und damit in der **Bühnenreife**. Stand je Person
   (`bn-ueben`, `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).

@@ -1590,6 +1590,13 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   await karte.click();
   const ueben = p.locator('app-backstage-ueben');
   await ueben.getByRole('button', { name: /Üben starten \(2 Karten\)/ }).click();
+  // Karten mit den Pfeilen durchblättern, ohne zu bewerten
+  const titel = () => ueben.locator('.karte .titel').innerText();
+  const erste = await titel();
+  await ueben.getByRole('button', { name: 'Nächste Karte' }).click();
+  await until(async () => (await titel()) !== erste, 'Pfeil rechts blättert nicht');
+  await ueben.getByRole('button', { name: 'Vorige Karte' }).click();
+  await until(async () => (await titel()) === erste, 'Pfeil links blättert nicht zurück');
   await ueben.getByRole('button', { name: 'Aufdecken' }).click();
   await ueben.getByRole('button', { name: 'Sitzt' }).click();
   await ueben.getByRole('button', { name: 'Aufdecken' }).click();
@@ -1605,6 +1612,19 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   expect((await ueben.locator('.geschafft').count()) === 1, 'Tagesziel nicht als geschafft gemeldet');
   const f = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')));
   expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length === 2, `Übemodus fehlt im Fortschritt: ${JSON.stringify(f)}`);
+  // Übe-Modus aus der Übersicht: Notenansicht mit „Wackelt noch“ / „Sitzt“ oben rechts, weiter zur nächsten Karte
+  await p.go('/backstage/');
+  expect((await p.locator('app-backstage .ueben-karte strong').innerText()).trim() === 'Üben', 'Übersicht nennt es nicht „Üben“');
+  await p.locator('app-backstage .ueben-reihe a.modus').click();
+  const noten = p.locator('app-setlist-buehne app-noten-anzeige');
+  await schritt('Übe-Modus öffnet die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  const songA = (await noten.locator('header .titel').innerText()).trim();
+  await noten.locator('header .wertung.sitzt').click();
+  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Sitzt wechselt nicht zur nächsten Karte');
+  await until(async () => Object.values(await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')))).flat().filter((e) => e.quelle === 'ueben').length >= 3, 'Wertung im Übe-Modus fehlt im Fortschritt');
+  // weiter bis zum Ende: zurück in die Übersicht
+  for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
   return p;
 });
 

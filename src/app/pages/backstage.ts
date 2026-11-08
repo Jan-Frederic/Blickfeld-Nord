@@ -28,12 +28,15 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
            kommenden Auftritte stehen unter Aufgaben. -->
       <app-backstage-suche />
       <app-heute-faellig />
-      <!-- Übemodus: persönlicher Karteikasten mit den Songs, die noch wackeln -->
-      <a class="ueben-karte" routerLink="/backstage/ueben">
-        <mat-icon>style</mat-icon>
-        <span><strong>Übemodus</strong> <small>{{ ueben.text }}</small></span>
-        <mat-icon class="weiter">chevron_right</mat-icon>
-      </a>
+      <!-- Üben: persönlicher Karteikasten mit den Songs, die noch wackeln; rechts der Übe-Modus (Notenansicht) -->
+      <div class="ueben-reihe">
+        <a class="ueben-karte" routerLink="/backstage/ueben">
+          <mat-icon>style</mat-icon>
+          <span><strong>Üben</strong> <small>{{ ueben.text }}</small></span>
+        </a>
+        <!-- wie Probe- und Bühnen-Modus: startet gleich die Notenansicht der fälligen Karteikarten -->
+        <a class="modus" routerLink="/backstage/ueben" [queryParams]="{ modus: 1 }" aria-label="Übe-Modus starten" title="Übe-Modus"><mat-icon>fit_screen</mat-icon> <span class="modus-text">Übe-Modus</span></a>
+      </div>
 
       <h3>Als Nächstes</h3>
       @if (next.length) {
@@ -56,7 +59,8 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
   styles: `
     h3 { margin: 32px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .next { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-    .ueben-karte { display: flex; align-items: center; gap: 12px; margin: 20px 0 0; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--bn-sunset); color: var(--bn-ink); text-decoration: none; }
+    .ueben-reihe { display: flex; align-items: stretch; gap: 8px; margin: 20px 0 0; }
+    .ueben-karte { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--bn-sunset); color: var(--bn-ink); text-decoration: none; }
     .ueben-karte:hover { background: rgba(232, 164, 106, .08); }
     .ueben-karte mat-icon { color: var(--bn-sunset); flex: none; }
     .ueben-karte span { flex: 1; min-width: 0; }

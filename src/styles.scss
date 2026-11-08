@@ -887,3 +887,15 @@ app-referenzen ul::-webkit-scrollbar { display: none; }
   app-technik-aufbau .table-wrap th, app-technik-aufbau .table-wrap td { padding: 6px 3px; }
   app-technik-aufbau .table-wrap th { letter-spacing: 0; }
 }
+// Übe-Modus in der Notenansicht: Karteikarte bewerten (oben rechts bei den anderen Knöpfen)
+app-noten-anzeige header .wertung { display: inline-flex; align-items: center; gap: 6px; width: auto; padding: 0 14px; border-radius: 999px; font: 600 .85rem Inter, sans-serif; white-space: nowrap; }
+app-noten-anzeige header button.wertung.wackelt { border-color: #e0b25a; color: #e0b25a; }
+app-noten-anzeige header button.wertung.sitzt { border-color: #5fb88a; color: #5fb88a; }
+app-noten-anzeige header .wertung mat-icon { font-size: 18px; width: 18px; height: 18px; }
+@media (max-width: 520px) { app-noten-anzeige header .wertung { padding: 0 10px; font-size: .78rem; } }
+// Üben: Karteikarte mit Pfeilen links und rechts zum Blättern
+app-backstage-ueben .karten-reihe { display: flex; align-items: center; justify-content: center; gap: 10px; }
+app-backstage-ueben .karten-reihe .karte { flex: 1; min-width: 0; margin: 0; }
+app-backstage-ueben .blaettern { width: 44px; height: 44px; }
+app-backstage-ueben .blaettern mat-icon { font-size: 26px; width: 26px; height: 26px; }
+@media (max-width: 480px) { app-backstage-ueben .tasten { display: none; } app-backstage-ueben .karten-reihe { gap: 4px; } app-backstage-ueben .blaettern { width: 34px; height: 34px; } }

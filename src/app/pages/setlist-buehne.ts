@@ -170,7 +170,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
+      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -245,6 +245,18 @@ export class SetlistBuehne {
   readonly probe = input<string>();
   /** Generalprobe: Setlist mit Pausen, Uhr je Set wie auf der Bühne */
   readonly generalprobe = input(false);
+  /** Übe-Modus: Notenansicht mit „Wackelt noch“ / „Sitzt“ – die Liste ist die Reihe der Karteikarten */
+  readonly ueben = input(false);
+  readonly bewertet = output<{ title: string; artist: string; sitzt: boolean }>();
+  /** Karte bewerten: wackelt kommt hinten noch einmal dran, dann weiter zur nächsten Karte (am Ende: fertig) */
+  protected werten(sitzt: boolean): void {
+    const c = this.aktuellerSong();
+    if (!c) return;
+    this.bewertet.emit({ title: c.title, artist: c.artist, sitzt });
+    if (!sitzt) this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
+    if (this.index() + 1 >= this.liste().length) this.closed.emit();
+    else this.springen(this.index() + 1);
+  }
   protected readonly minutenText = minutenText;
   private readonly band = inject(BandService);
   protected readonly naechsterSong = computed(() => {
@@ -255,6 +267,7 @@ export class SetlistBuehne {
   protected readonly anlass = computed(() => {
     const d = this.probe();
     if (d) return `${this.generalprobe() ? 'Generalprobe' : 'Probe'} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+    if (this.ueben()) return 'Übe-Modus';
     const id = this.show();
     const s = id ? this.band.showById(id) : undefined;
     return s ? (s.private ? (s.publicName ?? 'Private Feier') : s.venue) : '';

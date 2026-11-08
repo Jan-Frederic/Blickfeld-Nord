@@ -49,6 +49,11 @@ const BREITE_KEY = 'bn-noten-breite';
             <button type="button" (click)="tempo(1, $event)" aria-label="Schneller scrollen">›</button>
           </span>
         }
+        <!-- Übe-Modus: Karteikarte bewerten – weiter geht es mit der nächsten Karte -->
+        @if (bewerten()) {
+          <button type="button" class="wertung wackelt" (click)="werten(false, $event)" title="Wackelt noch – kommt gleich noch einmal"><mat-icon>replay</mat-icon> Wackelt noch</button>
+          <button type="button" class="wertung sitzt" (click)="werten(true, $event)" title="Sitzt – nächste Karte"><mat-icon>check</mat-icon> Sitzt</button>
+        }
         <!-- derselbe Noten-Knopf wie in der Titelanzeige: noch einmal drücken führt zurück; das X beendet den Bühnen-Modus -->
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
         <button type="button" class="zu" (click)="ende($event)" [attr.aria-label]="endeText()"><mat-icon>close</mat-icon></button>
@@ -137,6 +142,13 @@ export class NotenAnzeige {
   readonly endeText = input('Bühnen-Modus beenden');
   /** Auftritt bzw. Probe – steht vor dem Songtitel */
   readonly anlass = input('');
+  /** Übe-Modus: Knöpfe „Wackelt noch“ / „Sitzt“ oben rechts */
+  readonly bewerten = input(false);
+  readonly wertung = output<boolean>();
+  protected werten(sitzt: boolean, e: Event): void {
+    e.stopPropagation();
+    this.wertung.emit(sitzt);
+  }
 
   // Einstellungen (Kopfleiste) nach oben wegwischen, nach unten wieder hervorholen – Touch-Ereignisse, weil der
   // Browser beim Scrollen im Blatt die Pointer-Ereignisse abbricht; mit der Maus über Pointer-Ereignisse

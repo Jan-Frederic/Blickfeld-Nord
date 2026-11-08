@@ -13,13 +13,16 @@ import { LISTEN, songAbgleich } from '../data/playlisten';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { datumText } from '../data/datum';
 import { SetlistBuehne } from './setlist-buehne';
+import { Verlauf } from '../zurueck';
+import { ActivatedRoute, Router } from '@angular/router';
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 // Backstage → Üben: persönlicher Übemodus (Logik: data/ueben.ts). Oben die fünf Kästen des Karteikastens, darunter die
 // wackelnden Songs in Übe-Reihenfolge (heute dran, Songs des nächsten Auftritts zuerst). „Üben starten“ zeigt eine Karte
 // nach der anderen: Titel – im Kopf durchspielen – aufdecken (Tonart, Capo, Tempo, Takt, Notiz, Noten) – „Sitzt“ oder
-// „Wackelt noch“. Tasten: Leertaste deckt auf, ← wackelt, → sitzt, Escape beendet.
+// „Wackelt noch“. Pfeile blättern durch die Karten. Tasten: ← → blättern, Leertaste deckt auf, 1 wackelt, 2 sitzt,
+// Escape beendet. Übe-Modus: dieselben Karten in der Notenansicht, „Wackelt noch“ / „Sitzt“ oben rechts.
 @Component({
   selector: 'app-backstage-ueben',
   imports: [RouterLink, MatIconModule, SetlistBuehne],
@@ -42,6 +45,8 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 
         @if (karte(); as k) {
           <!-- Lernkarte -->
+          <div class="karten-reihe">
+          <button type="button" class="rund blaettern" (click)="blaettern(-1)" [disabled]="pos() === 0" aria-label="Vorige Karte"><mat-icon>chevron_left</mat-icon></button>
           <div class="karte" [class.offen]="offen()" role="group" [attr.aria-label]="'Karte ' + (pos() + 1) + ' von ' + schlange().length">
             <div class="karte-kopf">
               <span>Karte {{ pos() + 1 }} / {{ schlange().length }} · Kasten {{ k.kasten }}</span>
@@ -63,8 +68,10 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
                 <button type="button" class="wackelt" (click)="werten(false)"><mat-icon>replay</mat-icon> Wackelt noch</button>
                 <button type="button" class="sitzt" (click)="werten(true)"><mat-icon>check</mat-icon> Sitzt</button>
               </div>
-              <p class="tasten">Tasten: ← wackelt · → sitzt</p>
             }
+            <p class="tasten">Tasten: ← → blättern · Leertaste deckt auf · 1 wackelt · 2 sitzt</p>
+          </div>
+          <button type="button" class="rund blaettern" (click)="blaettern(1)" [disabled]="pos() + 1 >= schlange().length" aria-label="Nächste Karte"><mat-icon>chevron_right</mat-icon></button>
           </div>
         } @else {
           @if (ergebnis(); as e) {
@@ -78,6 +85,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
             } @else {
               <p class="geschafft"><mat-icon>task_alt</mat-icon> Tagesziel geschafft.</p>
             }
+            <button type="button" (click)="uebeModus(false)" [disabled]="!(rest() ? tagesKarten() : alle()).length"><mat-icon>fit_screen</mat-icon> Übe-Modus (Noten)</button>
             @if (alle().length > tagesKarten().length) { <button type="button" (click)="starten(true)"><mat-icon>style</mat-icon> Alle {{ alle().length }} üben</button> }
           </div>
           <h3>Deine wackelnden Songs</h3>
@@ -110,6 +118,10 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     @if (noten(); as n) {
       <!-- Noten der Karte im Bühnen-Modus; Schließen führt zurück zur Karte -->
       <app-setlist-buehne [entries]="[{ title: n.title, artist: n.artist }]" [notenAuf]="true" (closed)="noten.set(null)" />
+    }
+    @if (modus(); as m) {
+      <!-- Übe-Modus: Notenansicht der fälligen Karten, oben rechts „Wackelt noch“ / „Sitzt“ – weiter zur nächsten Karte -->
+      <app-setlist-buehne [entries]="m" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (closed)="modusZu()" />
     }
   `,
 })
@@ -180,7 +192,18 @@ export class BackstageUeben {
 
   private zaehler = { sitzt: 0, wackelt: 0, gelernt: 0 };
 
+  private readonly verlauf = inject(Verlauf);
+
   constructor() {
+    // aus der Übersicht („Üben“ → Übe-Modus): ?modus=1 startet gleich die Notenansicht der fälligen Karten
+    const route = inject(ActivatedRoute);
+    if (route.snapshot.queryParamMap.get('modus')) {
+      const router = inject(Router);
+      queueMicrotask(() => {
+        this.uebeModus(true);
+        void router.navigate([], { relativeTo: route, queryParams: { modus: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      });
+    }
     // neue Daten der Band (Abgleich): eigene Listen neu einlesen, ohne die Seite neu aufzubauen
     inject(DestroyRef).onDestroy(
       auffrischenAnmelden(() => {
@@ -211,6 +234,15 @@ export class BackstageUeben {
   protected werten(sitzt: boolean): void {
     const k = this.karte();
     if (!k || !this.offen()) return;
+    this.festhalten(k, sitzt);
+    // wackelt: hinten noch einmal anstellen (Kasten 1 ist sofort wieder dran)
+    if (!sitzt) this.schlange.update((s) => [...s, k.key]);
+    this.offen.set(false);
+    if (this.pos() + 1 >= this.schlange().length) this.beenden();
+    else this.pos.update((p) => p + 1);
+  }
+  /** Bewertung speichern: Kasten, Fortschritt (Bühnenreife), Tagesziel; im letzten Kasten gelernt */
+  private festhalten(k: Karte, sitzt: boolean): void {
     const r = bewerten(this.stand(), k.key, sitzt, this.heute);
     this.stand.set(r.stand);
     speichereUeben(r.stand);
@@ -227,11 +259,40 @@ export class BackstageUeben {
       this.wackelt.set(wackeltSetzen(k.key, false));
       this.fortschritt.set(ladeFortschritt(this.ich()));
     }
-    // wackelt: hinten noch einmal anstellen (Kasten 1 ist sofort wieder dran)
-    if (!sitzt) this.schlange.update((s) => [...s, k.key]);
+  }
+  /** Karten durchblättern, ohne zu bewerten */
+  protected blaettern(r: -1 | 1): void {
+    const p = this.pos() + r;
+    if (p < 0 || p >= this.schlange().length) return;
+    this.pos.set(p);
     this.offen.set(false);
-    if (this.pos() + 1 >= this.schlange().length) this.beenden();
-    else this.pos.update((p) => p + 1);
+  }
+
+  // Übe-Modus: dieselben Karten in der Notenansicht (Bühnen-Modus mit Noten), bewertet oben rechts
+  protected readonly modus = signal<Entry[] | null>(null);
+  private modusVonLink = false;
+  protected uebeModus(vonLink: boolean): void {
+    const k = this.rest() ? this.tagesKarten() : this.alle();
+    if (!k.length) return;
+    this.zaehler = { sitzt: 0, wackelt: 0, gelernt: 0 };
+    this.ergebnis.set(null);
+    this.modusVonLink = vonLink;
+    this.modus.set(k.map((x) => ({ title: x.title, artist: x.artist })));
+  }
+  protected ausModus(e: { title: string; artist: string; sitzt: boolean }): void {
+    const key = `${e.title}|${e.artist}`;
+    const k = this.alle().find((x) => x.key === key) ?? { key, title: e.title, artist: e.artist, kasten: 1, faellig: this.heute, dran: true };
+    this.festhalten(k, e.sitzt);
+  }
+  protected modusZu(): void {
+    this.modus.set(null);
+    const z = this.zaehler;
+    this.ergebnis.set(z.sitzt + z.wackelt ? { ...z } : null);
+    // aus der Übersicht gestartet: zurück dorthin
+    if (this.modusVonLink) {
+      this.modusVonLink = false;
+      this.verlauf.zurueck();
+    }
   }
   protected entfernen(k: Karte): void {
     if (!confirm(`„${k.title}“ sitzt? Dann kommt er aus deiner Übe-Liste.`)) return;
@@ -248,10 +309,12 @@ export class BackstageUeben {
   }
 
   protected taste(e: KeyboardEvent): void {
-    if (!this.karte() || this.noten() || (e.target as HTMLElement).closest('input, select, textarea')) return;
+    if (!this.karte() || this.noten() || this.modus() || (e.target as HTMLElement).closest('input, select, textarea')) return;
     if ((e.key === ' ' || e.key === 'Enter') && !this.offen() && !(e.target as HTMLElement).closest('button')) this.offen.set(true);
-    else if (e.key === 'ArrowLeft' && this.offen()) this.werten(false);
-    else if (e.key === 'ArrowRight' && this.offen()) this.werten(true);
+    else if (e.key === 'ArrowLeft') this.blaettern(-1);
+    else if (e.key === 'ArrowRight') this.blaettern(1);
+    else if (e.key === '1' && this.offen()) this.werten(false);
+    else if (e.key === '2' && this.offen()) this.werten(true);
     else if (e.key === 'Escape') this.beenden();
     else return;
     e.preventDefault();
