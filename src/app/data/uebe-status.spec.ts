@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { alleStatus, buehnenreife, eigenerStatus, karteBewerten, personUebersicht, statusAusAlt, statusAusKasten, statusMigrieren, statusSetzen, statusVonPerson } from './uebe-status';
+import { uebeWertung, alleStatus, buehnenreife, eigenerStatus, karteBewerten, personUebersicht, statusAusAlt, statusAusKasten, statusMigrieren, statusSetzen, statusVonPerson } from './uebe-status';
 import { ladeKastenGeteilt, ladeUeben } from './ueben';
 import { ladeFortschritt } from './fortschritt';
 
@@ -82,6 +82,23 @@ describe('Übe-Status', () => {
   it('noch nicht umgestellte Person: Status aus dem alten Stand', () => {
     const s = statusAusAlt({ [K]: [{ tag: '2026-10-08', stand: 'sitzt', quelle: 'probe' }] }, ['Angels|x'], { kaesten: {}, gelernt: {} });
     expect(Object.fromEntries(s)).toEqual({ [K]: 'sitzt', 'Angels|x': 'wackelt' });
+  });
+});
+
+describe('Übe-Modus mit fünf Status', () => {
+  it('Sitzt bei sitzendem Song schiebt weiter bis eingenordet, sonst gilt der Status direkt', () => {
+    localStorage.setItem('bn-ich', 'david');
+    localStorage.setItem('bn-kasten-david', JSON.stringify({ v: 2, kaesten: {}, gelernt: {} }));
+    localStorage.setItem('bn-ueben', JSON.stringify({ [K]: { kasten: 1, faellig: heute } }));
+    expect(uebeWertung(K, 'sitzt', heute)).toBe('sitzt');
+    expect(ladeUeben()[K]).toMatchObject({ kasten: 4, faellig: '2026-11-15' });
+    expect(uebeWertung(K, 'sitzt', heute)).toBe('sitzt');
+    expect(ladeUeben()[K].kasten).toBe(5);
+    expect(uebeWertung(K, 'sitzt', heute)).toBe('eingenordet');
+    expect(uebeWertung(K, 'ueben', heute)).toBe('ueben');
+    expect(ladeUeben()[K]).toMatchObject({ kasten: 1, faellig: heute });
+    expect(uebeWertung(K, 'wackelt', heute)).toBe('wackelt');
+    expect(ladeUeben()[K]).toMatchObject({ kasten: 2, faellig: '2026-11-09' });
   });
 });
 

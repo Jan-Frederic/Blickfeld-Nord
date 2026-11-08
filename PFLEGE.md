@@ -119,18 +119,22 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   (Kästen: `src/app/data/ueben.ts`). Der alte Stand („Wackelt noch“-Liste, Fortschritt mit sitzt/wackelt/sicher)
   wird je Person beim ersten Öffnen einmalig umgestellt: sicher → Eingenordet, sitzt → Kasten 4, wackelt → Kasten 2.
 - **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht):
-  persönlich (Einstellungen → „Ich bin …“). Oben die fünf Kästen mit ihrem Status, darunter **ein** großer Knopf
-  **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus), „Wackelt noch“ und „Sitzt“ oben rechts –
-  **Sitzt** schiebt die Karte einen Kasten weiter (wieder dran nach 1, 3, 7, 14 Tagen), im letzten Kasten ist der Song
-  **eingenordet**; **Wackelt noch** zurück in Kasten 1, die Karte kommt später noch einmal. Reihenfolge: heute fällige
-  zuerst (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
-  Notenansicht): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen. Darunter alle Songs
-  im Karteikasten mit ihrem Status (dort direkt änderbar) und eine Suche, um Songs zum Üben hinzuzufügen (Kasten 1).
-  **Tagesziel:** unter Einstellungen → Ich bin … „Karteikarten am Tag“ (Standard 10) – nur eine **Empfehlung**, sie
-  hält niemanden vom Üben ab. **Mit der Band geteilt** (`bn-kasten-<Person>`, Version 2: Kästen und eingenordete
-  Songs): daraus lesen alle den Status der anderen (Bühnenreife, Probe-Modus, Probe-Vorschlag); der Probe-Vorschlag
-  nimmt Songs, die bei mindestens zwei Leuten in Kasten 1 hängen, ganz nach vorn. Stand je Person (`bn-ueben`,
-  `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).
+  persönlich (Einstellungen → „Ich bin …“). Ganz oben eine **Suche**: einzelne Songs oder ganze **Setlists**,
+  **Sammlungen** und **Spotify-Listen** zum Üben dazunehmen – Songs ohne Status kommen auf „Üben“ (Kasten 1), die übrigen
+  behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Darunter die fünf
+  Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus),
+  oben rechts ein **Umschalter mit den fünf Status** (der aktuelle ist hervorgehoben; auf schmalen Bildschirmen nur die
+  Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status und geht zur nächsten Karte: **Sitzt** bei einem Song, der schon sitzt,
+  schiebt ihn einen Kasten weiter (wieder dran nach 7 bzw. 14 Tagen), aus dem letzten Kasten heraus ist er
+  **eingenordet**; sonst gilt der Status direkt (Üben = Kasten 1, kommt in dieser Runde noch einmal; Wackelt noch =
+  Kasten 2 bzw. bleibt in 2/3; Sitzt = Kasten 4; Nicht gelernt nimmt ihn heraus). Reihenfolge: heute fällige zuerst
+  (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
+  Notenansicht): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen. Unten alle Songs im
+  Karteikasten mit ihrem Status (dort direkt änderbar). **Tagesziel:** unter Einstellungen → Ich bin … „Karteikarten am
+  Tag“ (Standard 10) – nur eine **Empfehlung**. **Mit der Band geteilt** (`bn-kasten-<Person>`, Version 2: Kästen und
+  eingenordete Songs): daraus lesen alle den Status der anderen (Bühnenreife, Probe-Modus, Probe-Vorschlag); der
+  Probe-Vorschlag nimmt Songs, die bei mindestens zwei Leuten in Kasten 1 hängen, ganz nach vorn. Stand je Person
+  (`bn-ueben`, `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).
 - **Veranstalter bewerten** (Ansprechpartner beim Auftritt bzw. Termine → Kontakte): Technik, Publikum, Bezahlung
   pünktlich/spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ (Saisonplanung, Termine → Saison) –
   gelb, wenn zwei Punkte schlecht waren. Wie die Kontakte nur auf den Geräten und im OneDrive.

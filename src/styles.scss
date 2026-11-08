@@ -810,7 +810,7 @@ app-backstage-ueben {
   .kaesten .l { font-size: .78rem; }
   .kaesten .s { font-size: .72rem; color: var(--bn-sunset); }
   .kaesten .leer .s { color: var(--bn-fog); }
-  .eingenordet { display: flex; align-items: center; gap: 6px; margin: -8px 0 16px; color: #5fb88a; font-size: .9rem; }
+  .eingenordet-zahl { display: flex; align-items: center; gap: 6px; margin: -8px 0 16px; color: #5fb88a; font-size: .9rem; }
   .hinweis { margin: 0 0 12px; color: #e0b25a; font-size: .9rem; }
   .liste select { flex: none; max-width: 9.5rem; padding: 5px 8px; border: 1px solid var(--bn-line); border-radius: 999px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .8rem; color-scheme: dark; }
   .liste select.ueben, .liste select.wackelt { border-color: #e0b25a; color: #e0b25a; }
@@ -833,11 +833,13 @@ app-backstage-ueben {
   .liste .leer { color: var(--bn-fog); font-size: .9rem; }
   .t { font-weight: 500; }
   .a { color: var(--bn-fog); font-size: .88rem; }
-  .suche { display: flex; align-items: center; gap: 6px; margin-top: 14px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bn-line); max-width: 420px; }
+  .suche { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bn-line); max-width: 560px; }
   .suche:focus-within { border-color: var(--bn-sunset); }
   .suche mat-icon { color: var(--bn-fog); }
   .suche input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--bn-ink); font: inherit; padding: 9px 0; outline: none; }
-  .treffer { max-width: 420px; margin-top: 6px; }
+  .treffer { max-width: 560px; margin-top: 6px; }
+  .treffer .liste-treffer > mat-icon:first-child { margin-left: 0; color: var(--bn-sunset); align-self: center; }
+  .meldung { margin: 8px 0 0; color: #5fb88a; font-size: .9rem; }
   .treffer button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: baseline; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--bn-line); cursor: pointer; }
   .treffer button:hover, .treffer button:focus-visible { color: var(--bn-sunset); }
   .treffer mat-icon { margin-left: auto; align-self: center; color: var(--bn-fog); }
@@ -885,12 +887,24 @@ app-referenzen ul::-webkit-scrollbar { display: none; }
   app-technik-aufbau .table-wrap th, app-technik-aufbau .table-wrap td { padding: 6px 3px; }
   app-technik-aufbau .table-wrap th { letter-spacing: 0; }
 }
-// Übe-Modus in der Notenansicht: Karteikarte bewerten (oben rechts bei den anderen Knöpfen)
-app-noten-anzeige header .wertung { display: inline-flex; align-items: center; gap: 6px; width: auto; padding: 0 14px; border-radius: 999px; font: 600 .85rem Inter, sans-serif; white-space: nowrap; }
-app-noten-anzeige header button.wertung.wackelt { border-color: #e0b25a; color: #e0b25a; }
-app-noten-anzeige header button.wertung.sitzt { border-color: #5fb88a; color: #5fb88a; }
-app-noten-anzeige header .wertung mat-icon { font-size: 18px; width: 18px; height: 18px; }
-@media (max-width: 520px) { app-noten-anzeige header .wertung { padding: 0 10px; font-size: .78rem; } }
+// Übe-Modus in der Notenansicht: Übe-Status als Umschalter mit fünf Stufen (oben rechts bei den anderen Knöpfen)
+app-noten-anzeige header .wertungen { display: inline-flex; flex: none; align-items: stretch; border: 1px solid #444; border-radius: 20px; overflow: hidden; }
+app-noten-anzeige header .wertungen button.wertung { min-height: 38px; min-width: 0; padding: 0 10px; border: 0; border-left: 1px solid #444; border-radius: 0; color: #fff; font: 600 .8rem Inter, sans-serif; white-space: nowrap; }
+app-noten-anzeige header .wertungen button.wertung:first-child { border-left: 0; }
+app-noten-anzeige header .wertungen button.wertung.an { color: #2a1708; }
+app-noten-anzeige header .wertungen button.wertung.nicht.an { background: #9aa0a6; }
+app-noten-anzeige header .wertungen button.wertung.ueben.an { background: #e08a5a; }
+app-noten-anzeige header .wertungen button.wertung.wackelt.an { background: #e0b25a; }
+app-noten-anzeige header .wertungen button.wertung.sitzt.an { background: #9fd3b4; }
+app-noten-anzeige header .wertungen button.wertung.eingenordet.an { background: #5fb88a; }
+app-noten-anzeige header .wertungen button.wertung:hover:not(.an) { color: #e8a46a; }
+app-noten-anzeige header button.wertung .z { display: none; }
+// schmal: nur Zeichen (○ ✎ ↻ ✓ ✓✓), der Name steht im Tooltip und für Screenreader
+@media (max-width: 1200px) {
+  app-noten-anzeige header button.wertung .z { display: inline; }
+  app-noten-anzeige header button.wertung .l { display: none; }
+  app-noten-anzeige header .wertungen button.wertung { min-width: 36px; padding: 0 8px; font-size: .85rem; }
+}
 // Bühnenreife: Karteikasten je Person (Kasten 1–5, Zahl der Karten)
 app-songs-reife .kasten { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 6px 0 2px; }
 app-songs-reife .kasten span { padding: 2px 0; border: 1px solid var(--bn-sunset); border-radius: 4px; text-align: center; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--bn-sunset); }

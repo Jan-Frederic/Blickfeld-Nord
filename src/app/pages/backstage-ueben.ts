@@ -4,7 +4,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
 import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
-import { STATUS, UebeStatus, eigeneStatus, karteBewerten, statusAusKasten, statusLabel, statusMigrieren, statusSetzen } from '../data/uebe-status';
+import { STATUS, UebeStatus, eigeneStatus, statusAusKasten, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
+import { sammlungen } from '../data/sammlungen';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
@@ -16,9 +17,11 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 
 // Backstage → Üben: persönlicher Karteikasten (Logik: data/ueben.ts, Status: data/uebe-status.ts). Oben die fünf Kästen
 // (1 Üben, 2–3 Wackelt noch, 4–5 Sitzt), darunter ein Knopf „Übe-Modus“: die Karten in der Notenansicht, oben rechts
-// „Wackelt noch“ / „Sitzt“ – „Sitzt“ schiebt die Karte einen Kasten weiter, im letzten ist der Song eingenordet und fällt
-// heraus; „Wackelt noch“ zurück in Kasten 1. Heute fällige Karten kommen zuerst, das Tagesziel ist nur eine Empfehlung.
-// Darunter alle Songs im Kasten mit ihrem Status (änderbar) und eine Suche, um Songs hinzuzufügen („Üben“, Kasten 1).
+// die fünf Übe-Status (uebeWertung) – „Sitzt“ bei einem sitzenden Song schiebt ihn einen Kasten weiter, aus dem
+// letzten heraus ist er eingenordet; „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
+// Tagesziel ist nur eine Empfehlung.
+// Ganz oben eine Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen (Songs
+// ohne Status kommen auf „Üben“, Kasten 1). Darunter alle Songs im Kasten mit ihrem Status (änderbar).
 @Component({
   selector: 'app-backstage-ueben',
   imports: [RouterLink, MatIconModule, SetlistBuehne],
@@ -30,6 +33,22 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         <p class="lead">Üben ist persönlich: Wähle unter <a routerLink="/backstage/einstellungen">Einstellungen</a> „Ich bin …“ –
           dann stehen hier deine Songs im Karteikasten.</p>
       } @else {
+        <!-- Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen -->
+        <label class="suche">
+          <mat-icon aria-hidden="true">search</mat-icon>
+          <input type="search" placeholder="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen …" aria-label="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
+        </label>
+        @if (listenTreffer().length || treffer().length) {
+          <ul class="treffer">
+            @for (l of listenTreffer(); track l.id) {
+              <li><button type="button" class="liste-treffer" (click)="listeHinzu(l)"><mat-icon aria-hidden="true">{{ l.icon }}</mat-icon><span class="t">{{ l.name }}</span>&ngsp;<span class="a">{{ l.art }} · {{ l.keys.length }} {{ l.keys.length === 1 ? 'Song' : 'Songs' }}</span><mat-icon>playlist_add</mat-icon></button></li>
+            }
+            @for (t of treffer(); track t.key) {
+              <li><button type="button" (click)="hinzu(t.key)"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}{{ t.status !== 'nicht' ? ' · ' + statusLabel(t.status) : '' }}</span><mat-icon>add</mat-icon></button></li>
+            }
+          </ul>
+        }
+        @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
         <p class="lead">{{ name() }}: deine Songs im Karteikasten. Kasten 1 heißt <b>Üben</b>, 2 und 3 <b>Wackelt noch</b>, 4 und 5 <b>Sitzt</b>.
           „Sitzt“ schiebt eine Karte einen Kasten weiter (sie kommt seltener dran), „Wackelt noch“ zurück in Kasten 1.
           Sitzt sie im letzten Kasten, ist der Song <b>eingenordet</b> und fällt heraus.</p>
@@ -38,15 +57,15 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
             <li [class.leer]="!n"><span class="n">{{ n }}</span><span class="l">Kasten {{ i + 1 }}</span><span class="s">{{ label(i + 1) }}</span><small>{{ i ? 'alle ' + tage[i] + (tage[i] === 1 ? ' Tag' : ' Tage') : 'sofort' }}</small></li>
           }
         </ol>
-        @if (eingenordet()) { <p class="eingenordet"><mat-icon>verified</mat-icon> {{ eingenordet() }} {{ eingenordet() === 1 ? 'Song' : 'Songs' }} eingenordet</p> }
+        @if (eingenordet()) { <p class="eingenordet-zahl"><mat-icon>verified</mat-icon> {{ eingenordet() }} {{ eingenordet() === 1 ? 'Song' : 'Songs' }} eingenordet</p> }
 
         @if (ergebnis(); as e) {
-          <p class="ergebnis" role="status"><mat-icon>task_alt</mat-icon> Fertig: {{ e.sitzt }} gesessen, {{ e.wackelt }}× wackelt noch{{ e.eingenordet ? ', ' + e.eingenordet + ' eingenordet 🎉' : '' }}.</p>
+          <p class="ergebnis" role="status"><mat-icon>task_alt</mat-icon> Fertig: {{ e }}</p>
         }
         <button type="button" class="primaer gross" (click)="uebeModus(false)"><mat-icon>fit_screen</mat-icon> Übe-Modus</button>
         <p class="tagesziel">Empfehlung: {{ ziel }} Karten am Tag · heute {{ geuebt().length }} geübt{{ dran().length ? ' · ' + dran().length + ' fällig' : '' }}
           <a routerLink="/backstage/einstellungen">ändern</a></p>
-        @if (leerHinweis()) { <p class="hinweis" role="status">Noch keine Karten – füge unten einen Song hinzu.</p> }
+        @if (leerHinweis()) { <p class="hinweis" role="status">Noch keine Karten – füge oben Songs oder eine ganze Liste hinzu.</p> }
 
         <h3>Deine Songs im Karteikasten</h3>
         <ul class="liste">
@@ -60,20 +79,9 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
               </select>
             </li>
           } @empty {
-            <li class="leer">Der Karteikasten ist leer. Songs kommen über den Status (Song-Dialog, Probe-Modus, Nachbereitung) oder hier dazu.</li>
+            <li class="leer">Der Karteikasten ist leer. Songs kommen über den Status (Song-Dialog, Probe-Modus, Nachbereitung) oder oben über die Suche dazu.</li>
           }
         </ul>
-        <label class="suche">
-          <mat-icon aria-hidden="true">search</mat-icon>
-          <input type="search" placeholder="Song zum Üben hinzufügen …" aria-label="Song zum Üben hinzufügen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
-        </label>
-        @if (treffer().length) {
-          <ul class="treffer">
-            @for (t of treffer(); track t.key) {
-              <li><button type="button" (click)="hinzu(t.key)"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}{{ t.status !== 'nicht' ? ' · ' + statusLabel(t.status) : '' }}</span><mat-icon>add</mat-icon></button></li>
-            }
-          </ul>
-        }
       }
     </section>
     @if (modus(); as m) {
@@ -112,7 +120,8 @@ export class BackstageUeben {
   /** heute fällig und noch nicht geübt */
   protected readonly dran = computed(() => this.alle().filter((k) => k.dran && !this.geuebt().includes(k.key)));
   protected readonly kastenZahlen = computed(() => jeKasten(this.alle()));
-  protected readonly ergebnis = signal<{ sitzt: number; wackelt: number; eingenordet: number } | null>(null);
+  protected readonly ergebnis = signal<string | null>(null);
+  protected readonly meldung = signal('');
   protected readonly leerHinweis = signal(false);
 
   // Songs hinzufügen (alle Spotify-Listen)
@@ -128,7 +137,26 @@ export class BackstageUeben {
       .map((s) => ({ ...s, status: this.eigene().get(s.key) ?? ('nicht' as UebeStatus) }));
   });
 
-  private zaehler = { sitzt: 0, wackelt: 0, eingenordet: 0 };
+  /** Übe-Modus: neuer Status je bewerteter Karte (Anzahl je Status) */
+  private zaehler: Partial<Record<UebeStatus, number>> = {};
+
+  // ganze Listen: Setlists der Auftritte (auf diesem Gerät), Sammlungen, Spotify-Listen
+  private readonly listen = computed(() => {
+    this.stand();
+    const setlists = [...this.band.shows]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map((sh) => ({ sh, keys: (loadSetlist(this.band.showId(sh)) as Entry[]).filter((e) => !isPause(e)).map((e) => `${(e as { title: string }).title}|${(e as { artist: string }).artist}`) }))
+      .filter((x) => x.keys.length)
+      .map(({ sh, keys }) => ({ id: 'setlist:' + this.band.showId(sh), art: 'Setlist', icon: 'queue_music', name: `${sh.venue} ${datumText(sh.date)}`, keys }));
+    const samml = sammlungen().map((x) => ({ id: 'sammlung:' + x.name, art: 'Sammlung', icon: 'bookmarks', name: x.name, keys: (x.entries.filter((e) => !isPause(e)) as { title: string; artist: string }[]).map((e) => `${e.title}|${e.artist}`) }));
+    const spotify = LISTEN.map((l) => ({ id: 'spotify:' + l.key, art: 'Spotify-Liste', icon: l.icon, name: l.label, keys: this.songs.filter((x) => x.listen.includes(l.key)).map((x) => x.key) }));
+    return [...setlists, ...samml, ...spotify].filter((l) => l.keys.length);
+  });
+  protected readonly listenTreffer = computed(() => {
+    const q = norm(this.suche().trim());
+    if (q.length < 2) return [];
+    return this.listen().filter((l) => norm(`${l.art} ${l.name}`).includes(q)).slice(0, 6);
+  });
   private readonly verlauf = inject(Verlauf);
 
   constructor() {
@@ -173,24 +201,23 @@ export class BackstageUeben {
       return;
     }
     this.leerHinweis.set(false);
-    this.zaehler = { sitzt: 0, wackelt: 0, eingenordet: 0 };
+    this.zaehler = {};
     this.ergebnis.set(null);
     this.modusVonLink = vonLink;
     this.modus.set(k.map((x) => ({ title: x.title, artist: x.artist })));
   }
-  protected ausModus(e: { title: string; artist: string; sitzt: boolean }): void {
+  protected ausModus(e: { title: string; artist: string; status: UebeStatus }): void {
     const key = `${e.title}|${e.artist}`;
-    const r = karteBewerten(key, e.sitzt, this.heute);
+    const neu = uebeWertung(key, e.status, this.heute);
     this.geuebt.set(alsGeuebtMerken(key, this.heute));
-    if (e.sitzt) this.zaehler.sitzt++;
-    else this.zaehler.wackelt++;
-    if (r.eingenordet) this.zaehler.eingenordet++;
+    this.zaehler[neu] = (this.zaehler[neu] ?? 0) + 1;
     this.stand.update((n) => n + 1);
   }
   protected modusZu(): void {
     this.modus.set(null);
     const z = this.zaehler;
-    this.ergebnis.set(z.sitzt + z.wackelt ? { ...z } : null);
+    const teile = STATUS.filter((st) => z[st.id]).map((st) => `${z[st.id]}× ${st.label}${st.id === 'eingenordet' ? ' 🎉' : ''}`);
+    this.ergebnis.set(teile.length ? teile.join(', ') + '.' : null);
     // aus der Übersicht gestartet: zurück dorthin
     if (this.modusVonLink) {
       this.modusVonLink = false;
@@ -206,5 +233,24 @@ export class BackstageUeben {
     this.stand.update((n) => n + 1);
     this.suche.set('');
     this.leerHinweis.set(false);
+    this.meldung.set('');
+  }
+  /** ganze Liste zum Üben: Songs ohne Status kommen auf „Üben“ (Kasten 1), die übrigen behalten ihren Status */
+  protected listeHinzu(l: { name: string; art: string; keys: string[] }): void {
+    const eigene = this.eigene();
+    const keys = [...new Set(l.keys)];
+    const neu = keys.filter((k) => (eigene.get(k) ?? 'nicht') === 'nicht');
+    for (const k of neu) statusSetzen(k, 'ueben', 'liste');
+    const eingenordet = keys.filter((k) => eigene.get(k) === 'eingenordet').length;
+    const schon = keys.length - neu.length - eingenordet;
+    this.stand.update((n) => n + 1);
+    this.suche.set('');
+    this.leerHinweis.set(false);
+    this.meldung.set(
+      `${l.art} „${l.name}“: ${neu.length} ${neu.length === 1 ? 'Song' : 'Songs'} zum Üben dazu` +
+        (schon ? `, ${schon} schon im Karteikasten` : '') +
+        (eingenordet ? `, ${eingenordet} eingenordet` : '') +
+        '.',
+    );
   }
 }

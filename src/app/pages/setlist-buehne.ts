@@ -1,4 +1,5 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
+import { UebeStatus, eigenerStatus } from '../data/uebe-status';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
@@ -170,7 +171,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
+      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -245,15 +246,23 @@ export class SetlistBuehne {
   readonly probe = input<string>();
   /** Generalprobe: Setlist mit Pausen, Uhr je Set wie auf der Bühne */
   readonly generalprobe = input(false);
-  /** Übe-Modus: Notenansicht mit „Wackelt noch“ / „Sitzt“ – die Liste ist die Reihe der Karteikarten */
+  /** Übe-Modus: Notenansicht mit den fünf Übe-Status oben rechts – die Liste ist die Reihe der Karteikarten */
   readonly ueben = input(false);
-  readonly bewertet = output<{ title: string; artist: string; sitzt: boolean }>();
-  /** Karte bewerten: wackelt kommt hinten noch einmal dran, dann weiter zur nächsten Karte (am Ende: fertig) */
-  protected werten(sitzt: boolean): void {
+  readonly bewertet = output<{ title: string; artist: string; status: UebeStatus }>();
+  private readonly statusNeu = signal(0);
+  /** eigener Übe-Status des aktuellen Songs (nur im Übe-Modus) */
+  protected readonly uebeStatus = computed(() => {
+    this.statusNeu();
+    const c = this.aktuellerSong();
+    return this.ueben() && c ? eigenerStatus(`${c.title}|${c.artist}`) : null;
+  });
+  /** Status setzen: „Üben“ kommt hinten noch einmal dran, dann weiter zur nächsten Karte (am Ende: fertig) */
+  protected werten(status: UebeStatus): void {
     const c = this.aktuellerSong();
     if (!c) return;
-    this.bewertet.emit({ title: c.title, artist: c.artist, sitzt });
-    if (!sitzt) this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
+    this.bewertet.emit({ title: c.title, artist: c.artist, status });
+    this.statusNeu.update((n) => n + 1);
+    if (status === 'ueben') this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
     if (this.index() + 1 >= this.liste().length) this.closed.emit();
     else this.springen(this.index() + 1);
   }

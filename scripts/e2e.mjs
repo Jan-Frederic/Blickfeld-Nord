@@ -1610,10 +1610,17 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   // Status direkt ändern: Angels eingenordet → fällt aus dem Kasten; über die Suche wieder zum Üben (Kasten 1)
   await ueben.locator('.liste li', { hasText: 'Angels' }).locator('select').selectOption('eingenordet');
   await until(async () => (await ueben.locator('.liste li select').count()) === 2, 'Eingenordet bleibt im Karteikasten');
-  await until(async () => (await ueben.locator('.eingenordet').innerText().catch(() => '')).includes('1 Song eingenordet'), 'Eingenordet wird nicht gezählt');
+  await until(async () => (await ueben.locator('.eingenordet-zahl').innerText().catch(() => '')).includes('1 Song eingenordet'), 'Eingenordet wird nicht gezählt');
   await ueben.locator('.suche input').fill('Angels');
   await ueben.locator('.treffer button', { hasText: 'Eingenordet' }).first().click();
   await until(async () => (await ueben.locator('.kaesten li').nth(0).locator('.n').innerText()) === '1', 'Hinzufügen legt nicht in Kasten 1');
+  // ganze Sammlung zum Üben: Songs ohne Status kommen in Kasten 1
+  await ueben.locator('.suche input').fill('Weihnachts');
+  await ueben.locator('.treffer button.liste-treffer', { hasText: 'Weihnachtslieder' }).click();
+  await until(async () => (await ueben.locator('.meldung').innerText().catch(() => '')).includes('3 Songs zum Üben dazu'), 'Sammlung wird nicht zum Üben dazugenommen');
+  await until(async () => (await ueben.locator('.kaesten li').nth(0).locator('.n').innerText()) === '4', 'Sammlung nicht in Kasten 1');
+  for (const k of ['In der Weihnachtsbäckerei', 'Kleine Kinder', 'Weihnacht, was bist du']) await ueben.locator('.liste li', { hasText: k }).locator('select').selectOption('nicht');
+  await until(async () => (await ueben.locator('.liste li select').count()) === 3, 'Nicht gelernt bleibt im Karteikasten');
   // Übe-Modus: Notenansicht mit „Wackelt noch“ / „Sitzt“ oben rechts, weiter zur nächsten Karte
   await ueben.getByRole('button', { name: 'Übe-Modus' }).click();
   const noten = p.locator('app-setlist-buehne app-noten-anzeige');
@@ -1622,15 +1629,19 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await noten.locator('header .mitschnitt-knopf').click();
   await noten.locator('.mitschnitt-panel app-song-mitschnitte').waitFor();
   await noten.locator('header .mitschnitt-knopf').click();
+  // fünf Status statt „Wackelt noch“ / „Sitzt“; der aktuelle ist hervorgehoben
+  expect((await noten.locator('header .wertungen button').count()) === 5, 'Übe-Modus hat nicht die fünf Status');
+  expect((await noten.locator('header .wertung.an').count()) === 1, 'aktueller Status nicht hervorgehoben');
   const songA = (await noten.locator('header .titel').innerText()).trim();
-  await noten.locator('header .wertung.sitzt').click();
-  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Sitzt wechselt nicht zur nächsten Karte');
-  for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
-  await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('3 gesessen'), 'Übe-Ergebnis fehlt');
+  // „Üben“: kommt in dieser Runde noch einmal dran
+  await noten.locator('header .wertung.ueben').click();
+  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nicht zur nächsten Karte');
+  for (let i = 0; i < 6 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
+  await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('Sitzt'), 'Übe-Ergebnis fehlt');
   const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
-  expect(stand['Iris|The Goo Goo Dolls'].kasten === 3 && stand['Angels|Robbie Williams'].kasten === 2, `Karten nicht weitergeschoben: ${JSON.stringify(stand)}`);
+  expect(Object.values(stand).every((k) => k.kasten >= 4), `Sitzt setzt nicht auf Kasten 4/5: ${JSON.stringify(stand)}`);
   const f = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-fortschritt-jan-frederic-overbeck')));
-  expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length === 3, `Übe-Modus fehlt im Verlauf: ${JSON.stringify(f)}`);
+  expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length >= 3, `Übe-Modus fehlt im Verlauf: ${JSON.stringify(f)}`);
   // Tagesziel erreicht – der Übe-Modus geht trotzdem, aus der Übersicht und zurück dorthin
   await p.go('/backstage/');
   expect((await p.locator('app-backstage .ueben-karte').innerText()).includes('Tagesziel geschafft'), 'Tagesziel nicht als geschafft gemeldet');

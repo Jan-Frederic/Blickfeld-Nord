@@ -1,4 +1,5 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
+import { STATUS, UebeStatus } from '../data/uebe-status';
 import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
@@ -50,11 +51,14 @@ const BREITE_KEY = 'bn-noten-breite';
             <button type="button" (click)="tempo(1, $event)" aria-label="Schneller scrollen">›</button>
           </span>
         }
-        <!-- Übe-Modus: Karteikarte bewerten – weiter geht es mit der nächsten Karte -->
+        <!-- Übe-Modus: Übe-Status der Karte in fünf Stufen – weiter geht es mit der nächsten Karte -->
         @if (bewerten()) {
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
-          <button type="button" class="wertung wackelt" (click)="werten(false, $event)" title="Wackelt noch – kommt gleich noch einmal"><mat-icon>replay</mat-icon> Wackelt noch</button>
-          <button type="button" class="wertung sitzt" (click)="werten(true, $event)" title="Sitzt – nächste Karte"><mat-icon>check</mat-icon> Sitzt</button>
+          <span class="wertungen" role="group" aria-label="Übe-Status">
+            @for (st of statusListe; track st.id) {
+              <button type="button" [class]="'wertung ' + st.id" [class.an]="status() === st.id" [attr.aria-pressed]="status() === st.id" [attr.aria-label]="st.label" [title]="st.label + (st.id === 'sitzt' ? ' – sitzt er schon, einen Kasten weiter' : '')" (click)="werten(st.id, $event)"><span class="z" aria-hidden="true">{{ st.zeichen }}</span><span class="l">{{ st.label }}</span></button>
+            }
+          </span>
         }
         <!-- derselbe Noten-Knopf wie in der Titelanzeige: noch einmal drücken führt zurück; das X beendet den Bühnen-Modus -->
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
@@ -150,17 +154,20 @@ export class NotenAnzeige {
   readonly endeText = input('Bühnen-Modus beenden');
   /** Auftritt bzw. Probe – steht vor dem Songtitel */
   readonly anlass = input('');
-  /** Übe-Modus: Knöpfe „Wackelt noch“ / „Sitzt“ oben rechts */
+  /** Übe-Modus: Umschalter mit den fünf Übe-Status oben rechts */
   readonly bewerten = input(false);
-  readonly wertung = output<boolean>();
+  /** aktueller eigener Status des Songs (hervorgehoben) */
+  readonly status = input<UebeStatus | null>(null);
+  readonly wertung = output<UebeStatus>();
+  protected readonly statusListe = STATUS;
   protected readonly mitschnitt = signal(false);
   protected mitschnittUmschalten(e: Event): void {
     e.stopPropagation();
     this.mitschnitt.update((m) => !m);
   }
-  protected werten(sitzt: boolean, e: Event): void {
+  protected werten(s: UebeStatus, e: Event): void {
     e.stopPropagation();
-    this.wertung.emit(sitzt);
+    this.wertung.emit(s);
   }
 
   // Einstellungen (Kopfleiste) nach oben wegwischen, nach unten wieder hervorholen – Touch-Ereignisse, weil der

@@ -154,9 +154,11 @@ export function statusSetzen(key: string, status: UebeStatus, quelle: 'liste' | 
   if (status === 'eingenordet') eingenordet[key] = tag;
   const kasten = KASTEN_FUER[status];
   if (kasten) {
-    // gleicher Status wie bisher: Kasten und Fälligkeit bleiben (z. B. Kasten 3 bleibt „Wackelt noch“ in Kasten 3)
+    // gleicher Status wie bisher: der Kasten bleibt (z. B. Kasten 3 bleibt „Wackelt noch“ in Kasten 3), wieder dran
+    // nach dessen Abstand
     const alt = stand[key];
-    stand[key] = alt && statusAusKasten(alt.kasten) === status ? { ...alt, zuletzt: tag } : { kasten, faellig: plusTage(tag, status === 'ueben' ? 0 : KASTEN_TAGE[kasten - 1]), zuletzt: tag };
+    const k = alt && statusAusKasten(alt.kasten) === status ? alt.kasten : kasten;
+    stand[key] = { kasten: k, faellig: plusTage(tag, KASTEN_TAGE[k - 1]), zuletzt: tag };
   }
   speichereUeben(stand);
   ausAlterListe(key);
@@ -176,6 +178,17 @@ export function karteBewerten(key: string, sitzt: boolean, tag: string): { einge
   const status: UebeStatus = r.gelernt ? 'eingenordet' : statusAusKasten(r.stand[key].kasten);
   if (ich) fortschrittEintragen(ich, key, status, 'ueben', tag);
   return { eingenordet: r.gelernt, status };
+}
+
+/**
+ * Übe-Modus: Status für die aktuelle Karte. „Sitzt“ bei einem Song, der schon sitzt, schiebt ihn einen Kasten weiter
+ * (aus dem letzten heraus: eingenordet); sonst gilt der gewählte Status direkt (Üben = Kasten 1, gleich wieder dran;
+ * Wackelt noch = Kasten 2 bzw. bleibt in 2/3; Sitzt = Kasten 4). Gibt den neuen Status zurück.
+ */
+export function uebeWertung(key: string, status: UebeStatus, tag: string): UebeStatus {
+  if (status === 'sitzt' && eigenerStatus(key) === 'sitzt') return karteBewerten(key, true, tag).status;
+  statusSetzen(key, status, 'ueben', tag);
+  return status;
 }
 
 /**
