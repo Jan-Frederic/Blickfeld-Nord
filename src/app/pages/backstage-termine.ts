@@ -111,7 +111,7 @@ function loadFilters(): Set<FilterKey> {
             <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('status')">
               <button type="button" class="sort" (click)="sortBy('status')">Status<mat-icon>{{ sortIcons().status }}</mat-icon></button>
             </th>
-            <td mat-cell *matCellDef="let r">
+            <td mat-cell *matCellDef="let r" [class.leer]="!r.show">
               @if (r.show; as s) {
                 <span class="status" [class.ok]="s.confirmed">
                   <mat-icon>{{ s.confirmed ? 'check_circle' : 'schedule' }}</mat-icon>
@@ -124,7 +124,7 @@ function loadFilters(): Set<FilterKey> {
             <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort('comment')">
               <button type="button" class="sort" (click)="sortBy('comment')">Kommentar<mat-icon>{{ sortIcons().comment }}</mat-icon></button>
             </th>
-            <td mat-cell *matCellDef="let r" class="comment">{{ (r.show ? r.show.comment : r.probe.note) || '–' }}</td>
+            <td mat-cell *matCellDef="let r" class="comment" [class.leer]="!(r.show ? r.show.comment : r.probe.note)">{{ (r.show ? r.show.comment : r.probe.note) || '–' }}</td>
           </ng-container>
           <ng-container matColumnDef="open">
             <th mat-header-cell *matHeaderCellDef><span class="sr-only">Öffnen</span></th>

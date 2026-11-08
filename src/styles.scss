@@ -854,3 +854,36 @@ app-zurueck.gross .back { margin-bottom: 32px; font-family: var(--bn-wide); text
 app-backstage-ueben .tagesziel { margin: 0 0 12px; font-size: .9rem; color: var(--bn-fog); }
 app-backstage-ueben .tagesziel a { margin-left: 8px; color: var(--bn-sunset); font-size: .82rem; }
 app-backstage-ueben .geschafft { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #5fb88a; }
+
+// Keine unnötigen Scrollleisten (Prüfung aller Seiten in 360–1280 px):
+// Referenzen „Bisher live bei“: Blättern über die Pfeile und Wischen – die Leiste selbst braucht es nicht
+app-referenzen ul { scrollbar-width: none; }
+app-referenzen ul::-webkit-scrollbar { display: none; }
+// Technik: Kanalliste und Monitor-Mixe umbrechen statt seitlich zu scrollen
+@media (max-width: 900px) {
+  app-technik-aufbau .table-wrap th, app-technik-aufbau .table-wrap td { white-space: normal; padding: 8px 6px; overflow-wrap: break-word; hyphens: auto; }
+  app-technik-aufbau .table-wrap table { font-size: .84rem; }
+  app-technik-aufbau .table-wrap th { font-size: .62rem; letter-spacing: .06em; }
+}
+@media (max-width: 480px) {
+  app-technik-aufbau .table-wrap th, app-technik-aufbau .table-wrap td { padding: 7px 4px; }
+  app-technik-aufbau .table-wrap table { font-size: .76rem; }
+  app-technik-aufbau .table-wrap th { font-size: .56rem; letter-spacing: .02em; }
+  app-technik-aufbau .table-wrap .num { width: auto; }
+}
+// Backstage → Termine: auf schmalen Bildschirmen jede Zeile als Karte statt einer 820 px breiten Tabelle
+@media (max-width: 860px) {
+  app-backstage-termine table { min-width: 0 !important; }
+  app-backstage-termine thead { display: none; }
+  app-backstage-termine tbody, app-backstage-termine tr.mat-mdc-row { display: block; }
+  app-backstage-termine tr.mat-mdc-row { position: relative; height: auto !important; padding: 10px 40px 10px 14px; border-bottom: 1px solid var(--bn-line); }
+  app-backstage-termine tr.mat-mdc-row:last-child { border-bottom: 0; }
+  app-backstage-termine td.mat-mdc-cell { display: inline-block; padding: 2px 8px 2px 0; border: 0; vertical-align: middle; }
+  app-backstage-termine td.mat-column-date, app-backstage-termine td.mat-column-venue, app-backstage-termine td.mat-column-comment { display: block; }
+  app-backstage-termine td.leer { display: none !important; }
+  app-backstage-termine td.mat-column-open { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); }
+}
+@media (max-width: 400px) {
+  app-technik-aufbau .table-wrap th, app-technik-aufbau .table-wrap td { padding: 6px 3px; }
+  app-technik-aufbau .table-wrap th { letter-spacing: 0; }
+}

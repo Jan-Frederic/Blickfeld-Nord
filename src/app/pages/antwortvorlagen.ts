@@ -26,7 +26,8 @@ import { Sprache, VORLAGEN, Vorlage, antwort } from '../data/antworten';
       <label>Datum <input type="date" [value]="datum()" (input)="datum.set($any($event.target).value)" /></label>
       <label>Von <input [value]="absender()" (input)="absender.set($any($event.target).value)" placeholder="dein Name" /></label>
     </div>
-    <textarea rows="14" [value]="text()" aria-label="Antworttext" readonly></textarea>
+    <!-- so hoch wie der Text: keine eigene Scrollleiste im Feld -->
+    <textarea [rows]="zeilen()" [value]="text()" aria-label="Antworttext" readonly></textarea>
     <div class="aktionen">
       <button type="button" class="kopieren" (click)="kopieren()"><mat-icon>{{ kopiert() ? 'check' : 'content_copy' }}</mat-icon> {{ kopiert() ? 'Kopiert!' : 'Text kopieren' }}</button>
       <span class="hint">Gage, Adressen und Telefonnummern erst in der Mail ergänzen – sie gehören nicht auf die Website.</span>
@@ -49,7 +50,7 @@ import { Sprache, VORLAGEN, Vorlage, antwort } from '../data/antworten';
       box-sizing: border-box; width: 100%; padding: 9px 12px; border: 1px solid var(--bn-line); border-radius: 10px;
       background: transparent; color: var(--bn-ink); font: inherit; font-size: .92rem; color-scheme: dark;
     }
-    textarea { resize: vertical; line-height: 1.5; font-size: .88rem; }
+    textarea { resize: vertical; line-height: 1.5; font-size: .88rem; field-sizing: content; }
     .aktionen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; }
     .kopieren mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .hint { font-size: .8rem; color: var(--bn-fog); }
@@ -65,6 +66,8 @@ export class Antwortvorlagen {
   protected readonly datum = signal('');
   protected readonly absender = signal('');
   protected readonly kopiert = signal(false);
+  /** Zeilen fürs Antwortfeld: so viele wie der Text braucht (lange Zeilen grob mit 60 Zeichen je Zeile) */
+  protected readonly zeilen = computed(() => Math.max(6, this.text().split('\n').reduce((n, z) => n + Math.max(1, Math.ceil(z.length / 60)), 0)));
   protected readonly text = computed(() =>
     antwort(this.vorlage(), { name: this.name(), anlass: this.anlass(), datum: this.datum(), absender: this.absender() }, this.sprache()),
   );
