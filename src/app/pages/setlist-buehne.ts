@@ -47,7 +47,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
       <header>
-        <span class="set">{{ probe() && !generalprobe() ? 'Probe · ' + songNo() + ' / ' + songZahl() : (generalprobe() ? 'Generalprobe · ' : '') + 'Set ' + setNo() + ' / ' + sets().length }}</span>
+        <span class="set">@if (anlass()) { <span class="anlass">{{ anlass() }}</span> }{{ probe() && !generalprobe() ? 'Probe · ' + songNo() + ' / ' + songZahl() : (generalprobe() ? 'Generalprobe · ' : '') + 'Set ' + setNo() + ' / ' + sets().length }}</span>
         <span class="clock" [class.over]="remaining() < 0">
           <mat-icon>timer</mat-icon> {{ fmt(elapsed()) }}
           @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() && !generalprobe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
@@ -61,6 +61,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
             <mat-icon>library_music</mat-icon>
           </button>
         }
+        <button type="button" class="close liste-knopf" (click)="navUmschalten($event)" [attr.aria-pressed]="nav()" aria-label="Alle Songs der Setlist" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
         <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)"><mat-icon>search</mat-icon></button>
         <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät"><mat-icon>tune</mat-icon></button>
         <button type="button" class="close" (click)="end($event)" [attr.aria-label]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'"><mat-icon>close</mat-icon></button>
@@ -133,7 +134,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
       </footer>
       @if (stimmen()) { <app-stimmgeraet style="position: fixed; left: 50%; top: 50%; z-index: 4; width: min(520px, 92vw); transform: translate(-50%, -50%)" (schliessen)="stimmen.set(false)" (pointerup)="$event.stopPropagation()" /> }
       @if (lupe()) {
-        <div class="suche" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (keydown)="$event.stopPropagation(); $event.key === 'Escape' && lupe.set(false)">
+        <div class="suche" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (keydown)="sucheTaste($event)">
           <div class="suche-kopf">
             <mat-icon>search</mat-icon>
             <input #feld type="search" placeholder="Song suchen – kommt jetzt dran" aria-label="Song suchen" [value]="suche()" (input)="suche.set($any($event.target).value)" (keydown.enter)="treffer()[0] && waehlen(treffer()[0])" />
@@ -149,8 +150,27 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
           </ul>
         </div>
       }
+      @if (nav()) {
+        <nav class="navi" aria-label="Songs der Setlist" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (keydown)="navTaste($event)">
+          <div class="navi-kopf">
+            <span>Setlist</span>
+            <button type="button" class="close" (click)="navUmschalten($event)" aria-label="Song-Liste schließen"><mat-icon>close</mat-icon></button>
+          </div>
+          <ol>
+            @for (z of navZeilen(); track z.index) {
+              @if (z.pause) {
+                <li class="navi-pause">Pause · weiter mit Set {{ z.set }}</li>
+              } @else {
+                <li><button type="button" [class.jetzt]="z.index === index()" [class.weg]="z.gestrichen" [attr.aria-current]="z.index === index() ? 'true' : null" (click)="navSpringen(z.index)">
+                  <span class="nr">{{ z.nr }}</span> <span class="t">{{ z.title }}</span>
+                </button></li>
+              }
+            }
+          </ol>
+        </nav>
+      }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
+      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -230,6 +250,14 @@ export class SetlistBuehne {
   protected readonly naechsterSong = computed(() => {
     const n = this.next();
     return n && !isPause(n) ? n : undefined;
+  });
+  // links oben: wofür der Modus läuft – Name des Auftritts bzw. „Probe 12.11.“ (danach Set bzw. Song)
+  protected readonly anlass = computed(() => {
+    const d = this.probe();
+    if (d) return `${this.generalprobe() ? 'Generalprobe' : 'Probe'} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+    const id = this.show();
+    const s = id ? this.band.showById(id) : undefined;
+    return s ? (s.private ? (s.publicName ?? 'Private Feier') : s.venue) : '';
   });
   protected readonly songZahl = computed(() => this.liste().filter((e) => !isPause(e)).length);
 
@@ -515,6 +543,38 @@ export class SetlistBuehne {
     this.springen(Math.floor(anteil * this.liste().length));
   }
 
+  // Song-Liste rechts: alle Songs der Setlist mit Nummer, Pausen als Trenner – antippen springt dorthin
+  protected readonly nav = signal(false);
+  protected readonly navZeilen = computed(() => {
+    let nr = 0;
+    let set = 1;
+    return this.liste().map((e, index) =>
+      isPause(e) ? { index, pause: true, set: ++set, nr: 0, title: '', gestrichen: false } : { index, pause: false, set, nr: ++nr, title: e.title, gestrichen: this.gestrichen().has(index) },
+    );
+  });
+  protected navUmschalten(e: Event): void {
+    e.stopPropagation();
+    this.nav.update((n) => !n);
+    if (this.nav()) setTimeout(() => this.host.nativeElement.querySelector('.navi .jetzt')?.scrollIntoView({ block: 'center' }));
+    else this.host.nativeElement.focus();
+  }
+  protected navSpringen(i: number): void {
+    this.springen(i);
+    // auf dem Handy verdeckt die Liste den Song – dort nach dem Springen schließen
+    if (window.innerWidth < 700) {
+      this.nav.set(false);
+      this.host.nativeElement.focus();
+    }
+  }
+  /** Tasten in der Liste: Enter/Leertaste wählen den Song (nicht Blättern); Escape schließt */
+  protected navTaste(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      this.nav.set(false);
+      this.host.nativeElement.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+  }
+
   // Lupe: spontaner Wunsch – Song aus allen Listen (und eigenständige mit Noten) suchen; er kommt an die aktuelle
   // Stelle, steht er schon drin, wird er hierher gezogen (data/buehne-wunsch.ts)
   protected readonly lupe = signal(false);
@@ -528,6 +588,15 @@ export class SetlistBuehne {
       .filter((s) => `${s.title} ${s.artist}`.toLocaleLowerCase('de').normalize('NFD').replace(/\p{Diacritic}/gu, '').includes(q))
       .slice(0, 8);
   });
+  // Tasten im Suchfeld gehören dem Feld (nicht dem Blättern); Escape schließt. Kein Ausdruck mit „&&“ im Template:
+  // gibt ein Handler false zurück, ruft Angular preventDefault() – dann käme am Laptop kein Buchstabe im Feld an
+  protected sucheTaste(e: KeyboardEvent): void {
+    e.stopPropagation();
+    if (e.key === 'Escape') {
+      this.lupe.set(false);
+      this.host.nativeElement.focus();
+    }
+  }
   protected lupeAuf(e: Event): void {
     e.stopPropagation();
     this.suche.set('');

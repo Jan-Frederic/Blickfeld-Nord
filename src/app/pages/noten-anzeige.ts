@@ -19,7 +19,7 @@ const BREITE_KEY = 'bn-noten-breite';
   template: `
     <div class="noten" [class.weg]="kopfWeg()" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" (pointerdown)="zeigerStart($event)" (pointerup)="zeigerEnde($event)">
       <header [attr.aria-hidden]="kopfWeg()" [attr.inert]="kopfWeg() ? '' : null">
-        <span class="titel">{{ song()?.title ?? 'Pause' }}</span>
+        <span class="titel">@if (anlass()) { <span class="anlass">{{ anlass() }} · </span> }{{ song()?.title ?? 'Pause' }}</span>
         @if (ansicht() !== 'akkorde' && capoText(); as c) { <span class="capo">{{ c }}</span> }
         @if (ansicht() === 'pdf' && seiten().length) { <span class="seite">Seite {{ index() + 1 }}{{ halb() ? '–' + (index() + 2) : '' }} / {{ seiten().length }}</span> }
         @if (optionen().length > 1) {
@@ -135,6 +135,8 @@ export class NotenAnzeige {
   /** X: Bühnen- bzw. Probe-Modus ganz verlassen */
   readonly beenden = output<void>();
   readonly endeText = input('Bühnen-Modus beenden');
+  /** Auftritt bzw. Probe – steht vor dem Songtitel */
+  readonly anlass = input('');
 
   // Einstellungen (Kopfleiste) nach oben wegwischen, nach unten wieder hervorholen – Touch-Ereignisse, weil der
   // Browser beim Scrollen im Blatt die Pointer-Ereignisse abbricht; mit der Maus über Pointer-Ereignisse

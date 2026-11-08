@@ -678,3 +678,40 @@ app-songs-liste .sammlung-knoepfe mat-icon { font-size: 20px; width: 20px; heigh
 app-setlist .bausteine > *, app-setlist-sammlungen { display: block; min-width: 0; }
 app-setlist .bausteine .pausen { display: flex; }
 @media (max-width: 520px) { app-setlist-sammlungen select { flex-basis: 100%; } }
+
+// Bühnen-Modus: Name des Auftritts bzw. der Probe vor der Set-Nummer, Song-Liste rechts zum Springen
+app-setlist-buehne .set { display: inline-flex; align-items: baseline; gap: .6em; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+app-setlist-buehne .anlass { overflow: hidden; text-overflow: ellipsis; color: #fff; letter-spacing: .08em; }
+app-noten-anzeige .titel .anlass { font-weight: 400; color: #9aa0a6; }
+app-setlist-buehne .liste-knopf[aria-pressed=true] { border-color: #e8a46a; color: #e8a46a; }
+app-setlist-buehne .navi {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 5; width: min(360px, 88vw); display: flex; flex-direction: column;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); border-left: 1px solid #333;
+  background: #0d0d0d; box-shadow: -12px 0 40px rgba(0, 0, 0, .6); font-size: 1.1rem; user-select: none;
+}
+app-setlist-buehne .navi-kopf { display: flex; align-items: center; justify-content: space-between; color: #9aa0a6; font-family: var(--bn-wide); text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+app-setlist-buehne .navi ol { list-style: none; margin: 8px 0 0; padding: 0; overflow-y: auto; }
+app-setlist-buehne .navi li button { display: flex; gap: 10px; width: 100%; padding: 10px 8px; border: 0; border-radius: 8px; background: none; color: #fff; font: inherit; text-align: left; cursor: pointer; }
+app-setlist-buehne .navi li button:hover { background: #1c1c1c; }
+app-setlist-buehne .navi li button.jetzt { background: #e8a46a; color: #000; }
+app-setlist-buehne .navi li button.weg .t { text-decoration: line-through; opacity: .5; }
+app-setlist-buehne .navi .nr { min-width: 1.6em; text-align: right; font-variant-numeric: tabular-nums; color: var(--bn-sunset); }
+app-setlist-buehne .navi .jetzt .nr { color: #000; }
+app-setlist-buehne .navi .navi-pause { margin: 6px 0; padding: 6px 8px; border-top: 1px solid #333; color: #9aa0a6; font-size: .8em; text-transform: uppercase; letter-spacing: .1em; }
+
+// Song-Dialog: jede Fassung (PDF) durch eine Linie getrennt
+app-noten-editor .pdf + .pdf { padding-top: 8px; border-top: 1px solid var(--bn-line); }
+
+// „Bereit?“-Liste zugeklappt: Haken aller Punkte als Reihe rechts; unter Aufgaben die Auftritte untereinander
+app-bereitschaft .haken-reihe { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; margin-left: auto; }
+app-bereitschaft summary .haken-reihe mat-icon { font-size: 18px; width: 18px; height: 18px; color: #e0b25a; }
+app-bereitschaft summary .haken-reihe mat-icon.ok { color: #5fb88a; }
+app-backstage-aufgaben .anstehend { display: grid; gap: 10px; }
+app-backstage-aufgaben .anstehend app-bereitschaft .bereit { margin: 0; }
+// Bühnen-Modus auf dem Handy: Knöpfe der Kopfzeile etwas kleiner, damit sie in eine Reihe passen
+@media (max-width: 480px) {
+  app-setlist-buehne .stage header { gap: 8px; }
+  app-setlist-buehne .stage header .set { flex-basis: 100%; }
+  app-setlist-buehne .stage header .close, app-setlist-buehne .stage header .noten-knopf { width: 40px; height: 40px; }
+  app-setlist-buehne .stage header .zoom button { min-width: 40px; height: 40px; }
+}

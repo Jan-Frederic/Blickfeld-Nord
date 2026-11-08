@@ -4,7 +4,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BackstageStats } from './backstage-stats';
 import { HeuteFaellig } from './heute-faellig';
-import { Bereitschaft } from './bereitschaft';
 import { SongsKarte } from './songs-karte';
 import { BackstageSuche } from './backstage-suche';
 import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
@@ -16,29 +15,29 @@ import { SyncService } from '../data/sync.service';
 // (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, Bereitschaft, SongsKarte, BackstageSuche],
+  imports: [DatePipe, RouterLink, MatIconModule, BackstageStats, HeuteFaellig, SongsKarte, BackstageSuche],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
 
-      <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, Bereit-Check, die nächsten Termine; Zahlen und Songs
-           einklappbar (Zustand je Gerät gemerkt), zuletzt die Bereiche -->
+      <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, die nächsten Termine (je mit Bühnen- bzw. Probe-Modus);
+           Zahlen und Songs einklappbar (Zustand je Gerät gemerkt), zuletzt die Bereiche. Die Bereit-Checks der
+           kommenden Auftritte stehen unter Aufgaben. -->
       <app-backstage-suche />
       <app-heute-faellig />
-      @if (naechsterAuftritt; as n) { <app-bereitschaft [show]="n.show" [titel]="n.titel" /> }
 
       <h3>Als Nächstes</h3>
       @if (next.length) {
         <ol class="next">
           @for (n of next; track n.date + n.label) {
             <li>
-              <a [routerLink]="n.link">
+              <a class="termin" [routerLink]="n.link">
                 <span class="date">{{ n.date | date: 'EEE, dd.MM.' : '' : 'de' }}@if (n.time) { · {{ n.time }}}</span>
                 <span class="what"><mat-icon>{{ n.icon }}</mat-icon> {{ n.label }}</span>
-                @if (n.status) { <span class="status" [class.ok]="n.status === 'Geklärt'">{{ n.status }}</span> }
               </a>
+              <a class="modus" [routerLink]="n.modus.link" [queryParams]="n.modus.query" [attr.aria-label]="n.modus.text + ' – ' + n.label" [title]="n.modus.text"><mat-icon>fit_screen</mat-icon> <span class="modus-text">{{ n.modus.text }}</span></a>
             </li>
           }
         </ol>
@@ -70,16 +69,17 @@ import { SyncService } from '../data/sync.service';
   styles: `
     h3 { margin: 32px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .next { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-    .next a {
-      display: grid; grid-template-columns: 9em 1fr auto; align-items: center; gap: 12px; padding: 12px 16px;
+    .next li { display: flex; align-items: stretch; gap: 8px; }
+    .termin {
+      flex: 1; min-width: 0; display: grid; grid-template-columns: 9em 1fr; align-items: center; gap: 12px; padding: 12px 16px;
       border-radius: 10px; border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none;
     }
     .next a:hover { border-color: var(--bn-sunset); }
+    .modus { display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--bn-line); color: var(--bn-sunset); text-decoration: none; font-size: .85rem; white-space: nowrap; }
+    .modus mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .date { font-variant-numeric: tabular-nums; color: var(--bn-sunset); font-size: .9rem; }
     .what { display: flex; align-items: center; gap: 8px; min-width: 0; }
     .what mat-icon, .tiles mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--bn-fog); }
-    .status { font-size: .8rem; color: #e0b25a; }
-    .status.ok { color: #5fb88a; }
     .empty { padding: 16px; border: 1px dashed var(--bn-line); border-radius: 12px; color: var(--bn-fog); }
     .tiles { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
     .tiles a {
@@ -91,8 +91,8 @@ import { SyncService } from '../data/sync.service';
     .title { font-weight: 600; }
     .text { font-size: .85rem; line-height: 1.5; color: var(--bn-fog); }
     @media (max-width: 560px) {
-      .next a { grid-template-columns: 1fr auto; }
-      .what { grid-column: 1 / -1; grid-row: 2; }
+      .termin { grid-template-columns: 1fr; gap: 4px; }
+      .modus-text { display: none; }
     }
   `,
 })
@@ -131,24 +131,15 @@ export class Backstage {
         time: s.time,
         label: s.venue + (s.city ? ', ' + s.city : ''),
         icon: s.private ? 'lock' : 'celebration',
-        status: s.confirmed ? 'Geklärt' : 'Offen',
         link: ['/backstage', this.band.showId(s)],
+        modus: { text: 'Bühnen-Modus', link: ['/backstage', this.band.showId(s), 'setlist'], query: { buehne: 1 } },
       })),
     ...this.rehearsals
       .filter((r) => r.date >= this.today)
-      .map((r) => ({ date: r.date, time: r.time, label: 'Probe' + (r.place ? ', ' + r.place : ''), icon: 'music_note', status: '', link: ['/backstage/probe', r.date] })),
+      .map((r) => ({ date: r.date, time: r.time, label: 'Probe' + (r.place ? ', ' + r.place : ''), icon: 'music_note', link: ['/backstage/probe', r.date], modus: { text: 'Probe-Modus', link: ['/backstage/probe', r.date], query: { modus: 1 } } })),
   ]
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
     .slice(0, 4);
-
-  // „Bereit?“ für den nächsten Auftritt
-  protected readonly naechsterAuftritt = (() => {
-    const show = this.shows.find((s) => (s.endDate ?? s.date) >= this.today);
-    if (!show) return null;
-    const tage = Math.round((Date.parse(show.date) - Date.parse(this.today)) / 864e5);
-    const wann = tage <= 0 ? 'heute' : tage === 1 ? 'morgen' : `in ${tage} Tagen`;
-    return { show, titel: `${show.private ? (show.publicName ?? show.venue) : show.venue} ${wann}` };
-  })();
 
   constructor() {
     // Synchronisation mit OneDrive (falls eingerichtet und „automatisch“): beim Öffnen und alle 15 Minuten

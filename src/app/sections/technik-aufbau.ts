@@ -178,7 +178,7 @@ const py = (m: number) => PAD_TOP + m * M;
              [attr.aria-label]="bearbeiten() ? name(it) + ' verschieben (Pfeiltasten)' : it.hw ? name(it) + ' – ' + t().details : null"
              [style.cursor]="bearbeiten() ? 'grab' : null"
              (click)="!bearbeiten() && it.hw && open(it.hw)" (keydown.enter)="!bearbeiten() && it.hw && open(it.hw)" (keydown.space)="!bearbeiten() && it.hw && open(it.hw, $event)"
-             (pointerdown)="bearbeiten() && greifen($event, it)" (keydown)="bearbeiten() && schieben($event, it)">
+             (pointerdown)="bearbeiten() ? greifen($event, it) : undefined" (keydown)="bearbeiten() ? schieben($event, it) : undefined">
           @switch (it.typ) {
             @case ('drums') {
               <rect class="riser" [attr.x]="px(it.x - it.b! / 2)" [attr.y]="py(it.y - it.t! / 2)" [attr.width]="it.b! * M" [attr.height]="it.t! * M" rx="10" />

@@ -1493,7 +1493,10 @@ test('Backstage: Bühnen-Modus – Lupe holt Wünsche an die aktuelle Stelle, Ba
   const erster = (await titel.innerText()).trim();
   // Song, der schon drinsteht, wird an die aktuelle Stelle gezogen
   await buehne.locator('button.lupe').click();
-  await buehne.locator('.suche input').fill(zehnter);
+  // echte Tastenanschläge (Laptop): das Suchfeld hat den Fokus, die Blätter-Tasten des Bühnen-Modus fangen nichts ab
+  await until(() => buehne.locator('.suche input').evaluate((el) => el === document.activeElement), 'Suchfeld bekommt keinen Fokus');
+  await p.keyboard.type(zehnter, { delay: 20 });
+  await until(async () => (await buehne.locator('.suche input').inputValue()) === zehnter, 'Tastatur erreicht das Suchfeld nicht');
   await buehne.locator('.suche li button').first().click();
   await until(async () => (await titel.innerText()).trim() === zehnter, 'Gezogener Song ist nicht dran');
   await until(async () => (await buehne.locator('footer .next').innerText()).includes(erster), 'Bisheriger Song folgt nicht danach');
@@ -1504,6 +1507,44 @@ test('Backstage: Bühnen-Modus – Lupe holt Wünsche an die aktuelle Stelle, Ba
   await until(async () => Number(await buehne.locator('main .no').innerText().catch(() => '0')) > 20 || (await buehne.innerText()).includes('Pause'), 'Balken springt nicht');
   await buehne.locator('button[aria-label="Bühnen-Modus beenden"]').click();
   await until(async () => (await p.locator('app-setlist .list li .t').first().innerText()).trim() === zehnter, 'Wunsch landet nicht in der gespeicherten Setlist');
+  return p;
+});
+
+test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufgaben zeigen „Bereit?“ je Auftritt', async () => {
+  const p = await page();
+  await p.clock.setFixedTime(new Date('2026-11-30T10:00:00'));
+  await p.go('/backstage/');
+  const termine = p.locator('app-backstage ol.next li');
+  await termine.first().waitFor();
+  expect((await termine.count()) === (await p.locator('app-backstage ol.next li .modus').count()), 'nicht jeder Termin hat Bühnen- bzw. Probe-Modus');
+  expect(!/Geklärt|Offen/.test(await p.locator('app-backstage ol.next').innerText()), '„Geklärt/Offen“ steht noch bei den Terminen');
+  expect((await p.locator('app-backstage app-bereitschaft').count()) === 0, '„Bereit?“ steht noch in der Übersicht');
+  // Setlist für den ersten Auftritt anlegen, dann von der Übersicht aus den Bühnen-Modus starten
+  const modus = p.locator('app-backstage ol.next li .modus', { hasText: 'Bühnen-Modus' }).first();
+  const id = (await modus.getAttribute('href')).split('/')[2];
+  await p.evaluate((id) => localStorage.setItem('bn-setlist-' + id, JSON.stringify([
+    { title: 'Iris', artist: 'Goo Goo Dolls' }, { title: 'Perfect', artist: 'Ed Sheeran' }, { pause: true }, { title: 'Hallelujah', artist: 'Leonard Cohen' },
+  ])), id);
+  await modus.click();
+  const buehne = p.locator('app-setlist-buehne');
+  await schritt('Bühnen-Modus öffnet direkt', () => buehne.locator('main h1').waitFor({ timeout: 20000 }));
+  expect((await buehne.locator('header .anlass').innerText()).trim().length > 2, 'kein Name des Auftritts links oben');
+  // Song-Liste rechts: alle Songs, antippen springt
+  await buehne.locator('button.liste-knopf').click();
+  await until(async () => (await buehne.locator('.navi li button').count()) === 3, 'Song-Liste zeigt nicht alle Songs');
+  await buehne.locator('.navi li button', { hasText: 'Hallelujah' }).click();
+  await until(async () => (await buehne.locator('main h1').innerText()).trim() === 'Hallelujah', 'Sprung aus der Song-Liste geht nicht');
+  expect((await buehne.locator('header .set').innerText()).toLowerCase().includes('set 2'), 'Set-Nummer folgt nicht dem Sprung');
+  await p.keyboard.press('Escape');
+  await p.keyboard.press('Escape');
+  // Aufgaben: „Bereit?“ je kommendem Auftritt, zugeklappt mit Haken-Reihe
+  await p.go('/backstage/aufgaben/');
+  const listen = p.locator('app-backstage-aufgaben app-bereitschaft');
+  await listen.first().waitFor();
+  expect((await listen.count()) >= 2, 'nicht jeder kommende Auftritt hat eine To-do-Liste');
+  expect((await listen.first().locator('summary .haken-reihe mat-icon').count()) > 2, 'zugeklappt keine Haken-Reihe');
+  await listen.first().locator('summary').click();
+  await until(async () => (await listen.first().locator('summary .haken-reihe').count()) === 0, 'Haken-Reihe bleibt aufgeklappt stehen');
   return p;
 });
 
@@ -1699,8 +1740,8 @@ test('Backstage: Notiz je Auftritt und Einzählen im Bühnen-Modus, „Bereit?�
   const bereit = p.locator('app-bereitschaft');
   expect(await bereit.locator('li.ok', { hasText: 'Setlist steht' }).count(), '„Setlist steht“ nicht abgehakt');
   expect((await bereit.locator('li:not(.ok)', { hasText: 'Vor Ort geklärt' }).innerText()).includes('Ansprechpartner'), 'fehlende Vor-Ort-Angaben nicht gemeldet');
-  await p.go('/backstage/');
-  expect((await p.locator('app-bereitschaft summary').innerText()).includes('bereit'), 'kein „Bereit?“ für den nächsten Auftritt in der Übersicht');
+  await p.go('/backstage/aufgaben/');
+  expect((await p.locator('app-bereitschaft summary').first().innerText()).includes('bereit'), 'kein „Bereit?“ für den nächsten Auftritt unter Aufgaben');
   return p;
 });
 

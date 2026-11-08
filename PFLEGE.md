@@ -104,7 +104,8 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Saison-Update:** In der ersten Woche jedes Monats steht unter „Heute fällig“ „Saison-Update an die Band
   schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
 - **Backstage-Übersicht:** oben eine **Suche über alles** (Auftritte, Proben, Songs aller Spotify-Listen, Kontakte,
-  Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche). Danach Heute fällig, Bereit?, Als Nächstes;
+  Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche). Danach Heute fällig und Als Nächstes – rechts neben jedem
+  Termin startet **Bühnen-Modus** (Auftritt, mit dessen Setlist) bzw. **Probe-Modus** (Probe) direkt;
   „Zahlen und Songs“ lässt sich zuklappen (je Gerät gemerkt, zugeklappt wird es gar nicht erst geladen).
 - **Veranstalter bewerten** (Ansprechpartner beim Auftritt bzw. Termine → Kontakte): Technik, Publikum, Bezahlung
   pünktlich/spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ (Saisonplanung, Termine → Saison) –
@@ -468,12 +469,17 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
   in der Setlist, wird er von dort **hierher gezogen**. Er ist als Publikumswunsch (♥) markiert und landet in der
   gespeicherten Setlist (und damit beim Abgleich bei der Band).
 - **Fortschrittsbalken:** antippen springt an die Stelle; weiße Striche markieren die Pausen zwischen den Sets.
+- **Song-Liste:** das Listen-Symbol oben zeigt rechts alle Songs der Setlist mit Nummer (Pausen als Trenner) –
+  antippen springt dorthin (auf dem Handy schließt sich die Liste danach, Escape schließt sie am Laptop).
+- **Links oben** steht, wofür der Modus läuft: Name des Auftritts bzw. „Probe 12.11.“, danach Set bzw. Song-Nummer;
+  in der Notenansicht der Name vor dem Songtitel.
 - **Set zu lang:** Läuft das Set über die geplante Länge, steht unten „⏱ 4:10 drüber – streichen: …“ mit den Songs mit
   den wenigsten Sternen (Publikumswünsche bleiben). **Streichen** überspringt sie beim Blättern – nur für diesen Abend.
 
 **Vor dem Auftritt** (Setlist des Auftritts):
 
-- **Bereit?** steht oben auf der Seite jedes kommenden Auftritts, für den nächsten auch in der Backstage-Übersicht:
+- **Bereit?** steht oben auf der Seite jedes kommenden Auftritts und unter **Aufgaben → Anstehende Auftritte** für alle
+  kommenden Auftritte untereinander (zugeklappt zeigt jede Liste ihre Punkte als Haken-Reihe rechts):
   Termin geklärt, Beginn, Setlist, Tonart/Tempo und Noten der Songs, Vor-Ort-Angaben (Ansprechpartner, Ankunft,
   Strom), fällige Werbung und – zwei Tage vorher – die Packliste. Jeder offene Punkt führt dorthin, wo er sich erledigen
   lässt. Setlist, Noten, Vor Ort und Packliste stehen auf dem jeweiligen Gerät – auf einem anderen Handy kann der Check

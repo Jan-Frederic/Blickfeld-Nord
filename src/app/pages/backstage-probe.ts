@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { songInfoText } from '../data/songinfo';
@@ -276,6 +276,16 @@ export class BackstageProbe {
     effect(() => this.plan.set(loadProbe(this.datum())));
     // neue Daten der Band (Abgleich): Plan neu lesen, ohne die Seite neu aufzubauen (Suche und Scrollstand bleiben)
     inject(DestroyRef).onDestroy(auffrischenAnmelden(() => this.plan.set(loadProbe(this.datum()))));
+    // aus der Backstage-Übersicht („Als Nächstes“ → Probe-Modus): ?modus=1 startet gleich den Probe-Modus
+    const route = inject(ActivatedRoute);
+    if (route.snapshot.queryParamMap.get('modus')) {
+      const router = inject(Router);
+      queueMicrotask(() => {
+        this.plan.set(loadProbe(this.datum()));
+        if (this.modusSongs().length) this.modus.set(true);
+        void router.navigate([], { relativeTo: route, queryParams: { modus: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      });
+    }
   }
 
   protected info(s: { title: string; artist: string }): string {

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Bereitschaft } from './bereitschaft';
 import { BandService, Show } from '../data/band.service';
 import { AUFGABEN, Aufgabe } from '../data/aufgaben';
 import { erledigteSchritte, werbeplan, werbeplanAktiv } from '../data/werbeplan';
@@ -33,12 +34,20 @@ interface AutoAufgabe {
 
 @Component({
   selector: 'app-backstage-aufgaben',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, Bereitschaft],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Aufgaben</h2>
       <p class="lead">Was an der Website noch zu tun ist – {{ offen() }} offen.</p>
+
+      <!-- To-do-Liste („Bereit?“) je kommendem Auftritt, der nächste zuerst – zugeklappt stehen die Haken als Reihe -->
+      @if (anstehend().length) {
+        <h3>Anstehende Auftritte</h3>
+        <div class="anstehend">
+          @for (a of anstehend(); track a.id) { <app-bereitschaft [show]="a.show" [titel]="a.titel" /> }
+        </div>
+      }
 
       <h3>Aus den Daten erkannt</h3>
       <p class="note">Diese Punkte verschwinden von selbst, sobald die Angaben eingetragen sind.</p>
@@ -142,6 +151,17 @@ export class BackstageAufgaben {
   // längere Listen (z. B. alle Proben) gekürzt anzeigen
   protected readonly MAX_DETAILS = 6;
   private readonly heute = new Date().toISOString().slice(0, 10);
+  /** kommende Auftritte mit „Bereit?“-Liste, z. B. „Weihnachtsmarkt in 26 Tagen“ */
+  protected readonly anstehend = computed(() =>
+    [...this.band.shows]
+      .filter((s) => (s.endDate ?? s.date) >= this.heute)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((show) => {
+        const tage = Math.round((Date.parse(show.date) - Date.parse(this.heute)) / 864e5);
+        const wann = tage <= 0 ? 'heute' : tage === 1 ? 'morgen' : `in ${tage} Tagen`;
+        return { show, id: this.band.showId(show), titel: `${show.private ? (show.publicName ?? show.venue) : show.venue} ${wann}` };
+      }),
+  );
 
   // auf diesem Gerät abgehakt (ids)
   protected readonly lokal = signal<string[]>(this.laden());

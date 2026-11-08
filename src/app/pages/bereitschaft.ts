@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { datenStand } from '../data/neu-zeichnen';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,10 +21,16 @@ import { GROUPS, PACKLISTE_PREFIX, loadPackliste } from './packliste';
   selector: 'app-bereitschaft',
   imports: [RouterLink, MatIconModule],
   template: `
-    <details class="bereit" [class.fertig]="offen() === 0" [open]="aufgeklappt()">
+    <details class="bereit" [class.fertig]="offen() === 0" [open]="auf()" (toggle)="auf.set($any($event.target).open)">
       <summary>
         <mat-icon>{{ offen() === 0 ? 'verified' : 'checklist' }}</mat-icon>
         <span>@if (titel()) { {{ titel() }}: } {{ offen() === 0 ? 'alles bereit' : punkte().length - offen() + ' von ' + punkte().length + ' bereit' }}</span>
+        <!-- zugeklappt: alle Punkte als Haken in einer Reihe, rechtsbündig -->
+        @if (!auf()) {
+          <span class="haken-reihe" aria-hidden="true">
+            @for (p of punkte(); track p.text) { <mat-icon [class.ok]="p.ok" [title]="p.text">{{ p.ok ? 'check_box' : 'check_box_outline_blank' }}</mat-icon> }
+          </span>
+        }
       </summary>
       <ul>
         @for (p of punkte(); track p.text) {
@@ -73,6 +79,8 @@ export class Bereitschaft {
   /** Überschrift, z. B. „Weihnachtsmarkt in 37 Tagen“ (Übersicht); leer auf der Seite des Auftritts */
   readonly titel = input('');
   readonly aufgeklappt = input(false);
+  /** gerade aufgeklappt? (Anfang: aufgeklappt, danach wie angetippt) */
+  protected readonly auf = linkedSignal(() => this.aufgeklappt());
   private readonly band = inject(BandService);
   protected readonly id = computed(() => this.band.showId(this.show()));
   private readonly notenKeys = signal<Set<string> | undefined>(undefined);

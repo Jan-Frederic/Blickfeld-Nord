@@ -2,6 +2,7 @@ import { datumText } from '../data/datum';
 
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
+import { ActivatedRoute, Router } from '@angular/router';
 import { sammlungenNeuLaden } from '../data/sammlungen';
 import { MatIconModule } from '@angular/material/icon';
 import { AuftrittVorbereiten } from './auftritt-vorbereiten';
@@ -255,6 +256,15 @@ export class Setlist {
         sammlungenNeuLaden();
       }),
     );
+    // aus der Backstage-Übersicht („Als Nächstes“ → Bühnen-Modus): ?buehne=1 öffnet gleich den Bühnen-Modus
+    const route = inject(ActivatedRoute);
+    if (route.snapshot.queryParamMap.get('buehne')) {
+      const router = inject(Router);
+      queueMicrotask(() => {
+        if (loadSetlist(this.show()).some((e) => !isPause(e))) this.stage.set(true);
+        void router.navigate([], { relativeTo: route, queryParams: { buehne: null }, queryParamsHandling: 'merge', replaceUrl: true, preserveFragment: true });
+      });
+    }
     alleSongNoten()
       .then((n) => this.notenKeys.set(Object.entries(n).filter(([, x]) => x.pdfs?.length || x.chordpro).map(([k]) => k)))
       .catch(() => undefined);
