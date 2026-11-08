@@ -60,4 +60,10 @@ describe('probeTipps – Bühnenreife je Person', () => {
     expect(tipps[0].grund).toBe('wackelt bei Fred, David · Bühnenreife 20 %');
     expect(tipps[2].grund).toContain('fast bühnenreif');
   });
+  it('nimmt Songs aus dem Karteikasten, die bei mehreren in Kasten 1 hängen, ganz nach vorn', () => {
+    const tipps = probeTipps([s('A'), s('Wackel')], new Map(), new Map(), '2026-11-08', 4, new Set(['Wackel|X']), [], [], new Map(), new Map([['Kasten|X', ['Fred', 'David']]]));
+    expect(tipps[0].title).toBe('Kasten');
+    expect(tipps[0].grund).toContain('Fred, David');
+    expect(tipps[1].title).toBe('Wackel');
+  });
 });

@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { BandService } from '../data/band.service';
 import { zaehler } from '../data/goatcounter';
-import { EINHEITEN, Einheit, Ereignis, ereignisseJeZeitraum, zeitraeume } from '../data/besucher-verlauf';
+import { EINHEITEN, Einheit, Ereignis, WIRKUNG_TAGE, ereignisseJeZeitraum, wirkungJeSchritt, wirkungsFenster, zeitraeume, zuwachs } from '../data/besucher-verlauf';
 import { erledigteSchritte, werbeplan } from '../data/werbeplan';
 
 // Backstage → Zahlen → Besucher: Seitenaufrufe als Zeitlinie (Tag, Woche, Monat, Jahr – Standard Monat), darauf die
@@ -58,6 +58,34 @@ const RECHTS = 40; // Skala rechts neben den Balken
             @for (e of a.ereignisse; track $index) { <span class="ev" [class.auftritt]="e.art === 'auftritt'">{{ e.art === 'auftritt' ? '●' : e.erledigt ? '◆' : '◇' }} {{ e.datum.slice(8, 10) }}.{{ e.datum.slice(5, 7) }}. {{ e.text }}</span> }
           } @else { Balken antippen für Zahl und Ereignisse. }
         </p>
+        <!-- Was hat die Werbung gebracht? Aufrufe in den 3 Tagen ab jeder Maßnahme gegen die 3 Tage davor -->
+        <div class="wirkung">
+          <h3>Wirkung der Werbemaßnahmen</h3>
+          @if (wirkung(); as w) {
+            @if (w.je.length) {
+              <p class="empfehlung">Am meisten gebracht hat im Schnitt <strong>{{ w.je[0].titel }}</strong> ({{ w.je[0].schnitt > 0 ? '+' : '' }}{{ w.je[0].schnitt }} % Aufrufe in den {{ tage }} Tagen danach){{ w.je.length > 1 ? ', am wenigsten ' + w.je[w.je.length - 1].titel + ' (' + (w.je[w.je.length - 1].schnitt > 0 ? '+' : '') + w.je[w.je.length - 1].schnitt + ' %)' : '' }}.</p>
+              <ol class="je-schritt">
+                @for (j of w.je; track j.schritt) { <li><span>{{ j.titel }}</span> <b [class.plus]="j.schnitt > 0" [class.minus]="j.schnitt < 0">{{ j.schnitt > 0 ? '+' : '' }}{{ j.schnitt }} %</b> <small>{{ j.anzahl }}×</small></li> }
+              </ol>
+            } @else {
+              <p class="hinweis">Noch zu wenig Aufrufe vor den Maßnahmen für einen Vergleich.</p>
+            }
+            <details class="tabelle">
+              <summary>Einzeln ({{ w.einzeln.length }})</summary>
+              <table>
+                <thead><tr><th scope="col">Maßnahme</th><th scope="col">vorher</th><th scope="col">danach</th><th scope="col">±</th></tr></thead>
+                <tbody>
+                  @for (e of w.einzeln; track e.datum + e.text) {
+                    <tr><th scope="row">{{ e.datum.slice(8, 10) }}.{{ e.datum.slice(5, 7) }}. {{ e.text }}</th><td>{{ e.vorher | number: '1.0-0' }}</td><td>{{ e.nachher | number: '1.0-0' }}</td><td>{{ e.prozent === null ? '–' : (e.prozent > 0 ? '+' : '') + e.prozent + ' %' }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </details>
+          } @else {
+            <button type="button" class="berechnen" (click)="wirkungBerechnen()" [disabled]="rechnet()">{{ rechnet() ? 'Wird berechnet …' : 'Wirkung berechnen' }}</button>
+            <span class="hinweis"> vergleicht für jede Werbemaßnahme der letzten 12 Monate die Aufrufe der {{ tage }} Tage danach mit den {{ tage }} Tagen davor</span>
+          }
+        </div>
         <details class="tabelle">
           <summary>Als Tabelle</summary>
           <table>
@@ -95,7 +123,7 @@ export class BesucherVerlauf {
     if (s.private) return [auftritt];
     const erledigt = erledigteSchritte(id);
     const werbung = werbeplan(s.date, this.heute, s.endDate).map(
-      (x): Ereignis => ({ datum: x.datum, art: 'werbung', text: `${x.schritt.titel} (${name})`, erledigt: erledigt.includes(x.schritt.id) }),
+      (x): Ereignis => ({ datum: x.datum, art: 'werbung', text: `${x.schritt.titel} (${name})`, erledigt: erledigt.includes(x.schritt.id), schritt: x.schritt.id, titel: x.schritt.titel }),
     );
     return [auftritt, ...werbung];
   });
@@ -151,6 +179,31 @@ export class BesucherVerlauf {
 
   constructor() {
     void this.laden();
+  }
+
+  // Wirkung der Werbemaßnahmen (auf Knopfdruck – je Maßnahme zwei Abfragen beim Zähler)
+  protected readonly tage = WIRKUNG_TAGE;
+  protected readonly rechnet = signal(false);
+  protected readonly wirkung = signal<{ je: ReturnType<typeof wirkungJeSchritt>; einzeln: { datum: string; text: string; vorher: number; nachher: number; prozent: number | null }[] } | null>(null);
+  protected async wirkungBerechnen(): Promise<void> {
+    this.rechnet.set(true);
+    const grenze = new Date(Date.parse(this.heute) - 365 * 864e5).toISOString().slice(0, 10);
+    const bis = new Date(Date.parse(this.heute) - WIRKUNG_TAGE * 864e5).toISOString().slice(0, 10);
+    const massnahmen = this.ereignisse.filter((e) => e.art === 'werbung' && e.datum >= grenze && e.datum <= bis);
+    try {
+      const einzeln = await Promise.all(
+        massnahmen.map(async (e) => {
+          const f = wirkungsFenster(e.datum);
+          const [vorher, nachher] = await Promise.all([zaehler('TOTAL', f.vorher.start, f.vorher.ende), zaehler('TOTAL', f.nachher.start, f.nachher.ende)]);
+          return { datum: e.datum, text: e.text, schritt: e.schritt ?? '', titel: e.titel ?? e.text, vorher, nachher, prozent: zuwachs(vorher, nachher) };
+        }),
+      );
+      this.wirkung.set({ je: wirkungJeSchritt(einzeln), einzeln: einzeln.sort((a, b) => b.datum.localeCompare(a.datum)) });
+    } catch {
+      this.fehler.set(true);
+    } finally {
+      this.rechnet.set(false);
+    }
   }
 
   protected waehlen(e: Einheit): void {

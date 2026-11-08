@@ -119,7 +119,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   „Wackelt noch“. Die Pfeile links und rechts der Karte blättern zur vorigen bzw. nächsten Karte (ohne zu bewerten).
   Tasten: ← → blättern, Leertaste deckt auf, 1 wackelt, 2 sitzt. **Übe-Modus:** dieselben Karten in der Notenansicht
   (wie Bühnen-/Probe-Modus), „Wackelt noch“ und „Sitzt“ oben rechts – danach kommt die nächste fällige Karte, eine
-  wackelnde später noch einmal; Blättern wie im Bühnen-Modus. **Tagesziel:** unter Einstellungen → Ich bin …
+  wackelnde später noch einmal; Blättern wie im Bühnen-Modus. **Mitschnitt** (oben in der Notenansicht, auf der Karte
+  unter „Mitschnitte“): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen.
+  **Mit der Band geteilt** (`bn-kasten-<Person>`): welche Songs in welchem Kasten liegen und was gelernt wurde – unter
+  **Songs → Bühnenreife** steht je Musiker der Karteikasten (Karten je Kasten, in 30 Tagen gelernt, zuletzt geübt), und
+  der **Probe-Vorschlag** nimmt Songs, die bei mindestens zwei Leuten noch in Kasten 1 hängen, ganz nach vorn. **Tagesziel:** unter Einstellungen → Ich bin …
   „Karteikarten am Tag“ (Standard 10) – „Üben starten“ nimmt höchstens so viele (schon geübte zählen mit), „Alle üben“
   geht darüber hinaus. Jede Bewertung zählt im Fortschritt und damit in der **Bühnenreife**. Stand je Person
   (`bn-ueben`, `bn-ueben-tagesziel`, `bn-ueben-heute`, gespiegelt).
@@ -898,7 +902,8 @@ Die QR-Codes auf Plakat, Story und QR-Karte hängen einen Herkunftsvermerk an di
 `https://blickfeld-nord.de/konzerte/2026-12-04/?ref=plakat`. GoatCounter zeigt den Wert im Dashboard unter
 „Referrers“; im Backstage unter **Besucher** steht der **Verlauf** (Aufrufe je Tag, Woche, Monat oder Jahr – Standard
 Monat – mit den Auftritten ● und Werbemaßnahmen aus dem Werbeplan ◆ auf der Zeitlinie; Balken antippen zeigt Zahl und
-Ereignisse, „Als Tabelle“ alles in Zahlen) und „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
+Ereignisse, „Als Tabelle“ alles in Zahlen; **Wirkung berechnen** vergleicht je Werbemaßnahme der letzten 12 Monate die
+Aufrufe der 3 Tage danach mit den 3 Tagen davor und nennt, was im Schnitt am meisten bringt) und „Gekommen über“ (Plakat, Story, QR-Karte, Banner). Der Vermerk
 verschwindet nach dem Aufruf aus der Adresse, damit weitergeteilte Links nicht mitzählen.
 
 > **Selbst testen:** GoatCounter wertet `ref` und `utm_campaign` selbst aus, zählt sie aber nur beim **ersten Aufruf
@@ -952,7 +957,9 @@ Bevor etwas online geht, prüft GitHub unter anderem:
 - **Daten:** gültige Daten und Uhrzeiten, „bis“ nicht vor „von“, private Namen nie öffentlich,
   jedes Foto mit Beschreibung (Schritt „Tests“)
 - **Fotos:** Eingetragenes Bild fehlt im Ordner oder enthält einen GPS-Standort (Schritt „Fotos vorbereiten“).
-- **Links**, **Barrierefreiheit** und **Klicktests** der wichtigsten Seiten
+- **Links**, **Barrierefreiheit** und **Klicktests** der wichtigsten Seiten; dazu der **Breiten-Check** (360, 768, 1366,
+  1440 px): keine Seite breiter als das Fenster, keine abgeschnittene Kopfleiste, keine Tabellen oder Listen, die innen
+  seitlich scrollen (gewollte Karussells tragen `data-quer-ok`)
 - **Aussehen:** Die wichtigsten Seiten werden fotografiert und mit Referenzbildern verglichen (Schritt
   „Screenshot-Vergleich“). Neue Auftritte, Fotos oder Rückblicke stören dabei nicht. Schlägt der Schritt fehl, sieht
   eine Seite anders aus als vorher. Die Unterschiede stehen rot markiert im Lauf unter **Artifacts →
@@ -960,7 +967,9 @@ Bevor etwas online geht, prüft GitHub unter anderem:
   **„Screenshots aktualisieren“** starten (*Run workflow*). Danach geht die Seite automatisch neu online.
 
 **Auf dem eigenen Rechner prüfen** (für Entwickler): `npm run pruefen` baut die Seite genau wie GitHub (inklusive
-Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Linkcheck und Tests aus.
+Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Breiten-Check, Linkcheck und Tests aus.
+Nur einzelne Klicktests (nach dem Build): `NUR="Sammlungen|Übemodus" node scripts/e2e.mjs` – Teile der Testnamen,
+mehrere mit `|`.
 
 **Tote Links:** Einmal pro Woche (montags) prüft GitHub alle externen Links, etwa zu Freunden, Instagram oder Spotify.
 Ist einer nicht mehr erreichbar, erscheint unter **Issues** „Tote Links auf der Website“ mit der Liste. Das Issue

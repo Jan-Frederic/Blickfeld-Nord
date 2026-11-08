@@ -1,4 +1,5 @@
-// „Was sollten wir proben?“ (Backstage → Probe): zuerst Songs, die bei jemandem wackeln (Fortschritt je Person bzw.
+// „Was sollten wir proben?“ (Backstage → Probe): ganz vorn Songs, die im Karteikasten (Übemodus) bei mehreren noch in
+// Kasten 1 hängen; dann Songs, die bei jemandem wackeln (Fortschritt je Person bzw.
 // eigene „Wackelt noch“-Liste) – die mit der geringsten Bühnenreife und den meisten Wackelnden vorn –, dann Songs der
 // Wunschliste, die schon Noten und Tonart/Tempo haben, aber noch nie geprobt wurden („bereit“), dann Songs mit
 // wenig Sternen, fast bühnenreife (festigen), lange nicht gespielte und Repertoire-Songs, die noch auf keiner Setlist standen. Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
@@ -35,7 +36,13 @@ export function probeTipps(
   bereit: Song[] = [],
   baustellen: { song: Song; notiz: string }[] = [],
   reife = new Map<string, ReifeKurz>(),
+  kastenEins = new Map<string, string[]>(),
 ): ProbeTipp[] {
+  // Karteikasten: Songs, die bei mehreren noch in Kasten 1 hängen – gemeinsam proben bringt hier am meisten
+  const ausKasten = [...kastenEins].map(([k, namen]): ProbeTipp => {
+    const i = k.lastIndexOf('|');
+    return { title: k.slice(0, i), artist: k.slice(i + 1), grund: `Karteikasten: hängt bei ${namen.join(', ')} in Kasten 1` };
+  });
   // wackelt bei jemandem: geringste Reife zuerst, bei Gleichstand die mit mehr Wackelnden
   const r = (s: Song) => reife.get(key(s));
   const unsicher = repertoire
@@ -66,7 +73,7 @@ export function probeTipps(
     .slice(0, je)
     .map((s) => ({ ...s, grund: 'noch auf keiner Setlist' }));
   const gesehen = new Set<string>();
-  return [...unsicher, ...notiert, ...neu, ...festigen, ...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
+  return [...ausKasten, ...unsicher, ...notiert, ...neu, ...festigen, ...schwach, ...lange, ...nie].filter((t) => !gesehen.has(key(t)) && gesehen.add(key(t)));
 }
 
 /**

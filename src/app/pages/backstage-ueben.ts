@@ -5,7 +5,7 @@ import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
 import { fortschrittEintragen, ladeFortschritt } from '../data/fortschritt';
 import { ladeWackelt, wackeltSetzen } from '../data/wackelt';
-import { KASTEN_TAGE, Karte, alsGeuebtMerken, bewerten, heuteGeuebt, jeKasten, karten, ladeTagesziel, ladeUeben, nochHeute, speichereUeben } from '../data/ueben';
+import { KASTEN_TAGE, Karte, alsGeuebtMerken, kastenTeilen, bewerten, heuteGeuebt, jeKasten, karten, ladeTagesziel, ladeUeben, nochHeute, speichereUeben } from '../data/ueben';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { taktHinweis } from '../data/takt';
@@ -13,6 +13,7 @@ import { LISTEN, songAbgleich } from '../data/playlisten';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { datumText } from '../data/datum';
 import { SetlistBuehne } from './setlist-buehne';
+import { SongMitschnitte } from './song-mitschnitte';
 import { Verlauf } from '../zurueck';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -25,7 +26,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 // Escape beendet. Übe-Modus: dieselben Karten in der Notenansicht, „Wackelt noch“ / „Sitzt“ oben rechts.
 @Component({
   selector: 'app-backstage-ueben',
-  imports: [RouterLink, MatIconModule, SetlistBuehne],
+  imports: [RouterLink, MatIconModule, SetlistBuehne, SongMitschnitte],
   host: { '(keydown)': 'taste($event)' },
   template: `
     <section class="section ueben">
@@ -64,6 +65,11 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
                 @if (!rueckseite().length) { <li class="leer">Noch keine Tonart, kein Tempo eingetragen.</li> }
               </ul>
               <button type="button" class="noten" (click)="noten.set(k)"><mat-icon>library_music</mat-icon> Noten ansehen</button>
+              <!-- Proben-Mitschnitte des Songs: anhören, Stelle wiederholen, langsamer -->
+              <details class="mitschnitte-auf">
+                <summary><mat-icon>graphic_eq</mat-icon> Mitschnitte</summary>
+                <app-song-mitschnitte [songKey]="k.key" [titel]="k.title" />
+              </details>
               <div class="wertung">
                 <button type="button" class="wackelt" (click)="werten(false)"><mat-icon>replay</mat-icon> Wackelt noch</button>
                 <button type="button" class="sitzt" (click)="werten(true)"><mat-icon>check</mat-icon> Sitzt</button>
@@ -195,6 +201,8 @@ export class BackstageUeben {
   private readonly verlauf = inject(Verlauf);
 
   constructor() {
+    // beim Öffnen den aktuellen Kasten-Stand für die Band ablegen (auch noch nie bewertete Karten, Kasten 1)
+    queueMicrotask(() => kastenTeilen(this.ich(), this.alle(), this.heute));
     // aus der Übersicht („Üben“ → Übe-Modus): ?modus=1 startet gleich die Notenansicht der fälligen Karten
     const route = inject(ActivatedRoute);
     if (route.snapshot.queryParamMap.get('modus')) {
@@ -259,6 +267,8 @@ export class BackstageUeben {
       this.wackelt.set(wackeltSetzen(k.key, false));
       this.fortschritt.set(ladeFortschritt(this.ich()));
     }
+    // für die Band: Kästen (Übe-Statistik unter Bühnenreife, Probe-Vorschlag) und Gelerntes
+    kastenTeilen(this.ich(), this.alle(), this.heute, { geuebt: true, gelernt: r.gelernt ? k.key : undefined });
   }
   /** Karten durchblättern, ohne zu bewerten */
   protected blaettern(r: -1 | 1): void {
@@ -301,10 +311,12 @@ export class BackstageUeben {
     speichereUeben(rest);
     this.wackelt.set(wackeltSetzen(k.key, false));
     this.fortschritt.set(ladeFortschritt(this.ich()));
+    kastenTeilen(this.ich(), this.alle(), this.heute);
   }
   protected hinzu(key: string): void {
     this.wackelt.set(wackeltSetzen(key, true));
     this.fortschritt.set(ladeFortschritt(this.ich()));
+    kastenTeilen(this.ich(), this.alle(), this.heute);
     this.suche.set('');
   }
 

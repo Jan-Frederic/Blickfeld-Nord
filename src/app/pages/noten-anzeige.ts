@@ -6,6 +6,7 @@ import { NotenPdf, SongNoten, notenDatei, pdfName, songNoten } from '../data/not
 import { fassungWaehlen, ladeWahl, pdfId, wahlSpeichern } from '../data/noten-wahl';
 import { halbseite } from '../data/buehne-einstellungen';
 import { NotenStift } from './noten-stift';
+import { SongMitschnitte } from './song-mitschnitte';
 import { PdfDokument, pdfOeffnen, seiteZeichnen } from '../data/pdf';
 import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVerschieben } from '../data/chordpro';
 
@@ -15,7 +16,7 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 const BREITE_KEY = 'bn-noten-breite';
 @Component({
   selector: 'app-noten-anzeige',
-  imports: [MatIconModule, NotenStift],
+  imports: [MatIconModule, NotenStift, SongMitschnitte],
   template: `
     <div class="noten" [class.weg]="kopfWeg()" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" (pointerdown)="zeigerStart($event)" (pointerup)="zeigerEnde($event)">
       <header [attr.aria-hidden]="kopfWeg()" [attr.inert]="kopfWeg() ? '' : null">
@@ -51,6 +52,7 @@ const BREITE_KEY = 'bn-noten-breite';
         }
         <!-- Übe-Modus: Karteikarte bewerten – weiter geht es mit der nächsten Karte -->
         @if (bewerten()) {
+          <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
           <button type="button" class="wertung wackelt" (click)="werten(false, $event)" title="Wackelt noch – kommt gleich noch einmal"><mat-icon>replay</mat-icon> Wackelt noch</button>
           <button type="button" class="wertung sitzt" (click)="werten(true, $event)" title="Sitzt – nächste Karte"><mat-icon>check</mat-icon> Sitzt</button>
         }
@@ -58,6 +60,12 @@ const BREITE_KEY = 'bn-noten-breite';
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
         <button type="button" class="zu" (click)="ende($event)" [attr.aria-label]="endeText()"><mat-icon>close</mat-icon></button>
       </header>
+      <!-- Übe-Modus: Proben-Mitschnitte des Songs zum Mitspielen (Schleife, langsamer, selbst aufnehmen) -->
+      @if (bewerten() && mitschnitt() && song(); as s) {
+        <div class="mitschnitt-panel" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+          <app-song-mitschnitte [songKey]="s.title + '|' + s.artist" [titel]="s.title" />
+        </div>
+      }
       <!-- Einstellungen weggewischt: Capo bleibt als kleines Schild sichtbar, Tippen holt die Leiste zurück -->
       @if (kopfWeg()) {
         <button type="button" class="kopf-zurueck" (click)="kopfZeigen($event)" (pointerup)="$event.stopPropagation()" aria-label="Einstellungen einblenden">
@@ -145,6 +153,11 @@ export class NotenAnzeige {
   /** Übe-Modus: Knöpfe „Wackelt noch“ / „Sitzt“ oben rechts */
   readonly bewerten = input(false);
   readonly wertung = output<boolean>();
+  protected readonly mitschnitt = signal(false);
+  protected mitschnittUmschalten(e: Event): void {
+    e.stopPropagation();
+    this.mitschnitt.update((m) => !m);
+  }
   protected werten(sitzt: boolean, e: Event): void {
     e.stopPropagation();
     this.wertung.emit(sitzt);

@@ -1618,6 +1618,10 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   await p.locator('app-backstage .ueben-reihe a.modus').click();
   const noten = p.locator('app-setlist-buehne app-noten-anzeige');
   await schritt('Übe-Modus öffnet die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  // Mitschnitte des Songs zum Mitspielen
+  await noten.locator('header .mitschnitt-knopf').click();
+  await noten.locator('.mitschnitt-panel app-song-mitschnitte').waitFor();
+  await noten.locator('header .mitschnitt-knopf').click();
   const songA = (await noten.locator('header .titel').innerText()).trim();
   await noten.locator('header .wertung.sitzt').click();
   await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Sitzt wechselt nicht zur nächsten Karte');
@@ -1625,6 +1629,10 @@ test('Backstage: Zurück führt zur vorigen Seite, Übemodus lernt mit Karteikar
   // weiter bis zum Ende: zurück in die Übersicht
   for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
+  // mit der Band geteilt: Übe-Statistik unter Bühnenreife
+  expect(!!(await p.evaluate(() => localStorage.getItem('bn-kasten-jan-frederic-overbeck'))), 'Karteikasten wird nicht mit der Band geteilt');
+  await p.go('/backstage/songs/reife/');
+  await until(async () => (await p.locator('app-songs-reife .person.ich .kasten span').count()) === 5, 'Übe-Statistik (Karteikasten) fehlt unter Bühnenreife');
   return p;
 });
 
@@ -1640,6 +1648,9 @@ test('Backstage: Besucher-Verlauf mit Zeitlinie und Ereignissen', async () => {
   await until(async () => (await verlauf.locator('path.balken').count()) === 16, 'keine 16 Wochenbalken');
   await verlauf.locator('.einheiten button', { hasText: 'Jahr' }).click();
   await until(async () => (await verlauf.locator('.m-auftritt').count()) > 1, 'keine Auftritte auf der Zeitlinie');
+  // Wirkung der Werbemaßnahmen: auf Knopfdruck je Maßnahme vorher/danach
+  await verlauf.getByRole('button', { name: 'Wirkung berechnen' }).click();
+  await until(async () => (await verlauf.locator('.wirkung').innerText()).includes('Am meisten gebracht'), 'Wirkung der Werbemaßnahmen fehlt');
   return p;
 });
 
@@ -1940,7 +1951,14 @@ test('Kalender-Dateien und Service Worker sind vorhanden', async () => {
 // ---- Ausführen ---------------------------------------------------------------------------------------
 
 let failed = 0;
-for (const t of tests.filter((x) => !process.env.NUR || x.name.includes(process.env.NUR))) {
+// NUR="Teil des Namens" (mehrere mit |): nur diese Tests – zum schnellen Nachprüfen einer Änderung
+const filter = (process.env.NUR ?? '').split('|').map((x) => x.trim()).filter(Boolean);
+const auswahl = tests.filter((x) => !filter.length || filter.some((f) => x.name.includes(f)));
+if (filter.length && !auswahl.length) {
+  console.log(`::error::Kein Klicktest passt zu NUR="${process.env.NUR}"`);
+  failed++;
+}
+for (const t of auswahl) {
   const start = Date.now();
   try {
     const p = await t.fn();
@@ -1953,5 +1971,5 @@ for (const t of tests.filter((x) => !process.env.NUR || x.name.includes(process.
 }
 await browser.close();
 close();
-console.log(`Klicktests: ${tests.length - failed} von ${tests.length} bestanden.`);
+console.log(`Klicktests: ${auswahl.length - failed} von ${auswahl.length} bestanden${filter.length ? ` (Auswahl NUR, insgesamt ${tests.length})` : ''}.`);
 process.exit(failed ? 1 : 0);

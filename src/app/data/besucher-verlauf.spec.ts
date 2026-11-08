@@ -31,3 +31,21 @@ describe('besucher-verlauf', () => {
     expect(e.map((x) => x.map((y) => y.text))).toEqual([['Café'], ['Plakat']]);
   });
 });
+
+describe('besucher-verlauf – Wirkung der Werbemaßnahmen', () => {
+  it('vergleicht 3 Tage ab der Maßnahme mit den 3 Tagen davor', async () => {
+    const { wirkungsFenster, zuwachs, wirkungJeSchritt } = await import('./besucher-verlauf');
+    expect(wirkungsFenster('2026-11-06')).toEqual({ vorher: { start: '2026-11-03', ende: '2026-11-05' }, nachher: { start: '2026-11-06', ende: '2026-11-08' } });
+    expect(zuwachs(20, 30)).toBe(50);
+    expect(zuwachs(0, 30)).toBeNull();
+    expect(wirkungJeSchritt([
+      { schritt: 'plakat', titel: 'Plakat', prozent: 50 },
+      { schritt: 'plakat', titel: 'Plakat', prozent: 10 },
+      { schritt: 'woche', titel: 'Eine Woche vorher', prozent: 40 },
+      { schritt: 'heute', titel: 'Am Auftrittstag', prozent: null },
+    ])).toEqual([
+      { schritt: 'woche', titel: 'Eine Woche vorher', schnitt: 40, anzahl: 1 },
+      { schritt: 'plakat', titel: 'Plakat', schnitt: 30, anzahl: 2 },
+    ]);
+  });
+});

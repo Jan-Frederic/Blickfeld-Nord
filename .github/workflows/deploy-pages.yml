@@ -79,7 +79,7 @@ jobs:
       - name: Chromium für die Prüfungen
         uses: ./.github/actions/playwright
 
-      - name: Barrierefreiheit (WCAG 2.1 AA, axe-core) – schwere Verstöße stoppen den Deploy
+      - name: Barrierefreiheit (WCAG 2.1 AA, axe-core) und Breiten 360–1440 px – schwere Verstöße stoppen den Deploy
         run: node scripts/a11y.mjs
 
       - name: Service Worker für den Offline-Backstage

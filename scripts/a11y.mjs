@@ -121,12 +121,50 @@ async function handyPruefung(phone, path) {
   return offenders.length ? [{ bad: true, text: `::error::${path}: ragt auf dem Handy (360 px, Schrift +15 %) über den Rand: ${offenders.join(' | ')}` }] : [];
 }
 
-// Desktop- und Handy-Prüfung laufen gleichzeitig
-const [axeMeldungen, handyMeldungen] = await Promise.all([
+// Breiten von Handy bis Desktop: keine Seite breiter als das Fenster, keine abgeschnittene Kopfleiste (die volle
+// Leiste darf nur erscheinen, wenn sie passt – z. B. Backstage mit zehn Bereichen erst ab ~1450 px) und keine Bereiche,
+// die innen seitlich scrollen (Tabellen, Listen). Gewollte Karussells tragen data-quer-ok.
+const breit = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'de-DE', bypassCSP: true });
+await zugangFreischalten(breit);
+await breit.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+await breit.route(/goatcounter\.com\/counter\//, (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ count: '1.234' }) }));
+const BREITEN = [360, 768, 1366, 1440];
+
+async function breitenPruefung(tab, path) {
+  const out = [];
+  for (const w of BREITEN) {
+    await tab.setViewportSize({ width: w, height: 900 });
+    if (w === BREITEN[0]) await tab.goto(BASE + path, { waitUntil: 'networkidle' });
+    await tab.waitForTimeout(250);
+    const r = await tab.evaluate(() => {
+      const W = document.documentElement.clientWidth;
+      const kopf = document.querySelector('header.topbar');
+      const name = (e) => {
+        let c = e;
+        while (c && !c.tagName.includes('-')) c = c.parentElement;
+        return (c ? c.tagName.toLowerCase() + ' ' : '') + e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '');
+      };
+      const innen = [...document.querySelectorAll('body *')]
+        .filter((e) => e.offsetParent && !e.closest('[data-quer-ok]') && /(auto|scroll)/.test(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 2)
+        .slice(0, 3)
+        .map((e) => `${name(e)} (+${e.scrollWidth - e.clientWidth} px)`);
+      return { seite: document.documentElement.scrollWidth - W, kopf: kopf ? kopf.scrollWidth - kopf.clientWidth : 0, innen };
+    });
+    if (r.seite > 0) out.push(`Seite ${r.seite} px breiter als das Fenster`);
+    if (r.kopf > 1) out.push(`Kopfleiste ${r.kopf} px abgeschnitten`);
+    if (r.innen.length) out.push(`scrollt innen seitlich: ${r.innen.join(', ')}`);
+    if (out.length) return [{ bad: true, text: `::error::${path}: bei ${w} px – ${out.join('; ')}` }];
+  }
+  return [];
+}
+
+// Desktop-, Handy- und Breiten-Prüfung laufen gleichzeitig
+const [axeMeldungen, handyMeldungen, breitenMeldungen] = await Promise.all([
   parallel(() => desktop.newPage(), axePruefung),
   parallel(() => handy.newPage(), handyPruefung),
+  parallel(() => breit.newPage(), breitenPruefung),
 ]);
-const meldungen = [...axeMeldungen.flat(), ...handyMeldungen.flat()];
+const meldungen = [...axeMeldungen.flat(), ...handyMeldungen.flat(), ...breitenMeldungen.flat()];
 for (const m of meldungen) console.log(m.text);
 const serious = meldungen.filter((m) => m.bad).length;
 const minor = meldungen.length - serious;
@@ -134,5 +172,5 @@ const minor = meldungen.length - serious;
 await browser.close();
 close();
 
-console.log(`Barrierefreiheit und Handy-Breite: ${pages.length} Seiten geprüft, ${serious} schwere und ${minor} leichte Verstöße.`);
+console.log(`Barrierefreiheit, Handy-Breite und Breiten ${BREITEN.join('/')} px: ${pages.length} Seiten geprüft, ${serious} schwere und ${minor} leichte Verstöße.`);
 process.exit(serious ? 1 : 0);

@@ -29,7 +29,7 @@ const TEXT = tr(
             <button type="button" (click)="blaettern(1)" [attr.aria-label]="t().next"><mat-icon>chevron_right</mat-icon></button>
           </div>
         </div>
-        <ul #reihe tabindex="0" [attr.aria-label]="t().title">
+        <ul #reihe tabindex="0" [attr.aria-label]="t().title" data-quer-ok>
           @for (o of orte(); track o.name + o.city) {
             <li>
               <mat-icon aria-hidden="true">place</mat-icon>

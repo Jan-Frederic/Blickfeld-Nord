@@ -5,6 +5,7 @@ import { ladeIch, rufname } from '../data/band-ich';
 import { Reife, Stufe, alleFortschritte, personFortschritt, prozent, reife } from '../data/fortschritt';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { datumText } from '../data/datum';
+import { ladeKastenGeteilt, uebeStatistik } from '../data/ueben';
 
 // Backstage → Songs → Bühnenreife: Fortschritt je Musiker (sicher / sitzt / wackelt, was in den letzten 30 Tagen
 // gefestigt wurde oder neu wackelt) und je Song die Bühnenreife über alle Musiker (data/fortschritt.ts). Quellen:
@@ -29,6 +30,16 @@ const ZEICHEN: Record<Stufe, string> = { sicher: '✓✓', sitzt: '✓', wackelt
           @if (p.gefestigt.length) { <p class="plus">30 Tage: {{ p.gefestigt.length }} gefestigt – {{ p.gefestigt.join(', ') }}</p> }
           @if (p.neuWackelig.length) { <p class="minus">neu wackelig: {{ p.neuWackelig.join(', ') }}</p> }
           <p class="klein">{{ p.zuletzt ? 'zuletzt ' + datumText(p.zuletzt) : 'noch keine Angaben' }}</p>
+          <!-- Übe-Statistik aus dem Karteikasten der Person (bn-kasten-<Person>, data/ueben.ts) -->
+          @if (uebe().get(p.slug); as u) {
+            @if (u.karten) {
+              <div class="kasten" [attr.aria-label]="'Karteikasten: ' + u.jeKasten.join(', ') + ' Karten in Kasten 1 bis 5'">
+                @for (n of u.jeKasten; track $index) { <span [class.leer]="!n" [title]="'Kasten ' + ($index + 1)">{{ n }}</span> }
+              </div>
+            }
+            @if (u.gelernt.length) { <p class="plus">Karteikasten, 30 Tage: {{ u.gelernt.length }} gelernt – {{ u.gelernt.join(', ') }}</p> }
+            @if (u.zuletzt) { <p class="klein">zuletzt geübt {{ datumText(u.zuletzt) }}</p> }
+          }
         </div>
       }
     </div>
@@ -73,6 +84,13 @@ export class SongsReife {
   private readonly heute = new Date().toISOString().slice(0, 10);
   private readonly alle = alleFortschritte(this.mitglieder);
 
+  /** Übe-Statistik je Person: Karten je Kasten, in 30 Tagen gelernt, zuletzt geübt */
+  protected readonly uebe = computed(
+    () => new Map(this.mitglieder.map((m) => {
+      const st = uebeStatistik(ladeKastenGeteilt(m.slug), this.heute);
+      return [m.slug, { ...st, karten: st.jeKasten.reduce((a, b) => a + b, 0) }];
+    })),
+  );
   protected readonly personen = computed(() => this.mitglieder.map((m) => personFortschritt(m, this.alle.get(m.slug) ?? {}, this.heute)));
 
   /** Songs im aktiven Repertoire (nicht nur Archiv/Wunschliste) und alle mit Angaben – schwächste zuerst */

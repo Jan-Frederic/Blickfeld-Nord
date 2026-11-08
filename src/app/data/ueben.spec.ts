@@ -67,3 +67,22 @@ describe('ueben – zählt in der Bühnenreife', () => {
     expect(stufe([{ tag: '2026-11-02', stand: 'wackelt', quelle: 'liste' }, { tag: '2026-11-02', stand: 'sitzt', quelle: 'ueben' }])).toBe('sitzt');
   });
 });
+
+describe('ueben – mit der Band geteilt', () => {
+  it('Kasten 1 bei mehreren Personen, meiste zuerst', async () => {
+    const { kastenEinsBei } = await import('./ueben');
+    const g = new Map<string, { kaesten: Record<string, number>; gelernt: Record<string, string> }>([
+      ['a', { kaesten: { 'Iris|x': 1, 'Angels|y': 1 }, gelernt: {} }],
+      ['b', { kaesten: { 'Iris|x': 1, 'Angels|y': 3 }, gelernt: {} }],
+      ['c', { kaesten: { 'Iris|x': 1 }, gelernt: {} }],
+    ]);
+    const r = kastenEinsBei(g, new Map([['a', 'Fred'], ['b', 'David'], ['c', 'Matthias']]));
+    expect([...r]).toEqual([['Iris|x', ['Fred', 'David', 'Matthias']]]);
+  });
+  it('Statistik: Karten je Kasten und in 30 Tagen Gelerntes', async () => {
+    const { uebeStatistik } = await import('./ueben');
+    const s = uebeStatistik({ kaesten: { 'A|x': 1, 'B|x': 3, 'C|x': 3 }, gelernt: { 'D|x': '2026-11-01', 'E|x': '2026-08-01' }, zuletzt: '2026-11-07' }, '2026-11-08');
+    expect(s.jeKasten).toEqual([1, 0, 2, 0, 0]);
+    expect(s.gelernt).toEqual(['D']);
+  });
+});

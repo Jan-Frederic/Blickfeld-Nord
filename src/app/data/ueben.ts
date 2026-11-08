@@ -139,3 +139,62 @@ export function bewerten(stand: UebenStand, key: string, sitzt: boolean, heute: 
 export function jeKasten(k: Karte[]): number[] {
   return KASTEN_TAGE.map((_, i) => k.filter((x) => x.kasten === i + 1).length);
 }
+
+// ---- Mit der Band geteilt: je Person die Kästen (Song → Kasten) und was wann gelernt wurde ----
+// Datei bn-kasten-<Person> (wie bn-unsicher-<Person>: jede Person schreibt nur ihre eigene). Daraus zeigt Songs →
+// Bühnenreife die Übe-Statistik je Musiker, und der Probe-Vorschlag nimmt Songs, die bei mehreren in Kasten 1 hängen.
+export const KASTEN_PREFIX = 'bn-kasten-';
+export interface KastenGeteilt {
+  /** Song-Key → Kasten (1–5) */
+  kaesten: Record<string, number>;
+  /** Song-Key → Tag, an dem er gelernt wurde (aus dem letzten Kasten heraus) */
+  gelernt: Record<string, string>;
+  /** zuletzt geübt */
+  zuletzt?: string;
+}
+
+export function ladeKastenGeteilt(slug: string): KastenGeteilt {
+  try {
+    const v = JSON.parse(localStorage.getItem(KASTEN_PREFIX + slug) ?? 'null') as KastenGeteilt | null;
+    return { kaesten: v?.kaesten ?? {}, gelernt: v?.gelernt ?? {}, zuletzt: v?.zuletzt };
+  } catch {
+    return { kaesten: {}, gelernt: {} };
+  }
+}
+
+/**
+ * eigenen Stand für die Band ablegen: alle Karten mit ihrem Kasten (auch noch nie bewertete – Kasten 1);
+ * geuebt: heute geübt (setzt „zuletzt“); gelernt: Song, der eben aus dem letzten Kasten kam
+ */
+export function kastenTeilen(slug: string, karten: { key: string; kasten: number }[], heute: string, was: { geuebt?: boolean; gelernt?: string } = {}): void {
+  if (!slug) return;
+  const alt = ladeKastenGeteilt(slug);
+  const neu: KastenGeteilt = {
+    kaesten: Object.fromEntries(karten.map((k) => [k.key, k.kasten])),
+    gelernt: was.gelernt ? { ...alt.gelernt, [was.gelernt]: heute } : alt.gelernt,
+    zuletzt: was.geuebt ? heute : alt.zuletzt,
+  };
+  if (JSON.stringify(neu) === JSON.stringify(alt)) return;
+  try {
+    localStorage.setItem(KASTEN_PREFIX + slug, JSON.stringify(neu));
+  } catch {
+    // ohne Speicher sieht die Band es nicht
+  }
+}
+
+/** Songs, die bei mindestens `ab` Personen in Kasten 1 liegen → Rufnamen (meiste zuerst) */
+export function kastenEinsBei(geteilt: Map<string, KastenGeteilt>, namen: Map<string, string>, ab = 2): Map<string, string[]> {
+  const bei = new Map<string, string[]>();
+  for (const [slug, g] of geteilt) for (const [k, kasten] of Object.entries(g.kaesten)) if (kasten === 1) bei.set(k, [...(bei.get(k) ?? []), namen.get(slug) ?? slug]);
+  return new Map([...bei].filter(([, n]) => n.length >= ab).sort((a, b) => b[1].length - a[1].length));
+}
+
+/** Übe-Statistik einer Person: Karten je Kasten, in den letzten `tage` Tagen gelernt */
+export function uebeStatistik(g: KastenGeteilt, heute: string, tage = 30): { jeKasten: number[]; gelernt: string[]; zuletzt?: string } {
+  const grenze = new Date(Date.parse(heute) - tage * 864e5).toISOString().slice(0, 10);
+  return {
+    jeKasten: KASTEN_TAGE.map((_, i) => Object.values(g.kaesten).filter((k) => k === i + 1).length),
+    gelernt: Object.entries(g.gelernt).filter(([, t]) => t >= grenze).sort((a, b) => b[1].localeCompare(a[1])).map(([k]) => k.slice(0, k.lastIndexOf('|'))),
+    zuletzt: g.zuletzt,
+  };
+}

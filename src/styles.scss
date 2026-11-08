@@ -899,3 +899,25 @@ app-backstage-ueben .karten-reihe .karte { flex: 1; min-width: 0; margin: 0; }
 app-backstage-ueben .blaettern { width: 44px; height: 44px; }
 app-backstage-ueben .blaettern mat-icon { font-size: 26px; width: 26px; height: 26px; }
 @media (max-width: 480px) { app-backstage-ueben .tasten { display: none; } app-backstage-ueben .karten-reihe { gap: 4px; } app-backstage-ueben .blaettern { width: 34px; height: 34px; } }
+// Bühnenreife: Karteikasten je Person (Kasten 1–5, Zahl der Karten)
+app-songs-reife .kasten { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 6px 0 2px; }
+app-songs-reife .kasten span { padding: 2px 0; border: 1px solid var(--bn-sunset); border-radius: 4px; text-align: center; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--bn-sunset); }
+app-songs-reife .kasten span.leer { border-color: var(--bn-line); color: var(--bn-fog); }
+// Übe-Modus: Mitschnitte in der Notenansicht (unten eingeblendet) und auf der Karteikarte
+app-noten-anzeige header button.mitschnitt-knopf[aria-pressed='true'] { border-color: #7fb3e0; color: #7fb3e0; }
+app-noten-anzeige .mitschnitt-panel { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 6; width: min(640px, 94vw); max-height: 45vh; overflow-y: auto; transform: translateX(-50%); padding: 4px 14px 12px; border: 1px solid #444; border-radius: 14px; background: #111; box-shadow: 0 12px 40px rgba(0, 0, 0, .6); color: #fff; }
+app-noten-anzeige .mitschnitt-panel .mitschnitte { border-top: 0; }
+app-backstage-ueben .mitschnitte-auf { margin: 0 0 16px; text-align: left; }
+app-backstage-ueben .mitschnitte-auf summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--bn-fog); font-size: .9rem; }
+app-besucher-verlauf .wirkung { margin: 18px 0 0; }
+app-besucher-verlauf .wirkung h3 { margin: 0 0 8px !important; }
+app-besucher-verlauf .empfehlung { margin: 0 0 8px; font-size: .9rem; line-height: 1.5; }
+app-besucher-verlauf .je-schritt { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .85rem; }
+app-besucher-verlauf .je-schritt li { display: flex; align-items: baseline; gap: 8px; }
+app-besucher-verlauf .je-schritt span { flex: 1; min-width: 0; }
+app-besucher-verlauf .je-schritt b { font-variant-numeric: tabular-nums; }
+app-besucher-verlauf .je-schritt b.plus { color: #5fb88a; }
+app-besucher-verlauf .je-schritt b.minus { color: #e0b25a; }
+app-besucher-verlauf .je-schritt small { color: var(--bn-fog); }
+app-besucher-verlauf .berechnen { padding: 6px 14px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+app-besucher-verlauf .berechnen:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }

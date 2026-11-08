@@ -21,7 +21,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
   { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
   { id: 'probe', label: 'Probenplanung', praefixe: ['bn-probe-'], probe: true },
-  { id: 'band', label: 'Zusagen, „unsicher bei“ und Fortschritt', praefixe: ['bn-zusage-', 'bn-unsicher-', 'bn-fortschritt-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist, Fortschritt je Musiker (Bühnenreife)' },
+  { id: 'band', label: 'Zusagen, „unsicher bei“ und Fortschritt', praefixe: ['bn-zusage-', 'bn-unsicher-', 'bn-fortschritt-', 'bn-kasten-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist, Fortschritt je Musiker (Bühnenreife), Karteikästen' },
   { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
   { id: 'wackelt', label: '„Wackelt noch“-Liste und Übemodus', praefixe: ['bn-wackelt', 'bn-ueben'], hinweis: 'deine Übe-Liste für Probe-Vorschlag und Karteikasten' },

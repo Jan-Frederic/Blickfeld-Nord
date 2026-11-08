@@ -27,6 +27,9 @@ export interface Ereignis {
   text: string;
   /** Werbemaßnahme abgehakt? */
   erledigt?: boolean;
+  /** Werbeplan-Schritt (z. B. plakat, woche) – für die Wirkung je Maßnahme */
+  schritt?: string;
+  titel?: string;
 }
 
 const MONATE = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -80,4 +83,31 @@ export function ereignisseJeZeitraum(raeume: Zeitraum[], ereignisse: Ereignis[])
     if (i >= 0) out[i].push(e);
   }
   return out;
+}
+
+// ---- Wirkung der Werbemaßnahmen: Aufrufe in den 3 Tagen ab der Maßnahme gegen die 3 Tage davor ----
+export const WIRKUNG_TAGE = 3;
+
+/** Zeiträume vor und ab einer Maßnahme (je WIRKUNG_TAGE Tage) */
+export function wirkungsFenster(datum: string): { vorher: { start: string; ende: string }; nachher: { start: string; ende: string } } {
+  return {
+    vorher: { start: plus(datum, -WIRKUNG_TAGE), ende: plus(datum, -1) },
+    nachher: { start: datum, ende: plus(datum, WIRKUNG_TAGE - 1) },
+  };
+}
+
+/** Veränderung in Prozent (gerundet); ohne Aufrufe vorher: null (nicht vergleichbar) */
+export const zuwachs = (vorher: number, nachher: number): number | null => (vorher > 0 ? Math.round(((nachher - vorher) / vorher) * 100) : null);
+
+/** Schnitt je Maßnahme (z. B. Plakat, Story eine Woche vorher), stärkste zuerst – nur Maßnahmen mit Vergleichswert */
+export function wirkungJeSchritt(werte: { schritt: string; titel: string; prozent: number | null }[]): { schritt: string; titel: string; schnitt: number; anzahl: number }[] {
+  const je = new Map<string, { titel: string; summe: number; anzahl: number }>();
+  for (const w of werte) {
+    if (w.prozent === null) continue;
+    const e = je.get(w.schritt) ?? { titel: w.titel, summe: 0, anzahl: 0 };
+    e.summe += w.prozent;
+    e.anzahl++;
+    je.set(w.schritt, e);
+  }
+  return [...je].map(([schritt, e]) => ({ schritt, titel: e.titel, schnitt: Math.round(e.summe / e.anzahl), anzahl: e.anzahl })).sort((a, b) => b.schnitt - a.schnitt);
 }
