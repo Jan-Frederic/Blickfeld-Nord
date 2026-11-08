@@ -36,11 +36,6 @@ test('kopfleiste backstage (breit)', async ({ page }, info) => {
   await expect(page.locator('.topbar')).toHaveScreenshot('desktop-kopfleiste-backstage.png');
 });
 
-test('backstage übersicht – kacheln', async ({ page }, info) => {
-  await laden(page, '/backstage');
-  await expect(page.locator('app-backstage > .section > ul.tiles')).toHaveScreenshot(`${info.project.name}-backstage-kacheln.png`);
-});
-
 test('backstage zahlen – besucher', async ({ page }, info) => {
   await laden(page, '/backstage/zahlen');
   const b = page.locator('app-backstage-besucher');

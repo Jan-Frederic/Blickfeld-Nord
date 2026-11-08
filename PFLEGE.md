@@ -107,7 +107,8 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Sammlungen, Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche, Sammlungen ihre Seite). Danach Heute fällig,
   der **Übemodus** und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
   Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
-  Backstage → Zahlen.
+  Backstage → Zahlen. Die Bereiche (Termine, Zahlen, Songs, …) stehen im Menü oben – Kacheln gibt es in der
+  Übersicht nicht mehr.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
 - **Übemodus** (Übersicht → Übemodus, `/backstage/ueben`): persönlich (Einstellungen → „Ich bin …“) – deine Songs, die
@@ -311,8 +312,7 @@ Dialog). Mit einem Listen-Chip gibt es die Reihenfolge **wie in Spotify**.
 
 **Spielzeit je Auftritt:** In der Setlist die geplante Spielzeit (Minuten Musik ohne Pausen) eintragen – angezeigt
 wird „noch … frei“ bzw. „… zu lang“, dazu bis zu drei Songs, die in die Lücke passen (Website-Liste zuerst). Wird
-mit der Band abgeglichen. Die Backstage-Übersicht zeigt eine Kachel **Songs**: je Liste, wie viele der Wunschliste
-**spielbereit** sind (Noten, Tonart/Tempo, geprobt) und die Zahl der Hinweise. Der Probe-Vorschlag nimmt
+mit der Band abgeglichen. Der Probe-Vorschlag nimmt
 Wunschlisten-Songs mit Noten und Tonart, die noch nie geprobt wurden, gleich nach „wackelt noch“. (Die **Bühnenreife**
 je Song misst dagegen, wie sicher die Musiker sind – siehe Probe.)
 

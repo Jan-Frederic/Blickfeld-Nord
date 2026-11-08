@@ -341,11 +341,11 @@ test('Backstage: Übersetzung als passend markieren', async () => {
   return p;
 });
 
-test('Backstage: Übersicht führt in die Bereiche, Direktaufruf eines Bereichs klappt', async () => {
+test('Backstage: Übersicht ohne Kacheln, Bereich im Menü markiert, Direktaufruf eines Bereichs klappt', async () => {
   const p = await page();
   await p.go('/backstage/');
-  await p.locator('app-backstage .tiles a', { hasText: 'Material' }).click();
-  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/material', 'Kachel „Material“ führt nicht zu /backstage/material');
+  expect(!(await p.locator('app-backstage .tiles').count()), 'Kacheln stehen noch in der Übersicht');
+  await p.go('/backstage/material/');
   await until(async () => ((await p.locator('#hauptmenue a.on').textContent()) ?? '').includes('Material'), 'Navigation markiert den Bereich nicht');
   // Direktaufruf (z. B. Lesezeichen) geht über die Fehlerseite – muss im richtigen Bereich landen
   await p.go('/backstage/zahlen/');

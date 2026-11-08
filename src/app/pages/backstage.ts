@@ -4,7 +4,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { HeuteFaellig } from './heute-faellig';
 import { BackstageSuche } from './backstage-suche';
-import { BACKSTAGE_BEREICHE } from '../data/backstage-bereiche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { ladeIch } from '../data/band-ich';
@@ -14,7 +13,7 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
 // Die Übersicht zeigt Suche, Fälliges und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
-// (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE).
+// (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE), erreichbar über die Leiste oben.
 @Component({
   selector: 'app-backstage',
   imports: [DatePipe, RouterLink, MatIconModule, HeuteFaellig, BackstageSuche],
@@ -22,10 +21,10 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
-      <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben in der Leiste oder unten als Kacheln.</p>
+      <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben im Menü.</p>
 
       <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, die nächsten Termine (je mit Bühnen- bzw. Probe-Modus);
-           zuletzt die Bereiche (Zahlen stehen unter Backstage → Zahlen). Die Bereit-Checks der
+           die Bereiche stehen in der Leiste oben. Die Bereit-Checks der
            kommenden Auftritte stehen unter Aufgaben. -->
       <app-backstage-suche />
       <app-heute-faellig />
@@ -52,18 +51,6 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
       } @else {
         <p class="empty">Keine kommenden Termine eingetragen.</p>
       }
-
-      <ul class="tiles">
-        @for (b of bereiche; track b.path) {
-          <li>
-            <a [routerLink]="b.path">
-              <mat-icon>{{ b.icon }}</mat-icon>
-              <span class="title">{{ b.label }}</span>
-              <span class="text">{{ b.text }}</span>
-            </a>
-          </li>
-        }
-      </ul>
     </section>
   `,
   styles: `
@@ -84,17 +71,8 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
     .modus mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .date { font-variant-numeric: tabular-nums; color: var(--bn-sunset); font-size: .9rem; }
     .what { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .what mat-icon, .tiles mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--bn-fog); }
+    .what mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--bn-fog); }
     .empty { padding: 16px; border: 1px dashed var(--bn-line); border-radius: 12px; color: var(--bn-fog); }
-    .tiles { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-    .tiles a {
-      display: grid; align-content: start; gap: 6px; height: 100%; box-sizing: border-box; padding: 18px; border-radius: 12px;
-      border: 1px solid var(--bn-line); background: rgba(27, 30, 34, .72); color: var(--bn-ink); text-decoration: none;
-    }
-    .tiles a:hover { border-color: var(--bn-sunset); }
-    .tiles mat-icon { color: var(--bn-sunset); }
-    .title { font-weight: 600; }
-    .text { font-size: .85rem; line-height: 1.5; color: var(--bn-fog); }
     @media (max-width: 560px) {
       .termin { grid-template-columns: 1fr; gap: 4px; }
       .modus-text { display: none; }
@@ -115,7 +93,6 @@ export class Backstage {
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
   protected readonly rehearsals = [...this.band.rehearsals].sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''));
-  protected readonly bereiche = BACKSTAGE_BEREICHE.slice(1);
 
   // die nächsten vier Termine – Auftritte und Proben gemischt
   private readonly today = new Date().toISOString().slice(0, 10);
