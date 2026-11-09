@@ -11,7 +11,7 @@ import { STATUS, UebeStatus } from '../data/uebe-status';
     <span class="schalter" role="group" aria-label="Übe-Status">
       @for (st of liste; track st.id) {
         <button type="button" [class]="'wertung ' + st.id" [class.an]="status() === st.id" [attr.aria-pressed]="status() === st.id" [attr.aria-label]="st.label"
-          [title]="st.label + (st.id === 'sitzt' && weiter() ? ' – sitzt er schon, einen Kasten weiter' : '')" [disabled]="gesperrt()" (click)="waehlen(st.id, $event)">
+          [title]="sperren().includes(st.id) ? st.label + ' – erst bei 100 % Tempo' : st.label + (st.id === 'sitzt' && weiter() ? ' – sitzt er schon, einen Kasten weiter' : '')" [disabled]="gesperrt() || sperren().includes(st.id)" (click)="waehlen(st.id, $event)">
           <span class="z" aria-hidden="true">{{ st.zeichen }}</span><span class="l">{{ st.label }}</span>
         </button>
       }
@@ -21,6 +21,8 @@ import { STATUS, UebeStatus } from '../data/uebe-status';
 export class StatusSchalter {
   readonly status = input<UebeStatus | null>(null);
   readonly gesperrt = input(false);
+  /** einzelne Status gesperrt (z. B. „Sitzt“ beim Tempo-Training unter 100 %) */
+  readonly sperren = input<UebeStatus[]>([]);
   readonly kopf = input(false);
   /** Übe-Modus: „Sitzt“ bei sitzendem Song schiebt weiter (nur für den Tooltip) */
   readonly weiter = input(false);

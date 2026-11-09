@@ -13,9 +13,12 @@ import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
 import { ProbeVorschlag } from './probe-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
-import { ProbePlan, generalprobe, loadProbe, minutenText, probeNachricht, speichereProbe } from '../data/probe-modus';
+import { ProbePlan, generalprobe, loadProbe, minutenText, probeNachricht, probenDauer, speichereProbe } from '../data/probe-modus';
+import { Kandidat, probeFuellen, probeZeiten } from '../data/probe-fuellen';
+import { alleStatus, buehnenreife } from '../data/uebe-status';
+import { kastenEinsBei, ladeKastenGeteilt } from '../data/ueben';
 import { ProbeZusagen } from './probe-zusagen';
-import { unsicherJeSong } from '../data/band-ich';
+import { rufname, unsicherJeSong } from '../data/band-ich';
 import { alleFortschritte, bandStand, probeStaende } from '../data/fortschritt';
 import { notizenDerProbe } from '../data/probe-notiz';
 import { spotifyLinks } from '../data/playlisten';
@@ -73,6 +76,8 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
             }
           </ul>
         }
+        <!-- Probe füllen: nach der Probendauer mit den wichtigsten Songs (Baustellen der Setlist, Kasten 1, Wackelt noch) -->
+        <button type="button" class="fuellen" (click)="fuellen()" [title]="'Füllt die Probe (' + minutenText(budget()) + ') mit Baustellen der nächsten Setlist, Songs aus Kasten 1 und was bei jemandem noch wackelt'"><mat-icon>auto_awesome</mat-icon> Probe füllen ({{ minutenText(budget()) }})</button>
         @if (hinzuMeldung(); as m) { <p class="teilen-meldung" role="status">{{ m }}</p> }
         <!-- Vorschläge und Generalprobe eingeklappt – die Liste bleibt im Blick -->
         <details class="vorschlaege">
@@ -244,6 +249,33 @@ export class BackstageProbe {
     const id = this.band.showId(s);
     return { id, name: `${s.private ? (s.publicName ?? 'Private Feier') : s.venue} (${s.date.slice(8, 10)}.${s.date.slice(5, 7)}.)`, songs: loadSetlist(id).filter((e) => !isPause(e)).length };
   });
+  /** Probendauer in Sekunden (ohne Uhrzeit: 2 Stunden) */
+  protected readonly budget = computed(() => probenDauer(this.probe()) || 2 * 3600);
+  /** Probe mit den wichtigsten Songs füllen, bis die Probendauer erreicht ist (data/probe-fuellen.ts) */
+  protected fuellen(): void {
+    const m = this.band.members;
+    const status = alleStatus(m);
+    const namen = new Map(m.map((x) => [x.slug, rufname(x)]));
+    const kandidaten: Kandidat[] = [];
+    const show = this.band.shows.filter((x) => x.date >= this.datum()).sort((a, b) => a.date.localeCompare(b.date))[0];
+    const setlist = show ? (loadSetlist(this.band.showId(show)).filter((e) => !isPause(e)) as { title: string; artist: string }[]) : [];
+    const name = show ? (show.private ? (show.publicName ?? 'Private Feier') : show.venue) : '';
+    for (const s of setlist) {
+      const r = buehnenreife(s.title + '|' + s.artist, m, status);
+      if (r.ampel === 'baustelle' || r.ampel === 'offen') kandidaten.push({ ...s, grund: `Baustelle für ${name}`, prio: 0 });
+    }
+    const kaesten = new Map(m.map((x) => [x.slug, ladeKastenGeteilt(x.slug)]));
+    for (const [k, wer] of kastenEinsBei(kaesten, namen)) kandidaten.push({ title: k.slice(0, k.lastIndexOf('|')), artist: k.slice(k.lastIndexOf('|') + 1), grund: `Kasten 1 bei ${wer.join(', ')}`, prio: 1 });
+    for (const [k, wer] of unsicherJeSong(m)) kandidaten.push({ title: k.slice(0, k.lastIndexOf('|')), artist: k.slice(k.lastIndexOf('|') + 1), grund: `wackelt bei ${wer.join(', ')}`, prio: 2 });
+    for (const s of setlist) if (buehnenreife(s.title + '|' + s.artist, m, status).ampel === 'fast') kandidaten.push({ ...s, grund: `festigen für ${name}`, prio: 3 });
+    const r = probeFuellen(kandidaten, this.plan().songs, probeZeiten(), this.budget());
+    this.save((p) => ({ ...p, songs: [...p.songs, ...r.songs.map((t) => ({ title: t.title, artist: t.artist, done: false }))] }));
+    this.hinzuMeldung.set(
+      r.songs.length
+        ? `Probe gefüllt: ${r.songs.length} ${r.songs.length === 1 ? 'Song' : 'Songs'} dazu (${r.songs.map((x) => x.title).join(', ')}) – geplant ~${minutenText(r.gesamt)} von ${minutenText(this.budget())}.`
+        : this.plan().songs.length ? `Nichts dazu – die Probe ist mit ~${minutenText(r.gesamt)} schon voll oder es gibt keine Baustellen.` : 'Nichts gefunden – keine Baustellen, Kasten-1-Songs oder wackelnden Songs.',
+    );
+  }
   protected generalprobeUebernehmen(): void {
     const a = this.naechsterAuftritt();
     if (!a) return;

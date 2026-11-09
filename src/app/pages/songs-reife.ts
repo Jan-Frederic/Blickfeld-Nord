@@ -3,7 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
 import { alleFortschritte, prozent } from '../data/fortschritt';
-import { Reife, STATUS, alleStatus, buehnenreife, personUebersicht, statusInfo } from '../data/uebe-status';
+import { Reife, STATUS, alleStatus, buehnenreife, personUebersicht, statusInfo, uebeWoche } from '../data/uebe-status';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { datumText } from '../data/datum';
 import { ladeKastenGeteilt, uebeStatistik } from '../data/ueben';
@@ -42,6 +42,12 @@ const AMPEL: Record<Reife['ampel'], string> = { buehnenreif: 'bühnenreif', fast
             }
             @if (u.gelernt.length) { <p class="plus">30 Tage: {{ u.gelernt.length }} eingenordet – {{ u.gelernt.join(', ') }}</p> }
             @if (u.zuletzt) { <p class="klein">zuletzt geübt {{ datumText(u.zuletzt) }}</p> }
+          }
+          <!-- Übe-Woche: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet -->
+          @if (woche().get(p.slug); as w) {
+            @if (w.karten || w.serie) {
+              <p class="woche">@if (w.serie > 1) { <span class="serie">🔥 {{ w.serie }} Tage am Stück</span> · }{{ w.karten }} {{ w.karten === 1 ? 'Karte' : 'Karten' }} in 7 Tagen@if (w.eingenordet.length) { · eingenordet: {{ w.eingenordet.join(', ') }} }</p>
+            }
           }
         </div>
       }
@@ -98,6 +104,8 @@ export class SongsReife {
       return [m.slug, { ...st, karten: st.jeKasten.reduce((a, b) => a + b, 0) }];
     })),
   );
+  /** Übe-Woche je Person (Verlauf + geteilter Karteikasten) */
+  protected readonly woche = computed(() => new Map(this.mitglieder.map((m) => [m.slug, uebeWoche(this.verlauf.get(m.slug) ?? {}, ladeKastenGeteilt(m.slug), this.heute)])));
   protected readonly personen = computed(() => this.mitglieder.map((m) => personUebersicht(m, this.alle.get(m.slug) ?? new Map(), this.verlauf.get(m.slug) ?? {}, this.heute)));
 
   /** Songs im aktiven Repertoire (nicht nur Archiv/Wunschliste) und alle mit Angaben – schwächste zuerst */

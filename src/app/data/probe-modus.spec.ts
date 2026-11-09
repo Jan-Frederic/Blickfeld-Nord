@@ -1,4 +1,4 @@
-import { type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
+import { probeErgebnisNachricht, type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
 import { probenVerlauf } from './song-stand';
 
 const A = { title: 'Iris', artist: 'The Goo Goo Dolls' };
@@ -97,5 +97,20 @@ describe('probe-modus', () => {
     const e = ergebnis(plan, (s) => (s.title === 'Iris' ? 'nochmal' : undefined));
     expect(e.nochmal.map((x) => x.title)).toEqual(['Iris']);
     expect(e.offen.map((x) => x.title)).toEqual(['Angels']);
+  });
+});
+
+describe('Probe-Ergebnis an die Band', () => {
+  it('nennt Sitzt, Nochmal mit Namen, nicht Drangekommenes, Notizen und die nächste Probe', () => {
+    const A = { title: 'Iris', artist: 'X', done: true };
+    const B = { title: 'Africa', artist: 'Y', done: true };
+    const C = { title: 'Angels', artist: 'Z', done: false };
+    const t = probeErgebnisNachricht('2026-11-20', { sitzt: [A], nochmal: [B], offen: [C], zeit: 1800 }, () => 'Fred: Üben', new Map([['Africa|Y', ['Fred: Bridge']]]), { date: '2026-11-27', time: '19:00' });
+    expect(t).toContain('Ergebnis (30 min geprobt)');
+    expect(t).toContain('✅ Sitzt (1):\n• Iris');
+    expect(t).toContain('↻ Nochmal (1):\n• Africa (Fred: Üben)');
+    expect(t).toContain('⏳ Nicht drangekommen (1):\n• Angels');
+    expect(t).toContain('📝 Notizen:\n• Africa: Fred: Bridge');
+    expect(t).toContain('Nächste Probe: Freitag, 27. November, 19:00 Uhr');
   });
 });

@@ -879,6 +879,8 @@ app-referenzen ul::-webkit-scrollbar { display: none; }
 app-songs-reife .kasten { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 6px 0 2px; }
 app-songs-reife .kasten span { padding: 2px 0; border: 1px solid var(--bn-sunset); border-radius: 4px; text-align: center; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--bn-sunset); }
 app-songs-reife .kasten span.leer { border-color: var(--bn-line); color: var(--bn-fog); }
+app-songs-reife .woche { color: var(--bn-ink); font-size: .82rem !important; }
+app-songs-reife .woche .serie { color: var(--bn-sunset); font-weight: 600; }
 // Übe-Modus: Mitschnitte in der Notenansicht (unten eingeblendet) und auf der Karteikarte
 app-noten-anzeige header button.mitschnitt-knopf[aria-pressed='true'] { border-color: #7fb3e0; color: #7fb3e0; }
 app-noten-anzeige .mitschnitt-panel { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 6; width: min(640px, 94vw); max-height: 45vh; overflow-y: auto; transform: translateX(-50%); padding: 4px 14px 12px; border: 1px solid #444; border-radius: 14px; background: #111; box-shadow: 0 12px 40px rgba(0, 0, 0, .6); color: #fff; }
@@ -976,3 +978,28 @@ app-setlist-buehne header .clock.still { visibility: hidden; }
 app-setlist-buehne app-noten-anzeige { animation: noten-rein .28s cubic-bezier(.2, .8, .2, 1); }
 app-setlist-buehne app-noten-anzeige.raus { animation: noten-raus .24s ease-in forwards; }
 @media (prefers-reduced-motion: reduce) { app-setlist-buehne app-noten-anzeige, app-setlist-buehne app-noten-anzeige.raus { animation: none; } }
+
+// Probenseite: „Probe füllen“ (Budget der Komponente ist voll)
+app-backstage-probe .fuellen { display: inline-flex; align-items: center; gap: 6px; margin: 10px 0 0; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--bn-sunset); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+app-backstage-probe .fuellen:hover { color: var(--bn-sunset); }
+
+// Hinweis „Neue Version“ der App-Hülle (aus app.scss, deren Budget voll ist)
+app-root .update {
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 1000;
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 999px; max-width: calc(100vw - 32px);
+  background: #1f2328; border: 1px solid var(--bn-sunset); color: var(--bn-ink); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); font-size: .9rem;
+}
+app-root .update > .material-icons { color: var(--bn-sunset); flex: none; }
+app-root .update button {
+  padding: 6px 14px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+  background: var(--bn-sunset); color: #2a1708; white-space: nowrap;
+}
+app-root .update button.close { display: grid; place-items: center; padding: 4px; background: transparent; color: var(--bn-fog); }
+app-root .update button.close .material-icons { font-size: 18px; width: 18px; height: 18px; }
+
+// Setlist-Editor: Bühnenreife je Song (Übe-Status der Band)
+app-setlist .reife { margin-left: 8px; font-size: .78rem; white-space: nowrap; }
+app-setlist .reife.baustelle { color: #e0b25a; }
+app-setlist .reife.fast { color: #9fd3b4; }
+app-setlist .reife.buehnenreif { color: #5fb88a; }
+app-setlist .reife.offen { color: var(--bn-fog); }

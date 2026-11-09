@@ -13,6 +13,8 @@ Seite neu online, nach etwa 5 Minuten.
 4. Unter **Actions** ([Übersicht](https://github.com/Jan-Frederic/Blickfeld-Nord/actions)) läuft jetzt „Deploy to GitHub Pages“:
    - ✅ grüner Haken: nach ein paar Minuten ist die Änderung auf https://blickfeld-nord.de zu sehen.
      Nicht sofort? Seite neu laden. Die installierte App holt sich das Update beim nächsten Öffnen.
+     Bleibt GitHub Pages beim Veröffentlichen hängen („syncing_files“, Zeitlimit), versucht der Deploy es nach einer
+     Minute automatisch ein zweites Mal.
    - ❌ rotes Kreuz: Die Seite bleibt einfach auf dem alten Stand, kaputt geht nichts. Auf den Lauf klicken, dann
      den roten Schritt. Die Meldung sagt meist genau, was nicht stimmt (z. B. „2026-13-04 ist kein Datum“).
      Korrigieren und erneut speichern.
@@ -116,6 +118,12 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   nachziehen.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
+- **Heute fällig** nennt die fälligen Karteikarten („5 Karteikarten fällig – Übe-Modus starten · Weihnachtsmarkt in 12
+  Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet bei 70 %, der Tempo-Knopf
+  steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
+  **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
+- **Bühnenreife in der Setlist:** im Setlist-Editor steht je Song die Reife (● 73 %, Farbe nach Ampel, Tooltip mit
+  „wackelt bei …“); „Bereit?“ meldet Setlist-Songs, die noch Baustelle sind (sobald jemand Übe-Status setzt).
 - **Übe-Status:** Jeder Song hat je Musiker einen von fünf Status – **Nicht gelernt** (jeder neue Song und alle ohne
   Angabe), **Üben**, **Wackelt noch**, **Sitzt**, **Eingenordet** (früher „sicher“). Gesetzt im Song-Dialog (Auswahl
   oben), im Probe-Modus (Umschalter mit den fünf Stufen), in der Nachbereitung (⚠ = Wackelt noch) oder über den
@@ -197,6 +205,12 @@ Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 **Probe planen:** Im Backstage unter **Termine** auf eine Probe klicken. Dort stehen die Songs zum Üben (mit Tonart
 und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
 an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
+
+**Probe füllen** (Knopf unter der Suche): füllt die Probe nach ihrer Dauer (ohne Uhrzeit 2 Stunden) – zuerst Baustellen
+der nächsten Setlist, dann Songs, die bei mindestens zwei Leuten in Kasten 1 liegen, dann was bei jemandem auf Üben oder
+Wackelt noch steht, zuletzt fast bühnenreife Setlist-Songs zum Festigen. Minuten je Song aus den bisherigen Proben (Zeit
+im Probe-Modus), sonst 8 Minuten (`src/app/data/probe-fuellen.ts`). **Ergebnis an die Band** (am Ende des Probe-Modus):
+Nachricht mit Sitzt, Nochmal (mit Namen und Status), Nicht drangekommen, den Notizen und der nächsten Probe.
 
 **Probenseite:** **Probe-Modus starten** steht ganz oben (sobald Songs geplant sind), dann „Wer kommt?“.
 **Songs zum Üben:** Alles zum Hinzufügen steht über der Liste: eine **Suche** für einzelne Songs und ganze

@@ -267,3 +267,30 @@ export function personUebersicht(
   }
   return { slug: m.slug, name: rufname(m), je, gefestigt, neuWackelig, zuletzt };
 }
+
+/**
+ * Übe-Woche einer Person: Tage am Stück mit Übe-Modus (bis heute bzw. gestern), Karten der letzten 7 Tage und was in
+ * dieser Zeit eingenordet wurde (aus Verlauf und geteiltem Karteikasten).
+ */
+export function uebeWoche(f: Fortschritt, g: KastenGeteilt, heute: string): { serie: number; karten: number; eingenordet: string[] } {
+  const tag = (n: number) => new Date(Date.parse(`${heute}T12:00:00Z`) - n * 864e5).toISOString().slice(0, 10);
+  const tage = new Set<string>();
+  let karten = 0;
+  for (const verlauf of Object.values(f))
+    for (const e of verlauf) {
+      if (e.quelle !== 'ueben') continue;
+      tage.add(e.tag);
+      if (e.tag > tag(7) && e.tag <= heute) karten++;
+    }
+  // Serie: heute noch nicht geübt zählt nicht als Abbruch
+  let n = tage.has(heute) ? 0 : 1;
+  let serie = 0;
+  while (tage.has(tag(n))) {
+    serie++;
+    n++;
+  }
+  const eingenordet = Object.entries(g.eingenordet ?? {})
+    .filter(([, t]) => t > tag(7))
+    .map(([k]) => k.slice(0, k.lastIndexOf('|')));
+  return { serie, karten, eingenordet };
+}

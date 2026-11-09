@@ -3,13 +3,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { datumText } from '../data/datum';
 import { BandService } from '../data/band.service';
 import { probenPlaene } from '../data/song-stand';
-import { ProbePlan, ergebnis, letzteNotiz, loadProbe, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, songKeyVon, speichereProbe, uebertragen, zeitDazu, zeitJeSong } from '../data/probe-modus';
+import { ProbePlan, probeErgebnisNachricht, ergebnis, letzteNotiz, loadProbe, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, songKeyVon, speichereProbe, uebertragen, zeitDazu, zeitJeSong } from '../data/probe-modus';
 import { SongMitschnitte } from './song-mitschnitte';
 import { Mitglied, ladeIch, rufname } from '../data/band-ich';
 import { alleFortschritte, bandStand, probeStaende } from '../data/fortschritt';
 import { UebeStatus, alleStatus, eigenerStatus, statusLabel, statusSetzen } from '../data/uebe-status';
 import { StatusSchalter } from './status-schalter';
-import { ladeProbeNotizen, letzteNotizen, probeNotizSetzen } from '../data/probe-notiz';
+import { ladeProbeNotizen, letzteNotizen, notizenDerProbe, probeNotizSetzen } from '../data/probe-notiz';
+import { nachrichtSenden } from '../data/kontakte';
 
 type Song = { title: string; artist: string };
 
@@ -202,6 +203,7 @@ export class ProbeLeiste {
         }
       } @else { <p class="zeile">Noch keine weitere Probe eingetragen.</p> }
       @if (meldung(); as m) { <p class="zeile sitzt" role="status">{{ m }}</p> }
+      <button type="button" class="an-band" (click)="anBand()"><mat-icon>{{ geschickt() ? 'check' : 'send' }}</mat-icon> {{ geschickt() || 'Ergebnis an die Band' }}</button>
       <button type="button" class="zu" (click)="schliessen.emit()"><mat-icon>close</mat-icon> Probe-Modus beenden</button>
     </div>
   `,
@@ -240,6 +242,21 @@ export class ProbeEnde {
       .join(', ');
   }
 
+  /** Ergebnis als Nachricht (Messenger, Mail oder Zwischenablage): Sitzt, Nochmal mit Namen, Offen, Notizen */
+  protected readonly geschickt = signal('');
+  protected async anBand(): Promise<void> {
+    const e = this.erg();
+    const bei = (s: Song) =>
+      this.mitglieder
+        .filter((m) => { const st = this.wer().get(songKeyVon(s))?.get(m.slug); return st && st !== 'sitzt' && st !== 'eingenordet'; })
+        .map((m) => `${rufname(m)}: ${statusLabel(this.wer().get(songKeyVon(s))!.get(m.slug)!)}`)
+        .join(', ');
+    const notizen = notizenDerProbe(this.datum(), this.mitglieder);
+    const plan = loadProbe(this.datum());
+    for (const s of plan.songs) if (s.notiz && s.notiz !== 'nochmal üben') notizen.set(songKeyVon(s), [s.notiz, ...(notizen.get(songKeyVon(s)) ?? [])]);
+    const r = await nachrichtSenden(undefined, `Probe ${datumText(this.datum())} – Ergebnis`, probeErgebnisNachricht(this.datum(), e, bei, notizen, this.naechste() ?? undefined));
+    if (r !== 'abgebrochen') this.geschickt.set(r === 'kopiert' ? 'Kopiert – in die Band-Gruppe einfügen' : 'Geschickt');
+  }
   protected mitnehmen(): void {
     const n = this.naechste();
     if (!n) return;

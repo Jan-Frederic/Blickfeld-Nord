@@ -58,6 +58,8 @@ export interface BereitschaftsDaten {
   setlistCheck?: { langsamStrecken: number; spruenge: number; baustellen: string[] };
   /** Offline-Speicher dieses Geräts – undefined, solange unbekannt oder ohne Service Worker */
   offline?: OfflineStand;
+  /** Setlist-Songs, die nach dem Übe-Status der Band noch Baustelle sind (Titel) – undefined: keine Angaben */
+  nichtBuehnenreif?: string[];
   /** von Hand abgehakte Vorabend-Punkte (VORABEND) – undefined: nicht anzeigen */
   vorabend?: string[];
 }
@@ -93,6 +95,15 @@ export function bereitschaft(d: BereitschaftsDaten): Punkt[] {
         ziel: 'setlist',
       });
   }
+  if (songs.length && d.nichtBuehnenreif)
+    punkte.push({
+      text: 'Bühnenreife der Setlist',
+      ok: !d.nichtBuehnenreif.length,
+      hinweis: d.nichtBuehnenreif.length
+        ? `${d.nichtBuehnenreif.length} ${d.nichtBuehnenreif.length === 1 ? 'Song ist' : 'Songs sind'} noch Baustelle: ${liste(d.nichtBuehnenreif)} (Songs → Bühnenreife)`
+        : 'bei allen mindestens „Sitzt“',
+      ziel: 'setlist',
+    });
   if (songs.length && d.setlistCheck) {
     const c = d.setlistCheck;
     const teile = [

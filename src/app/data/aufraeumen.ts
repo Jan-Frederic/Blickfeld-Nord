@@ -21,10 +21,10 @@ export const BEREICHE: Bereich[] = [
   { id: 'werbeplan', label: 'Werbeplan-Häkchen', praefixe: ['bn-werbeplan-'], jeAuftritt: true },
   { id: 'nachbereitung', label: 'Nachbereitungen', praefixe: ['bn-nachbereitung-'], jeAuftritt: true, hinweis: 'Merkpunkte erscheinen unter Aufgaben' },
   { id: 'probe', label: 'Probenplanung', praefixe: ['bn-probe-'], probe: true },
-  { id: 'band', label: 'Zusagen, „unsicher bei“ und Fortschritt', praefixe: ['bn-zusage-', 'bn-unsicher-', 'bn-fortschritt-', 'bn-kasten-', 'bn-probenotiz-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist, Übe-Status je Musiker (Bühnenreife), Karteikästen, Probe-Notizen je Musiker' },
+  { id: 'band', label: 'Zusagen, Übe-Status und Probe-Notizen', praefixe: ['bn-zusage-', 'bn-unsicher-', 'bn-fortschritt-', 'bn-kasten-', 'bn-probenotiz-'], hinweis: 'wer zur Probe kommt, wer bei welchem Song unsicher ist, Übe-Status je Musiker (Bühnenreife), Karteikästen, Probe-Notizen je Musiker' },
   { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
-  { id: 'wackelt', label: '„Wackelt noch“-Liste und Übemodus', praefixe: ['bn-wackelt', 'bn-ueben'], hinweis: 'deine Übe-Liste für Probe-Vorschlag und Karteikasten' },
+  { id: 'wackelt', label: 'Dein Karteikasten (Üben)', praefixe: ['bn-wackelt', 'bn-ueben'], hinweis: 'deine Übe-Liste für Probe-Vorschlag und Karteikasten' },
   { id: 'aufgaben', label: 'Aufgaben und Prüf-Häkchen', praefixe: ['bn-aufgaben', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'] },
   {
     id: 'einstellungen',
@@ -138,8 +138,10 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-sync-einstellungen': 'Synchronisation: Einstellungen',
   'bn-sync-letzter': 'Synchronisation: letzter Abgleich',
   'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',
-  'bn-wackelt': '„Wackelt noch“-Liste',
-  'bn-ueben': 'Übemodus (Karteikasten)',
+  'bn-wackelt': '„Wackelt noch“-Liste (alter Stand, wird in den Übe-Status übernommen)',
+  'bn-ueben': 'Dein Karteikasten (Kästen und Fälligkeit)',
+  'bn-ueben-tagesziel': 'Karteikarten am Tag (Empfehlung)',
+  'bn-ueben-heute': 'Heute geübte Karten',
   'bn-aufgaben': 'Aufgaben-Häkchen',
   'bn-ui-geprueft': 'Geprüfte Oberflächentexte',
   'bn-uebersetzung-pruefung': 'Geprüfte Übersetzungen',
@@ -159,6 +161,8 @@ const ZIEL_FEST: Record<string, string> = {
   'bn-songinfo-entwurf': '/backstage/songs',
   'bn-wackelt': '/backstage/songs',
   'bn-ueben': '/backstage/ueben',
+  'bn-ueben-tagesziel': '/backstage/einstellungen',
+  'bn-ueben-heute': '/backstage/ueben',
   'bn-aufgaben': '/backstage/aufgaben',
   'bn-ui-geprueft': '/backstage/uebersetzungen',
   'bn-uebersetzung-pruefung': '/backstage/uebersetzungen',
@@ -228,7 +232,13 @@ export function eintragBeschreiben(key: string, roh: string, auftritte: Map<stri
       link: verwaist ? undefined : ZIEL[bereich.id]?.(id),
     };
   }
-  if (key.startsWith('bn-fortschritt-')) return { key, bereich, bytes, titel: `Fortschritt · ${key.slice(15)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Song', 'Songs'), link: '/backstage/songs/reife' };
+  if (key.startsWith('bn-fortschritt-')) return { key, bereich, bytes, titel: `Übe-Verlauf · ${key.slice(15)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Song', 'Songs'), link: '/backstage/songs/reife' };
+  if (key.startsWith('bn-kasten-')) {
+    const g = (wert ?? {}) as { kaesten?: object; eingenordet?: object };
+    return { key, bereich, bytes, titel: `Übe-Status · ${key.slice(10)}`, details: `${anzahl(Object.keys(g.kaesten ?? {}).length, 'Karte', 'Karten')} im Karteikasten, ${Object.keys(g.eingenordet ?? {}).length} eingenordet`, link: '/backstage/songs/reife' };
+  }
+  if (key.startsWith('bn-probenotiz-')) return { key, bereich, bytes, titel: `Probe-Notizen · ${key.slice(14)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Probe', 'Proben'), link: '/backstage/termine' };
+  if (key.startsWith('bn-unsicher-')) return { key, bereich, bytes, titel: `Unsicher bei · ${key.slice(12)}`, details: anzahl(Array.isArray(wert) ? wert.length : 0, 'Song', 'Songs'), link: '/backstage/songs/reife' };
   return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link: ZIEL_FEST[key] };
 }
 

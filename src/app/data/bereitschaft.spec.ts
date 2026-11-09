@@ -20,6 +20,12 @@ describe('bereitschaft', () => {
     expect(p.find((x) => x.text === 'Werbung im Plan')?.hinweis).toBe('als Nächstes: Eine Woche vorher');
   });
 
+  it('Bühnenreife der Setlist: Baustellen werden genannt, ohne Angaben kein Punkt', () => {
+    expect(bereitschaft({ ...basis, nichtBuehnenreif: ['A'] }).find((x) => x.text === 'Bühnenreife der Setlist')).toMatchObject({ ok: false, hinweis: '1 Song ist noch Baustelle: A (Songs → Bühnenreife)' });
+    expect(bereitschaft({ ...basis, nichtBuehnenreif: [] }).find((x) => x.text === 'Bühnenreife der Setlist')?.ok).toBe(true);
+    expect(bereitschaft(basis).map((x) => x.text)).not.toContain('Bühnenreife der Setlist');
+  });
+
   it('meldet, was fehlt', () => {
     const p = bereitschaft({ ...basis, heute: '2026-12-03', setlist: [], vorort: { kontakt: 'Frau K.' }, werbungErledigt: [] });
     const offen = Object.fromEntries(p.filter((x) => !x.ok).map((x) => [x.text, x.hinweis]));

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { uebeWertung, alleStatus, buehnenreife, eigenerStatus, karteBewerten, personUebersicht, statusAusAlt, statusAusKasten, statusMigrieren, statusSetzen, statusVonPerson } from './uebe-status';
+import { uebeWoche, uebeWertung, alleStatus, buehnenreife, eigenerStatus, karteBewerten, personUebersicht, statusAusAlt, statusAusKasten, statusMigrieren, statusSetzen, statusVonPerson } from './uebe-status';
 import { ladeKastenGeteilt, ladeUeben } from './ueben';
 import { ladeFortschritt } from './fortschritt';
 
@@ -129,5 +129,15 @@ describe('Bühnenreife aus dem Übe-Status', () => {
     );
     expect(p).toMatchObject({ name: 'David', gefestigt: ['Iris'], neuWackelig: ['Angels'], zuletzt: '2026-10-25' });
     expect(p.je).toMatchObject({ sitzt: 1, wackelt: 1 });
+  });
+});
+
+describe('Übe-Woche', () => {
+  it('Tage am Stück, Karten der letzten 7 Tage, diese Woche eingenordet', () => {
+    const e = (tag: string, quelle: 'ueben' | 'probe' = 'ueben') => ({ tag, stand: 'sitzt' as const, quelle });
+    const f = { 'A|x': [e('2026-11-06'), e('2026-11-07')], 'B|x': [e('2026-11-07'), e('2026-11-05', 'probe')], 'C|x': [e('2026-10-01')] };
+    const w = uebeWoche(f, { v: 2, kaesten: {}, gelernt: {}, eingenordet: { 'A|x': '2026-11-07', 'D|x': '2026-10-01' } }, heute);
+    // heute (08.) noch nicht geübt: 07. und 06. zählen
+    expect(w).toEqual({ serie: 2, karten: 3, eingenordet: ['A'] });
   });
 });

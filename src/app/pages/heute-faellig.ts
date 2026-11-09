@@ -14,6 +14,9 @@ import { loadProbe, vorbereitungFaellig } from '../data/probe-modus';
 import { lageAus, wetterHinweis } from '../data/wetter-warnung';
 import { HOME, Ortsverzeichnis } from '../data/entfernung';
 import { PACKLISTE_PREFIX, loadPackliste } from './packliste';
+import { ladeIch } from '../data/band-ich';
+import { heuteGeuebt, karten, ladeUeben } from '../data/ueben';
+import { statusMigrieren } from '../data/uebe-status';
 import { erledigteSchritte, schrittText, setzeSchritt, werbeplan, werbeplanAktiv } from '../data/werbeplan';
 
 // Backstage-Übersicht, ganz oben: was heute dran ist – Auftritt und Probe von heute sowie fällige, noch nicht
@@ -44,7 +47,7 @@ interface Werbung {
           @for (t of termine(); track t.label) {
             <li>
               <mat-icon>{{ t.icon }}</mat-icon>
-              <a [routerLink]="t.link">{{ t.label }}</a>
+              <a [routerLink]="t.link" [queryParams]="t.query">{{ t.label }}</a>
             </li>
           }
           @for (w of werbung(); track w.id + w.schritt) {
@@ -130,7 +133,8 @@ export class HeuteFaellig {
 
   private readonly morgen = new Date(Date.parse(this.heute) + 864e5).toISOString().slice(0, 10);
 
-  protected readonly termine = computed(() => [
+  protected readonly termine = computed((): { icon: string; label: string; link: string[]; query?: Record<string, string | number> }[] => [
+    ...this.uebenFaellig(),
     ...this.wetter(),
     // Woche vor einer Probe: Plan an die Band (Songs zum Vorher-Anhören), solange er nicht geschickt wurde
     ...vorbereitungFaellig(this.band.rehearsals, this.heute, loadProbe).map(({ probe, songs, tage }) => ({
@@ -167,6 +171,19 @@ export class HeuteFaellig {
       link: ['/backstage/termine/kontakte'],
     })),
   ]);
+
+  /** fällige Karteikarten (persönlich, „Ich bin …“) – direkt in den Übe-Modus; dazu der nächste Auftritt in 30 Tagen */
+  private uebenFaellig(): { icon: string; label: string; link: string[]; query?: Record<string, string | number> }[] {
+    if (!ladeIch()) return [];
+    statusMigrieren();
+    const geuebt = heuteGeuebt(this.heute);
+    const n = karten(ladeUeben(), new Map(), this.heute).filter((k) => k.dran && !geuebt.includes(k.key)).length;
+    if (!n) return [];
+    const show = [...this.band.shows].filter((x) => x.date > this.heute).sort((a, b) => a.date.localeCompare(b.date))[0];
+    const tage = show ? Math.round((Date.parse(show.date) - Date.parse(this.heute)) / 864e5) : 99;
+    const vorher = show && tage <= 30 ? ` · ${show.private ? (show.publicName ?? 'Private Feier') : show.venue} in ${tage === 1 ? 'einem Tag' : tage + ' Tagen'}` : '';
+    return [{ icon: 'style', label: `${n} ${n === 1 ? 'Karteikarte' : 'Karteikarten'} fällig – Übe-Modus starten${vorher}`, link: ['/backstage/ueben'], query: { modus: 1 } }];
+  }
 
   private backupFaellig(): { icon: string; label: string; link: string[] }[] {
     const tage = tageSeitBackup();

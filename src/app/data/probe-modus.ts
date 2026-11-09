@@ -115,6 +115,32 @@ export function ergebnis(plan: ProbePlan, stand: (s: ProbeSong) => 'sitzt' | 'no
   return { sitzt, nochmal, offen, zeit: plan.songs.reduce((n, s) => n + (s.zeit ?? 0), 0) };
 }
 
+/**
+ * Ergebnis einer Probe als Nachricht an die Band: was sitzt, was nochmal kommt (mit Namen), was nicht drankam, die
+ * Notizen je Person und die nächste Probe.
+ */
+export function probeErgebnisNachricht(
+  datum: string,
+  e: ProbeErgebnis,
+  nochmalBei: (s: ProbeSong) => string,
+  notizen: Map<string, string[]>,
+  naechste?: { date: string; time?: string },
+): string {
+  const tag = new Date(`${datum}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+  const liste = (songs: ProbeSong[], mit?: (s: ProbeSong) => string) => songs.map((s) => `• ${s.title}${mit && mit(s) ? ` (${mit(s)})` : ''}`).join('\n');
+  const mitNotiz = [...notizen].filter(([, n]) => n.length);
+  return [
+    `🎸 Probe ${tag} – Ergebnis${e.zeit ? ` (${minutenText(e.zeit)} geprobt)` : ''}`,
+    e.sitzt.length ? `\n✅ Sitzt (${e.sitzt.length}):\n${liste(e.sitzt)}` : '',
+    e.nochmal.length ? `\n↻ Nochmal (${e.nochmal.length}):\n${liste(e.nochmal, nochmalBei)}` : '',
+    e.offen.length ? `\n⏳ Nicht drangekommen (${e.offen.length}):\n${liste(e.offen)}` : '',
+    mitNotiz.length ? `\n📝 Notizen:\n${mitNotiz.map(([k, n]) => `• ${k.slice(0, k.lastIndexOf('|'))}: ${n.join(' · ')}`).join('\n')}` : '',
+    naechste ? `\nNächste Probe: ${new Date(`${naechste.date}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}${naechste.time ? `, ${naechste.time} Uhr` : ''}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 /** Songs auf den Plan einer anderen Probe setzen (nur, was dort noch fehlt) – Zahl der neuen */
 export function uebertragen(ziel: ProbePlan, songs: { title: string; artist: string }[]): { plan: ProbePlan; neu: number } {
   const da = new Set(ziel.songs.map(songKeyVon));

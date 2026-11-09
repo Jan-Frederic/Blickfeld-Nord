@@ -8,6 +8,7 @@ import { isPause, loadSetlist } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { spruenge } from '../data/tonart-uebergang';
 import { notizBaustellen, probenNotizen } from '../data/song-stand';
+import { alleStatus, buehnenreife } from '../data/uebe-status';
 import { alleSongNoten } from '../data/noten';
 import { type OfflineStand, offlineStand, offlineVorladen } from '../data/offline';
 import { erledigteSchritte } from '../data/werbeplan';
@@ -146,6 +147,13 @@ export class Bereitschaft {
       packliste: { eingepackt: Math.min(pack.checked.length, gesamt), gesamt },
       offline: this.offline(),
       vorabend: this.vorabendLesen(id),
+      nichtBuehnenreif: (() => {
+        const m = this.band.members;
+        const alle = alleStatus(m);
+        const r = songs.map((x) => ({ x, r: buehnenreife(`${x.title}|${x.artist}`, m, alle) }));
+        // ohne irgendeine Angabe in der Band: nichts melden (Übe-Status wird noch nicht genutzt)
+        return r.some((y) => y.r.ampel !== 'offen') ? r.filter((y) => y.r.ampel === 'baustelle').map((y) => y.x.title) : undefined;
+      })(),
       setlistCheck: {
         langsamStrecken: langsamStrecken(setlist, (s) => songInfo(s.title, s.artist)?.bpm),
         spruenge: spruenge(setlist, (s) => gespielteTonart(songInfo(s.title, s.artist))),

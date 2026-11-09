@@ -95,7 +95,12 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
                   </button>
                   <button type="button" class="ton" (click)="einzaehlen($event)" [attr.aria-label]="'Einzählen ' + (taktText() || '4/4')" [title]="'Im Takt des Songs vorzählen (' + (taktText() || '4/4') + ')'">{{ einzaehlKnopf() }}</button>
                   @if (klick()) {
-                    <button type="button" class="ton tempo" [class.on]="faktor() < 1" (click)="langsamer($event)" [attr.aria-label]="'Übungstempo ' + faktorText() + ', antippen für langsamer'" title="Zum Üben langsamer: 100 → 90 → 80 → 70 %">{{ faktorText() }}</button>
+                    @if (ueben()) {
+                      <!-- Übe-Modus: Tempo-Training steigert 70 → 80 → 90 → 100 %; „Sitzt“ gibt es erst bei 100 % -->
+                      <button type="button" class="ton tempo" [class.on]="faktor() < 1" (click)="schneller($event)" [attr.aria-label]="'Tempo-Training ' + faktorText() + ', antippen für schneller'" title="Tempo-Training: 70 → 80 → 90 → 100 % – „Sitzt“ erst bei vollem Tempo">{{ faktorText() }} ↑</button>
+                    } @else {
+                      <button type="button" class="ton tempo" [class.on]="faktor() < 1" (click)="langsamer($event)" [attr.aria-label]="'Übungstempo ' + faktorText() + ', antippen für langsamer'" title="Zum Üben langsamer: 100 → 90 → 80 → 70 %">{{ faktorText() }}</button>
+                    }
                     <button type="button" class="ton" [class.on]="ton()" (click)="toggleTon($event)" [attr.aria-pressed]="ton()" [attr.aria-label]="ton() ? 'Ton aus' : 'Ton an'">
                       <mat-icon>{{ ton() ? 'volume_up' : 'volume_off' }}</mat-icon>
                     </button>
@@ -108,7 +113,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
             @if (ueben()) {
               <!-- Übe-Modus: derselbe Status-Umschalter wie in der Kopfleiste der Notenansicht -->
               <div class="ueben-status" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
-                <app-status-schalter [status]="uebeStatus()" [weiter]="true" (gewaehlt)="werten($event)" />
+                <app-status-schalter [status]="uebeStatus()" [weiter]="true" [sperren]="gesperrteStatus()" (gewaehlt)="werten($event)" />
               </div>
             }
             @if (show()) {
@@ -183,7 +188,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [class.raus]="notenRaus()" [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben() || (!!probe() && !!ich)" [weiter]="ueben()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenSchliessen()" (beenden)="closed.emit()" /> }
+      @if (notenOffen()) { <app-noten-anzeige [class.raus]="notenRaus()" [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben() || (!!probe() && !!ich)" [weiter]="ueben()" [sperren]="gesperrteStatus()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenSchliessen()" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -284,6 +289,8 @@ export class SetlistBuehne {
       return;
     }
     this.bewertet.emit({ title: c.title, artist: c.artist, status });
+    // nächste Karte: Tempo-Training wieder bei 70 %
+    if (this.klick()) this.faktor.set(0.7);
     this.statusNeu.update((n) => n + 1);
     if (status === 'ueben') this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
     if (this.index() + 1 >= this.liste().length) this.closed.emit();
@@ -478,8 +485,19 @@ export class SetlistBuehne {
   protected toggleKlick(e: Event): void {
     e.stopPropagation();
     this.klick.update((k) => !k);
+    // Übe-Modus: Tempo-Training beginnt bei 70 %
+    if (this.ueben() && this.klick()) this.faktor.set(0.7);
     this.startKlick();
   }
+  /** Tempo-Training (Übe-Modus): eine Stufe schneller, nach 100 % wieder 70 % */
+  protected schneller(e: Event): void {
+    e.stopPropagation();
+    const f = [...SetlistBuehne.FAKTOREN].reverse();
+    this.faktor.set(f[(f.indexOf(this.faktor()) + 1) % f.length]);
+    this.startKlick();
+  }
+  /** Übe-Modus mit Klick unter 100 %: „Sitzt“ und „Eingenordet“ erst bei vollem Tempo */
+  protected readonly gesperrteStatus = computed<UebeStatus[]>(() => (this.ueben() && this.klick() && this.faktor() < 1 ? ['sitzt', 'eingenordet'] : []));
 
   protected toggleTon(e: Event): void {
     e.stopPropagation();

@@ -629,8 +629,16 @@ test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Büh
   await p.keyboard.press('ArrowRight');
   const ende = buehne.locator('app-probe-ende');
   await until(async () => /Nochmal \(2\): Iris \(Fred: Üben\), Africa \(David: Wackelt noch\)/.test(await ende.innerText().catch(() => '')), 'Zusammenfassung nennt nicht, bei wem es noch nicht sitzt');
+  // Ergebnis an die Band (ohne Teilen-Menü: Zwischenablage)
+  await ende.locator('button.an-band').click();
+  await until(async () => /Kopiert|Geschickt/.test(await ende.locator('button.an-band').innerText()), 'Ergebnis an die Band meldet nichts');
   await ende.locator('button', { hasText: 'Probe-Modus beenden' }).click();
   // Vorschlag (für eine Probe ohne diese Songs): was bei jemandem wackelt, zuerst – mit Namen
+  await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [], notizen: '', punkte: [] })), datum);
+  await p.reload({ waitUntil: 'networkidle' });
+  // Probe füllen: die wackelnden Songs kommen nach Probendauer auf den Plan
+  await p.locator('app-backstage-probe button.fuellen').click();
+  await until(async () => /Probe gefüllt: \d+ Songs? dazu \([^)]*(Iris|Africa)/.test(await p.locator('app-backstage-probe .teilen-meldung').innerText().catch(() => '')), 'Probe füllen nimmt die wackelnden Songs nicht');
   await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [], notizen: '', punkte: [] })), datum);
   await p.reload({ waitUntil: 'networkidle' });
   // Vorschläge sind eingeklappt
@@ -1613,6 +1621,9 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   const karte = p.locator('app-backstage a.ueben-karte');
   const karteText = await karte.innerText();
   expect(karteText.includes('3 Songs im Karteikasten · 3 heute dran'), 'Üben-Karte zählt nicht: ' + karteText);
+  // „Heute fällig“ kennt den Karteikasten und führt direkt in den Übe-Modus
+  await until(async () => /3 Karteikarten fällig – Übe-Modus starten/.test(await p.locator('app-heute-faellig').innerText().catch(() => '')), '„Heute fällig“ nennt die fälligen Karteikarten nicht');
+  expect((await p.locator('app-heute-faellig a', { hasText: 'Karteikarten fällig' }).getAttribute('href')).includes('modus=1'), 'Link führt nicht in den Übe-Modus');
   await karte.click();
   const ueben = p.locator('app-backstage-ueben');
   await ueben.locator('.liste li select').first().waitFor();
@@ -1675,6 +1686,15 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   const titel = p.locator('app-setlist-buehne');
   expect((await titel.locator('.ueben-status app-status-schalter button').count()) === 5, 'Titelanzeige im Übe-Modus ohne Status-Umschalter');
   expect((await titel.locator('header .liste-knopf, header .lupe').count()) === 0, 'Song-Liste/Suche gehören nicht in den Übe-Modus');
+  // Tempo-Training: Klick startet bei 70 %, „Sitzt“ erst bei vollem Tempo
+  if (await titel.locator('button.bpm').count()) {
+    await titel.locator('button.bpm').click();
+    await until(async () => (await titel.locator('button.tempo').innerText().catch(() => '')).includes('70 %'), 'Tempo-Training startet nicht bei 70 %');
+    expect(await titel.locator('.ueben-status button[aria-label="Sitzt"]').isDisabled(), '„Sitzt“ ist unter 100 % wählbar');
+    for (let i = 0; i < 3; i++) await titel.locator('button.tempo').click();
+    await until(async () => !(await titel.locator('.ueben-status button[aria-label="Sitzt"]').isDisabled()), '„Sitzt“ bei 100 % nicht wählbar');
+    await titel.locator('button.bpm').click();
+  }
   // Hochwischen: Notenansicht wieder herein
   await ziehen(600, 250);
   await schritt('Hochwischen holt die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 5000 }));

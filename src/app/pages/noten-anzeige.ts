@@ -55,7 +55,7 @@ const BREITE_KEY = 'bn-noten-breite';
         <!-- Übe- und Probe-Modus: Mitschnitt und eigener Übe-Status (Übe-Modus: danach die nächste Karte) -->
         @if (bewerten()) {
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
-          <app-status-schalter [kopf]="true" [status]="status()" [weiter]="weiter()" (gewaehlt)="wertung.emit($event)" />
+          <app-status-schalter [kopf]="true" [status]="status()" [weiter]="weiter()" [sperren]="sperren()" (gewaehlt)="wertung.emit($event)" />
         }
         <!-- derselbe Noten-Knopf wie in der Titelanzeige: noch einmal drücken führt zurück; das X beendet den Bühnen-Modus -->
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
@@ -158,6 +158,8 @@ export class NotenAnzeige {
   readonly wertung = output<UebeStatus>();
   /** Übe-Modus: „Sitzt“ schiebt bei sitzendem Song einen Kasten weiter (Tooltip) */
   readonly weiter = input(false);
+  /** Status, die gerade nicht wählbar sind (Tempo-Training unter 100 %) */
+  readonly sperren = input<UebeStatus[]>([]);
   protected readonly mitschnitt = signal(false);
   protected mitschnittUmschalten(e: Event): void {
     e.stopPropagation();

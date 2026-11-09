@@ -122,10 +122,19 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment2.outputs.page_url }}
     steps:
+      # GitHub Pages bleibt gelegentlich bei „syncing_files“ hängen (Zeitlimit) – dann einmal neu versuchen
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Kurz warten vor dem zweiten Versuch
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 60
+      - name: Deploy to GitHub Pages (zweiter Versuch)
+        id: deployment2
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
 
   # Live-Check nach jedem Deploy (auch nach dem von „Screenshots aktualisieren“ angestoßenen): startet den Workflow

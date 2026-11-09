@@ -1,5 +1,7 @@
 import { datumText } from '../data/datum';
 
+import { alleStatus, buehnenreife } from '../data/uebe-status';
+import { prozent } from '../data/fortschritt';
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { Verlauf } from '../zurueck';
@@ -118,7 +120,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
                 <span class="pause-label"><mat-icon>coffee</mat-icon> Pause @if (setBefore(i); as l) {<span class="set-time">· Set davor {{ time(l.seconds) }}</span>}</span>
               } @else {
                 <span class="no">{{ number(i) }}</span>
-                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if ($any(e).notiz) {<span class="info" style="color: #9ccc9c">✎ {{ $any(e).notiz }}</span>}@if (hier().get($any(e).title + '|' + $any(e).artist); as d) {<span class="sprung" style="color: #e8a46a">↺ hier schon am {{ datum(d) }} gespielt</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
+                <span class="song"><span class="t">{{ $any(e).title }}</span>&ngsp;<span class="a">{{ $any(e).artist }}</span>@if ($any(e).wunsch !== undefined) {&ngsp;<span class="wunsch">♥ {{ $any(e).wunsch || 'Wunsch' }}</span>}@if (info($any(e)); as i) {<span class="info">{{ i }}</span>}@if ($any(e).notiz) {<span class="info" style="color: #9ccc9c">✎ {{ $any(e).notiz }}</span>}@if (reife().get($any(e).title + '|' + $any(e).artist); as r) {<span [class]="'reife ' + r.ampel" [title]="'Bühnenreife ' + r.text">● {{ r.prozent }}</span>}@if (hier().get($any(e).title + '|' + $any(e).artist); as d) {<span class="sprung" style="color: #e8a46a">↺ hier schon am {{ datum(d) }} gespielt</span>}@if (sprung(i); as sp) {<span class="sprung" title="Großer Tonartwechsel ohne Pause – Überleitung über den Dominantseptakkord der neuen Tonart oder umsortieren">⚡ Tonartsprung {{ sp }}</span>}</span>
                 @if (length($any(e)); as d) { <span class="dur">{{ d }}</span> }
               }
               <span class="row-tools">
@@ -328,6 +330,21 @@ export class Setlist {
   protected readonly hier = computed(() => {
     const show = this.band.showById(this.show());
     return show ? hierGespielt(show, this.band.shows, (s) => loadSetlist(this.band.showId(s))) : new Map<string, string>();
+  });
+  /** Bühnenreife je Song aus dem Übe-Status der Band (nur, wenn überhaupt jemand einen Status gesetzt hat) */
+  protected readonly reife = computed(() => {
+    const m = this.band.members;
+    const alle = alleStatus(m);
+    const out = new Map<string, { ampel: string; prozent: string; text: string }>();
+    if (![...alle.values()].some((x) => x.size)) return out;
+    for (const e of this.entries()) {
+      if (this.isPause(e)) continue;
+      const k = `${(e as { title: string }).title}|${(e as { artist: string }).artist}`;
+      const r = buehnenreife(k, m, alle);
+      const wort = { buehnenreif: 'bühnenreif', fast: 'fast bühnenreif', baustelle: 'Baustelle', offen: 'ohne Angabe' }[r.ampel];
+      out.set(k, { ampel: r.ampel, prozent: prozent(r.wert), text: `${prozent(r.wert)} – ${wort}${r.wackeltBei.length ? ' · wackelt bei ' + r.wackeltBei.join(', ') : ''}` });
+    }
+    return out;
   });
   protected readonly hierZahl = computed(() => this.entries().filter((e) => !this.isPause(e) && this.hier().has(`${(e as { title: string }).title}|${(e as { artist: string }).artist}`)).length);
   protected datum(d: string): string {
