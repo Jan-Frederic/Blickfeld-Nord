@@ -557,6 +557,8 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
   }, datum);
   await p.reload({ waitUntil: 'networkidle' });
+  // Probe-Modus starten steht ganz oben, vor „Wer kommt?“
+  expect(await p.locator('app-backstage-probe').evaluate((el) => { const b = el.querySelector('.probe-start.oben'); const h = [...el.querySelectorAll('h3')].find((x) => x.textContent.includes('Wer kommt')); return !!b && !!h && !!(b.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING); }), 'Probe-Modus starten steht nicht oben');
   await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
   await until(async () => /probe[\s\S]*song 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
@@ -631,6 +633,8 @@ test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Büh
   // Vorschlag (für eine Probe ohne diese Songs): was bei jemandem wackelt, zuerst – mit Namen
   await p.evaluate((d) => localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [], notizen: '', punkte: [] })), datum);
   await p.reload({ waitUntil: 'networkidle' });
+  // Vorschläge sind eingeklappt
+  await p.locator('app-backstage-probe details.vorschlaege summary').click();
   await until(async () => /wackelt bei Fred/.test(await p.locator('app-probe-vorschlag').innerText().catch(() => '')), 'Vorschlag nutzt die Bühnenreife nicht');
   // Übersicht: Fred mit einem Song in „Üben“ und einem, der sitzt; Iris als Baustelle
   await p.go('/backstage/songs/reife/');
@@ -742,6 +746,7 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   await until(async () => /Plan (kopiert|geteilt)/.test(await seite.locator('.teilen-meldung').innerText().catch(() => '')), 'Plan an die Band meldet nichts');
   expect(!!(await p.evaluate((d) => JSON.parse(localStorage.getItem('bn-probe-' + d)).geschickt, datum)), '„geschickt“ wird nicht gemerkt');
   // Generalprobe: Setlist des nächsten Auftritts in Reihenfolge, Probe-Modus mit Sets
+  await seite.locator('details.vorschlaege summary').click();
   await seite.locator('button.general').click();
   await until(async () => /Africa[\s\S]*Iris[\s\S]*Angels/.test(await seite.locator('.list').first().innerText()), 'Generalprobe übernimmt die Setlist nicht');
   await seite.getByRole('button', { name: 'Probe-Modus starten' }).click();
@@ -1940,6 +1945,7 @@ test('Backstage: Übe-Status „Wackelt noch“ und Proben-Mitschnitt im Song, N
   // Probe-Vorschlag nimmt den Song zuerst
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
+  await p.locator('app-backstage-probe details.vorschlaege summary').click();
   await until(async () => /wackelt bei Fred/.test(await p.locator('app-probe-vorschlag li').first().innerText()), 'Probe-Vorschlag ohne „wackelt bei Fred“');
   // Abgleich: Mitschnitte zählen mit
   await p.go('/backstage/abgleich/');

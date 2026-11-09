@@ -44,6 +44,14 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           @if (p.note) { <br />{{ p.note }} }
         </p>
 
+        <!-- das Wichtigste zuerst: Probe-Modus starten (sobald Songs geplant sind) -->
+        @if (plan().songs.length) {
+          <div class="probe-start oben">
+            <button type="button" class="primaer" (click)="modus.set(true)"><mat-icon>fit_screen</mat-icon> Probe-Modus starten</button>
+            <span>{{ plan().songs.length }} {{ plan().songs.length === 1 ? 'Song' : 'Songs' }} · {{ stand() }}</span>
+          </div>
+        }
+
         <h3><mat-icon>groups</mat-icon> Wer kommt?</h3>
         <app-probe-zusagen [datum]="datum()" />
 
@@ -66,21 +74,21 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           </ul>
         }
         @if (hinzuMeldung(); as m) { <p class="teilen-meldung" role="status">{{ m }}</p> }
-        @if (naechsterAuftritt(); as a) {
-          <button type="button" class="general" (click)="generalprobeUebernehmen()" [disabled]="!a.songs"><mat-icon>theater_comedy</mat-icon>
-            {{ plan().generalprobe === a.id ? 'Generalprobe ' + a.name + ' – Setlist neu übernehmen' : 'Generalprobe: Setlist ' + a.name + ' übernehmen' }}{{ a.songs ? ' (' + a.songs + ' Songs)' : ' (noch keine Setlist auf diesem Gerät)' }}</button>
-        }
-        <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
+        <!-- Vorschläge und Generalprobe eingeklappt – die Liste bleibt im Blick -->
+        <details class="vorschlaege">
+          <summary><mat-icon>lightbulb</mat-icon> Vorschläge{{ naechsterAuftritt() ? ' und Generalprobe' : '' }}</summary>
+          @if (naechsterAuftritt(); as a) {
+            <button type="button" class="general" (click)="generalprobeUebernehmen()" [disabled]="!a.songs"><mat-icon>theater_comedy</mat-icon>
+              {{ plan().generalprobe === a.id ? 'Generalprobe ' + a.name + ' – Setlist neu übernehmen' : 'Generalprobe: Setlist ' + a.name + ' übernehmen' }}{{ a.songs ? ' (' + a.songs + ' Songs)' : ' (noch keine Setlist auf diesem Gerät)' }}</button>
+          }
+          <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
+        </details>
 
         <!-- Abgleich mit der Spotify-Liste „Probe“: nur als Hinweis (übernehmen geht über die Suche: „Probe“) -->
         @if (spotifyDiff(); as d) {
           <p class="spotify-diff" [title]="d.titel">{{ d.text }}</p>
         }
         @if (plan().songs.length) {
-          <div class="probe-start">
-            <button type="button" class="primaer" (click)="modus.set(true)"><mat-icon>fit_screen</mat-icon> Probe-Modus starten</button>
-            <span>{{ stand() }}</span>
-          </div>
           <div class="probe-teilen">
             <button type="button" (click)="planSchicken()"><mat-icon>{{ geschickt() ? 'check' : 'send' }}</mat-icon> Plan an die Band</button>
             <button type="button" (click)="fuerSpotify()" title="Track-Links kopieren – in Spotify am Computer in eine Playlist einfügen (Strg/Cmd+V)"><mat-icon>queue_music</mat-icon> Für Spotify kopieren</button>
@@ -181,7 +189,12 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .info.nochmal, .info.unsicher { border-color: #e0b25a; color: #e0b25a; }
     .probe-teilen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
     .probe-teilen button, .general { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
-    .general { margin: 12px 8px 10px 0; }
+    .general { margin: 4px 8px 12px 0; }
+    .vorschlaege { margin: 12px 0; border: 1px solid var(--bn-line); border-radius: 10px; padding: 0 12px; }
+    .vorschlaege[open] { padding-bottom: 4px; }
+    .vorschlaege summary { display: flex; align-items: center; gap: 8px; padding: 10px 0; cursor: pointer; color: var(--bn-fog); font-size: .9rem; }
+    .vorschlaege summary mat-icon { color: var(--bn-sunset); font-size: 18px; width: 18px; height: 18px; }
+    .probe-start.oben { margin: 4px 0 8px; }
     .general:disabled { opacity: .5; cursor: default; }
     .probe-teilen small { color: var(--bn-fog); }
     .teilen-meldung { margin: 8px 0 12px; color: #5fb88a; font-size: .85rem; }
