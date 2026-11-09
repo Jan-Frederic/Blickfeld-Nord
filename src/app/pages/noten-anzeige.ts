@@ -57,6 +57,10 @@ const BREITE_KEY = 'bn-noten-breite';
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
           <app-status-schalter [kopf]="true" [status]="status()" [weiter]="weiter()" [sperren]="sperren()" (gewaehlt)="wertung.emit($event)" />
         }
+        <!-- Übe- und Probe-Modus: Song-Liste zum Springen (öffnet die Liste des Bühnen-Modus über den Noten) -->
+        @if (listeKnopf()) {
+          <button type="button" class="liste-knopf" (click)="$event.stopPropagation(); liste.emit()" aria-label="Alle Songs – zum Springen" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
+        }
         <!-- derselbe Noten-Knopf wie in der Titelanzeige: noch einmal drücken führt zurück; das X beendet den Bühnen-Modus -->
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
         <button type="button" class="zu" (click)="ende($event)" [attr.aria-label]="endeText()"><mat-icon>close</mat-icon></button>
@@ -160,6 +164,9 @@ export class NotenAnzeige {
   readonly weiter = input(false);
   /** Status, die gerade nicht wählbar sind (Tempo-Training unter 100 %) */
   readonly sperren = input<UebeStatus[]>([]);
+  /** Knopf „Song-Liste“ in der Kopfleiste (Übe- und Probe-Modus) */
+  readonly listeKnopf = input(false);
+  readonly liste = output<void>();
   protected readonly mitschnitt = signal(false);
   protected mitschnittUmschalten(e: Event): void {
     e.stopPropagation();

@@ -1020,3 +1020,9 @@ app-backstage-ueben .board .werte { color: var(--bn-fog); }
 app-backstage-ueben .board .serie { color: var(--bn-sunset); font-weight: 600; }
 app-backstage-ueben .board-titel { margin: 16px 0 8px; color: var(--bn-fog); font-size: .9rem; }
 app-backstage-ueben .gemeinsam button { flex: none; padding: 6px 12px; font-size: .82rem; }
+
+// Üben: Song in der Liste antippen öffnet den Übe-Modus an dieser Stelle
+app-backstage-ueben .liste .song-start { all: unset; box-sizing: border-box; flex: 1; min-width: 0; overflow-wrap: anywhere; cursor: pointer; }
+app-backstage-ueben .liste .song-start:hover .t, app-backstage-ueben .liste .song-start:focus-visible .t { color: var(--bn-sunset); }
+app-backstage-ueben .liste .song-start:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; border-radius: 4px; }
+app-backstage-ueben .liste .song-start small { display: block; color: var(--bn-fog); font-size: .78rem; }

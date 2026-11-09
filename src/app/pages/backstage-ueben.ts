@@ -73,8 +73,9 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
           @for (k of alle(); track k.key) {
             <li [class.dran]="k.dran">
               <span class="kasten" [attr.aria-label]="'Kasten ' + k.kasten">{{ k.kasten }}</span>
-              <span class="song"><span class="t">{{ k.title }}</span>&ngsp;<span class="a">{{ k.artist }}</span>
-                <small>{{ k.dran ? 'heute dran' : 'wieder am ' + datum(k.faellig) }}{{ k.auftritt ? ' · im Set am ' + datum(k.auftritt) : '' }}</small></span>
+              <!-- Klick auf den Song: Übe-Modus direkt an dieser Stelle -->
+              <button type="button" class="song song-start" (click)="uebeModus(false, k.key)" [attr.aria-label]="k.title + ' im Übe-Modus öffnen'" title="Im Übe-Modus ab hier"><span class="t">{{ k.title }}</span>&ngsp;<span class="a">{{ k.artist }}</span>
+                <small>{{ k.dran ? 'heute dran' : 'wieder am ' + datum(k.faellig) }}{{ k.auftritt ? ' · im Set am ' + datum(k.auftritt) : '' }}</small></button>
               <select [class]="statusAusKasten(k.kasten)" [attr.aria-label]="'Status von ' + k.title" (change)="setzen(k.key, $any($event.target).value)">
                 @for (s of status; track s.id) { <option [value]="s.id" [selected]="s.id === statusAusKasten(k.kasten)">{{ s.label }}</option> }
               </select>
@@ -110,7 +111,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     </section>
     @if (modus(); as m) {
       <!-- Übe-Modus: Notenansicht der Karten, oben rechts „Wackelt noch“ / „Sitzt“ – weiter zur nächsten Karte -->
-      <app-setlist-buehne [entries]="m" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (closed)="modusZu()" />
+      <app-setlist-buehne [entries]="m" [start]="modusStart()" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (closed)="modusZu()" />
     }
   `,
 })
@@ -212,9 +213,12 @@ export class BackstageUeben {
   // heute fällige zuerst, danach alle übrigen – das Tagesziel hält niemanden vom Üben ab.
   protected readonly modus = signal<Entry[] | null>(null);
   private modusVonLink = false;
-  protected uebeModus(vonLink: boolean): void {
+  /** Übe-Modus ab dieser Karte (Klick auf einen Song in der Liste) */
+  protected readonly modusStart = signal(0);
+  protected uebeModus(vonLink: boolean, abKey?: string): void {
     const dran = this.dran();
     const k = [...dran, ...this.alle().filter((x) => !dran.includes(x))];
+    this.modusStart.set(Math.max(0, abKey ? k.findIndex((x) => x.key === abKey) : 0));
     if (!k.length) {
       this.leerHinweis.set(true);
       if (vonLink) this.verlauf.zurueck();

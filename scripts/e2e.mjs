@@ -1656,8 +1656,18 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => (await ueben.locator('.kaesten li').nth(0).locator('.n').innerText()) === '4', 'Sammlung nicht in Kasten 1');
   for (const k of ['In der Weihnachtsbäckerei', 'Kleine Kinder', 'Weihnacht, was bist du']) await ueben.locator('.liste li', { hasText: k }).locator('select').selectOption('nicht');
   await until(async () => (await ueben.locator('.liste li select').count()) === 3, 'Nicht gelernt bleibt im Karteikasten');
+  // Klick auf einen Song der Liste: Übe-Modus genau dort; Song-Liste auch in der Kopfleiste der Noten
+  const zweiter = (await ueben.locator('.liste li .song-start .t').nth(1).innerText()).trim();
+  await ueben.locator('.liste li .song-start').nth(1).click();
+  const notenA = p.locator('app-setlist-buehne app-noten-anzeige');
+  await until(async () => (await notenA.locator('header .titel').innerText().catch(() => '')).includes(zweiter), 'Klick auf den Song startet nicht an dieser Stelle');
+  await notenA.locator('header .liste-knopf').click();
+  await until(async () => (await p.locator('app-setlist-buehne .navi li').count()) >= 3, 'Song-Liste öffnet sich nicht aus der Kopfleiste');
+  await p.keyboard.press('Escape');
+  await p.locator('app-setlist-buehne header button[aria-label="Übe-Modus beenden"]').click().catch(async () => { await p.keyboard.press('Escape'); });
+  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'Übe-Modus schließt nicht');
   // Übe-Modus: Notenansicht mit „Wackelt noch“ / „Sitzt“ oben rechts, weiter zur nächsten Karte
-  await ueben.getByRole('button', { name: 'Übe-Modus' }).click();
+  await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
   const noten = p.locator('app-setlist-buehne app-noten-anzeige');
   await schritt('Übe-Modus öffnet die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
   // Mitschnitte des Songs zum Mitspielen
@@ -1695,7 +1705,8 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => (await noten.count()) === 0, 'Herunterwischen führt nicht zur Titelanzeige');
   const titel = p.locator('app-setlist-buehne');
   expect((await titel.locator('.ueben-status app-status-schalter button').count()) === 5, 'Titelanzeige im Übe-Modus ohne Status-Umschalter');
-  expect((await titel.locator('header .liste-knopf, header .lupe').count()) === 0, 'Song-Liste/Suche gehören nicht in den Übe-Modus');
+  expect((await titel.locator('header .lupe').count()) === 0, 'Wunsch-Suche gehört nicht in den Übe-Modus');
+  expect((await titel.locator('header .liste-knopf').count()) === 1, 'Song-Liste fehlt im Übe-Modus');
   // Tempo-Training: Klick startet bei 70 %, „Sitzt“ erst bei vollem Tempo
   if (await titel.locator('button.bpm').count()) {
     await titel.locator('button.bpm').click();

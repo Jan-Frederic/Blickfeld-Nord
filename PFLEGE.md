@@ -127,6 +127,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Spotify-Liste steht; er wechselt mit dem Song. Ganze Songs nur mit Spotify-Anmeldung im selben Browser, sonst
   30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`; nur im Backstage,
   öffentliche Seiten laden nichts von Spotify.
+- **Song antippen** in „Deine Songs im Karteikasten“ öffnet den Übe-Modus direkt bei diesem Song.
 - **Die Band übt** (unten auf der Üben-Seite): je Musiker die Übe-Woche (Tage am Stück, Karten in 7 Tagen, diese
   Woche eingenordet) und „Gerade gemeinsam dran“ – Songs, die bei mindestens zwei auf Üben oder Wackelt noch stehen, mit
   Status je Person; „Ich auch“ nimmt den Song in den eigenen Karteikasten.
@@ -258,7 +259,8 @@ ihrer Reihenfolge an den Anfang des Plans. Der Probe-Modus spielt dann die Setli
 Set gegen die geplante Spielzeit wie auf der Bühne.
 
 **Titelanzeige und Notenansicht (alle drei Modi):** Knöpfe der Titelanzeige von links nach rechts: Schriftgröße
-(A− A+), Stimmgerät, Wunsch-Suche und Song-Liste (nicht im Übe-Modus), **Noten** (orange, mit Text auf breiten
+(A− A+), Stimmgerät, Wunsch-Suche (nicht im Übe-Modus), Song-Liste (im Übe- und Probe-Modus auch in der Kopfleiste der
+Notenansicht), **Noten** (orange, mit Text auf breiten
 Bildschirmen), Beenden. **Hochwischen** in der Titelanzeige lässt die Notenansicht hereingleiten (wie der Noten-Knopf);
 in der Notenansicht blendet Hochwischen die Kopfleiste aus, Herunterwischen holt sie zurück – ist sie schon da und das
 Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape und Noten-Knopf). Der

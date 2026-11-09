@@ -57,7 +57,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
           @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() && !generalprobe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
         </span>
         <!-- Reihenfolge: Werkzeuge (Schrift, Stimmgerät, Wunsch-Suche) – Navigation (Song-Liste) – Noten – Beenden.
-             Im Übe-Modus ohne Wunsch-Suche und Song-Liste (die Reihe der Karten ergibt sich aus dem Status). -->
+             Im Übe-Modus ohne Wunsch-Suche; die Song-Liste zeigt dort die Karten. -->
         <span class="zoom" role="group" aria-label="Schriftgröße">
           <button type="button" (click)="zoomen(-1)" [disabled]="zoom() <= ZOOM_MIN" aria-label="Schrift kleiner">A−</button>
           <button type="button" (click)="zoomen(1)" [disabled]="zoom() >= ZOOM_MAX" aria-label="Schrift größer">A+</button>
@@ -65,8 +65,8 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät" title="Stimmgerät"><mat-icon>tune</mat-icon></button>
         @if (!ueben()) {
           <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)" title="Song suchen – kommt jetzt dran"><mat-icon>search</mat-icon></button>
-          <button type="button" class="close liste-knopf" (click)="navUmschalten($event)" [attr.aria-pressed]="nav()" aria-label="Alle Songs der Setlist" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
         }
+        <button type="button" class="close liste-knopf" (click)="navUmschalten($event)" [attr.aria-pressed]="nav()" [attr.aria-label]="ueben() ? 'Alle Karten' : 'Alle Songs der Setlist'" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
         @if (notenSongs().size || notenAuf()) {
           <button type="button" class="noten-knopf" (click)="notenUmschalten($event)" [attr.aria-pressed]="notenOffen()" aria-label="Noten anzeigen" title="Noten – oder nach oben wischen">
             <mat-icon>library_music</mat-icon><span class="noten-text">Noten</span>
@@ -181,7 +181,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
       @if (nav()) {
         <nav class="navi" aria-label="Songs der Setlist" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (keydown)="navTaste($event)">
           <div class="navi-kopf">
-            <span>Setlist</span>
+            <span>{{ ueben() ? 'Karten' : probe() ? 'Probe' : 'Setlist' }}</span>
             <button type="button" class="close" (click)="navUmschalten($event)" aria-label="Song-Liste schließen"><mat-icon>close</mat-icon></button>
           </div>
           <ol>
@@ -198,7 +198,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [class.raus]="notenRaus()" [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben() || (!!probe() && !!ich)" [weiter]="ueben()" [sperren]="gesperrteStatus()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenSchliessen()" (beenden)="closed.emit()" /> }
+      @if (notenOffen()) { <app-noten-anzeige [class.raus]="notenRaus()" [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben() || (!!probe() && !!ich)" [weiter]="ueben()" [sperren]="gesperrteStatus()" [listeKnopf]="ueben() || !!probe()" (liste)="navOeffnen()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenSchliessen()" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -692,6 +692,12 @@ export class SetlistBuehne {
       isPause(e) ? { index, pause: true, set: ++set, nr: 0, title: '', gestrichen: false } : { index, pause: false, set, nr: ++nr, title: e.title, gestrichen: this.gestrichen().has(index) },
     );
   });
+  /** aus der Kopfleiste der Notenansicht: Song-Liste öffnen */
+  protected navOeffnen(): void {
+    if (this.nav()) return;
+    this.nav.set(true);
+    setTimeout(() => this.host.nativeElement.querySelector('.navi .jetzt')?.scrollIntoView({ block: 'center' }));
+  }
   protected navUmschalten(e: Event): void {
     e.stopPropagation();
     this.nav.update((n) => !n);
