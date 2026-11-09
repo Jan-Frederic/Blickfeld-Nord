@@ -3,8 +3,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
-import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
-import { STATUS, UebeStatus, eigeneStatus, statusAusKasten, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
+import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeKastenGeteilt, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
+import { ladeFortschritt } from '../data/fortschritt';
+import { STATUS, UebeStatus, alleStatus, eigeneStatus, gemeinsamDran, uebeWoche, statusAusKasten, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
 import { ListenQuelle, listenQuellen, listenTreffer } from '../data/listen-quellen';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { LISTEN, songAbgleich } from '../data/playlisten';
@@ -82,6 +83,29 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
             <li class="leer">Der Karteikasten ist leer. Songs kommen über den Status (Song-Dialog, Probe-Modus, Nachbereitung) oder oben über die Suche dazu.</li>
           }
         </ul>
+
+        <!-- Band-Übe-Board: wer übt wie viel, und woran mehrere gerade gemeinsam arbeiten -->
+        <h3>Die Band übt</h3>
+        <ul class="board">
+          @for (p of bandWoche(); track p.slug) {
+            <li [class.ich]="p.slug === ich()">
+              <span class="name">{{ p.name }}</span>
+              <span class="werte">@if (p.serie > 1) { <span class="serie">🔥 {{ p.serie }} Tage</span> · }{{ p.karten }} {{ p.karten === 1 ? 'Karte' : 'Karten' }} in 7 Tagen@if (p.eingenordet.length) { · ✓✓ {{ p.eingenordet.join(', ') }} }@if (!p.karten && !p.serie && !p.eingenordet.length) { · diese Woche noch nicht geübt }</span>
+            </li>
+          }
+        </ul>
+        @if (gemeinsam().length) {
+          <p class="board-titel">Gerade gemeinsam dran – zusammen üben lohnt sich:</p>
+          <ul class="liste gemeinsam">
+            @for (g of gemeinsam(); track g.key) {
+              <li>
+                <span class="song"><span class="t">{{ g.title }}</span>&ngsp;<span class="a">{{ g.artist }}</span>
+                  <small>@for (w of g.wer; track w.slug; let l = $last) { {{ w.name }}: {{ statusLabel(w.status) }}{{ l ? '' : ' · ' }} }</small></span>
+                @if (!imKasten(g.key)) { <button type="button" (click)="hinzu(g.key)" [attr.aria-label]="g.title + ' auch üben'"><mat-icon>add</mat-icon> Ich auch</button> }
+              </li>
+            }
+          </ul>
+        }
       }
     </section>
     @if (modus(); as m) {
@@ -139,6 +163,16 @@ export class BackstageUeben {
 
   /** Übe-Modus: neuer Status je bewerteter Karte (Anzahl je Status) */
   private zaehler: Partial<Record<UebeStatus, number>> = {};
+
+  // Band-Übe-Board (zieht mit dem Abgleich nach): Übe-Woche je Musiker und Songs, an denen mehrere gerade arbeiten
+  protected readonly bandWoche = computed(() => {
+    this.stand();
+    return this.band.members.map((m) => ({ slug: m.slug, name: rufname(m), ...uebeWoche(ladeFortschritt(m.slug), ladeKastenGeteilt(m.slug), this.heute) }));
+  });
+  protected readonly gemeinsam = computed(() => (this.stand(), gemeinsamDran(this.band.members, alleStatus(this.band.members)).slice(0, 8)));
+  protected imKasten(key: string): boolean {
+    return this.alle().some((k) => k.key === key);
+  }
 
   // ganze Listen: Setlists der Auftritte (auf diesem Gerät), Sammlungen, Spotify-Listen
   private readonly listen = computed(() => (this.stand(), listenQuellen(this.band.shows, (x) => this.band.showId(x), this.songs)));

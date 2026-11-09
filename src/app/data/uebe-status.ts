@@ -294,3 +294,18 @@ export function uebeWoche(f: Fortschritt, g: KastenGeteilt, heute: string): { se
     .map(([k]) => k.slice(0, k.lastIndexOf('|')));
   return { serie, karten, eingenordet };
 }
+
+/** Songs, an denen mehrere gerade arbeiten (Üben oder Wackelt noch bei mindestens `ab` Personen) – meiste zuerst */
+export function gemeinsamDran(
+  mitglieder: Mitglied[],
+  alle: Map<string, Map<string, UebeStatus>>,
+  ab = 2,
+): { key: string; title: string; artist: string; wer: { slug: string; name: string; status: UebeStatus }[] }[] {
+  const je = new Map<string, { slug: string; name: string; status: UebeStatus }[]>();
+  for (const m of mitglieder)
+    for (const [k, st] of alle.get(m.slug) ?? []) if (unsicher(st)) je.set(k, [...(je.get(k) ?? []), { slug: m.slug, name: rufname(m), status: st }]);
+  return [...je]
+    .filter(([, w]) => w.length >= ab)
+    .map(([key, wer]) => ({ key, title: key.slice(0, key.lastIndexOf('|')), artist: key.slice(key.lastIndexOf('|') + 1), wer }))
+    .sort((a, b) => b.wer.length - a.wer.length || a.title.localeCompare(b.title, 'de'));
+}

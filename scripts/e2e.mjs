@@ -436,7 +436,7 @@ test('Backstage: Tap-Tempo und Status in der Songliste, Veranstalter-Mappe als P
   const [pdf] = await Promise.all([p.waitForEvent('download'), p.locator('app-termine-kontakte li', { hasText: 'Testhalle' }).getByRole('button', { name: /Mappe/ }).click()]);
   expect(pdf.suggestedFilename() === 'Mappe Testhalle.pdf', `Mappe heißt ${pdf.suggestedFilename()}`);
   return p;
-});
+}, { allein: true });
 
 test('Woche vor dem Konzert: „Noch … Tage“-Leiste auf Unterseiten, nicht auf der Startseite', async () => {
   const p = await page();
@@ -530,7 +530,7 @@ test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne
   await p.locator('app-backstage-aufgaben .item').first().waitFor();
   expect(!(await p.locator('app-backstage-aufgaben').innerText()).includes('Erste Story'), 'abgehakter Schritt steht noch unter Aufgaben');
   return p;
-});
+}, { allein: true });
 
 test('Backstage: Probe planen – Song und Punkt bleiben nach dem Neuladen', async () => {
   const p = await page();
@@ -946,7 +946,7 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   await until(async () => (await p.locator('app-setlist .list li .no').count()) >= 8, 'Auffüllen ergänzt das Set nicht');
   expect((await p.locator('app-setlist .list li .t').first().innerText()) === 'In der Weihnachtsbäckerei', 'Auffüllen hat die vorhandenen Songs verändert');
   return p;
-});
+}, { allein: true });
 
 test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modus, Weitergabe an ein zweites Gerät', async () => {
   const p = await page();
@@ -1637,6 +1637,11 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   expect((await ueben.locator('.kaesten li').nth(1).locator('.n').innerText()) === '3', 'alte Liste nicht in Kasten 2 umgestellt');
   expect((await ueben.locator('.kaesten li').nth(0).locator('.s').innerText()) === 'Üben' && (await ueben.locator('.kaesten li').nth(3).locator('.s').innerText()) === 'Sitzt', 'Kästen nennen den Status nicht');
   expect((await ueben.locator('.tagesziel').innerText()).includes('Empfehlung: 2 Karten'), 'Tagesziel nicht als Empfehlung');
+  // Band-Übe-Board: je Musiker eine Zeile, die eigene hervorgehoben; gemeinsame Songs mit „Ich auch“
+  await p.evaluate(() => localStorage.setItem('bn-kasten-david-broeker', JSON.stringify({ v: 2, kaesten: { 'Iris|The Goo Goo Dolls': 1, 'Hey Jude|The Beatles': 2 }, gelernt: {}, eingenordet: {} })));
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => (await ueben.locator('.board li').count()) >= 3 && (await ueben.locator('.board li.ich').count()) === 1, 'Band-Übe-Board fehlt');
+  await until(async () => /Iris[\s\S]*David: Üben/.test(await ueben.locator('.gemeinsam').innerText().catch(() => '')), 'Gemeinsam geübte Songs fehlen');
   // Status direkt ändern: Angels eingenordet → fällt aus dem Kasten; über die Suche wieder zum Üben (Kasten 1)
   await ueben.locator('.liste li', { hasText: 'Angels' }).locator('select').selectOption('eingenordet');
   await until(async () => (await ueben.locator('.liste li select').count()) === 2, 'Eingenordet bleibt im Karteikasten');
@@ -1783,7 +1788,7 @@ test('Backstage: Setlist als Link – ein zweites Gerät übernimmt sie', async 
   expect((await q.locator('app-setlist .pause-label').count()) === 1, 'Pause fehlt');
   expect(!q.url().includes('#liste='), 'Liste bleibt in der Adresse stehen');
   return q;
-});
+}, { allein: true });
 
 test('Backstage: Rückblick-Formular erzeugt den Historie-Block', async () => {
   const p = await page();
@@ -2056,17 +2061,31 @@ if (filter.length && !auswahl.length) {
   console.log(`::error::Kein Klicktest passt zu NUR="${process.env.NUR}"`);
   failed++;
 }
-for (const t of auswahl) {
+// Parallel in mehreren Browser-Tabs (eigene Kontexte, leerer Speicher je Test): PARALLEL=n (Standard 3, 1 = nacheinander).
+// Tests mit { allein: true } (zeitkritisch, z. B. Tap-Tempo) laufen danach einzeln, damit Last sie nicht verfälscht.
+const PARALLEL = Math.max(1, Number(process.env.PARALLEL ?? 3) || 1);
+async function lauf(t) {
   const start = Date.now();
+  let p;
   try {
-    const p = await t.fn();
+    p = await t.fn();
     if (p?.errors?.length) throw new Error('JavaScript-Fehler: ' + p.errors[0]);
     console.log(`✓ ${t.name} (${((Date.now() - start) / 1000).toFixed(1)} s)`);
   } catch (e) {
     failed++;
     console.log(`::error::✗ ${t.name}: ${e.message.split("\n")[0]}`); if (process.env.STACK) console.log(e.stack);
+  } finally {
+    // Kontext des Tests schließen – sonst wachsen Speicher und CPU-Last mit jedem Test
+    await p?.context?.().close().catch(() => {});
   }
 }
+const gesamtStart = Date.now();
+const warteschlange = auswahl.filter((t) => !t.options.allein);
+await Promise.all(Array.from({ length: Math.min(PARALLEL, warteschlange.length) }, async () => {
+  for (let t = warteschlange.shift(); t; t = warteschlange.shift()) await lauf(t);
+}));
+for (const t of auswahl.filter((x) => x.options.allein)) await lauf(t);
+console.log(`Laufzeit: ${((Date.now() - gesamtStart) / 1000).toFixed(0)} s (${PARALLEL} parallel)`);
 await browser.close();
 close();
 console.log(`Klicktests: ${auswahl.length - failed} von ${auswahl.length} bestanden${filter.length ? ` (Auswahl NUR, insgesamt ${tests.length})` : ''}.`);

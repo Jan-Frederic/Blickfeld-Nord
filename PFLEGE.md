@@ -127,6 +127,9 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Spotify-Liste steht; er wechselt mit dem Song. Ganze Songs nur mit Spotify-Anmeldung im selben Browser, sonst
   30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`; nur im Backstage,
   öffentliche Seiten laden nichts von Spotify.
+- **Die Band übt** (unten auf der Üben-Seite): je Musiker die Übe-Woche (Tage am Stück, Karten in 7 Tagen, diese
+  Woche eingenordet) und „Gerade gemeinsam dran“ – Songs, die bei mindestens zwei auf Üben oder Wackelt noch stehen, mit
+  Status je Person; „Ich auch“ nimmt den Song in den eigenen Karteikasten.
 - **Bühnenreife in der Setlist:** im Setlist-Editor steht je Song die Reife (● 73 %, Farbe nach Ampel, Tooltip mit
   „wackelt bei …“); „Bereit?“ meldet Setlist-Songs, die noch Baustelle sind (sobald jemand Übe-Status setzt).
 - **Übe-Status:** Jeder Song hat je Musiker einen von fünf Status – **Nicht gelernt** (jeder neue Song und alle ohne
@@ -1017,6 +1020,8 @@ Bevor etwas online geht, prüft GitHub unter anderem:
 
 **Auf dem eigenen Rechner prüfen** (für Entwickler): `npm run pruefen` baut die Seite genau wie GitHub (inklusive
 Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Breiten-Check, Linkcheck und Tests aus.
+Die Klicktests laufen parallel in 3 Browser-Tabs (`PARALLEL=n` ändert das, `PARALLEL=1` = nacheinander); Tests mit
+`{ allein: true }` – zeitkritisch (Tap-Tempo) oder mit Zwischenablage, die sich alle Tabs teilen – laufen danach einzeln.
 Nur einzelne Klicktests (nach dem Build): `NUR="Sammlungen|Karteikasten" node scripts/e2e.mjs` – Teile der Testnamen,
 mehrere mit `|`.
 

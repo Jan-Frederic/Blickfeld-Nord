@@ -1010,3 +1010,13 @@ app-setlist-buehne .spotify-player iframe { display: block; width: 100%; height:
 app-setlist-buehne .spotify-zeile { margin: 12px 0 0; text-align: center; }
 app-setlist-buehne .spotify-knopf { display: inline-flex !important; width: auto !important; padding: 0 14px !important; }
 app-setlist-buehne .spotify-knopf.on { border-color: #1db954 !important; color: #1db954 !important; }
+
+// Üben: Band-Übe-Board (wer übt wie viel, was mehrere gerade gemeinsam üben)
+app-backstage-ueben .board { display: grid; gap: 6px; }
+app-backstage-ueben .board li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 8px 12px; border: 1px solid var(--bn-line); border-radius: 10px; font-size: .9rem; }
+app-backstage-ueben .board li.ich { border-color: var(--bn-sunset); }
+app-backstage-ueben .board .name { min-width: 6em; font-weight: 600; }
+app-backstage-ueben .board .werte { color: var(--bn-fog); }
+app-backstage-ueben .board .serie { color: var(--bn-sunset); font-weight: 600; }
+app-backstage-ueben .board-titel { margin: 16px 0 8px; color: var(--bn-fog); font-size: .9rem; }
+app-backstage-ueben .gemeinsam button { flex: none; padding: 6px 12px; font-size: .82rem; }

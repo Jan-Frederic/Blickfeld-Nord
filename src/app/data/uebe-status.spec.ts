@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { uebeWoche, uebeWertung, alleStatus, buehnenreife, eigenerStatus, karteBewerten, personUebersicht, statusAusAlt, statusAusKasten, statusMigrieren, statusSetzen, statusVonPerson } from './uebe-status';
+import { gemeinsamDran, uebeWoche, uebeWertung, alleStatus, buehnenreife, eigenerStatus, karteBewerten, personUebersicht, statusAusAlt, statusAusKasten, statusMigrieren, statusSetzen, statusVonPerson } from './uebe-status';
 import { ladeKastenGeteilt, ladeUeben } from './ueben';
 import { ladeFortschritt } from './fortschritt';
 
@@ -139,5 +139,13 @@ describe('Übe-Woche', () => {
     const w = uebeWoche(f, { v: 2, kaesten: {}, gelernt: {}, eingenordet: { 'A|x': '2026-11-07', 'D|x': '2026-10-01' } }, heute);
     // heute (08.) noch nicht geübt: 07. und 06. zählen
     expect(w).toEqual({ serie: 2, karten: 3, eingenordet: ['A'] });
+  });
+});
+
+describe('Gemeinsam dran', () => {
+  it('Songs, die bei mindestens zwei auf Üben oder Wackelt noch stehen – meiste zuerst', () => {
+    const st = (o: Record<string, Record<string, string>>) => new Map(Object.entries(o).map(([k, v]) => [k, new Map(Object.entries(v))])) as ReturnType<typeof alleStatus>;
+    const r = gemeinsamDran(band, st({ david: { 'A|x': 'ueben', 'B|x': 'wackelt', 'C|x': 'sitzt' }, fred: { 'A|x': 'wackelt', 'B|x': 'wackelt', 'C|x': 'ueben' }, matthias: { 'B|x': 'ueben' } }));
+    expect(r.map((x) => [x.title, x.wer.map((w) => w.name).join(',')])).toEqual([['B', 'David,Fred,Matthias'], ['A', 'David,Fred']]);
   });
 });
