@@ -476,18 +476,6 @@ app-probe-leiste .knoepfe, app-probe-ende .probe-ende { display: flex; flex-wrap
 app-probe-leiste button, app-probe-ende button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #3a3f45; border-radius: 999px; background: #1b1e22; color: #ece9e4; font: inherit; font-size: .95em; cursor: pointer; }
 app-probe-leiste button.klein { padding: 0 12px; }
 app-probe-leiste button.an { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-// eigener Übe-Status als Umschalter mit fünf Stufen
-app-probe-leiste .status-wahl { display: inline-flex; flex-wrap: wrap; justify-content: center; border: 1px solid #3a3f45; border-radius: 999px; overflow: hidden; }
-app-probe-leiste .status-wahl button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 0; border-left: 1px solid #3a3f45; background: #1b1e22; font-size: .85em; }
-app-probe-leiste .status-wahl button:first-child { border-left: 0; }
-app-probe-leiste .status-wahl button:disabled { opacity: .45; cursor: default; }
-app-probe-leiste .status-wahl button.an { color: #2a1708; }
-app-probe-leiste .status-wahl button.nicht.an { background: #9aa0a6; }
-app-probe-leiste .status-wahl button.ueben.an { background: #e08a5a; }
-app-probe-leiste .status-wahl button.wackelt.an { background: #e0b25a; }
-app-probe-leiste .status-wahl button.sitzt.an { background: #9fd3b4; }
-app-probe-leiste .status-wahl button.eingenordet.an { background: #5fb88a; }
-@media (max-width: 560px) { app-probe-leiste .status-wahl { border-radius: 12px; } }
 app-probe-leiste .notiz { width: min(100%, 520px); box-sizing: border-box; padding: 10px 12px; border: 1px solid #3a3f45; border-radius: 10px; background: #15171a; color: #ece9e4; font: inherit; font-size: .95em; }
 app-probe-leiste .vorher { margin: 0; color: #e0b25a; font-size: .9em; }
 app-probe-leiste .zeit { margin: 0; color: #9aa0a6; font-size: .85em; }
@@ -887,24 +875,6 @@ app-referenzen ul::-webkit-scrollbar { display: none; }
   app-technik-aufbau .table-wrap th, app-technik-aufbau .table-wrap td { padding: 6px 3px; }
   app-technik-aufbau .table-wrap th { letter-spacing: 0; }
 }
-// Übe-Modus in der Notenansicht: Übe-Status als Umschalter mit fünf Stufen (oben rechts bei den anderen Knöpfen)
-app-noten-anzeige header .wertungen { display: inline-flex; flex: none; align-items: stretch; border: 1px solid #444; border-radius: 20px; overflow: hidden; }
-app-noten-anzeige header .wertungen button.wertung { min-height: 38px; min-width: 0; padding: 0 10px; border: 0; border-left: 1px solid #444; border-radius: 0; color: #fff; font: 600 .8rem Inter, sans-serif; white-space: nowrap; }
-app-noten-anzeige header .wertungen button.wertung:first-child { border-left: 0; }
-app-noten-anzeige header .wertungen button.wertung.an { color: #2a1708; }
-app-noten-anzeige header .wertungen button.wertung.nicht.an { background: #9aa0a6; }
-app-noten-anzeige header .wertungen button.wertung.ueben.an { background: #e08a5a; }
-app-noten-anzeige header .wertungen button.wertung.wackelt.an { background: #e0b25a; }
-app-noten-anzeige header .wertungen button.wertung.sitzt.an { background: #9fd3b4; }
-app-noten-anzeige header .wertungen button.wertung.eingenordet.an { background: #5fb88a; }
-app-noten-anzeige header .wertungen button.wertung:hover:not(.an) { color: #e8a46a; }
-app-noten-anzeige header button.wertung .z { display: none; }
-// schmal: nur Zeichen (○ ✎ ↻ ✓ ✓✓), der Name steht im Tooltip und für Screenreader
-@media (max-width: 1200px) {
-  app-noten-anzeige header button.wertung .z { display: inline; }
-  app-noten-anzeige header button.wertung .l { display: none; }
-  app-noten-anzeige header .wertungen button.wertung { min-width: 36px; padding: 0 8px; font-size: .85rem; }
-}
 // Bühnenreife: Karteikasten je Person (Kasten 1–5, Zahl der Karten)
 app-songs-reife .kasten { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 6px 0 2px; }
 app-songs-reife .kasten span { padding: 2px 0; border: 1px solid var(--bn-sunset); border-radius: 4px; text-align: center; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--bn-sunset); }
@@ -967,3 +937,42 @@ app-backstage-anleitung {
     .status .text { grid-column: 2 / -1; }
   }
 }
+
+// Status-Umschalter (pages/status-schalter.ts) – überall gleich: Kopfleiste der Notenansicht, Probe-Leiste,
+// Titelanzeige im Übe-Modus. Schmal nur die Zeichen ○ ✎ ↻ ✓ ✓✓ (Name im Tooltip und für Screenreader).
+app-status-schalter { display: inline-flex; flex: none; max-width: 100%; }
+app-status-schalter .schalter { display: inline-flex; max-width: 100%; border: 1px solid #444; border-radius: 20px; overflow: hidden; }
+app-status-schalter .schalter button.wertung { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; min-height: 38px; margin: 0; padding: 0 12px; border: 0; border-left: 1px solid #444; border-radius: 0; background: transparent; color: #fff; font: 600 .82rem Inter, sans-serif; white-space: nowrap; cursor: pointer; }
+app-status-schalter .schalter button.wertung:first-child { border-left: 0; }
+app-status-schalter .schalter button.wertung:hover:not(.an):not(:disabled) { color: #e8a46a; }
+app-status-schalter .schalter button.wertung:disabled { opacity: .45; cursor: default; }
+app-status-schalter .schalter button.wertung.an { color: #2a1708; }
+app-status-schalter .schalter button.wertung.nicht.an { background: #9aa0a6; }
+app-status-schalter .schalter button.wertung.ueben.an { background: #e08a5a; }
+app-status-schalter .schalter button.wertung.wackelt.an { background: #e0b25a; }
+app-status-schalter .schalter button.wertung.sitzt.an { background: #9fd3b4; }
+app-status-schalter .schalter button.wertung.eingenordet.an { background: #5fb88a; }
+app-status-schalter .z { display: none; }
+@media (max-width: 1200px) {
+  app-status-schalter.kopf .z { display: inline; }
+  app-status-schalter.kopf .l { display: none; }
+  app-status-schalter.kopf .schalter button.wertung { min-width: 36px; padding: 0 8px; font-size: .85rem; }
+}
+@media (max-width: 560px) {
+  app-status-schalter .z { display: inline; }
+  app-status-schalter .l { display: none; }
+  app-status-schalter .schalter button.wertung { min-width: 44px; min-height: 44px; padding: 0 8px; font-size: .95rem; }
+}
+// Titelanzeige im Übe-Modus: Umschalter unter Tonart/Tempo
+app-setlist-buehne .ueben-status { display: flex; justify-content: center; margin-top: 18px; }
+app-setlist-buehne .ueben-status app-status-schalter .schalter button.wertung { min-height: 44px; font-size: .95rem; }
+// Bühnen-Modus: Uhr im Übe-Modus nicht nötig; „Noten“ als Text erst auf breiten Bildschirmen
+app-setlist-buehne header .clock.still { visibility: hidden; }
+@media (max-width: 480px) { app-setlist-buehne header .clock.still { display: none; } }
+@media (max-width: 700px) { app-setlist-buehne header .noten-text { display: none; } }
+// Notenansicht gleitet herein (Titelanzeige → Noten) und beim Schließen nach unten heraus
+@keyframes noten-rein { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes noten-raus { from { transform: none; } to { transform: translateY(100%); } }
+app-setlist-buehne app-noten-anzeige { animation: noten-rein .28s cubic-bezier(.2, .8, .2, 1); }
+app-setlist-buehne app-noten-anzeige.raus { animation: noten-raus .24s ease-in forwards; }
+@media (prefers-reduced-motion: reduce) { app-setlist-buehne app-noten-anzeige, app-setlist-buehne app-noten-anzeige.raus { animation: none; } }

@@ -1,11 +1,13 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
 import { UebeStatus, eigenerStatus } from '../data/uebe-status';
+import { StatusSchalter } from './status-schalter';
+import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { alleSongNoten, pdfjsVorladen } from '../data/noten';
 import { NotenAnzeige } from './noten-anzeige';
-import { ProbeEnde, ProbeLeiste } from './probe-leiste';
+import { ProbeEnde, ProbeLeiste, probeStatusSetzen } from './probe-leiste';
 import { minutenText, probenDauer } from '../data/probe-modus';
 import { BandService } from '../data/band.service';
 import { Stimmgeraet } from './stimmgeraet';
@@ -43,29 +45,33 @@ function ladeZoom(): number {
 import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, taktHinweis } from '../data/takt';
 @Component({
   selector: 'app-setlist-buehne',
-  imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde],
+  imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde, StatusSchalter],
   host: { tabindex: '-1', '(keydown)': 'key($event)' },
   template: `
-    <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" [style.--zoom]="zoom()">
+    <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" [style.--zoom]="zoom()">
       <header>
-        <span class="set">@if (anlass()) { <span class="anlass">{{ anlass() }}</span> }{{ probe() && !generalprobe() ? 'Probe · ' + songNo() + ' / ' + songZahl() : (generalprobe() ? 'Generalprobe · ' : '') + 'Set ' + setNo() + ' / ' + sets().length }}</span>
-        <span class="clock" [class.over]="remaining() < 0">
+        <span class="set">@if (anlass()) { <span class="anlass">{{ anlass() }}</span> }{{ ueben() ? 'Karte ' + (index() + 1) + ' / ' + liste().length : probe() && !generalprobe() ? 'Song ' + songNo() + ' / ' + songZahl() : 'Set ' + setNo() + ' / ' + sets().length }}</span>
+        <span class="clock" [class.over]="remaining() < 0" [class.still]="ueben()">
           <mat-icon>timer</mat-icon> {{ fmt(elapsed()) }}
           @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() && !generalprobe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
         </span>
+        <!-- Reihenfolge: Werkzeuge (Schrift, Stimmgerät, Wunsch-Suche) – Navigation (Song-Liste) – Noten – Beenden.
+             Im Übe-Modus ohne Wunsch-Suche und Song-Liste (die Reihe der Karten ergibt sich aus dem Status). -->
         <span class="zoom" role="group" aria-label="Schriftgröße">
           <button type="button" (click)="zoomen(-1)" [disabled]="zoom() <= ZOOM_MIN" aria-label="Schrift kleiner">A−</button>
           <button type="button" (click)="zoomen(1)" [disabled]="zoom() >= ZOOM_MAX" aria-label="Schrift größer">A+</button>
         </span>
-        @if (notenSongs().size) {
-          <button type="button" class="noten-knopf" (click)="notenUmschalten($event)" [attr.aria-pressed]="notenOffen()" aria-label="Noten anzeigen">
-            <mat-icon>library_music</mat-icon>
+        <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät" title="Stimmgerät"><mat-icon>tune</mat-icon></button>
+        @if (!ueben()) {
+          <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)" title="Song suchen – kommt jetzt dran"><mat-icon>search</mat-icon></button>
+          <button type="button" class="close liste-knopf" (click)="navUmschalten($event)" [attr.aria-pressed]="nav()" aria-label="Alle Songs der Setlist" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
+        }
+        @if (notenSongs().size || notenAuf()) {
+          <button type="button" class="noten-knopf" (click)="notenUmschalten($event)" [attr.aria-pressed]="notenOffen()" aria-label="Noten anzeigen" title="Noten – oder nach oben wischen">
+            <mat-icon>library_music</mat-icon><span class="noten-text">Noten</span>
           </button>
         }
-        <button type="button" class="close liste-knopf" (click)="navUmschalten($event)" [attr.aria-pressed]="nav()" aria-label="Alle Songs der Setlist" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
-        <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)"><mat-icon>search</mat-icon></button>
-        <button type="button" class="close" (click)="stimmen.set(!stimmen()); $event.stopPropagation()" [attr.aria-pressed]="stimmen()" aria-label="Stimmgerät"><mat-icon>tune</mat-icon></button>
-        <button type="button" class="close" (click)="end($event)" [attr.aria-label]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'"><mat-icon>close</mat-icon></button>
+        <button type="button" class="close" (click)="end($event)" [attr.aria-label]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'"><mat-icon>close</mat-icon></button>
       </header>
 
       <main>
@@ -98,7 +104,13 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
             }
-            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" /> }
+            @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" [neu]="statusNeu()" /> }
+            @if (ueben()) {
+              <!-- Übe-Modus: derselbe Status-Umschalter wie in der Kopfleiste der Notenansicht -->
+              <div class="ueben-status" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
+                <app-status-schalter [status]="uebeStatus()" [weiter]="true" (gewaehlt)="werten($event)" />
+              </div>
+            }
             @if (show()) {
               <p class="stars" role="group" aria-label="Wie lief der Song heute?">
                 @for (n of [1, 2, 3, 4, 5]; track n) {
@@ -171,7 +183,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (notenOffen()) { <app-noten-anzeige [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenOffen.set(false)" (beenden)="closed.emit()" /> }
+      @if (notenOffen()) { <app-noten-anzeige [class.raus]="notenRaus()" [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben() || (!!probe() && !!ich)" [weiter]="ueben()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenSchliessen()" (beenden)="closed.emit()" /> }
     </div>
   `,
   styles: `
@@ -194,7 +206,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
       .clock { order: 5; flex-basis: 100%; margin-left: 0; }
     }
     .zoom { display: inline-flex; gap: 6px; }
-    .noten-knopf { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 24px; border: 1px solid #333; background: transparent; color: #fff; cursor: pointer; }
+    .noten-knopf { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 48px; height: 48px; padding: 0 14px; border-radius: 24px; border: 1px solid #e8a46a; background: transparent; color: #e8a46a; font: 600 .95rem Inter, sans-serif; cursor: pointer; }
     .noten-knopf[aria-pressed=true] { border-color: #e8a46a; color: #e8a46a; }
     .zoom button { min-width: 48px; height: 48px; border-radius: 24px; border: 1px solid #333; background: transparent; color: #fff; font: 600 1rem Inter, sans-serif; cursor: pointer; }
     .zoom button:disabled { opacity: .35; cursor: default; }
@@ -249,17 +261,28 @@ export class SetlistBuehne {
   /** Übe-Modus: Notenansicht mit den fünf Übe-Status oben rechts – die Liste ist die Reihe der Karteikarten */
   readonly ueben = input(false);
   readonly bewertet = output<{ title: string; artist: string; status: UebeStatus }>();
-  private readonly statusNeu = signal(0);
-  /** eigener Übe-Status des aktuellen Songs (nur im Übe-Modus) */
+  protected readonly statusNeu = signal(0);
+  /** Person am Gerät – ohne gibt es im Probe-Modus keinen Status-Umschalter in der Kopfleiste */
+  protected readonly ich = ladeIch();
+  /** eigener Übe-Status des aktuellen Songs (Übe- und Probe-Modus) */
   protected readonly uebeStatus = computed(() => {
     this.statusNeu();
     const c = this.aktuellerSong();
-    return this.ueben() && c ? eigenerStatus(`${c.title}|${c.artist}`) : null;
+    return (this.ueben() || this.probe()) && c ? eigenerStatus(`${c.title}|${c.artist}`) : null;
   });
-  /** Status setzen: „Üben“ kommt hinten noch einmal dran, dann weiter zur nächsten Karte (am Ende: fertig) */
+  /**
+   * Status setzen. Probe-Modus (Kopfleiste der Notenansicht): wie in der Probe-Leiste, der Song bleibt. Übe-Modus:
+   * „Üben“ kommt hinten noch einmal dran, dann weiter zur nächsten Karte (am Ende: fertig).
+   */
   protected werten(status: UebeStatus): void {
     const c = this.aktuellerSong();
     if (!c) return;
+    const datum = this.probe();
+    if (datum) {
+      if (this.ich) probeStatusSetzen(datum, c, status, this.band.members);
+      this.statusNeu.update((n) => n + 1);
+      return;
+    }
     this.bewertet.emit({ title: c.title, artist: c.artist, status });
     this.statusNeu.update((n) => n + 1);
     if (status === 'ueben') this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
@@ -332,7 +355,42 @@ export class SetlistBuehne {
   private readonly anzeige = viewChild(NotenAnzeige);
   protected notenUmschalten(e: Event): void {
     e.stopPropagation();
-    this.notenOffen.update((o) => !o);
+    if (this.notenOffen()) this.notenSchliessen();
+    else this.notenOffen.set(true);
+  }
+  /** Notenansicht gleitet nach unten heraus (Herunterwischen, Noten-Knopf, Escape), dann die Titelanzeige */
+  protected readonly notenRaus = signal(false);
+  protected notenSchliessen(): void {
+    if (!this.notenOffen() || this.notenRaus()) return;
+    const ruhig = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (ruhig) {
+      this.notenOffen.set(false);
+      return;
+    }
+    this.notenRaus.set(true);
+    setTimeout(() => {
+      this.notenOffen.set(false);
+      this.notenRaus.set(false);
+    }, 240);
+  }
+  // Titelanzeige: nach oben wischen holt die Notenansicht herein (wie der Noten-Knopf)
+  private wischY: { x: number; y: number } | null = null;
+  protected wischStart(e: TouchEvent): void {
+    const t = e.touches[0];
+    this.wischY = e.touches.length === 1 && t && !this.notenOffen() && !(e.target as HTMLElement).closest('button, input, select, textarea, .navi, .suche') ? { x: t.clientX, y: t.clientY } : null;
+  }
+  protected wischEnde(e: TouchEvent): void {
+    const t = e.changedTouches[0];
+    if (this.wischY && t) this.notenHochgewischt(t.clientX - this.wischY.x, t.clientY - this.wischY.y, e.target as HTMLElement);
+    this.wischY = null;
+  }
+  private notenHochgewischt(dx: number, dy: number, ziel: HTMLElement): boolean {
+    if (this.notenOffen() || !(this.notenSongs().size || this.notenAuf()) || dy > -60 || Math.abs(dy) < Math.abs(dx) * 1.5) return false;
+    // im Song-Bereich gescrollt (lange Probe-Leiste): erst wenn unten angekommen
+    const main = ziel.closest('main');
+    if (main && main.scrollHeight > main.clientHeight + 2 && main.scrollTop + main.clientHeight < main.scrollHeight - 2) return false;
+    this.notenOffen.set(true);
+    return true;
   }
 
   protected readonly info = computed(() => {
@@ -655,6 +713,8 @@ export class SetlistBuehne {
   protected up(e: PointerEvent): void {
     if ((e.target as HTMLElement).closest('button, select')) return;
     const dx = e.clientX - this.startX;
+    // mit der Maus nach oben gezogen: Notenansicht (mit dem Finger über die Touch-Ereignisse)
+    if (e.pointerType === 'mouse' && this.notenHochgewischt(dx, e.clientY - this.startY, e.target as HTMLElement)) return;
     // senkrecht gewischt = im Notenblatt gescrollt, kein Blättern
     if (Math.abs(e.clientY - this.startY) > 30 && Math.abs(e.clientY - this.startY) > Math.abs(dx)) return;
     if (Math.abs(dx) > 50) this.go(dx < 0 ? 1 : -1);
@@ -666,7 +726,7 @@ export class SetlistBuehne {
   protected key(e: KeyboardEvent): void {
     if (this.tasten.weiter.includes(e.key)) this.go(1);
     else if (this.tasten.zurueck.includes(e.key)) this.go(-1);
-    else if (e.key === 'Escape') this.notenOffen() ? this.notenOffen.set(false) : this.closed.emit();
+    else if (e.key === 'Escape') this.notenOffen() && !this.notenRaus() ? this.notenSchliessen() : this.closed.emit();
     else if (/^[1-5]$/.test(e.key)) this.bewerte(Number(e.key));
     else return;
     e.preventDefault();

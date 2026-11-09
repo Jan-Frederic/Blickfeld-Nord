@@ -227,6 +227,16 @@ einfügen).
 ihrer Reihenfolge an den Anfang des Plans. Der Probe-Modus spielt dann die Setlist mit Pausen durch – die Uhr läuft je
 Set gegen die geplante Spielzeit wie auf der Bühne.
 
+**Titelanzeige und Notenansicht (alle drei Modi):** Knöpfe der Titelanzeige von links nach rechts: Schriftgröße
+(A− A+), Stimmgerät, Wunsch-Suche und Song-Liste (nicht im Übe-Modus), **Noten** (orange, mit Text auf breiten
+Bildschirmen), Beenden. **Hochwischen** in der Titelanzeige lässt die Notenansicht hereingleiten (wie der Noten-Knopf);
+in der Notenansicht blendet Hochwischen die Kopfleiste aus, Herunterwischen holt sie zurück – ist sie schon da und das
+Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape und Noten-Knopf). Der
+**Status-Umschalter** (`src/app/pages/status-schalter.ts`) sieht überall gleich aus: Probe-Leiste, Titelanzeige im
+Übe-Modus und Kopfleiste der Notenansicht – dort im Übe- **und** im Probe-Modus (mit „Ich bin …“), zusammen mit
+**Mitschnitt**. Im Probe-Modus bleibt der Song beim Setzen stehen, im Übe-Modus geht es zur nächsten Karte. Oben links:
+Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) bzw. „Karte 2 / 8“ (Übe-Modus, ohne Uhr).
+
 **Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
 ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo
 (100 → 70 %), Einzählen, Stimmgerät, Schriftgröße; weiter per Pedal, Pfeiltaste, Tippen oder Wischen. Unter jedem Song

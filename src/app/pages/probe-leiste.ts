@@ -5,12 +5,25 @@ import { BandService } from '../data/band.service';
 import { probenPlaene } from '../data/song-stand';
 import { ProbePlan, ergebnis, letzteNotiz, loadProbe, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, songKeyVon, speichereProbe, uebertragen, zeitDazu, zeitJeSong } from '../data/probe-modus';
 import { SongMitschnitte } from './song-mitschnitte';
-import { ladeIch, rufname } from '../data/band-ich';
+import { Mitglied, ladeIch, rufname } from '../data/band-ich';
 import { alleFortschritte, bandStand, probeStaende } from '../data/fortschritt';
-import { STATUS, UebeStatus, alleStatus, eigenerStatus, statusLabel, statusSetzen } from '../data/uebe-status';
+import { UebeStatus, alleStatus, eigenerStatus, statusLabel, statusSetzen } from '../data/uebe-status';
+import { StatusSchalter } from './status-schalter';
 import { ladeProbeNotizen, letzteNotizen, probeNotizSetzen } from '../data/probe-notiz';
 
 type Song = { title: string; artist: string };
+
+/**
+ * eigenen Übe-Status in der Probe setzen (Datum der Probe; Leiste und Kopfleiste der Notenansicht): Karteikasten,
+ * Verlauf – und im Plan „geprobt“ plus „nochmal“, solange er bei jemandem noch nicht sitzt. Gibt den neuen Plan zurück.
+ */
+export function probeStatusSetzen(datum: string, song: Song, status: UebeStatus, mitglieder: Mitglied[]): ProbePlan {
+  statusSetzen(songKeyVon(song), status, 'probe', datum);
+  const band = bandStand(probeStaende(datum, mitglieder, alleFortschritte(mitglieder)).get(songKeyVon(song)));
+  const plan = markierenPerson(loadProbe(datum), song, band);
+  speichereProbe(datum, plan);
+  return plan;
+}
 
 /** Sekunden bis zum Probenende: am Probentag nach der Uhr, sonst die Probendauer ab dem Start des Probe-Modus */
 function restZeit(p: { date: string; time?: string; endTime?: string } | undefined, start: number, jetzt: number): number {
@@ -30,16 +43,12 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
 // nicht (der Bühnen-Modus reagiert sonst auf Tippen und Pfeiltasten).
 @Component({
   selector: 'app-probe-leiste',
-  imports: [MatIconModule, SongMitschnitte],
+  imports: [MatIconModule, SongMitschnitte, StatusSchalter],
   host: { '(pointerdown)': '$event.stopPropagation()', '(pointerup)': '$event.stopPropagation()', '(keydown)': 'taste($event)' },
   template: `
     <div class="probe-leiste" role="group" aria-label="Probe">
       <div class="knoepfe">
-        <div class="status-wahl" role="group" aria-label="Mein Übe-Status">
-          @for (s of status; track s.id) {
-            <button type="button" [class]="s.id" [class.an]="meinStatus() === s.id" [attr.aria-pressed]="meinStatus() === s.id" [disabled]="!ich()" (click)="setze(s.id)">{{ s.label }}</button>
-          }
-        </div>
+        <app-status-schalter [status]="meinStatus()" [gesperrt]="!ich()" (gewaehlt)="setze($event)" />
         <button type="button" [class.an]="mitschnitt()" (click)="mitschnitt.set(!mitschnitt())" [attr.aria-pressed]="mitschnitt()" aria-label="Mitschnitt aufnehmen"><mat-icon>mic</mat-icon></button>
       </div>
       @if (!ich()) {
@@ -59,7 +68,8 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
 export class ProbeLeiste {
   readonly datum = input.required<string>();
   readonly song = input.required<Song>();
-  protected readonly status = STATUS;
+  /** zählt hoch, wenn der Status anderswo gesetzt wurde (Kopfleiste der Notenansicht) – neu lesen */
+  readonly neu = input(0);
   private readonly band = inject(BandService);
   protected readonly datumText = datumText;
   protected readonly minutenText = minutenText;
@@ -72,7 +82,8 @@ export class ProbeLeiste {
   /** Person am Gerät (Einstellungen → „Ich bin …“) */
   protected readonly ich = signal(ladeIch());
   /** zählt hoch, wenn Status oder Notiz geändert wurden (neu lesen) */
-  private readonly stand = signal(0);
+  private readonly eigenerStand = signal(0);
+  private readonly stand = computed(() => this.eigenerStand() + this.neu());
   /** Stände dieser Probe je Song und Person (aus dem Verlauf) – für „nochmal“ im Plan und am Ende */
   private readonly staende = computed(() => (this.plan(), this.stand(), probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder))));
   protected readonly meinStatus = computed(() => (this.stand(), this.ich() ? eigenerStatus(this.key()) : null));
@@ -156,15 +167,13 @@ export class ProbeLeiste {
   /** eigenen Übe-Status setzen (Datum der Probe); im Plan „geprobt“ und „nochmal“, solange er bei jemandem nicht sitzt */
   protected setze(status: UebeStatus): void {
     if (!this.ich()) return;
-    statusSetzen(this.key(), status, 'probe', this.datum());
-    this.stand.update((n) => n + 1);
-    const band = bandStand(probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder)).get(this.key()));
-    this.speichern(markierenPerson(loadProbe(this.datum()), this.song(), band));
+    this.plan.set(probeStatusSetzen(this.datum(), this.song(), status, this.mitglieder));
+    this.eigenerStand.update((n) => n + 1);
   }
   protected notiz(text: string): void {
     if (this.ich()) {
       probeNotizSetzen(this.ich(), this.datum(), this.key(), text);
-      this.stand.update((n) => n + 1);
+      this.eigenerStand.update((n) => n + 1);
     } else this.speichern(notizSetzen(loadProbe(this.datum()), this.song(), text));
   }
   /** Tippen in die Notiz soll nicht blättern oder bewerten */

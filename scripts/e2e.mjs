@@ -559,10 +559,10 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
-  await until(async () => /probe · 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
+  await until(async () => /probe[\s\S]*song 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
   const leiste = buehne.locator('app-probe-leiste');
   // fünf Stufen statt Sitzt/Nochmal; Durchlauf und Übergang gibt es nicht mehr
-  expect((await leiste.locator('.status-wahl button').allInnerTexts()).map((t) => t.trim()).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Status-Umschalter hat nicht die fünf Stufen');
+  expect((await leiste.locator('app-status-schalter button').evaluateAll((b) => b.map((x) => x.getAttribute('aria-label')))).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Status-Umschalter hat nicht die fünf Stufen');
   expect((await leiste.getByRole('button', { name: /Durchlauf|Übergang/ }).count()) === 0, 'Durchlauf/Übergang sind noch da');
   // Song 1: Wackelt noch und eigene Notiz – Tippen in die Notiz blättert nicht
   await leiste.getByRole('button', { name: 'Wackelt noch', exact: true }).click();
@@ -746,8 +746,8 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   await until(async () => /Africa[\s\S]*Iris[\s\S]*Angels/.test(await seite.locator('.list').first().innerText()), 'Generalprobe übernimmt die Setlist nicht');
   await seite.getByRole('button', { name: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
-  await until(async () => /generalprobe · set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
-  await until(async () => (await buehne.locator('app-probe-leiste .status-wahl button').count()) === 5, 'Status-Umschalter fehlt in der Generalprobe');
+  await until(async () => /generalprobe[\s\S]*set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
+  await until(async () => (await buehne.locator('app-probe-leiste app-status-schalter button').count()) === 5, 'Status-Umschalter fehlt in der Generalprobe');
   return p;
 });
 
@@ -1630,7 +1630,7 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await noten.locator('.mitschnitt-panel app-song-mitschnitte').waitFor();
   await noten.locator('header .mitschnitt-knopf').click();
   // fünf Status statt „Wackelt noch“ / „Sitzt“; der aktuelle ist hervorgehoben
-  expect((await noten.locator('header .wertungen button').count()) === 5, 'Übe-Modus hat nicht die fünf Status');
+  expect((await noten.locator('header app-status-schalter button').count()) === 5, 'Übe-Modus hat nicht die fünf Status');
   expect((await noten.locator('header .wertung.an').count()) === 1, 'aktueller Status nicht hervorgehoben');
   const songA = (await noten.locator('header .titel').innerText()).trim();
   // „Üben“: kommt in dieser Runde noch einmal dran
@@ -1647,6 +1647,23 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   expect((await p.locator('app-backstage .ueben-karte').innerText()).includes('Tagesziel geschafft'), 'Tagesziel nicht als geschafft gemeldet');
   await p.locator('app-backstage .ueben-reihe a.modus').click();
   await schritt('Übe-Modus öffnet trotz Tagesziel', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  // Herunterwischen (Kopfleiste da, Blatt oben): Notenansicht gleitet heraus, Titelanzeige mit demselben Umschalter
+  const ziehen = async (vonY, nachY) => {
+    await p.waitForTimeout(400); // Ein-/Ausgleiten abwarten
+    await p.mouse.move(400, vonY);
+    await p.mouse.down();
+    await p.mouse.move(400, (vonY + nachY) / 2, { steps: 4 });
+    await p.mouse.move(400, nachY, { steps: 4 });
+    await p.mouse.up();
+  };
+  await ziehen(300, 600);
+  await until(async () => (await noten.count()) === 0, 'Herunterwischen führt nicht zur Titelanzeige');
+  const titel = p.locator('app-setlist-buehne');
+  expect((await titel.locator('.ueben-status app-status-schalter button').count()) === 5, 'Titelanzeige im Übe-Modus ohne Status-Umschalter');
+  expect((await titel.locator('header .liste-knopf, header .lupe').count()) === 0, 'Song-Liste/Suche gehören nicht in den Übe-Modus');
+  // Hochwischen: Notenansicht wieder herein
+  await ziehen(600, 250);
+  await schritt('Hochwischen holt die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 5000 }));
   for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
   // mit der Band geteilt: Übe-Statistik unter Bühnenreife

@@ -1,5 +1,6 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
-import { STATUS, UebeStatus } from '../data/uebe-status';
+import { UebeStatus } from '../data/uebe-status';
+import { StatusSchalter } from './status-schalter';
 import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
@@ -17,7 +18,7 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 const BREITE_KEY = 'bn-noten-breite';
 @Component({
   selector: 'app-noten-anzeige',
-  imports: [MatIconModule, NotenStift, SongMitschnitte],
+  imports: [MatIconModule, NotenStift, SongMitschnitte, StatusSchalter],
   template: `
     <div class="noten" [class.weg]="kopfWeg()" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" (pointerdown)="zeigerStart($event)" (pointerup)="zeigerEnde($event)">
       <header [attr.aria-hidden]="kopfWeg()" [attr.inert]="kopfWeg() ? '' : null">
@@ -51,14 +52,10 @@ const BREITE_KEY = 'bn-noten-breite';
             <button type="button" (click)="tempo(1, $event)" aria-label="Schneller scrollen">›</button>
           </span>
         }
-        <!-- Übe-Modus: Übe-Status der Karte in fünf Stufen – weiter geht es mit der nächsten Karte -->
+        <!-- Übe- und Probe-Modus: Mitschnitt und eigener Übe-Status (Übe-Modus: danach die nächste Karte) -->
         @if (bewerten()) {
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
-          <span class="wertungen" role="group" aria-label="Übe-Status">
-            @for (st of statusListe; track st.id) {
-              <button type="button" [class]="'wertung ' + st.id" [class.an]="status() === st.id" [attr.aria-pressed]="status() === st.id" [attr.aria-label]="st.label" [title]="st.label + (st.id === 'sitzt' ? ' – sitzt er schon, einen Kasten weiter' : '')" (click)="werten(st.id, $event)"><span class="z" aria-hidden="true">{{ st.zeichen }}</span><span class="l">{{ st.label }}</span></button>
-            }
-          </span>
+          <app-status-schalter [kopf]="true" [status]="status()" [weiter]="weiter()" (gewaehlt)="wertung.emit($event)" />
         }
         <!-- derselbe Noten-Knopf wie in der Titelanzeige: noch einmal drücken führt zurück; das X beendet den Bühnen-Modus -->
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
@@ -159,15 +156,12 @@ export class NotenAnzeige {
   /** aktueller eigener Status des Songs (hervorgehoben) */
   readonly status = input<UebeStatus | null>(null);
   readonly wertung = output<UebeStatus>();
-  protected readonly statusListe = STATUS;
+  /** Übe-Modus: „Sitzt“ schiebt bei sitzendem Song einen Kasten weiter (Tooltip) */
+  readonly weiter = input(false);
   protected readonly mitschnitt = signal(false);
   protected mitschnittUmschalten(e: Event): void {
     e.stopPropagation();
     this.mitschnitt.update((m) => !m);
-  }
-  protected werten(s: UebeStatus, e: Event): void {
-    e.stopPropagation();
-    this.wertung.emit(s);
   }
 
   // Einstellungen (Kopfleiste) nach oben wegwischen, nach unten wieder hervorholen – Touch-Ereignisse, weil der
@@ -177,6 +171,12 @@ export class NotenAnzeige {
   protected wischStart(e: TouchEvent): void {
     const t = e.touches[0];
     this.wisch = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+    this.obenBeimStart = this.ganzOben();
+  }
+  /** Blatt ganz oben (nichts nach oben zu scrollen) – nur dann führt Herunterwischen zurück zur Titelanzeige */
+  private obenBeimStart = true;
+  private ganzOben(): boolean {
+    return (this.flaeche()?.nativeElement.scrollTop ?? 0) <= 2;
   }
   protected wischEnde(e: TouchEvent): void {
     const t = e.changedTouches[0];
@@ -184,18 +184,24 @@ export class NotenAnzeige {
     this.wisch = null;
   }
   protected zeigerStart(e: PointerEvent): void {
-    if (e.pointerType === 'mouse') this.wisch = { x: e.clientX, y: e.clientY };
+    if (e.pointerType !== 'mouse') return;
+    this.wisch = { x: e.clientX, y: e.clientY };
+    this.obenBeimStart = this.ganzOben();
   }
   protected zeigerEnde(e: PointerEvent): void {
     if (e.pointerType !== 'mouse' || !this.wisch) return;
     this.wischen(e.clientX - this.wisch.x, e.clientY - this.wisch.y);
     this.wisch = null;
   }
-  /** senkrecht deutlich mehr als waagerecht (waagerecht blättert der Bühnen-Modus) */
+  /**
+   * senkrecht deutlich mehr als waagerecht (waagerecht blättert der Bühnen-Modus): hoch blendet die Kopfleiste aus,
+   * runter holt sie zurück – ist sie schon da und das Blatt ganz oben, geht es zurück zur Titelanzeige
+   */
   private wischen(dx: number, dy: number): void {
     if (this.stift() || Math.abs(dy) < 40 || Math.abs(dy) < Math.abs(dx) * 1.5) return;
     this.fokusHalten();
-    this.kopfWeg.set(dy < 0);
+    if (dy > 0 && !this.kopfWeg() && this.obenBeimStart) this.schliessen.emit();
+    else this.kopfWeg.set(dy < 0);
   }
   protected kopfZeigen(e: Event): void {
     e.stopPropagation();
