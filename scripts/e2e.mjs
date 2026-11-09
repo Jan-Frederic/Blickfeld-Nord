@@ -1655,6 +1655,21 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => (await p.locator('app-songs-reife .person.ich .kasten span').count()) === 5, 'Übe-Statistik (Karteikasten) fehlt unter Bühnenreife');
   return p;
 });
+test('Backstage: Anleitung – Link ganz unten in der Übersicht, drei Modi im Vergleich', async () => {
+  const p = await page();
+  await p.go('/backstage/');
+  const link = p.locator('app-backstage .anleitung-link a');
+  await link.click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/anleitung', () => `Anleitung öffnet nicht: ${p.url()}`);
+  const seite = p.locator('app-backstage-anleitung');
+  expect((await seite.locator('.vergleich thead th').allTextContents()).join('|').includes('Bühnen-Modus|Probe-Modus|Übe-Modus'), 'Vergleichstabelle fehlt');
+  expect((await seite.locator('.status li').count()) === 5, 'die fünf Übe-Status fehlen');
+  expect((await seite.locator('.begriffe dt').allInnerTexts()).includes('Akkordblatt'), 'Begriffe fehlen');
+  await seite.locator('app-zurueck a').click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', 'Zurück führt nicht in die Übersicht');
+  return p;
+});
+
 test('Backstage: Besucher-Verlauf mit Zeitlinie und Ereignissen', async () => {
   const p = await page();
   await p.context().route(/goatcounter\.com\/counter\//, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"count":"12"}' }));

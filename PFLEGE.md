@@ -109,6 +109,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
   Backstage → Zahlen. Die Bereiche (Termine, Zahlen, Songs, …) stehen im Menü oben – Kacheln gibt es in der
   Übersicht nicht mehr.
+- **Anleitung** (Link ganz unten in der Übersicht, `/backstage/anleitung`): Übe-, Probe- und Bühnen-Modus im Vergleich
+  (Tabelle, auf dem Handy je Merkmal untereinander), die fünf Übe-Status mit ihren Kästen und die gemeinsamen Begriffe
+  (Titelanzeige, Notenansicht, PDF, Akkordblatt, Fassung, Kopfleiste, Song-Liste, Status-Umschalter, Probe-Leiste,
+  Mitschnitt-Panel, Anlass). Reiner Text in `src/app/pages/backstage-anleitung.ts` – ändern sich die Modi, dort mit
+  nachziehen.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
 - **Übe-Status:** Jeder Song hat je Musiker einen von fünf Status – **Nicht gelernt** (jeder neue Song und alle ohne

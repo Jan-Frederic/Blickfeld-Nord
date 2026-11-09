@@ -925,3 +925,45 @@ app-besucher-verlauf .je-schritt b.minus { color: #e0b25a; }
 app-besucher-verlauf .je-schritt small { color: var(--bn-fog); }
 app-besucher-verlauf .berechnen { padding: 6px 14px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
 app-besucher-verlauf .berechnen:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+
+// Backstage-Übersicht: Link zur Anleitung ganz unten
+app-backstage .anleitung-link { margin: 40px 0 0; padding-top: 16px; border-top: 1px solid var(--bn-line); }
+app-backstage .anleitung-link a { display: inline-flex; align-items: center; gap: 8px; color: var(--bn-fog); text-decoration: none; font-size: .92rem; }
+app-backstage .anleitung-link a:hover { color: var(--bn-sunset); }
+app-backstage .anleitung-link mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+// Backstage → Anleitung (pages/backstage-anleitung.ts): drei Modi im Vergleich, Übe-Status, Begriffe
+app-backstage-anleitung {
+  display: block;
+  h3 { margin: 36px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+  .hinweis { margin: 0 0 12px; max-width: 760px; color: var(--bn-fog); font-size: .92rem; line-height: 1.55; }
+  .kurz { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 10px; margin-top: 20px; }
+  .modus-karte { display: grid; align-content: start; gap: 4px; padding: 14px 16px; border: 1px solid var(--bn-line); border-radius: 12px; color: var(--bn-ink); text-decoration: none; }
+  .modus-karte:hover { border-color: var(--bn-sunset); }
+  .modus-karte mat-icon { color: var(--bn-sunset); }
+  .modus-karte span { color: var(--bn-fog); font-size: .88rem; line-height: 1.45; }
+  .vergleich { width: 100%; border-collapse: collapse; font-size: .88rem; line-height: 1.45; }
+  .vergleich th, .vergleich td { padding: 9px 10px; border-bottom: 1px solid var(--bn-line); text-align: left; vertical-align: top; }
+  .vergleich thead th { font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; color: var(--bn-sunset); }
+  .vergleich tbody th { width: 16%; color: var(--bn-fog); font-weight: 500; }
+  .status { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .status li { display: grid; grid-template-columns: 2.2em 9em 6.5em minmax(0, 1fr); align-items: baseline; gap: 4px 10px; padding: 8px 0; border-bottom: 1px solid var(--bn-line); font-size: .9rem; }
+  .status .zeichen { color: var(--bn-sunset); font-weight: 700; }
+  .status .kasten { color: var(--bn-fog); font-size: .82rem; }
+  .status .text { color: var(--bn-fog); line-height: 1.45; }
+  .begriffe { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 10px; }
+  .begriffe div { padding: 12px 14px; border: 1px solid var(--bn-line); border-radius: 10px; }
+  .begriffe dt { font-weight: 600; margin-bottom: 4px; }
+  .begriffe dd { margin: 0; color: var(--bn-fog); font-size: .88rem; line-height: 1.5; }
+  // schmal: je Merkmal ein Block, die drei Modi untereinander mit ihrem Namen davor
+  @media (max-width: 760px) {
+    .vergleich thead { display: none; }
+    .vergleich, .vergleich tbody, .vergleich tr, .vergleich th, .vergleich td { display: block; width: auto; }
+    .vergleich tr { padding: 10px 0; border-bottom: 1px solid var(--bn-line); }
+    .vergleich th, .vergleich td { padding: 2px 0; border: 0; }
+    .vergleich tbody th { width: auto; margin-bottom: 4px; color: var(--bn-ink); font-weight: 600; }
+    .vergleich td::before { content: attr(data-modus) ': '; color: var(--bn-sunset); font-weight: 500; }
+    .status li { grid-template-columns: 2.2em minmax(0, 1fr) auto; }
+    .status .text { grid-column: 2 / -1; }
+  }
+}

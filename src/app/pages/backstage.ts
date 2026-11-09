@@ -53,6 +53,9 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
       } @else {
         <p class="empty">Keine kommenden Termine eingetragen.</p>
       }
+
+      <!-- ganz unten: Anleitung zu den drei Modi und den gemeinsamen Begriffen -->
+      <p class="anleitung-link"><a routerLink="/backstage/anleitung"><mat-icon>help_outline</mat-icon> Anleitung: Übe-, Probe- und Bühnen-Modus im Vergleich</a></p>
     </section>
   `,
   styles: `
