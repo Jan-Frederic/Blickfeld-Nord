@@ -16,6 +16,7 @@ import { Song, durationOf, loadSetlist, setTime } from '../data/setlist-data';
 import { BandService } from '../data/band.service';
 import { historieText, songHistorie } from '../data/song-historie';
 import { ladeWackelt } from '../data/wackelt';
+import { STATUS, alleStatus, buehnenreife, eigeneStatus } from '../data/uebe-status';
 
 // Backstage → Songs → Liste: Tonart, Tempo und Notiz je Song eintragen, ohne songinfo.ts von Hand zu bearbeiten.
 // „Original“ ist die Tonart der Aufnahme, „wir spielen“ und Capo die Band-Version; das Tempo lässt sich im Proberaum
@@ -98,15 +99,33 @@ function ladeEntwurf(): Record<string, Werte> {
       }
       <div class="filter">
         <label>Zeigen
+          <!-- gruppiert nach Frage: Was fehlt an Daten? Was fehlt an Noten? Wie steht es bei mir / bei der Band? Wie oft live? -->
           <select class="zeigen" (change)="zeigen.set($any($event.target).value)">
             <option value="">alle Songs</option>
-            <option value="tonart">ohne Tonart oder Tempo</option>
-            <option value="unsicher">Werte unsicher</option>
-            <option value="noten">ohne Noten</option>
-            <option value="akkorde">ohne Akkorde</option>
-            @for (f of fassungen(); track f) { <option [value]="'fassung:' + f">ohne {{ f }}</option> }
-            <option value="nie">noch nie gespielt</option>
-            <option value="wackelt">wackelt noch (dein Status)</option>
+            <optgroup label="Tonart und Tempo">
+              <option value="tonart">Tonart oder Tempo fehlt</option>
+              <option value="unsicher">Werte noch nicht geprüft</option>
+            </optgroup>
+            <optgroup label="Noten (auf diesem Gerät)">
+              <option value="noten">ganz ohne Noten</option>
+              <option value="pdf">ohne PDF</option>
+              <option value="akkorde">ohne Akkordblatt</option>
+              @for (f of fassungen(); track f) { <option [value]="'fassung:' + f">ohne Fassung „{{ f }}“</option> }
+            </optgroup>
+            <optgroup label="Mein Übe-Status">
+              <option value="wackelt">Üben oder Wackelt noch</option>
+              @for (st of statusListe; track st.id) { <option [value]="'status:' + st.id">{{ st.zeichen }} {{ st.label }}</option> }
+            </optgroup>
+            <optgroup label="Bühnenreife der Band">
+              <option value="reife:baustelle">Baustelle</option>
+              <option value="reife:fast">fast bühnenreif</option>
+              <option value="reife:buehnenreif">bühnenreif</option>
+            </optgroup>
+            <optgroup label="Live gespielt">
+              <option value="nie">noch nie gespielt</option>
+              <option value="lange">seit über einem Jahr nicht gespielt</option>
+              <option value="geplant">auf einer kommenden Setlist</option>
+            </optgroup>
           </select>
         </label>
         <label>Reihenfolge
@@ -225,9 +244,9 @@ function ladeEntwurf(): Record<string, Werte> {
     .fortschritt { height: 6px; margin: 0 0 14px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
     .fortschritt span { display: block; height: 100%; background: var(--bn-sunset); }
     .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-bottom: 12px; font-size: .88rem; color: var(--bn-fog); }
-    .filter label { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: normal; font-size: .88rem; color: var(--bn-fog); }
+    .filter label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; text-transform: none; letter-spacing: normal; font-size: .88rem; color: var(--bn-fog); }
     .filter input[type=checkbox] { flex: none; width: auto; margin: 0; padding: 0; accent-color: var(--bn-sunset); }
-    .filter select { padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+    .filter select { min-width: 0; max-width: 100%; padding: 6px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
     .search { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; border: 1px solid var(--bn-line); border-radius: 10px; }
     .search mat-icon { color: var(--bn-fog); }
     .search input { flex: 1; padding: 10px 0; border: 0; background: none; color: var(--bn-ink); font: inherit; }
@@ -337,6 +356,18 @@ export class SongsListe {
     else if (z === 'akkorde') liste = liste.filter((s) => !noten.get(s.key)?.akkorde);
     else if (z === 'nie') liste = liste.filter((s) => !this.historie().get(s.key)?.gespielt);
     else if (z === 'wackelt') liste = liste.filter((s) => this.wackelt()[s.key]);
+    else if (z === 'pdf') liste = liste.filter((s) => !noten.get(s.key)?.pdfs);
+    else if (z === 'lange') {
+      const grenze = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+      liste = liste.filter((s) => { const h = this.historie().get(s.key); return !!h?.gespielt && (h.zuletzt ?? '') < grenze; });
+    } else if (z === 'geplant') liste = liste.filter((s) => this.historie().get(s.key)?.geplant);
+    else if (z.startsWith('status:')) {
+      const st = this.meineStatus();
+      liste = liste.filter((s) => (st.get(s.key) ?? 'nicht') === z.slice(7));
+    } else if (z.startsWith('reife:')) {
+      const alle = alleStatus(this.band.members);
+      liste = liste.filter((s) => buehnenreife(s.key, this.band.members, alle).ampel === z.slice(6));
+    }
     else if (z.startsWith('fassung:')) {
       const f = z.slice(8).toLowerCase();
       liste = liste.filter((s) => !noten.get(s.key)?.fassungen.some((x) => x.toLowerCase() === f));
@@ -354,6 +385,9 @@ export class SongsListe {
   protected readonly geaendert = computed(() => Object.keys(this.entwurf()));
   /** eigene Songs mit Status „Üben“ oder „Wackelt noch“ (data/wackelt.ts) */
   protected readonly wackelt = signal(ladeWackelt());
+  /** eigener Übe-Status je Song (Filter „Mein Übe-Status“) – zieht mit dem Status aus dem Dialog nach */
+  protected readonly statusListe = STATUS;
+  private readonly meineStatus = computed(() => (this.wackelt(), eigeneStatus()));
   protected wackeltNeu(): void {
     this.wackelt.set(ladeWackelt());
   }

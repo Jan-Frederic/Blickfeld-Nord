@@ -1932,6 +1932,11 @@ test('Backstage: Übe-Status „Wackelt noch“ und Proben-Mitschnitt im Song, N
   await p.locator('app-backstage-songs input[type=search]').fill('');
   await p.locator('select.zeigen').selectOption('wackelt');
   await until(async () => (await p.locator('app-backstage-songs tbody tr').count()) === 1, 'Filter „wackelt noch“ zeigt nicht genau den Song');
+  // gleiche Antwort über den genauen Status; Gruppen im Filter
+  await p.locator('select.zeigen').selectOption('status:wackelt');
+  await until(async () => (await p.locator('app-backstage-songs tbody tr').count()) === 1, 'Filter „Mein Übe-Status: Wackelt noch“ zeigt nicht genau den Song');
+  expect((await p.locator('select.zeigen optgroup').evaluateAll((g) => g.map((x) => x.getAttribute('label')))).join('|') === 'Tonart und Tempo|Noten (auf diesem Gerät)|Mein Übe-Status|Bühnenreife der Band|Live gespielt', 'Filtergruppen fehlen');
+  await p.locator('select.zeigen').selectOption('wackelt');
   // Probe-Vorschlag nimmt den Song zuerst
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();

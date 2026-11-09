@@ -555,7 +555,7 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
 
 - **Übe-Status** (Auswahl oben im Dialog): dein eigener Status zum Song – Nicht gelernt, Üben, Wackelt noch, Sitzt,
   Eingenordet (braucht „Ich bin …“). Landet im Karteikasten und in der Bühnenreife; der **Probe-Vorschlag** nimmt Songs
-  mit Üben/Wackelt noch zuerst, „Zeigen → wackelt noch“ listet deine (Üben und Wackelt noch).
+  mit Üben/Wackelt noch zuerst, „Zeigen → Üben oder Wackelt noch“ listet deine.
 - **Mitschnitte:** auf **Aufnehmen** tippen, die Band spielt, **Stopp** – die Aufnahme bleibt beim Song auf diesem Gerät,
   zum Nachhören zu Hause oder zum **Teilen** (Messenger, AirDrop). Beim ersten Mal fragt der Browser nach dem Mikrofon.
   Mit ☁ (**Mit der Band teilen**) landet sie im Ordner `Mitschnitte/` der OneDrive-Synchronisation und erscheint bei den
@@ -575,8 +575,10 @@ Die Nachbereitung steckt im Backup (Einstellungen → Backup).
 Mai“), steht bei jedem Song, der dort schon lief, „↺ hier schon am … gespielt“. **Für Abwechslung tauschen** ersetzt
 sie durch Songs, die dort noch nicht liefen – mit möglichst ähnlichem Tempo.
 
-**Songs → Liste:** „Zeigen“ filtert Lücken (ohne Tonart/Tempo, ohne Noten, ohne Akkorde, ohne eine Fassung wie
-„Bass“, noch nie gespielt, wackelt noch). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
+**Songs → Liste:** „Zeigen“ ist nach Fragen gruppiert: **Tonart und Tempo** (fehlt, noch nicht geprüft), **Noten auf
+diesem Gerät** (ganz ohne, ohne PDF, ohne Akkordblatt, ohne Fassung wie „Bass“), **Mein Übe-Status** (Üben oder Wackelt
+noch sowie jeder der fünf Status einzeln), **Bühnenreife der Band** (Baustelle, fast bühnenreif, bühnenreif) und **Live
+gespielt** (noch nie, seit über einem Jahr nicht, auf einer kommenden Setlist). Je Song steht, wie oft und wann zuletzt er gespielt wurde (aus den Setlists vergangener
 Auftritte) und ob er in einer kommenden Setlist steht; sortierbar nach „oft“ bzw. „lange nicht gespielt“.
 
 ## Gerät aufräumen (Abgleich)
