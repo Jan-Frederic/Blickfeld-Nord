@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-08",
+  "updated": "2026-11-09",
   "listen": [
     {
       "key": "setlist",
@@ -301,13 +301,6 @@
           "url": "https://open.spotify.com/track/6DKM07xOL59GExqNgE8LFM"
         },
         {
-          "title": "Wake Me up When September Ends",
-          "artist": "Green Day",
-          "year": 2004,
-          "duration": 286,
-          "url": "https://open.spotify.com/track/3ZffCQKLFLUvYM59XKLbVm"
-        },
-        {
           "title": "Weihnacht, was bist du",
           "artist": "Rolf Zuckowski",
           "year": 1982,
@@ -341,20 +334,6 @@
           "year": 1993,
           "duration": 278,
           "url": "https://open.spotify.com/track/42MCrJAzCVF2lGxv9m1EKd"
-        },
-        {
-          "title": "Seven Nation Army",
-          "artist": "The White Stripes",
-          "year": 2003,
-          "duration": 232,
-          "url": "https://open.spotify.com/track/3dPQuX8Gs42Y7b454ybpMR"
-        },
-        {
-          "title": "When I'm Dead and Gone",
-          "artist": "Fury In The Slaughterhouse",
-          "year": 2017,
-          "duration": 240,
-          "url": "https://open.spotify.com/track/0ja0F5XJrYseWptANAvW46"
         },
         {
           "title": "Driving Home for Christmas",
@@ -441,20 +420,6 @@
       "name": "Blickfeld Nord - Probe",
       "tracks": [
         {
-          "title": "Chöre",
-          "artist": "Mark Forster",
-          "year": 2017,
-          "duration": 208,
-          "url": "https://open.spotify.com/track/4ZPXuHp219ujq6QJ9oqteR"
-        },
-        {
-          "title": "Sommerregen",
-          "artist": "JORIS",
-          "year": 2015,
-          "duration": 207,
-          "url": "https://open.spotify.com/track/3Eesfjqw0uwnOVr2HelCsX"
-        },
-        {
           "title": "Over My Shoulder",
           "artist": "Mike + The Mechanics",
           "year": 1995,
@@ -462,88 +427,11 @@
           "url": "https://open.spotify.com/track/6DKM07xOL59GExqNgE8LFM"
         },
         {
-          "title": "Wonderful Life",
-          "artist": "Katie Melua",
-          "year": 2018,
-          "duration": 244,
-          "url": "https://open.spotify.com/track/1C0bWhNWIF3yBdjNh4GlCT"
-        },
-        {
           "title": "Heaven - MTV Unplugged Version",
           "artist": "Bryan Adams",
           "year": 1997,
           "duration": 271,
           "url": "https://open.spotify.com/track/5mQSXVIEby1cb3CWHaqSlK"
-        },
-        {
-          "title": "Lemon Tree",
-          "artist": "Fools Garden",
-          "year": 1995,
-          "duration": 191,
-          "url": "https://open.spotify.com/track/2epbL7s3RFV81K5UhTgZje"
-        },
-        {
-          "title": "Schau schau",
-          "artist": "Selig",
-          "year": 2009,
-          "duration": 263,
-          "url": "https://open.spotify.com/track/5HdoL7HTdkggifGVyyFhGM"
-        },
-        {
-          "title": "Wir werden uns wiedersehen",
-          "artist": "Selig",
-          "year": 2009,
-          "duration": 242,
-          "url": "https://open.spotify.com/track/4YqzixZWs5ZwjnjuhrcJQ4"
-        },
-        {
-          "title": "Mein Herz bleibt hier",
-          "artist": "Madsen",
-          "year": 2010,
-          "duration": 187,
-          "url": "https://open.spotify.com/track/1wIY2Y0caWux5uG7calCoz"
-        },
-        {
-          "title": "Hear You Me",
-          "artist": "Jimmy Eat World",
-          "year": 2001,
-          "duration": 284,
-          "url": "https://open.spotify.com/track/1TvNcWY7WwPLQINhimxycA"
-        },
-        {
-          "title": "Another Day in Paradise - 2016 Remaster",
-          "artist": "Phil Collins",
-          "year": 1989,
-          "duration": 322,
-          "url": "https://open.spotify.com/track/1NCuYqMc8hKMb4cpNTcJbD"
-        },
-        {
-          "title": "Iris",
-          "artist": "The Goo Goo Dolls",
-          "year": 1998,
-          "duration": 290,
-          "url": "https://open.spotify.com/track/6Qyc6fS4DsZjB2mRW9DsQs"
-        },
-        {
-          "title": "Wake Me up When September Ends",
-          "artist": "Green Day",
-          "year": 2004,
-          "duration": 286,
-          "url": "https://open.spotify.com/track/3ZffCQKLFLUvYM59XKLbVm"
-        },
-        {
-          "title": "Seven Nation Army",
-          "artist": "The White Stripes",
-          "year": 2003,
-          "duration": 232,
-          "url": "https://open.spotify.com/track/3dPQuX8Gs42Y7b454ybpMR"
-        },
-        {
-          "title": "When I'm Dead and Gone",
-          "artist": "Fury In The Slaughterhouse",
-          "year": 2017,
-          "duration": 240,
-          "url": "https://open.spotify.com/track/0ja0F5XJrYseWptANAvW46"
         },
         {
           "title": "Last Christmas",
@@ -565,13 +453,6 @@
           "year": 2023,
           "duration": 133,
           "url": "https://open.spotify.com/track/1LmkdWSxjCV7wKTPsCvYWN"
-        },
-        {
-          "title": "Von Ewigkeit zu Ewigkeit",
-          "artist": "Selig",
-          "year": 2010,
-          "duration": 265,
-          "url": "https://open.spotify.com/track/63vgpb67R3yats9vrx0bEi"
         },
         {
           "title": "It's Beginning to Look a Lot like Christmas",
@@ -614,13 +495,6 @@
           "year": 2019,
           "duration": 243,
           "url": "https://open.spotify.com/track/7LoFMtL7hxP9tr5HYyyUrJ"
-        },
-        {
-          "title": "Dust in the Wind",
-          "artist": "Kansas",
-          "year": 1977,
-          "duration": 206,
-          "url": "https://open.spotify.com/track/6zeE5tKyr8Nu882DQhhSQI"
         },
         {
           "title": "Happy Xmas (War Is Over) - Remastered 2010",
@@ -1545,6 +1419,41 @@
           "year": 2004,
           "duration": 237,
           "url": "https://open.spotify.com/track/4PFAm88FBkY7IFtvCaGctZ"
+        },
+        {
+          "title": "Sommerregen",
+          "artist": "JORIS",
+          "year": 2015,
+          "duration": 207,
+          "url": "https://open.spotify.com/track/3Eesfjqw0uwnOVr2HelCsX"
+        },
+        {
+          "title": "Schau schau",
+          "artist": "Selig",
+          "year": 2009,
+          "duration": 263,
+          "url": "https://open.spotify.com/track/5HdoL7HTdkggifGVyyFhGM"
+        },
+        {
+          "title": "Wir werden uns wiedersehen",
+          "artist": "Selig",
+          "year": 2009,
+          "duration": 242,
+          "url": "https://open.spotify.com/track/4YqzixZWs5ZwjnjuhrcJQ4"
+        },
+        {
+          "title": "Mein Herz bleibt hier",
+          "artist": "Madsen",
+          "year": 2010,
+          "duration": 187,
+          "url": "https://open.spotify.com/track/1wIY2Y0caWux5uG7calCoz"
+        },
+        {
+          "title": "Hear You Me",
+          "artist": "Jimmy Eat World",
+          "year": 2001,
+          "duration": 284,
+          "url": "https://open.spotify.com/track/1TvNcWY7WwPLQINhimxycA"
         }
       ]
     },
