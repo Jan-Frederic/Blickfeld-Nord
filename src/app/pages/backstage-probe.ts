@@ -7,6 +7,7 @@ import { Verlauf, Zurueck } from '../zurueck';
 import { BandService } from '../data/band.service';
 import { songInfoText } from '../data/songinfo';
 import { LISTEN, listeInReihenfolge, songAbgleich } from '../data/playlisten';
+import { ListenQuelle, listenQuellen, listenTreffer } from '../data/listen-quellen';
 import { BackstageSync } from './backstage-sync';
 import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
@@ -47,6 +48,34 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
         <app-probe-zusagen [datum]="datum()" />
 
         <h3><mat-icon>queue_music</mat-icon> Songs zum Üben</h3>
+        <!-- Hinzufügen zuerst: Suche (Songs, Setlists, Sammlungen, Spotify-Listen), Generalprobe, Vorschlag -->
+        <label class="search">
+          <mat-icon>search</mat-icon>
+          <input type="search" placeholder="Song, Setlist, Sammlung oder Spotify-Liste hinzufügen …" [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Song, Setlist, Sammlung oder Spotify-Liste hinzufügen" />
+        </label>
+        @if (query().trim()) {
+          <ul class="hits">
+            @for (l of listenHits(); track l.id) {
+              <li><button type="button" class="liste-hit" (click)="listeHinzu(l)"><mat-icon>{{ l.icon }}</mat-icon> {{ l.name }} <span class="a">{{ l.art }} · {{ fehlendAus(l).length ? fehlendAus(l).length + ' von ' + l.songs.length + ' dazu' : 'alle schon drin' }}</span></button></li>
+            }
+            @for (t of treffer(); track t.title + t.artist) {
+              <li><button type="button" (click)="addSong(t)"><mat-icon>add</mat-icon> {{ t.title }} <span class="a">{{ t.artist }}</span></button></li>
+            } @empty {
+              @if (!listenHits().length) { <li class="empty">Nichts gefunden.</li> }
+            }
+          </ul>
+        }
+        @if (hinzuMeldung(); as m) { <p class="teilen-meldung" role="status">{{ m }}</p> }
+        @if (naechsterAuftritt(); as a) {
+          <button type="button" class="general" (click)="generalprobeUebernehmen()" [disabled]="!a.songs"><mat-icon>theater_comedy</mat-icon>
+            {{ plan().generalprobe === a.id ? 'Generalprobe ' + a.name + ' – Setlist neu übernehmen' : 'Generalprobe: Setlist ' + a.name + ' übernehmen' }}{{ a.songs ? ' (' + a.songs + ' Songs)' : ' (noch keine Setlist auf diesem Gerät)' }}</button>
+        }
+        <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
+
+        <!-- Abgleich mit der Spotify-Liste „Probe“: nur als Hinweis (übernehmen geht über die Suche: „Probe“) -->
+        @if (spotifyDiff(); as d) {
+          <p class="spotify-diff" [title]="d.titel">{{ d.text }}</p>
+        }
         @if (plan().songs.length) {
           <div class="probe-start">
             <button type="button" class="primaer" (click)="modus.set(true)"><mat-icon>fit_screen</mat-icon> Probe-Modus starten</button>
@@ -55,6 +84,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           <div class="probe-teilen">
             <button type="button" (click)="planSchicken()"><mat-icon>{{ geschickt() ? 'check' : 'send' }}</mat-icon> Plan an die Band</button>
             <button type="button" (click)="fuerSpotify()" title="Track-Links kopieren – in Spotify am Computer in eine Playlist einfügen (Strg/Cmd+V)"><mat-icon>queue_music</mat-icon> Für Spotify kopieren</button>
+            <button type="button" class="leeren" (click)="listeLeeren()"><mat-icon>delete_sweep</mat-icon> Liste leeren</button>
             @if (plan().geschickt) { <small>zuletzt geschickt am {{ plan().geschickt | date: 'd.M.' }}</small> }
           </div>
           @if (teilenMeldung(); as m) { <p class="teilen-meldung" role="status">{{ m }}</p> }
@@ -75,28 +105,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
             }
           </ul>
         } @else {
-          <p class="empty">Noch keine Songs ausgewählt.</p>
-        }
-        @if (naechsterAuftritt(); as a) {
-          <button type="button" class="general" (click)="generalprobeUebernehmen()" [disabled]="!a.songs"><mat-icon>theater_comedy</mat-icon>
-            {{ plan().generalprobe === a.id ? 'Generalprobe ' + a.name + ' – Setlist neu übernehmen' : 'Generalprobe: Setlist ' + a.name + ' übernehmen' }}{{ a.songs ? ' (' + a.songs + ' Songs)' : ' (noch keine Setlist auf diesem Gerät)' }}</button>
-        }
-        <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
-        @if (ausProbeListe().length) {
-          <button type="button" class="aus-liste" (click)="probeListeUebernehmen()"><mat-icon>piano</mat-icon> {{ ausProbeListe().length }} {{ ausProbeListe().length === 1 ? 'Song' : 'Songs' }} aus der Spotify-Liste „Probe“ übernehmen</button>
-        }
-        <label class="search">
-          <mat-icon>search</mat-icon>
-          <input type="search" placeholder="Song hinzufügen (alle Listen) …" [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Song suchen" />
-        </label>
-        @if (query().trim()) {
-          <ul class="hits">
-            @for (t of treffer(); track t.title + t.artist) {
-              <li><button type="button" (click)="addSong(t)"><mat-icon>add</mat-icon> {{ t.title }} <span class="a">{{ t.artist }}</span></button></li>
-            } @empty {
-              <li class="empty">Kein Song gefunden.</li>
-            }
-          </ul>
+          <p class="empty">Noch keine Songs ausgewählt – oben suchen oder einen Vorschlag übernehmen.</p>
         }
 
         <h3><mat-icon>tune</mat-icon> Stimmen</h3>
@@ -172,10 +181,13 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
     .info.nochmal, .info.unsicher { border-color: #e0b25a; color: #e0b25a; }
     .probe-teilen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
     .probe-teilen button, .general { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
-    .general { margin: 0 8px 10px 0; }
+    .general { margin: 12px 8px 10px 0; }
     .general:disabled { opacity: .5; cursor: default; }
     .probe-teilen small { color: var(--bn-fog); }
-    .teilen-meldung { margin: 0 0 12px; color: #5fb88a; font-size: .85rem; }
+    .teilen-meldung { margin: 8px 0 12px; color: #5fb88a; font-size: .85rem; }
+    .spotify-diff { margin: 4px 0 12px; color: #1db954; font-size: .85rem; }
+    .probe-teilen .leeren:hover { border-color: #ff8a65; color: #ff8a65; }
+    @media (max-width: 600px) { .list .protokoll { order: 5; flex-basis: 100%; } }
   `,
 })
 export class BackstageProbe {
@@ -272,16 +284,43 @@ export class BackstageProbe {
     const drin = new Set(this.plan().songs.map((s) => s.title + s.artist));
     return this.alle.filter((t) => !drin.has(t.title + t.artist) && norm(`${t.title} ${t.artist}`).includes(q)).slice(0, 20);
   });
-  // Songs aller Spotify-Listen; „Probe“-Liste mit einem Klick übernehmen (nur, was noch fehlt, in Spotify-Reihenfolge)
+  // Songs aller Spotify-Listen; ganze Listen (Setlists, Sammlungen, Spotify-Listen) über dieselbe Suche
   private readonly alle = songAbgleich(LISTEN);
-  protected readonly ausProbeListe = computed(() => {
-    const drin = new Set(this.plan().songs.map((s) => s.title + s.artist));
-    return listeInReihenfolge('probe', this.alle).filter((t) => !drin.has(t.title + t.artist));
-  });
-  protected probeListeUebernehmen(): void {
-    const neu = this.ausProbeListe();
-    this.save((p) => ({ ...p, songs: [...p.songs, ...neu.map((t) => ({ title: t.title, artist: t.artist, done: false }))] }));
+  private readonly listen = computed(() => (this.plan(), listenQuellen(this.band.shows, (x) => this.band.showId(x), this.alle)));
+  protected readonly listenHits = computed(() => listenTreffer(this.listen(), this.query()));
+  private readonly drinKeys = computed(() => new Set(this.plan().songs.map((s) => s.title + '|' + s.artist)));
+  protected fehlendAus(l: ListenQuelle): { title: string; artist: string }[] {
+    const drin = this.drinKeys();
+    return l.songs.filter((x, i, a) => !drin.has(x.title + '|' + x.artist) && a.findIndex((y) => y.title === x.title && y.artist === x.artist) === i);
   }
+  protected readonly hinzuMeldung = signal('');
+  /** ganze Liste anhängen (nur, was noch fehlt, in ihrer Reihenfolge) */
+  protected listeHinzu(l: ListenQuelle): void {
+    const neu = this.fehlendAus(l);
+    this.save((p) => ({ ...p, songs: [...p.songs, ...neu.map((t) => ({ title: t.title, artist: t.artist, done: false }))] }));
+    this.query.set('');
+    this.hinzuMeldung.set(`${l.art} „${l.name}“: ${neu.length} ${neu.length === 1 ? 'Song' : 'Songs'} dazu${l.songs.length > neu.length ? `, ${l.songs.length - neu.length} schon drin` : ''}.`);
+  }
+  /** Probe-Liste komplett leeren (Songs und Generalprobe; Notizen und offene Punkte bleiben) */
+  protected listeLeeren(): void {
+    if (!confirm(`Alle ${this.plan().songs.length} Songs aus dieser Probe entfernen?`)) return;
+    this.save((p) => ({ ...p, songs: [], generalprobe: undefined }));
+    this.hinzuMeldung.set('');
+  }
+  /** Unterschied zur Spotify-Liste „Probe“ – kurze Info in Spotify-Grün */
+  protected readonly spotifyDiff = computed(() => {
+    const spotify = listeInReihenfolge('probe', this.alle);
+    if (!spotify.length) return null;
+    const hier = this.drinKeys();
+    const dort = new Set(spotify.map((s) => s.title + '|' + s.artist));
+    const fehlen = spotify.filter((s) => !hier.has(s.title + '|' + s.artist)).map((s) => s.title);
+    const nurHier = this.plan().songs.filter((s) => !dort.has(s.title + '|' + s.artist)).map((s) => s.title);
+    const text = !fehlen.length && !nurHier.length
+      ? 'Spotify-Liste „Probe“: identisch ✓'
+      : `Spotify-Liste „Probe“: ${[fehlen.length ? `${fehlen.length} ${fehlen.length === 1 ? 'Song fehlt' : 'Songs fehlen'} hier` : '', nurHier.length ? `${nurHier.length} nur hier` : ''].filter(Boolean).join(', ')}`;
+    const titel = [fehlen.length ? 'Fehlen hier: ' + fehlen.join(', ') : '', nurHier.length ? 'Nur hier: ' + nurHier.join(', ') : ''].filter(Boolean).join(' · ');
+    return { text, titel };
+  });
 
   constructor() {
     // beim Öffnen (und beim Wechsel zu einer anderen Probe) den gespeicherten Stand laden

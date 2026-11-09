@@ -1466,10 +1466,19 @@ test('Backstage: Spotify-Listen übernehmen (Probe, Setlist), Dauer und Abweichu
   await p.go('/backstage/termine/');
   await p.locator('a.row-link', { hasText: 'Probe' }).first().click();
   await p.waitForURL(/\/backstage\/probe\//);
-  const knopf = p.locator('app-backstage-probe button.aus-liste');
-  const zahl = Number(/(\d+)/.exec(await knopf.innerText())[1]);
-  await knopf.click();
-  await until(async () => (await p.locator('app-backstage-probe .list li label').count()) >= zahl, 'Probe-Liste wird nicht übernommen');
+  const seite = p.locator('app-backstage-probe');
+  // Hinzufügen steht über der Liste; kein eigener Spotify-Knopf mehr – die Suche findet die Spotify-Liste „Probe“
+  expect((await seite.locator('button.aus-liste').count()) === 0, 'alter Knopf „aus der Spotify-Liste übernehmen“ ist noch da');
+  await until(async () => /Spotify-Liste „Probe“: \d+ Songs? fehl/.test(await seite.locator('.spotify-diff').innerText().catch(() => '')), 'Differenz zur Spotify-Liste fehlt');
+  await seite.locator('input[type=search]').fill('Probe');
+  const hit = seite.locator('.hits button.liste-hit', { hasText: 'Spotify-Liste' }).first();
+  const zahl = Number(/(\d+) von/.exec(await hit.innerText())[1]);
+  await hit.click();
+  await until(async () => (await seite.locator('.list li label').count()) >= zahl, 'Spotify-Liste „Probe“ wird nicht übernommen');
+  await until(async () => (await seite.locator('.spotify-diff').innerText()).includes('identisch'), 'nach dem Übernehmen nicht identisch');
+  // Liste komplett leeren
+  await seite.locator('button.leeren').click();
+  await until(async () => (await seite.locator('.list li label').count()) === 0, 'Liste leeren klappt nicht');
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
   await p.locator('app-setlist .pick .listen-chips button', { hasText: 'Setlist' }).click();

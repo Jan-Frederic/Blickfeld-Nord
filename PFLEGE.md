@@ -198,6 +198,13 @@ Proben erscheinen nur im Backstage und im Band-Kalender-Abo.
 und Tempo, falls eingetragen), Notizen und offene Punkte. Alles bleibt auf dem Gerät gespeichert; mit „Diesen Termin
 an die Band“ geht der Stand per WhatsApp & Co. an die anderen.
 
+**Songs zum Üben (Probenseite):** Alles zum Hinzufügen steht über der Liste: eine **Suche** für einzelne Songs und ganze
+**Setlists, Sammlungen und Spotify-Listen** (fehlende Songs der Liste werden in ihrer Reihenfolge angehängt, die Meldung
+sagt, wie viele schon drin waren), darunter **Generalprobe** und die **Vorschläge**. In Spotify-Grün steht der
+Unterschied zur Spotify-Liste „Probe“ („29 Songs fehlen hier, 1 nur hier“ bzw. „identisch ✓“; Tooltip mit den Titeln) –
+einen eigenen Übernehmen-Knopf gibt es nicht mehr, die Suche „Probe“ findet die Liste. **Liste leeren** entfernt alle
+Songs der Probe (Notizen und offene Punkte bleiben).
+
 **Wer kommt?** Einmal unter **Einstellungen → Ich bin …** die eigene Person wählen (gilt für die Person auf allen ihren
 Geräten), dann auf der Probenseite **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
 Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2 kommen, 1 offen“).

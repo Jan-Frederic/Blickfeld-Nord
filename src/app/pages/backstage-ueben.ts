@@ -5,7 +5,7 @@ import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
 import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 import { STATUS, UebeStatus, eigeneStatus, statusAusKasten, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
-import { sammlungen } from '../data/sammlungen';
+import { ListenQuelle, listenQuellen, listenTreffer } from '../data/listen-quellen';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
@@ -41,7 +41,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         @if (listenTreffer().length || treffer().length) {
           <ul class="treffer">
             @for (l of listenTreffer(); track l.id) {
-              <li><button type="button" class="liste-treffer" (click)="listeHinzu(l)"><mat-icon aria-hidden="true">{{ l.icon }}</mat-icon><span class="t">{{ l.name }}</span>&ngsp;<span class="a">{{ l.art }} · {{ l.keys.length }} {{ l.keys.length === 1 ? 'Song' : 'Songs' }}</span><mat-icon>playlist_add</mat-icon></button></li>
+              <li><button type="button" class="liste-treffer" (click)="listeHinzu(l)"><mat-icon aria-hidden="true">{{ l.icon }}</mat-icon><span class="t">{{ l.name }}</span>&ngsp;<span class="a">{{ l.art }} · {{ l.songs.length }} {{ l.songs.length === 1 ? 'Song' : 'Songs' }}</span><mat-icon>playlist_add</mat-icon></button></li>
             }
             @for (t of treffer(); track t.key) {
               <li><button type="button" (click)="hinzu(t.key)"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}{{ t.status !== 'nicht' ? ' · ' + statusLabel(t.status) : '' }}</span><mat-icon>add</mat-icon></button></li>
@@ -141,22 +141,8 @@ export class BackstageUeben {
   private zaehler: Partial<Record<UebeStatus, number>> = {};
 
   // ganze Listen: Setlists der Auftritte (auf diesem Gerät), Sammlungen, Spotify-Listen
-  private readonly listen = computed(() => {
-    this.stand();
-    const setlists = [...this.band.shows]
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .map((sh) => ({ sh, keys: (loadSetlist(this.band.showId(sh)) as Entry[]).filter((e) => !isPause(e)).map((e) => `${(e as { title: string }).title}|${(e as { artist: string }).artist}`) }))
-      .filter((x) => x.keys.length)
-      .map(({ sh, keys }) => ({ id: 'setlist:' + this.band.showId(sh), art: 'Setlist', icon: 'queue_music', name: `${sh.venue} ${datumText(sh.date)}`, keys }));
-    const samml = sammlungen().map((x) => ({ id: 'sammlung:' + x.name, art: 'Sammlung', icon: 'bookmarks', name: x.name, keys: (x.entries.filter((e) => !isPause(e)) as { title: string; artist: string }[]).map((e) => `${e.title}|${e.artist}`) }));
-    const spotify = LISTEN.map((l) => ({ id: 'spotify:' + l.key, art: 'Spotify-Liste', icon: l.icon, name: l.label, keys: this.songs.filter((x) => x.listen.includes(l.key)).map((x) => x.key) }));
-    return [...setlists, ...samml, ...spotify].filter((l) => l.keys.length);
-  });
-  protected readonly listenTreffer = computed(() => {
-    const q = norm(this.suche().trim());
-    if (q.length < 2) return [];
-    return this.listen().filter((l) => norm(`${l.art} ${l.name}`).includes(q)).slice(0, 6);
-  });
+  private readonly listen = computed(() => (this.stand(), listenQuellen(this.band.shows, (x) => this.band.showId(x), this.songs)));
+  protected readonly listenTreffer = computed(() => listenTreffer(this.listen(), this.suche()));
   private readonly verlauf = inject(Verlauf);
 
   constructor() {
@@ -236,9 +222,9 @@ export class BackstageUeben {
     this.meldung.set('');
   }
   /** ganze Liste zum Üben: Songs ohne Status kommen auf „Üben“ (Kasten 1), die übrigen behalten ihren Status */
-  protected listeHinzu(l: { name: string; art: string; keys: string[] }): void {
+  protected listeHinzu(l: ListenQuelle): void {
     const eigene = this.eigene();
-    const keys = [...new Set(l.keys)];
+    const keys = [...new Set(l.songs.map((x) => `${x.title}|${x.artist}`))];
     const neu = keys.filter((k) => (eigene.get(k) ?? 'nicht') === 'nicht');
     for (const k of neu) statusSetzen(k, 'ueben', 'liste');
     const eingenordet = keys.filter((k) => eigene.get(k) === 'eingenordet').length;
