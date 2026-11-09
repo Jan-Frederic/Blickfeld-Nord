@@ -562,6 +562,11 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
   await until(async () => /probe[\s\S]*song 1 \/ 3/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Probe-Modus startet nicht');
+  // Spotify-Player (Iris steht in den Spotify-Listen): erst auf Knopfdruck, mit der Einbett-Adresse des Tracks
+  expect((await buehne.locator('.spotify-player iframe').count()) === 0, 'Spotify-Player lädt ohne Knopfdruck');
+  await buehne.locator('button.spotify-knopf').click();
+  await until(async () => /open\.spotify\.com\/embed\/track\/6Qyc6fS4DsZjB2mRW9DsQs/.test((await buehne.locator('.spotify-player iframe').getAttribute('src').catch(() => '')) ?? ''), 'Spotify-Player erscheint nicht');
+  await buehne.locator('button.spotify-knopf').click();
   const leiste = buehne.locator('app-probe-leiste');
   // fünf Stufen statt Sitzt/Nochmal; Durchlauf und Übergang gibt es nicht mehr
   expect((await leiste.locator('app-status-schalter button').evaluateAll((b) => b.map((x) => x.getAttribute('aria-label')))).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Status-Umschalter hat nicht die fünf Stufen');

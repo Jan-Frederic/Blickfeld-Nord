@@ -1003,3 +1003,10 @@ app-setlist .reife.baustelle { color: #e0b25a; }
 app-setlist .reife.fast { color: #9fd3b4; }
 app-setlist .reife.buehnenreif { color: #5fb88a; }
 app-setlist .reife.offen { color: var(--bn-fog); }
+
+// Bühnen-Modus (Übe- und Probe-Modus): Spotify-Player unter Tonart und Tempo
+app-setlist-buehne .spotify-player { width: min(560px, 100%); margin: 14px auto 0; }
+app-setlist-buehne .spotify-player iframe { display: block; width: 100%; height: 152px; border: 0; border-radius: 12px; }
+app-setlist-buehne .spotify-zeile { margin: 12px 0 0; text-align: center; }
+app-setlist-buehne .spotify-knopf { display: inline-flex !important; width: auto !important; padding: 0 14px !important; }
+app-setlist-buehne .spotify-knopf.on { border-color: #1db954 !important; color: #1db954 !important; }

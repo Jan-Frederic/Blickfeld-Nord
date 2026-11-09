@@ -15,7 +15,8 @@ import { tasten } from '../data/buehne-einstellungen';
 import { BEWERTUNG_PREFIX, alleBewertungen, bewerten, ladeBewertungen, rangliste, songKey } from '../data/bewertung';
 import { RestSong, streichVorschlag, ueberzug } from '../data/kuerzen';
 import { wunschEinfuegen } from '../data/buehne-wunsch';
-import { LISTEN, songAbgleich } from '../data/playlisten';
+import { LISTEN, songAbgleich, vergleichsKey } from '../data/playlisten';
+import { DomSanitizer } from '@angular/platform-browser';
 
 // Bühnen-Modus: Setlist im Vollbild für Tablet/Handy am Mikroständer. Großer aktueller Song, danach der nächste;
 // weiter per Tippen rechts, Wischen oder Pfeiltaste, zurück per Tippen links. Der Bildschirm bleibt an (Wake Lock),
@@ -108,6 +109,15 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
                 }
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
+            }
+            <!-- Spotify-Player (Übe- und Probe-Modus): erst auf Knopfdruck geladen, wechselt mit dem Song -->
+            @if (spotifyMoeglich()) {
+              <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="Song von Spotify anhören (lädt den Spotify-Player)">♫ {{ spotifyAn() ? 'Spotify ausblenden' : 'Auf Spotify anhören' }}</button></p>
+            }
+            @if (spotifyAn() && spotifyEmbed(); as url) {
+              <div class="spotify-player" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
+                <iframe [src]="url" [title]="'Spotify-Player: ' + $any(c).title" width="100%" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+              </div>
             }
             @if (probe(); as d) { <app-probe-leiste [datum]="d" [song]="$any(c)" [neu]="statusNeu()" /> }
             @if (ueben()) {
@@ -297,6 +307,31 @@ export class SetlistBuehne {
     else this.springen(this.index() + 1);
   }
   protected readonly minutenText = minutenText;
+
+  // Spotify-Player (Übe- und Probe-Modus): Track-Link aus den Spotify-Listen → Einbett-Adresse; erst auf Knopfdruck,
+  // nur mit Netz. Voller Song nur mit Spotify-Anmeldung im selben Browser, sonst 30-Sekunden-Vorschau.
+  private readonly sanitizer = inject(DomSanitizer);
+  protected readonly spotifyAn = signal(false);
+  private readonly online = signal(typeof navigator === 'undefined' || navigator.onLine !== false);
+  private readonly spotifyTracks = (() => {
+    const m = new Map<string, string>();
+    for (const l of LISTEN) for (const t of l.tracks) if (t.url && !m.has(vergleichsKey(t.title, t.artist))) m.set(vergleichsKey(t.title, t.artist), t.url);
+    return m;
+  })();
+  private readonly spotifyId = computed(() => {
+    const c = this.aktuellerSong();
+    const url = c ? this.spotifyTracks.get(vergleichsKey(c.title, c.artist)) : undefined;
+    return /open\.spotify\.com\/track\/([A-Za-z0-9]+)/.exec(url ?? '')?.[1];
+  });
+  protected readonly spotifyMoeglich = computed(() => (this.ueben() || !!this.probe()) && !!this.spotifyId() && this.online());
+  protected readonly spotifyEmbed = computed(() => {
+    const id = this.spotifyId();
+    return id && this.online() ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://open.spotify.com/embed/track/${id}?utm_source=generator&theme=0`) : null;
+  });
+  protected spotifyUmschalten(e: Event): void {
+    e.stopPropagation();
+    this.spotifyAn.update((a) => !a);
+  }
   private readonly band = inject(BandService);
   // links oben: wofür der Modus läuft – Name des Auftritts bzw. „Probe 12.11.“ (danach Set bzw. Song)
   protected readonly anlass = computed(() => {
@@ -443,6 +478,17 @@ export class SetlistBuehne {
   private startX = 0;
   private startY = 0;
 
+  private readonly netzBeobachten = (() => {
+    if (typeof window === 'undefined') return;
+    const an = () => this.online.set(true);
+    const aus = () => this.online.set(false);
+    window.addEventListener('online', an);
+    window.addEventListener('offline', aus);
+    inject(DestroyRef).onDestroy(() => {
+      window.removeEventListener('online', an);
+      window.removeEventListener('offline', aus);
+    });
+  })();
   constructor() {
     alleSongNoten()
       .then((n) => {

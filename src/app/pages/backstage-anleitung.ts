@@ -17,6 +17,7 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Uhr', buehne: 'Set-Uhr gegen die geplante Spielzeit', probe: 'Uhr gegen die Probendauer, Zeit je Song, Rest je offenem Song', ueben: '–' },
   { was: 'Song-Liste, Wunsch-Suche', buehne: 'Ja', probe: 'Ja', ueben: 'Nein – die Reihe der Karten ergibt sich aus dem Status' },
   { was: 'Wischen', buehne: 'Seitlich: blättern. Hoch: Notenansicht gleitet herein. Runter (Kopfleiste sichtbar, Blatt oben): zurück zur Titelanzeige', probe: 'wie im Bühnen-Modus', ueben: 'wie im Bühnen-Modus' },
+  { was: 'Spotify-Player', buehne: '–', probe: '„♫ Auf Spotify anhören“ in der Titelanzeige (Song aus einer Spotify-Liste, mit Netz)', ueben: 'wie im Probe-Modus' },
   { was: 'Mitschnitt', buehne: '–', probe: 'Mikrofon in der Probe-Leiste: diesen Song aufnehmen und nachhören', ueben: 'Mitschnitt-Panel: Proben-Aufnahmen anhören, Schleife, langsamer' },
   { was: 'Klick', buehne: 'Originaltempo', probe: 'Übungstempo (100 → 70 %)', ueben: 'wie im Bühnen-Modus' },
   { was: 'Am Ende', buehne: 'Zurück zur Setlist bzw. Übersicht', probe: 'Zusammenfassung (Sitzt / Nochmal mit Namen / Nicht drangekommen, Zeit) – Rest mit einem Klick auf die nächste Probe', ueben: 'Ergebnis, z. B. „3× Sitzt, 1× Eingenordet 🎉“' },

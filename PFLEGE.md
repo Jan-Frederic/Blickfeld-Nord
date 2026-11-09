@@ -122,6 +122,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet bei 70 %, der Tempo-Knopf
   steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
   **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
+- **Spotify-Player** (Titelanzeige im Übe- und Probe-Modus, nur mit Netz): „♫ Auf Spotify anhören“ lädt erst auf
+  Knopfdruck den eingebetteten Spotify-Player (kompakt, 152 px) für den aktuellen Song – für jeden Song, der in einer
+  Spotify-Liste steht; er wechselt mit dem Song. Ganze Songs nur mit Spotify-Anmeldung im selben Browser, sonst
+  30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`; nur im Backstage,
+  öffentliche Seiten laden nichts von Spotify.
 - **Bühnenreife in der Setlist:** im Setlist-Editor steht je Song die Reife (● 73 %, Farbe nach Ampel, Tooltip mit
   „wackelt bei …“); „Bereit?“ meldet Setlist-Songs, die noch Baustelle sind (sobald jemand Übe-Status setzt).
 - **Übe-Status:** Jeder Song hat je Musiker einen von fünf Status – **Nicht gelernt** (jeder neue Song und alle ohne
