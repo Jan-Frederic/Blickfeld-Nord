@@ -12,7 +12,7 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
 // Die Übersicht zeigt Suche, Fälliges und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
-// (Termine, Zahlen, Übersetzungen, Material, Abgleich – siehe BACKSTAGE_BEREICHE), erreichbar über die Leiste oben.
+// (Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich – siehe BACKSTAGE_BEREICHE), erreichbar über die Leiste oben.
 @Component({
   selector: 'app-backstage',
   imports: [DatePipe, RouterLink, MatIconModule, HeuteFaellig, BackstageSuche],

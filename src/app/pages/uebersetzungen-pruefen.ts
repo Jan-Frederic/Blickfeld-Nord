@@ -31,7 +31,7 @@ function load(): Pruefung {
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
-      <h2>Übersetzungen prüfen</h2>
+      <h2>Sprachen</h2>
       <p class="lead">
         Links steht der deutsche Text, rechts die Übersetzung. Bei Bedarf korrigieren und <strong>„Passt“</strong> anklicken.
         Alles bleibt in diesem Browser gespeichert, bis ihr es unten übernehmt.

@@ -109,7 +109,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Sammlungen, Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche, Sammlungen ihre Seite). Danach Heute fällig,
   **Üben** (rechts daneben der Übe-Modus) und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
   Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
-  Backstage → Zahlen. Die Bereiche (Termine, Zahlen, Songs, …) stehen im Menü oben – Kacheln gibt es in der
+  Backstage → Zahlen. Die Bereiche (Übersicht, Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen) stehen im Menü oben – Kacheln gibt es in der
   Übersicht nicht mehr.
 - **Anleitung** (Link ganz unten in der Übersicht, `/backstage/anleitung`): Übe-, Probe- und Bühnen-Modus im Vergleich
   (Tabelle, auf dem Handy je Merkmal untereinander), die fünf Übe-Status mit ihren Kästen und die gemeinsamen Begriffe

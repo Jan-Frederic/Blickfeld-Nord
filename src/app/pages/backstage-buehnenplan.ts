@@ -15,7 +15,7 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
-      <h2>Bühnenplan</h2>
+      <h2>Technik</h2>
       <p class="lead">
         Geräte und Musiker mit Maus oder Finger an ihren Platz ziehen. Feinjustierung: antippen, dann Pfeiltasten
         (5 cm, mit Umschalt 25 cm). Ein Kästchen ist 1 m.
