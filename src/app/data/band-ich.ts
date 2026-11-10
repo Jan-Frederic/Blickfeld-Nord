@@ -38,7 +38,55 @@ export const ladeIch = (): string => lesen(ICH_KEY) ?? '';
 /** Person wählen – teilt gleich die angegebenen unsicheren Songs (ohne Angabe bleibt „unsicher bei“, wie es ist) */
 export function ichSetzen(slug: string, wackelt?: Record<string, string>): void {
   schreiben(ICH_KEY, slug || null);
+  // von Hand gewählt: das Microsoft-Konto überschreibt die Wahl nicht mehr („– wählen –“ gibt sie wieder frei)
+  schreiben(ICH_QUELLE_KEY, slug ? 'hand' : null);
   if (slug && wackelt) unsicherTeilen(slug, wackelt);
+}
+
+// „Ich bin …“ aus dem Microsoft-Konto: Name (z. B. „Jan-Frederic Overbeck“, auch „Overbeck, Jan-Frederic“) bzw. der
+// Teil der Adresse vor dem @ (z. B. „jan-frederic.overbeck“) gegen die Namen der Mitglieder. Es wird nichts
+// gespeichert außer dem Ergebnis – keine Adresse im Code, nur zur Laufzeit verglichen. Nur ein eindeutiger Treffer zählt.
+export const ICH_QUELLE_KEY = 'bn-ich-quelle';
+export const ichQuelle = (): 'konto' | 'hand' | '' => (lesen(ICH_QUELLE_KEY) as 'konto' | 'hand' | null) ?? '';
+
+const woerter = (t: string): string[] =>
+  t
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ß/g, 'ss')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+
+/** Mitglied zum Microsoft-Konto – null, wenn keiner oder mehrere passen */
+export function mitgliedZuKonto(mitglieder: Mitglied[], konto: { name?: string; username?: string } | null | undefined): string | null {
+  if (!konto) return null;
+  const kontoName = new Set(woerter(konto.name ?? ''));
+  const adresse = woerter((konto.username ?? '').split('@')[0]);
+  const passt = (m: Mitglied) => {
+    const w = woerter(m.name);
+    if (!w.length) return false;
+    // alle Teile des Namens im Kontonamen oder vor dem @
+    return w.every((x) => kontoName.has(x)) || w.every((x) => adresse.includes(x));
+  };
+  const treffer = mitglieder.filter(passt);
+  return treffer.length === 1 ? treffer[0].slug : null;
+}
+
+/**
+ * Nach der Microsoft-Anmeldung: „Ich bin …“ setzen, wenn noch niemand gewählt ist oder die Wahl schon vom Konto kam
+ * (anderes Konto → andere Person). Eine Wahl von Hand bleibt. Gibt true zurück, wenn sich etwas geändert hat.
+ */
+export function ichAusKonto(mitglieder: Mitglied[], konto: { name?: string; username?: string } | null | undefined): boolean {
+  if (ichQuelle() === 'hand' && ladeIch()) return false;
+  const slug = mitgliedZuKonto(mitglieder, konto);
+  if (!slug || slug === ladeIch()) return false;
+  schreiben(ICH_KEY, slug);
+  schreiben(ICH_QUELLE_KEY, 'konto');
+  return true;
 }
 
 export interface Zusage {

@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ONEDRIVE, clientId, clientIdSetzen } from '../data/onedrive-config';
 import { CloudEintrag, CloudOrt, cloudOrdnerAnlegen, cloudUnterordner, oneDriveAbmelden, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto } from '../data/onedrive';
 import { ordnerVerbindbar } from '../data/ordner';
+import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { SyncEinstellungen, cloudGewaehlt, cloudName, lokalerOrdnerHandle, lokalerOrdnerSetzen, syncEinstellungen, syncEinstellungenSetzen, syncZustandLoeschen } from '../data/sync-ordner';
 
@@ -119,6 +120,7 @@ import { SyncEinstellungen, cloudGewaehlt, cloudName, lokalerOrdnerHandle, lokal
 })
 export class SyncEinstellungenSeite {
   protected readonly sync = inject(SyncService);
+  private readonly mitglieder = inject(BandService).members;
   protected readonly festeId = !!ONEDRIVE.clientId;
   protected readonly verbindbar = ordnerVerbindbar();
   protected readonly id = signal(clientId());
@@ -179,7 +181,12 @@ export class SyncEinstellungenSeite {
   }
 
   protected anmelden(): Promise<void> {
-    return this.tun(async () => this.konto.set((await oneDriveAnmelden())?.username ?? null));
+    return this.tun(async () => {
+      const k = await oneDriveAnmelden();
+      this.konto.set(k?.username ?? null);
+      // „Ich bin …“ gleich aus dem Konto (Name)
+      if (k) void import('../data/ich-konto').then((m) => m.ichAusMicrosoft(this.mitglieder, k)).catch(() => undefined);
+    });
   }
 
   protected trennen(): Promise<void> {

@@ -1,4 +1,4 @@
-import { ICH_KEY, ichSetzen, ladeIch, rufname, unsicherJeSong, zusageSetzen, zusagen, zusagenText } from './band-ich';
+import { ICH_KEY, ichAusKonto, ichQuelle, ichSetzen, mitgliedZuKonto, ladeIch, rufname, unsicherJeSong, zusageSetzen, zusagen, zusagenText } from './band-ich';
 import { wackeltSetzen } from './wackelt';
 
 const band = [
@@ -12,6 +12,35 @@ describe('band-ich', () => {
 
   it('Rufname: Spitzname, sonst Vorname', () => {
     expect(band.map(rufname)).toEqual(['David', 'Fred', 'Matthias']);
+  });
+
+  // Kontonamen ohne echte Adressen: nur der Teil vor dem @ zählt
+  it('Microsoft-Konto → Mitglied: Name, „Nachname, Vorname“, Umlaute, Teil vor dem @; nur eindeutig', () => {
+    expect(mitgliedZuKonto(band, { name: 'Jan-Frederic Overbeck' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'Overbeck, Jan-Frederic' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'David Bröker' })).toBe('david');
+    expect(mitgliedZuKonto(band, { name: 'Konto', username: 'david.broeker' })).toBe('david');
+    expect(mitgliedZuKonto(band, { username: 'jan-frederic.overbeck' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'Matthias W.' })).toBe('matthias');
+    expect(mitgliedZuKonto(band, { name: 'Jan' })).toBeNull();
+    expect(mitgliedZuKonto([...band, { slug: 'david2', name: 'David Bröker' }], { name: 'David Bröker' })).toBeNull();
+    expect(mitgliedZuKonto(band, null)).toBeNull();
+  });
+
+  it('Ich bin aus dem Konto: nur wenn leer oder schon vom Konto – eine Wahl von Hand bleibt', () => {
+    expect(ichAusKonto(band, { name: 'David Bröker' })).toBe(true);
+    expect(ladeIch()).toBe('david');
+    expect(ichQuelle()).toBe('konto');
+    // anderes Konto auf demselben Gerät → andere Person
+    expect(ichAusKonto(band, { name: 'Jan-Frederic Overbeck' })).toBe(true);
+    expect(ladeIch()).toBe('fred');
+    ichSetzen('matthias');
+    expect(ichQuelle()).toBe('hand');
+    expect(ichAusKonto(band, { name: 'David Bröker' })).toBe(false);
+    expect(ladeIch()).toBe('matthias');
+    // „– wählen –“ gibt die Wahl wieder frei
+    ichSetzen('');
+    expect(ichAusKonto(band, { name: 'David Bröker' })).toBe(true);
   });
 
   it('Zusagen je Person in eigener Datei', () => {

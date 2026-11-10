@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
-import { ichSetzen, ladeIch, rufname } from '../data/band-ich';
+import { ichQuelle, ichSetzen, ladeIch, rufname } from '../data/band-ich';
 import { statusMigrieren } from '../data/uebe-status';
 import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
 
@@ -20,7 +20,9 @@ import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
           @for (m of mitglieder; track m.slug) { <option [value]="m.slug" [selected]="m.slug === ich()">{{ rufname(m) }}</option> }
         </select>
       </label>
-      <p class="hinweis">Damit zählen Zusagen zur Probe, dein Übe-Status je Song (Song-Dialog, Probe-Modus, Übe-Modus) und deine Probe-Notizen für dich.</p>
+      @if (quelle() === 'konto' && ich()) { <p class="hinweis konto"><mat-icon aria-hidden="true">verified_user</mat-icon> Automatisch erkannt über dein Microsoft-Konto.</p> }
+      <p class="hinweis">Damit zählen Zusagen zur Probe, dein Übe-Status je Song (Song-Dialog, Probe-Modus, Übe-Modus) und deine Probe-Notizen für dich.
+        Nach der Anmeldung mit Microsoft wird das automatisch über deinen Namen gesetzt; eine Wahl hier von Hand hat Vorrang.</p>
       <label class="ziel">Karteikarten am Tag (Empfehlung)
         <input type="number" min="1" max="100" inputmode="numeric" aria-label="Karteikarten am Tag" [value]="ziel()" (change)="zielSetzen($any($event.target).value)" />
       </label>
@@ -35,6 +37,8 @@ import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
     .ziel { margin-top: 16px; }
     .ziel input { width: 6em; padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
     .ok { color: #5fb88a; }
+    .konto { display: flex; align-items: center; gap: 6px; color: #5fb88a; }
+    .konto mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .hinweis { margin: 10px 0 0; max-width: 720px; font-size: .85rem; line-height: 1.5; color: var(--bn-fog); }
   `,
 })
@@ -42,6 +46,7 @@ export class IchEinstellung {
   protected readonly mitglieder = inject(BandService).members;
   protected readonly rufname = rufname;
   protected readonly ich = signal(ladeIch());
+  protected readonly quelle = signal(ichQuelle());
   protected readonly ziel = signal(ladeTagesziel());
   protected readonly gespeichert = signal(false);
   protected zielSetzen(roh: string): void {
@@ -54,6 +59,7 @@ export class IchEinstellung {
   protected waehlen(slug: string): void {
     ichSetzen(slug);
     this.ich.set(slug);
+    this.quelle.set(ichQuelle());
     // Übe-Status dieser Person: einmalig aus dem alten Stand umstellen, dann „unsicher bei“ aus den Kästen
     statusMigrieren();
   }

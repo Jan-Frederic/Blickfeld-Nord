@@ -236,8 +236,16 @@ Unterschied zur Spotify-Liste „Probe“ („29 Songs fehlen hier, 1 nur hier�
 einen eigenen Übernehmen-Knopf gibt es nicht mehr, die Suche „Probe“ findet die Liste. **Liste leeren** entfernt alle
 Songs der Probe (Notizen und offene Punkte bleiben).
 
-**Wer kommt?** Einmal unter **Einstellungen → Ich bin …** die eigene Person wählen (gilt für die Person auf allen ihren
-Geräten), dann auf der Probenseite **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
+**Ich bin …** wird nach der Anmeldung mit Microsoft automatisch gesetzt: `mitgliedZuKonto` in `src/app/data/band-ich.ts`
+vergleicht den Kontonamen (auch „Nachname, Vorname“, Umlaute als ae/oe/ue) bzw. den Teil der Adresse vor dem @ mit den
+Namen der Mitglieder – nur ein eindeutiger Treffer zählt, Adressen stehen nirgends im Code. Geprüft nach der Anmeldung
+(Zugangsseite, Einstellungen → Synchronisation) und einmal je Seitenaufruf im Backstage (`zugang.guard.ts` →
+`data/ich-konto.ts`, lazy). Eine Wahl von Hand unter Einstellungen hat Vorrang (`bn-ich-quelle` = hand), „– wählen –“
+gibt sie wieder frei; ein anderes Konto auf demselben Gerät wechselt eine automatisch gesetzte Person mit. Die
+Einstellung zeigt „Automatisch erkannt über dein Microsoft-Konto“.
+
+**Wer kommt?** Unter **Einstellungen → Ich bin …** steht die eigene Person (automatisch oder von Hand, gilt für die
+Person auf allen ihren Geräten), dann auf der Probenseite **Ich komme** / **Ich kann nicht**, optional mit Notiz („komme 30 min später“). Jede Person schreibt eine eigene
 Datei (`bn-zusage-<Datum>-<Person>`), die Probenseite zeigt alle Antworten („2 kommen, 1 offen“).
 
 **Unsicher bei:** Mit „Ich bin …“ sieht die Band, welche Songs bei dir auf Üben oder Wackelt noch stehen

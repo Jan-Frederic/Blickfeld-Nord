@@ -1,6 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { BandService } from '../data/band.service';
 import { ONEDRIVE } from '../data/onedrive-config';
 import { zugangMerken, zugangZiel } from '../data/zugang';
 
@@ -49,6 +50,7 @@ export class BackstageZugang {
   /** Backstage-Seite, die eigentlich aufgerufen wurde (?ziel=…) */
   readonly ziel = input<string>();
   private readonly router = inject(Router);
+  private readonly mitglieder = inject(BandService).members;
   protected readonly stand = signal<'start' | 'nein' | 'unklar'>('start');
   protected readonly laeuft = signal(false);
   protected readonly konto = signal('');
@@ -65,6 +67,8 @@ export class BackstageZugang {
       const k = await o.oneDriveAnmelden();
       if (!k) return this.stand.set('unklar');
       this.konto.set(k.username);
+      // „Ich bin …“ gleich aus dem Konto (Name) – ohne die Anmeldung aufzuhalten
+      void import('../data/ich-konto').then((m) => m.ichAusMicrosoft(this.mitglieder, k)).catch(() => undefined);
       const r = await o.ordnerSichtbar(band.drive, band.item);
       if (r === 'ja') {
         zugangMerken(band);
