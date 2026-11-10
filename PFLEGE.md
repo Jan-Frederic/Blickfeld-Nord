@@ -1018,7 +1018,9 @@ Bevor etwas online geht, prüft GitHub unter anderem:
   „Screenshot-Vergleich“). Neue Auftritte, Fotos oder Rückblicke stören dabei nicht. Schlägt der Schritt fehl, sieht
   eine Seite anders aus als vorher. Die Unterschiede stehen rot markiert im Lauf unter **Artifacts →
   screenshot-vergleich**. War die Änderung gewollt, z. B. ein neuer Text auf der Technik-Seite: unter Actions
-  **„Screenshots aktualisieren“** starten (*Run workflow*). Danach geht die Seite automatisch neu online.
+  **„Screenshots aktualisieren“** starten (*Run workflow*). Der Workflow wartet auf den Deploy des Stands davor: War er
+  grün, ist die Seite schon aktuell und es gibt keinen zweiten Deploy; kam er nicht durch (Screenshot-Vergleich oder
+  GitHub Pages hängt), startet er einen neuen Deploy mit den neuen Referenzbildern.
 
 **Auf dem eigenen Rechner prüfen** (für Entwickler): `npm run pruefen` baut die Seite genau wie GitHub (inklusive
 Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Breiten-Check, Linkcheck und Tests aus.

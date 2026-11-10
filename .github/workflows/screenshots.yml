@@ -1,6 +1,8 @@
 # Nimmt die Referenzbilder für den Screenshot-Vergleich (tests/visual) neu auf und speichert sie im Repo.
 # Starten nach gewollten Änderungen am Aussehen (Actions → „Screenshots aktualisieren“ → Run workflow).
-# Danach startet der Deploy automatisch neu – mit den neuen Referenzbildern.
+# Ein neuer Deploy wird nur angestoßen, wenn der Deploy des Stands davor nicht durchkam (z. B. am Screenshot-Vergleich
+# gescheitert oder bei GitHub Pages hängen geblieben) – war er grün, ist die Seite schon aktuell und die neuen
+# Referenzbilder ändern an ihr nichts. So entsteht pro Änderung nur ein Deploy statt zwei.
 # Die Bilder entstehen hier auf demselben Ubuntu-Runner wie beim Deploy, damit Schriften identisch gerendert werden.
 name: Screenshots aktualisieren
 
@@ -18,6 +20,8 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    # wartet ggf. auf den laufenden Deploy (bis ca. 40 min, wenn GitHub Pages zweimal hängen bleibt)
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -44,10 +48,10 @@ jobs:
           rm -rf tests/visual/referenz
           npx playwright test --update-snapshots
 
-      - name: Referenzbilder speichern und neu deployen
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Referenzbilder speichern
+        id: speichern
         run: |
+          echo "vorher=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tests/visual/referenz
@@ -57,6 +61,19 @@ jobs:
             git commit -m "test: Screenshot-Referenzen aktualisiert"
             git push
           fi
+
+      - name: Nur bei Bedarf neu deployen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VORHER: ${{ steps.speichern.outputs.vorher }}
+        run: |
+          # Deploy des Stands vor den neuen Referenzbildern (läuft meist noch) abwarten
+          RUN=$(gh run list -w deploy-pages.yml -c "$VORHER" -L 1 --json databaseId -q '.[0].databaseId')
+          if [ -n "$RUN" ] && gh run watch "$RUN" --exit-status --interval 30 > /dev/null; then
+            echo "Deploy $RUN war grün – die Seite ist aktuell, kein zweiter Deploy nötig."
+            exit 0
+          fi
           # Pushes mit dem Workflow-Token starten keinen Deploy von selbst – daher ausdrücklich anstoßen
           # (ein angehaltener Deploy kommt so mit den neuen Referenzbildern durch)
+          echo "Deploy ${RUN:-für $VORHER} nicht grün (oder keiner gefunden) – neuer Deploy mit den neuen Referenzbildern."
           gh workflow run deploy-pages.yml --ref main
