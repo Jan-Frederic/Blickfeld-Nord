@@ -21,7 +21,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 // die fünf Übe-Status (uebeWertung) – „Sitzt“ bei einem sitzenden Song schiebt ihn einen Kasten weiter, aus dem
 // letzten heraus ist er eingenordet; „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
 // Tagesziel ist nur eine Empfehlung.
-// Ganz oben eine Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen (Songs
+// Über der Liste eine Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen (Songs
 // ohne Status kommen auf „Üben“, Kasten 1). Darunter alle Songs im Kasten mit ihrem Status (änderbar).
 @Component({
   selector: 'app-backstage-ueben',
@@ -34,22 +34,6 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         <p class="lead">Üben ist persönlich: Wähle unter <a routerLink="/backstage/einstellungen">Einstellungen</a> „Ich bin …“ –
           dann stehen hier deine Songs im Karteikasten.</p>
       } @else {
-        <!-- Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen -->
-        <label class="suche">
-          <mat-icon aria-hidden="true">search</mat-icon>
-          <input type="search" placeholder="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen …" aria-label="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
-        </label>
-        @if (listenTreffer().length || treffer().length) {
-          <ul class="treffer">
-            @for (l of listenTreffer(); track l.id) {
-              <li><button type="button" class="liste-treffer" (click)="listeHinzu(l)"><mat-icon aria-hidden="true">{{ l.icon }}</mat-icon><span class="t">{{ l.name }}</span>&ngsp;<span class="a">{{ l.art }} · {{ l.songs.length }} {{ l.songs.length === 1 ? 'Song' : 'Songs' }}</span><mat-icon>playlist_add</mat-icon></button></li>
-            }
-            @for (t of treffer(); track t.key) {
-              <li><button type="button" (click)="hinzu(t.key)"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}{{ t.status !== 'nicht' ? ' · ' + statusLabel(t.status) : '' }}</span><mat-icon>add</mat-icon></button></li>
-            }
-          </ul>
-        }
-        @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
         <p class="lead">{{ name() }}: deine Songs im Karteikasten. Kasten 1 heißt <b>Üben</b>, 2 und 3 <b>Wackelt noch</b>, 4 und 5 <b>Sitzt</b>.
           „Sitzt“ schiebt eine Karte einen Kasten weiter (sie kommt seltener dran), „Wackelt noch“ zurück in Kasten 1.
           Sitzt sie im letzten Kasten, ist der Song <b>eingenordet</b> und fällt heraus.</p>
@@ -68,6 +52,22 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
           <a routerLink="/backstage/einstellungen">ändern</a></p>
         @if (leerHinweis()) { <p class="hinweis" role="status">Noch keine Karten – füge oben Songs oder eine ganze Liste hinzu.</p> }
 
+        <!-- Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen -->
+        <label class="suche">
+          <mat-icon aria-hidden="true">search</mat-icon>
+          <input type="search" placeholder="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen …" aria-label="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
+        </label>
+        @if (listenTreffer().length || treffer().length) {
+          <ul class="treffer">
+            @for (l of listenTreffer(); track l.id) {
+              <li><button type="button" class="liste-treffer" (click)="listeHinzu(l)"><mat-icon aria-hidden="true">{{ l.icon }}</mat-icon><span class="t">{{ l.name }}</span>&ngsp;<span class="a">{{ l.art }} · {{ l.songs.length }} {{ l.songs.length === 1 ? 'Song' : 'Songs' }}</span><mat-icon>playlist_add</mat-icon></button></li>
+            }
+            @for (t of treffer(); track t.key) {
+              <li><button type="button" (click)="hinzu(t.key)"><span class="t">{{ t.title }}</span>&ngsp;<span class="a">{{ t.artist }}{{ t.status !== 'nicht' ? ' · ' + statusLabel(t.status) : '' }}</span><mat-icon>add</mat-icon></button></li>
+            }
+          </ul>
+        }
+        @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
         <h3>Deine Songs im Karteikasten</h3>
         <ul class="liste">
           @for (k of alle(); track k.key) {

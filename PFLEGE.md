@@ -141,7 +141,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   (Kästen: `src/app/data/ueben.ts`). Der alte Stand („Wackelt noch“-Liste, Fortschritt mit sitzt/wackelt/sicher)
   wird je Person beim ersten Öffnen einmalig umgestellt: sicher → Eingenordet, sitzt → Kasten 4, wackelt → Kasten 2.
 - **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht):
-  persönlich (Einstellungen → „Ich bin …“). Ganz oben eine **Suche**: einzelne Songs oder ganze **Setlists**,
+  persönlich (Einstellungen → „Ich bin …“). Direkt über „Deine Songs im Karteikasten“ eine **Suche**: einzelne Songs oder ganze **Setlists**,
   **Sammlungen** und **Spotify-Listen** zum Üben dazunehmen – Songs ohne Status kommen auf „Üben“ (Kasten 1), die übrigen
   behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Darunter die fünf
   Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus),
