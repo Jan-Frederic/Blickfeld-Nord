@@ -1683,9 +1683,18 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   expect((await noten.locator('header .wertung.an').count()) === 1, 'aktueller Status nicht hervorgehoben');
   const songA = (await noten.locator('header .titel').innerText()).trim();
   // „Üben“: kommt in dieser Runde noch einmal dran
+  // der gewählte Status leuchtet kurz auf, erst dann kommt die nächste Karte: merken, welcher Titel beim Aufleuchten zu sehen war
+  await p.evaluate(() => {
+    const o = new MutationObserver(() => {
+      if (document.querySelector('app-noten-anzeige header .wertung.ueben.blitz.an')) {
+        window.__blitzTitel = document.querySelector('app-noten-anzeige header .titel')?.innerText?.trim();
+        o.disconnect();
+      }
+    });
+    o.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  });
   await noten.locator('header .wertung.ueben').click();
-  // der gewählte Status leuchtet kurz auf, erst dann kommt die nächste Karte
-  expect((await noten.locator('header .wertung.ueben.blitz.an').count()) === 1 && (await noten.locator('header .titel').innerText()).trim() === songA, 'Status leuchtet nicht erst auf, bevor es weitergeht');
+  await until(async () => (await p.evaluate(() => window.__blitzTitel)) === songA, async () => `Status leuchtet nicht erst auf, bevor es weitergeht (beim Aufleuchten: ${await p.evaluate(() => window.__blitzTitel)}, erwartet: ${songA})`);
   await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nicht zur nächsten Karte');
   for (let i = 0; i < 6 && (await noten.count()); i++) { await noten.locator('header .wertung.sitzt').click().catch(() => {}); await p.waitForTimeout(600); }
   await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('Sitzt'), 'Übe-Ergebnis fehlt');
