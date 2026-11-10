@@ -1,4 +1,4 @@
-import { probeErgebnisNachricht, type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong } from './probe-modus';
+import { probeErgebnisNachricht, type ProbePlan, generalprobe, probeNachricht, vorbereitungFaellig, NOCHMAL_NOTIZ, durchlauf, ergebnis, letzteNotiz, markieren, markierenPerson, minutenText, naechsteProbe, notizSetzen, probenDauer, uebertragen, zeitDazu, zeitJeSong, generalprobeAblauf } from './probe-modus';
 import { probenVerlauf } from './song-stand';
 
 const A = { title: 'Iris', artist: 'The Goo Goo Dolls' };
@@ -112,5 +112,18 @@ describe('Probe-Ergebnis an die Band', () => {
     expect(t).toContain('⏳ Nicht drangekommen (1):\n• Angels');
     expect(t).toContain('📝 Notizen:\n• Africa: Fred: Bridge');
     expect(t).toContain('Nächste Probe: Freitag, 27. November, 19:00 Uhr');
+  });
+});
+
+describe('Generalprobe mit Wackelnden vorab', () => {
+  const a = { title: 'A', artist: 'x' };
+  const b = { title: 'B', artist: 'y' };
+  const c = { title: 'C', artist: 'z' };
+  it('merkt sich nur Songs der Setlist als vorab; Ablauf: vorab, Pause, Setlist mit Pausen', () => {
+    const p = generalprobe({ songs: [], notizen: '', punkte: [] }, [a, b, c], 'show', [c, { title: 'Fremd', artist: 'q' }]);
+    expect(p.vorab).toEqual(['C|z']);
+    expect(generalprobeAblauf([a, { pause: true }, b, c], p.vorab)).toEqual([{ title: 'C', artist: 'z' }, { pause: true }, a, { pause: true }, b, c]);
+    expect(generalprobeAblauf([a, b], undefined)).toEqual([a, b]);
+    expect(generalprobe(p, [a, b, c], 'show').vorab).toBeUndefined();
   });
 });

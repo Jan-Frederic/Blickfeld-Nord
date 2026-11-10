@@ -13,7 +13,7 @@ import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
 import { ProbeVorschlag } from './probe-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
-import { ProbePlan, generalprobe, loadProbe, minutenText, probeNachricht, probenDauer, speichereProbe } from '../data/probe-modus';
+import { ProbePlan, generalprobe, generalprobeAblauf, loadProbe, minutenText, probeNachricht, probenDauer, speichereProbe } from '../data/probe-modus';
 import { Kandidat, probeFuellen, probeZeiten } from '../data/probe-fuellen';
 import { alleStatus, buehnenreife } from '../data/uebe-status';
 import { kastenEinsBei, ladeKastenGeteilt } from '../data/ueben';
@@ -85,6 +85,10 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
           @if (naechsterAuftritt(); as a) {
             <button type="button" class="general" (click)="generalprobeUebernehmen()" [disabled]="!a.songs"><mat-icon>theater_comedy</mat-icon>
               {{ plan().generalprobe === a.id ? 'Generalprobe ' + a.name + ' – Setlist neu übernehmen' : 'Generalprobe: Setlist ' + a.name + ' übernehmen' }}{{ a.songs ? ' (' + a.songs + ' Songs)' : ' (noch keine Setlist auf diesem Gerät)' }}</button>
+            @if (generalprobeVorab().length) {
+              <p class="general-vorab">Vor dem Durchlauf einzeln, weil es noch wackelt:
+                @for (v of generalprobeVorab(); track v.song.title + v.song.artist; let l = $last) { <b>{{ v.song.title }}</b>@if (v.wer.length) { ({{ v.wer.join(', ') }}) }{{ l ? '' : ', ' }} }</p>
+            }
           }
           <app-probe-vorschlag [drin]="plan().songs" [datum]="datum()" (add)="addSong($event)" />
         </details>
@@ -147,7 +151,7 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
         </form>
 
         @defer (when modus(); prefetch on idle) {
-          @if (modus()) { <app-setlist-buehne [entries]="modusSongs()" [start]="ersterOffener()" [probe]="datum()" [generalprobe]="!!plan().generalprobe" (closed)="modusZu()" /> }
+          @if (modus()) { <app-setlist-buehne [entries]="modusSongs()" [start]="ersterOffener()" [probe]="datum()" [generalprobe]="!!plan().generalprobe" [vorab]="vorabZahl()" (closed)="modusZu()" /> }
         }
         <p class="hint">Gespeichert auf diesem Gerät. Mit der Band teilen:</p>
         <app-backstage-sync [show]="datum()" />
@@ -225,7 +229,13 @@ export class BackstageProbe {
   protected readonly modusSongs = computed<Entry[]>(() => {
     const g = this.plan().generalprobe;
     const setlist = g ? loadSetlist(g) : [];
-    return setlist.length ? setlist : this.plan().songs.map((s) => ({ title: s.title, artist: s.artist }));
+    return setlist.length ? (generalprobeAblauf(setlist, this.plan().vorab) as Entry[]) : this.plan().songs.map((s) => ({ title: s.title, artist: s.artist }));
+  });
+  /** Generalprobe: Zahl der Songs vor dem Durchlauf (stehen vor der ersten Pause in modusSongs) */
+  protected readonly vorabZahl = computed(() => {
+    const m = this.modusSongs();
+    const n = this.plan().generalprobe && this.plan().vorab?.length ? m.findIndex((e) => isPause(e)) : 0;
+    return n > 0 && n === this.plan().vorab!.filter((k) => m.some((e) => !isPause(e) && e.title + '|' + e.artist === k)).length ? n : 0;
   });
   protected readonly ersterOffener = computed(() => {
     const offen = new Set(this.plan().songs.filter((s) => !s.done).map((s) => s.title + '|' + s.artist));
@@ -279,8 +289,21 @@ export class BackstageProbe {
   protected generalprobeUebernehmen(): void {
     const a = this.naechsterAuftritt();
     if (!a) return;
-    this.save((p) => generalprobe(p, loadSetlist(a.id).filter((e) => !isPause(e)) as { title: string; artist: string }[], a.id));
+    const setlist = loadSetlist(a.id).filter((e) => !isPause(e)) as { title: string; artist: string }[];
+    this.save((p) => generalprobe(p, setlist, a.id, this.generalprobeVorab().map((v) => v.song)));
   }
+  /** Generalprobe: Songs der Setlist, die noch nicht bühnenreif sind – schwächste zuerst, mit wem es noch wackelt */
+  protected readonly generalprobeVorab = computed(() => {
+    const a = this.naechsterAuftritt();
+    if (!a) return [];
+    const m = this.band.members;
+    const status = alleStatus(m);
+    return (loadSetlist(a.id).filter((e) => !isPause(e)) as { title: string; artist: string }[])
+      .map((s) => ({ song: s, r: buehnenreife(s.title + '|' + s.artist, m, status) }))
+      .filter((x) => x.r.ampel === 'baustelle')
+      .sort((x, y) => x.r.wert - y.r.wert)
+      .map((x) => ({ song: x.song, wer: x.r.wackeltBei }));
+  });
   // Plan an die Band: Songs mit Tonart/Tempo und Spotify-Link (WhatsApp über das Teilen-Menü)
   protected readonly teilenMeldung = signal('');
   protected readonly geschickt = signal(false);

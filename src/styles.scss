@@ -481,6 +481,7 @@ app-probe-leiste { display: block; margin: 18px auto 0; max-width: 760px; font-s
 app-probe-leiste .probe-leiste { display: grid; gap: 10px; justify-items: center; }
 app-probe-leiste .ich { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; font-size: .85em; color: var(--bn-fog); }
 app-probe-leiste .ich select { max-width: 100%; padding: 4px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
+app-backstage-probe .general-vorab { margin: -6px 0 12px; font-size: .85rem; color: #e0b25a; }
 app-probe-leiste .andere { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 0; font-size: .9em; color: var(--bn-fog); text-align: center; }
 app-probe-leiste .wer { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
 app-probe-leiste .wer .z { font-weight: 700; }

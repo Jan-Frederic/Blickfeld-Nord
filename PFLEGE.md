@@ -281,7 +281,11 @@ einfügen).
 
 **Generalprobe:** „Generalprobe: Setlist … übernehmen“ setzt die Setlist des nächsten Auftritts (von diesem Gerät) in
 ihrer Reihenfolge an den Anfang des Plans. Der Probe-Modus spielt dann die Setlist mit Pausen durch – die Uhr läuft je
-Set gegen die geplante Spielzeit wie auf der Bühne.
+Set gegen die geplante Spielzeit wie auf der Bühne. Was bei jemandem noch wackelt (Setlist-Songs mit Bühnenreife
+„Baustelle“, schwächste zuerst), steht unter dem Knopf mit Namen und kommt **vor dem Durchlauf einzeln** dran: der
+Probe-Modus spielt erst diese Songs, dann eine Pause, dann die Setlist am Stück (`plan.vorab`, `generalprobeAblauf` in
+`data/probe-modus.ts`; auch im Plan an die Band: „erst einzeln …, dann die Setlist am Stück“). Die Kopfzeile zählt
+den Einzel-Block für sich („Einzeln 1 / 2“), die Sets danach wie auf der Bühne („Set 1 / 2“).
 
 **Titelanzeige und Notenansicht (alle drei Modi):** Knöpfe der Titelanzeige von links nach rechts: Schriftgröße
 (A− A+), Stimmgerät, Wunsch-Suche (nicht im Übe-Modus), Song-Liste (im Übe- und Probe-Modus auch in der Kopfleiste der

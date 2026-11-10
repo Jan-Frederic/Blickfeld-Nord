@@ -766,7 +766,9 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   await until(async () => /Africa[\s\S]*Iris[\s\S]*Angels/.test(await seite.locator('.list').first().innerText()), 'Generalprobe übernimmt die Setlist nicht');
   await seite.getByRole('button', { name: 'Probe-Modus starten' }).click();
   const buehne = p.locator('app-setlist-buehne');
-  await until(async () => /generalprobe[\s\S]*set 1 \/ 2/i.test(await buehne.locator('header .set').innerText().catch(() => '')), 'Generalprobe zeigt keine Sets');
+  // was bei jemandem noch wackelt, kommt vorher einzeln (eigener Zähler), danach die Sets wie auf der Bühne
+  const vorab = await seite.locator('.general-vorab').count();
+  await until(async () => (vorab ? /generalprobe[\s\S]*einzeln 1 \/ \d/i : /generalprobe[\s\S]*set 1 \/ 2/i).test(await buehne.locator('header .set').innerText().catch(() => '')), async () => `Generalprobe zeigt keine Sets: ${await buehne.locator('header .set').innerText().catch(() => '')}`);
   await until(async () => (await buehne.locator('app-probe-leiste app-status-schalter button').count()) === 5, 'Status-Umschalter fehlt in der Generalprobe');
   return p;
 });

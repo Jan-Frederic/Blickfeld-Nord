@@ -54,7 +54,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" [style.--zoom]="zoom()">
       <header>
-        <span class="set">@if (anlass()) { <span class="anlass">{{ anlass() }}</span> }{{ ueben() ? 'Karte ' + (index() + 1) + ' / ' + liste().length : probe() && !generalprobe() ? 'Song ' + songNo() + ' / ' + songZahl() : 'Set ' + setNo() + ' / ' + sets().length }}</span>
+        <span class="set">@if (anlass()) { <span class="anlass">{{ anlass() }}</span> }{{ ueben() ? 'Karte ' + (index() + 1) + ' / ' + liste().length : probe() && !generalprobe() ? 'Song ' + songNo() + ' / ' + songZahl() : setKopf() }}</span>
         <span class="clock" [class.over]="remaining() < 0" [class.still]="ueben()">
           <mat-icon>timer</mat-icon> {{ fmt(elapsed()) }}
           @if (planned()) { <small>/ {{ plannedText() }} · {{ remaining() < 0 ? '+' + fmt(-remaining()) : 'noch ' + (probe() && !generalprobe() ? minutenText(remaining()) : fmt(remaining())) }}</small> }
@@ -280,6 +280,14 @@ export class SetlistBuehne {
   readonly probe = input<string>();
   /** Generalprobe: Setlist mit Pausen, Uhr je Set wie auf der Bühne */
   readonly generalprobe = input(false);
+  /** Generalprobe: so viele Songs kommen vor dem Durchlauf einzeln (dann eine Pause) – zählen nicht als Set */
+  readonly vorab = input(0);
+  /** „Set 1 / 2“ – bei der Generalprobe vorher „Einzeln 1 / 2“, die Sets danach ohne den Einzel-Block gezählt */
+  protected readonly setKopf = computed(() => {
+    const v = this.vorab();
+    if (v && this.index() < v) return `Einzeln ${this.index() + 1} / ${v}`;
+    return v ? `Set ${this.setNo() - 1} / ${this.sets().length - 1}` : `Set ${this.setNo()} / ${this.sets().length}`;
+  });
   /** Übe-Modus: Notenansicht mit den fünf Übe-Status oben rechts – die Liste ist die Reihe der Karteikarten */
   readonly ueben = input(false);
   readonly bewertet = output<{ title: string; artist: string; status: UebeStatus }>();

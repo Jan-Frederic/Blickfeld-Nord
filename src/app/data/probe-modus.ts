@@ -29,6 +29,8 @@ export interface ProbePlan {
   geschickt?: string;
   /** Generalprobe: Auftritts-ID, deren Setlist am Stück durchgespielt wird */
   generalprobe?: string;
+  /** Generalprobe: Songs („Titel|Interpret“), die vor dem Durchlauf einzeln drankommen – was bei jemandem noch wackelt */
+  vorab?: string[];
 }
 
 export const PROBE_PREFIX = 'bn-probe-';
@@ -201,7 +203,11 @@ export function probeNachricht(
   const punkte = plan.punkte.filter((x) => !x.done).map((x) => `• ${x.text}`);
   return [
     `🎸 Probe ${tag}${zeit}${p.place ? `, ${p.place}` : ''}`,
-    plan.generalprobe ? 'Generalprobe: Setlist am Stück durchspielen.' : '',
+    plan.generalprobe
+      ? plan.vorab?.length
+        ? `Generalprobe: erst einzeln ${plan.vorab.map((k) => k.slice(0, k.lastIndexOf('|'))).join(', ')} – dann die Setlist am Stück.`
+        : 'Generalprobe: Setlist am Stück durchspielen.'
+      : '',
     songs.length ? `\nDiese Songs üben wir${songs.length > 1 ? ' – bitte vorher anhören' : ''}:\n${songs.join('\n')}` : '\nSongs stehen noch nicht fest.',
     punkte.length ? `\nOffene Punkte:\n${punkte.join('\n')}` : '',
     plan.notizen.trim() ? `\n${plan.notizen.trim()}` : '',
@@ -220,10 +226,23 @@ export function vorbereitungFaellig<T extends { date: string }>(proben: T[], heu
     .map(({ probe, tage, plan: pl }) => ({ probe, tage, songs: pl.songs.length }));
 }
 
-/** Generalprobe: Songs der Setlist in ihrer Reihenfolge an den Anfang, Bisheriges (mit Notizen) bleibt dahinter */
-export function generalprobe(plan: ProbePlan, setlist: { title: string; artist: string }[], showId: string): ProbePlan {
+/**
+ * Generalprobe: Songs der Setlist in ihrer Reihenfolge an den Anfang, Bisheriges (mit Notizen) bleibt dahinter.
+ * vorab: was bei jemandem noch wackelt (Setlist-Songs, die nicht bühnenreif sind) – kommt vor dem Durchlauf einzeln dran.
+ */
+export function generalprobe(plan: ProbePlan, setlist: { title: string; artist: string }[], showId: string, vorab: { title: string; artist: string }[] = []): ProbePlan {
   const alt = new Map(plan.songs.map((s) => [songKeyVon(s), s]));
   const vorne = setlist.map((s) => alt.get(songKeyVon(s)) ?? { title: s.title, artist: s.artist, done: false });
   const drin = new Set(vorne.map(songKeyVon));
-  return { ...plan, generalprobe: showId, songs: [...vorne, ...plan.songs.filter((s) => !drin.has(songKeyVon(s)))] };
+  const imSet = new Set(setlist.map(songKeyVon));
+  const v = vorab.map(songKeyVon).filter((k) => imSet.has(k));
+  return { ...plan, generalprobe: showId, ...(v.length ? { vorab: v } : { vorab: undefined }), songs: [...vorne, ...plan.songs.filter((s) => !drin.has(songKeyVon(s)))] };
+}
+
+/** Generalprobe im Probe-Modus: erst die wackelnden Songs einzeln, eine Pause, dann die Setlist am Stück (mit Pausen) */
+export function generalprobeAblauf<E extends { title: string; artist: string } | { pause: true }>(setlist: E[], vorab: string[] | undefined): (E | { title: string; artist: string } | { pause: true })[] {
+  if (!vorab?.length || !setlist.length) return setlist;
+  const songs = new Map(setlist.filter((e): e is E & { title: string; artist: string } => !('pause' in e)).map((e) => [songKeyVon(e), e]));
+  const vorne = vorab.flatMap((k) => (songs.has(k) ? [{ title: songs.get(k)!.title, artist: songs.get(k)!.artist }] : []));
+  return vorne.length ? [...vorne, { pause: true as const }, ...setlist] : setlist;
 }
