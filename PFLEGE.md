@@ -238,7 +238,8 @@ Songs der Probe (Notizen und offene Punkte bleiben).
 
 **Ich bin …** wird nach der Anmeldung mit Microsoft automatisch gesetzt: `mitgliedZuKonto` in `src/app/data/band-ich.ts`
 vergleicht den Kontonamen (auch „Nachname, Vorname“, Umlaute als ae/oe/ue) bzw. den Teil der Adresse vor dem @ mit den
-Namen der Mitglieder – nur ein eindeutiger Treffer zählt, Adressen stehen nirgends im Code. Geprüft nach der Anmeldung
+Mitgliedern: ganzer Name, Vor- oder Spitzname mit Nachname („Fred Overbeck“), oder nur Vor- bzw. Spitzname, wenn das
+Konto genau so heißt („Fred“, „Jan-Frederic“) – nur ein eindeutiger Treffer zählt, Adressen stehen nirgends im Code. Geprüft nach der Anmeldung
 (Zugangsseite, Einstellungen → Synchronisation) und einmal je Seitenaufruf im Backstage (`zugang.guard.ts` →
 `data/ich-konto.ts`, lazy). Eine Wahl von Hand unter Einstellungen hat Vorrang (`bn-ich-quelle` = hand), „– wählen –“
 gibt sie wieder frei; ein anderes Konto auf demselben Gerät wechselt eine automatisch gesetzte Person mit. Die

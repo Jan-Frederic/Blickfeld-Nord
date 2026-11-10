@@ -22,7 +22,17 @@ describe('band-ich', () => {
     expect(mitgliedZuKonto(band, { name: 'Konto', username: 'david.broeker' })).toBe('david');
     expect(mitgliedZuKonto(band, { username: 'jan-frederic.overbeck' })).toBe('fred');
     expect(mitgliedZuKonto(band, { name: 'Matthias W.' })).toBe('matthias');
+    // Spitzname bzw. Vorname: mit Nachname oder genau so
+    expect(mitgliedZuKonto(band, { name: 'Fred Overbeck' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'Fred' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'Jan-Frederic' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { username: 'fred.overbeck' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'Konto', username: 'fred' })).toBe('fred');
+    expect(mitgliedZuKonto(band, { name: 'David' })).toBe('david');
+    // nur ein Teil des Vornamens, ein anderer Nachname oder Vorname plus Fremdes: nein
     expect(mitgliedZuKonto(band, { name: 'Jan' })).toBeNull();
+    expect(mitgliedZuKonto(band, { name: 'Fred Müller' })).toBeNull();
+    expect(mitgliedZuKonto(band, { name: 'David Schmidt' })).toBeNull();
     expect(mitgliedZuKonto([...band, { slug: 'david2', name: 'David Bröker' }], { name: 'David Bröker' })).toBeNull();
     expect(mitgliedZuKonto(band, null)).toBeNull();
   });

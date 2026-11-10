@@ -43,9 +43,12 @@ export function ichSetzen(slug: string, wackelt?: Record<string, string>): void 
   if (slug && wackelt) unsicherTeilen(slug, wackelt);
 }
 
-// „Ich bin …“ aus dem Microsoft-Konto: Name (z. B. „Jan-Frederic Overbeck“, auch „Overbeck, Jan-Frederic“) bzw. der
-// Teil der Adresse vor dem @ (z. B. „jan-frederic.overbeck“) gegen die Namen der Mitglieder. Es wird nichts
-// gespeichert außer dem Ergebnis – keine Adresse im Code, nur zur Laufzeit verglichen. Nur ein eindeutiger Treffer zählt.
+// „Ich bin …“ aus dem Microsoft-Konto: Name bzw. der Teil der Adresse vor dem @ gegen die Mitglieder. Es passt
+// – der ganze Name („Jan-Frederic Overbeck“, auch „Overbeck, Jan-Frederic“, „jan-frederic.overbeck“),
+// – Vorname oder Spitzname mit Nachname („Fred Overbeck“, „fred.overbeck“),
+// – nur Vorname oder nur Spitzname, wenn das Konto genau so heißt („Fred“, „Jan-Frederic“).
+// Es wird nichts gespeichert außer dem Ergebnis – keine Adresse im Code, nur zur Laufzeit verglichen. Nur ein
+// eindeutiger Treffer zählt.
 export const ICH_QUELLE_KEY = 'bn-ich-quelle';
 export const ichQuelle = (): 'konto' | 'hand' | '' => (lesen(ICH_QUELLE_KEY) as 'konto' | 'hand' | null) ?? '';
 
@@ -65,12 +68,22 @@ const woerter = (t: string): string[] =>
 export function mitgliedZuKonto(mitglieder: Mitglied[], konto: { name?: string; username?: string } | null | undefined): string | null {
   if (!konto) return null;
   const kontoName = new Set(woerter(konto.name ?? ''));
-  const adresse = woerter((konto.username ?? '').split('@')[0]);
+  const adresse = new Set(woerter((konto.username ?? '').split('@')[0]));
+  const enthalten = (teile: string[], t: Set<string>) => teile.length > 0 && teile.every((x) => t.has(x));
+  const genau = (teile: string[], t: Set<string>) => enthalten(teile, t) && t.size === new Set(teile).size;
   const passt = (m: Mitglied) => {
-    const w = woerter(m.name);
-    if (!w.length) return false;
-    // alle Teile des Namens im Kontonamen oder vor dem @
-    return w.every((x) => kontoName.has(x)) || w.every((x) => adresse.includes(x));
+    const name = woerter(m.name);
+    if (!name.length) return false;
+    const nach = name.slice(-1);
+    const vor = name.slice(0, -1);
+    const spitz = woerter(m.nickname ?? '');
+    return [kontoName, adresse].some(
+      (t) =>
+        enthalten(name, t) ||
+        ((enthalten(vor, t) || enthalten(spitz, t)) && enthalten(nach, t)) ||
+        genau(vor, t) ||
+        genau(spitz, t),
+    );
   };
   const treffer = mitglieder.filter(passt);
   return treffer.length === 1 ? treffer[0].slug : null;
