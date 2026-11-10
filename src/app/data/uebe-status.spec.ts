@@ -86,7 +86,7 @@ describe('Übe-Status', () => {
 });
 
 describe('Übe-Modus mit fünf Status', () => {
-  it('Sitzt bei sitzendem Song schiebt weiter bis eingenordet, sonst gilt der Status direkt', () => {
+  it('Gleicher Status schiebt im Status einen Kasten weiter (2 → 3, 4 → 5), dann bleibt er; Eingenordet nur ausdrücklich', () => {
     localStorage.setItem('bn-ich', 'david');
     localStorage.setItem('bn-kasten-david', JSON.stringify({ v: 2, kaesten: {}, gelernt: {} }));
     localStorage.setItem('bn-ueben', JSON.stringify({ [K]: { kasten: 1, faellig: heute } }));
@@ -94,7 +94,11 @@ describe('Übe-Modus mit fünf Status', () => {
     expect(ladeUeben()[K]).toMatchObject({ kasten: 4, faellig: '2026-11-15' });
     expect(uebeWertung(K, 'sitzt', heute)).toBe('sitzt');
     expect(ladeUeben()[K].kasten).toBe(5);
-    expect(uebeWertung(K, 'sitzt', heute)).toBe('eingenordet');
+    // in Kasten 5 bleibt „Sitzt“ in 5 – eingenordet nur ausdrücklich
+    expect(uebeWertung(K, 'sitzt', heute)).toBe('sitzt');
+    expect(ladeUeben()[K]).toMatchObject({ kasten: 5, faellig: '2026-11-22' });
+    expect(uebeWertung(K, 'eingenordet', heute)).toBe('eingenordet');
+    expect(ladeUeben()[K]).toBeUndefined();
     expect(uebeWertung(K, 'ueben', heute)).toBe('ueben');
     expect(ladeUeben()[K]).toMatchObject({ kasten: 1, faellig: heute });
     expect(uebeWertung(K, 'wackelt', heute)).toBe('wackelt');

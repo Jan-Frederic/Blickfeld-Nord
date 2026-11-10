@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
 import { UebeStatus, eigenerStatus } from '../data/uebe-status';
-import { StatusSchalter } from './status-schalter';
+import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
@@ -287,11 +287,14 @@ export class SetlistBuehne {
   });
   /**
    * Status setzen. Probe-Modus (Kopfleiste der Notenansicht): wie in der Probe-Leiste, der Song bleibt. Übe-Modus:
-   * „Üben“ kommt hinten noch einmal dran, dann weiter zur nächsten Karte (am Ende: fertig).
+   * Status gilt sofort; „Üben“ kommt hinten noch einmal dran. Weiter zur nächsten Karte (am Ende: fertig) erst, wenn
+   * der gewählte Status kurz aufgeleuchtet hat (AUFLEUCHTEN_MS) – und nur, wenn man nicht schon selbst geblättert hat.
    */
+  private weiterZeit: ReturnType<typeof setTimeout> | undefined;
+  private readonly weiterAufraeumen = inject(DestroyRef).onDestroy(() => clearTimeout(this.weiterZeit));
   protected werten(status: UebeStatus): void {
     const c = this.aktuellerSong();
-    if (!c) return;
+    if (!c || this.weiterZeit !== undefined) return;
     const datum = this.probe();
     if (datum) {
       if (this.ich) probeStatusSetzen(datum, c, status, this.band.members);
@@ -303,8 +306,13 @@ export class SetlistBuehne {
     if (this.klick()) this.faktor.set(0.7);
     this.statusNeu.update((n) => n + 1);
     if (status === 'ueben') this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
-    if (this.index() + 1 >= this.liste().length) this.closed.emit();
-    else this.springen(this.index() + 1);
+    const bei = this.index();
+    this.weiterZeit = setTimeout(() => {
+      this.weiterZeit = undefined;
+      if (this.index() !== bei) return;
+      if (bei + 1 >= this.liste().length) this.closed.emit();
+      else this.springen(bei + 1);
+    }, AUFLEUCHTEN_MS);
   }
   protected readonly minutenText = minutenText;
 

@@ -13,7 +13,7 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Startet in', buehne: 'Titelanzeige', probe: 'Titelanzeige', ueben: 'Notenansicht' },
   { was: 'Starten über', buehne: 'Setlist des Auftritts oder „Als Nächstes“ in der Übersicht', probe: 'Probenseite „Probe-Modus starten“ oder „Als Nächstes“', ueben: 'Üben-Seite „Übe-Modus“ oder der Knopf neben „Üben“ in der Übersicht' },
   { was: 'Pro Song festhalten', buehne: 'Sterne (1–5): wie lief der Song an diesem Abend', probe: 'Probe-Leiste unter dem Song: Status-Umschalter, eigene Notiz, Status und Notizen der anderen, Notizen der letzten Probe; Status auch in der Kopfleiste der Notenansicht', ueben: 'Status-Umschalter – in der Titelanzeige und in der Kopfleiste' },
-  { was: 'Zum nächsten Song', buehne: 'Selbst blättern: Pedal, Pfeiltaste, Tippen, Wischen', probe: 'Selbst blättern', ueben: 'Automatisch nach jeder Status-Wahl; „Üben“ hängt die Karte hinten noch einmal an' },
+  { was: 'Zum nächsten Song', buehne: 'Selbst blättern: Pedal, Pfeiltaste, Tippen, Wischen', probe: 'Selbst blättern', ueben: 'Automatisch nach jeder Status-Wahl, nachdem der Status kurz aufgeleuchtet hat; „Üben“ hängt die Karte hinten noch einmal an' },
   { was: 'Uhr', buehne: 'Set-Uhr gegen die geplante Spielzeit', probe: 'Uhr gegen die Probendauer, Zeit je Song, Rest je offenem Song', ueben: '–' },
   { was: 'Song-Liste', buehne: 'Ja (Titelanzeige)', probe: 'Ja – auch in der Kopfleiste der Notenansicht', ueben: 'Ja – die Karten, auch in der Kopfleiste der Notenansicht' },
   { was: 'Wunsch-Suche', buehne: 'Ja', probe: 'Ja', ueben: 'Nein' },
@@ -34,7 +34,7 @@ const BEGRIFFE: { name: string; text: string }[] = [
   { name: 'Fassung', text: 'Hat ein Song mehrere Noten, wählt man oben in der Notenansicht, welche gilt (die PDFs mit Namen oder „Akkorde“). Die Wahl wird je Song gemerkt.' },
   { name: 'Kopfleiste', text: 'Die Leiste oben in der Notenansicht: Titel, Seite, Fassung, Werkzeuge des Blatts, im Übe- und Probe-Modus Mitschnitt und Status, dann Noten-Knopf und Beenden. Nach oben wischen blendet sie aus, nach unten holt sie zurück – ist sie schon da, geht es zur Titelanzeige.' },
   { name: 'Song-Liste', text: 'Navigation rechts mit allen Songs der Setlist bzw. des Plans – antippen springt dorthin. Im Übe- und Probe-Modus auch in der Kopfleiste der Notenansicht.' },
-  { name: 'Status-Umschalter', text: 'Die fünf Übe-Status nebeneinander, der aktuelle ist farbig – überall gleich: Probe-Leiste, Titelanzeige im Übe-Modus und Kopfleiste der Notenansicht (Übe- und Probe-Modus). Schmal nur ○ ✎ ↻ ✓ ✓✓.' },
+  { name: 'Status-Umschalter', text: 'Die fünf Übe-Status nebeneinander, der aktuelle ist farbig – überall gleich: Probe-Leiste, Titelanzeige im Übe-Modus und Kopfleiste der Notenansicht (Übe- und Probe-Modus). Der gewählte Status leuchtet kurz auf, erst dann gilt er (und im Übe-Modus kommt die nächste Karte) – so tippt man beim nächsten Song nicht versehentlich daneben. Schmal nur ○ ✎ ↻ ✓ ✓✓.' },
   { name: 'Probe-Leiste', text: 'Unter jedem Song im Probe-Modus: Status-Umschalter, Mikrofon, eigene Notiz, die Status und Notizen der anderen, Notizen der letzten Probe, Zeit.' },
   { name: 'Mitschnitt-Panel', text: 'Im Übe-Modus über „Mitschnitt“ einblendbar: Proben-Aufnahmen des Songs anhören, Stelle in Schleife, langsamer abspielen.' },
   { name: 'Anlass', text: 'Text oben links vor dem Songtitel – Name des Auftritts, „Probe 12.11.“ oder „Übe-Modus“.' },
@@ -44,8 +44,8 @@ const STATUS_ZEILEN: { zeichen: string; name: string; kasten: string; text: stri
   { zeichen: '○', name: 'Nicht gelernt', kasten: '–', text: 'Jeder neue Song und alle ohne Angabe. Nicht im Karteikasten.' },
   { zeichen: '✎', name: 'Üben', kasten: 'Kasten 1', text: 'Jeden Tag dran; im Übe-Modus kommt die Karte in derselben Runde noch einmal.' },
   { zeichen: '↻', name: 'Wackelt noch', kasten: 'Kasten 2–3', text: 'Wieder dran nach 1 bzw. 3 Tagen. „Wackelt noch“ bei einem Song, der schon wackelt, schiebt ihn im Übe-Modus von Kasten 2 nach 3.' },
-  { zeichen: '✓', name: 'Sitzt', kasten: 'Kasten 4–5', text: 'Wieder dran nach 7 bzw. 14 Tagen. „Sitzt“ bei einem Song, der schon sitzt, schiebt ihn im Übe-Modus einen Kasten weiter.' },
-  { zeichen: '✓✓', name: 'Eingenordet', kasten: 'raus', text: 'Fällt aus dem Karteikasten – im Übe-Modus nach „Sitzt“ in Kasten 5 oder direkt gesetzt.' },
+  { zeichen: '✓', name: 'Sitzt', kasten: 'Kasten 4–5', text: 'Wieder dran nach 7 bzw. 14 Tagen. „Sitzt“ bei einem Song, der schon in Kasten 4 sitzt, schiebt ihn im Übe-Modus nach Kasten 5; in Kasten 5 bleibt er.' },
+  { zeichen: '✓✓', name: 'Eingenordet', kasten: 'raus', text: 'Fällt aus dem Karteikasten – nur wenn man ausdrücklich „Eingenordet“ wählt.' },
 ];
 
 @Component({

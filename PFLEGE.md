@@ -148,9 +148,15 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   oben rechts ein **Umschalter mit den fünf Status** (der aktuelle ist hervorgehoben; auf schmalen Bildschirmen nur die
   Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status und geht zur nächsten Karte: **Wackelt noch** bei einem Song, der
   schon in Kasten 2 wackelt, schiebt ihn nach Kasten 3 (wieder dran nach 3 statt 1 Tag; in 3 bleibt er in 3, weiter
-  geht es mit „Sitzt“); **Sitzt** bei einem Song, der schon sitzt, schiebt ihn einen Kasten weiter (wieder dran nach 7
-  bzw. 14 Tagen), aus dem letzten Kasten heraus ist er **eingenordet**; sonst gilt der Status direkt (Üben = Kasten 1,
-  kommt in dieser Runde noch einmal; Wackelt noch = Kasten 2; Sitzt = Kasten 4; Nicht gelernt nimmt ihn heraus). Reihenfolge: heute fällige zuerst
+  geht es mit „Sitzt“); **Sitzt** bei einem Song, der schon in Kasten 4 sitzt, schiebt ihn nach Kasten 5 (wieder dran
+  nach 14 statt 7 Tagen; in 5 bleibt er in 5). **Eingenordet** wird ein Song nur, wenn man ausdrücklich „Eingenordet“
+  wählt; sonst gilt der Status direkt (Üben = Kasten 1, kommt in dieser Runde noch einmal; Wackelt noch = Kasten 2;
+  Sitzt = Kasten 4; Nicht gelernt nimmt ihn heraus). Jeder Status-Umschalter (Übe-Modus, Probe-Leiste, Kopfleiste)
+  speichert den Status sofort und lässt ihn kurz aufleuchten (`AUFLEUCHTEN_MS` in `pages/status-schalter.ts`, 450 ms,
+  als CSS-Animation); der Übe-Modus wechselt erst danach zur nächsten Karte und nimmt bis dahin keinen weiteren Status
+  an – so vertippt man sich beim nächsten Song nicht. Hat man in der Zeit selbst geblättert, bleibt er dort. Die Kästen oben auf der Seite zeigen ihr Status-Symbol (✎ ↻ ↻ ✓ ✓) im Rahmen
+  „Karteikasten“, links daneben gestrichelt **Nicht gelernt** (Songs der Spotify-Listen ohne Status), rechts
+  **Eingenordet** – beide gehören nicht zum Karteikasten. Darunter die Liste „Was ein Status-Klick bewirkt“. Reihenfolge: heute fällige zuerst
   (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
   Notenansicht): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen. Unten alle Songs im
   Karteikasten mit ihrem Status (dort direkt änderbar). **Tagesziel:** unter Einstellungen → Ich bin … „Karteikarten am

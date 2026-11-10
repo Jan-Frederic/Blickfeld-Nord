@@ -1645,7 +1645,11 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   // Status direkt ändern: Angels eingenordet → fällt aus dem Kasten; über die Suche wieder zum Üben (Kasten 1)
   await ueben.locator('.liste li', { hasText: 'Angels' }).locator('select').selectOption('eingenordet');
   await until(async () => (await ueben.locator('.liste li select').count()) === 2, 'Eingenordet bleibt im Karteikasten');
-  await until(async () => (await ueben.locator('.eingenordet-zahl').innerText().catch(() => '')).includes('1 Song eingenordet'), 'Eingenordet wird nicht gezählt');
+  await until(async () => (await ueben.locator('.aussen.eingenordet .n').innerText().catch(() => '')) === '1', 'Eingenordet wird nicht gezählt');
+  // Kästen mit Status-Symbol im Rahmen „Karteikasten“; Nicht gelernt und Eingenordet stehen außerhalb
+  expect((await ueben.locator('.kartei .kaesten li .sym').allInnerTexts()).join(' ') === '✎ ↻ ↻ ✓ ✓', 'Kästen ohne Status-Symbole');
+  expect((await ueben.locator('.kartei .aussen').count()) === 0 && (await ueben.locator('.kartei-system > .aussen').count()) === 2, 'Nicht gelernt / Eingenordet nicht außerhalb des Karteikastens');
+  expect((await ueben.locator('.wege li').count()) === 5, 'Erklärung, wohin ein Status-Klick führt, fehlt');
   await ueben.locator('.suche input').fill('Angels');
   await ueben.locator('.treffer button', { hasText: 'Eingenordet' }).first().click();
   await until(async () => (await ueben.locator('.kaesten li').nth(0).locator('.n').innerText()) === '1', 'Hinzufügen legt nicht in Kasten 1');
@@ -1680,8 +1684,10 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   const songA = (await noten.locator('header .titel').innerText()).trim();
   // „Üben“: kommt in dieser Runde noch einmal dran
   await noten.locator('header .wertung.ueben').click();
+  // der gewählte Status leuchtet kurz auf, erst dann kommt die nächste Karte
+  expect((await noten.locator('header .wertung.ueben.blitz.an').count()) === 1 && (await noten.locator('header .titel').innerText()).trim() === songA, 'Status leuchtet nicht erst auf, bevor es weitergeht');
   await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nicht zur nächsten Karte');
-  for (let i = 0; i < 6 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
+  for (let i = 0; i < 6 && (await noten.count()); i++) { await noten.locator('header .wertung.sitzt').click().catch(() => {}); await p.waitForTimeout(600); }
   await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('Sitzt'), 'Übe-Ergebnis fehlt');
   const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
   expect(Object.values(stand).every((k) => k.kasten >= 4), `Sitzt setzt nicht auf Kasten 4/5: ${JSON.stringify(stand)}`);
@@ -1719,7 +1725,7 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   // Hochwischen: Notenansicht wieder herein
   await ziehen(600, 250);
   await schritt('Hochwischen holt die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 5000 }));
-  for (let i = 0; i < 5 && (await noten.count()); i++) await noten.locator('header .wertung.sitzt').click().catch(() => {});
+  for (let i = 0; i < 5 && (await noten.count()); i++) { await noten.locator('header .wertung.sitzt').click().catch(() => {}); await p.waitForTimeout(600); }
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
   // mit der Band geteilt: Übe-Statistik unter Bühnenreife
   expect((await p.evaluate(() => JSON.parse(localStorage.getItem('bn-kasten-jan-frederic-overbeck') ?? '{}').v)) === 2, 'Karteikasten wird nicht mit der Band geteilt');

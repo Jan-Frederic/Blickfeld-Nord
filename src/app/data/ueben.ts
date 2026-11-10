@@ -1,7 +1,7 @@
 // Karteikasten (Leitner) für den Übe-Modus (Backstage → Übersicht → Üben). Jede Karte liegt in einem von fünf Kästen;
-// „Sitzt“ schiebt sie einen Kasten weiter (seltener wieder dran), „Wackelt noch“ zurück in Kasten 1 (gleich wieder dran).
-// Sitzt eine Karte im letzten Kasten noch einmal, ist der Song eingenordet und fällt aus dem Kasten. Die Kästen bilden
-// den Übe-Status (data/uebe-status.ts): Kasten 1 Üben, 2–3 Wackelt noch, 4–5 Sitzt.
+// je höher der Kasten, desto seltener ist sie dran. Die Kästen bilden den Übe-Status (data/uebe-status.ts): Kasten 1
+// Üben, 2–3 Wackelt noch, 4–5 Sitzt. Wohin ein Status-Klick führt, regelt uebeWertung dort (gleicher Status 2 → 3 bzw.
+// 4 → 5, eingenordet nur ausdrücklich); bewerten() hier ist der einfache Leitner-Schritt (eine Stufe weiter).
 // Persönlich: je Person ein Stand (bn-ueben, mit den Einstellungen der Person gespiegelt). Das Tagesziel (Einstellungen,
 // Standard 10) ist nur eine Empfehlung.
 // Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
@@ -140,7 +140,7 @@ export interface KastenGeteilt {
   v?: number;
   /** Song-Key → Kasten (1–5) */
   kaesten: Record<string, number>;
-  /** Song-Key → Tag, an dem er eingenordet wurde (Übe-Modus aus dem letzten Kasten oder direkt gesetzt) */
+  /** Song-Key → Tag, an dem er eingenordet wurde (ausdrücklich gesetzt) */
   eingenordet?: Record<string, string>;
   /** alter Stand (vor Version 2): aus dem letzten Kasten gelernt */
   gelernt: Record<string, string>;

@@ -5,7 +5,7 @@ import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
 import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeKastenGeteilt, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 import { ladeFortschritt } from '../data/fortschritt';
-import { STATUS, UebeStatus, alleStatus, eigeneStatus, gemeinsamDran, uebeWoche, statusAusKasten, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
+import { STATUS, UebeStatus, alleStatus, eigeneStatus, gemeinsamDran, uebeWoche, statusAusKasten, statusInfo, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
 import { ListenQuelle, listenQuellen, listenTreffer } from '../data/listen-quellen';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { LISTEN, songAbgleich } from '../data/playlisten';
@@ -19,7 +19,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 // Backstage → Üben: persönlicher Karteikasten (Logik: data/ueben.ts, Status: data/uebe-status.ts). Oben die fünf Kästen
 // (1 Üben, 2–3 Wackelt noch, 4–5 Sitzt), darunter ein Knopf „Übe-Modus“: die Karten in der Notenansicht, oben rechts
 // die fünf Übe-Status (uebeWertung) – derselbe Status noch einmal schiebt die Karte einen Kasten weiter („Wackelt
-// noch“ 2 → 3, „Sitzt“ 4 → 5, aus dem letzten heraus eingenordet); „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
+// noch“ 2 → 3, „Sitzt“ 4 → 5, im letzten Kasten des Status bleibt sie), eingenordet nur ausdrücklich; „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
 // Tagesziel ist nur eine Empfehlung.
 // Über der Liste eine Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen (Songs
 // ohne Status kommen auf „Üben“, Kasten 1). Darunter alle Songs im Kasten mit ihrem Status (änderbar).
@@ -34,15 +34,27 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         <p class="lead">Üben ist persönlich: Wähle unter <a routerLink="/backstage/einstellungen">Einstellungen</a> „Ich bin …“ –
           dann stehen hier deine Songs im Karteikasten.</p>
       } @else {
-        <p class="lead">{{ name() }}: deine Songs im Karteikasten. Kasten 1 heißt <b>Üben</b>, 2 und 3 <b>Wackelt noch</b>, 4 und 5 <b>Sitzt</b>.
-          Wählst du im Übe-Modus denselben Status noch einmal, rückt die Karte einen Kasten weiter und kommt seltener dran
-          („Wackelt noch“ 2 → 3, „Sitzt“ 4 → 5). Sitzt sie im letzten Kasten, ist der Song <b>eingenordet</b> und fällt heraus.</p>
-        <ol class="kaesten" aria-label="Karteikasten">
-          @for (n of kastenZahlen(); track $index; let i = $index) {
-            <li [class.leer]="!n"><span class="n">{{ n }}</span><span class="l">Kasten {{ i + 1 }}</span><span class="s">{{ label(i + 1) }}</span><small>{{ i ? 'alle ' + tage[i] + (tage[i] === 1 ? ' Tag' : ' Tage') : 'sofort' }}</small></li>
-          }
-        </ol>
-        @if (eingenordet()) { <p class="eingenordet-zahl"><mat-icon>verified</mat-icon> {{ eingenordet() }} {{ eingenordet() === 1 ? 'Song' : 'Songs' }} eingenordet</p> }
+        <p class="lead">{{ name() }}: deine Songs im Karteikasten – je Kasten ein Status, je höher der Kasten, desto seltener ist die Karte dran.</p>
+        <!-- Karteikasten mit seinen fünf Kästen; Nicht gelernt und Eingenordet stehen daneben, gehören aber nicht dazu -->
+        <div class="kartei-system">
+          <div class="aussen nicht" [class.leer]="!nichtGelernt()"><span class="sym" aria-hidden="true">○</span><span class="n">{{ nichtGelernt() }}</span><span class="s">Nicht gelernt</span><small>nicht im Kasten</small></div>
+          <div class="kartei">
+            <p class="kartei-titel">Karteikasten</p>
+            <ol class="kaesten" aria-label="Karteikasten">
+              @for (n of kastenZahlen(); track $index; let i = $index) {
+                <li [class]="statusAusKasten(i + 1)" [class.leer]="!n"><span class="sym" aria-hidden="true">{{ zeichen(i + 1) }}</span><span class="n">{{ n }}</span><span class="l">Kasten {{ i + 1 }}</span><span class="s">{{ label(i + 1) }}</span><small>{{ i ? 'alle ' + tage[i] + (tage[i] === 1 ? ' Tag' : ' Tage') : 'sofort' }}</small></li>
+              }
+            </ol>
+          </div>
+          <div class="aussen eingenordet" [class.leer]="!eingenordet()"><span class="sym" aria-hidden="true">✓✓</span><span class="n">{{ eingenordet() }}</span><span class="s">Eingenordet</span><small>raus aus dem Kasten</small></div>
+        </div>
+        <ul class="wege" aria-label="Was ein Status-Klick im Übe-Modus bewirkt">
+          <li><span class="sym ueben" aria-hidden="true">✎</span><span><b>Üben</b> → Kasten 1, kommt in derselben Runde noch einmal</span></li>
+          <li><span class="sym wackelt" aria-hidden="true">↻</span><span><b>Wackelt noch</b> → Kasten 2 · wackelt er schon in 2 → Kasten 3 · in 3 bleibt er in 3</span></li>
+          <li><span class="sym sitzt" aria-hidden="true">✓</span><span><b>Sitzt</b> → Kasten 4 · sitzt er schon in 4 → Kasten 5 · in 5 bleibt er in 5</span></li>
+          <li><span class="sym eingenordet" aria-hidden="true">✓✓</span><span><b>Eingenordet</b> → raus aus dem Karteikasten – nur mit diesem Klick</span></li>
+          <li><span class="sym nicht" aria-hidden="true">○</span><span><b>Nicht gelernt</b> → raus aus dem Karteikasten, ohne Status</span></li>
+        </ul>
 
         @if (ergebnis(); as e) {
           <p class="ergebnis" role="status"><mat-icon>task_alt</mat-icon> Fertig: {{ e }}</p>
@@ -140,6 +152,8 @@ export class BackstageUeben {
   protected readonly alle = computed(() => (this.stand(), karten(ladeUeben(), this.auftritte, this.heute)));
   private readonly eigene = computed(() => (this.stand(), eigeneStatus()));
   protected readonly eingenordet = computed(() => [...this.eigene().values()].filter((s) => s === 'eingenordet').length);
+  /** Songs aus den Spotify-Listen ohne eigenen Status */
+  protected readonly nichtGelernt = computed(() => this.songs.filter((s) => (this.eigene().get(s.key) ?? 'nicht') === 'nicht').length);
   protected readonly ziel = ladeTagesziel();
   protected readonly geuebt = signal(heuteGeuebt(this.heute));
   /** heute fällig und noch nicht geübt */
@@ -207,6 +221,9 @@ export class BackstageUeben {
   }
   protected label(kasten: number): string {
     return statusLabel(statusAusKasten(kasten));
+  }
+  protected zeichen(kasten: number): string {
+    return statusInfo(statusAusKasten(kasten)).zeichen;
   }
 
   // Übe-Modus: die Karten in der Notenansicht (Bühnen-Modus mit Noten), bewertet oben rechts. Immer möglich:

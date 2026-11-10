@@ -790,15 +790,42 @@ app-backstage-ueben {
   ul, ol { list-style: none; margin: 0; padding: 0; }
   mat-icon { font-size: 18px; width: 18px; height: 18px; }
   h3 { margin: 28px 0 10px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
-  .kaesten { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 16px 0 20px; }
+  // Karteikasten (fünf Kästen im Rahmen), daneben gestrichelt Nicht gelernt und Eingenordet – nicht Teil des Kastens
+  .kartei-system { display: grid; grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr) minmax(0, 5.5rem); gap: 8px; align-items: end; margin: 16px 0 12px; }
+  .kartei { padding: 6px 8px 8px; border: 2px solid var(--bn-sunset); border-radius: 12px; }
+  .kartei-titel { margin: 0 0 6px; font-size: .68rem; text-transform: uppercase; letter-spacing: .14em; color: var(--bn-sunset); text-align: center; }
+  .aussen { display: grid; justify-items: center; gap: 2px; padding: 10px 4px; border: 1px dashed var(--bn-line); border-radius: 10px; text-align: center; color: var(--bn-fog); }
+  .aussen .n { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .aussen .s { font-size: .72rem; }
+  .aussen small { font-size: .64rem; }
+  .aussen.eingenordet:not(.leer) { color: #5fb88a; border-color: #5fb88a; }
+  .sym { font-weight: 700; line-height: 1; }
+  .kaesten .sym { font-size: .95rem; }
+  .kaesten .ueben .sym, .kaesten .ueben .s, .wege .ueben { color: #e08a5a; }
+  .kaesten .wackelt .sym, .kaesten .wackelt .s, .wege .wackelt { color: #e0b25a; }
+  .kaesten .sitzt .sym, .kaesten .sitzt .s, .wege .sitzt { color: #9fd3b4; }
+  .kaesten li.ueben:not(.leer) { border-color: #e08a5a; }
+  .kaesten li.wackelt:not(.leer) { border-color: #e0b25a; }
+  .kaesten li.sitzt:not(.leer) { border-color: #9fd3b4; }
+  .wege .eingenordet { color: #5fb88a; }
+  .wege .nicht { color: var(--bn-fog); }
+  .wege { display: grid; gap: 4px; margin: 0 0 20px; font-size: .85rem; color: var(--bn-fog); }
+  .wege li { display: flex; gap: 8px; align-items: baseline; }
+  .wege .sym { flex: none; width: 1.6rem; text-align: center; }
+  .wege b { color: var(--bn-ink); font-weight: 500; }
+  @media (max-width: 600px) {
+    .kartei-system { grid-template-columns: 1fr 1fr; }
+    .kartei { grid-column: 1 / -1; order: -1; }
+    .aussen { grid-template-columns: auto auto 1fr; justify-items: start; align-items: baseline; gap: 6px; padding: 8px 10px; text-align: left; }
+    .aussen small { grid-column: 1 / -1; }
+  }
+  .kaesten { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0; }
   .kaesten li { display: grid; justify-items: center; gap: 2px; padding: 10px 4px; border: 1px solid var(--bn-line); border-radius: 10px; text-align: center; }
-  .kaesten li:not(.leer) { border-color: var(--bn-sunset); }
-  .kaesten .n { font-size: 1.4rem; font-weight: 700; color: var(--bn-sunset); font-variant-numeric: tabular-nums; }
+  .kaesten .n { font-size: 1.4rem; font-weight: 700; color: var(--bn-ink); font-variant-numeric: tabular-nums; }
   .kaesten .leer .n { color: var(--bn-fog); }
   .kaesten .l { font-size: .78rem; }
-  .kaesten .s { font-size: .72rem; color: var(--bn-sunset); }
-  .kaesten .leer .s { color: var(--bn-fog); }
-  .eingenordet-zahl { display: flex; align-items: center; gap: 6px; margin: -8px 0 16px; color: #5fb88a; font-size: .9rem; }
+  .kaesten .s { font-size: .72rem; }
+  .kaesten .leer .n, .kaesten .leer .s, .kaesten .leer .sym { color: var(--bn-fog); }
   .hinweis { margin: 0 0 12px; color: #e0b25a; font-size: .9rem; }
   .liste select { flex: none; max-width: 9.5rem; padding: 5px 8px; border: 1px solid var(--bn-line); border-radius: 999px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .8rem; color-scheme: dark; }
   .liste select.ueben, .liste select.wackelt { border-color: #e0b25a; color: #e0b25a; }
@@ -954,6 +981,12 @@ app-status-schalter .schalter button.wertung.ueben.an { background: #e08a5a; }
 app-status-schalter .schalter button.wertung.wackelt.an { background: #e0b25a; }
 app-status-schalter .schalter button.wertung.sitzt.an { background: #9fd3b4; }
 app-status-schalter .schalter button.wertung.eingenordet.an { background: #5fb88a; }
+// gewählter Status leuchtet kurz auf (status-schalter.ts, AUFLEUCHTEN_MS), die übrigen treten zurück
+app-status-schalter .schalter.blitzt button.wertung:not(.blitz) { opacity: .35; }
+app-status-schalter .schalter button.wertung.blitz { animation: status-blitz .45s ease-out; }
+@keyframes status-blitz { 0% { filter: brightness(1.9); box-shadow: inset 0 0 0 3px #fff; } 100% { filter: none; box-shadow: inset 0 0 0 0 transparent; } }
+@keyframes status-halten { from { box-shadow: inset 0 0 0 3px #fff; } to { box-shadow: inset 0 0 0 3px #fff; } }
+@media (prefers-reduced-motion: reduce) { app-status-schalter .schalter button.wertung.blitz { animation: status-halten .45s linear; } }
 app-status-schalter .z { display: none; }
 @media (max-width: 1200px) {
   app-status-schalter.kopf .z { display: inline; }

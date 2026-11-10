@@ -182,13 +182,14 @@ export function karteBewerten(key: string, sitzt: boolean, tag: string): { einge
 
 /**
  * Übe-Modus: Status für die aktuelle Karte. Gleicher Status wie bisher schiebt die Karte innerhalb ihres Status einen
- * Kasten weiter: „Wackelt noch“ 2 → 3 (wieder dran nach 3 statt 1 Tag), „Sitzt“ 4 → 5, aus 5 heraus eingenordet. In
- * Kasten 3 bleibt „Wackelt noch“ in 3 – weiter nach 4 geht es nur mit „Sitzt“. Sonst gilt der gewählte Status direkt
- * (Üben = Kasten 1, gleich wieder dran; Wackelt noch = Kasten 2; Sitzt = Kasten 4). Gibt den neuen Status zurück.
+ * Kasten weiter: „Wackelt noch“ 2 → 3 (wieder dran nach 3 statt 1 Tag), „Sitzt“ 4 → 5 (nach 14 statt 7 Tagen). Im
+ * letzten Kasten eines Status bleibt sie dort (Wackelt noch in 3, Sitzt in 5) – eingenordet wird ein Song nur, wenn
+ * man ausdrücklich „Eingenordet“ wählt. Sonst gilt der gewählte Status direkt (Üben = Kasten 1, gleich wieder dran;
+ * Wackelt noch = Kasten 2; Sitzt = Kasten 4). Gibt den neuen Status zurück.
  */
 export function uebeWertung(key: string, status: UebeStatus, tag: string): UebeStatus {
-  if (status === 'sitzt' && eigenerStatus(key) === 'sitzt') return karteBewerten(key, true, tag).status;
-  if (status === 'wackelt' && ladeUeben()[key]?.kasten === 2) return karteBewerten(key, true, tag).status;
+  const kasten = ladeUeben()[key]?.kasten;
+  if ((status === 'wackelt' && kasten === 2) || (status === 'sitzt' && kasten === 4)) return karteBewerten(key, true, tag).status;
   statusSetzen(key, status, 'ueben', tag);
   return status;
 }
