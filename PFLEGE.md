@@ -156,7 +156,16 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   als CSS-Animation); der Übe-Modus wechselt erst danach zur nächsten Karte und nimmt bis dahin keinen weiteren Status
   an – so vertippt man sich beim nächsten Song nicht. Hat man in der Zeit selbst geblättert, bleibt er dort. Die Kästen oben auf der Seite zeigen ihr Status-Symbol (✎ ↻ ↻ ✓ ✓) im Rahmen
   „Karteikasten“, links daneben gestrichelt **Nicht gelernt** (Songs der Spotify-Listen ohne Status), rechts
-  **Eingenordet** – beide gehören nicht zum Karteikasten. Darunter die Liste „Was ein Status-Klick bewirkt“. Reihenfolge: heute fällige zuerst
+  **Eingenordet** – beide gehören nicht zum Karteikasten. Darunter die Liste „Was ein Status-Klick bewirkt“. Nach jeder Status-Wahl im Übe-Modus steht 6 Sekunden lang **„↶ Rückgängig“** unten in
+  der Mitte: zurück zur Karte, Karteikasten, Verlauf und „heute geübt“ wie vorher (`uebeSchnappschuss` in
+  `data/uebe-status.ts`); eine wegen „Üben“ angehängte Wiederholung fällt wieder weg. Nach der letzten Karte schließt
+  der Übe-Modus wie bisher. **Übe-Erinnerung** (Einstellungen → Ich bin, `data/erinnerung.ts`): höchstens einmal am Tag
+  ab der gewählten Stunde eine Benachrichtigung „n Karteikarten sind heute fällig“ – über die periodische
+  Hintergrund-Synchronisation des Service Workers (`periodicsync` in `scripts/sw/sw-template.js`, nur installierte App
+  auf Android/Chrome/Edge); Fälligkeiten legt die Seite im Speicher `ueben-erinnerung` ab. Überall, wo es geht, zeigt
+  das App-Symbol die Zahl fälliger Karten (Badge). Im **Song-Dialog** steht „Dein Weg“: der eigene Übe-Status im Lauf
+  der Zeit (`uebeWeg` in `data/fortschritt.ts`). In der **Probe-Leiste** stehen die anderen als Zeichen mit Namen
+  (○ ✎ ↻ ✓ ✓✓ in den Status-Farben, Text für Screenreader und im Tooltip). Reihenfolge: heute fällige zuerst
   (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
   Notenansicht): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen. Unten alle Songs im
   Karteikasten mit ihrem Status (dort direkt änderbar). **Tagesziel:** unter Einstellungen → Ich bin … „Karteikarten am

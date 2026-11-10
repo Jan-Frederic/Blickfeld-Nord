@@ -114,3 +114,18 @@ export function plaeneMitStaenden<S extends { title: string; artist: string; don
 
 /** „73 %“ */
 export const prozent = (wert: number) => `${Math.round(wert * 100)} %`;
+
+/**
+ * Übe-Weg eines Songs für eine Person: je Tag der letzte Status (am selben Tag Probe vor Übe-Modus vor Liste), gleiche
+ * Status hintereinander zusammengefasst – „Üben 02.11. → Wackelt noch 05.11. → Sitzt 10.11.“. tage: vom ersten bis
+ * zum letzten Schritt.
+ */
+export function uebeWeg(verlauf: FortschrittEintrag[] | undefined): { schritte: { tag: string; stand: Stand }[]; tage: number } {
+  const rang = { liste: 0, ueben: 1, probe: 2 } as const;
+  const jeTag = new Map<string, Stand>();
+  for (const e of [...(verlauf ?? [])].sort((a, b) => a.tag.localeCompare(b.tag) || (rang[a.quelle] ?? 0) - (rang[b.quelle] ?? 0))) jeTag.set(e.tag, e.stand);
+  const schritte: { tag: string; stand: Stand }[] = [];
+  for (const [tag, stand] of jeTag) if (schritte.at(-1)?.stand !== stand) schritte.push({ tag, stand });
+  const tage = schritte.length > 1 ? Math.round((Date.parse(schritte.at(-1)!.tag) - Date.parse(schritte[0].tag)) / 864e5) : 0;
+  return { schritte, tage };
+}

@@ -1,5 +1,5 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
-import { UebeStatus, eigenerStatus } from '../data/uebe-status';
+import { UebeStatus, eigenerStatus, statusLabel } from '../data/uebe-status';
 import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,6 +42,9 @@ function ladeZoom(): number {
     return 1;
   }
 }
+
+/** so lange lässt sich die letzte Status-Wahl im Übe-Modus zurücknehmen */
+const ZURUECK_MS = 6000;
 
 import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, taktHinweis } from '../data/takt';
 @Component({
@@ -198,6 +201,10 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
+      @if (zurueck(); as z) {
+        <!-- Übe-Modus: letzte Status-Wahl ein paar Sekunden lang zurücknehmbar (Karte und Kasten wie vorher) -->
+        <button type="button" class="rueckgaengig" (click)="rueckgaengigKlick($event)" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()"><span aria-hidden="true">↶</span> Rückgängig: {{ z.title }} – {{ z.label }}</button>
+      }
       @if (notenOffen()) { <app-noten-anzeige [class.raus]="notenRaus()" [song]="aktuellerSong()" [info]="info()" [anlass]="anlass()" [bewerten]="ueben() || (!!probe() && !!ich)" [weiter]="ueben()" [sperren]="gesperrteStatus()" [listeKnopf]="ueben() || !!probe()" (liste)="navOeffnen()" [status]="uebeStatus()" (wertung)="werten($event)" [endeText]="probe() ? 'Probe-Modus beenden' : ueben() ? 'Übe-Modus beenden' : 'Bühnen-Modus beenden'" (schliessen)="notenSchliessen()" (beenden)="closed.emit()" /> }
     </div>
   `,
@@ -276,6 +283,11 @@ export class SetlistBuehne {
   /** Übe-Modus: Notenansicht mit den fünf Übe-Status oben rechts – die Liste ist die Reihe der Karteikarten */
   readonly ueben = input(false);
   readonly bewertet = output<{ title: string; artist: string; status: UebeStatus }>();
+  /** Übe-Modus: die letzte Status-Wahl zurücknehmen (der Elternteil stellt den Stand wieder her) */
+  readonly rueckgaengig = output<void>();
+  /** letzte Status-Wahl im Übe-Modus, solange sie zurückgenommen werden kann */
+  protected readonly zurueck = signal<{ title: string; label: string; bei: number; nochmal: boolean } | null>(null);
+  private zurueckZeit: ReturnType<typeof setTimeout> | undefined;
   protected readonly statusNeu = signal(0);
   /** Person am Gerät – ohne gibt es im Probe-Modus keinen Status-Umschalter in der Kopfleiste */
   protected readonly ich = ladeIch();
@@ -291,7 +303,10 @@ export class SetlistBuehne {
    * der gewählte Status kurz aufgeleuchtet hat (AUFLEUCHTEN_MS) – und nur, wenn man nicht schon selbst geblättert hat.
    */
   private weiterZeit: ReturnType<typeof setTimeout> | undefined;
-  private readonly weiterAufraeumen = inject(DestroyRef).onDestroy(() => clearTimeout(this.weiterZeit));
+  private readonly weiterAufraeumen = inject(DestroyRef).onDestroy(() => {
+    clearTimeout(this.weiterZeit);
+    clearTimeout(this.zurueckZeit);
+  });
   protected werten(status: UebeStatus): void {
     const c = this.aktuellerSong();
     if (!c || this.weiterZeit !== undefined) return;
@@ -307,12 +322,29 @@ export class SetlistBuehne {
     this.statusNeu.update((n) => n + 1);
     if (status === 'ueben') this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
     const bei = this.index();
+    clearTimeout(this.zurueckZeit);
+    this.zurueck.set({ title: c.title, label: statusLabel(status), bei, nochmal: status === 'ueben' });
+    this.zurueckZeit = setTimeout(() => this.zurueck.set(null), ZURUECK_MS);
     this.weiterZeit = setTimeout(() => {
       this.weiterZeit = undefined;
       if (this.index() !== bei) return;
       if (bei + 1 >= this.liste().length) this.closed.emit();
       else this.springen(bei + 1);
     }, AUFLEUCHTEN_MS);
+  }
+  /** „Rückgängig“: zurück zur Karte, angehängte Wiederholung wieder weg, Stand beim Elternteil zurück */
+  protected rueckgaengigKlick(e: Event): void {
+    e.stopPropagation();
+    const z = this.zurueck();
+    if (!z) return;
+    clearTimeout(this.zurueckZeit);
+    clearTimeout(this.weiterZeit);
+    this.weiterZeit = undefined;
+    this.zurueck.set(null);
+    if (z.nochmal) this.liste.update((l) => l.slice(0, -1));
+    this.rueckgaengig.emit();
+    this.statusNeu.update((n) => n + 1);
+    if (this.index() !== z.bei) this.springen(z.bei);
   }
   protected readonly minutenText = minutenText;
 

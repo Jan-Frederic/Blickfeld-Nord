@@ -4,6 +4,7 @@ import { BandService } from '../data/band.service';
 import { ichQuelle, ichSetzen, ladeIch, rufname } from '../data/band-ich';
 import { statusMigrieren } from '../data/uebe-status';
 import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
+import { ErinnerungErgebnis, erinnerungSetzen, ladeErinnerung } from '../data/erinnerung';
 
 // Backstage → Einstellungen: „Ich bin …“ – wer dieses Gerät benutzt. Gilt für Probe (Zusagen, Status und Notizen im
 // Probe-Modus), den Übe-Status je Song und den Übe-Modus; dazu das Tagesziel (Empfehlung, Karten je Tag). Beides wird mit den
@@ -27,6 +28,20 @@ import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
         <input type="number" min="1" max="100" inputmode="numeric" aria-label="Karteikarten am Tag" [value]="ziel()" (change)="zielSetzen($any($event.target).value)" />
       </label>
       <p class="hinweis">So viele Karten empfiehlt der Übe-Modus je Tag – mehr üben geht immer. Gilt für dich auf allen deinen Geräten.@if (gespeichert()) { <span class="ok"> Gespeichert ✓</span> }</p>
+      <div class="erinnerung">
+        <label class="haken"><input type="checkbox" [checked]="erinnerung().an" (change)="erinnern($any($event.target).checked, erinnerung().stunde)" /> Ans Üben erinnern, wenn Karten fällig sind</label>
+        <label class="stunde">ab
+          <select aria-label="Erinnerung ab Uhrzeit" [disabled]="!erinnerung().an" (change)="erinnern(true, +$any($event.target).value)">
+            @for (h of stunden; track h) { <option [value]="h" [selected]="h === erinnerung().stunde">{{ h }}:00 Uhr</option> }
+          </select>
+        </label>
+      </div>
+      <p class="hinweis">Höchstens einmal am Tag. Klappt in der installierten App auf Android (Chrome/Edge); sonst zeigt das App-Symbol die Zahl der fälligen Karten, wo das Gerät es kann.
+        @switch (meldung()) {
+          @case ('an') { <span class="ok"> Erinnerung ist an ✓</span> }
+          @case ('nur-badge') { <span class="warn"> Dieses Gerät kann nicht im Hintergrund erinnern – nur das App-Symbol zeigt die Zahl.</span> }
+          @case ('keine-erlaubnis') { <span class="warn"> Benachrichtigungen sind für diese Seite nicht erlaubt (Browser-Einstellungen).</span> }
+        }</p>
     </div>
   `,
   styles: `
@@ -37,6 +52,10 @@ import { ladeTagesziel, speichereTagesziel } from '../data/ueben';
     .ziel { margin-top: 16px; }
     .ziel input { width: 6em; padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
     .ok { color: #5fb88a; }
+    .warn { color: #e0b25a; }
+    .erinnerung { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 16px; }
+    .haken { display: flex; align-items: center; gap: 8px; max-width: none; color: var(--bn-ink); font-size: .9rem; }
+    .stunde { display: flex; align-items: center; gap: 6px; }
     .konto { display: flex; align-items: center; gap: 6px; color: #5fb88a; }
     .konto mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .hinweis { margin: 10px 0 0; max-width: 720px; font-size: .85rem; line-height: 1.5; color: var(--bn-fog); }
@@ -49,6 +68,19 @@ export class IchEinstellung {
   protected readonly quelle = signal(ichQuelle());
   protected readonly ziel = signal(ladeTagesziel());
   protected readonly gespeichert = signal(false);
+  protected readonly erinnerung = signal(ladeErinnerung());
+  protected readonly meldung = signal<ErinnerungErgebnis | ''>('');
+  protected readonly stunden = Array.from({ length: 17 }, (_, i) => i + 6);
+  protected async erinnern(an: boolean, stunde: number): Promise<void> {
+    const e = { an, stunde };
+    this.erinnerung.set(e);
+    const r = await erinnerungSetzen(e);
+    this.meldung.set(r === 'aus' ? '' : r);
+    if (r === 'keine-erlaubnis') {
+      this.erinnerung.set({ ...e, an: false });
+      void erinnerungSetzen({ ...e, an: false });
+    }
+  }
   protected zielSetzen(roh: string): void {
     const n = Math.round(Number(roh));
     if (!(n >= 1 && n <= 100)) return;

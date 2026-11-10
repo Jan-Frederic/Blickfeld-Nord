@@ -3,8 +3,8 @@ import { datumText } from '../data/datum';
 import { Component, ElementRef, afterNextRender, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname, unsicherJeSong } from '../data/band-ich';
-import { alleFortschritte, plaeneMitStaenden, prozent } from '../data/fortschritt';
-import { STATUS, UebeStatus, alleStatus, buehnenreife, eigenerStatus, statusLabel, statusSetzen } from '../data/uebe-status';
+import { alleFortschritte, ladeFortschritt, plaeneMitStaenden, prozent, uebeWeg } from '../data/fortschritt';
+import { STATUS, UebeStatus, alleStatus, buehnenreife, eigenerStatus, statusInfo, statusLabel, statusSetzen } from '../data/uebe-status';
 import { MatIconModule } from '@angular/material/icon';
 import { SongWerte } from '../data/songinfo';
 import { NotenDateiInfo } from '../data/noten';
@@ -108,6 +108,12 @@ import { TAKTARTEN } from '../data/takt';
       @if (reifeText(); as r) {
         <p class="quelle reife" [class.baustelle]="r.baustelle"><mat-icon>{{ r.baustelle ? 'warning' : 'military_tech' }}</mat-icon> {{ r.text }}</p>
       } @else if (unsicherBei(); as u) { <p class="quelle" style="color: #e0b25a"><mat-icon>warning</mat-icon> Unsicher bei: {{ u }}</p> }
+      @if (weg(); as w) {
+        <!-- dein Weg mit diesem Song: Übe-Status im Lauf der Zeit (aus deinem Verlauf) -->
+        <p class="quelle weg"><mat-icon>timeline</mat-icon> <span>Dein Weg:
+          @for (s of w.schritte; track s.tag; let l = $last) {<span class="schritt" [class]="'schritt ' + s.stand"><b aria-hidden="true">{{ zeichen(s.stand) }}</b> {{ label(s.stand) }} {{ datumKurz(s.tag) }}</span>@if (!l) { → }}
+          @if (w.tage) { · in {{ w.tage }} {{ w.tage === 1 ? 'Tag' : 'Tagen' }} }</span></p>
+      }
       @if (probe(); as p) { <p class="quelle"><mat-icon>edit_note</mat-icon> Zuletzt geprobt {{ datumText(p.tag) }}: {{ p.notiz }}</p> }
       @if (verlauf().length) {
         <div class="proben-verlauf" role="img" [attr.aria-label]="verlaufText()">
@@ -193,6 +199,23 @@ export class SongDialog {
     const wer = this.mitglieder.map((m) => `${rufname(m)} ${statusLabel(r.personen.get(m.slug) ?? 'nicht')}`).join(' · ');
     return { text: `Bühnenreife ${prozent(r.wert)} · ${wer}`, baustelle: r.ampel === 'baustelle' };
   });
+  /** eigener Übe-Weg mit diesem Song (nur mit „Ich bin …“ und wenigstens einem Eintrag) */
+  protected readonly weg = computed(() => {
+    this.statusStand();
+    const ich = ladeIch();
+    if (!ich) return null;
+    const w = uebeWeg(ladeFortschritt(ich)[this.song().key]);
+    return w.schritte.length ? w : null;
+  });
+  protected zeichen(s: UebeStatus): string {
+    return statusInfo(s).zeichen;
+  }
+  protected label(s: UebeStatus): string {
+    return statusLabel(s);
+  }
+  protected datumKurz(tag: string): string {
+    return `${tag.slice(8, 10)}.${tag.slice(5, 7)}.`;
+  }
   protected readonly verlaufText = computed(() => {
     const v = this.verlauf();
     const geprobt = v.filter((p) => p.stufe !== 'geplant');

@@ -629,7 +629,9 @@ test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Büh
   await buehne.focus();
   await p.keyboard.press('ArrowRight');
   await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zum zweiten Song klappt nicht');
-  await until(async () => (await leiste.innerText()).includes('David: Wackelt noch'), 'Status der anderen fehlt');
+  // die anderen als Zeichen mit Namen (↻ David), der Status als Text für Screenreader und im Tooltip
+  await until(async () => (await leiste.locator('.andere .wer.wackelt[title="David: Wackelt noch"]').count()) === 1, 'Status der anderen fehlt');
+  expect((await leiste.locator('.andere .wer.wackelt .z').innerText()) === '↻', 'Status der anderen ohne Zeichen');
   await leiste.getByRole('button', { name: 'Sitzt', exact: true }).click();
   await p.keyboard.press('ArrowRight');
   const ende = buehne.locator('app-probe-ende');
@@ -747,7 +749,7 @@ test('Backstage: Probe – wer kommt, unsicher bei, Plan an die Band, Generalpro
   // „Ich bin …“ steht unter Einstellungen – die Probe verweist dorthin
   expect((await zusagen.innerText()).includes('Einstellungen'), 'Probe verweist nicht auf „Ich bin …“ in den Einstellungen');
   await p.go('/backstage/einstellungen/');
-  await p.locator('app-ich-einstellung select').selectOption('jan-frederic-overbeck');
+  await p.locator('app-ich-einstellung select[aria-label="Ich bin"]').selectOption('jan-frederic-overbeck');
   await p.go('/backstage/probe/' + datum);
   await zusagen.getByRole('button', { name: 'Ich komme' }).click();
   await until(async () => (await zusagen.innerText()).includes('1 kommt, 2 offen'), 'Zusage wird nicht gezählt');
@@ -1683,6 +1685,7 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   expect((await noten.locator('header .wertung.an').count()) === 1, 'aktueller Status nicht hervorgehoben');
   const songA = (await noten.locator('header .titel').innerText()).trim();
   // „Üben“: kommt in dieser Runde noch einmal dran
+  const standVorher = await p.evaluate(() => localStorage.getItem('bn-ueben'));
   // der gewählte Status leuchtet kurz auf, erst dann kommt die nächste Karte: merken, welcher Titel beim Aufleuchten zu sehen war
   await p.evaluate(() => {
     const o = new MutationObserver(() => {
@@ -1696,6 +1699,13 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await noten.locator('header .wertung.ueben').click();
   await until(async () => (await p.evaluate(() => window.__blitzTitel)) === songA, async () => `Status leuchtet nicht erst auf, bevor es weitergeht (beim Aufleuchten: ${await p.evaluate(() => window.__blitzTitel)}, erwartet: ${songA})`);
   await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nicht zur nächsten Karte');
+  // „Rückgängig“: zurück zur Karte, Karteikasten wie vorher – dann noch einmal „Üben“
+  await p.locator('app-setlist-buehne button.rueckgaengig').click();
+  await until(async () => (await noten.locator('header .titel').innerText()).trim() === songA, 'Rückgängig führt nicht zur Karte zurück');
+  expect((await p.evaluate(() => localStorage.getItem('bn-ueben'))) === standVorher, 'Rückgängig stellt den Karteikasten nicht wieder her');
+  expect((await p.locator('app-setlist-buehne button.rueckgaengig').count()) === 0, 'Rückgängig-Knopf bleibt stehen');
+  await noten.locator('header .wertung.ueben').click();
+  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nach Rückgängig nicht zur nächsten Karte');
   for (let i = 0; i < 6 && (await noten.count()); i++) { await noten.locator('header .wertung.sitzt').click().catch(() => {}); await p.waitForTimeout(600); }
   await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('Sitzt'), 'Übe-Ergebnis fehlt');
   const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));

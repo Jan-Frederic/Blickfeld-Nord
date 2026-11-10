@@ -187,6 +187,12 @@ app-setlist .pick .listen-chips { margin-bottom: 10px; }
 app-setlist .pick mat-icon.liste { font-size: 14px; width: 14px; height: 14px; margin-left: 4px; vertical-align: -2px; color: #1db954; }
 // Song-Dialog: eigenständigen Song umbenennen (Budget von song-dialog)
 app-song-dialog .umbenennen { margin-top: 6px; font-size: .8rem; color: var(--bn-fog); }
+// Song-Dialog: „Dein Weg“ – eigener Übe-Status im Lauf der Zeit (Farben wie der Status-Umschalter)
+app-song-dialog .weg .schritt { white-space: nowrap; }
+app-song-dialog .weg .schritt.ueben b { color: #e08a5a; }
+app-song-dialog .weg .schritt.wackelt b { color: #e0b25a; }
+app-song-dialog .weg .schritt.sitzt b { color: #9fd3b4; }
+app-song-dialog .weg .schritt.eingenordet b { color: #5fb88a; }
 app-song-dialog .umbenennen summary { cursor: pointer; }
 app-song-dialog .umbenennen form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 app-song-dialog .umbenennen input { flex: 1 1 140px; min-width: 0; padding: 5px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; }
@@ -221,6 +227,10 @@ app-setlist .spielzeit mat-icon { font-size: 16px; width: 16px; height: 16px; }
 app-nachbereitung mat-icon.spotify { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; color: #1db954; }
 app-nachbereitung .hint a { color: var(--bn-sunset); }
 // Bühnen-Modus: Lupe für spontane Wünsche (Budget von setlist-buehne)
+// Übe-Modus: letzte Status-Wahl zurücknehmen (setlist-buehne.ts, ein paar Sekunden sichtbar)
+app-setlist-buehne .rueckgaengig { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 6; transform: translateX(-50%); max-width: 92vw; padding: 10px 18px; border: 1px solid #e8a46a; border-radius: 999px; background: #1b1e22; color: #e8a46a; font: 600 .95rem Inter, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); cursor: pointer; animation: rueckgaengig-rein .2s ease-out; }
+app-setlist-buehne .rueckgaengig:hover { background: #2a1d12; }
+@keyframes rueckgaengig-rein { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 app-setlist-buehne .suche { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 5; width: min(640px, 94vw); max-height: 80vh; display: flex; flex-direction: column; transform: translateX(-50%); padding: 12px; border: 1px solid #444; border-radius: 14px; background: #111; box-shadow: 0 12px 40px rgba(0, 0, 0, .6); font-size: 1.1rem; }
 app-setlist-buehne .suche-kopf { display: flex; align-items: center; gap: 8px; }
 app-setlist-buehne .suche-kopf input { flex: 1; min-width: 0; padding: 12px; border: 1px solid #555; border-radius: 10px; background: #000; color: #fff; font: inherit; }
@@ -471,7 +481,13 @@ app-probe-leiste { display: block; margin: 18px auto 0; max-width: 760px; font-s
 app-probe-leiste .probe-leiste { display: grid; gap: 10px; justify-items: center; }
 app-probe-leiste .ich { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; font-size: .85em; color: var(--bn-fog); }
 app-probe-leiste .ich select { max-width: 100%; padding: 4px 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; color-scheme: dark; }
-app-probe-leiste .andere { margin: 0; font-size: .85em; color: var(--bn-fog); text-align: center; }
+app-probe-leiste .andere { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 0; font-size: .9em; color: var(--bn-fog); text-align: center; }
+app-probe-leiste .wer { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+app-probe-leiste .wer .z { font-weight: 700; }
+app-probe-leiste .wer.ueben .z { color: #e08a5a; }
+app-probe-leiste .wer.wackelt .z { color: #e0b25a; }
+app-probe-leiste .wer.sitzt .z { color: #9fd3b4; }
+app-probe-leiste .wer.eingenordet .z { color: #5fb88a; }
 app-probe-leiste .knoepfe, app-probe-ende .probe-ende { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 app-probe-leiste button, app-probe-ende button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #3a3f45; border-radius: 999px; background: #1b1e22; color: #ece9e4; font: inherit; font-size: .95em; cursor: pointer; }
 app-probe-leiste button.klein { padding: 0 12px; }

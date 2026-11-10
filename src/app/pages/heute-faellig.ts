@@ -2,6 +2,7 @@ import { datumText } from '../data/datum';
 
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { erinnerungAktualisieren } from '../data/erinnerung';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService, Show } from '../data/band.service';
 import { ladeKontakte, nachfragen } from '../data/kontakte';
@@ -90,6 +91,8 @@ export class HeuteFaellig {
   /** letzter Deploy gescheitert? (GitHub, nur mit Netz) */
   protected readonly deploy = signal<DeployLauf | null>(null);
   constructor() {
+    // Zahl fälliger Karteikarten am App-Symbol (Übe-Erinnerung, data/erinnerung.ts)
+    void erinnerungAktualisieren();
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       deployStatus().then((d) => this.deploy.set(d));
       void this.wetterPruefen();

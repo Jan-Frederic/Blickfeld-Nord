@@ -10,9 +10,9 @@
 // (bn-fortschritt-<Person>, für „in 30 Tagen gefestigt“ und die Stände einer Probe) und als „unsicher bei“
 // (bn-unsicher-<Person>: Üben und Wackelt noch).
 // Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
-import { Mitglied, ladeIch, rufname, unsicherTeilen } from './band-ich';
-import { Fortschritt, fortschrittEintragen, ladeFortschritt, stufe } from './fortschritt';
-import { KASTEN_PREFIX, KASTEN_TAGE, KastenGeteilt, UebenStand, bewerten, ladeKastenGeteilt, ladeUeben, speichereUeben } from './ueben';
+import { Mitglied, UNSICHER_PREFIX, ladeIch, rufname, unsicherTeilen } from './band-ich';
+import { FORTSCHRITT_PREFIX, Fortschritt, fortschrittEintragen, ladeFortschritt, stufe } from './fortschritt';
+import { HEUTE_KEY, KASTEN_PREFIX, KASTEN_TAGE, KastenGeteilt, UEBEN_KEY, UebenStand, bewerten, ladeKastenGeteilt, ladeUeben, speichereUeben } from './ueben';
 
 export type UebeStatus = 'nicht' | 'ueben' | 'wackelt' | 'sitzt' | 'eingenordet';
 
@@ -311,4 +311,31 @@ export function gemeinsamDran(
     .filter(([, w]) => w.length >= ab)
     .map(([key, wer]) => ({ key, title: key.slice(0, key.lastIndexOf('|')), artist: key.slice(key.lastIndexOf('|') + 1), wer }))
     .sort((a, b) => b.wer.length - a.wer.length || a.title.localeCompare(b.title, 'de'));
+}
+
+/**
+ * „Rückgängig“ im Übe-Modus: alles, was eine Status-Wahl der eigenen Person ändert (Karteikasten, geteilter Kasten,
+ * Verlauf, „unsicher bei“, alte Liste, heute geübt), vorher merken. Die zurückgegebene Funktion stellt genau diesen
+ * Stand wieder her – über localStorage, damit auch der Abgleich die Rücknahme mitbekommt.
+ */
+export function uebeSchnappschuss(): () => void {
+  const ich = ladeIch();
+  const keys = [UEBEN_KEY, ALTE_LISTE, HEUTE_KEY, ...(ich ? [KASTEN_PREFIX + ich, FORTSCHRITT_PREFIX + ich, UNSICHER_PREFIX + ich] : [])];
+  const vorher = keys.map((k) => {
+    try {
+      return [k, localStorage.getItem(k)] as const;
+    } catch {
+      return [k, null] as const;
+    }
+  });
+  return () => {
+    for (const [k, v] of vorher) {
+      try {
+        if (v === null) localStorage.removeItem(k);
+        else localStorage.setItem(k, v);
+      } catch {
+        // ohne Speicher nichts zurückzunehmen
+      }
+    }
+  };
 }

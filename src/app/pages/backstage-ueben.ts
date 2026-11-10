@@ -1,16 +1,17 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
 import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeKastenGeteilt, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 import { ladeFortschritt } from '../data/fortschritt';
-import { STATUS, UebeStatus, alleStatus, eigeneStatus, gemeinsamDran, uebeWoche, statusAusKasten, statusInfo, statusLabel, statusMigrieren, statusSetzen, uebeWertung } from '../data/uebe-status';
+import { STATUS, UebeStatus, alleStatus, eigeneStatus, gemeinsamDran, uebeWoche, statusAusKasten, statusInfo, statusLabel, statusMigrieren, statusSetzen, uebeSchnappschuss, uebeWertung } from '../data/uebe-status';
 import { ListenQuelle, listenQuellen, listenTreffer } from '../data/listen-quellen';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
 import { LISTEN, songAbgleich } from '../data/playlisten';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { datumText } from '../data/datum';
+import { erinnerungAktualisieren } from '../data/erinnerung';
 import { SetlistBuehne } from './setlist-buehne';
 import { Verlauf } from '../zurueck';
 
@@ -123,7 +124,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     </section>
     @if (modus(); as m) {
       <!-- Übe-Modus: Notenansicht der Karten, oben rechts „Wackelt noch“ / „Sitzt“ – weiter zur nächsten Karte -->
-      <app-setlist-buehne [entries]="m" [start]="modusStart()" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (closed)="modusZu()" />
+      <app-setlist-buehne [entries]="m" [start]="modusStart()" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (rueckgaengig)="letzteZuruecknehmen()" (closed)="modusZu()" />
     }
   `,
 })
@@ -195,6 +196,12 @@ export class BackstageUeben {
   private readonly verlauf = inject(Verlauf);
 
   constructor() {
+    // Zahl fälliger Karten am App-Symbol und für die Übe-Erinnerung (data/erinnerung.ts) nach jeder Änderung
+    effect(() => {
+      this.alle();
+      this.geuebt();
+      void erinnerungAktualisieren(this.heute);
+    });
     // einmalig vom alten Stand („Wackelt noch“-Liste, Fortschritt) auf die fünf Status umstellen
     statusMigrieren();
     // aus der Übersicht („Üben“ → Übe-Modus): ?modus=1 startet gleich die Notenansicht
@@ -247,9 +254,22 @@ export class BackstageUeben {
     this.modusVonLink = vonLink;
     this.modus.set(k.map((x) => ({ title: x.title, artist: x.artist })));
   }
+  /** letzte Wertung im Übe-Modus: Stand davor und gezählter Status – für „Rückgängig“ */
+  private letzte: { zurueck: () => void; neu: UebeStatus } | null = null;
+  protected letzteZuruecknehmen(): void {
+    const l = this.letzte;
+    if (!l) return;
+    this.letzte = null;
+    l.zurueck();
+    this.zaehler[l.neu] = Math.max(0, (this.zaehler[l.neu] ?? 1) - 1);
+    this.geuebt.set(heuteGeuebt(this.heute));
+    this.stand.update((n) => n + 1);
+  }
   protected ausModus(e: { title: string; artist: string; status: UebeStatus }): void {
     const key = `${e.title}|${e.artist}`;
+    const zurueck = uebeSchnappschuss();
     const neu = uebeWertung(key, e.status, this.heute);
+    this.letzte = { zurueck, neu };
     this.geuebt.set(alsGeuebtMerken(key, this.heute));
     this.zaehler[neu] = (this.zaehler[neu] ?? 0) + 1;
     this.stand.update((n) => n + 1);

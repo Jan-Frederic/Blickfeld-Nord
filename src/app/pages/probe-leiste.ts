@@ -7,7 +7,7 @@ import { ProbePlan, probeErgebnisNachricht, ergebnis, letzteNotiz, loadProbe, ma
 import { SongMitschnitte } from './song-mitschnitte';
 import { Mitglied, ladeIch, rufname } from '../data/band-ich';
 import { alleFortschritte, bandStand, probeStaende } from '../data/fortschritt';
-import { UebeStatus, alleStatus, eigenerStatus, statusLabel, statusSetzen } from '../data/uebe-status';
+import { UebeStatus, alleStatus, eigenerStatus, statusInfo, statusLabel, statusSetzen } from '../data/uebe-status';
 import { StatusSchalter } from './status-schalter';
 import { ladeProbeNotizen, letzteNotizen, notizenDerProbe, probeNotizSetzen } from '../data/probe-notiz';
 import { nachrichtSenden } from '../data/kontakte';
@@ -54,7 +54,10 @@ function restZeit(p: { date: string; time?: string; endTime?: string } | undefin
       </div>
       @if (!ich()) {
         <p class="andere">Unter Einstellungen „Ich bin …“ wählen, damit dein Übe-Status und deine Notizen zählen.</p>
-      } @else if (andere(); as a) { <p class="andere">{{ a }}</p> }
+      } @else if (andere().length) {
+        <!-- die anderen auf einen Blick: Zeichen und Farbe je Übe-Status (○ ✎ ↻ ✓ ✓✓), der Status als Text für Screenreader -->
+        <p class="andere">@for (a of andere(); track a.slug) {<span class="wer" [class]="'wer ' + a.status" [title]="a.name + ': ' + a.label"><span class="z" aria-hidden="true">{{ a.zeichen }}</span> {{ a.name }}<span class="sr-only">: {{ a.label }}</span></span>}</p>
+      }
       @if (vorher(); as v) { <p class="vorher">Letzte Probe ({{ datumText(v.tag) }}): {{ v.notiz }}</p> }
       @if (notizenAndere(); as n) { <p class="vorher">Heute: {{ n }}</p> }
       <input class="notiz" maxlength="80" [value]="meineNotiz()" [placeholder]="ich() ? 'Deine Notiz, z. B. Bridge wackelt' : 'Notiz fürs Protokoll'" aria-label="Meine Notiz zu diesem Song" (change)="notiz($any($event.target).value)" />
@@ -88,15 +91,17 @@ export class ProbeLeiste {
   /** Stände dieser Probe je Song und Person (aus dem Verlauf) – für „nochmal“ im Plan und am Ende */
   private readonly staende = computed(() => (this.plan(), this.stand(), probeStaende(this.datum(), this.mitglieder, alleFortschritte(this.mitglieder))));
   protected readonly meinStatus = computed(() => (this.stand(), this.ich() ? eigenerStatus(this.key()) : null));
-  /** „Fred: Sitzt · David: Üben“ – der aktuelle Übe-Status der anderen */
+  /** der aktuelle Übe-Status der anderen – als Zeichen mit Namen („✓ David · ↻ Matthias“) */
   protected readonly andere = computed(() => {
     this.stand();
     this.plan();
     const alle = alleStatus(this.mitglieder);
     return this.mitglieder
       .filter((m) => m.slug !== this.ich())
-      .map((m) => `${rufname(m)}: ${statusLabel(alle.get(m.slug)?.get(this.key()) ?? 'nicht')}`)
-      .join(' · ');
+      .map((m) => {
+        const status = alle.get(m.slug)?.get(this.key()) ?? 'nicht';
+        return { slug: m.slug, name: rufname(m), status, label: statusLabel(status), zeichen: statusInfo(status).zeichen };
+      });
   });
   private readonly plaene = probenPlaene();
   /** Notizen der letzten Probe: Protokoll im Plan und die Notizen aller Musiker */

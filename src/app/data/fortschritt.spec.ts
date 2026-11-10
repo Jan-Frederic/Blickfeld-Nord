@@ -1,4 +1,4 @@
-import { Fortschritt, bandStand, mitEintrag, plaeneMitStaenden, probeStaende, stufe } from './fortschritt';
+import { Fortschritt, bandStand, mitEintrag, plaeneMitStaenden, probeStaende, stufe, uebeWeg } from './fortschritt';
 
 const band = [
   { slug: 'david', name: 'David B.' },
@@ -44,5 +44,24 @@ describe('Fortschritt je Person', () => {
     expect(bandStand(new Map([['david', 'eingenordet'], ['fred', 'ueben']]))).toBe('nochmal');
     const plaene = plaeneMitStaenden([{ tag: '2026-11-05', songs: [{ title: 'Iris', artist: 'Goo Goo Dolls', done: false }] }], band, alle);
     expect(plaene[0].songs[0]).toMatchObject({ stand: 'nochmal', done: true });
+  });
+});
+
+describe('Übe-Weg', () => {
+  it('je Tag der letzte Status (Probe vor Übe-Modus vor Liste), gleiche hintereinander zusammengefasst, Tage dazwischen', () => {
+    const w = uebeWeg([
+      { tag: '2026-11-02', stand: 'ueben', quelle: 'liste' },
+      { tag: '2026-11-03', stand: 'ueben', quelle: 'ueben' },
+      { tag: '2026-11-05', stand: 'sitzt', quelle: 'liste' },
+      { tag: '2026-11-05', stand: 'wackelt', quelle: 'probe' },
+      { tag: '2026-11-10', stand: 'sitzt', quelle: 'ueben' },
+    ]);
+    expect(w.schritte).toEqual([
+      { tag: '2026-11-02', stand: 'ueben' },
+      { tag: '2026-11-05', stand: 'wackelt' },
+      { tag: '2026-11-10', stand: 'sitzt' },
+    ]);
+    expect(w.tage).toBe(8);
+    expect(uebeWeg(undefined)).toEqual({ schritte: [], tage: 0 });
   });
 });

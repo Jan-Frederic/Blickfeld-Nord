@@ -86,3 +86,44 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+// Übe-Erinnerung (src/app/data/erinnerung.ts): periodische Hintergrund-Prüfung (installierte App auf Android). Die
+// Seite legt Einstellung und Fälligkeiten im Speicher „ueben-erinnerung“ ab; höchstens eine Meldung am Tag, ab der
+// gewählten Stunde, nur wenn Karten fällig sind.
+const ERINNERUNG_CACHE = 'ueben-erinnerung';
+const ERINNERUNG_URL = '/__ueben-erinnerung.json';
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag !== 'bn-ueben') return;
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(ERINNERUNG_CACHE);
+      const d = await (await cache.match(ERINNERUNG_URL))?.json().catch(() => null);
+      if (!d?.an) return;
+      const jetzt = new Date();
+      const heute = jetzt.toLocaleDateString('sv-SE');
+      if (d.gemeldet === heute || jetzt.getHours() < d.stunde) return;
+      const n = (d.faellig ?? []).filter((t) => t <= heute).length;
+      if (self.navigator.setAppBadge) await (n ? self.navigator.setAppBadge(n) : self.navigator.clearAppBadge()).catch(() => undefined);
+      if (!n) return;
+      await self.registration.showNotification('Blickfeld Nord – Üben', {
+        body: n === 1 ? '1 Karteikarte ist heute fällig.' : `${n} Karteikarten sind heute fällig.`,
+        tag: 'bn-ueben',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: { url: '/backstage/ueben?modus=1' },
+      });
+      await cache.put(ERINNERUNG_URL, new Response(JSON.stringify({ ...d, gemeldet: heute }), { headers: { 'Content-Type': 'application/json' } }));
+    })(),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const ziel = event.notification.data?.url ?? '/backstage/ueben';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((liste) => {
+      const offen = liste.find((c) => new URL(c.url).pathname.startsWith('/backstage'));
+      return offen ? offen.navigate(ziel).then((c) => (c ?? offen).focus()) : self.clients.openWindow(ziel);
+    }),
+  );
+});

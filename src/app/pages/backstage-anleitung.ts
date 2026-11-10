@@ -12,8 +12,8 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Songs kommen aus', buehne: 'Setlist des Auftritts, mit Sets und Pausen', probe: 'Probenplan der Probe; Generalprobe: Setlist des nächsten Auftritts', ueben: 'Eigener Karteikasten: heute fällige zuerst, danach alle übrigen' },
   { was: 'Startet in', buehne: 'Titelanzeige', probe: 'Titelanzeige', ueben: 'Notenansicht' },
   { was: 'Starten über', buehne: 'Setlist des Auftritts oder „Als Nächstes“ in der Übersicht', probe: 'Probenseite „Probe-Modus starten“ oder „Als Nächstes“', ueben: 'Üben-Seite „Übe-Modus“ oder der Knopf neben „Üben“ in der Übersicht' },
-  { was: 'Pro Song festhalten', buehne: 'Sterne (1–5): wie lief der Song an diesem Abend', probe: 'Probe-Leiste unter dem Song: Status-Umschalter, eigene Notiz, Status und Notizen der anderen, Notizen der letzten Probe; Status auch in der Kopfleiste der Notenansicht', ueben: 'Status-Umschalter – in der Titelanzeige und in der Kopfleiste' },
-  { was: 'Zum nächsten Song', buehne: 'Selbst blättern: Pedal, Pfeiltaste, Tippen, Wischen', probe: 'Selbst blättern', ueben: 'Automatisch nach jeder Status-Wahl, nachdem der Status kurz aufgeleuchtet hat; „Üben“ hängt die Karte hinten noch einmal an' },
+  { was: 'Pro Song festhalten', buehne: 'Sterne (1–5): wie lief der Song an diesem Abend', probe: 'Probe-Leiste unter dem Song: Status-Umschalter, eigene Notiz, Status der anderen als Zeichen (↻ David), Notizen der anderen, Notizen der letzten Probe; Status auch in der Kopfleiste der Notenansicht', ueben: 'Status-Umschalter – in der Titelanzeige und in der Kopfleiste' },
+  { was: 'Zum nächsten Song', buehne: 'Selbst blättern: Pedal, Pfeiltaste, Tippen, Wischen', probe: 'Selbst blättern', ueben: 'Automatisch nach jeder Status-Wahl, nachdem der Status kurz aufgeleuchtet hat; „Üben“ hängt die Karte hinten noch einmal an. Ein paar Sekunden lang holt „↶ Rückgängig“ die Karte samt altem Kasten zurück' },
   { was: 'Uhr', buehne: 'Set-Uhr gegen die geplante Spielzeit', probe: 'Uhr gegen die Probendauer, Zeit je Song, Rest je offenem Song', ueben: '–' },
   { was: 'Song-Liste', buehne: 'Ja (Titelanzeige)', probe: 'Ja – auch in der Kopfleiste der Notenansicht', ueben: 'Ja – die Karten, auch in der Kopfleiste der Notenansicht' },
   { was: 'Wunsch-Suche', buehne: 'Ja', probe: 'Ja', ueben: 'Nein' },
@@ -37,6 +37,8 @@ const BEGRIFFE: { name: string; text: string }[] = [
   { name: 'Status-Umschalter', text: 'Die fünf Übe-Status nebeneinander, der aktuelle ist farbig – überall gleich: Probe-Leiste, Titelanzeige im Übe-Modus und Kopfleiste der Notenansicht (Übe- und Probe-Modus). Der gewählte Status leuchtet kurz auf, erst dann gilt er (und im Übe-Modus kommt die nächste Karte) – so tippt man beim nächsten Song nicht versehentlich daneben. Schmal nur ○ ✎ ↻ ✓ ✓✓.' },
   { name: 'Probe-Leiste', text: 'Unter jedem Song im Probe-Modus: Status-Umschalter, Mikrofon, eigene Notiz, die Status und Notizen der anderen, Notizen der letzten Probe, Zeit.' },
   { name: 'Mitschnitt-Panel', text: 'Im Übe-Modus über „Mitschnitt“ einblendbar: Proben-Aufnahmen des Songs anhören, Stelle in Schleife, langsamer abspielen.' },
+  { name: 'Dein Weg', text: 'Im Song-Dialog: wie sich dein Übe-Status mit diesem Song entwickelt hat, z. B. „✎ Üben 02.11. → ↻ Wackelt noch 05.11. → ✓ Sitzt 10.11. · in 8 Tagen“.' },
+  { name: 'Übe-Erinnerung', text: 'Unter Einstellungen → Ich bin: höchstens einmal am Tag ab der gewählten Uhrzeit „5 Karteikarten sind heute fällig“ (installierte App auf Android). Das App-Symbol zeigt die Zahl fälliger Karten, wo das Gerät es kann.' },
   { name: 'Anlass', text: 'Text oben links vor dem Songtitel – Name des Auftritts, „Probe 12.11.“ oder „Übe-Modus“.' },
 ];
 
