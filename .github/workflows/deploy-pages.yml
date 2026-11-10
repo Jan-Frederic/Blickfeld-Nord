@@ -122,20 +122,35 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url || steps.deployment2.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment2.outputs.page_url || steps.deployment3.outputs.page_url }}
     steps:
-      # GitHub Pages bleibt gelegentlich bei „syncing_files“ hängen (Zeitlimit) – dann einmal neu versuchen
+      # GitHub Pages bleibt manchmal bei „syncing_files“ hängen. Ein normaler Deploy braucht unter einer Minute – statt
+      # 10 Minuten (Standard) zu warten, nach 4 Minuten abbrechen und neu versuchen, bis zu dreimal.
       - name: Deploy to GitHub Pages
         id: deployment
         continue-on-error: true
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 240000
       - name: Kurz warten vor dem zweiten Versuch
         if: steps.deployment.outcome == 'failure'
-        run: sleep 60
+        run: sleep 30
       - name: Deploy to GitHub Pages (zweiter Versuch)
         id: deployment2
         if: steps.deployment.outcome == 'failure'
+        continue-on-error: true
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 240000
+      - name: Kurz warten vor dem dritten Versuch
+        if: steps.deployment.outcome == 'failure' && steps.deployment2.outcome == 'failure'
+        run: sleep 60
+      - name: Deploy to GitHub Pages (dritter Versuch)
+        id: deployment3
+        if: steps.deployment.outcome == 'failure' && steps.deployment2.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        with:
+          timeout: 300000
 
   # Live-Check nach jedem Deploy (auch nach dem von „Screenshots aktualisieren“ angestoßenen): startet den Workflow
   # live-check.yml – er wartet kurz, prüft alle Seiten, Pressekits und Downloads und meldet Probleme als Issue

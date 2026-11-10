@@ -13,8 +13,8 @@ Seite neu online, nach etwa 5 Minuten.
 4. Unter **Actions** ([Übersicht](https://github.com/Jan-Frederic/Blickfeld-Nord/actions)) läuft jetzt „Deploy to GitHub Pages“:
    - ✅ grüner Haken: nach ein paar Minuten ist die Änderung auf https://blickfeld-nord.de zu sehen.
      Nicht sofort? Seite neu laden. Die installierte App holt sich das Update beim nächsten Öffnen.
-     Bleibt GitHub Pages beim Veröffentlichen hängen („syncing_files“, Zeitlimit), versucht der Deploy es nach einer
-     Minute automatisch ein zweites Mal.
+     Bleibt GitHub Pages beim Veröffentlichen hängen („syncing_files“), bricht der Deploy nach 4 Minuten ab und
+     versucht es automatisch neu – bis zu dreimal (ein normaler Deploy braucht unter einer Minute).
    - ❌ rotes Kreuz: Die Seite bleibt einfach auf dem alten Stand, kaputt geht nichts. Auf den Lauf klicken, dann
      den roten Schritt. Die Meldung sagt meist genau, was nicht stimmt (z. B. „2026-13-04 ist kein Datum“).
      Korrigieren und erneut speichern.
@@ -1036,7 +1036,8 @@ Bevor etwas online geht, prüft GitHub unter anderem:
   screenshot-vergleich**. War die Änderung gewollt, z. B. ein neuer Text auf der Technik-Seite: unter Actions
   **„Screenshots aktualisieren“** starten (*Run workflow*). Der Workflow wartet auf den Deploy des Stands davor: War er
   grün, ist die Seite schon aktuell und es gibt keinen zweiten Deploy; kam er nicht durch (Screenshot-Vergleich oder
-  GitHub Pages hängt), startet er einen neuen Deploy mit den neuen Referenzbildern.
+  GitHub Pages hängt), startet er einen neuen Deploy mit den neuen Referenzbildern. Wurde er nur abgebrochen, weil ein
+  neuerer Push schon deployt (der den Stand enthält), gibt es ebenfalls keinen zweiten Deploy.
 
 **Auf dem eigenen Rechner prüfen** (für Entwickler): `npm run pruefen` baut die Seite genau wie GitHub (inklusive
 Fehlerseite und Backstage-Weiterleitung) und führt Klicktests, Barrierefreiheit, Breiten-Check, Linkcheck und Tests aus.

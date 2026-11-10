@@ -73,6 +73,15 @@ jobs:
             echo "Deploy $RUN war grün – die Seite ist aktuell, kein zweiter Deploy nötig."
             exit 0
           fi
+          # abgebrochen, weil ein neuerer Push deployt (der enthält diesen Stand) – nichts zu tun
+          if [ -n "$RUN" ] && [ "$(gh run view "$RUN" --json conclusion -q .conclusion)" = "cancelled" ]; then
+            git fetch -q origin main
+            NEUER=$(gh run list -w deploy-pages.yml -b main -L 1 --json databaseId,headSha -q '.[0].headSha')
+            if [ -n "$NEUER" ] && [ "$NEUER" != "$VORHER" ] && git merge-base --is-ancestor "$VORHER" "$NEUER" 2>/dev/null; then
+              echo "Deploy $RUN wurde von einem neueren Deploy ($NEUER) abgelöst – kein zweiter Deploy nötig."
+              exit 0
+            fi
+          fi
           # Pushes mit dem Workflow-Token starten keinen Deploy von selbst – daher ausdrücklich anstoßen
           # (ein angehaltener Deploy kommt so mit den neuen Referenzbildern durch)
           echo "Deploy ${RUN:-für $VORHER} nicht grün (oder keiner gefunden) – neuer Deploy mit den neuen Referenzbildern."
