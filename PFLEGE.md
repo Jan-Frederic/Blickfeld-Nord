@@ -146,10 +146,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Darunter die fünf
   Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus),
   oben rechts ein **Umschalter mit den fünf Status** (der aktuelle ist hervorgehoben; auf schmalen Bildschirmen nur die
-  Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status und geht zur nächsten Karte: **Sitzt** bei einem Song, der schon sitzt,
-  schiebt ihn einen Kasten weiter (wieder dran nach 7 bzw. 14 Tagen), aus dem letzten Kasten heraus ist er
-  **eingenordet**; sonst gilt der Status direkt (Üben = Kasten 1, kommt in dieser Runde noch einmal; Wackelt noch =
-  Kasten 2 bzw. bleibt in 2/3; Sitzt = Kasten 4; Nicht gelernt nimmt ihn heraus). Reihenfolge: heute fällige zuerst
+  Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status und geht zur nächsten Karte: **Wackelt noch** bei einem Song, der
+  schon in Kasten 2 wackelt, schiebt ihn nach Kasten 3 (wieder dran nach 3 statt 1 Tag; in 3 bleibt er in 3, weiter
+  geht es mit „Sitzt“); **Sitzt** bei einem Song, der schon sitzt, schiebt ihn einen Kasten weiter (wieder dran nach 7
+  bzw. 14 Tagen), aus dem letzten Kasten heraus ist er **eingenordet**; sonst gilt der Status direkt (Üben = Kasten 1,
+  kommt in dieser Runde noch einmal; Wackelt noch = Kasten 2; Sitzt = Kasten 4; Nicht gelernt nimmt ihn heraus). Reihenfolge: heute fällige zuerst
   (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
   Notenansicht): die Proben-Mitschnitte des Songs anhören, Stelle wiederholen, langsamer abspielen. Unten alle Songs im
   Karteikasten mit ihrem Status (dort direkt änderbar). **Tagesziel:** unter Einstellungen → Ich bin … „Karteikarten am

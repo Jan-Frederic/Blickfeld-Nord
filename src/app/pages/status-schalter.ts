@@ -11,7 +11,7 @@ import { STATUS, UebeStatus } from '../data/uebe-status';
     <span class="schalter" role="group" aria-label="Übe-Status">
       @for (st of liste; track st.id) {
         <button type="button" [class]="'wertung ' + st.id" [class.an]="status() === st.id" [attr.aria-pressed]="status() === st.id" [attr.aria-label]="st.label"
-          [title]="sperren().includes(st.id) ? st.label + ' – erst bei 100 % Tempo' : st.label + (st.id === 'sitzt' && weiter() ? ' – sitzt er schon, einen Kasten weiter' : '')" [disabled]="gesperrt() || sperren().includes(st.id)" (click)="waehlen(st.id, $event)">
+          [title]="sperren().includes(st.id) ? st.label + ' – erst bei 100 % Tempo' : st.label + (weiter() && st.id === 'sitzt' ? ' – sitzt er schon, einen Kasten weiter' : weiter() && st.id === 'wackelt' ? ' – wackelt er schon in Kasten 2, weiter nach 3' : '')" [disabled]="gesperrt() || sperren().includes(st.id)" (click)="waehlen(st.id, $event)">
           <span class="z" aria-hidden="true">{{ st.zeichen }}</span><span class="l">{{ st.label }}</span>
         </button>
       }

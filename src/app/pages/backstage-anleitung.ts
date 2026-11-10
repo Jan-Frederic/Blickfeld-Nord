@@ -43,8 +43,8 @@ const BEGRIFFE: { name: string; text: string }[] = [
 const STATUS_ZEILEN: { zeichen: string; name: string; kasten: string; text: string }[] = [
   { zeichen: '○', name: 'Nicht gelernt', kasten: '–', text: 'Jeder neue Song und alle ohne Angabe. Nicht im Karteikasten.' },
   { zeichen: '✎', name: 'Üben', kasten: 'Kasten 1', text: 'Jeden Tag dran; im Übe-Modus kommt die Karte in derselben Runde noch einmal.' },
-  { zeichen: '↻', name: 'Wackelt noch', kasten: 'Kasten 2–3', text: 'Wieder dran nach 1 bzw. 3 Tagen.' },
-  { zeichen: '✓', name: 'Sitzt', kasten: 'Kasten 4–5', text: 'Wieder dran nach 7 bzw. 14 Tagen. „Sitzt“ bei einem Song, der schon sitzt, schiebt ihn einen Kasten weiter.' },
+  { zeichen: '↻', name: 'Wackelt noch', kasten: 'Kasten 2–3', text: 'Wieder dran nach 1 bzw. 3 Tagen. „Wackelt noch“ bei einem Song, der schon wackelt, schiebt ihn im Übe-Modus von Kasten 2 nach 3.' },
+  { zeichen: '✓', name: 'Sitzt', kasten: 'Kasten 4–5', text: 'Wieder dran nach 7 bzw. 14 Tagen. „Sitzt“ bei einem Song, der schon sitzt, schiebt ihn im Übe-Modus einen Kasten weiter.' },
   { zeichen: '✓✓', name: 'Eingenordet', kasten: 'raus', text: 'Fällt aus dem Karteikasten – im Übe-Modus nach „Sitzt“ in Kasten 5 oder direkt gesetzt.' },
 ];
 

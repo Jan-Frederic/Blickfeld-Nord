@@ -160,7 +160,7 @@ export class NotenAnzeige {
   /** aktueller eigener Status des Songs (hervorgehoben) */
   readonly status = input<UebeStatus | null>(null);
   readonly wertung = output<UebeStatus>();
-  /** Übe-Modus: „Sitzt“ schiebt bei sitzendem Song einen Kasten weiter (Tooltip) */
+  /** Übe-Modus: derselbe Status noch einmal schiebt einen Kasten weiter – Wackelt 2 → 3, Sitzt 4 → 5 (Tooltip) */
   readonly weiter = input(false);
   /** Status, die gerade nicht wählbar sind (Tempo-Training unter 100 %) */
   readonly sperren = input<UebeStatus[]>([]);

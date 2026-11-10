@@ -18,8 +18,8 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 
 // Backstage → Üben: persönlicher Karteikasten (Logik: data/ueben.ts, Status: data/uebe-status.ts). Oben die fünf Kästen
 // (1 Üben, 2–3 Wackelt noch, 4–5 Sitzt), darunter ein Knopf „Übe-Modus“: die Karten in der Notenansicht, oben rechts
-// die fünf Übe-Status (uebeWertung) – „Sitzt“ bei einem sitzenden Song schiebt ihn einen Kasten weiter, aus dem
-// letzten heraus ist er eingenordet; „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
+// die fünf Übe-Status (uebeWertung) – derselbe Status noch einmal schiebt die Karte einen Kasten weiter („Wackelt
+// noch“ 2 → 3, „Sitzt“ 4 → 5, aus dem letzten heraus eingenordet); „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
 // Tagesziel ist nur eine Empfehlung.
 // Über der Liste eine Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen (Songs
 // ohne Status kommen auf „Üben“, Kasten 1). Darunter alle Songs im Kasten mit ihrem Status (änderbar).
@@ -35,8 +35,8 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
           dann stehen hier deine Songs im Karteikasten.</p>
       } @else {
         <p class="lead">{{ name() }}: deine Songs im Karteikasten. Kasten 1 heißt <b>Üben</b>, 2 und 3 <b>Wackelt noch</b>, 4 und 5 <b>Sitzt</b>.
-          „Sitzt“ schiebt eine Karte einen Kasten weiter (sie kommt seltener dran), „Wackelt noch“ zurück in Kasten 1.
-          Sitzt sie im letzten Kasten, ist der Song <b>eingenordet</b> und fällt heraus.</p>
+          Wählst du im Übe-Modus denselben Status noch einmal, rückt die Karte einen Kasten weiter und kommt seltener dran
+          („Wackelt noch“ 2 → 3, „Sitzt“ 4 → 5). Sitzt sie im letzten Kasten, ist der Song <b>eingenordet</b> und fällt heraus.</p>
         <ol class="kaesten" aria-label="Karteikasten">
           @for (n of kastenZahlen(); track $index; let i = $index) {
             <li [class.leer]="!n"><span class="n">{{ n }}</span><span class="l">Kasten {{ i + 1 }}</span><span class="s">{{ label(i + 1) }}</span><small>{{ i ? 'alle ' + tage[i] + (tage[i] === 1 ? ' Tag' : ' Tage') : 'sofort' }}</small></li>

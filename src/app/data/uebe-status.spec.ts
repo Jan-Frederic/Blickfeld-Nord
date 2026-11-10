@@ -99,6 +99,13 @@ describe('Übe-Modus mit fünf Status', () => {
     expect(ladeUeben()[K]).toMatchObject({ kasten: 1, faellig: heute });
     expect(uebeWertung(K, 'wackelt', heute)).toBe('wackelt');
     expect(ladeUeben()[K]).toMatchObject({ kasten: 2, faellig: '2026-11-09' });
+    // „Wackelt noch“ bei wackelndem Song: Kasten 2 → 3, dort bleibt er; „Sitzt“ führt weiter nach 4
+    expect(uebeWertung(K, 'wackelt', heute)).toBe('wackelt');
+    expect(ladeUeben()[K]).toMatchObject({ kasten: 3, faellig: '2026-11-11' });
+    expect(uebeWertung(K, 'wackelt', heute)).toBe('wackelt');
+    expect(ladeUeben()[K]).toMatchObject({ kasten: 3, faellig: '2026-11-11' });
+    expect(uebeWertung(K, 'sitzt', heute)).toBe('sitzt');
+    expect(ladeUeben()[K].kasten).toBe(4);
   });
 });
 
