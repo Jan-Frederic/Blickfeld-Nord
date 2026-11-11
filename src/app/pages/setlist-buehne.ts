@@ -117,10 +117,12 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
             <!-- Spotify-Player (Übe- und Probe-Modus): erst auf Knopfdruck geladen, wechselt mit dem Song -->
             @if (spotifyMoeglich()) {
               <!-- ganze Songs über die Spotify-App (Premium, data/spotify-remote.ts); darunter der Vorschau-Player als Rückfall -->
-              <app-spotify-steuerung [trackId]="spotifyId()" />
+              <app-spotify-steuerung [trackId]="spotifyId()" (verbindung)="spotifyFern.set($event)" />
+              @if (!spotifyFern()) {
               <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="30-Sekunden-Vorschau im eingebetteten Spotify-Player (ohne Anmeldung)">♫ {{ spotifyAn() ? 'Vorschau ausblenden' : 'Vorschau anhören' }}</button></p>
+              }
             }
-            @if (spotifyAn() && spotifyEmbed(); as url) {
+            @if (spotifyAn() && !spotifyFern() && spotifyEmbed(); as url) {
               <div class="spotify-player" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
                 <iframe [src]="url" [title]="'Spotify-Player: ' + $any(c).title" width="100%" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
               </div>
@@ -363,6 +365,8 @@ export class SetlistBuehne {
   // nur mit Netz. Voller Song nur mit Spotify-Anmeldung im selben Browser, sonst 30-Sekunden-Vorschau.
   private readonly sanitizer = inject(DomSanitizer);
   protected readonly spotifyAn = signal(false);
+  /** Spotify-Fernsteuerung verbunden – dann keine Vorschau (Rückfall) */
+  protected readonly spotifyFern = signal(false);
   private readonly online = signal(typeof navigator === 'undefined' || navigator.onLine !== false);
   private readonly spotifyTracks = (() => {
     const m = new Map<string, string>();

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import {
   SpotifyFehler,
   SpotifyGeraet,
@@ -19,8 +19,8 @@ import {
 
 // Spotify-Fernsteuerung in der Titelanzeige (Übe- und Probe-Modus, data/spotify-remote.ts): ▶/⏸ spielt den Song ganz in
 // der Spotify-App bzw. auf dem gewählten Spotify-Connect-Gerät, 10 s zurück, Fortschritt, Gerätewahl und „Beim
-// Weiterblättern mitspielen“. Ohne Verbindung nur „Spotify verbinden“ – der eingebettete Player (Vorschau) bleibt
-// daneben als Rückfall. Styles global (styles.scss, app-spotify-steuerung).
+// Weiterblättern mitspielen“. Ohne Verbindung nur „Spotify verbinden“ – dann steht daneben der eingebettete Player
+// (Vorschau) als Rückfall; verbunden blendet der Elternteil ihn aus (Ausgabe „verbindung“). Styles global (styles.scss).
 @Component({
   selector: 'app-spotify-steuerung',
   host: { '(pointerdown)': '$event.stopPropagation()', '(pointerup)': '$event.stopPropagation()', '(keydown)': '$event.stopPropagation()' },
@@ -49,6 +49,8 @@ import {
 export class SpotifySteuerung {
   /** Spotify-Track-ID des aktuellen Songs */
   readonly trackId = input<string | undefined>();
+  /** verbunden ja/nein – der Elternteil blendet damit die Vorschau (Rückfall) aus */
+  readonly verbindung = output<boolean>();
   protected readonly verbunden = signal(spotifyVerbunden());
   protected readonly spielt = signal(false);
   protected readonly position = signal(0);
@@ -81,6 +83,7 @@ export class SpotifySteuerung {
       });
     });
     if (this.verbunden()) void this.standLaden();
+    effect(() => this.verbindung.emit(this.verbunden()));
     // Fortschritt: jede Sekunde weiterzählen, alle 5 s mit Spotify abgleichen (nur solange es spielt)
     this.uhrTakt = setInterval(() => {
       if (this.spielt()) this.position.update((p) => Math.min(p + 1000, this.dauer() || p + 1000));

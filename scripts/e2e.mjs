@@ -593,7 +593,7 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await buehne.locator('app-spotify-steuerung button[aria-label="Auf Spotify abspielen"]').click();
   await until(async () => gespielt.some((x) => x.includes('device_id=d1') && x.includes('spotify:track:6Qyc6fS4DsZjB2mRW9DsQs')), () => `▶ spielt den Song nicht über Spotify: ${gespielt.join(' | ')}`);
   await until(async () => (await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1, 'nach ▶ kein ⏸');
-  expect((await buehne.locator('button.spotify-knopf').count()) === 1, 'Vorschau-Player als Rückfall fehlt');
+  expect((await buehne.locator('button.spotify-knopf').count()) === 0, 'Vorschau bleibt trotz Verbindung stehen');
   await p.unroute('https://api.spotify.com/**');
   await p.evaluate(() => localStorage.removeItem('bn-spotify-token'));
   const leiste = buehne.locator('app-probe-leiste');

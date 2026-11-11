@@ -131,7 +131,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   über die Steuerung, startet beim nächsten gleich der neue), „Spotify trennen“. Findet Spotify kein Gerät, hilft es,
   die Spotify-App kurz zu öffnen. Zugang nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src`
   `accounts.spotify.com` und `api.spotify.com`.
-- **Spotify-Vorschau** (Rückfall ohne Verbindung): „♫ Vorschau anhören“ lädt erst auf Knopfdruck den eingebetteten
+- **Spotify-Vorschau** (Rückfall ohne Verbindung, verbunden ausgeblendet): „♫ Vorschau anhören“ lädt erst auf Knopfdruck den eingebetteten
   Spotify-Player (kompakt, 152 px) für den aktuellen Song; er wechselt mit dem Song. Auf dem Handy spielt er nur die
   30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`; nur im Backstage,
   öffentliche Seiten laden nichts von Spotify.
