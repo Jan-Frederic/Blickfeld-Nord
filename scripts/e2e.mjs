@@ -872,9 +872,17 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   const p = await page();
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
-  // Zeile der Tabelle anklicken öffnet den Dialog
-  await p.locator('app-backstage-songs tbody tr').first().click();
   const zeile = p.locator('app-song-dialog dialog[open]');
+  // Klick öffnet den Dialog – direkt nach dem Laden kann ein Klick verpuffen (Seite noch nicht ganz bereit): bis er offen ist
+  const oeffnen = (ziel) =>
+    until(async () => {
+      if (await zeile.count()) return true;
+      await ziel.click().catch(() => {});
+      await p.waitForTimeout(300);
+      return (await zeile.count()) > 0;
+    }, 'Song-Dialog öffnet sich nicht');
+  // Zeile der Tabelle anklicken öffnet den Dialog
+  await oeffnen(p.locator('app-backstage-songs tbody tr').first());
   await zeile.locator('.felder select').first().selectOption('G');
   await zeile.locator('input[type=number]').fill('120');
   await zeile.locator('input[type=number]').blur();
@@ -882,8 +890,8 @@ test('Backstage: Songs – Tonart und Tempo bleiben als Entwurf erhalten', async
   await p.reload({ waitUntil: 'networkidle' });
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
   await until(async () => (await p.locator('app-backstage-songs tbody tr').first().innerText()).includes('120 bpm'), 'Entwurf nach Neuladen nicht in der Tabelle');
-  await p.locator('app-backstage-songs tbody tr .oeffnen').first().click();
-  await until(async () => (await zeile.locator('.felder select').first().inputValue()) === 'G', 'Entwurf nach Neuladen weg');
+  await oeffnen(p.locator('app-backstage-songs tbody tr .oeffnen').first());
+  await until(async () => (await zeile.locator('.felder select').first().inputValue({ timeout: 2000 }).catch(() => '')) === 'G', 'Entwurf nach Neuladen weg');
   // der Entwurf gilt auf diesem Gerät sofort im Bühnen-Modus
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
