@@ -25,8 +25,8 @@ const TEXT = tr(
             <h3 id="ref-title">{{ t().title }}</h3>
           </div>
           <div class="nav">
-            <button type="button" (click)="blaettern(-1)" [attr.aria-label]="t().prev"><mat-icon>chevron_left</mat-icon></button>
-            <button type="button" (click)="blaettern(1)" [attr.aria-label]="t().next"><mat-icon>chevron_right</mat-icon></button>
+            <button type="button" (click)="blaettern(-1)" aria-label="Zurück" [attr.aria-label]="t().prev"><mat-icon>chevron_left</mat-icon></button>
+            <button type="button" (click)="blaettern(1)" aria-label="Weiter" [attr.aria-label]="t().next"><mat-icon>chevron_right</mat-icon></button>
           </div>
         </div>
         <ul #reihe tabindex="0" [attr.aria-label]="t().title" data-quer-ok>

@@ -61,11 +61,11 @@ function iso(y: number, m: number, d: number): string {
       <div class="head">
         <h3>{{ t().title }}</h3>
         <div class="nav">
-          <button type="button" (click)="step(-1)" [disabled]="offset() === 0" [attr.aria-label]="t().prev">
+          <button type="button" (click)="step(-1)" [disabled]="offset() === 0" aria-label="Zurück" [attr.aria-label]="t().prev">
             <mat-icon>chevron_left</mat-icon>
           </button>
           <span class="month" aria-live="polite">{{ title() }}</span>
-          <button type="button" (click)="step(1)" [disabled]="offset() === maxOffset" [attr.aria-label]="t().next">
+          <button type="button" (click)="step(1)" [disabled]="offset() === maxOffset" aria-label="Weiter" [attr.aria-label]="t().next">
             <mat-icon>chevron_right</mat-icon>
           </button>
         </div>
