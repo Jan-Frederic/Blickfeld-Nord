@@ -3,6 +3,7 @@ import { UebeStatus, eigenerStatus, statusLabel } from '../data/uebe-status';
 import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
 import { SpotifySteuerung } from './spotify-steuerung';
 import { SpotifySpieler } from '../data/spotify-spieler';
+import { spotifyArt } from '../data/spotify-remote';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
@@ -115,15 +116,15 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
                 @if (i.notiz) { <span class="note">{{ i.notiz }}</span> }
               </p>
             }
-            <!-- Spotify-Player (Übe- und Probe-Modus): erst auf Knopfdruck geladen, wechselt mit dem Song -->
-            @if (spotifyMoeglich()) {
-              <!-- ganze Songs über die Spotify-App (Premium, data/spotify-remote.ts); darunter der Vorschau-Player als Rückfall -->
-              <app-spotify-steuerung (verbindung)="spotifyFern.set($event)" />
-              @if (!spotifyFern()) {
-              <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="30-Sekunden-Vorschau im eingebetteten Spotify-Player (ohne Anmeldung)">♫ {{ spotifyAn() ? 'Vorschau ausblenden' : 'Vorschau anhören' }}</button></p>
-              }
+            <!-- Spotify im Übe- und Probe-Modus – je nach Einstellung (Einstellungen → Spotify, Standard: aus):
+                 „fern“ steuert die Spotify-App (ganze Songs, Premium), „vorschau“ lädt auf Knopfdruck den eingebetteten Player -->
+            @if (spotifyMoeglich() && spotifyArt === 'fern') {
+              <app-spotify-steuerung />
             }
-            @if (spotifyAn() && !spotifyFern() && spotifyEmbed(); as url) {
+            @if (spotifyMoeglich() && spotifyArt === 'vorschau') {
+              <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="Eingebetteter Spotify-Player (auf dem Handy 30-Sekunden-Vorschau)">♫ {{ spotifyAn() ? 'Spotify ausblenden' : 'Auf Spotify anhören' }}</button></p>
+            }
+            @if (spotifyAn() && spotifyArt === 'vorschau' && spotifyEmbed(); as url) {
               <div class="spotify-player" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
                 <iframe [src]="url" [title]="'Spotify-Player: ' + $any(c).title" width="100%" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
               </div>
@@ -207,6 +208,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
+      @if (zurueckHinweis()) { <p class="zurueck-hinweis" role="status">Noch einmal „Zurück“ beendet den {{ probe() ? 'Probe-Modus' : ueben() ? 'Übe-Modus' : 'Bühnen-Modus' }}</p> }
       @if (zurueck(); as z) {
         <!-- Übe-Modus: letzte Status-Wahl ein paar Sekunden lang zurücknehmbar (Karte und Kasten wie vorher) -->
         <button type="button" class="rueckgaengig" (click)="rueckgaengigKlick($event)" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()"><span aria-hidden="true">↶</span> Rückgängig: {{ z.title }} – {{ z.label }}</button>
@@ -316,6 +318,43 @@ export class SetlistBuehne {
    * Status gilt sofort; „Üben“ kommt hinten noch einmal dran. Weiter zur nächsten Karte (am Ende: fertig) erst, wenn
    * der gewählte Status kurz aufgeleuchtet hat (AUFLEUCHTEN_MS) – und nur, wenn man nicht schon selbst geblättert hat.
    */
+  // „Zurück“ des Handys (Wischen vom Rand, Zurück-Taste) soll den Modus nicht versehentlich beenden – beim Blättern
+  // per Wischen passiert das leicht. Der Modus legt dafür einen eigenen Schritt in den Browser-Verlauf: einmal „Zurück“
+  // zeigt nur einen Hinweis, erst ein zweites Mal innerhalb von 2,5 s beendet ihn. Beim Schließen verschwindet der
+  // Schritt wieder (vor dem Schließen-Ereignis, damit „zurück zur Übersicht“ des Elternteils danach stimmt).
+  protected readonly zurueckHinweis = signal(false);
+  private readonly zurueckSchutz = (() => {
+    if (typeof window === 'undefined' || typeof history === 'undefined') return;
+    const marke = Date.now();
+    const ablegen = () => history.pushState({ ...(history.state ?? {}), bnModus: marke }, '');
+    ablegen();
+    let offen = true;
+    let letztes = 0;
+    let hinweisZeit: ReturnType<typeof setTimeout> | undefined;
+    const zurueck = () => {
+      if (!offen) return;
+      if (Date.now() - letztes < 2500) {
+        this.closed.emit();
+        return;
+      }
+      letztes = Date.now();
+      ablegen();
+      this.zurueckHinweis.set(true);
+      clearTimeout(hinweisZeit);
+      hinweisZeit = setTimeout(() => this.zurueckHinweis.set(false), 2500);
+    };
+    window.addEventListener('popstate', zurueck);
+    const aufraeumen = () => {
+      if (!offen) return;
+      offen = false;
+      clearTimeout(hinweisZeit);
+      window.removeEventListener('popstate', zurueck);
+      // unser Schritt liegt noch oben: wieder herausnehmen
+      if ((history.state as { bnModus?: number } | null)?.bnModus === marke) history.back();
+    };
+    this.closed.subscribe(aufraeumen);
+    inject(DestroyRef).onDestroy(aufraeumen);
+  })();
   private weiterZeit: ReturnType<typeof setTimeout> | undefined;
   private readonly weiterAufraeumen = inject(DestroyRef).onDestroy(() => {
     clearTimeout(this.weiterZeit);
@@ -366,13 +405,13 @@ export class SetlistBuehne {
   // nur mit Netz. Voller Song nur mit Spotify-Anmeldung im selben Browser, sonst 30-Sekunden-Vorschau.
   private readonly sanitizer = inject(DomSanitizer);
   protected readonly spotifyAn = signal(false);
-  /** Spotify-Fernsteuerung verbunden – dann keine Vorschau (Rückfall) */
-  protected readonly spotifyFern = signal(false);
+  /** Einstellung dieses Geräts: 'aus' (Standard), 'vorschau' (eingebetteter Player) oder 'fern' (Fernsteuerung) */
+  protected readonly spotifyArt = spotifyArt();
   // Fernsteuerung (data/spotify-spieler.ts): immer den angezeigten Song melden – gespielt wird nur er; beim Verlassen
   // des Modus pausieren
   private readonly spotifySpieler = inject(SpotifySpieler);
   private readonly spotifyMelden = (() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || this.spotifyArt !== 'fern') return;
     let gestartet = false;
     effect(() => {
       const an = this.ueben() || !!this.probe();
@@ -398,7 +437,7 @@ export class SetlistBuehne {
     const url = c ? this.spotifyTracks.get(vergleichsKey(c.title, c.artist)) : undefined;
     return /open\.spotify\.com\/track\/([A-Za-z0-9]+)/.exec(url ?? '')?.[1];
   });
-  protected readonly spotifyMoeglich = computed(() => (this.ueben() || !!this.probe()) && !!this.spotifyId() && this.online());
+  protected readonly spotifyMoeglich = computed(() => this.spotifyArt !== 'aus' && (this.ueben() || !!this.probe()) && !!this.spotifyId() && this.online());
   protected readonly spotifyEmbed = computed(() => {
     const id = this.spotifyId();
     return id && this.online() ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://open.spotify.com/embed/track/${id}?utm_source=generator&theme=0`) : null;

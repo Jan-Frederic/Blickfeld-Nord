@@ -12,5 +12,7 @@ export async function ichAusMicrosoft(mitglieder: Mitglied[], konto?: { name?: s
   if (!ichAusKonto(mitglieder, k)) return;
   // neue Person: einmalig vom alten Stand umstellen, offene Seite mit der neuen Person neu aufbauen
   statusMigrieren();
-  neuZeichnen();
+  // nie mitten im Bühnen-, Probe- oder Übe-Modus neu aufbauen – das würde ihn beenden; die Seite liest „Ich bin …“
+  // dann beim nächsten Öffnen
+  if (typeof document === 'undefined' || !document.querySelector('app-setlist-buehne')) neuZeichnen();
 }

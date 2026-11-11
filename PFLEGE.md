@@ -122,25 +122,36 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet bei 70 %, der Tempo-Knopf
   steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
   **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
-- **Spotify fernsteuern** (Titelanzeige im Übe- und Probe-Modus, für Songs aus einer Spotify-Liste, nur mit Netz,
-  Spotify Premium): „♫ Spotify verbinden – ganze Songs“ meldet einmal je Person und Gerät bei Spotify an (OAuth mit
-  PKCE, ohne Server; Client-ID in `data/spotify-remote.ts`, Redirect-URI `https://blickfeld-nord.de/` – genau so im
-  Spotify-Developer-Dashboard eintragen, die Nutzer dort unter „User Management“). Danach: **▶ / ⏸** spielt den Song
-  ganz in der Spotify-App bzw. auf dem gewählten Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum),
-  **↺10** springt 10 Sekunden zurück, Balken mit Zeit, Gerätewahl, „Spotify trennen“. In der Kopfleiste der
-  Notenansicht steht derselbe Knopf als **♫ ▶ / ⏸**. **Gespielt wird immer der angezeigte Song**
-  (`data/spotify-spieler.ts`, ein Zustand für alle Knöpfe): Wechselt der Song, während die Steuerung spielt, startet
-  mit „beim Weiterblättern mitspielen“ (Standard an) gleich der neue – sonst, und bei Songs ohne Spotify-Track, wird
-  pausiert. Ist der Song zu Ende und Spotify spielt von sich aus weiter (Autoplay), wird angehalten; beim Verlassen
-  des Modus ebenso. Spielt Spotify eine andere Fassung des Songs (nicht verfügbare werden ersetzt), gilt sie trotzdem
-  als der Song. Findet Spotify kein Gerät, hilft es, die Spotify-App kurz zu öffnen; ein vorhandenes, aber nicht
-  aktives Gerät wird erst aktiviert. Meldungen unterscheiden „nur mit Premium“ und „Konto im Developer-Dashboard
-  nicht freigeschaltet“. Zugang nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src`
-  `accounts.spotify.com` und `api.spotify.com`.
-- **Spotify-Vorschau** (Rückfall ohne Verbindung, verbunden ausgeblendet): „♫ Vorschau anhören“ lädt erst auf Knopfdruck den eingebetteten
-  Spotify-Player (kompakt, 152 px) für den aktuellen Song; er wechselt mit dem Song. Auf dem Handy spielt er nur die
-  30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`; nur im Backstage,
-  öffentliche Seiten laden nichts von Spotify.
+- **Spotify im Übe- und Probe-Modus** – unter **Einstellungen → Spotify im Übe- und Probe-Modus** je Gerät wählbar
+  (`bn-spotify-modus`, `pages/spotify-einstellung.ts`): **Aus** (Standard, nichts von Spotify), **Eingebetteter Player**
+  oder **Fernsteuerung der Spotify-App**. Gilt nur für Songs aus einer Spotify-Liste und nur mit Netz.
+  - **Eingebetteter Player:** „♫ Auf Spotify anhören“ in der Titelanzeige lädt erst auf Knopfdruck den Spotify-Player
+    (kompakt, 152 px); er wechselt mit dem Song. Am Computer ganze Songs (bei Spotify angemeldet), auf dem Handy nur
+    die 30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`.
+  - **Fernsteuerung** (Spotify Premium): „Spotify verbinden“ (in den Einstellungen oder in der Titelanzeige) meldet
+    einmal je Person und Gerät bei Spotify an (OAuth mit PKCE, ohne Server; Client-ID in `data/spotify-remote.ts`,
+    Redirect-URI `https://blickfeld-nord.de/` – genau so im Spotify-Developer-Dashboard eintragen, die Nutzer dort
+    unter „User Management“). Danach: **▶ / ⏸** spielt den Song ganz in der Spotify-App bzw. auf dem gewählten
+    Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum), **↺10** springt 10 Sekunden zurück, Balken mit
+    Zeit, Gerätewahl, „Spotify trennen“; in der Kopfleiste der Notenansicht steht derselbe Knopf als **♫ ▶ / ⏸**.
+    **Gespielt wird immer der angezeigte Song** (`data/spotify-spieler.ts`, ein Zustand für alle Knöpfe): Wechselt
+    der Song, während die Steuerung spielt, startet mit „beim Weiterblättern mitspielen“ (Standard an) gleich der
+    neue – sonst, und bei Songs ohne Spotify-Track, wird pausiert. Am Songende hält die Steuerung an, wenn Spotify
+    von sich aus weiterspielt (Autoplay); beim Verlassen des Modus ebenso. Eigenheiten von Spotify, die abgefangen
+    sind: Befehle antworten bei Erfolg teils mit Text, der kein JSON ist (wird ignoriert); kurz nach dem Start meldet
+    Spotify noch den alten Stand (6 s Schonfrist, danach alle 5 s Abgleich); vorübergehende Fehler (5xx, 429) werden
+    einmal wiederholt; der Zugang wird stündlich erneuert (nie zweimal gleichzeitig – das kappte die Verbindung); eine
+    andere Fassung desselben Songs gilt als der Song; ein vorhandenes, aber nicht aktives Gerät wird erst aktiviert.
+    Meldungen: „Kein Spotify-Gerät gefunden“ (Spotify-App kurz öffnen), „nur mit Premium“, „Konto im
+    Developer-Dashboard nicht freigeschaltet“, „Spotify meldet einen Fehler (Status)“, „Keine Verbindung“. Zugang
+    nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src` `accounts.spotify.com`, `api.spotify.com`.
+- **Modus bleibt offen** (Bühnen-, Probe-, Übe-Modus): „Zurück“ des Handys (Wischen vom Rand, Zurück-Taste) beendet
+  ihn nicht versehentlich – einmal zeigt nur „Noch einmal ‚Zurück‘ beendet …“, erst ein zweites Mal innerhalb von
+  2,5 s beendet (`zurueckSchutz` in `pages/setlist-buehne.ts`, eigener Schritt im Browser-Verlauf). Lädt die Seite neu,
+  während Übe- oder Probe-Modus offen sind (Handy hat sie im Hintergrund verworfen, Update), öffnet er sich wieder –
+  Übe-Modus bei der nächsten fälligen Karte mit dem bisherigen Ergebnis, Probe-Modus beim ersten offenen Song
+  (`data/modus-sitzung.ts`, sessionStorage, 3 Stunden). Steigt man im Übe-Modus über einen Song der Liste ein, kommt
+  er zuerst, die Karten davor hängen hinten an (kein vorzeitiges Ende).
 - **Song antippen** in „Deine Songs im Karteikasten“ öffnet den Übe-Modus direkt bei diesem Song.
 - **Die Band übt** (unten auf der Üben-Seite): je Musiker die Übe-Woche (Tage am Stück, Karten in 7 Tagen, diese
   Woche eingenordet) und „Gerade gemeinsam dran“ – Songs, die bei mindestens zwei auf Üben oder Wackelt noch stehen, mit

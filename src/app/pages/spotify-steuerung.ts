@@ -1,12 +1,12 @@
-import { Component, effect, inject, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { spotifyAnmelden } from '../data/spotify-remote';
 import { SpotifySpieler } from '../data/spotify-spieler';
 
 // Spotify-Fernsteuerung in der Titelanzeige (Übe- und Probe-Modus): ▶/⏸ spielt den angezeigten Song ganz in der
 // Spotify-App bzw. auf dem gewählten Spotify-Connect-Gerät, ↺10, Fortschritt, Gerätewahl und „beim Weiterblättern
 // mitspielen“. Zustand und Regeln: data/spotify-spieler.ts (derselbe Zustand wie der ▶-Knopf in der Kopfleiste der
-// Notenansicht). Ohne Verbindung nur „Spotify verbinden“ – dann steht daneben der eingebettete Player (Vorschau) als
-// Rückfall; verbunden blendet der Elternteil ihn aus (Ausgabe „verbindung“). Styles global (styles.scss).
+// Notenansicht). Ohne Verbindung nur „Spotify verbinden“. Nur mit der Einstellung „Fernsteuerung“
+// (Einstellungen → Spotify im Übe- und Probe-Modus). Styles global (styles.scss).
 @Component({
   selector: 'app-spotify-steuerung',
   host: { '(pointerdown)': '$event.stopPropagation()', '(pointerup)': '$event.stopPropagation()', '(keydown)': '$event.stopPropagation()' },
@@ -34,13 +34,6 @@ import { SpotifySpieler } from '../data/spotify-spieler';
 })
 export class SpotifySteuerung {
   protected readonly s = inject(SpotifySpieler);
-  /** verbunden ja/nein – der Elternteil blendet damit die Vorschau (Rückfall) aus */
-  readonly verbindung = output<boolean>();
-
-  constructor() {
-    effect(() => this.verbindung.emit(this.s.verbunden()));
-  }
-
   protected uhr(ms: number): string {
     const sek = Math.floor(ms / 1000);
     return `${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}`;

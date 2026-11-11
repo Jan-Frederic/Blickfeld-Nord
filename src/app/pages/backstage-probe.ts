@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,6 +13,7 @@ import { SongMitschnitte } from './song-mitschnitte';
 import { Stimmgeraet } from './stimmgeraet';
 import { ProbeVorschlag } from './probe-vorschlag';
 import { SetlistBuehne } from './setlist-buehne';
+import { sitzungLesen, sitzungMerken, sitzungVergessen } from '../data/modus-sitzung';
 import { ProbePlan, generalprobe, generalprobeAblauf, loadProbe, minutenText, probeNachricht, probenDauer, speichereProbe } from '../data/probe-modus';
 import { Kandidat, probeFuellen, probeZeiten } from '../data/probe-fuellen';
 import { alleStatus, buehnenreife } from '../data/uebe-status';
@@ -340,6 +341,7 @@ export class BackstageProbe {
   private readonly verlauf = inject(Verlauf);
   protected modusZu(): void {
     this.modus.set(false);
+    sitzungVergessen('probe');
     if (this.ausLink) {
       this.ausLink = false;
       if (this.verlauf.zurueck()) return;
@@ -395,6 +397,18 @@ export class BackstageProbe {
     effect(() => this.plan.set(loadProbe(this.datum())));
     // neue Daten der Band (Abgleich): Plan neu lesen, ohne die Seite neu aufzubauen (Suche und Scrollstand bleiben)
     inject(DestroyRef).onDestroy(auffrischenAnmelden(() => this.plan.set(loadProbe(this.datum()))));
+    // Probe-Modus für diese Sitzung merken: lädt die Seite neu (Handy hat sie im Hintergrund verworfen, Update), öffnet
+    // er sich wieder beim ersten noch offenen Song (data/modus-sitzung.ts); beim Verlassen der Seite vergessen
+    effect(() => {
+      if (this.modus()) untracked(() => sitzungMerken({ art: 'probe', id: this.datum() }));
+    });
+    inject(DestroyRef).onDestroy(() => sitzungVergessen('probe'));
+    queueMicrotask(() => {
+      if (this.modus() || !sitzungLesen('probe', this.datum())) return;
+      this.plan.set(loadProbe(this.datum()));
+      if (this.modusSongs().length) this.modus.set(true);
+      else sitzungVergessen('probe');
+    });
     // aus der Backstage-Übersicht („Als Nächstes“ → Probe-Modus): ?modus=1 startet gleich den Probe-Modus
     const route = inject(ActivatedRoute);
     if (route.snapshot.queryParamMap.get('modus')) {

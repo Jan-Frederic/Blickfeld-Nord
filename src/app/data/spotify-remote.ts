@@ -79,8 +79,11 @@ async function tokenHolen(body: Record<string, string>): Promise<Token> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: SPOTIFY_CLIENT_ID, ...body }),
+  }).catch(() => {
+    throw new SpotifyFehler('netz', 0);
   });
-  if (!res.ok) throw new Error('Spotify-Anmeldung fehlgeschlagen');
+  // 400/401: Zugang ungültig (neu verbinden); alles andere ist vorübergehend
+  if (!res.ok) throw new SpotifyFehler(res.status === 400 || res.status === 401 ? 'anmelden' : 'netz', res.status);
   const j = (await res.json()) as { access_token: string; refresh_token?: string; expires_in: number };
   const alt = lesen<Token>(TOKEN_KEY);
   const t: Token = { access: j.access_token, refresh: j.refresh_token ?? alt?.refresh ?? '', bis: Date.now() + (j.expires_in - 60) * 1000 };
@@ -108,16 +111,22 @@ export function spotifyAbmelden(): void {
   schreiben(GERAET_KEY, null);
 }
 
+/** läuft gerade eine Erneuerung des Zugangs? Dann warten alle darauf – Spotify gibt bei jeder Erneuerung ein neues
+ *  Erneuerungs-Token aus, zwei gleichzeitige Erneuerungen mit demselben alten würden die Verbindung kappen */
+let erneuerung: Promise<string> | null = null;
 async function zugang(): Promise<string> {
   const t = lesen<Token>(TOKEN_KEY);
   if (!t?.refresh) throw new SpotifyFehler('anmelden');
   if (t.bis > Date.now()) return t.access;
-  try {
-    return (await tokenHolen({ grant_type: 'refresh_token', refresh_token: t.refresh })).access;
-  } catch {
-    spotifyAbmelden();
-    throw new SpotifyFehler('anmelden');
-  }
+  erneuerung ??= tokenHolen({ grant_type: 'refresh_token', refresh_token: t.refresh })
+    .then((n) => n.access)
+    .catch((e) => {
+      // nur wenn Spotify den Zugang ablehnt, ist die Verbindung weg – bei Netzproblemen bleibt sie
+      if (e instanceof SpotifyFehler && e.art === 'anmelden') spotifyAbmelden();
+      throw e instanceof SpotifyFehler ? e : new SpotifyFehler('netz', 0);
+    })
+    .finally(() => (erneuerung = null));
+  return erneuerung;
 }
 
 /**
@@ -126,7 +135,8 @@ async function zugang(): Promise<string> {
  * Pause, obwohl nichts läuft) · netz: sonstiges
  */
 export class SpotifyFehler extends Error {
-  constructor(readonly art: 'anmelden' | 'geraet' | 'premium' | 'freigabe' | 'nichts' | 'netz') {
+  /** status: HTTP-Status von Spotify (0: keine Antwort, z. B. offline) – für die Meldung */
+  constructor(readonly art: 'anmelden' | 'geraet' | 'premium' | 'freigabe' | 'nichts' | 'netz', readonly status = 0) {
     super(art);
   }
 }
@@ -139,17 +149,39 @@ export function fehler403(text: string): SpotifyFehler['art'] {
 }
 
 async function api<T = void>(pfad: string, init: RequestInit = {}): Promise<T | null> {
-  const res = await fetch(API + pfad, { ...init, headers: { ...init.headers, Authorization: `Bearer ${await zugang()}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
+  const befehl = !!init.method && init.method !== 'GET';
+  const senden = async () => {
+    try {
+      return await fetch(API + pfad, { ...init, headers: { ...init.headers, Authorization: `Bearer ${await zugang()}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
+    } catch (e) {
+      if (e instanceof SpotifyFehler) throw e;
+      // keine Antwort (offline, Verbindung abgebrochen)
+      throw new SpotifyFehler('netz', 0);
+    }
+  };
+  let res = await senden();
+  // Befehle (Abspielen, Pause, Springen) scheitern bei Spotify gelegentlich kurz mit 5xx bzw. 429: einmal neu versuchen
+  if (befehl && (res.status >= 500 || res.status === 429)) {
+    await new Promise((r) => setTimeout(r, 700));
+    res = await senden();
+  }
   if (res.status === 204 || res.status === 202) return null;
   if (res.status === 401) {
     spotifyAbmelden();
-    throw new SpotifyFehler('anmelden');
+    throw new SpotifyFehler('anmelden', 401);
   }
-  if (res.status === 404) throw new SpotifyFehler('geraet');
-  if (res.status === 403) throw new SpotifyFehler(fehler403(await res.text().catch(() => '')));
-  if (!res.ok) throw new SpotifyFehler('netz');
+  if (res.status === 404) throw new SpotifyFehler('geraet', 404);
+  if (res.status === 403) throw new SpotifyFehler(fehler403(await res.text().catch(() => '')), 403);
+  if (!res.ok) throw new SpotifyFehler('netz', res.status);
+  // Befehle: die Antwort ist ohne Belang – Spotify schickt bei Erfolg teils Text, der kein JSON ist
+  if (befehl) return null;
   const text = await res.text();
-  return text ? (JSON.parse(text) as T) : null;
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new SpotifyFehler('netz', res.status);
+  }
 }
 
 export interface SpotifyGeraet {
@@ -210,3 +242,13 @@ export const spotifyGeraetWaehlen = (id: string) => schreiben(GERAET_KEY, id || 
 export const spotifyGewaehltesGeraet = () => lesen<string>(GERAET_KEY) ?? '';
 export const spotifyMitspielen = () => lesen<boolean>(MITSPIELEN_KEY) !== false;
 export const spotifyMitspielenSetzen = (an: boolean) => schreiben(MITSPIELEN_KEY, an);
+
+/** Spotify im Übe- und Probe-Modus (Einstellungen, je Gerät): gar nicht, eingebetteter Player (30-Sekunden-Vorschau auf
+ *  dem Handy) oder Fernsteuerung der Spotify-App (Premium) */
+export type SpotifyArt = 'aus' | 'vorschau' | 'fern';
+export const SPOTIFY_ART_KEY = 'bn-spotify-modus';
+export function spotifyArt(): SpotifyArt {
+  const v = lesen<string>(SPOTIFY_ART_KEY);
+  return v === 'vorschau' || v === 'fern' ? v : 'aus';
+}
+export const spotifyArtSetzen = (a: SpotifyArt) => schreiben(SPOTIFY_ART_KEY, a === 'aus' ? null : a);

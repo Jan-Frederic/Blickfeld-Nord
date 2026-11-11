@@ -556,7 +556,14 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     localStorage.setItem('bn-probe-' + d, JSON.stringify({ songs: [{ title: 'Iris', artist: 'The Goo Goo Dolls', done: false }, { title: 'Africa', artist: 'TOTO', done: false }, { title: 'Angels', artist: 'Robbie Williams', done: false }], notizen: '', punkte: [] }));
     localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
   }, datum);
-  await p.reload({ waitUntil: 'networkidle' });
+  // Spotify im Übe- und Probe-Modus: Standard aus; in den Einstellungen wählbar (eingebetteter Player / Fernsteuerung)
+  const probeSeite = p.url();
+  await p.go('/backstage/einstellungen/');
+  const spotifyWahl = p.locator('app-spotify-einstellung select');
+  expect((await spotifyWahl.inputValue()) === 'aus', 'Spotify ist nicht standardmäßig aus');
+  await spotifyWahl.selectOption('vorschau');
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-spotify-modus'))) === '"vorschau"', 'Spotify-Einstellung wird nicht gespeichert');
+  await p.goto(probeSeite, { waitUntil: 'networkidle' });
   // Probe-Modus starten steht ganz oben, vor „Wer kommt?“
   expect(await p.locator('app-backstage-probe').evaluate((el) => { const b = el.querySelector('.probe-start.oben'); const h = [...el.querySelectorAll('h3')].find((x) => x.textContent.includes('Wer kommt')); return !!b && !!h && !!(b.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING); }), 'Probe-Modus starten steht nicht oben');
   await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
@@ -567,11 +574,19 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await buehne.locator('button.spotify-knopf').click();
   await until(async () => /open\.spotify\.com\/embed\/track\/6Qyc6fS4DsZjB2mRW9DsQs/.test((await buehne.locator('.spotify-player iframe').getAttribute('src').catch(() => '')) ?? ''), 'Spotify-Player erscheint nicht');
   await buehne.locator('button.spotify-knopf').click();
-  // Spotify-Fernsteuerung: ohne Verbindung nur „Spotify verbinden“; verbunden spielt ▶ den ganzen Song in der Spotify-App
-  expect((await buehne.locator('app-spotify-steuerung button.verbinden').count()) === 1, '„Spotify verbinden“ fehlt');
+  // Einstellung „Fernsteuerung“: Probe-Modus neu öffnen – ohne Verbindung nur „Spotify verbinden“, keine Vorschau;
+  // verbunden spielt ▶ den ganzen Song in der Spotify-App
+  expect((await buehne.locator('app-spotify-steuerung').count()) === 0, 'Fernsteuerung erscheint ohne die Einstellung');
+  await buehne.locator('button[aria-label="Probe-Modus beenden"]').first().click();
+  await until(async () => (await buehne.count()) === 0, 'Probe-Modus schließt nicht');
+  await p.evaluate(() => localStorage.setItem('bn-spotify-modus', '"fern"'));
+  await p.locator('app-backstage-probe button', { hasText: 'Probe-Modus starten' }).click();
+  await until(async () => (await buehne.locator('app-spotify-steuerung button.verbinden').count()) === 1, '„Spotify verbinden“ fehlt');
+  expect((await buehne.locator('button.spotify-knopf').count()) === 0, 'Vorschau erscheint trotz Einstellung „Fernsteuerung“');
   const gespielt = [];
   let spotifySpielt = false;
   let pausen = 0;
+  let abfragenNachStart = 0;
   await p.route('https://api.spotify.com/**', async (route) => {
     const r = route.request();
     const pfad = new URL(r.url()).pathname;
@@ -579,13 +594,16 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     if (pfad.endsWith('/me/player/play')) {
       gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
       spotifySpielt = true;
-      return route.fulfill({ status: 204 });
+      // wie bei Spotify: Erfolg mit einem Text, der kein JSON ist
+      return route.fulfill({ status: 200, contentType: 'application/json', body: 'kein-json-AbC123' });
     }
     if (pfad.endsWith('/me/player/pause')) {
       spotifySpielt = false;
       pausen++;
       return route.fulfill({ status: 204 });
     }
+    // direkt nach dem Start meldet Spotify noch „spielt nicht“ – die Anzeige darf nicht auf ▶ zurückfallen
+    if (pfad.endsWith('/me/player') && spotifySpielt && abfragenNachStart++ === 0) return route.fulfill({ json: { is_playing: false, progress_ms: 0, item: null, device: { id: 'd1', name: 'Handy' } } });
     if (pfad.endsWith('/me/player')) return route.fulfill({ json: { is_playing: spotifySpielt, progress_ms: 5000, item: { id: '6Qyc6fS4DsZjB2mRW9DsQs', duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
     return route.fulfill({ status: 204 });
   });
@@ -599,7 +617,9 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await buehne.locator('app-spotify-steuerung button[aria-label="Auf Spotify abspielen"]').click();
   await until(async () => gespielt.some((x) => x.includes('device_id=d1') && x.includes('spotify:track:6Qyc6fS4DsZjB2mRW9DsQs')), () => `▶ spielt den Song nicht über Spotify: ${gespielt.join(' | ')}`);
   await until(async () => (await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1, 'nach ▶ kein ⏸');
-  expect((await buehne.locator('button.spotify-knopf').count()) === 0, 'Vorschau bleibt trotz Verbindung stehen');
+  // Fortschritt kommt von Spotify (5 s von 3:20), obwohl die erste Abfrage noch den alten Stand meldete; kein Fehlerhinweis
+  await until(async () => /0:0[5-9] \/ 3:20/.test(await buehne.locator('app-spotify-steuerung .zeit').innerText().catch(() => '')), async () => `Fortschritt fehlt: ${await buehne.locator('app-spotify-steuerung .zeit').innerText().catch(() => '')}`);
+  expect((await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1 && (await buehne.locator('app-spotify-steuerung .hinweis').count()) === 0, 'Steuerung fällt nach dem Start zurück oder meldet einen Fehler');
   // gespielt wird immer der angezeigte Song: beim Weiterblättern startet der nächste (hier: Song ohne Spotify-Track → Pause)
   await buehne.focus();
   await p.keyboard.press('ArrowRight');
@@ -1728,6 +1748,20 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
   const noten = p.locator('app-setlist-buehne app-noten-anzeige');
   await schritt('Übe-Modus öffnet die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  // „Zurück“ des Handys (Wischen vom Rand) beendet den Übe-Modus nicht versehentlich: einmal zurück zeigt nur einen Hinweis
+  await p.evaluate(() => history.back());
+  await until(async () => (await p.locator('app-setlist-buehne .zurueck-hinweis').count()) === 1, 'Hinweis nach „Zurück“ fehlt');
+  expect((await noten.count()) === 1 && new URL(p.url()).pathname.includes('/backstage/ueben'), '„Zurück“ beendet den Übe-Modus sofort');
+  // Seite lädt neu (Handy hat sie im Hintergrund verworfen): der Übe-Modus öffnet sich wieder
+  await p.reload({ waitUntil: 'networkidle' });
+  await schritt('Übe-Modus öffnet sich nach dem Neuladen wieder', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  // zweimal „Zurück“ kurz hintereinander beendet ihn – die Üben-Seite bleibt, danach wieder öffnen
+  await p.evaluate(() => history.back());
+  await p.locator('app-setlist-buehne .zurueck-hinweis').waitFor();
+  await p.evaluate(() => history.back());
+  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0 && new URL(p.url()).pathname.includes('/backstage/ueben'), 'Zweimal „Zurück“ beendet den Übe-Modus nicht');
+  await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
+  await schritt('Übe-Modus öffnet sich erneut', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
   // Mitschnitte des Songs zum Mitspielen
   await noten.locator('header .mitschnitt-knopf').click();
   await noten.locator('.mitschnitt-panel app-song-mitschnitte').waitFor();

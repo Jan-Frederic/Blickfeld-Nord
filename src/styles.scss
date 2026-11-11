@@ -227,6 +227,8 @@ app-setlist .spielzeit mat-icon { font-size: 16px; width: 16px; height: 16px; }
 app-nachbereitung mat-icon.spotify { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; color: #1db954; }
 app-nachbereitung .hint a { color: var(--bn-sunset); }
 // Bühnen-Modus: Lupe für spontane Wünsche (Budget von setlist-buehne)
+// Bühnen-, Probe-, Übe-Modus: Hinweis nach einmal „Zurück“ (setlist-buehne.ts, zurueckSchutz)
+app-setlist-buehne .zurueck-hinweis { position: fixed; left: 50%; top: max(64px, env(safe-area-inset-top)); z-index: 7; transform: translateX(-50%); max-width: 92vw; margin: 0; padding: 10px 18px; border-radius: 999px; background: #e8a46a; color: #2a1708; font: 600 .95rem Inter, sans-serif; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); pointer-events: none; }
 // Übe-Modus: letzte Status-Wahl zurücknehmen (setlist-buehne.ts, ein paar Sekunden sichtbar)
 app-setlist-buehne .rueckgaengig { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 6; transform: translateX(-50%); max-width: 92vw; padding: 10px 18px; border: 1px solid #e8a46a; border-radius: 999px; background: #1b1e22; color: #e8a46a; font: 600 .95rem Inter, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); cursor: pointer; animation: rueckgaengig-rein .2s ease-out; }
 app-setlist-buehne .rueckgaengig:hover { background: #2a1d12; }

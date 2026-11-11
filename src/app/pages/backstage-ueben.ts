@@ -12,6 +12,7 @@ import { LISTEN, songAbgleich } from '../data/playlisten';
 import { auffrischenAnmelden } from '../data/neu-zeichnen';
 import { datumText } from '../data/datum';
 import { erinnerungAktualisieren } from '../data/erinnerung';
+import { sitzungLesen, sitzungMerken, sitzungVergessen } from '../data/modus-sitzung';
 import { SetlistBuehne } from './setlist-buehne';
 import { Verlauf } from '../zurueck';
 
@@ -213,6 +214,19 @@ export class BackstageUeben {
         void router.navigate([], { relativeTo: route, queryParams: { modus: null }, queryParamsHandling: 'merge', replaceUrl: true });
       });
     }
+    // Seite wurde neu geladen, während der Übe-Modus offen war (Handy hat sie im Hintergrund verworfen, Update):
+    // wieder öffnen – bei der nächsten fälligen Karte, mit dem bisherigen Ergebnis (data/modus-sitzung.ts)
+    const offen = !route.snapshot.queryParamMap.get('modus') && this.ich() ? sitzungLesen('ueben') : null;
+    if (offen)
+      queueMicrotask(() => {
+        this.uebeModus(false);
+        if (this.modus()) {
+          this.zaehler = { ...(offen.zaehler as Partial<Record<UebeStatus, number>>) };
+          sitzungMerken({ art: 'ueben', zaehler: this.zaehler });
+        }
+      });
+    // Seite innerhalb der App verlassen: nichts wieder öffnen
+    inject(DestroyRef).onDestroy(() => sitzungVergessen('ueben'));
     // neue Daten der Band (Abgleich): eigenen Stand neu einlesen, ohne die Seite neu aufzubauen
     inject(DestroyRef).onDestroy(
       auffrischenAnmelden(() => {
@@ -241,8 +255,12 @@ export class BackstageUeben {
   protected readonly modusStart = signal(0);
   protected uebeModus(vonLink: boolean, abKey?: string): void {
     const dran = this.dran();
-    const k = [...dran, ...this.alle().filter((x) => !dran.includes(x))];
-    this.modusStart.set(Math.max(0, abKey ? k.findIndex((x) => x.key === abKey) : 0));
+    const alle = [...dran, ...this.alle().filter((x) => !dran.includes(x))];
+    // ab einem bestimmten Song: er kommt zuerst, die Karten davor hängen hinten an – so endet der Modus nicht vorzeitig,
+    // nur weil man weiter hinten eingestiegen ist
+    const ab = Math.max(0, abKey ? alle.findIndex((x) => x.key === abKey) : 0);
+    const k = [...alle.slice(ab), ...alle.slice(0, ab)];
+    this.modusStart.set(0);
     if (!k.length) {
       this.leerHinweis.set(true);
       if (vonLink) this.verlauf.zurueck();
@@ -253,6 +271,7 @@ export class BackstageUeben {
     this.ergebnis.set(null);
     this.modusVonLink = vonLink;
     this.modus.set(k.map((x) => ({ title: x.title, artist: x.artist })));
+    sitzungMerken({ art: 'ueben', zaehler: {} });
   }
   /** letzte Wertung im Übe-Modus: Stand davor und gezählter Status – für „Rückgängig“ */
   private letzte: { zurueck: () => void; neu: UebeStatus } | null = null;
@@ -262,6 +281,7 @@ export class BackstageUeben {
     this.letzte = null;
     l.zurueck();
     this.zaehler[l.neu] = Math.max(0, (this.zaehler[l.neu] ?? 1) - 1);
+    sitzungMerken({ art: 'ueben', zaehler: this.zaehler });
     this.geuebt.set(heuteGeuebt(this.heute));
     this.stand.update((n) => n + 1);
   }
@@ -272,10 +292,12 @@ export class BackstageUeben {
     this.letzte = { zurueck, neu };
     this.geuebt.set(alsGeuebtMerken(key, this.heute));
     this.zaehler[neu] = (this.zaehler[neu] ?? 0) + 1;
+    sitzungMerken({ art: 'ueben', zaehler: this.zaehler });
     this.stand.update((n) => n + 1);
   }
   protected modusZu(): void {
     this.modus.set(null);
+    sitzungVergessen('ueben');
     const z = this.zaehler;
     const teile = STATUS.filter((st) => z[st.id]).map((st) => `${z[st.id]}× ${st.label}${st.id === 'eingenordet' ? ' 🎉' : ''}`);
     this.ergebnis.set(teile.length ? teile.join(', ') + '.' : null);

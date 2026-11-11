@@ -142,6 +142,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-ueben': 'Dein Karteikasten (Kästen und Fälligkeit)',
   'bn-ueben-tagesziel': 'Karteikarten am Tag (Empfehlung)',
   'bn-ueben-erinnerung': 'Übe-Erinnerung (an/aus, Uhrzeit)',
+  'bn-spotify-modus': 'Spotify im Übe- und Probe-Modus (aus, eingebettet, Fernsteuerung)',
   'bn-spotify-token': 'Spotify-Verbindung (nur dieses Gerät)',
   'bn-spotify-geraet': 'Gewähltes Spotify-Gerät',
   'bn-spotify-mitspielen': 'Spotify beim Weiterblättern mitspielen',

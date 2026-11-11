@@ -42,6 +42,8 @@ export class SpotifySpieler {
   /** Track, den die Steuerung zuletzt gestartet hat, und unter welcher ID Spotify ihn tatsächlich spielt */
   private gestartet: string | null = null;
   private gestartetAls: string | null = null;
+  /** bis dahin (ms) gilt „spielt“ nach einem Start-Befehl, auch wenn Spotify noch den alten Stand meldet */
+  private schonfrist = 0;
   private uhrTakt: ReturnType<typeof setInterval> | undefined;
   private abfrage: ReturnType<typeof setInterval> | undefined;
 
@@ -53,8 +55,9 @@ export class SpotifySpieler {
     this.uhrTakt = setInterval(() => {
       if (this.spielt()) this.position.update((p) => Math.min(p + 1000, this.dauer() || p + 1000));
     }, 1000);
+    // solange ein Song über die Steuerung lief oder läuft: alle 5 s abgleichen (Position, Pause in der Spotify-App …)
     this.abfrage = setInterval(() => {
-      if (this.spielt() && document.visibilityState === 'visible') void this.standLaden();
+      if (this.verbunden() && this.gestartet && document.visibilityState === 'visible') void this.standLaden();
     }, 5000);
     if (this.verbunden()) void this.standLaden();
   }
@@ -85,6 +88,7 @@ export class SpotifySpieler {
     if (t && this.mitspielen()) void this.spielen(t);
     else {
       // nicht mitspielen oder Song ohne Spotify-Track: der alte Song soll nicht weiterlaufen
+      this.schonfrist = 0;
       this.spielt.set(false);
       void spotifyPause().catch(() => undefined);
     }
@@ -109,13 +113,16 @@ export class SpotifySpieler {
         await spotifyPause().catch(() => undefined);
         return;
       }
-      this.spielt.set(meins && !!s?.spielt);
       if (meins) {
         this.position.set(s!.position);
         this.dauer.set(s!.dauer);
       }
+      // kurz nach dem Start meldet Spotify oft noch den alten Stand (nichts oder der vorige Song): nicht zurückfallen
+      if (!(meins && s?.spielt) && Date.now() < this.schonfrist) return;
+      this.spielt.set(meins && !!s?.spielt);
     } catch (e) {
-      this.fehler(e);
+      // das Nachlesen im Hintergrund meldet nichts (nächster Versuch in ein paar Sekunden) – außer die Verbindung ist weg
+      if (e instanceof SpotifyFehler && e.art === 'anmelden') this.fehler(e);
     }
   }
 
@@ -125,6 +132,7 @@ export class SpotifySpieler {
     if (!t) return;
     if (this.spielt()) {
       await this.tun(async () => {
+        this.schonfrist = 0;
         await spotifyPause();
         this.spielt.set(false);
       });
@@ -140,8 +148,7 @@ export class SpotifySpieler {
           if (!(e instanceof SpotifyFehler) || (e.art !== 'nichts' && e.art !== 'geraet')) throw e;
           await spotifySpielen(t, this.position());
         }
-        this.spielt.set(true);
-        setTimeout(() => void this.standLaden(), 1200);
+        this.gestartetMerken();
       });
     } else await this.spielen(t);
   }
@@ -151,10 +158,16 @@ export class SpotifySpieler {
       this.gestartetAls = null;
       await spotifySpielen(t);
       this.gestartet = t;
-      this.spielt.set(true);
       this.position.set(0);
-      setTimeout(() => void this.standLaden(), 1200);
+      this.gestartetMerken();
     });
+  }
+
+  /** nach einem Start-Befehl: sofort als spielend zeigen, Schonfrist setzen und den Stand ein paarmal nachlesen */
+  private gestartetMerken(): void {
+    this.spielt.set(true);
+    this.schonfrist = Date.now() + 6000;
+    for (const ms of [1200, 3000, 6500]) setTimeout(() => this.gestartet && void this.standLaden(), ms);
   }
 
   async zurueck(): Promise<void> {
@@ -197,7 +210,9 @@ export class SpotifySpieler {
   }
 
   private fehler(e: unknown): void {
+    this.schonfrist = 0;
     const art = e instanceof SpotifyFehler ? e.art : 'netz';
+    const status = e instanceof SpotifyFehler ? e.status : 0;
     if (art === 'anmelden') {
       this.verbunden.set(false);
       this.spielt.set(false);
@@ -215,7 +230,9 @@ export class SpotifySpieler {
           ? 'Das geht nur mit Spotify Premium.'
           : art === 'freigabe'
             ? 'Dein Spotify-Konto ist für die App noch nicht freigeschaltet (Spotify-Developer-Dashboard → User Management).'
-            : 'Spotify antwortet gerade nicht – noch einmal versuchen.',
+            : status
+              ? `Spotify meldet einen Fehler (${status}) – noch einmal versuchen.`
+              : 'Keine Verbindung zu Spotify – Netz prüfen und noch einmal versuchen.',
     );
   }
 }

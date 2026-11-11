@@ -5,12 +5,13 @@ import { BuehneEinstellungen } from './buehne-einstellungen';
 import { BackupKarte } from './backup-karte';
 import { BandOrdner } from './band-ordner';
 import { IchEinstellung } from './ich-einstellung';
+import { SpotifyEinstellung } from './spotify-einstellung';
 
 // Backstage → Einstellungen: „Ich bin …“ (ich-einstellung.ts), Synchronisation mit OneDrive (sync-einstellungen.ts), Backup (backup-karte.ts) und Bühnen-Modus
-// (Halbseiten-Blättern, Pedal-Tasten – buehne-einstellungen.ts)
+// (Halbseiten-Blättern, Pedal-Tasten – buehne-einstellungen.ts), Spotify im Übe- und Probe-Modus (spotify-einstellung.ts)
 @Component({
   selector: 'app-backstage-einstellungen',
-  imports: [IchEinstellung, SyncEinstellungenSeite, BandOrdner, BackupKarte, BuehneEinstellungen],
+  imports: [IchEinstellung, SpotifyEinstellung, SyncEinstellungenSeite, BandOrdner, BackupKarte, BuehneEinstellungen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
@@ -21,6 +22,7 @@ import { IchEinstellung } from './ich-einstellung';
       <app-band-ordner />
       <app-backup-karte />
       <app-buehne-einstellungen />
+      <app-spotify-einstellung />
     </section>
   `,
 })

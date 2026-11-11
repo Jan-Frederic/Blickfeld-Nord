@@ -18,7 +18,7 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Song-Liste', buehne: 'Ja (Titelanzeige)', probe: 'Ja – auch in der Kopfleiste der Notenansicht', ueben: 'Ja – die Karten, auch in der Kopfleiste der Notenansicht' },
   { was: 'Wunsch-Suche', buehne: 'Ja', probe: 'Ja', ueben: 'Nein' },
   { was: 'Wischen', buehne: 'Seitlich: blättern. Hoch: Notenansicht gleitet herein. Runter (Kopfleiste sichtbar, Blatt oben): zurück zur Titelanzeige', probe: 'wie im Bühnen-Modus', ueben: 'wie im Bühnen-Modus' },
-  { was: 'Spotify', buehne: '–', probe: 'Titelanzeige (Song aus einer Spotify-Liste, mit Netz): mit Premium „Spotify verbinden“ – ▶ spielt den ganzen Song in der Spotify-App oder auf einem Lautsprecher (auch als ♫ ▶ in der Kopfleiste der Notenansicht); beim Weiterblättern läuft der jeweils angezeigte Song. Sonst „Vorschau anhören“ (30 Sekunden)', ueben: 'wie im Probe-Modus' },
+  { was: 'Spotify', buehne: '–', probe: 'Unter Einstellungen wählbar (Standard: aus): eingebetteter Player („♫ Auf Spotify anhören“ in der Titelanzeige) oder Fernsteuerung der Spotify-App (Premium) – ▶ spielt den ganzen Song, auch als ♫ ▶ in der Kopfleiste der Notenansicht; beim Weiterblättern läuft der jeweils angezeigte Song', ueben: 'wie im Probe-Modus' },
   { was: 'Mitschnitt', buehne: '–', probe: 'Mikrofon in der Probe-Leiste: diesen Song aufnehmen und nachhören', ueben: 'Mitschnitt-Panel: Proben-Aufnahmen anhören, Schleife, langsamer' },
   { was: 'Klick', buehne: 'Originaltempo', probe: 'Übungstempo (100 → 70 %)', ueben: 'wie im Bühnen-Modus' },
   { was: 'Am Ende', buehne: 'Zurück zur Setlist bzw. Übersicht', probe: 'Zusammenfassung (Sitzt / Nochmal mit Namen / Nicht drangekommen, Zeit) – Rest mit einem Klick auf die nächste Probe', ueben: 'Ergebnis, z. B. „3× Sitzt, 1× Eingenordet 🎉“' },
@@ -39,6 +39,7 @@ const BEGRIFFE: { name: string; text: string }[] = [
   { name: 'Mitschnitt-Panel', text: 'Im Übe-Modus über „Mitschnitt“ einblendbar: Proben-Aufnahmen des Songs anhören, Stelle in Schleife, langsamer abspielen.' },
   { name: 'Dein Weg', text: 'Im Song-Dialog: wie sich dein Übe-Status mit diesem Song entwickelt hat, z. B. „✎ Üben 02.11. → ↻ Wackelt noch 05.11. → ✓ Sitzt 10.11. · in 8 Tagen“.' },
   { name: 'Übe-Erinnerung', text: 'Unter Einstellungen → Ich bin: höchstens einmal am Tag ab der gewählten Uhrzeit „5 Karteikarten sind heute fällig“ (installierte App auf Android). Das App-Symbol zeigt die Zahl fälliger Karten, wo das Gerät es kann.' },
+  { name: 'Zurück-Schutz', text: 'In allen drei Modi beendet „Zurück“ des Handys (Wischen vom Rand) den Modus nicht sofort: erst ein zweites „Zurück“ kurz danach. Lädt die Seite neu, öffnen sich Übe- und Probe-Modus von selbst wieder.' },
   { name: 'Anlass', text: 'Text oben links vor dem Songtitel – Name des Auftritts, „Probe 12.11.“ oder „Übe-Modus“.' },
 ];
 
