@@ -1,6 +1,7 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
 import { UebeStatus, eigenerStatus, statusLabel } from '../data/uebe-status';
 import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
+import { SpotifySteuerung } from './spotify-steuerung';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
@@ -49,7 +50,7 @@ const ZURUECK_MS = 6000;
 import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, taktHinweis } from '../data/takt';
 @Component({
   selector: 'app-setlist-buehne',
-  imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde, StatusSchalter],
+  imports: [MatIconModule, NotenAnzeige, Stimmgeraet, ProbeLeiste, ProbeEnde, StatusSchalter, SpotifySteuerung],
   host: { tabindex: '-1', '(keydown)': 'key($event)' },
   template: `
     <div class="stage" (pointerdown)="down($event)" (pointerup)="up($event)" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" [style.--zoom]="zoom()">
@@ -115,7 +116,9 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
             }
             <!-- Spotify-Player (Übe- und Probe-Modus): erst auf Knopfdruck geladen, wechselt mit dem Song -->
             @if (spotifyMoeglich()) {
-              <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="Song von Spotify anhören (lädt den Spotify-Player)">♫ {{ spotifyAn() ? 'Spotify ausblenden' : 'Auf Spotify anhören' }}</button></p>
+              <!-- ganze Songs über die Spotify-App (Premium, data/spotify-remote.ts); darunter der Vorschau-Player als Rückfall -->
+              <app-spotify-steuerung [trackId]="spotifyId()" />
+              <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="30-Sekunden-Vorschau im eingebetteten Spotify-Player (ohne Anmeldung)">♫ {{ spotifyAn() ? 'Vorschau ausblenden' : 'Vorschau anhören' }}</button></p>
             }
             @if (spotifyAn() && spotifyEmbed(); as url) {
               <div class="spotify-player" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
@@ -366,7 +369,7 @@ export class SetlistBuehne {
     for (const l of LISTEN) for (const t of l.tracks) if (t.url && !m.has(vergleichsKey(t.title, t.artist))) m.set(vergleichsKey(t.title, t.artist), t.url);
     return m;
   })();
-  private readonly spotifyId = computed(() => {
+  protected readonly spotifyId = computed(() => {
     const c = this.aktuellerSong();
     const url = c ? this.spotifyTracks.get(vergleichsKey(c.title, c.artist)) : undefined;
     return /open\.spotify\.com\/track\/([A-Za-z0-9]+)/.exec(url ?? '')?.[1];

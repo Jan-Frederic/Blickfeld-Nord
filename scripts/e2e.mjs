@@ -567,6 +567,35 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await buehne.locator('button.spotify-knopf').click();
   await until(async () => /open\.spotify\.com\/embed\/track\/6Qyc6fS4DsZjB2mRW9DsQs/.test((await buehne.locator('.spotify-player iframe').getAttribute('src').catch(() => '')) ?? ''), 'Spotify-Player erscheint nicht');
   await buehne.locator('button.spotify-knopf').click();
+  // Spotify-Fernsteuerung: ohne Verbindung nur „Spotify verbinden“; verbunden spielt ▶ den ganzen Song in der Spotify-App
+  expect((await buehne.locator('app-spotify-steuerung button.verbinden').count()) === 1, '„Spotify verbinden“ fehlt');
+  const gespielt = [];
+  let spotifySpielt = false;
+  await p.route('https://api.spotify.com/**', async (route) => {
+    const r = route.request();
+    const pfad = new URL(r.url()).pathname;
+    if (pfad.endsWith('/me/player/devices')) return route.fulfill({ json: { devices: [{ id: 'd1', name: 'Handy', type: 'Smartphone', is_active: true }] } });
+    if (pfad.endsWith('/me/player/play')) {
+      gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
+      spotifySpielt = true;
+      return route.fulfill({ status: 204 });
+    }
+    if (pfad.endsWith('/me/player')) return route.fulfill({ json: { is_playing: spotifySpielt, progress_ms: 5000, item: { id: '6Qyc6fS4DsZjB2mRW9DsQs', duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
+    return route.fulfill({ status: 204 });
+  });
+  await p.evaluate(() => localStorage.setItem('bn-spotify-token', JSON.stringify({ access: 'test', refresh: 'test', bis: 9e15 })));
+  // Steuerung neu aufbauen (liest die Verbindung beim Erscheinen): einen Song weiter und zurück
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zu Africa klappt nicht');
+  await p.keyboard.press('ArrowLeft');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Iris'), 'Zurück zu Iris klappt nicht');
+  await buehne.locator('app-spotify-steuerung button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => gespielt.some((x) => x.includes('device_id=d1') && x.includes('spotify:track:6Qyc6fS4DsZjB2mRW9DsQs')), () => `▶ spielt den Song nicht über Spotify: ${gespielt.join(' | ')}`);
+  await until(async () => (await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1, 'nach ▶ kein ⏸');
+  expect((await buehne.locator('button.spotify-knopf').count()) === 1, 'Vorschau-Player als Rückfall fehlt');
+  await p.unroute('https://api.spotify.com/**');
+  await p.evaluate(() => localStorage.removeItem('bn-spotify-token'));
   const leiste = buehne.locator('app-probe-leiste');
   // fünf Stufen statt Sitzt/Nochmal; Durchlauf und Übergang gibt es nicht mehr
   expect((await leiste.locator('app-status-schalter button').evaluateAll((b) => b.map((x) => x.getAttribute('aria-label')))).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Status-Umschalter hat nicht die fünf Stufen');

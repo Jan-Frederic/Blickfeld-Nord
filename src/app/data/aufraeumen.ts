@@ -30,7 +30,7 @@ export const BEREICHE: Bereich[] = [
     id: 'einstellungen',
     label: 'Einstellungen',
     hinweis: 'Schriftgröße, Klick-Ton, Noten-Ansicht, Filter, Sprache',
-    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-geraet-', 'bn-ich', 'bn-zugang', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-'],
+    praefixe: ['bn-buehne-', 'bn-noten-', 'bn-backstage-filter', 'bn-sprache', 'bn-gesichert', 'bn-geraet-', 'bn-ich', 'bn-zugang', 'bn-chunk-reload', 'bn-onedrive-', 'bn-sync-', 'bn-spotify-'],
   },
 ];
 
@@ -142,6 +142,9 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-ueben': 'Dein Karteikasten (Kästen und Fälligkeit)',
   'bn-ueben-tagesziel': 'Karteikarten am Tag (Empfehlung)',
   'bn-ueben-erinnerung': 'Übe-Erinnerung (an/aus, Uhrzeit)',
+  'bn-spotify-token': 'Spotify-Verbindung (nur dieses Gerät)',
+  'bn-spotify-geraet': 'Gewähltes Spotify-Gerät',
+  'bn-spotify-mitspielen': 'Spotify beim Weiterblättern mitspielen',
   'bn-ueben-heute': 'Heute geübte Karten',
   'bn-aufgaben': 'Aufgaben-Häkchen',
   'bn-ui-geprueft': 'Geprüfte Oberflächentexte',

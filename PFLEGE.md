@@ -122,9 +122,17 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet bei 70 %, der Tempo-Knopf
   steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
   **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
-- **Spotify-Player** (Titelanzeige im Übe- und Probe-Modus, nur mit Netz): „♫ Auf Spotify anhören“ lädt erst auf
-  Knopfdruck den eingebetteten Spotify-Player (kompakt, 152 px) für den aktuellen Song – für jeden Song, der in einer
-  Spotify-Liste steht; er wechselt mit dem Song. Ganze Songs nur mit Spotify-Anmeldung im selben Browser, sonst
+- **Spotify fernsteuern** (Titelanzeige im Übe- und Probe-Modus, für Songs aus einer Spotify-Liste, nur mit Netz,
+  Spotify Premium): „♫ Spotify verbinden – ganze Songs“ meldet einmal je Person und Gerät bei Spotify an (OAuth mit
+  PKCE, ohne Server; Client-ID in `data/spotify-remote.ts`, Redirect-URI `https://blickfeld-nord.de/` – genau so im
+  Spotify-Developer-Dashboard eintragen, die Nutzer dort unter „User Management“). Danach: **▶ / ⏸** spielt den Song
+  ganz in der Spotify-App bzw. auf dem gewählten Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum),
+  **↺10** springt 10 Sekunden zurück, Balken mit Zeit, Gerätewahl, „beim Weiterblättern mitspielen“ (lief der Song
+  über die Steuerung, startet beim nächsten gleich der neue), „Spotify trennen“. Findet Spotify kein Gerät, hilft es,
+  die Spotify-App kurz zu öffnen. Zugang nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src`
+  `accounts.spotify.com` und `api.spotify.com`.
+- **Spotify-Vorschau** (Rückfall ohne Verbindung): „♫ Vorschau anhören“ lädt erst auf Knopfdruck den eingebetteten
+  Spotify-Player (kompakt, 152 px) für den aktuellen Song; er wechselt mit dem Song. Auf dem Handy spielt er nur die
   30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`; nur im Backstage,
   öffentliche Seiten laden nichts von Spotify.
 - **Song antippen** in „Deine Songs im Karteikasten“ öffnet den Übe-Modus direkt bei diesem Song.

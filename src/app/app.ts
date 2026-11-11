@@ -154,6 +154,9 @@ export class App {
   }
 
   constructor() {
+    // Rückkehr von der Spotify-Anmeldung (Startseite mit ?code=&state=): Zugang holen, zurück zur Ausgangsseite
+    if (typeof location !== 'undefined' && /[?&]state=/.test(location.search) && typeof localStorage !== 'undefined' && localStorage.getItem('bn-spotify-pkce'))
+      void import('./data/spotify-remote').then((m) => (m.istSpotifyRueckkehr() ? m.spotifyAnmeldungAbschliessen() : undefined));
     trackPageViews();
     // Sprungmarken (z. B. /booking#verfuegbarkeit) nicht unter der fest stehenden Kopfzeile verstecken
     inject(ViewportScroller).setOffset([0, 80]);
