@@ -127,9 +127,15 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   PKCE, ohne Server; Client-ID in `data/spotify-remote.ts`, Redirect-URI `https://blickfeld-nord.de/` – genau so im
   Spotify-Developer-Dashboard eintragen, die Nutzer dort unter „User Management“). Danach: **▶ / ⏸** spielt den Song
   ganz in der Spotify-App bzw. auf dem gewählten Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum),
-  **↺10** springt 10 Sekunden zurück, Balken mit Zeit, Gerätewahl, „beim Weiterblättern mitspielen“ (lief der Song
-  über die Steuerung, startet beim nächsten gleich der neue), „Spotify trennen“. Findet Spotify kein Gerät, hilft es,
-  die Spotify-App kurz zu öffnen. Zugang nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src`
+  **↺10** springt 10 Sekunden zurück, Balken mit Zeit, Gerätewahl, „Spotify trennen“. In der Kopfleiste der
+  Notenansicht steht derselbe Knopf als **♫ ▶ / ⏸**. **Gespielt wird immer der angezeigte Song**
+  (`data/spotify-spieler.ts`, ein Zustand für alle Knöpfe): Wechselt der Song, während die Steuerung spielt, startet
+  mit „beim Weiterblättern mitspielen“ (Standard an) gleich der neue – sonst, und bei Songs ohne Spotify-Track, wird
+  pausiert. Ist der Song zu Ende und Spotify spielt von sich aus weiter (Autoplay), wird angehalten; beim Verlassen
+  des Modus ebenso. Spielt Spotify eine andere Fassung des Songs (nicht verfügbare werden ersetzt), gilt sie trotzdem
+  als der Song. Findet Spotify kein Gerät, hilft es, die Spotify-App kurz zu öffnen; ein vorhandenes, aber nicht
+  aktives Gerät wird erst aktiviert. Meldungen unterscheiden „nur mit Premium“ und „Konto im Developer-Dashboard
+  nicht freigeschaltet“. Zugang nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src`
   `accounts.spotify.com` und `api.spotify.com`.
 - **Spotify-Vorschau** (Rückfall ohne Verbindung, verbunden ausgeblendet): „♫ Vorschau anhören“ lädt erst auf Knopfdruck den eingebetteten
   Spotify-Player (kompakt, 152 px) für den aktuellen Song; er wechselt mit dem Song. Auf dem Handy spielt er nur die

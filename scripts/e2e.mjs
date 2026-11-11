@@ -571,6 +571,7 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   expect((await buehne.locator('app-spotify-steuerung button.verbinden').count()) === 1, '„Spotify verbinden“ fehlt');
   const gespielt = [];
   let spotifySpielt = false;
+  let pausen = 0;
   await p.route('https://api.spotify.com/**', async (route) => {
     const r = route.request();
     const pfad = new URL(r.url()).pathname;
@@ -578,6 +579,11 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     if (pfad.endsWith('/me/player/play')) {
       gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
       spotifySpielt = true;
+      return route.fulfill({ status: 204 });
+    }
+    if (pfad.endsWith('/me/player/pause')) {
+      spotifySpielt = false;
+      pausen++;
       return route.fulfill({ status: 204 });
     }
     if (pfad.endsWith('/me/player')) return route.fulfill({ json: { is_playing: spotifySpielt, progress_ms: 5000, item: { id: '6Qyc6fS4DsZjB2mRW9DsQs', duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
@@ -594,6 +600,13 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await until(async () => gespielt.some((x) => x.includes('device_id=d1') && x.includes('spotify:track:6Qyc6fS4DsZjB2mRW9DsQs')), () => `▶ spielt den Song nicht über Spotify: ${gespielt.join(' | ')}`);
   await until(async () => (await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1, 'nach ▶ kein ⏸');
   expect((await buehne.locator('button.spotify-knopf').count()) === 0, 'Vorschau bleibt trotz Verbindung stehen');
+  // gespielt wird immer der angezeigte Song: beim Weiterblättern startet der nächste (hier: Song ohne Spotify-Track → Pause)
+  await buehne.focus();
+  await p.keyboard.press('ArrowRight');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zu Africa klappt nicht');
+  await until(async () => pausen > 0 || gespielt.length > 1, () => `Beim Songwechsel läuft der alte Song weiter (${gespielt.length} Starts, ${pausen} Pausen)`);
+  await p.keyboard.press('ArrowLeft');
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Iris'), 'Zurück zu Iris klappt nicht');
   await p.unroute('https://api.spotify.com/**');
   await p.evaluate(() => localStorage.removeItem('bn-spotify-token'));
   const leiste = buehne.locator('app-probe-leiste');

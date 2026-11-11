@@ -120,11 +120,22 @@ async function zugang(): Promise<string> {
   }
 }
 
-/** anmelden: (neu) verbinden · geraet: kein aktives Spotify · premium: nur mit Premium · netz: sonstiges */
+/**
+ * anmelden: (neu) verbinden · geraet: kein aktives Spotify · premium: nur mit Premium · freigabe: Konto ist in der
+ * Spotify-App (Developer-Dashboard → User Management) nicht eingetragen · nichts: Befehl passt gerade nicht (z. B.
+ * Pause, obwohl nichts läuft) · netz: sonstiges
+ */
 export class SpotifyFehler extends Error {
-  constructor(readonly art: 'anmelden' | 'geraet' | 'premium' | 'netz') {
+  constructor(readonly art: 'anmelden' | 'geraet' | 'premium' | 'freigabe' | 'nichts' | 'netz') {
     super(art);
   }
+}
+
+/** 403 von Spotify einordnen: Premium fehlt, Konto nicht freigeschaltet oder Befehl passt gerade nicht */
+export function fehler403(text: string): SpotifyFehler['art'] {
+  if (/PREMIUM_REQUIRED|premium/i.test(text)) return 'premium';
+  if (/not registered|developer dashboard/i.test(text)) return 'freigabe';
+  return 'nichts';
 }
 
 async function api<T = void>(pfad: string, init: RequestInit = {}): Promise<T | null> {
@@ -135,7 +146,7 @@ async function api<T = void>(pfad: string, init: RequestInit = {}): Promise<T | 
     throw new SpotifyFehler('anmelden');
   }
   if (res.status === 404) throw new SpotifyFehler('geraet');
-  if (res.status === 403) throw new SpotifyFehler('premium');
+  if (res.status === 403) throw new SpotifyFehler(fehler403(await res.text().catch(() => '')));
   if (!res.ok) throw new SpotifyFehler('netz');
   const text = await res.text();
   return text ? (JSON.parse(text) as T) : null;
@@ -150,6 +161,8 @@ export interface SpotifyGeraet {
 export interface SpotifyStand {
   spielt: boolean;
   trackId: string | null;
+  /** ursprünglich gewünschter Track, wenn Spotify eine andere Fassung spielt */
+  auchId: string | null;
   position: number;
   dauer: number;
   geraet: string | null;
@@ -160,9 +173,10 @@ export async function spotifyGeraete(): Promise<SpotifyGeraet[]> {
 }
 
 export async function spotifyStand(): Promise<SpotifyStand | null> {
-  const s = await api<{ is_playing: boolean; progress_ms: number | null; item: { id: string; duration_ms: number } | null; device: { id: string; name: string } | null }>('/me/player');
+  const s = await api<{ is_playing: boolean; progress_ms: number | null; item: { id: string; duration_ms: number; linked_from?: { id: string } } | null; device: { id: string; name: string } | null }>('/me/player');
   if (!s) return null;
-  return { spielt: s.is_playing, trackId: s.item?.id ?? null, position: s.progress_ms ?? 0, dauer: s.item?.duration_ms ?? 0, geraet: s.device?.name ?? null };
+  // Spotify ersetzt nicht verfügbare Fassungen eines Songs durch eine andere („linked_from“ nennt die gewünschte)
+  return { spielt: s.is_playing, trackId: s.item?.id ?? null, auchId: s.item?.linked_from?.id ?? null, position: s.progress_ms ?? 0, dauer: s.item?.duration_ms ?? 0, geraet: s.device?.name ?? null };
 }
 
 /** gewähltes Gerät (sonst das aktive bzw. erste) */
@@ -177,7 +191,16 @@ async function zielGeraet(): Promise<string | undefined> {
 export async function spotifySpielen(trackId: string, positionMs = 0): Promise<void> {
   const geraet = await zielGeraet();
   if (!geraet) throw new SpotifyFehler('geraet');
-  await api(`/me/player/play?device_id=${encodeURIComponent(geraet)}`, { method: 'PUT', body: JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: positionMs }) });
+  const starten = () => api(`/me/player/play?device_id=${encodeURIComponent(geraet)}`, { method: 'PUT', body: JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: positionMs }) });
+  try {
+    await starten();
+  } catch (e) {
+    // Gerät ist da, aber gerade nicht aktiv: erst die Wiedergabe dorthin holen, dann noch einmal
+    if (!(e instanceof SpotifyFehler) || e.art !== 'geraet') throw e;
+    await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [geraet], play: false }) });
+    await new Promise((r) => setTimeout(r, 700));
+    await starten();
+  }
 }
 export const spotifyPause = () => api('/me/player/pause', { method: 'PUT' });
 export const spotifyWeiter = () => api('/me/player/play', { method: 'PUT' });
@@ -185,5 +208,5 @@ export const spotifySpringen = (ms: number) => api(`/me/player/seek?position_ms=
 
 export const spotifyGeraetWaehlen = (id: string) => schreiben(GERAET_KEY, id || null);
 export const spotifyGewaehltesGeraet = () => lesen<string>(GERAET_KEY) ?? '';
-export const spotifyMitspielen = () => lesen<boolean>(MITSPIELEN_KEY) === true;
+export const spotifyMitspielen = () => lesen<boolean>(MITSPIELEN_KEY) !== false;
 export const spotifyMitspielenSetzen = (an: boolean) => schreiben(MITSPIELEN_KEY, an);

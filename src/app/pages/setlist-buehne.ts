@@ -1,7 +1,8 @@
-import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild, effect, untracked } from '@angular/core';
 import { UebeStatus, eigenerStatus, statusLabel } from '../data/uebe-status';
 import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
 import { SpotifySteuerung } from './spotify-steuerung';
+import { SpotifySpieler } from '../data/spotify-spieler';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
@@ -117,7 +118,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
             <!-- Spotify-Player (Übe- und Probe-Modus): erst auf Knopfdruck geladen, wechselt mit dem Song -->
             @if (spotifyMoeglich()) {
               <!-- ganze Songs über die Spotify-App (Premium, data/spotify-remote.ts); darunter der Vorschau-Player als Rückfall -->
-              <app-spotify-steuerung [trackId]="spotifyId()" (verbindung)="spotifyFern.set($event)" />
+              <app-spotify-steuerung (verbindung)="spotifyFern.set($event)" />
               @if (!spotifyFern()) {
               <p class="spotify-zeile"><button type="button" class="ton spotify-knopf" [class.on]="spotifyAn()" (click)="spotifyUmschalten($event)" [attr.aria-pressed]="spotifyAn()" title="30-Sekunden-Vorschau im eingebetteten Spotify-Player (ohne Anmeldung)">♫ {{ spotifyAn() ? 'Vorschau ausblenden' : 'Vorschau anhören' }}</button></p>
               }
@@ -367,6 +368,25 @@ export class SetlistBuehne {
   protected readonly spotifyAn = signal(false);
   /** Spotify-Fernsteuerung verbunden – dann keine Vorschau (Rückfall) */
   protected readonly spotifyFern = signal(false);
+  // Fernsteuerung (data/spotify-spieler.ts): immer den angezeigten Song melden – gespielt wird nur er; beim Verlassen
+  // des Modus pausieren
+  private readonly spotifySpieler = inject(SpotifySpieler);
+  private readonly spotifyMelden = (() => {
+    if (typeof window === 'undefined') return;
+    let gestartet = false;
+    effect(() => {
+      const an = this.ueben() || !!this.probe();
+      const t = an && this.online() ? this.spotifyId() : undefined;
+      untracked(() => {
+        if (an && !gestartet) {
+          gestartet = true;
+          this.spotifySpieler.start();
+        }
+        if (gestartet) this.spotifySpieler.songSetzen(t);
+      });
+    });
+    inject(DestroyRef).onDestroy(() => gestartet && this.spotifySpieler.ende());
+  })();
   private readonly online = signal(typeof navigator === 'undefined' || navigator.onLine !== false);
   private readonly spotifyTracks = (() => {
     const m = new Map<string, string>();

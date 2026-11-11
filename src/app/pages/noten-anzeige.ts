@@ -1,6 +1,7 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { UebeStatus } from '../data/uebe-status';
 import { StatusSchalter } from './status-schalter';
+import { SpotifySpieler } from '../data/spotify-spieler';
 import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
@@ -53,6 +54,10 @@ const BREITE_KEY = 'bn-noten-breite';
           </span>
         }
         <!-- Übe- und Probe-Modus: Mitschnitt und eigener Übe-Status (Übe-Modus: danach die nächste Karte) -->
+        @if (spotify.verbunden() && spotify.track()) {
+          <!-- Übe- und Probe-Modus: den angezeigten Song über Spotify abspielen (data/spotify-spieler.ts) -->
+          <button type="button" class="spotify-play" [class.an]="spotify.spielt()" (click)="$event.stopPropagation(); spotify.umschalten()" [disabled]="spotify.laeuft()" [attr.aria-label]="spotify.spielt() ? 'Spotify: Pause' : 'Auf Spotify abspielen'" [title]="spotify.hinweis() || (spotify.spielt() ? 'Spotify: Pause' : 'Song auf Spotify abspielen')">♫ {{ spotify.spielt() ? '⏸' : '▶' }}</button>
+        }
         @if (bewerten()) {
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
           <app-status-schalter [kopf]="true" [status]="status()" [weiter]="weiter()" [sperren]="sperren()" (gewaehlt)="wertung.emit($event)" />
@@ -146,6 +151,7 @@ const BREITE_KEY = 'bn-noten-breite';
   `,
 })
 export class NotenAnzeige {
+  protected readonly spotify = inject(SpotifySpieler);
   /** aktueller Song (undefined = Pause) */
   readonly song = input<Song>();
   readonly info = input<SongInfo>();

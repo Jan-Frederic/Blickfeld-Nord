@@ -45,12 +45,21 @@ async function parallel(neuerTab, pruefe) {
 
 async function scrollen(tab, pause) {
   // nach unten scrollen, damit per @defer nachgeladene Abschnitte erscheinen
-  await tab.evaluate(async (pause) => {
-    for (let y = 0; y < document.body.scrollHeight; y += 600) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, pause));
-    }
-  }, pause);
+  const lauf = () =>
+    tab.evaluate(async (pause) => {
+      for (let y = 0; y < document.body.scrollHeight; y += 600) {
+        window.scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, pause));
+      }
+    }, pause);
+  try {
+    await lauf();
+  } catch (e) {
+    // die Seite hat währenddessen noch einmal navigiert (Weiterleitung der App) – warten, bis sie steht, und noch einmal
+    if (!/context was destroyed|navigation/i.test(String(e?.message))) throw e;
+    await tab.waitForLoadState('networkidle').catch(() => {});
+    await lauf();
+  }
 }
 
 // bypassCSP: axe wird als Skript in die Seite gelegt – das blockt die Content-Security-Policy der Seite sonst (zu Recht)

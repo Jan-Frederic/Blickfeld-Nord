@@ -18,7 +18,7 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Song-Liste', buehne: 'Ja (Titelanzeige)', probe: 'Ja – auch in der Kopfleiste der Notenansicht', ueben: 'Ja – die Karten, auch in der Kopfleiste der Notenansicht' },
   { was: 'Wunsch-Suche', buehne: 'Ja', probe: 'Ja', ueben: 'Nein' },
   { was: 'Wischen', buehne: 'Seitlich: blättern. Hoch: Notenansicht gleitet herein. Runter (Kopfleiste sichtbar, Blatt oben): zurück zur Titelanzeige', probe: 'wie im Bühnen-Modus', ueben: 'wie im Bühnen-Modus' },
-  { was: 'Spotify', buehne: '–', probe: 'Titelanzeige (Song aus einer Spotify-Liste, mit Netz): mit Premium „Spotify verbinden“ – ▶ spielt den ganzen Song in der Spotify-App oder auf einem Lautsprecher; sonst „Vorschau anhören“ (30 Sekunden)', ueben: 'wie im Probe-Modus' },
+  { was: 'Spotify', buehne: '–', probe: 'Titelanzeige (Song aus einer Spotify-Liste, mit Netz): mit Premium „Spotify verbinden“ – ▶ spielt den ganzen Song in der Spotify-App oder auf einem Lautsprecher (auch als ♫ ▶ in der Kopfleiste der Notenansicht); beim Weiterblättern läuft der jeweils angezeigte Song. Sonst „Vorschau anhören“ (30 Sekunden)', ueben: 'wie im Probe-Modus' },
   { was: 'Mitschnitt', buehne: '–', probe: 'Mikrofon in der Probe-Leiste: diesen Song aufnehmen und nachhören', ueben: 'Mitschnitt-Panel: Proben-Aufnahmen anhören, Schleife, langsamer' },
   { was: 'Klick', buehne: 'Originaltempo', probe: 'Übungstempo (100 → 70 %)', ueben: 'wie im Bühnen-Modus' },
   { was: 'Am Ende', buehne: 'Zurück zur Setlist bzw. Übersicht', probe: 'Zusammenfassung (Sitzt / Nochmal mit Namen / Nicht drangekommen, Zeit) – Rest mit einem Klick auf die nächste Probe', ueben: 'Ergebnis, z. B. „3× Sitzt, 1× Eingenordet 🎉“' },
