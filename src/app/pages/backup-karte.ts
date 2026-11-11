@@ -4,7 +4,7 @@ import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { GESICHERT_KEY, backupDatei, backupEinlesen, backupGemerkt } from './backstage-sync';
 import { mb } from '../data/aufraeumen';
-import { BACKUP_BEHALTEN, BACKUP_ORDNER, DATEN_BACKUP, NOTEN_BACKUP, backupZeit, backupsSortiert, backupsZuLoeschen } from '../data/backup-regeln';
+import { BACKUP_AUFRAEUMEN_BEHALTEN, BACKUP_BEHALTEN, BACKUP_ORDNER, DATEN_BACKUP, NOTEN_BACKUP, backupZeit, backupsAufraeumen, backupsSortiert, backupsZuLoeschen } from '../data/backup-regeln';
 
 // Backstage → Einstellungen → Backup: alles dieses Geräts in einer Datei sichern und wiederherstellen – Backstage-Daten
 // (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan, Nachbereitungen, Songs-Entwurf …), Einstellungen und
@@ -48,6 +48,10 @@ const datum = (t: number) => (t ? new Date(t).toLocaleString('de-DE', { dateStyl
             }
           </ul>
           <p class="klein">Ergänzt die Daten dieses Geräts – vorher zeigt eine Rückfrage, was neu ist und was sich ändert.</p>
+          @if (sync.darfLoeschen() && vorhanden().length > aufraeumenBehalten) {
+            <!-- nur wer den Sync-Ordner besitzt: alte Backups für die ganze Band löschen, die beiden neuesten bleiben -->
+            <button type="button" class="aufraeumen" (click)="aufraeumen()" [disabled]="laeuft()"><mat-icon>delete_sweep</mat-icon> {{ vorhanden().length - aufraeumenBehalten }} ältere {{ vorhanden().length - aufraeumenBehalten === 1 ? 'Backup' : 'Backups' }} löschen – die {{ aufraeumenBehalten }} neuesten bleiben</button>
+          }
         </details>
       }
       <details>
@@ -81,6 +85,7 @@ const datum = (t: number) => (t ? new Date(t).toLocaleString('de-DE', { dateStyl
     .liste li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 6px 0; border-bottom: 1px solid var(--bn-line); font-size: .86rem; }
     .liste li span { overflow-wrap: anywhere; } .liste small, .klein { color: var(--bn-fog); font-size: .8rem; }
     .meldung.fehler { color: #e07a5a; }
+    button.aufraeumen { margin-top: 4px; border-color: #e07a5a; color: #e07a5a; }
   `,
 })
 export class BackupKarte {
@@ -94,6 +99,29 @@ export class BackupKarte {
   /** alle Backups im Ordner „Backup“ (auch frühere „Backstage“-Sicherungen und Notenpakete), neueste zuerst */
   protected readonly vorhanden = signal<{ pfad: string; name: string; art: string; datum: string; groesse: string }[]>([]);
   protected readonly behalten = BACKUP_BEHALTEN;
+  protected readonly aufraeumenBehalten = BACKUP_AUFRAEUMEN_BEHALTEN;
+
+  /**
+   * Alte Backups löschen, bis auf die beiden neuesten – nur mit Berechtigung „Daten löschen“ (Besitzer des
+   * Sync-Ordners). Vorher abgleichen (damit Backups anderer Geräte mitzählen), dann über den Lösch-Weg der
+   * Synchronisation – aus OneDrive und von allen Geräten.
+   */
+  protected aufraeumen(): Promise<void> {
+    return this.tun(async () => {
+      if (!this.sync.darfLoeschen()) throw new Error('Nur wer den Sync-Ordner besitzt, darf Backups löschen.');
+      const o = await this.sync.lokal(true);
+      if (!o) throw new Error('Kein Zugriff auf den lokalen Ordner – unter Synchronisation wählen.');
+      await this.sync.jetzt();
+      const weg = backupsAufraeumen(await o.liste());
+      if (!weg.length) return 'Nichts zu löschen – es gibt höchstens zwei Backups.';
+      const neueste = backupsSortiert(await o.liste()).slice(0, BACKUP_AUFRAEUMEN_BEHALTEN).map((x) => datum(backupZeit(x)));
+      if (!confirm(`${weg.length} ${weg.length === 1 ? 'älteres Backup' : 'ältere Backups'} aus OneDrive löschen – für die ganze Band?\n\nEs bleiben: ${neueste.join(' und ')}.`)) return null;
+      // über den Lösch-Weg der Synchronisation: jedes Gerät entfernt sie beim nächsten Abgleich, keiner lädt sie wieder hoch
+      const n = await this.sync.ausOneDriveLoeschen(weg.map((x) => ({ name: x.pfad.split('/').at(-1)!, groesse: x.groesse })));
+      if (!n) throw new Error('Die Backups ließen sich nicht löschen.');
+      return `${weg.length} ${weg.length === 1 ? 'älteres Backup' : 'ältere Backups'} gelöscht ✓ – die ${BACKUP_AUFRAEUMEN_BEHALTEN} neuesten bleiben.`;
+    });
+  }
 
   constructor() {
     void this.oneDriveStand();

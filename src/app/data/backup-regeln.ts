@@ -41,3 +41,9 @@ export function backupsZuLoeschen<T extends { pfad: string; geaendert?: string }
     .slice(BACKUP_BEHALTEN)
     .filter((x) => jetzt - backupZeit(x) > BACKUP_TTL_TAGE * 864e5);
 }
+
+/** von Hand aufräumen (nur wer den Sync-Ordner besitzt): alle Backups bis auf die neuesten „behalten“ */
+export const BACKUP_AUFRAEUMEN_BEHALTEN = 2;
+export function backupsAufraeumen<T extends { pfad: string; geaendert?: string }>(liste: T[], behalten = BACKUP_AUFRAEUMEN_BEHALTEN): T[] {
+  return backupsSortiert(liste).slice(behalten);
+}

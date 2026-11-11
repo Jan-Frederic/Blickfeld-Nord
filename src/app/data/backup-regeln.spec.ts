@@ -1,4 +1,4 @@
-import { backupName, backupsSortiert, backupsZuLoeschen, istBackup } from './backup-regeln';
+import { backupName, backupsAufraeumen, backupsSortiert, backupsZuLoeschen, istBackup } from './backup-regeln';
 
 describe('Backup-Regeln', () => {
   const jetzt = new Date(2026, 10, 3, 8, 0).getTime();
@@ -28,5 +28,19 @@ describe('Backup-Regeln', () => {
     // gemischt: nur die alten jenseits der letzten 5
     const gemischt = [...jung.slice(0, 4), b('2026-06-01'), b('2026-04-01'), b('2025-12-01')];
     expect(backupsZuLoeschen(gemischt, jetzt).map((x) => x.pfad)).toEqual([b('2026-04-01').pfad, b('2025-12-01').pfad]);
+  });
+});
+
+describe('Backups von Hand aufräumen', () => {
+  it('alle bis auf die beiden neuesten (auch frühere Sicherungen), andere Dateien bleiben', () => {
+    const liste = [
+      { pfad: 'Backup/blickfeld-nord-backup-2026-11-03-0806.json' },
+      { pfad: 'Backup/blickfeld-nord-backup-2026-11-10-2100.json' },
+      { pfad: 'Backup/blickfeld-nord-backup-2026-10-01-1200.json' },
+      { pfad: 'Backstage/blickfeld-nord-backstage-alle-2026-05-01.json' },
+      { pfad: 'Noten/Iris.pdf' },
+    ];
+    expect(backupsAufraeumen(liste).map((x) => x.pfad)).toEqual(['Backup/blickfeld-nord-backup-2026-10-01-1200.json', 'Backstage/blickfeld-nord-backstage-alle-2026-05-01.json']);
+    expect(backupsAufraeumen(liste.slice(0, 2))).toEqual([]);
   });
 });

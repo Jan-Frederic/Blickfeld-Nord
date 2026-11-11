@@ -679,6 +679,11 @@ frühere, getrennte Daten- bzw. Noten-Backups sind als solche markiert) – jede
 zeigt eine Rückfrage, was neu ist und was sich ändert). Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
 **Heute fällig**; nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
 
+**Alte Backups löschen** (nur wer den Sync-Ordner besitzt, Berechtigung „Daten löschen“): unter **Backups in OneDrive
+(…)** der Knopf „n ältere Backups löschen – die 2 neuesten bleiben“. Erst wird abgeglichen (damit Backups anderer
+Geräte mitzählen), nach einer Rückfrage mit den beiden verbleibenden Backups werden alle älteren über den Lösch-Weg der
+Synchronisation entfernt – aus OneDrive und von allen Geräten (`backupsAufraeumen` in `data/backup-regeln.ts`).
+
 - **Backup erstellen:** mit eingerichteter Synchronisation in den Unterordner `Backup` des OneDrive-Ordners
   (`blickfeld-nord-backup-JJJJ-MM-TT-HHMM.json`) und gleich abgleichen. **Aufbewahrung:** ein halbes Jahr – die
   letzten 5 Backups bleiben aber immer, auch wenn sie älter sind; ältere werden beim Erstellen eines neuen Backups
