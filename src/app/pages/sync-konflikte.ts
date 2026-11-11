@@ -4,6 +4,7 @@ import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { eintragBeschreiben } from '../data/aufraeumen';
 import { keyAusPfad, konfliktVon } from '../data/spiegel';
+import { zusammenfuehrbar, zusammenfuehren } from '../data/spiegel-merge';
 
 // Abgleich → Synchronisation → Konflikte: Haben zwei Geräte denselben Eintrag gleichzeitig geändert, gewinnt beim
 // Abgleich die neuere Fassung, die ältere bleibt als Konfliktkopie liegen. Hier stehen beide nebeneinander:
@@ -34,6 +35,7 @@ interface Konflikt {
               <span class="knoepfe">
                 <button type="button" (click)="behalten(k)" [disabled]="sync.laeuft()">Aktuelle behalten</button>
                 <button type="button" (click)="uebernehmen(k)" [disabled]="sync.laeuft()">Kopie übernehmen</button>
+                @if (k.key && zusammenfuehrbar(k.key)) { <button type="button" class="beide" (click)="zusammen(k)" [disabled]="sync.laeuft()" title="Beide Fassungen vereinen – z. B. Karteikarten und Verlauf von beiden Geräten">Zusammenführen</button> }
               </span>
             </li>
           }
@@ -51,6 +53,7 @@ interface Konflikt {
     button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .82rem; cursor: pointer; }
     button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     button:disabled { opacity: .4; }
+    button.beide { border-color: #5fb88a; color: #5fb88a; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
   `,
 })
@@ -116,6 +119,17 @@ export class SyncKonflikte {
     const kopie = await o.lesen(k.pfad);
     if (k.key) localStorage.setItem(k.key, await kopie.text());
     else await o.schreiben(k.original, kopie);
+    await o.loeschen(k.pfad);
+    await this.fertig();
+  }
+
+  protected readonly zusammenfuehrbar = zusammenfuehrbar;
+  // Übe-Daten: beide Fassungen vereinen (data/spiegel-merge.ts), Kopie entfernen
+  protected async zusammen(k: Konflikt): Promise<void> {
+    const o = await this.sync.lokal(true);
+    if (!o || !k.key) return;
+    const kopie = await (await o.lesen(k.pfad)).text();
+    localStorage.setItem(k.key, zusammenfuehren(k.key, localStorage.getItem(k.key), kopie));
     await o.loeschen(k.pfad);
     await this.fertig();
   }

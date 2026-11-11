@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt } from './spiegel';
+import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt, spiegelPfad } from './spiegel';
+import { zusammenfuehren } from './spiegel-merge';
 import { letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, ergebnisText, istDatenPfad, synchronisieren } from './sync';
@@ -130,10 +131,19 @@ export class SyncService {
     return out;
   }
 
-  // vor dem Abgleich: geänderte Einträge als Dateien in den lokalen Sync-Ordner, gelöschte dort entfernen
-  private async spiegelnVorher(lokal: SyncOrdner, person: string): Promise<void> {
+  /**
+   * vor dem Abgleich: geänderte Einträge als Dateien in den lokalen Sync-Ordner, gelöschte dort entfernen.
+   * Neu aufgesetztes Gerät (noch nie gespiegelt): nichts hochschreiben – was es schon hat (z. B. ein leerer Karteikasten
+   * nach „Ich bin …“), würde sonst als neuere Fassung den Stand der Band überschreiben und eine Konfliktkopie erzeugen.
+   * Diese Einträge kommen nach dem Abgleich dran (spiegelnNachher): mit OneDrive zusammengeführt bzw. dann hochgeladen.
+   * Gibt die zurückgestellten Schlüssel zurück.
+   */
+  private async spiegelnVorher(lokal: SyncOrdner, person: string): Promise<string[]> {
     const z: SpiegelZustand = { ...(await spiegelZustandLaden()) };
-    const plan = planVorher(this.werte(), z, person);
+    const neuesGeraet = !Object.keys(z).length;
+    const werte = this.werte();
+    const zurueck = neuesGeraet ? Object.keys(werte).filter((k) => spiegelPfad(k, person)) : [];
+    const plan = planVorher(neuesGeraet ? {} : werte, z, person);
     for (const d of plan.schreiben) {
       const datei = await lokal.schreiben(d.pfad, new Blob([d.text], { type: 'application/json' }));
       z[d.pfad] = { hash: d.hash, version: datei.version };
@@ -159,6 +169,7 @@ export class SyncService {
     }
     await spiegelZustandSetzen(z);
     this.spiegel.set(z);
+    return zurueck;
   }
 
   /** Mitschnitt mit der Band teilen: in den Ordner „Mitschnitte/<Song>/“ des Sync-Ordners legen und abgleichen */
@@ -291,10 +302,39 @@ export class SyncService {
   }
 
   // nach dem Abgleich: neue/geänderte Dateien in localStorage übernehmen, verschwundene Einträge entfernen
-  private async spiegelnNachher(lokal: SyncOrdner, person: string, liste: SyncDatei[]): Promise<number> {
+  // zurueck: Einträge eines neu aufgesetzten Geräts (spiegelnVorher) – liegt die Datei schon in OneDrive, gilt deren
+  // Stand (Übe-Daten zusammengeführt, data/spiegel-merge.ts), sonst wird der Eintrag jetzt geschrieben. true in
+  // hochladen: es muss gleich noch ein schneller Abgleich laufen.
+  private hochladen = false;
+  private async spiegelnNachher(lokal: SyncOrdner, person: string, liste: SyncDatei[], zurueck: string[] = []): Promise<number> {
     const z: SpiegelZustand = { ...(await spiegelZustandLaden()) };
-    const plan = planNachher(liste, z, person);
+    const dateien = new Map(liste.map((d) => [d.pfad, d]));
     let n = 0;
+    this.spiegelt = true;
+    try {
+      for (const key of zurueck) {
+        const pfad = spiegelPfad(key, person);
+        const eigen = localStorage.getItem(key);
+        if (!pfad || eigen === null) continue;
+        const d = dateien.get(pfad);
+        const andere = d ? await (await lokal.lesen(pfad)).text() : null;
+        const text = zusammenfuehren(key, eigen, andere);
+        if (text !== eigen) {
+          localStorage.setItem(key, text);
+          n++;
+        }
+        if (d && text === andere) z[pfad] = { hash: hash(text), version: d.version };
+        else {
+          // nur hier vorhanden oder zusammengeführt: als Datei ablegen, der nächste Abgleich lädt sie hoch
+          const datei = await lokal.schreiben(pfad, new Blob([text], { type: 'application/json' }));
+          z[pfad] = { hash: hash(text), version: datei.version };
+          this.hochladen = true;
+        }
+      }
+    } finally {
+      this.spiegelt = false;
+    }
+    const plan = planNachher(liste, z, person);
     this.spiegelt = true;
     try {
       for (const d of plan.lesen) {
@@ -502,7 +542,7 @@ export class SyncService {
       const person = personOrdner(konto.username);
       this.person.set(person);
       this.stand.set({ text: 'Einstellungen und Daten vorbereiten …' });
-      await this.spiegelnVorher(lokal, person);
+      const zurueck = await this.spiegelnVorher(lokal, person);
       // dieses Gerät als „zuletzt abgeglichen“ melden (höchstens stündlich eine neue Datei)
       const g = geraetMeldung(person);
       if (g) await lokal.schreiben(g.pfad, new Blob([g.text], { type: 'application/json' })).catch(() => undefined);
@@ -517,7 +557,8 @@ export class SyncService {
       const { ergebnis, lokal: nachListe } = still ? await oneDriveStill(lauf) : await lauf();
       this.neu.set(ergebnis.neu);
       // die Liste nach dem Abgleich kommt aus dem Abgleich selbst – der Ordner muss nicht noch einmal gelesen werden
-      const uebernommen = await this.spiegelnNachher(lokal, person, nachListe);
+      this.hochladen = false;
+      const uebernommen = await this.spiegelnNachher(lokal, person, nachListe, zurueck);
       const noten = !schnell && e.notenAuto ? await this.notenEinlesen(lokal, ergebnis.neu, nachListe) : '';
       const notenSync = await this.notenNachher(lokal, person, nachListe);
       const aufnahmen = schnell ? 0 : await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
@@ -530,6 +571,8 @@ export class SyncService {
       const mit = (aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '') + (weg ? ` · ${weg} für alle gelöschte ${weg === 1 ? 'Noten-Datei' : 'Noten-Dateien'} entfernt` : '');
       const offen = ergebnis.ausstehend?.dateien ? ` · ${ausstehendText(ergebnis.ausstehend)} werden geladen` : '';
       if (offen || (schnell && this.vollFaellig())) danach = 'voll';
+      // neu aufgesetztes Gerät: eigene bzw. zusammengeführte Einträge gleich hochladen
+      else if (this.hochladen) danach = 'schnell';
       letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
@@ -541,7 +584,7 @@ export class SyncService {
       this.laeuft.set(false);
     }
     // angefordert während des Laufs oder PDFs warten: gleich weiter (still – ohne Rückfragen)
-    const weiter = this.nochmal === 'voll' || danach === 'voll' ? 'voll' : this.nochmal;
+    const weiter = this.nochmal === 'voll' || danach === 'voll' ? 'voll' : (this.nochmal ?? danach);
     this.nochmal = null;
     if (weiter && navigator.onLine) void this.jetzt(true, weiter);
   }

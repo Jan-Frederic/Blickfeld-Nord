@@ -745,7 +745,16 @@ jeder Eintrag als eigene kleine Datei im Sync-Ordner gespeichert – so ändern 
 
 **Konflikte:** Ändern zwei Geräte denselben Eintrag gleichzeitig, gewinnt die neuere Fassung, die ältere bleibt als
 Konfliktkopie. Abgleich → Synchronisation zeigt sie mit beiden Fassungen: **Aktuelle behalten** entfernt die Kopie,
-**Kopie übernehmen** macht sie wieder gültig – für alle.
+**Kopie übernehmen** macht sie wieder gültig – für alle. Bei Übe-Daten (Karteikasten, geteilter Kasten, Verlauf,
+Probe-Notizen, „unsicher bei“, heute geübt) gibt es zusätzlich **Zusammenführen**: beide Fassungen werden vereint
+(`data/spiegel-merge.ts`; je Song gewinnt der spätere Stand, Verlauf und Eingenordete von beiden Seiten).
+
+**Gerät neu aufsetzen** (anderer Browser, neues Handy, Speicher gelöscht): Beim allerersten Abgleich eines Geräts
+schreibt es seine Einträge **nicht** vorab in den Sync-Ordner – sonst träte z. B. ein leerer Karteikasten (entsteht
+nach „Ich bin …“) als neuere Fassung gegen den Stand in OneDrive an und machte eine Konfliktkopie. Erst wird geholt;
+danach gilt für jeden Eintrag, der schon in OneDrive liegt, dessen Stand (Übe-Daten mit dem Gerät zusammengeführt),
+was es nur auf dem Gerät gibt, geht im gleich folgenden schnellen Abgleich hoch (`spiegelnVorher`/`spiegelnNachher` in
+`data/sync.service.ts`). Außerdem legt die Umstellung auf die fünf Übe-Status keinen leeren Kasten mehr an.
 
 Jede Änderung wird nach wenigen Sekunden abgeglichen. Solange abgeglichen wird, blendet sich **unten rechts** ein
 Kompass ein und dreht sich (nur online); danach blendet er sich wieder aus – antippen öffnet den Abgleich. Dort steht bei jedem Eintrag ☁ synchron, ⟳ wartet oder

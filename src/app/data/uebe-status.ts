@@ -209,8 +209,12 @@ export function statusMigrieren(heute = new Date().toISOString().slice(0, 10)): 
     if (s === 'eingenordet') eingenordet[k] = heute;
     else if (KASTEN_FUER[s]) stand[k] = { kasten: KASTEN_FUER[s]!, faellig: heute };
   }
+  const gelernt = { ...ladeKastenGeteilt(ich).gelernt, ...eingenordet };
+  // nichts umzustellen (z. B. neues Gerät vor dem ersten Abgleich): nichts schreiben – ein leerer Kasten würde sonst
+  // beim Abgleich als neuere Fassung gegen den Stand in OneDrive antreten
+  if (!Object.keys(stand).length && !Object.keys(gelernt).length) return;
   speichereUeben(stand);
-  teilen(ich, stand, { ...ladeKastenGeteilt(ich).gelernt, ...eingenordet });
+  teilen(ich, stand, gelernt);
 }
 
 // ---- Bühnenreife eines Songs aus dem Status aller Musiker ----
