@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-11",
+  "updated": "2026-11-12",
   "listen": [
     {
       "key": "setlist",
@@ -523,6 +523,13 @@
           "year": 2004,
           "duration": 237,
           "url": "https://open.spotify.com/track/4PFAm88FBkY7IFtvCaGctZ"
+        },
+        {
+          "title": "Weihnacht, was bist du",
+          "artist": "Rolf Zuckowski",
+          "year": 1982,
+          "duration": 134,
+          "url": "https://open.spotify.com/track/5wNqpy9bWHcm0JIgcjaGss"
         }
       ]
     },
