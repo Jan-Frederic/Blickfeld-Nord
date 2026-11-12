@@ -243,7 +243,9 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Hintergrund-Synchronisation des Service Workers (`periodicsync` in `scripts/sw/sw-template.js`, nur installierte App
   auf Android/Chrome/Edge); Fälligkeiten legt die Seite im Speicher `ueben-erinnerung` ab. Die Zahl fälliger Karten am
   App-Symbol (Badge, `setAppBadge`) zeigen nur Computer (installierte App in Chrome/Edge) und iPhone/iPad
-  (Home-Bildschirm, Mitteilungen erlaubt); Android zeigt keine Zahl, höchstens einen Punkt bei einer Benachrichtigung. Im **Song-Dialog** steht „Dein Weg“: der eigene Übe-Status im Lauf
+  (Home-Bildschirm, Mitteilungen erlaubt); Android zeigt keine Zahl, höchstens einen Punkt bei einer Benachrichtigung.
+  Das kleine Symbol der Benachrichtigung in der Android-Statusleiste ist `public/badge-96.png` (weiße Silhouette auf
+  transparent – Android nutzt nur die Deckkraft, ein farbiges Icon erschiene als weißes Quadrat). Im **Song-Dialog** steht „Dein Weg“: der eigene Übe-Status im Lauf
   der Zeit (`uebeWeg` in `data/fortschritt.ts`). In der **Probe-Leiste** stehen die anderen als Zeichen mit Namen
   (○ ✎ ↻ ✓ ✓✓ in den Status-Farben, Text für Screenreader und im Tooltip). Reihenfolge: heute fällige zuerst
   (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
@@ -1184,3 +1186,14 @@ schließt sich von selbst, sobald alles wieder geht. Von Hand: Actions → **Liv
 
 Nicht weiterkommen? Einfach Fred fragen. Über **History** (Uhr-Symbol oben in der Datei) seht ihr jede frühere
 Fassung und könnt den alten Text von dort zurückkopieren.
+
+## App-Icon und Favicons
+
+Alle Icons erzeugt `python3 scripts/favicons.py` (pillow) aus der Kompass-Grafik der Band
+(`scripts/assets/kompass-icon.png`, heller Kompass auf transparentem Grund): App-Icons (`icon-192.png`,
+`icon-512.png`, `apple-touch-icon.png`) zeigen die Grafik auf dunklem Grund, das maskierbare (`icon-maskable-512.png`)
+mit dem Kompass ganz in der sicheren Zone (Android schneidet rund oder eckig zu). Favicons (`favicon.svg` als Vektor,
+`favicon.ico`, 16/32 px) und das Statusleisten-Symbol `badge-96.png` sind dieselben Formen vereinfacht (Ring,
+Nord-Süd-Nadel, „K“, Nabe) – die feinen Gradstriche wären dort nur Brei. Neue Grafik: Datei ersetzen, Skript
+ausführen, committen. Eine installierte App übernimmt ein neues Icon erst, wenn Android sie aktualisiert (nach dem
+Öffnen, meist innerhalb von ein bis zwei Tagen).

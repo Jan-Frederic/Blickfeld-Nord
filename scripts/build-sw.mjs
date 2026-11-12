@@ -21,7 +21,7 @@ const top = readdirSync(DIST).filter((f) => /\.(js|css)$/.test(f) && f !== 'sw.j
 const fonts = readdirSync(join(DIST, 'fonts')).map((f) => `fonts/${f}`);
 // Textschriften (von Angular mit Hash nach media/ kopiert)
 const media = readdirSync(join(DIST, 'media')).filter((f) => f.endsWith('.woff2')).map((f) => `media/${f}`);
-const assets = ['/site.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png', '/hero-800.webp', '/kompass-440.webp'];
+const assets = ['/site.webmanifest', '/favicon.svg', '/icon-192.png', '/badge-96.png', '/icon-512.png', '/hero-800.webp', '/kompass-440.webp'];
 // Seiten selbst landen erst beim Aufruf im Speicher (spart Datenvolumen beim ersten Besuch)
 const files = ['/', '/backstage/index.html', ...top.map((f) => `/${f}`), ...fonts.map((f) => `/${f}`), ...media.map((f) => `/${f}`), ...assets];
 

@@ -109,7 +109,8 @@ self.addEventListener('periodicsync', (event) => {
         body: n === 1 ? '1 Karteikarte ist heute fällig.' : `${n} Karteikarten sind heute fällig.`,
         tag: 'bn-ueben',
         icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        // Statusleiste (Android): nur die Deckkraft zählt – weiße Silhouette auf transparent (scripts/favicons.py)
+        badge: '/badge-96.png',
         data: { url: '/backstage/ueben?modus=1' },
       });
       await cache.put(ERINNERUNG_URL, new Response(JSON.stringify({ ...d, gemeldet: heute }), { headers: { 'Content-Type': 'application/json' } }));

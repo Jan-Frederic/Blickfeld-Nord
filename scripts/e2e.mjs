@@ -2452,7 +2452,7 @@ test('Navigation: angemeldet Sprachen im Untermenü und Backstage-Zugang an letz
 
 test('Kalender-Dateien und Service Worker sind vorhanden', async () => {
   const p = await page();
-  for (const f of ['/konzerte.ics', '/en/konzerte.ics', '/nl/konzerte.ics', '/backstage/kalender.ics', '/sw.js', '/site.webmanifest']) {
+  for (const f of ['/konzerte.ics', '/en/konzerte.ics', '/nl/konzerte.ics', '/backstage/kalender.ics', '/sw.js', '/site.webmanifest', '/badge-96.png', '/icon-maskable-512.png']) {
     const res = await p.request.get(BASE + f);
     expect(res.ok(), `${f} fehlt`);
   }
