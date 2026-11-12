@@ -2048,9 +2048,17 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await p.reload({ waitUntil: 'networkidle' });
   await until(async () => (await ueben.locator('.board li').count()) >= 3 && (await ueben.locator('.board li.ich').count()) === 1, 'Band-Übe-Board fehlt');
   await until(async () => /Iris[\s\S]*David: Üben/.test(await ueben.locator('.gemeinsam').innerText().catch(() => '')), 'Gemeinsam geübte Songs fehlen');
-  // Status direkt ändern: Angels eingenordet → fällt aus dem Kasten; über die Suche wieder zum Üben (Kasten 1)
+  // Status direkt ändern: Angels eingenordet → fällt aus dem Kasten, bleibt aber bis zum nächsten Besuch an seinem Platz
+  // in der Liste (die Reihenfolge ändert sich erst beim nächsten Besuch); über die Suche wieder zum Üben (Kasten 1)
+  const reihenfolge = () => ueben.locator('.liste li .song-start .t').allInnerTexts();
+  const vorher = await reihenfolge();
   await ueben.locator('.liste li', { hasText: 'Angels' }).locator('select').selectOption('eingenordet');
-  await until(async () => (await ueben.locator('.liste li select').count()) === 2, 'Eingenordet bleibt im Karteikasten');
+  await until(async () => (await ueben.locator('.liste li.raus', { hasText: 'Angels' }).count()) === 1, 'Eingenordeter Song verschwindet sofort aus der Liste');
+  expect(JSON.stringify(await reihenfolge()) === JSON.stringify(vorher), 'Status-Wahl verschiebt die Songs in der Liste');
+  // die Suche filtert auch die eigenen Karten
+  await ueben.locator('.suche input').fill('Iris');
+  await until(async () => (await ueben.locator('ul.liste:not(.gemeinsam) > li').count()) === 1 && (await ueben.locator('.filter-hinweis').innerText()).includes('1 von 3'), async () => `Suche filtert die eigenen Karten nicht: ${(await reihenfolge()).join(', ')} / ${await ueben.locator('.filter-hinweis').innerText().catch(() => '–')} / ${await ueben.locator('ul.liste:not(.gemeinsam) > li').count()}`);
+  await ueben.locator('.suche input').fill('');
   await until(async () => (await ueben.locator('.aussen.eingenordet .n').innerText().catch(() => '')) === '1', 'Eingenordet wird nicht gezählt');
   // Kästen mit Status-Symbol im Rahmen „Karteikasten“; Nicht gelernt und Eingenordet stehen außerhalb
   expect((await ueben.locator('.kartei .kaesten li .sym').allInnerTexts()).join(' ') === '✎ ↻ ↻ ✓ ✓', 'Kästen ohne Status-Symbole');
@@ -2065,7 +2073,10 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => (await ueben.locator('.meldung').innerText().catch(() => '')).includes('3 Songs zum Üben dazu'), 'Sammlung wird nicht zum Üben dazugenommen');
   await until(async () => (await ueben.locator('.kaesten li').nth(0).locator('.n').innerText()) === '4', 'Sammlung nicht in Kasten 1');
   for (const k of ['In der Weihnachtsbäckerei', 'Kleine Kinder', 'Weihnacht, was bist du']) await ueben.locator('.liste li', { hasText: k }).locator('select').selectOption('nicht');
-  await until(async () => (await ueben.locator('.liste li select').count()) === 3, 'Nicht gelernt bleibt im Karteikasten');
+  // „Nicht gelernt“: bleibt bis zum nächsten Besuch stehen, dann ist es aus der Liste
+  await until(async () => (await ueben.locator('.liste li.raus').count()) === 3, 'Nicht gelernt wird nicht als „nicht mehr im Karteikasten“ gezeigt');
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => (await ueben.locator('.liste li select').count()) === 3, 'Nicht gelernt bleibt nach dem neuen Besuch im Karteikasten');
   // Klick auf einen Song der Liste: Übe-Modus genau dort; Song-Liste auch in der Kopfleiste der Noten
   const zweiter = (await ueben.locator('.liste li .song-start .t').nth(1).innerText()).trim();
   await ueben.locator('.liste li .song-start').nth(1).click();

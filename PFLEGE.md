@@ -228,7 +228,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht):
   persönlich (Einstellungen → „Ich bin …“). Direkt über „Deine Songs im Karteikasten“ eine **Suche**: einzelne Songs oder ganze **Setlists**,
   **Sammlungen** und **Spotify-Listen** zum Üben dazunehmen – Songs ohne Status kommen auf „Üben“ (Kasten 1), die übrigen
-  behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Darunter die fünf
+  behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Dieselbe Suche
+  filtert ab 2 Zeichen auch „Deine Songs im Karteikasten“ („„Iris“: 1 von 12 Songs in deinen Karten“). Die Liste hat je
+  Besuch eine feste Reihenfolge: Ein Status per Auswahlfeld verschiebt den Song nicht, neu hinzugekommene stehen oben;
+  Songs, die dabei aus dem Karteikasten fallen (Eingenordet, Nicht gelernt), bleiben gedämpft mit „–“ an ihrem Platz –
+  neu sortiert wird erst beim nächsten Besuch der Seite. Darunter die fünf
   Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus),
   oben rechts ein **Umschalter mit den fünf Status** (der aktuelle ist hervorgehoben; auf schmalen Bildschirmen nur die
   Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status, die Karte bleibt stehen (weiter per Wischen, Tippen, Pfeiltaste

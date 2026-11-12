@@ -875,6 +875,11 @@ app-backstage-ueben {
   .liste .song { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .liste small { display: block; color: var(--bn-fog); font-size: .78rem; }
   .liste .leer { color: var(--bn-fog); font-size: .9rem; }
+  // gerade aus dem Karteikasten gefallen (Eingenordet, Nicht gelernt): bleibt bis zum nächsten Besuch, gedämpft
+  .liste li.raus .song { opacity: .6; }
+  .liste li.raus .kasten { border-style: dashed; }
+  .liste select.eingenordet { border-color: #5fb88a; color: #5fb88a; }
+  .filter-hinweis { margin: -4px 0 8px; color: var(--bn-fog); font-size: .82rem; }
   .t { font-weight: 500; }
   .a { color: var(--bn-fog); font-size: .88rem; }
   .suche { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bn-line); max-width: 560px; }

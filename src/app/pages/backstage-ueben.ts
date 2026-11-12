@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ladeIch, rufname } from '../data/band-ich';
-import { KASTEN_TAGE, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeKastenGeteilt, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
+import { KASTEN_TAGE, Karte, alsGeuebtMerken, heuteGeuebt, jeKasten, karten, ladeKastenGeteilt, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 import { ladeFortschritt } from '../data/fortschritt';
 import { STATUS, UebeStatus, alleStatus, eigeneStatus, gemeinsamDran, uebeWoche, statusAusKasten, statusInfo, statusLabel, statusMigrieren, statusSetzen, uebeSchnappschuss, uebeWertung } from '../data/uebe-status';
 import { ListenQuelle, listenQuellen, listenTreffer } from '../data/listen-quellen';
@@ -69,7 +69,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         <!-- Suche: einzelne Songs oder ganze Setlists, Sammlungen und Spotify-Listen zum Üben dazunehmen -->
         <label class="suche">
           <mat-icon aria-hidden="true">search</mat-icon>
-          <input type="search" placeholder="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen …" aria-label="Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
+          <input type="search" placeholder="Song suchen oder hinzufügen …" aria-label="Song in deinen Karten suchen oder Song, Setlist, Sammlung oder Spotify-Liste zum Üben hinzufügen" [value]="suche()" (input)="suche.set($any($event.target).value)" />
         </label>
         @if (listenTreffer().length || treffer().length) {
           <ul class="treffer">
@@ -83,19 +83,22 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         }
         @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
         <h3>Deine Songs im Karteikasten</h3>
+        @if (gefiltert(); as f) { <p class="filter-hinweis" role="status">„{{ suche().trim() }}“: {{ f }} von {{ liste().length }} {{ liste().length === 1 ? 'Song' : 'Songs' }} in deinen Karten</p> }
         <ul class="liste">
-          @for (k of alle(); track k.key) {
-            <li [class.dran]="k.dran">
-              <span class="kasten" [attr.aria-label]="'Kasten ' + k.kasten">{{ k.kasten }}</span>
+          @for (k of sichtbar(); track k.key) {
+            <li [class.dran]="k.dran" [class.raus]="!k.kasten">
+              <span class="kasten" [attr.aria-label]="k.kasten ? 'Kasten ' + k.kasten : 'nicht mehr im Karteikasten'">{{ k.kasten || '–' }}</span>
               <!-- Klick auf den Song: Übe-Modus direkt an dieser Stelle -->
               <button type="button" class="song song-start" (click)="uebeModus(false, k.key)" [attr.aria-label]="k.title + ' im Übe-Modus öffnen'" title="Im Übe-Modus ab hier"><span class="t">{{ k.title }}</span>&ngsp;<span class="a">{{ k.artist }}</span>
-                <small>{{ k.dran ? 'heute dran' : 'wieder am ' + datum(k.faellig) }}{{ k.auftritt ? ' · im Set am ' + datum(k.auftritt) : '' }}</small></button>
-              <select [class]="statusAusKasten(k.kasten)" [attr.aria-label]="'Status von ' + k.title" (change)="setzen(k.key, $any($event.target).value)">
-                @for (s of status; track s.id) { <option [value]="s.id" [selected]="s.id === statusAusKasten(k.kasten)">{{ s.label }}</option> }
+                <small>{{ !k.kasten ? 'nicht mehr im Karteikasten – fällt beim nächsten Besuch aus der Liste' : k.dran ? 'heute dran' : 'wieder am ' + datum(k.faellig) }}{{ k.auftritt ? ' · im Set am ' + datum(k.auftritt) : '' }}</small></button>
+              <select [class]="k.status" [attr.aria-label]="'Status von ' + k.title" (change)="setzen(k.key, $any($event.target).value)">
+                @for (s of status; track s.id) { <option [value]="s.id" [selected]="s.id === k.status">{{ s.label }}</option> }
               </select>
             </li>
           } @empty {
+            @if (gefiltert() !== null) { <li class="leer">Keiner deiner Songs passt zu „{{ suche().trim() }}“.</li> } @else {
             <li class="leer">Der Karteikasten ist leer. Songs kommen über den Status (Song-Dialog, Probe-Modus, Nachbereitung) oder oben über die Suche dazu.</li>
+            }
           }
         </ul>
 
@@ -152,6 +155,39 @@ export class BackstageUeben {
     return m;
   })();
   protected readonly alle = computed(() => (this.stand(), karten(ladeUeben(), this.auftritte, this.heute)));
+  /**
+   * Liste der Karten in fester Reihenfolge je Besuch: Ein neuer Status verschiebt den Song nicht (sortiert wird erst beim
+   * nächsten Besuch); neu hinzugekommene stehen oben. Songs, die gerade aus dem Karteikasten gefallen sind (Eingenordet,
+   * Nicht gelernt), bleiben bis dahin mit ihrem neuen Status an ihrem Platz.
+   */
+  private readonly platz = new Map<string, number>();
+  private readonly zuletzt = new Map<string, Karte>();
+  protected readonly liste = computed(() => {
+    const alle = this.alle();
+    const eigene = this.eigene();
+    if (!this.platz.size) alle.forEach((k, i) => this.platz.set(k.key, i));
+    let oben = Math.min(0, ...this.platz.values());
+    for (const k of alle) {
+      if (!this.platz.has(k.key)) this.platz.set(k.key, --oben);
+      this.zuletzt.set(k.key, k);
+    }
+    const drin = new Map(alle.map((k) => [k.key, k]));
+    return [...this.platz.entries()]
+      .sort((a, b) => a[1] - b[1])
+      .map(([key]) => {
+        const k = drin.get(key);
+        if (k) return { ...k, status: statusAusKasten(k.kasten) };
+        const alt = this.zuletzt.get(key)!;
+        return { ...alt, kasten: 0, dran: false, status: eigene.get(key) ?? ('nicht' as UebeStatus) };
+      });
+  });
+  /** Suche filtert auch die eigenen Karten (ab 2 Zeichen) */
+  protected readonly sichtbar = computed(() => {
+    const q = norm(this.suche().trim());
+    return q.length < 2 ? this.liste() : this.liste().filter((k) => norm(`${k.title} ${k.artist}`).includes(q));
+  });
+  /** Zahl der passenden Karten während einer Suche (sonst null) */
+  protected readonly gefiltert = computed(() => (norm(this.suche().trim()).length < 2 ? null : this.sichtbar().length));
   private readonly eigene = computed(() => (this.stand(), eigeneStatus()));
   protected readonly eingenordet = computed(() => [...this.eigene().values()].filter((s) => s === 'eingenordet').length);
   /** Songs aus den Spotify-Listen ohne eigenen Status */
