@@ -4,6 +4,7 @@
 // Halbseiten-Blättern bei PDF-Noten (erst die obere Hälfte zeigt den Anfang der nächsten Seite, dann ganz).
 const TASTEN_KEY = 'bn-buehne-tasten';
 const HALB_KEY = 'bn-buehne-halbseite';
+const BALKEN_KEY = 'bn-buehne-balken-tippen';
 
 export interface Tasten {
   weiter: string[];
@@ -53,6 +54,25 @@ export function halbseite(): boolean {
 export function halbseiteSetzen(an: boolean): void {
   try {
     localStorage.setItem(HALB_KEY, an ? '1' : '0');
+  } catch {
+    // egal
+  }
+}
+
+/** Fortschrittsbalken unten in der Titelanzeige antippbar (springt zu einem Song)? Standard: nein – nur Anzeige, damit
+ *  niemand beim Hochwischen vom unteren Rand aus versehentlich den Song wechselt */
+export function balkenTippen(): boolean {
+  try {
+    return localStorage.getItem(BALKEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function balkenTippenSetzen(an: boolean): void {
+  try {
+    if (an) localStorage.setItem(BALKEN_KEY, '1');
+    else localStorage.removeItem(BALKEN_KEY);
   } catch {
     // egal
   }

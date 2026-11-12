@@ -656,7 +656,10 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
   unten wischen oder Tippen aufs Schild holt sie zurück. Waagerecht wischen blättert wie gewohnt.
 - **Halbseiten-Blättern** und eigene **Pedal-Tasten:** unter Backstage → **Einstellungen → Bühnen-Modus**. Mit
   Halbseiten-Blättern zeigt der erste Tritt oben schon den Anfang der nächsten Seite, der zweite blättert ganz um.
-  Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten. Vier Aktionen (`data/buehne-einstellungen.ts`):
+  Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten. **Fortschrittsbalken** unten in der Titelanzeige
+  (orange, das ganze Set): Standard nur Anzeige – mit „Fortschrittsbalken … antippen springt zu einem Song“
+  (`bn-buehne-balken-tippen`) springt ein Tipp dorthin. Aus, damit niemand beim Hochwischen vom unteren Rand aus
+  versehentlich den Song wechselt. Vier Aktionen (`data/buehne-einstellungen.ts`):
   **Weiter** (→, Leertaste, Bild ↓, Eingabe), **Zurück** (←, Bild ↑), **Hoch** (↑, wie nach oben wischen: Titelanzeige →
   Notenansicht → volle Notenansicht) und **Runter** (↓, wie nach unten wischen: zurück bis zur Titelanzeige). Eine Taste
   gehört immer nur zu einer Aktion. Bis November 2026 blätterten ↓/↑ weiter bzw. zurück; ältere gespeicherte
@@ -1189,11 +1192,13 @@ Fassung und könnt den alten Text von dort zurückkopieren.
 
 ## App-Icon und Favicons
 
-Alle Icons erzeugt `python3 scripts/favicons.py` (pillow) aus der Kompass-Grafik der Band
-(`scripts/assets/kompass-icon.png`, heller Kompass auf transparentem Grund): App-Icons (`icon-192.png`,
+Alle Icons erzeugt `python3 scripts/favicons.py` (pillow) aus der Kompass-Grafik der Band – dem hellen
+Kompass-Logo des Pressekits (`scripts/presse-quellen/kompass-logo-hell.png`, aus `scripts/kompass-logo.py`): App-Icons (`icon-192.png`,
 `icon-512.png`, `apple-touch-icon.png`) zeigen die Grafik auf dunklem Grund, das maskierbare (`icon-maskable-512.png`)
 mit dem Kompass ganz in der sicheren Zone (Android schneidet rund oder eckig zu). Favicons (`favicon.svg` als Vektor,
 `favicon.ico`, 16/32 px) und das Statusleisten-Symbol `badge-96.png` sind dieselben Formen vereinfacht (Ring,
-Nord-Süd-Nadel, „K“, Nabe) – die feinen Gradstriche wären dort nur Brei. Neue Grafik: Datei ersetzen, Skript
-ausführen, committen. Eine installierte App übernimmt ein neues Icon erst, wenn Android sie aktualisiert (nach dem
+Nord-Süd-Nadel, „K“, Nabe) – die feinen Gradstriche wären dort nur Brei. Dasselbe Skript schreibt das
+Kompass-Symbol fürs Pressekit (`scripts/presse-quellen/kompass-2048.png`, `kompass-detail.svg`: Grafik auf dunklem
+Quadrat mit runden Ecken); danach `python3 scripts/build-pressekit.py`. Neue Grafik: Logo ersetzen (bzw.
+`kompass-logo.py` anpassen), beide Skripte ausführen, committen. Eine installierte App übernimmt ein neues Icon erst, wenn Android sie aktualisiert (nach dem
 Öffnen, meist innerhalb von ein bis zwei Tagen).

@@ -34,7 +34,7 @@ const FILES: Omit<Asset, 'title' | 'info'>[] = [
   { file: 'blickfeld-nord-bandfoto-1.jpg', preview: 'galerie/band-1-thumb.webp' },
   { file: 'blickfeld-nord-logo-motiv.jpg', preview: 'galerie/logo-thumb.webp', contain: true },
   { file: 'blickfeld-nord-kompass.png', preview: 'icon-512.png', dark: true },
-  { file: 'blickfeld-nord-kompass.svg', preview: 'favicon.svg', dark: true },
+  { file: 'blickfeld-nord-kompass.svg', preview: 'presse/blickfeld-nord-kompass.svg', dark: true },
   { file: 'blickfeld-nord-kompass-logo-hell.png', preview: 'presse/blickfeld-nord-kompass-logo-hell.svg', dark: true },
   { file: 'blickfeld-nord-kompass-logo-hell.svg', preview: 'presse/blickfeld-nord-kompass-logo-hell.svg', dark: true },
   { file: 'blickfeld-nord-kompass-logo-dunkel.png', preview: 'presse/blickfeld-nord-kompass-logo-dunkel.svg', light: true },

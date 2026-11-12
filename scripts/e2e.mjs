@@ -1418,7 +1418,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   // Halbseiten-Blättern und eigene Pedal-Taste (in den Einstellungen festgelegt)
   await p.go('/backstage/einstellungen/');
   const buehne = p.locator('app-buehne-einstellungen');
-  await buehne.locator('input[type=checkbox]').check();
+  await buehne.locator('input[type=checkbox]').first().check();
   await buehne.locator('button.neu').first().click();
   await p.keyboard.press('b');
   await until(async () => (await buehne.innerText()).includes('B'), 'Pedal-Taste wird nicht aufgenommen');
@@ -1917,9 +1917,22 @@ test('Backstage: Bühnen-Modus – Lupe holt Wünsche an die aktuelle Stelle, Ba
   await buehne.locator('.suche li button').first().click();
   await until(async () => (await titel.innerText()).trim() === zehnter, 'Gezogener Song ist nicht dran');
   await until(async () => (await buehne.locator('footer .next').innerText()).includes(erster), 'Bisheriger Song folgt nicht danach');
-  // Fortschrittsbalken: antippen springt, Sets sind markiert
+  // Fortschrittsbalken: Standard nur Anzeige – Tippen darauf springt nicht ans Ende (höchstens ein Song weiter wie überall)
   const balken = buehne.locator('footer .progress');
-  const box = await balken.boundingBox();
+  expect((await balken.getAttribute('role')) === 'progressbar', 'Fortschrittsbalken ist ohne Einstellung antippbar');
+  let box = await balken.boundingBox();
+  await p.mouse.click(box.x + box.width * 0.95, box.y + box.height / 2);
+  await p.waitForTimeout(400);
+  expect(Number(await buehne.locator('main .no').innerText().catch(() => '0')) < 5, 'Tippen auf den Balken springt ohne Einstellung');
+  await buehne.locator('button[aria-label="Bühnen-Modus beenden"]').click();
+  // mit der Einstellung (Einstellungen → Bühnen-Modus): antippen springt, Sets sind markiert
+  await p.go('/backstage/einstellungen/');
+  await p.locator('app-buehne-einstellungen input.balken-tippen').check();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-buehne-balken-tippen'))) === '1', 'Einstellung „Balken antippen“ wird nicht gespeichert');
+  await p.go(`/backstage/${id}/setlist`);
+  await p.locator('app-setlist button', { hasText: 'Bühnen-Modus' }).first().click();
+  await schritt('Bühnen-Modus erscheint wieder', () => titel.waitFor({ timeout: 20000 }));
+  box = await balken.boundingBox();
   await p.mouse.click(box.x + box.width * 0.95, box.y + box.height / 2);
   await until(async () => Number(await buehne.locator('main .no').innerText().catch(() => '0')) > 20 || (await buehne.innerText()).includes('Pause'), 'Balken springt nicht');
   await buehne.locator('button[aria-label="Bühnen-Modus beenden"]').click();

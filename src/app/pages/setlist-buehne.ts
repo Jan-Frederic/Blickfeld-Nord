@@ -15,7 +15,7 @@ import { ProbeEnde, ProbeLeiste, probeStatusSetzen } from './probe-leiste';
 import { minutenText, probenDauer } from '../data/probe-modus';
 import { BandService } from '../data/band.service';
 import { Stimmgeraet } from './stimmgeraet';
-import { tasten } from '../data/buehne-einstellungen';
+import { balkenTippen, tasten } from '../data/buehne-einstellungen';
 import { BEWERTUNG_PREFIX, alleBewertungen, bewerten, ladeBewertungen, rangliste, songKey } from '../data/bewertung';
 import { RestSong, streichVorschlag, ueberzug } from '../data/kuerzen';
 import { wunschEinfuegen } from '../data/buehne-wunsch';
@@ -165,11 +165,19 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
           <span class="label" style="color: #ff8a65">⏱ {{ fmt(ueber()) }} drüber</span>
           <span class="next" style="font-size: .7em">streichen: {{ streichText() }} <button type="button" class="ton" style="display: inline" (click)="streichenJa($event)">Streichen</button></span>
         }
-        <div class="progress" role="slider" tabindex="0" aria-label="Position in der Setlist – antippen zum Springen" aria-valuemin="1" [attr.aria-valuemax]="liste().length" [attr.aria-valuenow]="index() + 1"
-             (pointerdown)="$event.stopPropagation()" (pointerup)="balken($event)">
-          <span class="stand" [style.width.%]="progress()"></span>
-          @for (m of setMarken(); track m.index) { <span class="marke" [style.left.%]="m.links" [attr.title]="'Set ' + m.set"></span> }
-        </div>
+        <!-- Fortschritt im ganzen Set: Standard nur Anzeige; antippbar nur mit der Einstellung (Einstellungen → Bühnen-Modus) -->
+        @if (balkenTippen) {
+          <div class="progress tippbar" role="slider" tabindex="0" aria-label="Position in der Setlist – antippen zum Springen" aria-valuemin="1" [attr.aria-valuemax]="liste().length" [attr.aria-valuenow]="index() + 1"
+               (pointerdown)="$event.stopPropagation()" (pointerup)="balken($event)">
+            <span class="stand" [style.width.%]="progress()"></span>
+            @for (m of setMarken(); track m.index) { <span class="marke" [style.left.%]="m.links" [attr.title]="'Set ' + m.set"></span> }
+          </div>
+        } @else {
+          <div class="progress" role="progressbar" aria-label="Position in der Setlist" aria-valuemin="1" [attr.aria-valuemax]="liste().length" [attr.aria-valuenow]="index() + 1">
+            <span class="stand" [style.width.%]="progress()"></span>
+            @for (m of setMarken(); track m.index) { <span class="marke" [style.left.%]="m.links" [attr.title]="'Set ' + m.set"></span> }
+          </div>
+        }
       </footer>
       @if (stimmen()) { <app-stimmgeraet style="position: fixed; left: 50%; top: 50%; z-index: 4; width: min(520px, 92vw); transform: translate(-50%, -50%)" (schliessen)="stimmen.set(false)" (pointerup)="$event.stopPropagation()" /> }
       @if (lupe()) {
@@ -822,7 +830,9 @@ export class SetlistBuehne {
     this.springen(target);
   }
 
-  // Fortschrittsbalken: antippen springt an die Stelle; die Sets sind als Striche markiert (an den Pausen)
+  // Fortschrittsbalken: die Sets sind als Striche markiert (an den Pausen); antippen springt an die Stelle – nur mit der
+  // Einstellung, sonst wechselte ein Wisch vom unteren Rand aus versehentlich den Song
+  protected readonly balkenTippen = balkenTippen();
   protected readonly setMarken = computed(() => {
     const l = this.liste();
     const out: { index: number; links: number; set: number }[] = [];

@@ -251,8 +251,10 @@ app-setlist-buehne .suche .a { color: #999; font-size: .85em; }
 app-setlist-buehne .suche small { display: block; color: var(--bn-sunset); font-size: .75em; }
 app-setlist-buehne .suche .leer { padding: 12px 10px; color: #999; }
 // Bühnen-Modus: Fortschrittsbalken – antippen springt, Striche markieren die Sets
-app-setlist-buehne .progress { position: relative; grid-column: 1 / -1; height: 10px; border-radius: 5px; background: #222; margin-top: 10px; cursor: pointer; touch-action: none; }
-app-setlist-buehne .progress::before { content: ''; position: absolute; inset: -12px 0; }
+app-setlist-buehne .progress { position: relative; grid-column: 1 / -1; height: 10px; border-radius: 5px; background: #222; margin-top: 10px; }
+// nur antippbar (Einstellung): größere Trefferfläche, Wischen dort springt statt zu scrollen
+app-setlist-buehne .progress.tippbar { cursor: pointer; touch-action: none; }
+app-setlist-buehne .progress.tippbar::before { content: ''; position: absolute; inset: -12px 0; }
 app-setlist-buehne .progress .stand { display: block; height: 100%; border-radius: 5px; background: var(--bn-sunset); }
 app-setlist-buehne .progress .marke { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1px; border-radius: 2px; background: #eee; }
 // Pressekit: anstehende Konzerte und Pressekit je Konzert (Budget der Seiten)

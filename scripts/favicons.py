@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Erzeugt alle Website- und App-Icons aus der Kompass-Grafik der Band (scripts/assets/kompass-icon.png, heller
-Kompass auf transparentem Grund): icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png (180) –
+"""Erzeugt alle Website- und App-Icons aus der Kompass-Grafik der Band (das helle Kompass-Logo des Pressekits,
+scripts/presse-quellen/kompass-logo-hell.png – heller Kompass auf transparentem Grund, aus scripts/kompass-logo.py): icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png (180) –
 die Grafik auf dunklem Grund. Für die Favicons (favicon.svg, favicon.ico 16/32/48, favicon-16.png, favicon-32.png)
 wären die feinen Linien der Grafik zu dünn: dort dieselben Formen vereinfacht (Ring, Nadel, „K“, Nabe), hell auf
 dunklem Grund – favicon.svg als echter Vektor.
@@ -11,6 +11,9 @@ Dazu public/badge-96.png: das kleine Symbol für Benachrichtigungen in der Andro
 nur die Deckkraft (alles Deckende wird weiß) – ein vollflächiges Icon erschiene als weißes Quadrat. Deshalb eine
 vereinfachte Silhouette des Kompasses (Ring, Nord-Süd-Nadel, die beiden Arme, Nabe) weiß auf transparent; die
 feinen Gradstriche der Grafik wären bei 24 dp nur Brei.
+
+Außerdem das Kompass-Symbol fürs Pressekit (scripts/presse-quellen/kompass-2048.png und kompass-detail.svg, von
+scripts/build-pressekit.py übernommen): die Grafik auf dunklem Quadrat mit abgerundeten Ecken, das SVG als Vektor.
 Aufruf:  python3 scripts/favicons.py   (benötigt pillow)
 """
 import math
@@ -20,14 +23,24 @@ from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC = os.path.join(ROOT, 'public')
-QUELLE = os.path.join(ROOT, 'scripts', 'assets', 'kompass-icon.png')
+PRESSE = os.path.join(ROOT, 'scripts', 'presse-quellen')
+QUELLE = os.path.join(PRESSE, 'kompass-logo-hell.png')
+QUELLE_SVG = os.path.join(PRESSE, 'kompass-logo-hell.svg')
+
+
+def grafik():
+    """Grafik quadratisch auf den Kompass (mit N/S/W/O) zugeschnitten"""
+    im = Image.open(QUELLE).convert('RGBA')
+    x0, y0, x1, y1 = im.split()[3].point(lambda v: 255 if v > 0 else 0).getbbox()
+    cx, cy, r = (x0 + x1) / 2, (y0 + y1) / 2, max(x1 - x0, y1 - y0) / 2 + 4
+    return im.crop((round(cx - r), round(cy - r), round(cx + r), round(cy + r)))
 
 BG = (21, 23, 28, 255)  # #15171c wie bisher, passt zur Nabe der Grafik
 
 
 def kompass(size, anteil):
     """Kompass auf dunklem Grund; anteil: Durchmesser der Grafik (mit N/S/W/O) im Verhältnis zur Kantenlänge."""
-    quelle = Image.open(QUELLE).convert('RGBA')
+    quelle = grafik()
     d = max(1, round(size * anteil))
     klein = quelle.resize((d, d), Image.LANCZOS)
     bild = Image.new('RGBA', (size, size), BG)
@@ -116,6 +129,26 @@ def svg():
     return '\n'.join(teile) + '\n'
 
 
+def presse_symbol():
+    """Pressekit: Kompass-Symbol als PNG (2048, abgerundete Ecken, außen transparent) und als Vektor-SVG"""
+    groesse = 2048
+    bild = kompass(groesse, 0.92).convert('RGBA')
+    maske = Image.new('L', (groesse * 2, groesse * 2), 0)
+    ImageDraw.Draw(maske).rounded_rectangle((0, 0, groesse * 2 - 1, groesse * 2 - 1), radius=round(groesse * 2 * 14 / 64), fill=255)
+    bild.putalpha(maske.resize((groesse, groesse), Image.LANCZOS))
+    bild.save(os.path.join(PRESSE, 'kompass-2048.png'), optimize=True)
+    with open(QUELLE_SVG, encoding='utf-8') as fh:
+        quelle = fh.read()
+    inhalt = quelle[quelle.index('>', quelle.index('<svg')) + 1:quelle.rindex('</svg>')]
+    inhalt = inhalt.replace('<title>Blickfeld Nord – Kompass</title>', '')
+    # Logo-SVG: 1500er-Fläche, der Kompass füllt sie fast ganz – auf 92 % verkleinert und mittig auf das Quadrat
+    with open(os.path.join(PRESSE, 'kompass-detail.svg'), 'w', encoding='utf-8') as fh:
+        fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1500" width="1500" height="1500">\n'
+                 '<title>Blickfeld Nord – Kompass</title>\n'
+                 '<rect width="1500" height="1500" rx="328" fill="#15171c"/>\n'
+                 f'<g transform="translate(60 60) scale(0.92)">{inhalt}</g>\n</svg>\n')
+
+
 def main():
     with open(os.path.join(PUBLIC, 'favicon.svg'), 'w') as fh:
         fh.write(svg())
@@ -127,7 +160,8 @@ def main():
     kompass(512, 0.78).save(os.path.join(PUBLIC, 'icon-maskable-512.png'), optimize=True)
     mini(48).save(os.path.join(PUBLIC, 'favicon.ico'), sizes=[(16, 16), (32, 32), (48, 48)])
     badge(96).save(os.path.join(PUBLIC, 'badge-96.png'), optimize=True)
-    print('Icons erzeugt: favicon.svg/.ico, 16, 32, 180, 192, 512, maskierbar 512, Badge 96')
+    presse_symbol()
+    print('Icons erzeugt: favicon.svg/.ico, 16, 32, 180, 192, 512, maskierbar 512, Badge 96, Pressekit-Symbol (PNG, SVG)')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { STANDARD_TASTEN, TASTEN_FELDER, Tasten, halbseite, halbseiteSetzen, tasten, tastenName, tastenSetzen } from '../data/buehne-einstellungen';
+import { STANDARD_TASTEN, TASTEN_FELDER, Tasten, balkenTippen, balkenTippenSetzen, halbseite, halbseiteSetzen, tasten, tastenName, tastenSetzen } from '../data/buehne-einstellungen';
 
 // Backstage → Einstellungen → Bühnen-Modus: Halbseiten-Blättern und die Tasten fürs Fußpedal – Weiter, Zurück sowie
 // Hoch und Runter (wie Wischen: Titelanzeige ↔ Notenansicht ↔ volle Notenansicht). Eine Taste kommt dazu, indem man
@@ -13,6 +13,8 @@ import { STANDARD_TASTEN, TASTEN_FELDER, Tasten, halbseite, halbseiteSetzen, tas
       <h3><mat-icon>fit_screen</mat-icon> Bühnen-Modus</h3>
       <label class="check"><input type="checkbox" [checked]="halb()" (change)="halbSetzen($any($event.target).checked)" />
         Halbseiten-Blättern bei PDF-Noten – erst zeigt die obere Hälfte den Anfang der nächsten Seite, der nächste Tritt blättert ganz um</label>
+      <label class="check"><input type="checkbox" class="balken-tippen" [checked]="balken()" (change)="balkenSetzen($any($event.target).checked)" />
+        Fortschrittsbalken unten in der Titelanzeige antippen springt zu einem Song – sonst nur Anzeige (kein versehentlicher Songwechsel beim Hochwischen)</label>
       @for (r of richtungen; track r.feld) {
         <div class="tasten">
           <span class="was">{{ r.label }}</span>
@@ -44,6 +46,7 @@ import { STANDARD_TASTEN, TASTEN_FELDER, Tasten, halbseite, halbseiteSetzen, tas
 })
 export class BuehneEinstellungen implements OnDestroy {
   protected readonly halb = signal(halbseite());
+  protected readonly balken = signal(balkenTippen());
   protected readonly t = signal<Tasten>(tasten());
   protected readonly wartet = signal<keyof Tasten | null>(null);
   protected readonly name = tastenName;
@@ -58,6 +61,11 @@ export class BuehneEinstellungen implements OnDestroy {
   protected halbSetzen(an: boolean): void {
     this.halb.set(an);
     halbseiteSetzen(an);
+  }
+
+  protected balkenSetzen(an: boolean): void {
+    this.balken.set(an);
+    balkenTippenSetzen(an);
   }
 
   private setzen(t: Tasten): void {
