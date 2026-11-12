@@ -8,6 +8,7 @@ import {
   spotifyGewaehltesGeraet,
   spotifyMitspielen,
   spotifyMitspielenSetzen,
+  spotifyNotiz,
   spotifyPause,
   spotifySpielen,
   spotifySpringen,
@@ -71,18 +72,23 @@ export class SpotifySpieler {
     this.verbunden.set(spotifyVerbunden());
     this.hinweisWeg();
     if (this.uhrTakt) return;
+    spotifyNotiz(`— Modus geöffnet (verbunden: ${this.verbunden() ? 'ja' : 'nein'}) —`);
     this.uhrTakt = setInterval(() => {
       if (!this.spielt()) return;
       const p = this.stelle();
       const d = this.dauer();
       this.position.set(d ? Math.min(p, d) : p);
       // nach der eigenen Uhr ist der Song zu Ende und Spotify hat es (noch) nicht gemeldet
-      if (d && p > d + 4000) this.laufen(false, d);
+      if (d && p > d + 4000) {
+        spotifyNotiz('eigene Uhr: Song zu Ende → ▶');
+        this.laufen(false, d);
+      }
     }, 500);
-    // solange ein Song über die Steuerung lief oder läuft: alle 5 s abgleichen (Position, Pause in der Spotify-App …)
+    // solange ein Song über die Steuerung lief oder läuft: alle 10 s abgleichen (Stelle, Pause in der Spotify-App …) –
+    // sparsam, weil Spotify die Zahl der Anfragen begrenzt; der Fortschritt läuft dazwischen mit der eigenen Uhr
     this.abfrage = setInterval(() => {
       if (this.verbunden() && this.gestartet && document.visibilityState === 'visible') void this.standLaden();
-    }, 5000);
+    }, 10_000);
     if (this.verbunden()) void this.standLaden();
   }
 
@@ -91,6 +97,7 @@ export class SpotifySpieler {
     clearInterval(this.uhrTakt);
     clearInterval(this.abfrage);
     this.uhrTakt = this.abfrage = undefined;
+    spotifyNotiz('— Modus verlassen —');
     this.befehlNr++;
     if (this.spielt() && this.gestartet) void spotifyPause().catch(() => undefined);
     this.laufen(false, 0);
@@ -111,6 +118,7 @@ export class SpotifySpieler {
     this.laufen(false, 0);
     this.dauer.set(dauerMs);
     if (!this.verbunden()) return;
+    spotifyNotiz(`Songwechsel → ${t ?? 'Song ohne Spotify-Track'} (lief: ${lief ? 'ja' : 'nein'}, mitlaufen: ${this.mitlaufen ? 'ja' : 'nein'}, mitspielen: ${this.mitspielen() ? 'ja' : 'nein'}, Länge: ${Math.round(dauerMs / 1000)} s)`);
     if (t && this.mitlaufen && this.mitspielen()) void this.spielen(t);
     else if (lief) {
       // nicht mitspielen oder Song ohne Spotify-Track: der alte Song soll nicht weiterlaufen
@@ -162,6 +170,7 @@ export class SpotifySpieler {
       const spielt = (meins || ohneTitel) && !!s?.spielt;
       // in der Spotify-App mitten im Song angehalten: wie ⏸ hier – beim Weiterblättern nicht von selbst weiterspielen
       if (meins && !spielt && this.spielt() && s!.position > 2000 && s!.position < s!.dauer - 5000) this.mitlaufen = false;
+      if (spielt !== this.spielt()) spotifyNotiz(`Rückmeldung: ${spielt ? 'spielt → ⏸' : `spielt nicht → ▶ (unser Song: ${meins ? 'ja' : 'nein'})`}`);
       this.laufen(spielt, meins ? s!.position : undefined);
     } catch (e) {
       // das Nachlesen im Hintergrund meldet nichts (nächster Versuch in ein paar Sekunden) – außer die Verbindung ist weg
@@ -173,6 +182,7 @@ export class SpotifySpieler {
   async umschalten(): Promise<void> {
     const t = this.track();
     if (!t) return;
+    spotifyNotiz(`Knopf ${this.spielt() ? '⏸' : '▶'} (Song ${t}, gestartet: ${this.gestartet ?? '–'}, Stelle ${Math.round(this.position() / 1000)} s von ${Math.round(this.dauer() / 1000)} s)`);
     if (this.spielt()) {
       const nr = ++this.befehlNr;
       this.mitlaufen = false;
@@ -228,7 +238,7 @@ export class SpotifySpieler {
     this.mitlaufen = true;
     this.schonfrist = performance.now() + 6000;
     this.laufen(true, ab);
-    for (const ms of [1200, 3000, 6500]) setTimeout(() => nr === this.befehlNr && this.gestartet && void this.standLaden(), ms);
+    for (const ms of [1500, 4000, 7000]) setTimeout(() => nr === this.befehlNr && this.gestartet && void this.standLaden(), ms);
   }
 
   async zurueck(): Promise<void> {
@@ -290,6 +300,7 @@ export class SpotifySpieler {
     this.schonfrist = 0;
     const art = e instanceof SpotifyFehler ? e.art : 'netz';
     const status = e instanceof SpotifyFehler ? e.status : 0;
+    spotifyNotiz(`Fehler: ${art}${status ? ` ${status}` : ''}${e instanceof SpotifyFehler ? '' : ` (${String(e).slice(0, 120)})`}`);
     if (art === 'anmelden') {
       this.verbunden.set(false);
       this.laufen(false);

@@ -147,10 +147,10 @@ export function spotifyAbmelden(): void {
 /** läuft gerade eine Erneuerung des Zugangs? Dann warten alle darauf – Spotify gibt bei jeder Erneuerung ein neues
  *  Erneuerungs-Token aus, zwei gleichzeitige Erneuerungen mit demselben alten würden die Verbindung kappen */
 let erneuerung: Promise<string> | null = null;
-async function zugang(): Promise<string> {
+async function zugang(frisch = false): Promise<string> {
   const t = lesen<Token>(TOKEN_KEY);
   if (!t?.refresh) throw new SpotifyFehler('anmelden');
-  if (t.bis > Date.now()) return t.access;
+  if (!frisch && t.bis > Date.now()) return t.access;
   erneuerung ??= tokenHolen({ grant_type: 'refresh_token', refresh_token: t.refresh })
     .then((n) => n.access)
     .catch((e) => {
@@ -181,38 +181,103 @@ export function fehler403(text: string): SpotifyFehler['art'] {
   return 'nichts';
 }
 
+// ---- Diagnose ---------------------------------------------------------------------------------------------------
+// Protokoll der letzten Befehle und Antworten (nur auf diesem Gerät, wird nicht gespiegelt; ohne Zugangsschlüssel,
+// Geräte-IDs gekürzt) – in den Einstellungen einsehbar und kopierbar, wenn die Fernsteuerung irgendwo nicht tut, was
+// sie soll: Was Spotify einem echten Konto antwortet, lässt sich nur dort sehen.
+const PROTOKOLL_KEY = 'bn-spotify-protokoll';
+const PROTOKOLL_LAENGE = 150;
+let protokoll: string[] | null = null;
+export function spotifyNotiz(text: string): void {
+  protokoll ??= lesen<string[]>(PROTOKOLL_KEY) ?? [];
+  const z = new Date();
+  protokoll.push(`${z.toTimeString().slice(0, 8)}.${Math.floor(z.getMilliseconds() / 100)} ${text}`);
+  if (protokoll.length > PROTOKOLL_LAENGE) protokoll.splice(0, protokoll.length - PROTOKOLL_LAENGE);
+  schreiben(PROTOKOLL_KEY, protokoll);
+}
+export const spotifyProtokoll = (): string[] => [...(protokoll ?? lesen<string[]>(PROTOKOLL_KEY) ?? [])];
+export function spotifyProtokollLeeren(): void {
+  protokoll = [];
+  schreiben(PROTOKOLL_KEY, null);
+}
+/** Kopfzeilen fürs Protokoll: Einstellungen und Zustand dieses Geräts (ohne Schlüssel) */
+export function spotifyLage(): string[] {
+  const t = lesen<Token>(TOKEN_KEY);
+  const passt = (a: string) => typeof matchMedia === 'function' && matchMedia(a).matches;
+  return [
+    `Einstellung: ${spotifyArt()} · verbunden: ${t?.refresh ? 'ja' : 'nein'}${t?.refresh ? ` · Zugang gilt noch ${Math.round((t.bis - Date.now()) / 60000)} min` : ''}`,
+    `mitspielen: ${spotifyMitspielen() ? 'ja' : 'nein'} · Gerät gewählt: ${idKurz(lesen<string>(GERAET_KEY) ?? '') || 'automatisch'} · zuletzt: ${idKurz(zuletztGeraet ?? '') || '–'}`,
+    `Fenster: ${passt('(display-mode: fullscreen)') ? 'Vollbild-App' : passt('(display-mode: standalone)') ? 'App-Fenster' : 'Browser-Tab'} · ${passt('(pointer: coarse)') ? 'Touch' : 'Maus'} · ${typeof navigator === 'undefined' ? '' : navigator.userAgent}`,
+  ];
+}
+const idKurz = (id: string) => (id.length > 6 ? `${id.slice(0, 6)}…` : id);
+const geraeteKurz = (text: string) => text.replace(/(device_id=)([^&\s]+)/g, (_, a: string, id: string) => a + idKurz(decodeURIComponent(id))).replace(/("device_ids":\[")([^"]+)/g, (_, a: string, id: string) => a + idKurz(id));
+/** Antwort von Spotify in einer Zeile: Wiedergabestand, Geräteliste, sonst der Anfang */
+function antwortKurz(j: unknown): string {
+  const o = (j ?? {}) as { is_playing?: boolean; progress_ms?: number | null; currently_playing_type?: string; item?: { id?: string; duration_ms?: number; linked_from?: { id?: string } } | null; device?: { name?: string; type?: string; is_active?: boolean } | null; devices?: { id?: string; name?: string; type?: string; is_active?: boolean; is_restricted?: boolean }[] };
+  if (Array.isArray(o.devices)) return o.devices.length ? o.devices.map((g) => `${g.name} (${g.type}, ${g.is_active ? 'aktiv' : 'nicht aktiv'}${g.is_restricted ? ', gesperrt' : ''}, ${idKurz(g.id ?? '')})`).join(' · ') : 'keine Geräte';
+  if ('is_playing' in o) return `spielt=${o.is_playing} stelle=${o.progress_ms} titel=${o.item ? o.item.id : 'keiner'}${o.item?.linked_from?.id ? ` (statt ${o.item.linked_from.id})` : ''} dauer=${o.item?.duration_ms ?? '?'} art=${o.currently_playing_type ?? '?'} gerät=${o.device ? `${o.device.name} (${o.device.type}, ${o.device.is_active ? 'aktiv' : 'nicht aktiv'})` : 'keins'}`;
+  return JSON.stringify(j).slice(0, 160);
+}
+
 async function api<T = void>(pfad: string, init: RequestInit = {}): Promise<T | null> {
-  const befehl = !!init.method && init.method !== 'GET';
-  const senden = async () => {
+  const methode = init.method ?? 'GET';
+  const befehl = methode !== 'GET';
+  const beginn = performance.now();
+  const notiz = (ergebnis: string) => spotifyNotiz(`${methode} ${geraeteKurz(pfad)}${typeof init.body === 'string' ? ` ${geraeteKurz(init.body)}` : ''} → ${ergebnis} (${Math.round(performance.now() - beginn)} ms)`);
+  const warten = (r: Response) => (r.headers.get('Retry-After') ? ` Retry-After ${r.headers.get('Retry-After')} s` : '');
+  const senden = async (frisch = false) => {
     try {
-      return await fetch(API + pfad, { ...init, headers: { ...init.headers, Authorization: `Bearer ${await zugang()}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
+      return await fetch(API + pfad, { ...init, headers: { ...init.headers, Authorization: `Bearer ${await zugang(frisch)}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
     } catch (e) {
-      if (e instanceof SpotifyFehler) throw e;
-      // keine Antwort (offline, Verbindung abgebrochen)
-      throw new SpotifyFehler('netz', 0);
+      // keine Antwort (offline, Verbindung abgebrochen) – oder der Zugang ließ sich nicht erneuern
+      const f = e instanceof SpotifyFehler ? e : new SpotifyFehler('netz', 0);
+      notiz(f.art === 'netz' && !f.status ? 'keine Antwort' : `Zugang: ${f.art}${f.status ? ` ${f.status}` : ''}`);
+      throw f;
     }
   };
   let res = await senden();
   // Befehle (Abspielen, Pause, Springen) scheitern bei Spotify gelegentlich kurz mit 5xx bzw. 429: einmal neu versuchen
   if (befehl && (res.status >= 500 || res.status === 429)) {
+    notiz(`${res.status}${warten(res)} – zweiter Versuch`);
     await new Promise((r) => setTimeout(r, 700));
     res = await senden();
   }
-  if (res.status === 204 || res.status === 202) return null;
+  // Zugang abgelaufen, obwohl er nach der Uhr dieses Geräts noch gelten müsste: einmal erneuern und wiederholen
   if (res.status === 401) {
-    spotifyAbmelden();
-    throw new SpotifyFehler('anmelden', 401);
+    notiz('401 – Zugang wird erneuert');
+    res = await senden(true);
   }
-  if (res.status === 404) throw new SpotifyFehler('geraet', 404);
-  if (res.status === 403) throw new SpotifyFehler(fehler403(await res.text().catch(() => '')), 403);
-  if (!res.ok) throw new SpotifyFehler('netz', res.status);
+  if (res.status === 204 || res.status === 202) {
+    notiz(String(res.status));
+    return null;
+  }
+  const text = await res.text().catch(() => '');
+  if (!res.ok) {
+    notiz(`${res.status}${warten(res)} ${text.replace(/\s+/g, ' ').slice(0, 200)}`);
+    if (res.status === 401) {
+      spotifyAbmelden();
+      throw new SpotifyFehler('anmelden', 401);
+    }
+    if (res.status === 404) throw new SpotifyFehler('geraet', 404);
+    if (res.status === 403) throw new SpotifyFehler(fehler403(text), 403);
+    throw new SpotifyFehler('netz', res.status);
+  }
   // Befehle: die Antwort ist ohne Belang – Spotify schickt bei Erfolg teils Text, der kein JSON ist
-  if (befehl) return null;
-  const text = await res.text();
-  if (!text) return null;
+  if (befehl) {
+    notiz(String(res.status));
+    return null;
+  }
+  if (!text) {
+    notiz(`${res.status} leer`);
+    return null;
+  }
   try {
-    return JSON.parse(text) as T;
+    const j = JSON.parse(text) as T;
+    notiz(`${res.status} ${antwortKurz(j)}`);
+    return j;
   } catch {
+    notiz(`${res.status} kein JSON: ${text.slice(0, 80)}`);
     throw new SpotifyFehler('netz', res.status);
   }
 }

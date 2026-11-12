@@ -141,13 +141,18 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     wieder ▶ drückt. Am Songende hält die Steuerung an, wenn Spotify von sich aus weiterspielt (Autoplay); beim
     Verlassen des Modus ebenso. **Maßgeblich sind die eigenen Befehle, nicht Spotifys Rückmeldung:** Nach ▶ gilt der
     Song als laufend, der Fortschritt zählt mit der eigenen Uhr (Länge aus den Spotify-Listen); die Abfrage des
-    Stands (alle 5 s) berichtigt nur Stelle, Länge und Pause – fällt sie aus, läuft alles weiter. Das Gerät des
+    Stands (alle 10 s) berichtigt nur Stelle, Länge und Pause – fällt sie aus, läuft alles weiter. Das Gerät des
     letzten Starts wird gemerkt: Der nächste Befehl geht direkt dorthin (ohne Geräteliste), auch wenn Spotify es nach
     einer Pause nicht mehr als aktiv oder gar nicht mehr listet. Befehle gehen nacheinander raus, überholte (schnelles
     Blättern) werden verworfen. Weitere Eigenheiten von Spotify, die abgefangen sind: Befehle antworten bei Erfolg
     teils mit Text, der kein JSON ist (wird ignoriert); kurz nach dem Start meldet Spotify noch den alten Stand (6 s
     Schonfrist); vorübergehende Fehler (5xx, 429) werden einmal wiederholt; der Zugang wird stündlich erneuert (nie
     zweimal gleichzeitig – das kappte die Verbindung); eine andere Fassung desselben Songs gilt als der Song.
+    **Diagnose:** Einstellungen → Spotify → „Diagnose“ zeigt das Protokoll der letzten 150 Befehle, Antworten und
+    Knopfdrücke (`bn-spotify-protokoll`, nur auf dem Gerät, ohne Zugangsschlüssel, Geräte-IDs gekürzt) mit „Protokoll
+    kopieren“ – was Spotify einem echten Konto antwortet, lässt sich nur dort sehen. Antwortet Spotify mit 401, obwohl
+    der Zugang nach der Uhr des Geräts noch gilt, wird er einmal erneuert und der Befehl wiederholt. Der Abgleich läuft
+    sparsam (nach einem Start nach 1,5, 4 und 7 s, dann alle 10 s), weil Spotify die Zahl der Anfragen begrenzt.
     Meldungen stehen als Hinweis über Titelanzeige **und** Notenansicht (nicht nur als Tooltip): „Spotify läuft auf
     keinem Gerät“ mit Knopf **Spotify öffnen** (die Fernsteuerung braucht ein laufendes Spotify – App oder
     open.spotify.com in einem Tab; die Seite selbst spielt nichts ab), „nur mit Premium“, „Konto im

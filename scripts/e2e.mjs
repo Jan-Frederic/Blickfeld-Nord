@@ -574,6 +574,10 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await p.go('/backstage/einstellungen/');
   const spotifyWahl = p.locator('app-spotify-einstellung select');
   expect((await spotifyWahl.inputValue()) === 'aus', 'Spotify ist nicht standardmäßig aus');
+  // Fernsteuerung: „Diagnose“ zeigt das Protokoll mit den Einstellungen dieses Geräts
+  await spotifyWahl.selectOption('fern');
+  await p.locator('app-spotify-einstellung details.diagnose summary').click();
+  await until(async () => /Spotify-Protokoll[\s\S]*Einstellung: fern · verbunden: nein[\s\S]*noch nichts aufgezeichnet/.test(await p.locator('app-spotify-einstellung pre').innerText().catch(() => '')), 'Diagnose zeigt das Spotify-Protokoll nicht');
   await spotifyWahl.selectOption('vorschau');
   await until(async () => (await p.evaluate(() => localStorage.getItem('bn-spotify-modus'))) === '"vorschau"', 'Spotify-Einstellung wird nicht gespeichert');
   await p.goto(probeSeite, { waitUntil: 'networkidle' });
@@ -696,6 +700,10 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   expect(gespielt.length === startsVorWeiter + 3 && (await spKnopf('Auf Spotify abspielen').count()) === 1, 'nach eigener Pause spielt das Weiterblättern von selbst los');
   await zu('ArrowLeft', 'Africa');
   await zu('ArrowLeft', 'Iris');
+  // Diagnose: Befehle und Antworten stehen im Protokoll dieses Geräts – ohne den Zugangsschlüssel, Geräte-ID gekürzt
+  const spProtokoll = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-spotify-protokoll') ?? '[]').join('\n'));
+  expect(/PUT \/me\/player\/play\?device_id=d1 .*spotify:track:6Qyc6fS4DsZjB2mRW9DsQs.* → 200/.test(spProtokoll) && spProtokoll.includes('PUT /me/player/pause → 204') && /Songwechsel → 1M2nd8jNUkkwrc1dgBPTJz/.test(spProtokoll) && spProtokoll.includes('keine Geräte') && /Knopf ▶/.test(spProtokoll), `Spotify-Protokoll unvollständig: ${spProtokoll.split("\n").filter((z) => !z.includes("GET /me/player →") || z.includes("403")).join(" ¦ ")}`);
+  expect(!/Bearer|"access"|refresh/.test(spProtokoll), 'Spotify-Protokoll enthält den Zugang');
   await p.unroute('https://api.spotify.com/**');
   await p.evaluate(() => localStorage.removeItem('bn-spotify-token'));
   const leiste = buehne.locator('app-probe-leiste');

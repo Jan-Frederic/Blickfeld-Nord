@@ -1,10 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyMeldung, spotifyVerbunden } from '../data/spotify-remote';
+import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
 
 // Backstage → Einstellungen: Spotify im Übe- und Probe-Modus – aus (Standard), eingebetteter Player oder Fernsteuerung
 // der Spotify-App (data/spotify-remote.ts). Gilt für dieses Gerät; die Spotify-Verbindung der Fernsteuerung lässt sich
-// hier herstellen und trennen (danach geht es hierher zurück).
+// hier herstellen und trennen (danach geht es hierher zurück). „Diagnose“ zeigt das Protokoll der letzten Befehle und
+// Antworten von Spotify (ohne Zugangsschlüssel) zum Kopieren – für die Fehlersuche.
 @Component({
   selector: 'app-spotify-einstellung',
   imports: [MatIconModule],
@@ -29,6 +30,12 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
             <button type="button" class="verbinden" (click)="verbinden()">♫ Spotify verbinden</button>
             @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
           }
+          <details class="diagnose" (toggle)="protokollLesen()">
+            <summary>Diagnose</summary>
+            <p class="hinweis">Was die Fernsteuerung zuletzt an Spotify geschickt hat und was zurückkam – ohne Zugangsschlüssel. Tut sie nicht, was sie soll: Fehler im Übe- oder Probe-Modus nachstellen, dann hier kopieren und weitergeben.</p>
+            <p class="knoepfe"><button type="button" (click)="kopieren()">Protokoll kopieren</button> <button type="button" (click)="leeren()">Leeren</button> <span role="status">{{ kopiert() }}</span></p>
+            <pre tabindex="0" aria-label="Spotify-Protokoll">{{ protokoll() }}</pre>
+          </details>
         }
       }
       <p class="hinweis">Gilt für dieses Gerät und nur für Songs, die in einer Spotify-Liste stehen.</p>
@@ -45,6 +52,10 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
     button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
     button.verbinden { margin-top: 10px; border-color: #1db954; color: #1db954; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .diagnose { margin-top: 14px; font-size: .85rem; color: var(--bn-fog); }
+    .diagnose summary { cursor: pointer; }
+    .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0; }
+    pre { max-height: 320px; margin: 10px 0 0; padding: 10px 12px; overflow: auto; border: 1px solid var(--bn-line); border-radius: 8px; background: #111316; color: var(--bn-ink); font: .72rem/1.5 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
   `,
 })
 export class SpotifyEinstellung {
@@ -62,5 +73,30 @@ export class SpotifyEinstellung {
   protected trennen(): void {
     spotifyAbmelden();
     this.verbunden.set(false);
+  }
+
+  // Diagnose: Kopfzeilen (Einstellungen dieses Geräts) und die letzten Befehle samt Antworten
+  protected readonly protokoll = signal('');
+  protected readonly kopiert = signal('');
+  private text(): string {
+    const zeilen = spotifyProtokoll();
+    return [`Spotify-Protokoll · ${new Date().toLocaleString('de-DE')}`, ...spotifyLage(), '', ...(zeilen.length ? zeilen : ['(noch nichts aufgezeichnet – erst im Übe- oder Probe-Modus ▶ drücken)'])].join('\n');
+  }
+  protected protokollLesen(): void {
+    this.protokoll.set(this.text());
+    this.kopiert.set('');
+  }
+  protected async kopieren(): Promise<void> {
+    this.protokollLesen();
+    try {
+      await navigator.clipboard.writeText(this.protokoll());
+      this.kopiert.set('Kopiert ✓');
+    } catch {
+      this.kopiert.set('Kopieren ging nicht – Text unten markieren und kopieren.');
+    }
+  }
+  protected leeren(): void {
+    spotifyProtokollLeeren();
+    this.protokollLesen();
   }
 }
