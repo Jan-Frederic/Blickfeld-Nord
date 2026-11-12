@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, afterNextRender, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SpotifyCheckliste } from './spotify-checkliste';
 import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyBrowserRechte, spotifyGesteuert, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
@@ -7,11 +7,19 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
 // der Spotify-App (data/spotify-remote.ts) oder im Browser abspielen (data/spotify-browser.ts). Gilt für dieses Gerät; die Spotify-Verbindung der Fernsteuerung lässt sich
 // hier herstellen und trennen (danach geht es hierher zurück). „Diagnose“ zeigt das Protokoll der letzten Befehle und
 // Antworten von Spotify (ohne Zugangsschlüssel) zum Kopieren – für die Fehlersuche.
+/** Anleitung für die anderen in der Band – ohne Konten, ohne E-Mail-Adressen */
+export const SPOTIFY_ANLEITUNG = `Spotify im Übe- und Probe-Modus einrichten (Blickfeld Nord):
+1. Link öffnen (Backstage) – er führt direkt zu den Spotify-Einstellungen.
+2. „Im Browser abspielen“ wählen (Computer und Android mit Chrome), sonst „Fernsteuerung der Spotify-App“.
+3. „Spotify verbinden“ tippen und bei Spotify zustimmen – dafür braucht es Spotify Premium.
+4. Die Checkliste darunter zeigt, was noch fehlt: „Jetzt prüfen“ tippen.
+Steht bei „Konto freigeschaltet“ ein ✗: kurz Bescheid geben – das Spotify-Konto muss einmal in der Spotify-App der Band eingetragen werden.`;
+
 @Component({
   selector: 'app-spotify-einstellung',
   imports: [MatIconModule, SpotifyCheckliste],
   template: `
-    <div class="box">
+    <div class="box" id="spotify">
       <h3><mat-icon>music_note</mat-icon> Spotify im Übe- und Probe-Modus</h3>
       <label>Songs anhören
         <select aria-label="Spotify im Übe- und Probe-Modus" (change)="waehlen($any($event.target).value)">
@@ -25,7 +33,7 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
         @case ('aus') { <p class="hinweis">Im Übe- und Probe-Modus erscheint nichts von Spotify.</p> }
         @case ('vorschau') { <p class="hinweis">„♫ Auf Spotify anhören“ in der Titelanzeige lädt den Spotify-Player in die Seite. Am Computer spielt er ganze Songs (bei Spotify angemeldet), auf dem Handy nur die 30-Sekunden-Vorschau.</p> }
         @case ('fern') { <p class="hinweis">▶ spielt den angezeigten Song ganz – in der Spotify-App auf diesem Handy oder auf einem anderen Spotify-Gerät (Laptop, Lautsprecher). Braucht Spotify Premium; die Spotify-App muss offen sein.</p> }
-        @case ('browser') { <p class="hinweis">▶ spielt den angezeigten Song ganz hier im Browser – ohne Spotify-App, mit allen Bedienelementen (Fortschritt zum Springen, ±10 s, Lautstärke). Braucht Spotify Premium. Spotify unterstützt das nur in Browsern am Computer (Chrome, Edge, Firefox, Safari); auf dem Handy klappt es meist nicht – dann „Fernsteuerung“ wählen. Beim ersten Mal Spotify (neu) verbinden: Spotify verlangt dafür zusätzlich die Freigabe von Name und E-Mail.</p> }
+        @case ('browser') { <p class="hinweis">▶ spielt den angezeigten Song ganz hier im Browser – ohne Spotify-App, mit allen Bedienelementen (Fortschritt zum Springen, ±10 s, Lautstärke). Braucht Spotify Premium. Offiziell unterstützt Spotify das nur in Browsern am Computer (Chrome, Edge, Firefox, Safari); auf Android-Handys mit Chrome klappt es nach unseren Erfahrungen auch. Klappt es nicht, „Fernsteuerung“ wählen. Beim ersten Mal Spotify (neu) verbinden: Spotify verlangt dafür zusätzlich die Freigabe von Name und E-Mail.</p> }
       }
       @if (gesteuert()) {
         @if (verbunden() && !rechteFehlen()) {
@@ -35,6 +43,9 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
           @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
         }
         <app-spotify-checkliste [art]="art()" [verbunden]="verbunden()" [rechteFehlen]="rechteFehlen()" />
+        <!-- Einladung an die anderen: kurze Anleitung mit Link hierher (Teilen-Menü, sonst Zwischenablage) -->
+        <p class="knoepfe"><button type="button" class="teilen" (click)="teilen()">Anleitung teilen</button> <span role="status">{{ geteilt() }}</span></p>
+        @if (teilText(); as t) { <textarea class="teil-text" readonly rows="7" aria-label="Anleitung zum Kopieren">{{ t }}</textarea> }
         <details class="diagnose" (toggle)="protokollLesen()">
           <summary>Diagnose</summary>
           <p class="hinweis">Was die Steuerung zuletzt an Spotify geschickt hat und was zurückkam – ohne Zugangsschlüssel. Tut sie nicht, was sie soll: Fehler im Übe- oder Probe-Modus nachstellen, dann hier kopieren und weitergeben.</p>
@@ -55,6 +66,7 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
     .ok { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #5fb88a; }
     button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
     button.verbinden { margin-top: 10px; border-color: #1db954; color: #1db954; }
+    .teil-text { width: 100%; max-width: 720px; margin-top: 6px; padding: 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #111316; color: var(--bn-ink); font: .8rem/1.5 inherit; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .diagnose { margin-top: 14px; font-size: .85rem; color: var(--bn-fog); }
     .diagnose summary { cursor: pointer; }
@@ -64,6 +76,12 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
 })
 export class SpotifyEinstellung {
   protected readonly art = signal<SpotifyArt>(spotifyArt());
+  protected readonly geteilt = signal('');
+  protected readonly teilText = signal('');
+  /** Link aus „Anleitung teilen“: direkt hierher scrollen */
+  private readonly hinScrollen = afterNextRender(() => {
+    if (location.hash === '#spotify') document.getElementById('spotify')?.scrollIntoView({ block: 'start' });
+  });
   protected readonly gesteuert = computed(() => spotifyGesteuert(this.art()));
   protected readonly verbunden = signal(spotifyVerbunden());
   /** Browser-Player gewählt, aber der Zugang (von der Fernsteuerung) hat das Recht zum Abspielen nicht */
@@ -77,6 +95,31 @@ export class SpotifyEinstellung {
   protected verbinden(): void {
     void spotifyAnmelden();
   }
+  /** Anleitung mit Link teilen: Teilen-Menü (Handy), sonst Zwischenablage, sonst Text zum Markieren */
+  protected async teilen(): Promise<void> {
+    const url = `${location.origin}/backstage/einstellungen/#spotify`;
+    const text = `${SPOTIFY_ANLEITUNG}\n${url}`;
+    this.teilText.set('');
+    const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> };
+    if (nav.share) {
+      try {
+        await nav.share({ title: 'Spotify einrichten – Blickfeld Nord', text });
+        this.geteilt.set('Geteilt ✓');
+        return;
+      } catch (e) {
+        // abgebrochen: nichts weiter tun
+        if ((e as Error)?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      this.geteilt.set('Anleitung kopiert ✓ – z. B. in WhatsApp einfügen.');
+    } catch {
+      this.geteilt.set('Zum Kopieren markieren:');
+      this.teilText.set(text);
+    }
+  }
+
   protected trennen(): void {
     spotifyAbmelden();
     this.verbunden.set(false);

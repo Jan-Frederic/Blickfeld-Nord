@@ -446,6 +446,20 @@ export class SetlistBuehne {
       });
     });
     inject(DestroyRef).onDestroy(() => gestartet && this.spotifySpieler.ende());
+    // Übergang (Spotify-Steuerung): den nächsten Song mit Spotify-Track melden; am Ende eines Übergangs weiterblättern
+    effect(() => {
+      const n = this.next();
+      const url = n && !isPause(n) ? this.spotifyTracks.get(vergleichsKey(n.title, n.artist)) : undefined;
+      const track = /open\.spotify\.com\/track\/([A-Za-z0-9]+)/.exec(url ?? '')?.[1];
+      untracked(() => this.spotifySpieler.naechster.set(track && n && !isPause(n) ? { track, titel: n.title } : undefined));
+    });
+    let weiter = this.spotifySpieler.weiterBitte();
+    effect(() => {
+      const w = this.spotifySpieler.weiterBitte();
+      if (w === weiter) return;
+      weiter = w;
+      untracked(() => this.springen(this.naechsterIndex()));
+    });
   })();
   private readonly online = signal(typeof navigator === 'undefined' || navigator.onLine !== false);
   private readonly spotifyTracks = (() => {

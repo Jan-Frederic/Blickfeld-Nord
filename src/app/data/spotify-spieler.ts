@@ -73,6 +73,8 @@ const schreiben = (k: string, v: unknown) => {
 // Im Browser-Player (Einstellung „Im Browser abspielen“) meldet der Player seinen Stand selbst – genau und sofort.
 // Zum Üben: Sprungmarken je Track (data/sprungmarken.ts, mit der Band geteilt) – ▶ beginnt am „Einsatz“, ein Tipp auf
 // eine Marke springt dorthin – und eine Schleife A–B, die einen Abschnitt wiederholt, bis man sie aufhebt.
+// Übergang: die letzten 15 s des Songs, dann blättert der Modus von selbst weiter (weiterBitte) und der nächste Song
+// beginnt am Einsatz – zum Proben der Wechsel zwischen zwei Songs der Setlist.
 @Injectable({ providedIn: 'root' })
 export class SpotifySpieler {
   readonly verbunden = signal(spotifyVerbunden());
@@ -106,6 +108,14 @@ export class SpotifySpieler {
   readonly marken = signal<Marke[]>([]);
   /** Schleife A–B (ms): erst A gesetzt (b null), dann beide – am Ende springt es zurück auf A */
   readonly schleife = signal<{ a: number; b: number | null } | null>(null);
+  /** nächster Song mit Spotify-Track (vom Bühnen-Modus gemeldet) – sonst kein Übergang möglich */
+  readonly naechster = signal<{ track: string; titel: string } | undefined>(undefined);
+  /** Übergang läuft: am Songende geht es von selbst zum nächsten */
+  readonly uebergang = signal(false);
+  /** zählt hoch, wenn der Bühnen-Modus zum nächsten Song blättern soll (Ende eines Übergangs) */
+  readonly weiterBitte = signal(0);
+  /** der nächste Song kommt aus einem Übergang: spielen, auch ohne „mitspielen“ */
+  private uebergangWeiter = false;
   private antrieb: Antrieb = FERN;
   private browser: SpotifyBrowser | null = null;
   private readonly cspMelden = (e: SecurityPolicyViolationEvent) => spotifyNotiz(`Sicherheitsregel blockiert: ${e.effectiveDirective} ${e.blockedURI}`);
@@ -185,6 +195,14 @@ export class SpotifySpieler {
       const p = this.stelle();
       const d = this.dauer();
       this.position.set(d ? Math.min(p, d) : p);
+      // Übergang: kurz vor dem Ende zum nächsten Song blättern lassen (der beginnt dann am Einsatz)
+      if (this.uebergang() && d && p >= d - 700) {
+        this.uebergang.set(false);
+        this.uebergangWeiter = true;
+        spotifyNotiz('Übergang: weiter zum nächsten Song');
+        this.weiterBitte.update((n) => n + 1);
+        return;
+      }
       // Schleife: am Ende des Abschnitts zurück an den Anfang (solange kein Befehl läuft)
       const sch = this.schleife();
       if (sch?.b != null && p >= sch.b && !this.laeuft() && !this.startet()) {
@@ -223,7 +241,9 @@ export class SpotifySpieler {
     this.antrieb = FERN;
     this.startet.set(false);
     this.laufen(false, 0);
-    this.mitlaufen = this.bestaetigt = false;
+    this.mitlaufen = this.bestaetigt = this.uebergangWeiter = false;
+    this.uebergang.set(false);
+    this.naechster.set(undefined);
     this.offen = null;
     this.gestartet = this.gestartetAls = this.davor = null;
     this.track.set(undefined);
@@ -239,6 +259,10 @@ export class SpotifySpieler {
     this.hinweisWeg();
     this.marken.set(marken(t));
     this.schleife.set(null);
+    // von Hand weitergeblättert, während ein Übergang lief: der Übergang ist vorbei
+    const ausUebergang = this.uebergangWeiter;
+    this.uebergangWeiter = false;
+    this.uebergang.set(false);
     // auch ein angenommener, noch nicht bestätigter Start zählt: er könnte gleich noch loslaufen
     const lief = (this.spielt() || this.startet()) && !!this.gestartet;
     this.startet.set(false);
@@ -248,7 +272,7 @@ export class SpotifySpieler {
     this.dauer.set(dauerMs);
     if (!this.verbunden()) return;
     spotifyNotiz(`Songwechsel → ${t ?? 'Song ohne Spotify-Track'} (lief: ${lief ? 'ja' : 'nein'}, mitlaufen: ${this.mitlaufen ? 'ja' : 'nein'}, mitspielen: ${this.mitspielen() ? 'ja' : 'nein'}, Länge: ${Math.round(dauerMs / 1000)} s)`);
-    if (t && this.mitlaufen && this.mitspielen()) void this.spielen(t);
+    if (t && ((this.mitlaufen && this.mitspielen()) || ausUebergang)) void this.spielen(t);
     else if (lief) {
       // nicht mitspielen oder Song ohne Spotify-Track: der alte Song soll nicht weiterlaufen
       this.befehlNr++;
@@ -368,6 +392,8 @@ export class SpotifySpieler {
     if (this.spielt()) {
       const nr = ++this.befehlNr;
       this.mitlaufen = false;
+      // ⏸ beendet auch einen Übergang – nach der Pause wird nicht von selbst weitergeblättert
+      this.uebergang.set(false);
       await this.tun(nr, async () => {
         this.schonfrist = 0;
         await this.antrieb.pause();
@@ -489,6 +515,19 @@ export class SpotifySpieler {
   }
   schleifeAus(): void {
     this.schleife.set(null);
+  }
+  /** Übergang proben: die letzten 15 s dieses Songs, dann geht es von selbst zum nächsten (ab dessen Einsatz) */
+  async uebergangStarten(vorlauf = 15_000): Promise<void> {
+    const t = this.track();
+    const d = this.dauer();
+    if (!t || !d || !this.naechster() || this.startet()) return;
+    this.browser?.aktivieren();
+    this.schleife.set(null);
+    spotifyNotiz(`Übergang zu ${this.naechster()!.titel}`);
+    this.uebergang.set(true);
+    if (this.aktiv()) await this.springenAuf(d - vorlauf);
+    else await this.spielen(t, Math.max(0, d - vorlauf));
+    if (!this.spielt() && !this.startet()) this.uebergang.set(false);
   }
 
   /** nur für Tests: womit gespielt wird */

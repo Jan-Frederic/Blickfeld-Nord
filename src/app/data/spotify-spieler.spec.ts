@@ -11,12 +11,19 @@ function ersatz() {
     pausen: 0,
     spruenge: [] as number[],
     stand: null as SpotifyStand | null,
+    /** wann der Stand zuletzt gesetzt wurde – solange er „spielt“, läuft die gemeldete Stelle weiter wie bei Spotify */
+    seit: 0,
     spielen: async (t: string, ab = 0) => void a.spiele.push([t, ab]),
     pause: async () => void a.pausen++,
     weiter: async () => undefined,
-    springen: async (ms: number) => void a.spruenge.push(ms),
+    // wie Spotify: nach dem Sprung meldet der Stand die neue Stelle
+    springen: async (ms: number) => {
+      a.spruenge.push(ms);
+      if (a.stand) a.stand = { ...a.stand, position: ms };
+      a.seit = Date.now();
+    },
     // eslint-disable-next-line @typescript-eslint/require-await
-    standAbfragen: async () => a.stand,
+    standAbfragen: async () => (a.stand?.spielt ? { ...a.stand, position: a.stand.position + (Date.now() - a.seit) } : a.stand),
   };
   return a;
 }
@@ -46,6 +53,7 @@ describe('Spotify-Steuerung', () => {
   /** ▶ und Spotify bestätigt, dass der Song läuft */
   async function abspielen(track = 't1', position = 1000) {
     a.stand = laeuft(track, position);
+    a.seit = Date.now();
     await s.umschalten();
     await zeit(800);
   }
@@ -126,6 +134,35 @@ describe('Spotify-Steuerung', () => {
     expect(a.spruenge).toContain(sch.a);
     s.schleifeTippen();
     expect(s.schleife()).toBeNull();
+  });
+
+  it('Übergang: letzte 15 s, dann blättert der Modus weiter und der nächste Song beginnt am Einsatz – auch ohne „mitspielen“', async () => {
+    markeSetzen('t2', 'Einsatz', 4_000);
+    s.mitspielenSetzen(false);
+    s.naechster.set({ track: 't2', titel: 'Zwei' });
+    await abspielen();
+    await s.uebergangStarten();
+    expect(a.spruenge).toEqual([185_000]);
+    expect(s.uebergang()).toBe(true);
+    const vorher = s.weiterBitte();
+    await zeit(15_000);
+    expect(s.weiterBitte()).toBe(vorher + 1);
+    expect(s.uebergang()).toBe(false);
+    // der Bühnen-Modus blättert weiter und meldet den neuen Song
+    s.songSetzen('t2', 180_000);
+    await zeit(0);
+    expect(a.spiele.at(-1)).toEqual(['t2', 4_000]);
+  });
+
+  it('von Hand weitergeblättert während eines Übergangs: kein erzwungenes Abspielen', async () => {
+    s.mitspielenSetzen(false);
+    s.naechster.set({ track: 't2', titel: 'Zwei' });
+    await abspielen();
+    await s.uebergangStarten();
+    s.songSetzen('t2', 180_000);
+    await zeit(0);
+    expect(a.spiele.map(([t]) => t)).toEqual(['t1']);
+    expect(s.uebergang()).toBe(false);
   });
 
   it('Songwechsel hebt die Schleife auf', async () => {

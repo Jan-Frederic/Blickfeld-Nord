@@ -181,7 +181,11 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     bearbeiten“ zeigt ✕ zum Löschen; Striche unter dem Balken zeigen die Stellen. **Einsatz:** ▶ und das Mitspielen
     beim Weiterblättern beginnen dort statt am Anfang. **Schleife A–B:** erster Tipp setzt den Anfang, der zweite das
     Ende (mind. 2 s), dann springt es am Ende von selbst zurück; dritter Tipp oder ✕ hebt sie auf, ein Songwechsel
-    auch. **Einrichtung** (Einstellungen → Spotify, `pages/spotify-checkliste.ts`): Checkliste Verbunden, Konto
+    auch. **Übergang** („⇢ Übergang zu …“, nur wenn der nächste Song einen Spotify-Track hat): die letzten 15 s des
+    Songs, dann blättert der Modus von selbst weiter (`weiterBitte`) und der nächste beginnt am Einsatz – auch ohne
+    „mitspielen“; ⏸ oder Weiterblättern von Hand beendet ihn. **Anleitung teilen** (Einstellungen → Spotify): kurze
+    Anleitung mit Link auf `/backstage/einstellungen/#spotify` übers Teilen-Menü (z. B. WhatsApp), sonst in die
+    Zwischenablage – ohne Konten und E-Mail-Adressen. **Einrichtung** (Einstellungen → Spotify, `pages/spotify-checkliste.ts`): Checkliste Verbunden, Konto
     freigeschaltet, Gerät bereit bzw. Browser spielt ab, Premium, erster Song – „Jetzt prüfen“ fragt Spotify
     (Geräteliste; beim Browser-Player wird er einmal angemeldet); „erster Song“ und „nur mit Premium“ merkt sich das
     Gerät (`bn-spotify-ok`, `bn-spotify-premium-fehlt`). Unit-Tests der Regeln: `data/spotify-spieler.spec.ts`.
@@ -238,7 +242,10 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   **Eingenordet** – beide gehören nicht zum Karteikasten. Darunter die Liste „Was ein Status-Klick bewirkt“. Nach jeder Status-Wahl im Übe-Modus steht 6 Sekunden lang **„↶ Rückgängig“** unten in
   der Mitte: zurück zur Karte, Karteikasten, Verlauf und „heute geübt“ wie vorher (`uebeSchnappschuss` in
   `data/uebe-status.ts`); eine wegen „Üben“ angehängte Wiederholung fällt wieder weg. Nach der letzten Karte schließt
-  der Übe-Modus wie bisher. **Übe-Erinnerung** (Einstellungen → Ich bin, `data/erinnerung.ts`): höchstens einmal am Tag
+  der Übe-Modus wie bisher. **Wochenrückblick** (Backstage-Übersicht unter Üben, `data/wochenrueckblick.ts`): geübte Karten der letzten 7 Tage je
+  Person (Übe-Modus, je Song und Tag einmal, aus dem gespiegelten Verlauf `bn-fortschritt-<Person>`) und die Songs, die
+  jetzt bei allen sitzen (Sitzt/Eingenordet) und diese Woche dort angekommen sind; erscheint nur, wenn es etwas zu
+  berichten gibt. **Übe-Erinnerung** (Einstellungen → Ich bin, `data/erinnerung.ts`): höchstens einmal am Tag
   ab der gewählten Stunde eine Benachrichtigung „n Karteikarten sind heute fällig“ – über die periodische
   Hintergrund-Synchronisation des Service Workers (`periodicsync` in `scripts/sw/sw-template.js`, nur installierte App
   auf Android/Chrome/Edge); Fälligkeiten legt die Seite im Speicher `ueben-erinnerung` ab. Die Zahl fälliger Karten am

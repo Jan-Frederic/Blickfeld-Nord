@@ -794,6 +794,10 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
     // Zugang aus der Fernsteuerung: ohne das Recht, im Browser abzuspielen
     localStorage.setItem('bn-spotify-token', JSON.stringify({ access: 'test', refresh: 'test', bis: 9e15, scope: 'user-read-playback-state user-modify-playback-state' }));
   });
+  // Wochenrückblick in der Übersicht: geübte Karten der letzten 7 Tage
+  await p.evaluate(() => localStorage.setItem('bn-fortschritt-jan-frederic-overbeck', JSON.stringify({ 'Iris|The Goo Goo Dolls': [{ tag: new Date().toLocaleDateString('sv-SE'), stand: 'wackelt', quelle: 'ueben' }] })));
+  await p.go('/backstage/');
+  await until(async () => /Diese Woche geübt:\s*du 1 Karte/.test(await p.locator('app-backstage .wochenrueckblick').innerText().catch(() => '')), async () => `Wochenrückblick fehlt: ${await p.locator('app-backstage .wochenrueckblick').innerText().catch(() => '–')}`);
   await p.go('/backstage/einstellungen/');
   const einstellung = p.locator('app-spotify-einstellung');
   expect((await einstellung.locator('select').inputValue()) === 'browser', 'Einstellung „Im Browser abspielen“ fehlt');
@@ -831,6 +835,10 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await until(async () => /✓\s*Verbunden/.test(await liste.innerText().catch(() => '')) && /○\s*Erster Song/.test(await liste.innerText()), async () => `Checkliste falsch: ${await liste.innerText().catch(() => '')}`);
   await liste.getByRole('button', { name: 'Jetzt prüfen' }).click();
   await until(async () => /✓\s*Konto freigeschaltet[\s\S]*✓\s*Dieser Browser spielt ab/.test(await liste.innerText()), async () => `„Jetzt prüfen“ klappt nicht: ${await liste.innerText()}`);
+  // Einladung an die anderen: Anleitung mit Link zu den Spotify-Einstellungen (Teilen-Menü, Zwischenablage oder zum Markieren)
+  await einstellung.getByRole('button', { name: 'Anleitung teilen' }).click();
+  await until(async () => /kopiert|Geteilt/.test(await einstellung.locator('.knoepfe [role=status]').last().innerText().catch(() => '')) || /backstage\/einstellungen\/#spotify/.test(await einstellung.locator('textarea.teil-text').inputValue().catch(() => '')), 'Anleitung teilen tut nichts');
+  expect(!/@/.test(await einstellung.locator('textarea.teil-text').inputValue().catch(() => '')), 'Anleitung enthält eine E-Mail-Adresse');
   await p.go('/backstage/ueben/');
   const ueben = p.locator('app-backstage-ueben');
   await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
@@ -894,7 +902,7 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await refrain.click();
   await until(async () => (await p.evaluate(() => window.__spCalls)).includes('seek ' + markeMs), () => `Marke antippen springt nicht dorthin (${markeMs})`);
   // Schleife: Anfang, gut 2 s später Ende – dann springt es von selbst zurück an den Anfang; ✕ hebt sie auf
-  const schleife = steuerung.locator('button.schleife');
+  const schleife = steuerung.locator('button.schleife:not(.uebergang)');
   await schleife.click();
   await p.waitForTimeout(2300);
   const seeksVorher = (await p.evaluate(() => window.__spCalls)).filter((c) => c.startsWith('seek')).length;
@@ -903,6 +911,15 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await until(async () => (await p.evaluate(() => window.__spCalls)).filter((c) => c.startsWith('seek')).length > seeksVorher, 'Schleife springt am Ende nicht zurück', 4000);
   await steuerung.locator('button[aria-label="Schleife aufheben"]').click();
   await until(async () => (await schleife.innerText()) === '⟲ A–B', 'Schleife lässt sich nicht aufheben');
+  // Übergang zum nächsten Song: springt auf die letzten 15 s (hier 3:05 von 3:20); ⏸ beendet ihn
+  const uebergang = steuerung.locator('button.uebergang');
+  await until(async () => /Übergang zu \S/.test(await uebergang.innerText().catch(() => '')), 'Knopf „Übergang zum nächsten Song“ fehlt');
+  await uebergang.click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('seek 185000') && (await uebergang.evaluate((el) => el.classList.contains('an'))), 'Übergang springt nicht auf die letzten 15 Sekunden');
+  await steuerung.locator('button[aria-label="Pause"]').click();
+  await until(async () => !(await uebergang.evaluate((el) => el.classList.contains('an'))), '⏸ beendet den Übergang nicht');
+  await steuerung.locator('button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => (await steuerung.locator('button[aria-label="Pause"]').count()) === 1, 'nach dem Übergang lässt sich nicht weiterspielen');
   // Feld am Griff verschieben: die Stelle wird gemerkt; Tippen ins Feld blättert nicht
   const griff = await dock.locator('.griff').boundingBox();
   await p.mouse.move(griff.x + griff.width / 2, griff.y + griff.height / 2);

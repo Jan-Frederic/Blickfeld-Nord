@@ -1090,6 +1090,10 @@ app-spotify-steuerung .laut { display: inline-flex; align-items: center; gap: 6p
 app-spotify-steuerung .laut input { width: 110px; accent-color: #1db954; }
 app-spotify-steuerung .klein-text { color: #888; font-size: .8rem; align-self: center; }
 app-spotify-steuerung .rund.gross.startet { opacity: .7; }
+// Backstage-Übersicht: Wochenrückblick der Band (pages/backstage.ts)
+app-backstage .wochenrueckblick { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0 0; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--bn-line); font-size: .9rem; line-height: 1.45; }
+app-backstage .wochenrueckblick mat-icon { flex: none; color: var(--bn-sunset); }
+app-backstage .wochenrueckblick small { display: block; color: var(--bn-fog); font-size: .84rem; }
 // Sprungmarken und Schleife (unter dem Fortschrittsbalken)
 app-spotify-steuerung .spur { position: relative; height: 8px; margin: -6px 8px 6px; }
 app-spotify-steuerung .spur .tick { position: absolute; top: 0; width: 2px; height: 8px; margin-left: -1px; background: #e8a46a; }

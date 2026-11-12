@@ -48,6 +48,10 @@ import { MARKEN_NAMEN } from '../data/sprungmarken';
           @for (n of namen; track n) { <option [value]="n">{{ n }}</option> }
         </select>
         @if (s.marken().length) { <button type="button" class="klein" (click)="bearbeiten.set(!bearbeiten())" [attr.aria-pressed]="bearbeiten()">{{ bearbeiten() ? 'Fertig' : 'Marken bearbeiten' }}</button> }
+        @if (s.naechster(); as n) {
+          <button type="button" class="schleife uebergang" [class.an]="s.uebergang()" (click)="s.uebergangStarten()" [disabled]="s.laeuft() || s.startet() || !s.dauer()"
+            [title]="'Übergang proben: die letzten 15 Sekunden, dann ' + n.titel + ' ab dem Einsatz'">⇢ Übergang zu {{ n.titel }}</button>
+        }
         <button type="button" class="schleife" [class.an]="!!s.schleife()" (click)="s.schleifeTippen()" [disabled]="!s.aktiv()" [attr.aria-label]="schleifeName()" [title]="schleifeName()">{{ schleifeText() }}</button>
         @if (s.schleife()) { <button type="button" class="weg" (click)="s.schleifeAus()" aria-label="Schleife aufheben">✕</button> }
       </div>
