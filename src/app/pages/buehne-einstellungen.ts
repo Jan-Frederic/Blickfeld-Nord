@@ -1,9 +1,10 @@
 import { Component, OnDestroy, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { STANDARD_TASTEN, Tasten, halbseite, halbseiteSetzen, tasten, tastenName, tastenSetzen } from '../data/buehne-einstellungen';
+import { STANDARD_TASTEN, TASTEN_FELDER, Tasten, halbseite, halbseiteSetzen, tasten, tastenName, tastenSetzen } from '../data/buehne-einstellungen';
 
-// Backstage → Einstellungen → Bühnen-Modus: Halbseiten-Blättern und die Tasten fürs Fußpedal. Eine Taste kommt dazu,
-// indem man „+ Taste“ antippt und dann aufs Pedal tritt (oder die Taste drückt).
+// Backstage → Einstellungen → Bühnen-Modus: Halbseiten-Blättern und die Tasten fürs Fußpedal – Weiter, Zurück sowie
+// Hoch und Runter (wie Wischen: Titelanzeige ↔ Notenansicht ↔ volle Notenansicht). Eine Taste kommt dazu, indem man
+// „+ Taste“ antippt und dann aufs Pedal tritt (oder die Taste drückt); sie gehört dann nur zu dieser Aktion.
 @Component({
   selector: 'app-buehne-einstellungen',
   imports: [MatIconModule],
@@ -49,6 +50,8 @@ export class BuehneEinstellungen implements OnDestroy {
   protected readonly richtungen: { feld: keyof Tasten; label: string }[] = [
     { feld: 'weiter', label: 'Weiter (nächste Seite / nächster Song)' },
     { feld: 'zurueck', label: 'Zurück' },
+    { feld: 'hoch', label: 'Hoch – wie nach oben wischen (Titelanzeige → Noten → volle Notenansicht)' },
+    { feld: 'runter', label: 'Runter – wie nach unten wischen (volle Notenansicht → Noten → Titelanzeige)' },
   ];
   private hoeren?: (e: KeyboardEvent) => void;
 
@@ -75,9 +78,9 @@ export class BuehneEinstellungen implements OnDestroy {
       e.stopPropagation();
       this.aufhoeren();
       if (e.key === 'Escape' || ['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
-      const andere: keyof Tasten = feld === 'weiter' ? 'zurueck' : 'weiter';
       const t = this.t();
-      this.setzen({ [feld]: [...new Set([...t[feld], e.key])], [andere]: t[andere].filter((x) => x !== e.key) } as unknown as Tasten);
+      const neu = Object.fromEntries(TASTEN_FELDER.map((f) => [f, f === feld ? [...new Set([...t[f], e.key])] : t[f].filter((x) => x !== e.key)])) as unknown as Tasten;
+      this.setzen(neu);
     };
     addEventListener('keydown', this.hoeren, { capture: true });
   }

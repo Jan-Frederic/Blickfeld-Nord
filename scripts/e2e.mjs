@@ -833,6 +833,17 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   const spielen = kopf.locator('button[aria-label="Auf Spotify abspielen"]');
   await spielen.waitFor();
   // Herunterwischen (zur Titelanzeige) lädt die Seite nie neu: kein „Zum Aktualisieren ziehen“, Notenblatt reicht nichts weiter
+  // ↑/↓ wie Wischen: Notenansicht → volle Notenansicht → zurück → Titelanzeige → wieder Noten
+  await buehne.focus();
+  await p.keyboard.press('ArrowUp');
+  await until(async () => (await buehne.locator('app-noten-anzeige .noten.weg').count()) === 1, '↑ blendet die Kopfleiste nicht aus (volle Notenansicht)');
+  await p.keyboard.press('ArrowDown');
+  await until(async () => (await buehne.locator('app-noten-anzeige .noten.weg').count()) === 0, '↓ holt die Kopfleiste nicht zurück');
+  await p.keyboard.press('ArrowDown');
+  await until(async () => (await buehne.locator('app-noten-anzeige').count()) === 0, '↓ führt nicht zur Titelanzeige');
+  await p.keyboard.press('ArrowUp');
+  await until(async () => (await buehne.locator('app-noten-anzeige').count()) === 1, '↑ öffnet die Notenansicht nicht');
+  await spielen.waitFor();
   expect(await p.evaluate(() => getComputedStyle(document.documentElement).overscrollBehaviorY === 'none' && getComputedStyle(document.body).overscrollBehaviorY === 'none' && getComputedStyle(document.querySelector('app-noten-anzeige .flaeche')).overscrollBehaviorY === 'contain'), 'Herunterwischen kann die Seite neu laden (overscroll-behavior fehlt)');
   expect(await kopf.locator('button[aria-label="Spotify: 10 Sekunden zurück"]').isDisabled(), '↺10 ist bedienbar, bevor ein Song läuft');
   await until(async () => (await p.evaluate(() => window.__spToken)) === 'test', 'Browser-Player bekommt keinen Zugang');
@@ -1385,6 +1396,9 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await buehne.locator('button.neu').first().click();
   await p.keyboard.press('b');
   await until(async () => (await buehne.innerText()).includes('B'), 'Pedal-Taste wird nicht aufgenommen');
+  // vier Aktionen: Weiter, Zurück, Hoch (↑), Runter (↓) – eine Taste gehört nur zu einer Aktion
+  const zeilen = buehne.locator('.tasten');
+  expect((await zeilen.count()) === 4 && /hoch/i.test(await zeilen.nth(2).innerText()) && (await zeilen.nth(2).innerText()).includes('↑') && (await zeilen.nth(3).innerText()).includes('↓') && !(await zeilen.nth(0).locator('.taste').allInnerTexts()).some((x) => x.startsWith('↓')), 'Tasten für Hoch/Runter fehlen in den Einstellungen');
   await p.go(`/backstage/${id}/setlist`);
   await p.getByRole('button', { name: /Bühnen-Modus/ }).first().click();
   await p.locator('app-setlist-buehne .noten-knopf').click();

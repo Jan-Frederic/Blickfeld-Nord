@@ -36,10 +36,10 @@ import { ErinnerungErgebnis, erinnerungSetzen, ladeErinnerung } from '../data/er
           </select>
         </label>
       </div>
-      <p class="hinweis">Höchstens einmal am Tag. Klappt in der installierten App auf Android (Chrome/Edge); sonst zeigt das App-Symbol die Zahl der fälligen Karten, wo das Gerät es kann.
+      <p class="hinweis">Höchstens einmal am Tag. Klappt in der installierten App auf Android (Chrome/Edge). Die Zahl der fälligen Karten am App-Symbol zeigen nur Computer (installierte App in Chrome/Edge) und iPhone/iPad (zum Home-Bildschirm hinzugefügt, Mitteilungen erlaubt); Android zeigt am Symbol höchstens einen Punkt, wenn eine Erinnerung da ist.
         @switch (meldung()) {
           @case ('an') { <span class="ok"> Erinnerung ist an ✓</span> }
-          @case ('nur-badge') { <span class="warn"> Dieses Gerät kann nicht im Hintergrund erinnern – nur das App-Symbol zeigt die Zahl.</span> }
+          @case ('nur-badge') { <span class="warn"> Dieses Gerät kann nicht im Hintergrund erinnern – höchstens das App-Symbol zeigt die Zahl (Computer, iPhone/iPad).</span> }
           @case ('keine-erlaubnis') { <span class="warn"> Benachrichtigungen sind für diese Seite nicht erlaubt (Browser-Einstellungen).</span> }
         }</p>
     </div>

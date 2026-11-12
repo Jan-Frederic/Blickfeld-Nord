@@ -553,6 +553,16 @@ export class SetlistBuehne {
     if (this.wischY && t) this.notenHochgewischt(t.clientX - this.wischY.x, t.clientY - this.wischY.y, e.target as HTMLElement);
     this.wischY = null;
   }
+  /** Taste „hoch“ (Standard ↑) wie nach oben wischen: Titelanzeige → Notenansicht → volle Notenansicht */
+  private hoch(): void {
+    if (!this.notenOffen()) {
+      if (this.notenSongs().size || this.notenAuf()) this.notenOffen.set(true);
+    } else this.anzeige()?.hoch();
+  }
+  /** Taste „runter“ (Standard ↓) wie nach unten wischen: volle Notenansicht → Notenansicht → Titelanzeige */
+  private runter(): void {
+    if (this.notenOffen() && !this.notenRaus() && !this.anzeige()?.runter()) this.notenSchliessen();
+  }
   private notenHochgewischt(dx: number, dy: number, ziel: HTMLElement): boolean {
     if (this.notenOffen() || !(this.notenSongs().size || this.notenAuf()) || dy > -60 || Math.abs(dy) < Math.abs(dx) * 1.5) return false;
     // im Song-Bereich gescrollt (lange Probe-Leiste): erst wenn unten angekommen
@@ -940,6 +950,8 @@ export class SetlistBuehne {
   protected key(e: KeyboardEvent): void {
     if (this.tasten.weiter.includes(e.key)) this.go(1);
     else if (this.tasten.zurueck.includes(e.key)) this.go(-1);
+    else if (this.tasten.hoch.includes(e.key)) this.hoch();
+    else if (this.tasten.runter.includes(e.key)) this.runter();
     else if (e.key === 'Escape') this.notenOffen() && !this.notenRaus() ? this.notenSchliessen() : this.closed.emit();
     else if (/^[1-5]$/.test(e.key)) this.bewerte(Number(e.key));
     else return;

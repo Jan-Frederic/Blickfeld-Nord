@@ -38,7 +38,7 @@ const BEGRIFFE: { name: string; text: string }[] = [
   { name: 'Probe-Leiste', text: 'Unter jedem Song im Probe-Modus: Status-Umschalter, Mikrofon, eigene Notiz, die Status und Notizen der anderen, Notizen der letzten Probe, Zeit.' },
   { name: 'Mitschnitt-Panel', text: 'Im Übe-Modus über „Mitschnitt“ einblendbar: Proben-Aufnahmen des Songs anhören, Stelle in Schleife, langsamer abspielen.' },
   { name: 'Dein Weg', text: 'Im Song-Dialog: wie sich dein Übe-Status mit diesem Song entwickelt hat, z. B. „✎ Üben 02.11. → ↻ Wackelt noch 05.11. → ✓ Sitzt 10.11. · in 8 Tagen“.' },
-  { name: 'Übe-Erinnerung', text: 'Unter Einstellungen → Ich bin: höchstens einmal am Tag ab der gewählten Uhrzeit „5 Karteikarten sind heute fällig“ (installierte App auf Android). Das App-Symbol zeigt die Zahl fälliger Karten, wo das Gerät es kann.' },
+  { name: 'Übe-Erinnerung', text: 'Unter Einstellungen → Ich bin: höchstens einmal am Tag ab der gewählten Uhrzeit „5 Karteikarten sind heute fällig“ (installierte App auf Android). Die Zahl der fälligen Karten am App-Symbol zeigen nur Computer (installierte App in Chrome/Edge) und iPhone/iPad (zum Home-Bildschirm hinzugefügt, Mitteilungen erlaubt); Android zeigt am Symbol höchstens einen Punkt, wenn eine Erinnerung da ist.' },
   { name: 'Zurück-Schutz', text: 'In allen drei Modi beendet „Zurück“ des Handys (Wischen vom Rand) den Modus nicht sofort: erst ein zweites „Zurück“ kurz danach. Lädt die Seite neu, öffnen sich Übe- und Probe-Modus von selbst wieder.' },
   { name: 'Anlass', text: 'Text oben links vor dem Songtitel – Name des Auftritts, „Probe 12.11.“ oder „Übe-Modus“.' },
 ];

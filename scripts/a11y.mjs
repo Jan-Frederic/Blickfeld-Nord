@@ -68,16 +68,48 @@ await zugangFreischalten(desktop);
 // Zählpixel und externe Einbettungen spielen für den Check keine Rolle
 await desktop.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
 
+/** warten, bis sich die Seite nicht mehr ändert (300 ms ohne DOM-Änderung, höchstens 3 s) – Teile wie die
+ *  Konzertliste werden nach dem Laden im Browser neu aufgebaut; mittendrin fehlt Knöpfen kurz der Text */
+const ruhe = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((ok) => {
+        let zeit = setTimeout(fertig, 300);
+        const ende = setTimeout(fertig, 3000);
+        const beob = new MutationObserver(() => {
+          clearTimeout(zeit);
+          zeit = setTimeout(fertig, 300);
+        });
+        beob.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true });
+        function fertig() {
+          beob.disconnect();
+          clearTimeout(zeit);
+          clearTimeout(ende);
+          ok();
+        }
+      }),
+  );
+
 // WCAG-Prüfung mit axe-core
 async function axePruefung(page, path) {
   await page.goto(BASE + path, { waitUntil: 'networkidle' });
   await scrollen(page, 60);
   await page.waitForTimeout(400);
+  await ruhe(page);
   await page.addScriptTag({ content: AXE });
-  const result = await page.evaluate(() =>
-    // eslint-disable-next-line no-undef
-    axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } }),
-  );
+  const pruefen = () =>
+    page.evaluate(() =>
+      // eslint-disable-next-line no-undef
+      axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } }),
+    );
+  let result = await pruefen();
+  // schwere Verstöße: nach einer Pause noch einmal prüfen – gemeldet wird nur, was dann noch da ist (ein echter
+  // Verstoß bleibt, ein Zwischenstand beim Neuaufbau nicht)
+  if (result.violations.some((v) => v.impact === 'serious' || v.impact === 'critical')) {
+    await page.waitForTimeout(800);
+    await ruhe(page);
+    result = await pruefen();
+  }
   return result.violations.map((v) => {
     const bad = v.impact === 'serious' || v.impact === 'critical';
     const where = v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ');

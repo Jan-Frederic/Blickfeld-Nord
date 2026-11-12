@@ -274,6 +274,16 @@ export class NotenAnzeige {
     if (dy > 0 && !this.kopfWeg() && this.obenBeimStart) this.schliessen.emit();
     else this.kopfWeg.set(dy < 0);
   }
+  /** Taste „hoch“ (vom Bühnen-Modus): Kopfleiste wegblenden – volle Notenansicht */
+  hoch(): void {
+    this.kopfWeg.set(true);
+  }
+  /** Taste „runter“: Kopfleiste zurückholen; false, wenn sie schon da ist (dann geht es zur Titelanzeige) */
+  runter(): boolean {
+    if (!this.kopfWeg()) return false;
+    this.kopfWeg.set(false);
+    return true;
+  }
   protected kopfZeigen(e: Event): void {
     e.stopPropagation();
     this.fokusHalten();

@@ -1,5 +1,6 @@
 // Übe-Erinnerung. Zwei Teile, beide ohne Server:
-// – App-Symbol: Zahl der heute fälligen Karteikarten als Badge (installierte App, Chrome/Edge/Safari, wo möglich).
+// – App-Symbol: Zahl der heute fälligen Karteikarten als Badge – zu sehen am Computer (installierte App, Chrome/Edge)
+//   und auf iPhone/iPad (Home-Bildschirm, Mitteilungen erlaubt); Android zeigt keine Zahl, höchstens einen Punkt.
 // – Benachrichtigung (einstellbar unter Einstellungen → Ich bin): höchstens einmal am Tag ab der gewählten Stunde
 //   „5 Karten heute fällig“. Der Service Worker (scripts/sw/sw-template.js, „periodicsync“) liest dafür die Fälligkeiten
 //   aus dem Speicher ERINNERUNG_CACHE – die Seite legt sie bei jeder Änderung dort ab. Periodische Hintergrund-

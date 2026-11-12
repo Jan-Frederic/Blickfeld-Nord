@@ -230,8 +230,9 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   der Übe-Modus wie bisher. **Übe-Erinnerung** (Einstellungen → Ich bin, `data/erinnerung.ts`): höchstens einmal am Tag
   ab der gewählten Stunde eine Benachrichtigung „n Karteikarten sind heute fällig“ – über die periodische
   Hintergrund-Synchronisation des Service Workers (`periodicsync` in `scripts/sw/sw-template.js`, nur installierte App
-  auf Android/Chrome/Edge); Fälligkeiten legt die Seite im Speicher `ueben-erinnerung` ab. Überall, wo es geht, zeigt
-  das App-Symbol die Zahl fälliger Karten (Badge). Im **Song-Dialog** steht „Dein Weg“: der eigene Übe-Status im Lauf
+  auf Android/Chrome/Edge); Fälligkeiten legt die Seite im Speicher `ueben-erinnerung` ab. Die Zahl fälliger Karten am
+  App-Symbol (Badge, `setAppBadge`) zeigen nur Computer (installierte App in Chrome/Edge) und iPhone/iPad
+  (Home-Bildschirm, Mitteilungen erlaubt); Android zeigt keine Zahl, höchstens einen Punkt bei einer Benachrichtigung. Im **Song-Dialog** steht „Dein Weg“: der eigene Übe-Status im Lauf
   der Zeit (`uebeWeg` in `data/fortschritt.ts`). In der **Probe-Leiste** stehen die anderen als Zeichen mit Namen
   (○ ✎ ↻ ✓ ✓✓ in den Status-Farben, Text für Screenreader und im Tooltip). Reihenfolge: heute fällige zuerst
   (Songs des nächsten Auftritts vorn), danach alle übrigen – der Knopf geht immer. **Mitschnitt** (oben in der
@@ -642,7 +643,11 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
   unten wischen oder Tippen aufs Schild holt sie zurück. Waagerecht wischen blättert wie gewohnt.
 - **Halbseiten-Blättern** und eigene **Pedal-Tasten:** unter Backstage → **Einstellungen → Bühnen-Modus**. Mit
   Halbseiten-Blättern zeigt der erste Tritt oben schon den Anfang der nächsten Seite, der zweite blättert ganz um.
-  Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten.
+  Pedal-Taste festlegen: „+ Taste“ antippen und aufs Pedal treten. Vier Aktionen (`data/buehne-einstellungen.ts`):
+  **Weiter** (→, Leertaste, Bild ↓, Eingabe), **Zurück** (←, Bild ↑), **Hoch** (↑, wie nach oben wischen: Titelanzeige →
+  Notenansicht → volle Notenansicht) und **Runter** (↓, wie nach unten wischen: zurück bis zur Titelanzeige). Eine Taste
+  gehört immer nur zu einer Aktion. Bis November 2026 blätterten ↓/↑ weiter bzw. zurück; ältere gespeicherte
+  Belegungen bekommen ↑/↓ beim Lesen automatisch für Hoch/Runter (`tastenLesen`).
 
 - **Einzählen:** neben dem Tempo auf **1-2-3-4** tippen – vier Schläge im Tempo des Songs groß auf dem Bildschirm
   (mit Ton, wenn der Klick-Ton an ist; die Eins höher). Der **Klick** daneben blinkt dauerhaft im Tempo.
