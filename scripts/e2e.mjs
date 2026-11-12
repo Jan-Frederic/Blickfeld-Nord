@@ -809,6 +809,7 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
     const url = new URL(r.url());
     const geraet = url.searchParams.get('device_id') ?? JSON.parse(r.postData() ?? '{}').device_ids?.[0];
     const fehlt = (unbekannt === 'weich' && !geholt.includes(geraet)) || (unbekannt === 'hart' && geraet === 'web1');
+    if (url.pathname.endsWith('/me/player/devices')) return route.fulfill({ json: { devices: [] } });
     if (url.pathname.endsWith('/me/player') && r.method() === 'PUT') {
       geholt.push(geraet);
       return fehlt && unbekannt === 'hart' ? route.fulfill({ status: 404, json: { error: { status: 404, message: 'Device not found' } } }) : route.fulfill({ status: 204 });
@@ -824,6 +825,12 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
     // alles andere (Stand, Pause …) geht im Browser-Player nicht über die Web-API
     return route.fulfill({ status: 500, body: 'nicht erwartet' });
   });
+  // Checkliste zum Einrichten: verbunden ✓, „Jetzt prüfen“ fragt Spotify (Konto freigeschaltet) und meldet den Browser-Player an
+  await p.go('/backstage/einstellungen/');
+  const liste = p.locator('app-spotify-checkliste');
+  await until(async () => /✓\s*Verbunden/.test(await liste.innerText().catch(() => '')) && /○\s*Erster Song/.test(await liste.innerText()), async () => `Checkliste falsch: ${await liste.innerText().catch(() => '')}`);
+  await liste.getByRole('button', { name: 'Jetzt prüfen' }).click();
+  await until(async () => /✓\s*Konto freigeschaltet[\s\S]*✓\s*Dieser Browser spielt ab/.test(await liste.innerText()), async () => `„Jetzt prüfen“ klappt nicht: ${await liste.innerText()}`);
   await p.go('/backstage/ueben/');
   const ueben = p.locator('app-backstage-ueben');
   await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
@@ -862,7 +869,7 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   expect((await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 0 && (await p.evaluate(() => localStorage.getItem('bn-spotify-abgedockt'))) === 'true', 'Abdocken lässt die Knöpfe in der Kopfleiste oder wird nicht gemerkt');
   const steuerung = dock.locator('app-spotify-steuerung');
   await until(async () => (await steuerung.locator('button[aria-label="Pause"]').count()) === 1, 'abgedockte Steuerung zeigt nicht, dass der Song läuft');
-  expect((await steuerung.locator('.geraet').innerText()).includes('dieser Browser') && (await steuerung.locator('select').count()) === 0, 'Browser-Player zeigt eine Gerätewahl');
+  expect((await steuerung.locator('.geraet').innerText()).includes('dieser Browser') && (await steuerung.locator('select[aria-label="Spotify-Gerät"]').count()) === 0, 'Browser-Player zeigt eine Gerätewahl');
   // Fortschritt bestimmen: am Balken auf 1:00 ziehen, 10 s vor, Lautstärke
   await steuerung.locator('input.balken').evaluate((el) => {
     el.value = '60000';
@@ -877,6 +884,25 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
     el.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await until(async () => (await p.evaluate(() => window.__spCalls)).includes('volume 0.5') && (await p.evaluate(() => localStorage.getItem('bn-spotify-lautstaerke'))) === '0.5', 'Lautstärke wird nicht gesetzt');
+  // Sprungmarke an der aktuellen Stelle (für die Band gespeichert), antippen springt dorthin
+  await steuerung.locator('select.neu-marke').selectOption('Refrain');
+  const refrain = steuerung.locator('.marke button', { hasText: 'Refrain' });
+  await refrain.waitFor();
+  expect((await p.evaluate(() => Object.values(JSON.parse(localStorage.getItem('bn-sprungmarken') ?? '{}'))[0]?.marken?.[0]?.n)) === 'Refrain' && (await steuerung.locator('.spur .tick').count()) === 1, 'Sprungmarke wird nicht gespeichert oder nicht am Balken gezeigt');
+  const markeMs = await p.evaluate(() => Object.values(JSON.parse(localStorage.getItem('bn-sprungmarken')))[0].marken[0].ms);
+  await steuerung.locator('button[aria-label="10 Sekunden vor"]').click();
+  await refrain.click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('seek ' + markeMs), () => `Marke antippen springt nicht dorthin (${markeMs})`);
+  // Schleife: Anfang, gut 2 s später Ende – dann springt es von selbst zurück an den Anfang; ✕ hebt sie auf
+  const schleife = steuerung.locator('button.schleife');
+  await schleife.click();
+  await p.waitForTimeout(2300);
+  const seeksVorher = (await p.evaluate(() => window.__spCalls)).filter((c) => c.startsWith('seek')).length;
+  await schleife.click();
+  await until(async () => /⟲ \d:\d\d–\d:\d\d/.test(await schleife.innerText()), async () => `Schleife zeigt keinen Abschnitt: ${await schleife.innerText()}`);
+  await until(async () => (await p.evaluate(() => window.__spCalls)).filter((c) => c.startsWith('seek')).length > seeksVorher, 'Schleife springt am Ende nicht zurück', 4000);
+  await steuerung.locator('button[aria-label="Schleife aufheben"]').click();
+  await until(async () => (await schleife.innerText()) === '⟲ A–B', 'Schleife lässt sich nicht aufheben');
   // Feld am Griff verschieben: die Stelle wird gemerkt; Tippen ins Feld blättert nicht
   const griff = await dock.locator('.griff').boundingBox();
   await p.mouse.move(griff.x + griff.width / 2, griff.y + griff.height / 2);

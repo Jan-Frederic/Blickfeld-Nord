@@ -1088,6 +1088,19 @@ app-spotify-steuerung .laut { display: inline-flex; align-items: center; gap: 6p
 app-spotify-steuerung .laut input { width: 110px; accent-color: #1db954; }
 app-spotify-steuerung .klein-text { color: #888; font-size: .8rem; align-self: center; }
 app-spotify-steuerung .rund.gross.startet { opacity: .7; }
+// Sprungmarken und Schleife (unter dem Fortschrittsbalken)
+app-spotify-steuerung .spur { position: relative; height: 8px; margin: -6px 8px 6px; }
+app-spotify-steuerung .spur .tick { position: absolute; top: 0; width: 2px; height: 8px; margin-left: -1px; background: #e8a46a; }
+app-spotify-steuerung .spur .tick.einsatz { width: 3px; background: #fff; }
+app-spotify-steuerung .spur .ab { position: absolute; top: 2px; height: 4px; border-radius: 2px; background: rgba(29, 185, 84, .55); }
+app-spotify-steuerung .marken { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 0 0 8px; }
+app-spotify-steuerung .marke { display: inline-flex; align-items: center; gap: 2px; }
+app-spotify-steuerung .marke > button:first-child { min-height: 32px; padding: 0 10px; border-color: #e8a46a; color: #e8a46a; font-size: .8rem; }
+app-spotify-steuerung .marke small { color: #aaa; font-size: .7rem; }
+app-spotify-steuerung .weg { min-width: 28px; min-height: 28px; padding: 0; color: #aaa; font-size: .75rem; }
+app-spotify-steuerung .neu-marke { padding: 5px 8px; font-size: .8rem; }
+app-spotify-steuerung .schleife { min-height: 32px; padding: 0 12px; font-size: .8rem; }
+app-spotify-steuerung .schleife.an { border-color: #1db954; color: #1db954; }
 // Notenansicht: Spotify-Steuerung abgedockt – verschiebbares Feld über den Noten
 app-noten-anzeige .spotify-dock { position: fixed; z-index: 8; box-sizing: border-box; width: min(440px, calc(100vw - 16px)); padding: 6px 12px 10px; border: 1px solid #1db954; border-radius: 14px; background: rgba(17, 19, 22, .96); box-shadow: 0 10px 30px rgba(0, 0, 0, .55); }
 app-noten-anzeige .spotify-dock:not(.frei) { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); }

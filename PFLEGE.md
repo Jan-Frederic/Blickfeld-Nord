@@ -174,6 +174,17 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     teils mit Text, der kein JSON ist (wird ignoriert); kurz nach dem Start meldet Spotify noch den alten Stand (6 s
     Schonfrist); vorübergehende Fehler (5xx, 429) werden einmal wiederholt; der Zugang wird stündlich erneuert (nie
     zweimal gleichzeitig – das kappte die Verbindung); eine andere Fassung desselben Songs gilt als der Song.
+    **Zum Üben:** **Sprungmarken** je Spotify-Track (`data/sprungmarken.ts`, Speicher `bn-sprungmarken`, mit der
+    Band gespiegelt – unter „Daten/“; bei gleichzeitigen Änderungen gewinnt je Track die spätere, `spiegel-merge.ts`):
+    „+ Marke“ setzt Einsatz, Strophe, Refrain, Bridge, Solo oder Outro an der aktuellen Stelle (mehrere gleiche werden
+    durchnummeriert), ein Tipp auf die Marke springt dorthin (läuft der Song nicht, startet er dort), „Marken
+    bearbeiten“ zeigt ✕ zum Löschen; Striche unter dem Balken zeigen die Stellen. **Einsatz:** ▶ und das Mitspielen
+    beim Weiterblättern beginnen dort statt am Anfang. **Schleife A–B:** erster Tipp setzt den Anfang, der zweite das
+    Ende (mind. 2 s), dann springt es am Ende von selbst zurück; dritter Tipp oder ✕ hebt sie auf, ein Songwechsel
+    auch. **Einrichtung** (Einstellungen → Spotify, `pages/spotify-checkliste.ts`): Checkliste Verbunden, Konto
+    freigeschaltet, Gerät bereit bzw. Browser spielt ab, Premium, erster Song – „Jetzt prüfen“ fragt Spotify
+    (Geräteliste; beim Browser-Player wird er einmal angemeldet); „erster Song“ und „nur mit Premium“ merkt sich das
+    Gerät (`bn-spotify-ok`, `bn-spotify-premium-fehlt`). Unit-Tests der Regeln: `data/spotify-spieler.spec.ts`.
     **Diagnose:** Einstellungen → Spotify → „Diagnose“ zeigt das Protokoll der letzten 150 Befehle, Antworten und
     Knopfdrücke (`bn-spotify-protokoll`, nur auf dem Gerät, ohne Zugangsschlüssel, Geräte-IDs gekürzt) mit „Protokoll
     kopieren“ – was Spotify einem echten Konto antwortet, lässt sich nur dort sehen. Antwortet Spotify mit 401, obwohl

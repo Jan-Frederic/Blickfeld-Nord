@@ -1,5 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { SpotifyCheckliste } from './spotify-checkliste';
 import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyBrowserRechte, spotifyGesteuert, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
 
 // Backstage → Einstellungen: Spotify im Übe- und Probe-Modus – aus (Standard), eingebetteter Player, Fernsteuerung
@@ -8,7 +9,7 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
 // Antworten von Spotify (ohne Zugangsschlüssel) zum Kopieren – für die Fehlersuche.
 @Component({
   selector: 'app-spotify-einstellung',
-  imports: [MatIconModule],
+  imports: [MatIconModule, SpotifyCheckliste],
   template: `
     <div class="box">
       <h3><mat-icon>music_note</mat-icon> Spotify im Übe- und Probe-Modus</h3>
@@ -33,6 +34,7 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
           <button type="button" class="verbinden" (click)="verbinden()">{{ rechteFehlen() ? '♫ Spotify neu verbinden – fürs Abspielen im Browser' : '♫ Spotify verbinden' }}</button>
           @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
         }
+        <app-spotify-checkliste [art]="art()" [verbunden]="verbunden()" [rechteFehlen]="rechteFehlen()" />
         <details class="diagnose" (toggle)="protokollLesen()">
           <summary>Diagnose</summary>
           <p class="hinweis">Was die Steuerung zuletzt an Spotify geschickt hat und was zurückkam – ohne Zugangsschlüssel. Tut sie nicht, was sie soll: Fehler im Übe- oder Probe-Modus nachstellen, dann hier kopieren und weitergeben.</p>

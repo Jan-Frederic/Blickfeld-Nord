@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { SpotifyBrowser, spotifyBrowser } from './spotify-browser';
+import { EINSATZ, Marke, markeLoeschen, markeSetzen, marken } from './sprungmarken';
 import {
   SpotifyFehler,
   SpotifyGeraet,
@@ -24,7 +25,7 @@ import {
 } from './spotify-remote';
 
 /** womit gespielt wird: Fernsteuerung der Spotify-App (Web-API) oder der Player im Browser (data/spotify-browser.ts) */
-interface Antrieb {
+export interface Antrieb {
   spielen(t: string, ab?: number): Promise<void>;
   pause(): Promise<unknown>;
   weiter(): Promise<unknown>;
@@ -33,6 +34,9 @@ interface Antrieb {
 }
 const FERN: Antrieb = { spielen: spotifySpielen, pause: spotifyPause, weiter: spotifyWeiter, springen: spotifySpringen, stand: spotifyStand };
 const DOCK_KEY = 'bn-spotify-abgedockt';
+/** Einrichtung (Einstellungen → Checkliste): wann zuletzt ein Song wirklich lief, ob Spotify „nur mit Premium“ meldete */
+export const SPOTIFY_OK_KEY = 'bn-spotify-ok';
+export const SPOTIFY_PREMIUM_FEHLT_KEY = 'bn-spotify-premium-fehlt';
 const DOCK_POS_KEY = 'bn-spotify-dock';
 const lesen = <T>(k: string): T | null => {
   try {
@@ -67,6 +71,8 @@ const schreiben = (k: string, v: unknown) => {
 // eigenen Uhr (Länge aus den Spotify-Listen), die Rückmeldung (alle 10 s) berichtigt nur. Gibt Spotify gar keine
 // Auskunft (Abfrage scheitert), gilt der eigene Befehl.
 // Im Browser-Player (Einstellung „Im Browser abspielen“) meldet der Player seinen Stand selbst – genau und sofort.
+// Zum Üben: Sprungmarken je Track (data/sprungmarken.ts, mit der Band geteilt) – ▶ beginnt am „Einsatz“, ein Tipp auf
+// eine Marke springt dorthin – und eine Schleife A–B, die einen Abschnitt wiederholt, bis man sie aufhebt.
 @Injectable({ providedIn: 'root' })
 export class SpotifySpieler {
   readonly verbunden = signal(spotifyVerbunden());
@@ -96,6 +102,10 @@ export class SpotifySpieler {
   /** Notenansicht: Steuerung als verschiebbares Feld über den Noten statt in der Kopfleiste (je Gerät gemerkt) */
   readonly abgedockt = signal(lesen<boolean>(DOCK_KEY) === true);
   readonly dockPos = signal(lesen<{ x: number; y: number }>(DOCK_POS_KEY));
+  /** Sprungmarken des angezeigten Tracks */
+  readonly marken = signal<Marke[]>([]);
+  /** Schleife A–B (ms): erst A gesetzt (b null), dann beide – am Ende springt es zurück auf A */
+  readonly schleife = signal<{ a: number; b: number | null } | null>(null);
   private antrieb: Antrieb = FERN;
   private browser: SpotifyBrowser | null = null;
   private readonly cspMelden = (e: SecurityPolicyViolationEvent) => spotifyNotiz(`Sicherheitsregel blockiert: ${e.effectiveDirective} ${e.blockedURI}`);
@@ -175,6 +185,12 @@ export class SpotifySpieler {
       const p = this.stelle();
       const d = this.dauer();
       this.position.set(d ? Math.min(p, d) : p);
+      // Schleife: am Ende des Abschnitts zurück an den Anfang (solange kein Befehl läuft)
+      const sch = this.schleife();
+      if (sch?.b != null && p >= sch.b && !this.laeuft() && !this.startet()) {
+        void this.springenAuf(sch.a, true);
+        return;
+      }
       // nach der eigenen Uhr ist der Song zu Ende und Spotify hat es (noch) nicht gemeldet
       if (d && p > d + 4000) {
         spotifyNotiz('eigene Uhr: Song zu Ende → ▶');
@@ -221,6 +237,8 @@ export class SpotifySpieler {
     if (t === vorher) return;
     this.track.set(t);
     this.hinweisWeg();
+    this.marken.set(marken(t));
+    this.schleife.set(null);
     // auch ein angenommener, noch nicht bestätigter Start zählt: er könnte gleich noch loslaufen
     const lief = (this.spielt() || this.startet()) && !!this.gestartet;
     this.startet.set(false);
@@ -297,6 +315,8 @@ export class SpotifySpieler {
         this.offen = null;
         this.hinweisWeg();
         spotifyNotiz('Rückmeldung: Song läuft');
+        schreiben(SPOTIFY_OK_KEY, new Date().toISOString());
+        schreiben(SPOTIFY_PREMIUM_FEHLT_KEY, null);
         this.laufen(true, meins ? s!.position : this.befehlAb + (performance.now() - this.befehlZeit));
         return;
       }
@@ -374,7 +394,8 @@ export class SpotifySpieler {
     } else await this.spielen(t);
   }
 
-  private async spielen(t: string): Promise<void> {
+  /** neu starten – am „Einsatz“, wenn der Song einen hat (sonst ab, Standard: Anfang) */
+  private async spielen(t: string, ab = this.marken().find((m) => m.n === EINSATZ)?.ms ?? 0): Promise<void> {
     const nr = ++this.befehlNr;
     this.mitlaufen = true;
     await this.tun(nr, async () => {
@@ -385,7 +406,7 @@ export class SpotifySpieler {
       this.gestartet = null;
       this.bestaetigt = false;
       try {
-        await this.antrieb.spielen(t);
+        await this.antrieb.spielen(t, ab);
       } catch (e) {
         // der Start kam nicht an: nichts als spielend zeigen
         if (nr === this.befehlNr) this.laufen(false, 0);
@@ -393,7 +414,7 @@ export class SpotifySpieler {
       }
       if (nr !== this.befehlNr) return;
       this.gestartet = t;
-      this.gestartetMerken(nr, 0);
+      this.gestartetMerken(nr, ab);
     });
   }
 
@@ -421,15 +442,58 @@ export class SpotifySpieler {
     return this.springenAuf(this.stelle() + 10_000);
   }
   /** an eine Stelle im Song springen (Fortschrittsbalken, ↺10, 10↻) – nur im Song, der über die Steuerung läuft */
-  async springenAuf(ms: number): Promise<void> {
+  async springenAuf(ms: number, leise = false): Promise<void> {
     if (!this.aktiv()) return;
     const ziel = Math.round(Math.max(0, Math.min(ms, (this.dauer() || Infinity) - 1000)));
     const nr = this.befehlNr;
-    spotifyNotiz(`Springen auf ${Math.round(ziel / 1000)} s`);
+    if (!leise) spotifyNotiz(`Springen auf ${Math.round(ziel / 1000)} s`);
+    // sofort an der neuen Stelle zeigen (die Schleife prüft sonst noch einmal die alte)
+    this.laufen(this.spielt(), ziel);
     await this.tun(nr, async () => {
       await this.antrieb.springen(ziel);
       if (nr === this.befehlNr) this.laufen(this.spielt(), ziel);
     });
+  }
+
+  /** Marke antippen: läuft der Song über die Steuerung, dorthin springen – sonst von dort an abspielen */
+  async zuMarke(m: Marke): Promise<void> {
+    const t = this.track();
+    if (!t || this.startet()) return;
+    this.browser?.aktivieren();
+    if (this.aktiv()) await this.springenAuf(m.ms);
+    else await this.spielen(t, m.ms);
+  }
+  /** Marke an der aktuellen Stelle setzen (für die ganze Band) */
+  markeHier(name: string): void {
+    const t = this.track();
+    if (!t || !this.aktiv()) return;
+    spotifyNotiz(`Marke „${name}“ bei ${Math.round(this.stelle() / 1000)} s`);
+    this.marken.set(markeSetzen(t, name, this.stelle()));
+  }
+  markeWeg(name: string): void {
+    const t = this.track();
+    if (t) this.marken.set(markeLoeschen(t, name));
+  }
+  /** Schleife: erst A (Anfang), dann B (Ende) an der aktuellen Stelle; ein dritter Tipp hebt sie auf */
+  schleifeTippen(): void {
+    if (!this.aktiv()) return;
+    const sch = this.schleife();
+    const hier = Math.round(this.stelle());
+    if (!sch) this.schleife.set({ a: hier, b: null });
+    else if (sch.b == null) {
+      // B vor A getippt: Abschnitt umdrehen; zu kurz (unter 2 s): weiter auf B warten
+      if (Math.abs(hier - sch.a) < 2000) return;
+      this.schleife.set({ a: Math.min(sch.a, hier), b: Math.max(sch.a, hier) });
+      spotifyNotiz(`Schleife ${Math.round(Math.min(sch.a, hier) / 1000)}–${Math.round(Math.max(sch.a, hier) / 1000)} s`);
+    } else this.schleife.set(null);
+  }
+  schleifeAus(): void {
+    this.schleife.set(null);
+  }
+
+  /** nur für Tests: womit gespielt wird */
+  antriebSetzen(a: Antrieb): void {
+    this.antrieb = a;
   }
 
   /** Lautstärke des Browser-Players (0–1) */
@@ -533,7 +597,10 @@ export class SpotifySpieler {
     if (art === 'browser') return 'Dieser Browser kann Spotify nicht selbst abspielen – Spotify unterstützt das nur in Browsern am Computer (Chrome, Edge, Firefox, Safari). Auf dem Handy in den Einstellungen „Fernsteuerung“ wählen.';
     if (art === 'geraet' && this.imBrowser()) return 'Der Player im Browser ist noch nicht bereit – gleich noch einmal ▶.';
     if (art === 'geraet') return 'Spotify läuft auf keinem Gerät. Öffne die Spotify-App (am Computer: die App oder open.spotify.com in einem Tab), dann noch einmal ▶.';
-    if (art === 'premium') return 'Das geht nur mit Spotify Premium.';
+    if (art === 'premium') {
+      schreiben(SPOTIFY_PREMIUM_FEHLT_KEY, true);
+      return 'Das geht nur mit Spotify Premium.';
+    }
     if (art === 'freigabe') return 'Dein Spotify-Konto ist für die App noch nicht freigeschaltet (Spotify-Developer-Dashboard → User Management).';
     if (status === 429) return 'Spotify nimmt gerade keine weiteren Befehle an (zu viele Anfragen) – kurz warten, dann noch einmal ▶.';
     return status ? `Spotify meldet einen Fehler (${status}) – noch einmal versuchen.` : 'Keine Verbindung zu Spotify – Netz prüfen und noch einmal versuchen.';

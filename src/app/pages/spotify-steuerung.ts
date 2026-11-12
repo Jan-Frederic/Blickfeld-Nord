@@ -1,12 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { spotifyAnmelden, spotifyMeldung } from '../data/spotify-remote';
 import { SpotifySpieler } from '../data/spotify-spieler';
+import { MARKEN_NAMEN } from '../data/sprungmarken';
 
 // Spotify-Steuerung im Übe- und Probe-Modus (Titelanzeige, abgedockt auch über den Noten): ▶/⏸ spielt den
 // angezeigten Song – mit der Einstellung „Fernsteuerung“ in der Spotify-App bzw. auf dem gewählten
 // Spotify-Connect-Gerät, mit „Im Browser abspielen“ hier im Browser. Dazu ↺10 / 10↻, der Fortschrittsbalken zum
 // Springen (ziehen oder antippen), Lautstärke (Browser-Player) bzw. Gerätewahl (Fernsteuerung) und „beim
-// Weiterblättern mitspielen“. Zustand und Regeln: data/spotify-spieler.ts. Ohne Verbindung nur „Spotify verbinden“.
+// Weiterblättern mitspielen“. Zum Üben: Sprungmarken (mit der Band geteilt; ▶ beginnt am „Einsatz“) und die Schleife
+// A–B (erster Tipp: Anfang, zweiter: Ende, dritter: aus). Zustand und Regeln: data/spotify-spieler.ts. Ohne Verbindung nur „Spotify verbinden“.
 // Fehlerhinweise zeigt der Bühnen-Modus selbst. Styles global (styles.scss).
 // Tippen und Wischen neben den Bedienelementen blättert wie überall im Modus (nur die Elemente selbst fangen es ab).
 @Component({
@@ -27,6 +29,28 @@ import { SpotifySpieler } from '../data/spotify-spieler';
       </div>
       <input type="range" class="balken" min="0" [max]="s.dauer() || 1" step="1000" [value]="ziehen() ?? s.position()" [disabled]="!s.aktiv() || !s.dauer()"
         (input)="ziehen.set(+$any($event.target).value)" (change)="springen(+$any($event.target).value)" aria-label="Stelle im Song" [attr.aria-valuetext]="uhr(ziehen() ?? s.position())" />
+      <!-- Marken und Schleife am Balken -->
+      <div class="spur" aria-hidden="true">
+        @if (s.dauer()) {
+          @if (s.schleife(); as sch) { <span class="ab" [style.left.%]="pct(sch.a)" [style.width.%]="sch.b != null ? pct(sch.b) - pct(sch.a) : 0.8"></span> }
+          @for (m of s.marken(); track m.n) { <span class="tick" [class.einsatz]="m.n === 'Einsatz'" [style.left.%]="pct(m.ms)"></span> }
+        }
+      </div>
+      <div class="marken" role="group" aria-label="Sprungmarken und Schleife">
+        @for (m of s.marken(); track m.n) {
+          <span class="marke">
+            <button type="button" (click)="s.zuMarke(m)" [disabled]="s.laeuft() || s.startet()" [attr.aria-label]="'Zu ' + m.n + ' springen (' + uhr(m.ms) + ')'">{{ m.n }} <small>{{ uhr(m.ms) }}</small></button>
+            @if (bearbeiten()) { <button type="button" class="weg" (click)="s.markeWeg(m.n)" [attr.aria-label]="'Marke ' + m.n + ' löschen'">✕</button> }
+          </span>
+        }
+        <select class="neu-marke" aria-label="Marke an dieser Stelle setzen" [disabled]="!s.aktiv()" (change)="markeSetzen($event)" title="Erst ▶ – dann an der Stelle eine Marke setzen (gilt für die ganze Band)">
+          <option value="">+ Marke</option>
+          @for (n of namen; track n) { <option [value]="n">{{ n }}</option> }
+        </select>
+        @if (s.marken().length) { <button type="button" class="klein" (click)="bearbeiten.set(!bearbeiten())" [attr.aria-pressed]="bearbeiten()">{{ bearbeiten() ? 'Fertig' : 'Marken bearbeiten' }}</button> }
+        <button type="button" class="schleife" [class.an]="!!s.schleife()" (click)="s.schleifeTippen()" [disabled]="!s.aktiv()" [attr.aria-label]="schleifeName()" [title]="schleifeName()">{{ schleifeText() }}</button>
+        @if (s.schleife()) { <button type="button" class="weg" (click)="s.schleifeAus()" aria-label="Schleife aufheben">✕</button> }
+      </div>
       <div class="geraet">
         @if (s.imBrowser()) {
           <label class="laut">Lautstärke <input type="range" min="0" max="1" step="0.05" [value]="s.lautstaerke()" (input)="s.lautstaerkeSetzen(+$any($event.target).value)" /></label>
@@ -49,6 +73,26 @@ export class SpotifySteuerung {
   protected readonly meldung = this.s.verbunden() ? '' : spotifyMeldung();
   /** Stelle, solange am Fortschrittsbalken gezogen wird (erst beim Loslassen wird gesprungen) */
   protected readonly ziehen = signal<number | null>(null);
+  protected readonly namen = MARKEN_NAMEN;
+  protected readonly bearbeiten = signal(false);
+  protected pct(ms: number): number {
+    return this.s.dauer() ? Math.min(100, Math.max(0, (ms / this.s.dauer()) * 100)) : 0;
+  }
+  protected readonly schleifeText = computed(() => {
+    const sch = this.s.schleife();
+    if (!sch) return '⟲ A–B';
+    return sch.b == null ? `⟲ ${this.uhr(sch.a)}–B?` : `⟲ ${this.uhr(sch.a)}–${this.uhr(sch.b)}`;
+  });
+  protected readonly schleifeName = computed(() => {
+    const sch = this.s.schleife();
+    if (!sch) return 'Schleife: Anfang hier setzen';
+    return sch.b == null ? 'Schleife: Ende hier setzen' : `Schleife ${this.uhr(sch.a)} bis ${this.uhr(sch.b)} – antippen hebt sie auf`;
+  });
+  protected markeSetzen(e: Event): void {
+    const feld = e.target as HTMLSelectElement;
+    if (feld.value) this.s.markeHier(feld.value);
+    feld.value = '';
+  }
   protected uhr(ms: number): string {
     const sek = Math.floor(ms / 1000);
     return `${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}`;

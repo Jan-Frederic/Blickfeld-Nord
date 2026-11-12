@@ -3,6 +3,7 @@
 // Abgleich eines neu aufgesetzten Geräts (sync.service.ts) und unter Abgleich → Konflikte („Zusammenführen“).
 // Bei Gleichstand gilt die Fassung aus OneDrive („andere“), sonst die mit dem späteren Datum.
 // Ohne Angular-Abhängigkeiten, damit es in Node testbar ist.
+import { AlleMarken, SPRUNGMARKEN_KEY, markenZusammenfuehren } from './sprungmarken';
 
 type Obj = Record<string, unknown>;
 const istObj = (x: unknown): x is Obj => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -76,6 +77,8 @@ const REGELN: [(key: string) => boolean, (eigen: Obj, andere: Obj) => Obj][] = [
   [(k) => k.startsWith('bn-fortschritt-'), verlauf],
   [(k) => k.startsWith('bn-probenotiz-'), tief],
   [(k) => k.startsWith('bn-unsicher-'), (e, a) => ({ ...e, ...a })],
+  // Sprungmarken der Band: je Spotify-Track die später geänderte Fassung
+  [(k) => k === SPRUNGMARKEN_KEY, (e, a) => markenZusammenfuehren(e as AlleMarken, a as AlleMarken) as Obj],
 ];
 
 /** lassen sich zwei Fassungen dieses Eintrags zusammenführen? */
