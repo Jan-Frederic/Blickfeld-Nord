@@ -139,9 +139,14 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     „beim Weiterblättern mitspielen“ (Standard an) gleich der neue; sonst, und bei Songs ohne Spotify-Track, wird
     pausiert. Wer selbst ⏸ drückt (oder in der Spotify-App anhält), bekommt beim Blättern nichts vorgespielt, bis er
     wieder ▶ drückt. Am Songende hält die Steuerung an, wenn Spotify von sich aus weiterspielt (Autoplay); beim
-    Verlassen des Modus ebenso. **Maßgeblich sind die eigenen Befehle, nicht Spotifys Rückmeldung:** Nach ▶ gilt der
-    Song als laufend, der Fortschritt zählt mit der eigenen Uhr (Länge aus den Spotify-Listen); die Abfrage des
-    Stands (alle 10 s) berichtigt nur Stelle, Länge und Pause – fällt sie aus, läuft alles weiter. Das Gerät des
+    Verlassen des Modus ebenso. **Start wird bestätigt:** Spotify nimmt ▶ auch dann an (204), wenn das Gerät nichts
+    spielt – die Spotify-App auf dem Handy startet aus dem Hintergrund oft nichts (Android; im Protokoll: „spielt=false
+    titel=keiner“, Pause wird mit „Restriction violated“ abgelehnt). Nach ▶ steht der Knopf deshalb auf „…“, bis
+    Spotify den Song als laufend meldet (Abfragen nach 0,7 / 1,6 / 2,8 / 4,2 s). Bleibt das 5 s aus: Hinweis
+    „angenommen, spielt aber nicht“ mit **Spotify öffnen**; nach der Rückkehr in die App wird der Stand sofort
+    nachgelesen und ein offener Start wiederholt. Läuft der Song, zählt der Fortschritt mit der eigenen Uhr (Länge aus
+    den Spotify-Listen); die Abfrage des Stands (alle 10 s) berichtigt nur Stelle, Länge und Pause. Gibt Spotify gar
+    keine Auskunft (Abfrage scheitert zweimal), gilt der eigene Befehl. Das Gerät des
     letzten Starts wird gemerkt: Der nächste Befehl geht direkt dorthin (ohne Geräteliste), auch wenn Spotify es nach
     einer Pause nicht mehr als aktiv oder gar nicht mehr listet. Befehle gehen nacheinander raus, überholte (schnelles
     Blättern) werden verworfen. Weitere Eigenheiten von Spotify, die abgefangen sind: Befehle antworten bei Erfolg

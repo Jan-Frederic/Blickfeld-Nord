@@ -27,9 +27,12 @@ import {
 //   beim Weiterblättern nichts vorgespielt, bis er wieder ▶ drückt.
 // – Ist der Song zu Ende und Spotify spielt von sich aus etwas anderes weiter (Autoplay), wird pausiert.
 // – Beim Verlassen des Modus (ende) wird pausiert, was die Steuerung gestartet hat.
-// Maßgeblich sind die eigenen Befehle: Nach ▶ gilt der Song als laufend und der Fortschritt zählt mit der eigenen Uhr
-// (Länge aus den Spotify-Listen); Spotifys Rückmeldung (alle 5 s) berichtigt nur – sie kommt verzögert, nennt Songs
-// teils unter einer anderen ID und fällt auch mal aus, daran darf die Steuerung nicht hängen.
+// Nach ▶ wartet die Steuerung auf Spotifys Bestätigung („startet“, bis zu 5 s): Spotify nimmt Befehle auch dann an
+// (204), wenn das Gerät sie nicht ausführt – die Spotify-App auf dem Handy startet aus dem Hintergrund oft nichts
+// (Android). Bleibt die Bestätigung aus, steht das als Hinweis mit „Spotify öffnen“ da; nach der Rückkehr in die App
+// wird der Stand sofort nachgelesen und ein offener Start wiederholt. Läuft der Song, zählt der Fortschritt mit der
+// eigenen Uhr (Länge aus den Spotify-Listen), die Rückmeldung (alle 10 s) berichtigt nur. Gibt Spotify gar keine
+// Auskunft (Abfrage scheitert), gilt der eigene Befehl.
 @Injectable({ providedIn: 'root' })
 export class SpotifySpieler {
   readonly verbunden = signal(spotifyVerbunden());
@@ -43,6 +46,8 @@ export class SpotifySpieler {
   readonly gewaehlt = signal(spotifyGewaehltesGeraet());
   readonly mitspielen = signal(spotifyMitspielen());
   readonly laeuft = signal(false);
+  /** Start-Befehl ist angenommen, Spotify hat aber noch nicht bestätigt, dass der Song läuft */
+  readonly startet = signal(false);
   readonly hinweis = signal('');
   /** der Hinweis lässt sich beheben, indem man Spotify öffnet (kein Gerät gefunden) */
   readonly spotifyOeffnen = signal(false);
@@ -54,8 +59,34 @@ export class SpotifySpieler {
   private davor: string | null = null;
   /** über die Steuerung wird gespielt (auch wenn der Song gerade zu Ende ist) – endet mit ⏸ */
   private mitlaufen = false;
-  /** bis dahin (performance.now) gilt „spielt“ nach einem Start-Befehl, auch wenn Spotify noch den alten Stand meldet */
+  /** bis dahin (performance.now) meldet Spotify nach einem Start-Befehl oft noch den Song davor – der zählt dann nicht */
   private schonfrist = 0;
+  /** Spotify hat bestätigt, dass der gestartete Song läuft (nur dann lässt er sich nach ⏸ fortsetzen) */
+  private bestaetigt = false;
+  /** Warten auf die Bestätigung: Zeitpunkt des Befehls, Stelle, Zahl der Auskünfte und der gescheiterten Abfragen */
+  private befehlZeit = 0;
+  private befehlAb = 0;
+  private auskuenfte = 0;
+  private fehlAbfragen = 0;
+  /** Song, dessen Start nicht geklappt hat (kein Gerät oder nicht bestätigt) – nach der Rückkehr aus der Spotify-App
+   *  wird er noch einmal gestartet, wenn er dann nicht ohnehin läuft */
+  private offen: string | null = null;
+  private offenZeit = 0;
+  /** bis dahin (performance.now) zählt eine Rückmeldung „spielt“ nach ⏸ nicht (Spotify meldet kurz noch den alten Stand) */
+  private pauseFrist = 0;
+  private readonly sichtbar = () => {
+    if (document.visibilityState !== 'visible' || !this.verbunden() || this.startet()) return;
+    const t = this.track();
+    const nachholen = !!t && this.offen === t && performance.now() - this.offenZeit < 180_000;
+    if (!nachholen && !this.gestartet) return;
+    // zurück in der App (z. B. aus der Spotify-App): Stand sofort nachlesen; läuft der offene Song nicht, noch einmal starten
+    void this.standLaden().then(() => {
+      if (!nachholen || this.spielt() || this.startet() || this.offen !== t || this.track() !== t) return;
+      this.offen = null;
+      spotifyNotiz('zurück in der App: offener Start wird wiederholt');
+      void this.spielen(t);
+    });
+  };
   /** eigene Uhr: Stelle im Song (ms) zum Zeitpunkt „seit“ – solange gespielt wird, läuft sie von dort weiter */
   private basis = 0;
   private seit = 0;
@@ -89,6 +120,7 @@ export class SpotifySpieler {
     this.abfrage = setInterval(() => {
       if (this.verbunden() && this.gestartet && document.visibilityState === 'visible') void this.standLaden();
     }, 10_000);
+    document.addEventListener('visibilitychange', this.sichtbar);
     if (this.verbunden()) void this.standLaden();
   }
 
@@ -97,11 +129,14 @@ export class SpotifySpieler {
     clearInterval(this.uhrTakt);
     clearInterval(this.abfrage);
     this.uhrTakt = this.abfrage = undefined;
+    document.removeEventListener('visibilitychange', this.sichtbar);
     spotifyNotiz('— Modus verlassen —');
     this.befehlNr++;
-    if (this.spielt() && this.gestartet) void spotifyPause().catch(() => undefined);
+    if ((this.spielt() || this.startet()) && this.gestartet) void spotifyPause().catch(() => undefined);
+    this.startet.set(false);
     this.laufen(false, 0);
-    this.mitlaufen = false;
+    this.mitlaufen = this.bestaetigt = false;
+    this.offen = null;
     this.gestartet = this.gestartetAls = this.davor = null;
     this.track.set(undefined);
   }
@@ -114,7 +149,10 @@ export class SpotifySpieler {
     if (t === vorher) return;
     this.track.set(t);
     this.hinweisWeg();
-    const lief = this.spielt() && !!this.gestartet;
+    // auch ein angenommener, noch nicht bestätigter Start zählt: er könnte gleich noch loslaufen
+    const lief = (this.spielt() || this.startet()) && !!this.gestartet;
+    this.startet.set(false);
+    this.offen = null;
     this.laufen(false, 0);
     this.dauer.set(dauerMs);
     if (!this.verbunden()) return;
@@ -165,9 +203,28 @@ export class SpotifySpieler {
         return;
       }
       if (meins && s!.dauer) this.dauer.set(s!.dauer);
-      // kurz nach dem Start meldet Spotify oft noch den alten Stand (nichts oder der vorige Song): nicht zurückfallen
-      if (!((meins || ohneTitel) && s?.spielt) && frist) return;
       const spielt = (meins || ohneTitel) && !!s?.spielt;
+      if (this.startet()) {
+        // Start-Befehl ist raus: erst wenn Spotify den Song als laufend meldet, gilt er als gestartet
+        this.auskuenfte++;
+        if (!spielt) return;
+        this.startet.set(false);
+        this.bestaetigt = true;
+        this.offen = null;
+        this.hinweisWeg();
+        spotifyNotiz('Rückmeldung: Song läuft');
+        this.laufen(true, meins ? s!.position : this.befehlAb + (performance.now() - this.befehlZeit));
+        return;
+      }
+      // kurz nach ⏸ meldet Spotify oft noch „spielt“: nicht zurückfallen
+      if (spielt && performance.now() < this.pauseFrist) return;
+      if (spielt && meins) {
+        // läuft (auch wenn es in der Spotify-App gestartet wurde): beim Weiterblättern mitspielen, Hinweis erledigt
+        this.mitlaufen = this.bestaetigt = true;
+        this.gestartet ??= t!;
+        this.offen = null;
+        if (this.spotifyOeffnen()) this.hinweisWeg();
+      }
       // in der Spotify-App mitten im Song angehalten: wie ⏸ hier – beim Weiterblättern nicht von selbst weiterspielen
       if (meins && !spielt && this.spielt() && s!.position > 2000 && s!.position < s!.dauer - 5000) this.mitlaufen = false;
       if (spielt !== this.spielt()) spotifyNotiz(`Rückmeldung: ${spielt ? 'spielt → ⏸' : `spielt nicht → ▶ (unser Song: ${meins ? 'ja' : 'nein'})`}`);
@@ -175,13 +232,33 @@ export class SpotifySpieler {
     } catch (e) {
       // das Nachlesen im Hintergrund meldet nichts (nächster Versuch in ein paar Sekunden) – außer die Verbindung ist weg
       if (e instanceof SpotifyFehler && e.art === 'anmelden') this.fehler(e);
+      // Spotify gibt nach einem Start gar keine Auskunft (zweite Abfrage gescheitert): dann gilt der eigene Befehl
+      else if (nr === this.befehlNr && this.startet() && ++this.fehlAbfragen >= 2 && !this.auskuenfte) this.unbestaetigt();
     }
+  }
+
+  /** die Wartezeit nach einem Start-Befehl ist um (oder Spotify gibt keine Auskunft), ohne dass der Song als laufend gemeldet wurde */
+  private unbestaetigt(): void {
+    if (!this.startet()) return;
+    this.startet.set(false);
+    if (!this.auskuenfte) {
+      spotifyNotiz('keine Auskunft von Spotify – gehe davon aus, dass der Song läuft');
+      this.bestaetigt = true;
+      this.laufen(true, this.befehlAb + (performance.now() - this.befehlZeit));
+      return;
+    }
+    spotifyNotiz('Befehl angenommen, aber Spotify spielt nicht');
+    this.laufen(false, this.befehlAb);
+    this.offen = this.track() ?? null;
+    this.offenZeit = performance.now();
+    this.spotifyOeffnen.set(true);
+    this.hinweis.set('Spotify hat den Befehl angenommen, spielt aber nicht – auf dem Handy startet die Spotify-App aus dem Hintergrund oft nichts. „Spotify öffnen“ antippen, bis der Song läuft, dann hierher zurück.');
   }
 
   /** ▶/⏸ für den angezeigten Song */
   async umschalten(): Promise<void> {
     const t = this.track();
-    if (!t) return;
+    if (!t || this.startet()) return;
     spotifyNotiz(`Knopf ${this.spielt() ? '⏸' : '▶'} (Song ${t}, gestartet: ${this.gestartet ?? '–'}, Stelle ${Math.round(this.position() / 1000)} s von ${Math.round(this.dauer() / 1000)} s)`);
     if (this.spielt()) {
       const nr = ++this.befehlNr;
@@ -189,13 +266,14 @@ export class SpotifySpieler {
       await this.tun(nr, async () => {
         this.schonfrist = 0;
         await spotifyPause();
+        this.pauseFrist = performance.now() + 3000;
         if (nr === this.befehlNr) this.laufen(false);
       });
       return;
     }
     // derselbe Song war schon dran (pausiert): weiter, sonst von vorn
     const ab = this.position();
-    if (this.gestartet === t && ab > 0 && ab < (this.dauer() || Infinity) - 2000) {
+    if (this.gestartet === t && this.bestaetigt && ab > 0 && ab < (this.dauer() || Infinity) - 2000) {
       const nr = ++this.befehlNr;
       await this.tun(nr, async () => {
         try {
@@ -220,6 +298,7 @@ export class SpotifySpieler {
       this.davor = this.gestartetAls ?? this.gestartet;
       this.gestartetAls = null;
       this.gestartet = null;
+      this.bestaetigt = false;
       try {
         await spotifySpielen(t);
       } catch (e) {
@@ -233,12 +312,19 @@ export class SpotifySpieler {
     });
   }
 
-  /** nach einem Start-Befehl: sofort als spielend zeigen, Schonfrist setzen und den Stand ein paarmal nachlesen */
+  /** nach einem angenommenen Start-Befehl: auf Spotifys Bestätigung warten (Stand ein paarmal nachlesen); bleibt sie
+   *  aus, meldet sich „unbestaetigt“ */
   private gestartetMerken(nr: number, ab: number): void {
     this.mitlaufen = true;
     this.schonfrist = performance.now() + 6000;
-    this.laufen(true, ab);
-    for (const ms of [1500, 4000, 7000]) setTimeout(() => nr === this.befehlNr && this.gestartet && void this.standLaden(), ms);
+    this.pauseFrist = 0;
+    this.befehlZeit = performance.now();
+    this.befehlAb = ab;
+    this.auskuenfte = this.fehlAbfragen = 0;
+    this.laufen(false, ab);
+    this.startet.set(true);
+    for (const ms of [700, 1600, 2800, 4200]) setTimeout(() => nr === this.befehlNr && this.startet() && void this.standLaden(), ms);
+    setTimeout(() => nr === this.befehlNr && this.unbestaetigt(), 5200);
   }
 
   async zurueck(): Promise<void> {
@@ -267,8 +353,10 @@ export class SpotifySpieler {
     if (this.spielt() && this.gestartet) void spotifyPause().catch(() => undefined);
     spotifyAbmelden();
     this.verbunden.set(false);
+    this.startet.set(false);
     this.laufen(false, 0);
-    this.mitlaufen = false;
+    this.mitlaufen = this.bestaetigt = false;
+    this.offen = null;
     this.gestartet = this.gestartetAls = this.davor = null;
   }
 
@@ -312,6 +400,11 @@ export class SpotifySpieler {
       return;
     }
     this.spotifyOeffnen.set(art === 'geraet');
+    if (art === 'geraet') {
+      // nach „Spotify öffnen“ und der Rückkehr hierher wird der Start wiederholt
+      this.offen = this.track() ?? null;
+      this.offenZeit = performance.now();
+    }
     this.hinweis.set(
       art === 'geraet'
         ? 'Spotify läuft auf keinem Gerät. Öffne die Spotify-App (am Computer: die App oder open.spotify.com in einem Tab), dann noch einmal ▶.'

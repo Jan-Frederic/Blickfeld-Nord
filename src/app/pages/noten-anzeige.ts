@@ -61,7 +61,7 @@ const BREITE_KEY = 'bn-noten-breite';
         }
         @if (spotify.verbunden() && spotify.track()) {
           <!-- Übe- und Probe-Modus: den angezeigten Song über Spotify abspielen (data/spotify-spieler.ts) -->
-          <button type="button" class="spotify-play" [class.an]="spotify.spielt()" (click)="$event.stopPropagation(); spotify.umschalten()" [disabled]="spotify.laeuft()" [attr.aria-label]="spotify.spielt() ? 'Spotify: Pause' : 'Auf Spotify abspielen'" [title]="spotify.hinweis() || (spotify.spielt() ? 'Spotify: Pause' : 'Song auf Spotify abspielen')">♫ {{ spotify.spielt() ? '⏸' : '▶' }}</button>
+          <button type="button" class="spotify-play" [class.an]="spotify.spielt()" (click)="$event.stopPropagation(); spotify.umschalten()" [disabled]="spotify.laeuft() || spotify.startet()" [attr.aria-label]="spotify.startet() ? 'Spotify startet …' : spotify.spielt() ? 'Spotify: Pause' : 'Auf Spotify abspielen'" [title]="spotify.hinweis() || (spotify.spielt() ? 'Spotify: Pause' : 'Song auf Spotify abspielen')">♫ {{ spotify.startet() ? '…' : spotify.spielt() ? '⏸' : '▶' }}</button>
         }
         @if (bewerten()) {
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>

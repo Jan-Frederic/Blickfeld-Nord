@@ -605,7 +605,8 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   let pausen = 0;
   let abfragenNachStart = 0;
   let keinGeraet = true;
-  // 'gut' · 'kaputt': die Abfrage des Stands scheitert · 'ende': der Song ist durchgelaufen (spielt nicht, Stelle 0)
+  // 'gut' · 'kaputt': die Abfrage des Stands scheitert · 'ende': der Song ist durchgelaufen (spielt nicht, Stelle 0) ·
+  // 'schlaeft': Spotify nimmt Befehle an, das Gerät spielt aber nichts
   let standArt = 'gut';
   let zuletztTrack = '6Qyc6fS4DsZjB2mRW9DsQs';
   await p.route('https://api.spotify.com/**', async (route) => {
@@ -627,6 +628,8 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     // direkt nach dem Start meldet Spotify noch „spielt nicht“ – die Anzeige darf nicht auf ▶ zurückfallen
     if (pfad.endsWith('/me/player') && spotifySpielt && abfragenNachStart++ === 0) return route.fulfill({ json: { is_playing: false, progress_ms: 0, item: null, device: { id: 'd1', name: 'Handy' } } });
     if (pfad.endsWith('/me/player') && standArt === 'kaputt') return route.fulfill({ status: 403, body: 'nein' });
+    // wie auf dem Handy, wenn die Spotify-App im Hintergrund den Befehl annimmt, aber nichts spielt
+    if (pfad.endsWith('/me/player') && standArt === 'schlaeft') return route.fulfill({ json: { is_playing: false, progress_ms: 0, item: null, currently_playing_type: 'unknown', device: { id: 'd1', name: 'Handy' } } });
     if (pfad.endsWith('/me/player') && standArt === 'ende') return route.fulfill({ json: { is_playing: false, progress_ms: 0, item: { id: zuletztTrack, duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
     if (pfad.endsWith('/me/player')) return route.fulfill({ json: { is_playing: spotifySpielt, progress_ms: 5000, item: { id: zuletztTrack, duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
     return route.fulfill({ status: 204 });
@@ -700,6 +703,20 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   expect(gespielt.length === startsVorWeiter + 3 && (await spKnopf('Auf Spotify abspielen').count()) === 1, 'nach eigener Pause spielt das Weiterblättern von selbst los');
   await zu('ArrowLeft', 'Africa');
   await zu('ArrowLeft', 'Iris');
+  // Spotify nimmt ▶ an (204), das Handy spielt aber nichts (App im Hintergrund): kein vorgetäuschter Fortschritt,
+  // sondern „startet …“, dann ein Hinweis mit „Spotify öffnen“ – und nach der Rückkehr in die App stimmt der Stand
+  standArt = 'schlaeft';
+  const startsVorSchlaf = gespielt.length;
+  await spKnopf('Auf Spotify abspielen').click();
+  await until(async () => gespielt.length === startsVorSchlaf + 1 && (await spKnopf('Spotify startet …').count()) === 1, 'nach ▶ wartet die Steuerung nicht auf Spotifys Bestätigung');
+  await until(async () => /angenommen, spielt aber nicht/.test(await buehne.locator('.spotify-hinweis').innerText().catch(() => '')), 'Hinweis „angenommen, spielt aber nicht“ fehlt', 9000);
+  expect((await spKnopf('Auf Spotify abspielen').count()) === 1 && (await buehne.locator('.spotify-hinweis a').count()) === 1 && /^0:00 /.test(await buehne.locator('app-spotify-steuerung .zeit').innerText()), 'nicht gestarteter Song wird als laufend gezeigt oder „Spotify öffnen“ fehlt');
+  standArt = 'gut';
+  await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await until(async () => (await spKnopf('Pause').count()) === 1 && (await buehne.locator('.spotify-hinweis').count()) === 0, 'nach der Rückkehr aus der Spotify-App stimmt der Stand nicht');
+  expect(gespielt.length === startsVorSchlaf + 1, 'läuft der Song nach der Rückkehr schon, wird er nicht noch einmal gestartet');
+  await spKnopf('Pause').click();
+  await until(async () => (await spKnopf('Auf Spotify abspielen').count()) === 1, 'Pause klappt nicht');
   // Diagnose: Befehle und Antworten stehen im Protokoll dieses Geräts – ohne den Zugangsschlüssel, Geräte-ID gekürzt
   const spProtokoll = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-spotify-protokoll') ?? '[]').join('\n'));
   expect(/PUT \/me\/player\/play\?device_id=d1 .*spotify:track:6Qyc6fS4DsZjB2mRW9DsQs.* → 200/.test(spProtokoll) && spProtokoll.includes('PUT /me/player/pause → 204') && /Songwechsel → 1M2nd8jNUkkwrc1dgBPTJz/.test(spProtokoll) && spProtokoll.includes('keine Geräte') && /Knopf ▶/.test(spProtokoll), `Spotify-Protokoll unvollständig: ${spProtokoll.split("\n").filter((z) => !z.includes("GET /me/player →") || z.includes("403")).join(" ¦ ")}`);

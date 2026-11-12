@@ -18,7 +18,7 @@ import { SpotifySpieler } from '../data/spotify-spieler';
     } @else {
       <div class="leiste" role="group" aria-label="Spotify steuern">
         <button type="button" class="rund" (click)="s.zurueck()" [disabled]="s.laeuft() || !s.spielt()" aria-label="10 Sekunden zurück">↺10</button>
-        <button type="button" class="rund gross" [class.an]="s.spielt()" (click)="s.umschalten()" [disabled]="s.laeuft()" [attr.aria-label]="s.spielt() ? 'Pause' : 'Auf Spotify abspielen'">{{ s.spielt() ? '⏸' : '▶' }}</button>
+        <button type="button" class="rund gross" [class.an]="s.spielt()" [class.startet]="s.startet()" (click)="s.umschalten()" [disabled]="s.laeuft() || s.startet()" [attr.aria-label]="s.startet() ? 'Spotify startet …' : s.spielt() ? 'Pause' : 'Auf Spotify abspielen'">{{ s.startet() ? '…' : s.spielt() ? '⏸' : '▶' }}</button>
         <span class="zeit" aria-live="off">{{ uhr(s.position()) }} / {{ uhr(s.dauer()) }}</span>
         <label class="mit"><input type="checkbox" [checked]="s.mitspielen()" (change)="s.mitspielenSetzen($any($event.target).checked)" /> beim Weiterblättern mitspielen</label>
       </div>
