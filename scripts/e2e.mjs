@@ -766,10 +766,10 @@ const FAKE_SPOTIFY_SDK = `(() => {
   const calls = (window.__spCalls = []);
   let stand = null;
   class Player {
-    constructor(o) { this.o = o; this.l = {}; window.__sp = this; }
+    constructor(o) { this.o = o; this.l = {}; this.n = 0; window.__sp = this; window.__spNeu = (window.__spNeu ?? 0) + 1; }
     addListener(e, f) { (this.l[e] ??= []).push(f); return true; }
     emit(e, d) { (this.l[e] || []).forEach((f) => f(d)); }
-    connect() { this.o.getOAuthToken((t) => { window.__spToken = t; }); setTimeout(() => this.emit('ready', { device_id: 'web1' }), 30); return Promise.resolve(true); }
+    connect() { calls.push('connect'); const id = 'web' + ++this.n; this.o.getOAuthToken((t) => { window.__spToken = t; }); setTimeout(() => this.emit('ready', { device_id: id }), 30); return Promise.resolve(true); }
     disconnect() { calls.push('disconnect'); }
     getCurrentState() { return Promise.resolve(stand); }
     setzen(s) { stand = s; this.emit('player_state_changed', s); }
@@ -800,12 +800,22 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await until(async () => /neu verbinden – fürs Abspielen im Browser/.test(await einstellung.locator('button.verbinden').innerText().catch(() => '')), 'ohne Recht zum Abspielen im Browser fehlt „neu verbinden“');
   await p.evaluate(() => localStorage.setItem('bn-spotify-token', JSON.stringify({ access: 'test', refresh: 'test', bis: 9e15, scope: 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state' })));
   const gespielt = [];
+  const geholt = [];
+  // Spotify kennt das Gerät nicht: '' nein · 'weich': bis die Wiedergabe dorthin geholt wurde · 'hart': web1 gar nicht mehr
+  let unbekannt = '';
   await p.route('https://sdk.scdn.co/spotify-player.js', (route) => route.fulfill({ contentType: 'application/javascript', body: FAKE_SPOTIFY_SDK }));
   await p.route('https://api.spotify.com/**', async (route) => {
     const r = route.request();
     const url = new URL(r.url());
+    const geraet = url.searchParams.get('device_id') ?? JSON.parse(r.postData() ?? '{}').device_ids?.[0];
+    const fehlt = (unbekannt === 'weich' && !geholt.includes(geraet)) || (unbekannt === 'hart' && geraet === 'web1');
+    if (url.pathname.endsWith('/me/player') && r.method() === 'PUT') {
+      geholt.push(geraet);
+      return fehlt && unbekannt === 'hart' ? route.fulfill({ status: 404, json: { error: { status: 404, message: 'Device not found' } } }) : route.fulfill({ status: 204 });
+    }
     if (url.pathname.endsWith('/me/player/play') && r.method() === 'PUT') {
       gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
+      if (fehlt) return route.fulfill({ status: 404, json: { error: { status: 404, message: 'Device not found' } } });
       const d = JSON.parse(r.postData() ?? '{}');
       const id = /spotify:track:(\w+)/.exec(d.uris?.[0] ?? '')?.[1];
       if (id) await p.evaluate(([i, ab]) => window.__sp.spielen(i, ab), [id, d.position_ms ?? 0]);
@@ -871,9 +881,34 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   // andocken: Feld weg, Knöpfe wieder in der Kopfleiste
   await dock.locator('button[aria-label="Spotify-Steuerung andocken"]').click();
   await until(async () => (await dock.count()) === 0 && (await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 1, 'Andocken klappt nicht');
-  // Modus verlassen: Browser-Player abmelden
+  // Modus verlassen: anhalten, der Player bleibt angemeldet – beim nächsten Öffnen kein neuer Player, kein neues Gerät
+  const anzahl = async (c) => (await p.evaluate(() => window.__spCalls)).filter((x) => x === c).length;
+  const pausenVorher = await anzahl('pause');
   await kopf.locator('button[aria-label="Übe-Modus beenden"]').click();
-  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('disconnect'), 'Browser-Player wird beim Verlassen nicht abgemeldet');
+  await until(async () => (await anzahl('pause')) > pausenVorher, 'Browser-Player hält beim Verlassen nicht an');
+  expect((await anzahl('disconnect')) === 0, 'Browser-Player wird beim Verlassen abgemeldet (neues Gerät bei jedem Öffnen)');
+  const wiederOeffnen = async () => {
+    await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
+    await kopf.locator('button[aria-label="Auf Spotify abspielen"]').waitFor();
+  };
+  await wiederOeffnen();
+  await kopf.locator('button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => gespielt.at(-1).includes('device_id=web1') && (await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 1, () => `nach erneutem Öffnen spielt der Browser-Player nicht: ${gespielt.slice(-2).join(' | ')}`);
+  expect((await p.evaluate(() => window.__spNeu)) === 1 && (await anzahl('connect')) === 1, 'beim erneuten Öffnen wird ein neuer Player angemeldet');
+  // Spotify kennt das Gerät nicht mehr („Device not found“): erst die Wiedergabe dorthin holen …
+  await kopf.locator('button[aria-label="Übe-Modus beenden"]').click();
+  unbekannt = 'weich';
+  await wiederOeffnen();
+  await kopf.locator('button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => (await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 1 && geholt.includes('web1'), () => `„Device not found“ wird nicht durch Herholen der Wiedergabe behoben: ${gespielt.slice(-3).join(' | ')}`, 8000);
+  // … und hilft das nicht, den Player neu verbinden (neue Geräte-ID)
+  await kopf.locator('button[aria-label="Übe-Modus beenden"]').click();
+  unbekannt = 'hart';
+  await wiederOeffnen();
+  await kopf.locator('button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => (await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 1 && gespielt.at(-1).includes('device_id=web2'), () => `„Device not found“ wird nicht durch neues Verbinden behoben: ${gespielt.slice(-3).join(' | ')}`, 12000);
+  expect((await anzahl('disconnect')) === 1 && (await p.evaluate(() => window.__spNeu)) === 1, 'Neu verbinden legt einen zweiten Player an');
+  expect((await buehne.locator('.spotify-hinweis').count()) === 0, 'nach der Reparatur bleibt ein Hinweis stehen');
   return p;
 });
 test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Bühnenreife-Übersicht, Probe-Vorschlag', async () => {

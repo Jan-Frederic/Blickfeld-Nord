@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { SpotifyBrowser } from './spotify-browser';
+import { SpotifyBrowser, spotifyBrowser } from './spotify-browser';
 import {
   SpotifyFehler,
   SpotifyGeraet,
@@ -161,10 +161,11 @@ export class SpotifySpieler {
     this.rechteFehlen.set(imBrowser && this.verbunden() && !spotifyBrowserRechte());
     spotifyNotiz(`— Modus geöffnet (verbunden: ${this.verbunden() ? 'ja' : 'nein'}${imBrowser ? ', im Browser' : ''}) —`);
     if (imBrowser) {
-      const b = (this.browser = new SpotifyBrowser(
+      const b = (this.browser = spotifyBrowser());
+      b.anbinden(
         (st) => void this.standAnwenden(st, this.befehlNr),
         (e) => this.fehler(e),
-      ));
+      );
       this.antrieb = { spielen: (t, ab) => b.spielen(t, ab), pause: b.pause, weiter: b.weiter, springen: b.springen, stand: b.stand_ };
       document.addEventListener('securitypolicyviolation', this.cspMelden);
       if (this.verbunden() && !this.rechteFehlen()) void b.verbinden().catch((e) => this.fehler(e));
@@ -199,8 +200,8 @@ export class SpotifySpieler {
     spotifyNotiz('— Modus verlassen —');
     this.befehlNr++;
     if (this.browser) {
-      // Browser-Player abmelden – damit hört auch die Musik auf
-      this.browser.trennen();
+      // Browser-Player anhalten; er bleibt noch eine Weile angemeldet (data/spotify-browser.ts)
+      this.browser.loesen();
       this.browser = null;
     } else if ((this.spielt() || this.startet()) && this.gestartet) void spotifyPause().catch(() => undefined);
     this.antrieb = FERN;

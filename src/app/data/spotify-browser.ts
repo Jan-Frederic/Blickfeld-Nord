@@ -1,12 +1,18 @@
-import { SpotifyFehler, SpotifyStand, spotifyLautstaerke, spotifyNotiz, spotifySpielenAuf, spotifyZugang } from './spotify-remote';
+import { SpotifyFehler, SpotifyStand, spotifyLautstaerke, spotifyNotiz, spotifySpielenAuf, spotifyUebertragen, spotifyZugang } from './spotify-remote';
 
 // „Im Browser abspielen“ (vierte Fassung von Spotify im Übe- und Probe-Modus): Die Seite wird selbst zum
 // Spotify-Gerät – über Spotifys Web Playback SDK (https://sdk.scdn.co/spotify-player.js, erst bei Bedarf geladen).
 // Braucht Spotify Premium und einen Zugang mit den Rechten „streaming“, „user-read-email“, „user-read-private“
-// (in den Einstellungen neu verbinden). Spotify unterstützt das offiziell nur in Browsern am Computer; auf dem Handy
-// meldet das SDK meist einen Initialisierungsfehler – dann bleibt die Fernsteuerung.
+// (in den Einstellungen neu verbinden). Spotify unterstützt das offiziell nur in Browsern am Computer; scheitert die
+// Initialisierung, meldet die Steuerung das.
 // Gestartet wird ein Song über die Web-API auf der Geräte-ID dieses Players, Pause, Weiter, Springen und Lautstärke
 // gehen direkt an den Player; seinen Stand meldet er selbst (player_state_changed) – genau, ohne Abfragen bei Spotify.
+//
+// Ein Player für die ganze Sitzung (nicht einer je Öffnen des Modus): Jeder neue Player meldet sich bei Spotify als
+// neues Gerät an, und nach ein paar An- und Abmeldungen kurz hintereinander kannte Spotify das frische Gerät nicht
+// mehr („Device not found“, obwohl der Player „bereit“ meldete). Beim Verlassen des Modus wird deshalb nur pausiert;
+// abgemeldet wird erst nach 10 Minuten ohne Modus, beim Schließen der Seite und beim Trennen. Kennt Spotify das Gerät
+// trotzdem nicht: erst die Wiedergabe dorthin holen, dann den Player neu verbinden – jeweils mit neuem Versuch.
 
 interface SdkTrack {
   id: string | null;
@@ -37,6 +43,10 @@ type SdkFenster = Window & {
 };
 
 const SDK = 'https://sdk.scdn.co/spotify-player.js';
+/** so lange bleibt der Player nach dem Verlassen des Modus angemeldet (schneller Wiedereinstieg, kein neues Gerät) */
+const NACHLAUF_MS = 10 * 60_000;
+const warten = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 let sdkLaden: Promise<void> | null = null;
 function sdk(): Promise<void> {
   const w = window as SdkFenster;
@@ -73,50 +83,70 @@ function umrechnen(s: SdkStand | null): SpotifyStand | null {
 export class SpotifyBrowser {
   private player: SdkPlayer | null = null;
   private geraet: string | null = null;
+  /** läuft gerade eine Anmeldung bei Spotify? (connect bis „ready“) */
   private bereit: Promise<string> | null = null;
   private fehler: SpotifyFehler | null = null;
   private wartend: ((id: string) => void)[] = [];
+  private nachlauf: ReturnType<typeof setTimeout> | undefined;
+  /** angebunden: der geöffnete Modus (Stand und Fehler gehen an ihn) */
+  private stand: (s: SpotifyStand | null) => void = () => undefined;
+  private fehlerMelden: (e: SpotifyFehler) => void = () => undefined;
 
-  /** stand: jeder neue Stand des Players · fehler: Initialisierung, Zugang, Konto (meldet die Steuerung als Hinweis) */
-  constructor(
-    private readonly stand: (s: SpotifyStand | null) => void,
-    private readonly fehlerMelden: (e: SpotifyFehler) => void,
-  ) {}
+  /** Modus geöffnet: Stand und Fehler an ihn melden, angemeldet bleiben */
+  anbinden(stand: (s: SpotifyStand | null) => void, fehler: (e: SpotifyFehler) => void): void {
+    clearTimeout(this.nachlauf);
+    this.stand = stand;
+    this.fehlerMelden = fehler;
+  }
+  /** Modus verlassen: anhalten, noch eine Weile angemeldet bleiben, dann abmelden */
+  loesen(): void {
+    this.stand = () => undefined;
+    this.fehlerMelden = () => undefined;
+    void this.player?.pause().catch(() => undefined);
+    clearTimeout(this.nachlauf);
+    this.nachlauf = setTimeout(() => this.trennen(), NACHLAUF_MS);
+  }
 
-  /** Player verbinden (beim Öffnen des Modus) – die Geräte-ID kommt, sobald Spotify ihn angemeldet hat */
+  /** Player anmelden (einmal je Sitzung) – die Geräte-ID kommt, sobald Spotify ihn angemeldet hat */
   verbinden(): Promise<string> {
+    if (this.geraet && !this.fehler) return Promise.resolve(this.geraet);
     this.bereit ??= (async () => {
       await sdk();
-      const w = window as SdkFenster;
-      const p = new w.Spotify!.Player({
-        name: 'Blickfeld Nord (Browser)',
-        volume: spotifyLautstaerke(),
-        getOAuthToken: (cb) => void spotifyZugang().then(cb, (e) => this.melden(e instanceof SpotifyFehler ? e : new SpotifyFehler('anmelden'))),
-      });
-      this.player = p;
+      this.fehler = null;
+      const p = this.player ?? this.anlegen();
       const id = new Promise<string>((ok) => this.wartend.push(ok));
-      p.addListener('ready', ({ device_id }: { device_id: string }) => {
-        spotifyNotiz(`Browser-Player bereit (${device_id.slice(0, 6)}…)`);
-        this.geraet = device_id;
-        this.wartend.splice(0).forEach((f) => f(device_id));
-      });
-      p.addListener('not_ready', () => {
-        spotifyNotiz('Browser-Player nicht mehr bereit');
-        this.geraet = null;
-      });
-      p.addListener('player_state_changed', (s: SdkStand | null) => this.stand(umrechnen(s)));
-      p.addListener('initialization_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('browser'), message));
-      p.addListener('authentication_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('rechte'), message));
-      p.addListener('account_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('premium'), message));
-      p.addListener('playback_error', ({ message }: { message: string }) => spotifyNotiz(`Browser-Player: Wiedergabefehler ${message}`));
       if (!(await p.connect())) throw new SpotifyFehler('browser');
       spotifyNotiz('Browser-Player verbindet …');
       return id;
-    })().catch((e) => {
-      this.bereit = null;
-      throw e;
-    });
+    })().finally(() => (this.bereit = null));
     return this.bereit;
+  }
+
+  private anlegen(): SdkPlayer {
+    const w = window as SdkFenster;
+    const p = new w.Spotify!.Player({
+      name: 'Blickfeld Nord (Browser)',
+      volume: spotifyLautstaerke(),
+      getOAuthToken: (cb) => void spotifyZugang().then(cb, (e) => this.melden(e instanceof SpotifyFehler ? e : new SpotifyFehler('anmelden'))),
+    });
+    this.player = p;
+    p.addListener('ready', ({ device_id }: { device_id: string }) => {
+      spotifyNotiz(`Browser-Player bereit (${device_id.slice(0, 6)}…)`);
+      this.geraet = device_id;
+      this.wartend.splice(0).forEach((f) => f(device_id));
+    });
+    p.addListener('not_ready', ({ device_id }: { device_id: string }) => {
+      spotifyNotiz(`Browser-Player nicht mehr bereit (${device_id.slice(0, 6)}…)`);
+      if (this.geraet === device_id) this.geraet = null;
+    });
+    p.addListener('player_state_changed', (s: SdkStand | null) => this.stand(umrechnen(s)));
+    p.addListener('initialization_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('browser'), message));
+    p.addListener('authentication_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('rechte'), message));
+    p.addListener('account_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('premium'), message));
+    p.addListener('playback_error', ({ message }: { message: string }) => spotifyNotiz(`Browser-Player: Wiedergabefehler ${message}`));
+    // Seite wird geschlossen oder neu geladen: abmelden, sonst bleibt bei Spotify ein totes Gerät stehen
+    addEventListener('pagehide', () => this.player?.disconnect());
+    return p;
   }
 
   private melden(e: SpotifyFehler, text = ''): void {
@@ -134,20 +164,34 @@ export class SpotifyBrowser {
   private async geraetId(): Promise<string> {
     if (this.fehler) throw this.fehler;
     if (this.geraet) return this.geraet;
-    const id = await Promise.race([this.verbinden(), new Promise<never>((_, fehl) => setTimeout(() => fehl(this.fehler ?? new SpotifyFehler('geraet')), 12_000))]);
+    const id = await Promise.race([this.verbinden(), warten(12_000).then(() => Promise.reject(this.fehler ?? new SpotifyFehler('geraet')))]);
     if (this.fehler) throw this.fehler;
     return id;
   }
 
+  /** abmelden und wieder anmelden (derselbe Player) – Spotify vergibt dabei meist eine neue Geräte-ID */
+  private async neuVerbinden(): Promise<string> {
+    spotifyNotiz('Browser-Player wird neu verbunden');
+    this.player?.disconnect();
+    this.geraet = null;
+    await warten(500);
+    return this.geraetId();
+  }
+
   async spielen(trackId: string, ab = 0): Promise<void> {
-    const id = await this.geraetId();
-    try {
-      await spotifySpielenAuf(id, trackId, ab);
-    } catch (e) {
-      // gerade erst angemeldet: Spotify kennt das Gerät noch nicht – kurz warten, noch einmal
-      if (!(e instanceof SpotifyFehler) || e.art !== 'geraet') throw e;
-      await new Promise((r) => setTimeout(r, 1200));
-      await spotifySpielenAuf(id, trackId, ab);
+    let id = await this.geraetId();
+    for (let versuch = 0; ; versuch++) {
+      try {
+        await spotifySpielenAuf(id, trackId, ab);
+        return;
+      } catch (e) {
+        if (!(e instanceof SpotifyFehler) || e.art !== 'geraet' || versuch >= 2) throw e;
+      }
+      // Spotify kennt das Gerät (noch) nicht: erst die Wiedergabe dorthin holen, beim zweiten Mal neu verbinden
+      if (versuch === 1) id = await this.neuVerbinden();
+      spotifyNotiz('Browser-Player: Wiedergabe wird auf diesen Browser geholt');
+      await spotifyUebertragen(id).catch(() => undefined);
+      await warten(800);
     }
   }
   pause = async () => this.player?.pause();
@@ -156,13 +200,17 @@ export class SpotifyBrowser {
   lautstaerke = async (v: number) => this.player?.setVolume(v);
   stand_ = async (): Promise<SpotifyStand | null> => umrechnen((await this.player?.getCurrentState().catch(() => null)) ?? null);
 
-  /** Modus verlassen: Player abmelden (Spotify hält dann an) */
+  /** abmelden (Trennen, 10 Minuten nach dem Modus): beim nächsten Mal wird neu angemeldet */
   trennen(): void {
+    clearTimeout(this.nachlauf);
+    if (this.player) spotifyNotiz('Browser-Player abgemeldet');
     this.player?.disconnect();
-    this.player = null;
     this.geraet = null;
-    this.bereit = null;
     this.fehler = null;
     this.wartend = [];
   }
 }
+
+/** der eine Browser-Player dieser Seite */
+let einer: SpotifyBrowser | null = null;
+export const spotifyBrowser = (): SpotifyBrowser => (einer ??= new SpotifyBrowser());

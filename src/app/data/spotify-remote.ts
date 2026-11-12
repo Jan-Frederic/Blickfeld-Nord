@@ -364,6 +364,10 @@ export async function spotifySpielen(trackId: string, positionMs = 0): Promise<v
   }
   zuletztGeraet = geraet;
 }
+/** Wiedergabe auf dieses Gerät holen (ohne abzuspielen) – macht es bei Spotify zum aktiven Gerät */
+export async function spotifyUebertragen(geraet: string): Promise<void> {
+  await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [geraet], play: false }) });
+}
 /** Song auf genau diesem Gerät spielen (Browser-Player: dessen Geräte-ID) – ohne Geräteliste und Wecken */
 export async function spotifySpielenAuf(geraet: string, trackId: string, positionMs = 0): Promise<void> {
   await api(`/me/player/play?device_id=${encodeURIComponent(geraet)}`, { method: 'PUT', body: JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: Math.max(0, Math.round(positionMs)) }) });

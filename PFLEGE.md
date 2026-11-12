@@ -134,8 +134,13 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     `user-read-email`, `user-read-private` – verlangt Spotify so); ein Zugang aus der Fernsteuerung hat sie nicht, dann
     steht überall „Spotify neu verbinden“ (Rechte stehen im Zugang als `scope`, auch im Diagnose-Protokoll). Spotify
     unterstützt das offiziell nur in Browsern am Computer; scheitert es (Initialisierungsfehler), sagt ein Hinweis, auf
-    dem Handy die Fernsteuerung zu nehmen. Beim Verlassen des Modus wird der Player abgemeldet. Blockiert die
-    Sicherheitsregel (CSP) etwas, steht das im Diagnose-Protokoll.
+    dem Handy die Fernsteuerung zu nehmen. **Ein Player je Sitzung:** Jeder neue Player meldet sich bei Spotify als
+    neues Gerät an; nach ein paar An- und Abmeldungen kurz hintereinander kannte Spotify das frische Gerät nicht mehr
+    („Device not found“, obwohl der Player „bereit“ meldete). Deshalb hält das Verlassen des Modus nur an; abgemeldet
+    wird erst nach 10 Minuten ohne Modus, beim Schließen bzw. Neuladen der Seite (`pagehide`) und mit „Spotify
+    trennen“. Meldet Spotify trotzdem „Device not found“, wird erst die Wiedergabe auf den Browser geholt
+    (`PUT /me/player`), dann der Player neu verbunden – jeweils mit neuem Versuch, alles im Diagnose-Protokoll.
+    Blockiert die Sicherheitsregel (CSP) etwas, steht das ebenfalls im Diagnose-Protokoll.
   - **Eingebetteter Player:** „♫ Auf Spotify anhören“ in der Titelanzeige lädt erst auf Knopfdruck den Spotify-Player
     (kompakt, 152 px); er wechselt mit dem Song. Am Computer ganze Songs (bei Spotify angemeldet), auf dem Handy nur
     die 30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`.
