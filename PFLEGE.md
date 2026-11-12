@@ -366,6 +366,10 @@ Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape u
 **Mitschnitt**. Im Probe-Modus bleibt der Song beim Setzen stehen, im Übe-Modus geht es zur nächsten Karte. Oben links:
 Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) bzw. „Karte 2 / 8“ (Übe-Modus, ohne Uhr).
 
+**Kein Neuladen durch Herunterwischen:** `html, body { overscroll-behavior-y: none }` (styles.scss) schaltet Chromes
+„Zum Aktualisieren ziehen“ auf der ganzen Seite ab; das Notenblatt (`.flaeche`) reicht sein Scrollen nicht an die
+Seite weiter (`overscroll-behavior: contain`). So führt Herunterwischen in der Notenansicht immer zur Titelanzeige.
+
 **Vollbild (Bühnen-, Probe- und Übe-Modus, `data/vollbild.ts`):** Im Browser-Tab und am Computer fordert der Modus das
 Vollbild des Browsers an. In der **installierten App auf Handy und Tablet nicht** – die läuft schon insgesamt im
 Vollbild, ohne Statusleiste (`"display": "fullscreen"` in `public/site.webmanifest`, gilt für alle Seiten). Grund: Im

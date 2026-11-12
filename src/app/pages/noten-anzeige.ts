@@ -157,7 +157,7 @@ const BREITE_KEY = 'bn-noten-breite';
     header button[aria-pressed=true] { border-color: #e8a46a; color: #e8a46a; }
     .wahl { min-height: 40px; max-width: 46vw; padding: 0 10px; border-radius: 20px; border: 1px solid #e8a46a; background: #000; color: #e8a46a; font: inherit; color-scheme: dark; }
     header mat-icon { font-size: 20px; width: 20px; height: 20px; }
-    .flaeche { flex: 1; min-height: 0; overflow: auto; display: grid; place-items: center; touch-action: pan-y; }
+    .flaeche { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; display: grid; place-items: center; touch-action: pan-y; }
     .flaeche.breit { place-items: start center; }
     canvas { display: block; background: #fff; }
     .blattseite { position: relative; }

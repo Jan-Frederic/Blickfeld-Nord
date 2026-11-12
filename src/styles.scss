@@ -47,6 +47,10 @@ html { scroll-behavior: smooth; }
 // Sicherheitsnetz: nichts darf die Seite seitlich verbreitern (z. B. bei vergrößerter Schrift im Handy-Browser).
 // clip statt hidden – erzeugt keinen eigenen Scrollbereich, „sticky“ und Sprungmarken funktionieren weiter.
 html, body { overflow-x: clip; }
+// Kein „Zum Aktualisieren ziehen“ (Chrome auf Android): Herunterwischen am Seitenanfang lädt die Seite nie neu –
+// im Übe-, Probe- und Bühnen-Modus führt Herunterwischen in der Notenansicht zur Titelanzeige; auch sonst soll ein
+// Wisch nicht versehentlich neu laden (Neuladen über das Menü des Browsers bzw. die App neu öffnen)
+html, body { overscroll-behavior-y: none; }
 html { background-color: var(--bn-night); }
 body {
   margin: 0;

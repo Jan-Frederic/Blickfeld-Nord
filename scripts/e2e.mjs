@@ -832,6 +832,8 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   // Notenansicht: ♫ ▶, ↺10 (erst wenn der Song läuft) und Abdocken in der Kopfleiste
   const spielen = kopf.locator('button[aria-label="Auf Spotify abspielen"]');
   await spielen.waitFor();
+  // Herunterwischen (zur Titelanzeige) lädt die Seite nie neu: kein „Zum Aktualisieren ziehen“, Notenblatt reicht nichts weiter
+  expect(await p.evaluate(() => getComputedStyle(document.documentElement).overscrollBehaviorY === 'none' && getComputedStyle(document.body).overscrollBehaviorY === 'none' && getComputedStyle(document.querySelector('app-noten-anzeige .flaeche')).overscrollBehaviorY === 'contain'), 'Herunterwischen kann die Seite neu laden (overscroll-behavior fehlt)');
   expect(await kopf.locator('button[aria-label="Spotify: 10 Sekunden zurück"]').isDisabled(), '↺10 ist bedienbar, bevor ein Song läuft');
   await until(async () => (await p.evaluate(() => window.__spToken)) === 'test', 'Browser-Player bekommt keinen Zugang');
   const titel = async () => (await kopf.locator('.titel').innerText()).trim();
