@@ -32,6 +32,18 @@ async function until(check, message, ms = 5000) {
   throw new Error(typeof message === 'function' ? await message() : message);
 }
 
+/** Song-Dialog über die erste Zeile der Songliste öffnen – direkt nach dem Laden geht ein Klick gelegentlich verloren
+ *  (die Liste baut sich noch auf), deshalb klicken, bis der Dialog da ist */
+async function songDialogOeffnen(p) {
+  const dialog = p.locator('app-song-dialog dialog[open]');
+  await until(async () => {
+    if (await dialog.count()) return true;
+    await p.locator('app-backstage-songs tbody tr').first().click().catch(() => {});
+    await p.waitForTimeout(300);
+    return (await dialog.count()) > 0;
+  }, 'Song-Dialog öffnet sich nicht', 10000);
+}
+
 /** Schritt mit Namen: scheitert er, steht der Name in der Meldung (statt nur „locator.click: Timeout“) */
 async function schritt(name, fn) {
   try {
@@ -478,7 +490,8 @@ test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne
   await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('In zwei Wochen'), 'Story-Text nicht kopiert');
   const text = await p.evaluate(() => navigator.clipboard.readText());
   expect(text.includes(`utm_campaign=konzert-${id}`) && text.includes('ref=text'), `Link ohne Herkunft/Kampagne: ${text}`);
-  await eintrag.locator('input[type=checkbox]').check();
+  // click statt check: der Eintrag verschwindet mit dem Haken – check() wartete dann vergeblich auf den angehakten Zustand
+  await eintrag.locator('input[type=checkbox]').click();
   await until(async () => (await p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).count()) === 0, 'Schritt bleibt nach dem Abhaken in „Heute fällig“');
   await p.go(`/backstage/${id}/`);
   await until(async () => await p.locator('#wp-story-1').isChecked(), 'Haken fehlt im Werbeplan des Auftritts');
@@ -778,7 +791,7 @@ test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Büh
   // Song-Dialog: eigener Status als Auswahl mit den fünf Stufen
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Iris');
-  await p.locator('app-backstage-songs tbody tr').first().click();
+  await songDialogOeffnen(p);
   const status = p.locator('app-song-dialog dialog[open] header select');
   expect((await status.inputValue()) === 'ueben', 'Song-Dialog zeigt den eigenen Status nicht');
   expect((await status.locator('option').allInnerTexts()).join('|').replace(/[^A-Za-zÜü|ä ]/g, '').trim().split('|').map((t) => t.trim()).join('|') === 'Nicht gelernt|Üben|Wackelt noch|Sitzt|Eingenordet', 'Auswahl hat nicht die fünf Status');
@@ -1022,7 +1035,7 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   const p = await page();
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Iris');
-  await p.locator('app-backstage-songs tbody tr').first().click();
+  await songDialogOeffnen(p);
   const zeile = p.locator('app-song-dialog dialog[open]');
   await until(async () => (await zeile.count()) === 1, 'Dialog öffnet nicht');
   expect((await zeile.innerText()).includes('Recherche:'), 'Quelle der recherchierten Werte fehlt');
@@ -1082,7 +1095,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   const p = await page();
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Iris');
-  await p.locator('app-backstage-songs tbody tr').first().click();
+  await songDialogOeffnen(p);
   const zeile = p.locator('app-song-dialog dialog[open]');
   await zeile.waitFor();
   // „Wir spielen E“ – erst weiter, wenn der Entwurf wirklich gespeichert ist (sonst bleibt das Akkordblatt später in D)
@@ -1324,7 +1337,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   // einzelne Datei beim Song, ältere Windows-Kodierung mit Umlaut
   await q.locator('app-backstage-songs input[type=search]').fill('Angels');
   await until(async () => (await q.locator('app-backstage-songs tbody tr .noten').first().innerText()).includes('Akkorde'), 'Sammel-Import kennzeichnet den Song nicht');
-  await q.locator('app-backstage-songs tbody tr').first().click();
+  await songDialogOeffnen(q);
   const engel = q.locator('app-song-dialog dialog[open]');
   await until(async () => (await engel.locator('app-noten-editor textarea').inputValue()).includes('I sit and wait'), 'Akkordblatt aus der .pro-Datei fehlt beim Song');
   await engel.locator('app-noten-editor input[type=file][accept*=".pro"]').setInputFiles({ name: 'angels.cho', mimeType: 'text/plain', buffer: Buffer.from('{title: Angels}\n[E]Grüße', 'latin1') });

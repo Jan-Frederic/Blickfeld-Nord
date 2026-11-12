@@ -53,7 +53,8 @@ export function reloadOnMissingChunk(error: unknown, url: string): void {
 
 export function setupPwa(): void {
   if (typeof window === 'undefined') return;
-  const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
+  // installiert läuft die App im Vollbild (site.webmanifest: "display": "fullscreen"); wo das Gerät das nicht kann, als eigenes Fenster
+  const standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
   if (standalone) return;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();

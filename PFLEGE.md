@@ -336,12 +336,16 @@ Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape u
 Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) bzw. „Karte 2 / 8“ (Übe-Modus, ohne Uhr).
 
 **Vollbild (Bühnen-, Probe- und Übe-Modus, `data/vollbild.ts`):** Im Browser-Tab und am Computer fordert der Modus das
-Vollbild des Browsers an. In der **installierten App auf Handy und Tablet nicht** – dort füllt der Modus das Fenster
-ohnehin (nur die Statusleiste bleibt). Grund: Im Browser-Vollbild zeigt Android bei jedem Wisch vom oberen Rand „Zum
-Beenden des Vollbildmodus …“ und wirft den Modus mit „Zurück“ hinaus; beides kann eine Seite nicht abschalten, und die
-Randgeste beißt sich mit dem Herunterwischen in der Notenansicht. Im Browser-Tab auf Touch-Geräten holt der nächste
-Tipp ein verlorenes Vollbild zurück. (Soll auch die Statusleiste weg, ginge das nur über `"display": "fullscreen"` in
-`public/site.webmanifest` – dann für die ganze App.)
+Vollbild des Browsers an. In der **installierten App auf Handy und Tablet nicht** – die läuft schon insgesamt im
+Vollbild, ohne Statusleiste (`"display": "fullscreen"` in `public/site.webmanifest`, gilt für alle Seiten). Grund: Im
+Browser-Vollbild zeigt Android bei jedem Wisch vom oberen Rand „Zum Beenden des Vollbildmodus …“ und wirft den Modus
+mit „Zurück“ hinaus; beides kann eine Seite nicht abschalten, und die Randgeste beißt sich mit dem Herunterwischen in
+der Notenansicht. Das Vollbild der installierten App gehört dagegen zum Fenster: keine Meldung, nichts zu verlassen
+(ein Wisch vom Rand blendet die Systemleisten nur kurz ein). Im Browser-Tab auf Touch-Geräten holt der nächste Tipp
+ein verlorenes Vollbild zurück. Android übernimmt eine geänderte Anzeigeart erst, wenn es die installierte App
+aktualisiert (nach dem Öffnen, meist innerhalb von ein bis zwei Tagen) – oder sofort nach Deinstallieren und neu
+Installieren im selben Browser (die Daten bleiben). Geräte ohne Vollbild-Apps (iPhone) zeigen sie als eigenes
+Fenster. Der Bereich um eine Kamera-Aussparung bleibt frei (kein `viewport-fit=cover`).
 
 **Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
 ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo
