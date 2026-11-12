@@ -587,10 +587,11 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   let spotifySpielt = false;
   let pausen = 0;
   let abfragenNachStart = 0;
+  let keinGeraet = true;
   await p.route('https://api.spotify.com/**', async (route) => {
     const r = route.request();
     const pfad = new URL(r.url()).pathname;
-    if (pfad.endsWith('/me/player/devices')) return route.fulfill({ json: { devices: [{ id: 'd1', name: 'Handy', type: 'Smartphone', is_active: true }] } });
+    if (pfad.endsWith('/me/player/devices')) return route.fulfill({ json: { devices: keinGeraet ? [] : [{ id: 'd1', name: 'Handy', type: 'Smartphone', is_active: true }] } });
     if (pfad.endsWith('/me/player/play')) {
       gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
       spotifySpielt = true;
@@ -614,7 +615,13 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zu Africa klappt nicht');
   await p.keyboard.press('ArrowLeft');
   await until(async () => (await buehne.locator('h1').innerText()).includes('Iris'), 'Zurück zu Iris klappt nicht');
+  // Spotify läuft auf keinem Gerät: sichtbare Meldung mit „Spotify öffnen“ (auch über der Notenansicht), nichts wird gestartet
   await buehne.locator('app-spotify-steuerung button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => /Spotify läuft auf keinem Gerät/.test(await buehne.locator('.spotify-hinweis').innerText().catch(() => '')), 'Meldung „kein Gerät“ fehlt');
+  expect(((await buehne.locator('.spotify-hinweis a').getAttribute('href')) ?? '').includes('open.spotify.com/track/6Qyc6fS4DsZjB2mRW9DsQs') && !gespielt.length, '„Spotify öffnen“ fehlt oder es wurde trotzdem gestartet');
+  keinGeraet = false;
+  await buehne.locator('app-spotify-steuerung button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => (await buehne.locator('.spotify-hinweis').count()) === 0, 'Meldung bleibt nach erfolgreichem Start stehen');
   await until(async () => gespielt.some((x) => x.includes('device_id=d1') && x.includes('spotify:track:6Qyc6fS4DsZjB2mRW9DsQs')), () => `▶ spielt den Song nicht über Spotify: ${gespielt.join(' | ')}`);
   await until(async () => (await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1, 'nach ▶ kein ⏸');
   // Fortschritt kommt von Spotify (5 s von 3:20), obwohl die erste Abfrage noch den alten Stand meldete; kein Fehlerhinweis

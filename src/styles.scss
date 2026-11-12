@@ -227,6 +227,10 @@ app-setlist .spielzeit mat-icon { font-size: 16px; width: 16px; height: 16px; }
 app-nachbereitung mat-icon.spotify { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; color: #1db954; }
 app-nachbereitung .hint a { color: var(--bn-sunset); }
 // Bühnen-Modus: Lupe für spontane Wünsche (Budget von setlist-buehne)
+// Meldung der Spotify-Fernsteuerung im Übe- und Probe-Modus (setlist-buehne.ts) – über Titelanzeige und Notenansicht
+app-setlist-buehne .spotify-hinweis { position: fixed; left: 50%; top: max(124px, env(safe-area-inset-top)); z-index: 7; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; width: max-content; max-width: 92vw; margin: 0; padding: 10px 14px; border: 1px solid #e0b25a; border-radius: 14px; background: #1b1e22; color: #e0b25a; font: .9rem/1.4 Inter, sans-serif; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
+app-setlist-buehne .spotify-hinweis a { padding: 5px 12px; border: 1px solid #1db954; border-radius: 999px; color: #1db954; text-decoration: none; white-space: nowrap; }
+app-setlist-buehne .spotify-hinweis button { min-width: 32px; min-height: 32px; border: 1px solid #444; border-radius: 999px; background: transparent; color: #ddd; font: inherit; cursor: pointer; }
 // Bühnen-, Probe-, Übe-Modus: Hinweis nach einmal „Zurück“ (setlist-buehne.ts, zurueckSchutz)
 app-setlist-buehne .zurueck-hinweis { position: fixed; left: 50%; top: max(64px, env(safe-area-inset-top)); z-index: 7; transform: translateX(-50%); max-width: 92vw; margin: 0; padding: 10px 18px; border-radius: 999px; background: #e8a46a; color: #2a1708; font: 600 .95rem Inter, sans-serif; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); pointer-events: none; }
 // Übe-Modus: letzte Status-Wahl zurücknehmen (setlist-buehne.ts, ein paar Sekunden sichtbar)

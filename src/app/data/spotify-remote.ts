@@ -67,11 +67,18 @@ export async function spotifyAnmelden(zurueck = location.pathname + location.sea
   location.assign(`https://accounts.spotify.com/authorize?${q}`);
 }
 
-/** gehört die aktuelle Adresse zur Rückkehr von der Spotify-Anmeldung? (ohne Spotify-Code zu laden) */
-export function istSpotifyRueckkehr(): boolean {
-  if (typeof location === 'undefined') return false;
-  const q = new URLSearchParams(location.search);
-  return (q.has('code') || q.has('error')) && !!q.get('state') && lesen<{ state: string }>(PKCE_KEY)?.state === q.get('state');
+/**
+ * Adresse nach der Rückkehr von der Spotify-Anmeldung einordnen (suche: location.search der Startseite):
+ * 'passt' – Antwort auf die hier begonnene Anmeldung · 'abgebrochen' – bei Spotify abgelehnt · 'fremd' – Antwort ohne
+ * passende Anmeldung in diesem Browser (in einem anderen Browser begonnen, z. B. weil der Standardbrowser ein anderer
+ * ist) · null – hat nichts mit Spotify zu tun
+ */
+export function spotifyRueckkehr(suche: string): 'passt' | 'abgebrochen' | 'fremd' | null {
+  const q = new URLSearchParams(suche);
+  if (!q.get('state') || !(q.has('code') || q.has('error'))) return null;
+  const passt = lesen<{ state: string }>(PKCE_KEY)?.state === q.get('state');
+  if (!passt) return q.has('code') ? 'fremd' : null;
+  return q.has('error') ? 'abgebrochen' : 'passt';
 }
 
 async function tokenHolen(body: Record<string, string>): Promise<Token> {
@@ -91,16 +98,41 @@ async function tokenHolen(body: Record<string, string>): Promise<Token> {
   return t;
 }
 
-/** Rückkehr von der Anmeldung: Code gegen Zugang tauschen, dann zurück auf die Ausgangsseite */
-export async function spotifyAnmeldungAbschliessen(): Promise<void> {
-  const q = new URLSearchParams(location.search);
+const MELDUNG_KEY = 'bn-spotify-meldung';
+/** Ergebnis der letzten Anmeldung für die Seite, auf die es zurückgeht (einmal lesen) */
+export function spotifyMeldung(): string {
+  try {
+    const m = sessionStorage.getItem(MELDUNG_KEY) ?? '';
+    sessionStorage.removeItem(MELDUNG_KEY);
+    return m;
+  } catch {
+    return '';
+  }
+}
+const meldungMerken = (text: string) => {
+  try {
+    sessionStorage.setItem(MELDUNG_KEY, text);
+  } catch {
+    // ohne Speicher keine Meldung
+  }
+};
+
+/**
+ * Rückkehr von der Anmeldung (suche: location.search, gleich beim Start gemerkt): Code gegen Zugang tauschen, dann
+ * zurück auf die Ausgangsseite – mit einer Meldung, wenn es nicht geklappt hat
+ */
+export async function spotifyAnmeldungAbschliessen(suche: string): Promise<void> {
+  const q = new URLSearchParams(suche);
   const p = lesen<{ verifier: string; state: string; zurueck: string }>(PKCE_KEY);
   schreiben(PKCE_KEY, null);
-  if (p && q.get('code') && q.get('state') === p.state) {
+  if (q.has('error')) meldungMerken('Die Anmeldung bei Spotify wurde abgebrochen.');
+  else if (p && q.get('code') && q.get('state') === p.state) {
     try {
       await tokenHolen({ grant_type: 'authorization_code', code: q.get('code')!, redirect_uri: spotifyRedirect(), code_verifier: p.verifier });
-    } catch {
-      // bleibt ohne Verbindung – die Steuerung bietet die Anmeldung erneut an
+      meldungMerken('Mit Spotify verbunden ✓');
+    } catch (e) {
+      const status = e instanceof SpotifyFehler ? e.status : 0;
+      meldungMerken(status ? `Verbinden mit Spotify hat nicht geklappt (Fehler ${status}) – bitte noch einmal versuchen.` : 'Verbinden mit Spotify hat nicht geklappt (keine Verbindung) – bitte noch einmal versuchen.');
     }
   }
   location.replace(p?.zurueck || '/backstage');

@@ -142,8 +142,14 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     Spotify noch den alten Stand (6 s Schonfrist, danach alle 5 s Abgleich); vorübergehende Fehler (5xx, 429) werden
     einmal wiederholt; der Zugang wird stündlich erneuert (nie zweimal gleichzeitig – das kappte die Verbindung); eine
     andere Fassung desselben Songs gilt als der Song; ein vorhandenes, aber nicht aktives Gerät wird erst aktiviert.
-    Meldungen: „Kein Spotify-Gerät gefunden“ (Spotify-App kurz öffnen), „nur mit Premium“, „Konto im
-    Developer-Dashboard nicht freigeschaltet“, „Spotify meldet einen Fehler (Status)“, „Keine Verbindung“. Zugang
+    Meldungen stehen als Hinweis über Titelanzeige **und** Notenansicht (nicht nur als Tooltip): „Spotify läuft auf
+    keinem Gerät“ mit Knopf **Spotify öffnen** (die Fernsteuerung braucht ein laufendes Spotify – App oder
+    open.spotify.com in einem Tab; die Seite selbst spielt nichts ab), „nur mit Premium“, „Konto im
+    Developer-Dashboard nicht freigeschaltet“, „Spotify meldet einen Fehler (Status)“, „Keine Verbindung“. Ohne
+    Verbindung steht in der Kopfleiste der Noten „♫ verbinden“. **Anmeldung:** Die Antwort von Spotify muss im selben
+    Browser ankommen, in dem „Spotify verbinden“ getippt wurde (dort liegt der Schlüssel der Anmeldung); kommt sie in
+    einem anderen an (anderer Standardbrowser), erklärt ein Hinweis auf der Startseite, was zu tun ist. Nach der
+    Rückkehr steht das Ergebnis da („Mit Spotify verbunden ✓“ bzw. warum es nicht geklappt hat). Zugang
     nur auf dem Gerät (`bn-spotify-*`, nicht gespiegelt). CSP: `connect-src` `accounts.spotify.com`, `api.spotify.com`.
 - **Modus bleibt offen** (Bühnen-, Probe-, Übe-Modus): „Zurück“ des Handys (Wischen vom Rand, Zurück-Taste) beendet
   ihn nicht versehentlich – einmal zeigt nur „Noch einmal ‚Zurück‘ beendet …“, erst ein zweites Mal innerhalb von

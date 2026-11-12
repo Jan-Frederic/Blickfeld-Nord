@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyVerbunden } from '../data/spotify-remote';
+import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyMeldung, spotifyVerbunden } from '../data/spotify-remote';
 
 // Backstage → Einstellungen: Spotify im Übe- und Probe-Modus – aus (Standard), eingebetteter Player oder Fernsteuerung
 // der Spotify-App (data/spotify-remote.ts). Gilt für dieses Gerät; die Spotify-Verbindung der Fernsteuerung lässt sich
@@ -27,6 +27,7 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
             <p class="hinweis ok"><mat-icon aria-hidden="true">check_circle</mat-icon> Mit Spotify verbunden. <button type="button" (click)="trennen()">Trennen</button></p>
           } @else {
             <button type="button" class="verbinden" (click)="verbinden()">♫ Spotify verbinden</button>
+            @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
           }
         }
       }
@@ -39,6 +40,7 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
     label { display: grid; gap: 4px; max-width: 320px; font-size: .8rem; color: var(--bn-fog); }
     select { padding: 8px 10px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: .95rem; }
     .hinweis { margin: 10px 0 0; max-width: 720px; font-size: .85rem; line-height: 1.5; color: var(--bn-fog); }
+    .warn { color: #e0b25a; }
     .ok { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #5fb88a; }
     button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
     button.verbinden { margin-top: 10px; border-color: #1db954; color: #1db954; }
@@ -48,6 +50,8 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
 export class SpotifyEinstellung {
   protected readonly art = signal<SpotifyArt>(spotifyArt());
   protected readonly verbunden = signal(spotifyVerbunden());
+  /** Ergebnis der letzten Anmeldung (nach der Rückkehr von Spotify), wenn sie nicht geklappt hat */
+  protected readonly meldung = spotifyVerbunden() ? (spotifyMeldung(), '') : spotifyMeldung();
   protected waehlen(a: SpotifyArt): void {
     spotifyArtSetzen(a);
     this.art.set(spotifyArt());

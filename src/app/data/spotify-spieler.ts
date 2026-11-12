@@ -38,6 +38,8 @@ export class SpotifySpieler {
   readonly mitspielen = signal(spotifyMitspielen());
   readonly laeuft = signal(false);
   readonly hinweis = signal('');
+  /** der Hinweis lässt sich beheben, indem man Spotify öffnet (kein Gerät gefunden) */
+  readonly spotifyOeffnen = signal(false);
 
   /** Track, den die Steuerung zuletzt gestartet hat, und unter welcher ID Spotify ihn tatsächlich spielt */
   private gestartet: string | null = null;
@@ -50,7 +52,7 @@ export class SpotifySpieler {
   /** Modus geöffnet: Verbindung neu lesen, Fortschritt mitzählen und alle 5 s mit Spotify abgleichen */
   start(): void {
     this.verbunden.set(spotifyVerbunden());
-    this.hinweis.set('');
+    this.hinweisWeg();
     if (this.uhrTakt) return;
     this.uhrTakt = setInterval(() => {
       if (this.spielt()) this.position.update((p) => Math.min(p + 1000, this.dauer() || p + 1000));
@@ -80,7 +82,7 @@ export class SpotifySpieler {
     if (this.verbunden() !== spotifyVerbunden()) this.verbunden.set(spotifyVerbunden());
     if (t === vorher) return;
     this.track.set(t);
-    this.hinweis.set('');
+    this.hinweisWeg();
     const liefUeberUns = this.spielt() && !!this.gestartet;
     this.position.set(0);
     this.dauer.set(0);
@@ -197,9 +199,15 @@ export class SpotifySpieler {
     this.gestartet = this.gestartetAls = null;
   }
 
+  /** Hinweis schließen */
+  hinweisWeg(): void {
+    this.hinweis.set('');
+    this.spotifyOeffnen.set(false);
+  }
+
   private async tun(arbeit: () => Promise<void>): Promise<void> {
     this.laeuft.set(true);
-    this.hinweis.set('');
+    this.hinweisWeg();
     try {
       await arbeit();
     } catch (e) {
@@ -223,9 +231,10 @@ export class SpotifySpieler {
       this.spielt.set(false);
       return;
     }
+    this.spotifyOeffnen.set(art === 'geraet');
     this.hinweis.set(
       art === 'geraet'
-        ? 'Kein Spotify-Gerät gefunden – öffne kurz die Spotify-App (oder Spotify auf dem Laptop), dann noch einmal ▶.'
+        ? 'Spotify läuft auf keinem Gerät. Öffne die Spotify-App (am Computer: die App oder open.spotify.com in einem Tab), dann noch einmal ▶.'
         : art === 'premium'
           ? 'Das geht nur mit Spotify Premium.'
           : art === 'freigabe'

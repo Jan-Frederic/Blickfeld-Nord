@@ -208,6 +208,14 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
+      @if (spotifyArt === 'fern' && spotifySpieler.hinweis(); as h) {
+        <!-- Meldung der Spotify-Fernsteuerung – sichtbar in Titelanzeige und Notenansicht -->
+        <p class="spotify-hinweis" role="status" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
+          <span>{{ h }}</span>
+          @if (spotifySpieler.spotifyOeffnen() && spotifyId(); as id) { <a [href]="'https://open.spotify.com/track/' + id" target="_blank" rel="noopener">Spotify öffnen</a> }
+          <button type="button" (click)="$event.stopPropagation(); spotifySpieler.hinweisWeg()" aria-label="Hinweis schließen">✕</button>
+        </p>
+      }
       @if (zurueckHinweis()) { <p class="zurueck-hinweis" role="status">Noch einmal „Zurück“ beendet den {{ probe() ? 'Probe-Modus' : ueben() ? 'Übe-Modus' : 'Bühnen-Modus' }}</p> }
       @if (zurueck(); as z) {
         <!-- Übe-Modus: letzte Status-Wahl ein paar Sekunden lang zurücknehmbar (Karte und Kasten wie vorher) -->
@@ -409,7 +417,7 @@ export class SetlistBuehne {
   protected readonly spotifyArt = spotifyArt();
   // Fernsteuerung (data/spotify-spieler.ts): immer den angezeigten Song melden – gespielt wird nur er; beim Verlassen
   // des Modus pausieren
-  private readonly spotifySpieler = inject(SpotifySpieler);
+  protected readonly spotifySpieler = inject(SpotifySpieler);
   private readonly spotifyMelden = (() => {
     if (typeof window === 'undefined' || this.spotifyArt !== 'fern') return;
     let gestartet = false;

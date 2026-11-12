@@ -162,6 +162,15 @@
   }
 </footer>
 
+<!-- Spotify-Anmeldung (Backstage, Fernsteuerung) ist in einem anderen Browser angekommen als dem, in dem sie begann -->
+@if (spotifyFremd()) {
+  <div class="update" role="status">
+    <span class="material-icons" aria-hidden="true">music_note</span>
+    <span>Spotify-Anmeldung: Die Bestätigung ist in diesem Browser angekommen, begonnen wurde sie aber in einem anderen (oder in der installierten App). Bitte dort noch einmal „Spotify verbinden“ antippen – am einfachsten, wenn dieser Browser der Standardbrowser des Geräts ist.</span>
+    <button type="button" class="close" (click)="spotifyFremd.set(false)" aria-label="Hinweis schließen"><span class="material-icons" aria-hidden="true">close</span></button>
+  </div>
+}
+
 <!-- neue Version während der Nutzung angekommen -->
 @if (updateReady()) {
   <div class="update" role="status">

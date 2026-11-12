@@ -2,6 +2,7 @@ import { Component, DestroyRef, ElementRef, computed, effect, inject, input, out
 import { UebeStatus } from '../data/uebe-status';
 import { StatusSchalter } from './status-schalter';
 import { SpotifySpieler } from '../data/spotify-spieler';
+import { spotifyAnmelden } from '../data/spotify-remote';
 import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
 import { SongInfo, gespielteTonart } from '../data/songinfo';
@@ -54,6 +55,10 @@ const BREITE_KEY = 'bn-noten-breite';
           </span>
         }
         <!-- Übe- und Probe-Modus: Mitschnitt und eigener Übe-Status (Übe-Modus: danach die nächste Karte) -->
+        @if (!spotify.verbunden() && spotify.track()) {
+          <!-- Einstellung „Fernsteuerung“, aber noch nicht verbunden: von hier aus verbinden (danach geht es hierher zurück) -->
+          <button type="button" class="spotify-play" (click)="$event.stopPropagation(); spotifyVerbinden()" aria-label="Spotify verbinden" title="Spotify verbinden – ganze Songs über die Spotify-App">♫ verbinden</button>
+        }
         @if (spotify.verbunden() && spotify.track()) {
           <!-- Übe- und Probe-Modus: den angezeigten Song über Spotify abspielen (data/spotify-spieler.ts) -->
           <button type="button" class="spotify-play" [class.an]="spotify.spielt()" (click)="$event.stopPropagation(); spotify.umschalten()" [disabled]="spotify.laeuft()" [attr.aria-label]="spotify.spielt() ? 'Spotify: Pause' : 'Auf Spotify abspielen'" [title]="spotify.hinweis() || (spotify.spielt() ? 'Spotify: Pause' : 'Song auf Spotify abspielen')">♫ {{ spotify.spielt() ? '⏸' : '▶' }}</button>
@@ -152,6 +157,9 @@ const BREITE_KEY = 'bn-noten-breite';
 })
 export class NotenAnzeige {
   protected readonly spotify = inject(SpotifySpieler);
+  protected spotifyVerbinden(): void {
+    void spotifyAnmelden();
+  }
   /** aktueller Song (undefined = Pause) */
   readonly song = input<Song>();
   readonly info = input<SongInfo>();

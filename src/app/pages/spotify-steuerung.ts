@@ -1,18 +1,20 @@
 import { Component, inject } from '@angular/core';
-import { spotifyAnmelden } from '../data/spotify-remote';
+import { spotifyAnmelden, spotifyMeldung } from '../data/spotify-remote';
 import { SpotifySpieler } from '../data/spotify-spieler';
 
 // Spotify-Fernsteuerung in der Titelanzeige (Übe- und Probe-Modus): ▶/⏸ spielt den angezeigten Song ganz in der
 // Spotify-App bzw. auf dem gewählten Spotify-Connect-Gerät, ↺10, Fortschritt, Gerätewahl und „beim Weiterblättern
 // mitspielen“. Zustand und Regeln: data/spotify-spieler.ts (derselbe Zustand wie der ▶-Knopf in der Kopfleiste der
 // Notenansicht). Ohne Verbindung nur „Spotify verbinden“. Nur mit der Einstellung „Fernsteuerung“
-// (Einstellungen → Spotify im Übe- und Probe-Modus). Styles global (styles.scss).
+// (Einstellungen → Spotify im Übe- und Probe-Modus). Fehlerhinweise zeigt der Bühnen-Modus selbst (sichtbar auch in
+// der Notenansicht). Styles global (styles.scss).
 @Component({
   selector: 'app-spotify-steuerung',
   host: { '(pointerdown)': '$event.stopPropagation()', '(pointerup)': '$event.stopPropagation()', '(keydown)': '$event.stopPropagation()' },
   template: `
     @if (!s.verbunden()) {
       <button type="button" class="verbinden" (click)="anmelden()" title="Ganze Songs über die Spotify-App abspielen (Spotify Premium)">♫ Spotify verbinden – ganze Songs</button>
+      @if (meldung) { <p class="hinweis" role="status">{{ meldung }}</p> }
     } @else {
       <div class="leiste" role="group" aria-label="Spotify steuern">
         <button type="button" class="rund" (click)="s.zurueck()" [disabled]="s.laeuft() || !s.spielt()" aria-label="10 Sekunden zurück">↺10</button>
@@ -28,12 +30,13 @@ import { SpotifySpieler } from '../data/spotify-spieler';
         </select>
         <button type="button" class="klein" (click)="s.abmelden()">Spotify trennen</button>
       </div>
-      @if (s.hinweis(); as h) { <p class="hinweis" role="status">{{ h }}</p> }
     }
   `,
 })
 export class SpotifySteuerung {
   protected readonly s = inject(SpotifySpieler);
+  /** Ergebnis der letzten Anmeldung, falls sie von hier aus begonnen wurde und nicht geklappt hat */
+  protected readonly meldung = this.s.verbunden() ? '' : spotifyMeldung();
   protected uhr(ms: number): string {
     const sek = Math.floor(ms / 1000);
     return `${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}`;

@@ -149,14 +149,25 @@ export class App {
     }
   }
 
+  /** Spotify-Anmeldung kam in einem anderen Browser an als dem, in dem sie begonnen wurde */
+  protected readonly spotifyFremd = signal(false);
+
   protected reload(): void {
     location.reload();
   }
 
   constructor() {
     // Rückkehr von der Spotify-Anmeldung (Startseite mit ?code=&state=): Zugang holen, zurück zur Ausgangsseite
-    if (typeof location !== 'undefined' && /[?&]state=/.test(location.search) && typeof localStorage !== 'undefined' && localStorage.getItem('bn-spotify-pkce'))
-      void import('./data/spotify-remote').then((m) => (m.istSpotifyRueckkehr() ? m.spotifyAnmeldungAbschliessen() : undefined));
+    // (die Adresse gleich merken – bis das Modul geladen ist, kann sie sich schon geändert haben). Kam die Antwort in
+    // einem Browser an, in dem die Anmeldung nicht begonnen wurde, erklärt ein Hinweis, was zu tun ist.
+    const suche = typeof location !== 'undefined' ? location.search : '';
+    if (/[?&]state=/.test(suche) && /[?&](code|error)=/.test(suche))
+      void import('./data/spotify-remote').then((m) => {
+        const art = m.spotifyRueckkehr(suche);
+        if (art === 'passt' || art === 'abgebrochen') return m.spotifyAnmeldungAbschliessen(suche);
+        if (art === 'fremd') this.spotifyFremd.set(true);
+        return undefined;
+      });
     trackPageViews();
     // Sprungmarken (z. B. /booking#verfuegbarkeit) nicht unter der fest stehenden Kopfzeile verstecken
     inject(ViewportScroller).setOffset([0, 80]);
