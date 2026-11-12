@@ -662,7 +662,7 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   const spKnopf = (name) => buehne.locator(`app-spotify-steuerung button[aria-label="${name}"]`);
   const zeit0 = await spZeit();
   await until(async () => (await spZeit()) >= zeit0 + 2, async () => `Fortschritt bleibt ohne Spotifys Rückmeldung stehen (${zeit0} → ${await spZeit()})`);
-  expect((await buehne.locator('app-spotify-steuerung .balken span').evaluate((el) => parseFloat(el.style.width) || 0)) > 0, 'Fortschrittsbalken zeigt keinen Fortschritt');
+  expect((await buehne.locator('app-spotify-steuerung input.balken').evaluate((el) => Number(el.value) || 0)) > 0, 'Fortschrittsbalken zeigt keinen Fortschritt');
   expect((await spKnopf('Pause').count()) === 1, 'Steuerung fällt ohne Spotifys Rückmeldung auf ▶ zurück');
   // ⏸, danach listet Spotify das Gerät nicht mehr: ▶ setzt trotzdem fort – auf dem gemerkten Gerät, ohne Meldung
   await spKnopf('Pause').click();
@@ -681,7 +681,10 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     await until(async () => (await buehne.locator('h1').innerText()).includes(titel), `Blättern zu ${titel} klappt nicht`);
   };
   const pausenVorher = pausen;
-  await zu('ArrowRight', 'Africa');
+  // Tippen neben die Spotify-Knöpfe blättert (rechts: weiter) – die Box der Steuerung fängt es nicht mehr ab
+  const spBox = await buehne.locator('app-spotify-steuerung').boundingBox();
+  await p.mouse.click(spBox.x + spBox.width - 3, spBox.y + 3);
+  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Tippen neben die Spotify-Knöpfe blättert nicht weiter');
   await until(async () => pausen === pausenVorher + 1, () => `Beim Wechsel zu einem Song ohne Spotify-Track läuft der alte weiter (${pausen} Pausen)`);
   await zu('ArrowRight', 'Angels');
   await until(async () => gespielt.length === startsVorWeiter + 2 && gespielt.at(-1).includes('device_id=d1') && gespielt.at(-1).includes('spotify:track:1M2nd8jNUkkwrc1dgBPTJz'), () => `Beim Weiterblättern startet der nächste Song nicht: ${gespielt.slice(startsVorWeiter).join(' | ')}`);
@@ -755,6 +758,122 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   expect(d.notiz[datum]?.['Iris|The Goo Goo Dolls'] === 'Bridge wackelt', 'Notiz nicht in der eigenen Datei');
   expect(d.plan.songs[0].done && d.plan.songs[0].notiz !== 'Bridge wackelt', 'Notiz landet im gemeinsamen Plan');
   expect(d.ueben['Iris|The Goo Goo Dolls']?.kasten === 2 && d.ueben['Africa|TOTO']?.kasten === 4, `Status nicht im Karteikasten: ${JSON.stringify(d.ueben)}`);
+  return p;
+});
+
+// nachgebauter Spotify-Player (Web Playback SDK) für die vierte Fassung „Im Browser abspielen“
+const FAKE_SPOTIFY_SDK = `(() => {
+  const calls = (window.__spCalls = []);
+  let stand = null;
+  class Player {
+    constructor(o) { this.o = o; this.l = {}; window.__sp = this; }
+    addListener(e, f) { (this.l[e] ??= []).push(f); return true; }
+    emit(e, d) { (this.l[e] || []).forEach((f) => f(d)); }
+    connect() { this.o.getOAuthToken((t) => { window.__spToken = t; }); setTimeout(() => this.emit('ready', { device_id: 'web1' }), 30); return Promise.resolve(true); }
+    disconnect() { calls.push('disconnect'); }
+    getCurrentState() { return Promise.resolve(stand); }
+    setzen(s) { stand = s; this.emit('player_state_changed', s); }
+    spielen(id, ab) { this.setzen({ paused: false, position: ab, duration: 200000, track_window: { current_track: { id, uri: 'spotify:track:' + id, duration_ms: 200000 } } }); }
+    pause() { calls.push('pause'); if (stand) this.setzen({ ...stand, paused: true }); return Promise.resolve(); }
+    resume() { calls.push('resume'); if (stand) this.setzen({ ...stand, paused: false }); return Promise.resolve(); }
+    seek(ms) { calls.push('seek ' + ms); if (stand) this.setzen({ ...stand, position: ms }); return Promise.resolve(); }
+    setVolume(v) { calls.push('volume ' + v); return Promise.resolve(); }
+    activateElement() { calls.push('activate'); return Promise.resolve(); }
+  }
+  window.Spotify = { Player };
+  window.onSpotifyWebPlaybackSDKReady?.();
+})();`;
+
+test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienelementen, abgedockt über den Noten', async () => {
+  const p = await page();
+  await p.go('/backstage/');
+  await p.evaluate(() => {
+    localStorage.setItem('bn-ich', 'jan-frederic-overbeck');
+    localStorage.setItem('bn-wackelt', JSON.stringify({ 'Iris|The Goo Goo Dolls': '2026-10-01', 'Angels|Robbie Williams': '2026-10-02' }));
+    localStorage.setItem('bn-spotify-modus', '"browser"');
+    // Zugang aus der Fernsteuerung: ohne das Recht, im Browser abzuspielen
+    localStorage.setItem('bn-spotify-token', JSON.stringify({ access: 'test', refresh: 'test', bis: 9e15, scope: 'user-read-playback-state user-modify-playback-state' }));
+  });
+  await p.go('/backstage/einstellungen/');
+  const einstellung = p.locator('app-spotify-einstellung');
+  expect((await einstellung.locator('select').inputValue()) === 'browser', 'Einstellung „Im Browser abspielen“ fehlt');
+  await until(async () => /neu verbinden – fürs Abspielen im Browser/.test(await einstellung.locator('button.verbinden').innerText().catch(() => '')), 'ohne Recht zum Abspielen im Browser fehlt „neu verbinden“');
+  await p.evaluate(() => localStorage.setItem('bn-spotify-token', JSON.stringify({ access: 'test', refresh: 'test', bis: 9e15, scope: 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state' })));
+  const gespielt = [];
+  await p.route('https://sdk.scdn.co/spotify-player.js', (route) => route.fulfill({ contentType: 'application/javascript', body: FAKE_SPOTIFY_SDK }));
+  await p.route('https://api.spotify.com/**', async (route) => {
+    const r = route.request();
+    const url = new URL(r.url());
+    if (url.pathname.endsWith('/me/player/play') && r.method() === 'PUT') {
+      gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
+      const d = JSON.parse(r.postData() ?? '{}');
+      const id = /spotify:track:(\w+)/.exec(d.uris?.[0] ?? '')?.[1];
+      if (id) await p.evaluate(([i, ab]) => window.__sp.spielen(i, ab), [id, d.position_ms ?? 0]);
+      return route.fulfill({ status: 204 });
+    }
+    // alles andere (Stand, Pause …) geht im Browser-Player nicht über die Web-API
+    return route.fulfill({ status: 500, body: 'nicht erwartet' });
+  });
+  await p.go('/backstage/ueben/');
+  const ueben = p.locator('app-backstage-ueben');
+  await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
+  const buehne = p.locator('app-setlist-buehne');
+  const kopf = buehne.locator('app-noten-anzeige header');
+  // Notenansicht: ♫ ▶, ↺10 (erst wenn der Song läuft) und Abdocken in der Kopfleiste
+  const spielen = kopf.locator('button[aria-label="Auf Spotify abspielen"]');
+  await spielen.waitFor();
+  expect(await kopf.locator('button[aria-label="Spotify: 10 Sekunden zurück"]').isDisabled(), '↺10 ist bedienbar, bevor ein Song läuft');
+  await until(async () => (await p.evaluate(() => window.__spToken)) === 'test', 'Browser-Player bekommt keinen Zugang');
+  const titel = async () => (await kopf.locator('.titel').innerText()).trim();
+  const erster = await titel();
+  await spielen.click();
+  await until(async () => gespielt.length === 1 && gespielt[0].includes('device_id=web1') && /spotify:track:\w+/.test(gespielt[0]), () => `▶ spielt nicht im Browser-Player: ${gespielt.join(' | ')}`);
+  await until(async () => (await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 1, 'nach ▶ kein ⏸ in der Kopfleiste');
+  expect((await p.evaluate(() => window.__spCalls)).includes('activate'), 'Browser-Player wird im Klick nicht freigeschaltet (Ton auf Mobil-Browsern)');
+  await kopf.locator('button[aria-label="Spotify: 10 Sekunden zurück"]').click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('seek 0'), '↺10 in der Kopfleiste springt nicht');
+  // abdocken: die ganze Steuerung als Feld über den Noten, die Kopfleiste zeigt nur noch den Knopf zum Andocken
+  await kopf.locator('button.dock').click();
+  const dock = buehne.locator('.spotify-dock');
+  await dock.waitFor();
+  expect((await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 0 && (await p.evaluate(() => localStorage.getItem('bn-spotify-abgedockt'))) === 'true', 'Abdocken lässt die Knöpfe in der Kopfleiste oder wird nicht gemerkt');
+  const steuerung = dock.locator('app-spotify-steuerung');
+  await until(async () => (await steuerung.locator('button[aria-label="Pause"]').count()) === 1, 'abgedockte Steuerung zeigt nicht, dass der Song läuft');
+  expect((await steuerung.locator('.geraet').innerText()).includes('dieser Browser') && (await steuerung.locator('select').count()) === 0, 'Browser-Player zeigt eine Gerätewahl');
+  // Fortschritt bestimmen: am Balken auf 1:00 ziehen, 10 s vor, Lautstärke
+  await steuerung.locator('input.balken').evaluate((el) => {
+    el.value = '60000';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('seek 60000') && /^1:0\d \/ 3:20/.test(await steuerung.locator('.zeit').innerText()), async () => `Springen am Balken klappt nicht: ${await steuerung.locator('.zeit').innerText()}`);
+  await steuerung.locator('button[aria-label="10 Sekunden vor"]').click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).some((c) => /^seek 7\d{4}$/.test(c)), '10↻ springt nicht');
+  await steuerung.locator('.laut input').evaluate((el) => {
+    el.value = '0.5';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('volume 0.5') && (await p.evaluate(() => localStorage.getItem('bn-spotify-lautstaerke'))) === '0.5', 'Lautstärke wird nicht gesetzt');
+  // Feld am Griff verschieben: die Stelle wird gemerkt; Tippen ins Feld blättert nicht
+  const griff = await dock.locator('.griff').boundingBox();
+  await p.mouse.move(griff.x + griff.width / 2, griff.y + griff.height / 2);
+  await p.mouse.down();
+  await p.mouse.move(griff.x - 300, griff.y - 200, { steps: 5 });
+  await p.mouse.up();
+  await until(async () => !!(await p.evaluate(() => localStorage.getItem('bn-spotify-dock'))) && (await dock.evaluate((el) => !!el.style.left)), 'abgedocktes Feld lässt sich nicht verschieben');
+  await dock.locator('.dock-kopf span').click();
+  await p.waitForTimeout(300);
+  expect((await titel()) === erster, 'Tippen ins abgedockte Feld blättert');
+  await steuerung.locator('button[aria-label="Pause"]').click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('pause') && (await steuerung.locator('button[aria-label="Auf Spotify abspielen"]').count()) === 1, 'Pause im Browser-Player klappt nicht');
+  await steuerung.locator('button[aria-label="Auf Spotify abspielen"]').click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('resume') && gespielt.length === 1, 'Fortsetzen im Browser-Player klappt nicht');
+  // andocken: Feld weg, Knöpfe wieder in der Kopfleiste
+  await dock.locator('button[aria-label="Spotify-Steuerung andocken"]').click();
+  await until(async () => (await dock.count()) === 0 && (await kopf.locator('button[aria-label="Spotify: Pause"]').count()) === 1, 'Andocken klappt nicht');
+  // Modus verlassen: Browser-Player abmelden
+  await kopf.locator('button[aria-label="Übe-Modus beenden"]').click();
+  await until(async () => (await p.evaluate(() => window.__spCalls)).includes('disconnect'), 'Browser-Player wird beim Verlassen nicht abgemeldet');
   return p;
 });
 test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Bühnenreife-Übersicht, Probe-Vorschlag', async () => {

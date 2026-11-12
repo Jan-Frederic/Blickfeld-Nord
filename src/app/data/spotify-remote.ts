@@ -7,6 +7,8 @@
 
 export const SPOTIFY_CLIENT_ID = '67d2d4b9c0ed431f932124cc94fbcb97';
 const SCOPES = 'user-read-playback-state user-modify-playback-state';
+/** zusätzlich für „Im Browser abspielen“ (Web Playback SDK) – verlangt Spotify so, auch Name und E-Mail */
+const BROWSER_SCOPES = 'streaming user-read-email user-read-private';
 const TOKEN_KEY = 'bn-spotify-token';
 const PKCE_KEY = 'bn-spotify-pkce';
 export const GERAET_KEY = 'bn-spotify-geraet';
@@ -21,6 +23,8 @@ interface Token {
   refresh: string;
   /** ms seit 1970 */
   bis: number;
+  /** von Spotify bestätigte Rechte (ältere Zugänge: fehlt – dann nur Fernsteuerung) */
+  scope?: string;
 }
 
 const lesen = <T>(k: string): T | null => {
@@ -40,6 +44,8 @@ const schreiben = (k: string, v: unknown): void => {
 };
 
 export const spotifyVerbunden = () => !!lesen<Token>(TOKEN_KEY)?.refresh;
+/** darf dieser Zugang im Browser abspielen (Web Playback SDK)? Sonst: neu verbinden */
+export const spotifyBrowserRechte = () => /\bstreaming\b/.test(lesen<Token>(TOKEN_KEY)?.scope ?? '');
 
 const zufall = (n: number) => {
   const z = crypto.getRandomValues(new Uint8Array(n));
@@ -51,7 +57,7 @@ async function challenge(verifier: string): Promise<string> {
 }
 
 /** zur Spotify-Anmeldung; danach geht es auf die Seite zurück, von der aus angemeldet wurde */
-export async function spotifyAnmelden(zurueck = location.pathname + location.search): Promise<void> {
+export async function spotifyAnmelden(zurueck = location.pathname + location.search, art: SpotifyArt = spotifyArt()): Promise<void> {
   const verifier = zufall(64);
   const state = zufall(16);
   schreiben(PKCE_KEY, { verifier, state, zurueck });
@@ -61,7 +67,7 @@ export async function spotifyAnmelden(zurueck = location.pathname + location.sea
     redirect_uri: spotifyRedirect(),
     code_challenge_method: 'S256',
     code_challenge: await challenge(verifier),
-    scope: SCOPES,
+    scope: art === 'browser' ? `${SCOPES} ${BROWSER_SCOPES}` : SCOPES,
     state,
   });
   location.assign(`https://accounts.spotify.com/authorize?${q}`);
@@ -91,9 +97,9 @@ async function tokenHolen(body: Record<string, string>): Promise<Token> {
   });
   // 400/401: Zugang ungültig (neu verbinden); alles andere ist vorübergehend
   if (!res.ok) throw new SpotifyFehler(res.status === 400 || res.status === 401 ? 'anmelden' : 'netz', res.status);
-  const j = (await res.json()) as { access_token: string; refresh_token?: string; expires_in: number };
+  const j = (await res.json()) as { access_token: string; refresh_token?: string; expires_in: number; scope?: string };
   const alt = lesen<Token>(TOKEN_KEY);
-  const t: Token = { access: j.access_token, refresh: j.refresh_token ?? alt?.refresh ?? '', bis: Date.now() + (j.expires_in - 60) * 1000 };
+  const t: Token = { access: j.access_token, refresh: j.refresh_token ?? alt?.refresh ?? '', bis: Date.now() + (j.expires_in - 60) * 1000, scope: j.scope ?? alt?.scope };
   schreiben(TOKEN_KEY, t);
   return t;
 }
@@ -147,6 +153,10 @@ export function spotifyAbmelden(): void {
 /** läuft gerade eine Erneuerung des Zugangs? Dann warten alle darauf – Spotify gibt bei jeder Erneuerung ein neues
  *  Erneuerungs-Token aus, zwei gleichzeitige Erneuerungen mit demselben alten würden die Verbindung kappen */
 let erneuerung: Promise<string> | null = null;
+/** gültiger Zugangsschlüssel (bei Bedarf erneuert) – auch für den Browser-Player (data/spotify-browser.ts) */
+export async function spotifyZugang(frisch = false): Promise<string> {
+  return zugang(frisch);
+}
 async function zugang(frisch = false): Promise<string> {
   const t = lesen<Token>(TOKEN_KEY);
   if (!t?.refresh) throw new SpotifyFehler('anmelden');
@@ -165,11 +175,12 @@ async function zugang(frisch = false): Promise<string> {
 /**
  * anmelden: (neu) verbinden · geraet: kein aktives Spotify · premium: nur mit Premium · freigabe: Konto ist in der
  * Spotify-App (Developer-Dashboard → User Management) nicht eingetragen · nichts: Befehl passt gerade nicht (z. B.
- * Pause, obwohl nichts läuft) · netz: sonstiges
+ * Pause, obwohl nichts läuft) · netz: sonstiges · browser: dieser Browser kann nicht selbst abspielen · rechte: für den
+ * Browser-Player neu verbinden (Zugang ohne „streaming“)
  */
 export class SpotifyFehler extends Error {
   /** status: HTTP-Status von Spotify (0: keine Antwort, z. B. offline) – für die Meldung */
-  constructor(readonly art: 'anmelden' | 'geraet' | 'premium' | 'freigabe' | 'nichts' | 'netz', readonly status = 0) {
+  constructor(readonly art: 'anmelden' | 'geraet' | 'premium' | 'freigabe' | 'nichts' | 'netz' | 'browser' | 'rechte', readonly status = 0) {
     super(art);
   }
 }
@@ -205,7 +216,7 @@ export function spotifyLage(): string[] {
   const t = lesen<Token>(TOKEN_KEY);
   const passt = (a: string) => typeof matchMedia === 'function' && matchMedia(a).matches;
   return [
-    `Einstellung: ${spotifyArt()} · verbunden: ${t?.refresh ? 'ja' : 'nein'}${t?.refresh ? ` · Zugang gilt noch ${Math.round((t.bis - Date.now()) / 60000)} min` : ''}`,
+    `Einstellung: ${spotifyArt()} · verbunden: ${t?.refresh ? 'ja' : 'nein'}${t?.refresh ? ` · Zugang gilt noch ${Math.round((t.bis - Date.now()) / 60000)} min · Rechte: ${t.scope ?? 'unbekannt (älterer Zugang)'}` : ''}`,
     `mitspielen: ${spotifyMitspielen() ? 'ja' : 'nein'} · Gerät gewählt: ${idKurz(lesen<string>(GERAET_KEY) ?? '') || 'automatisch'} · zuletzt: ${idKurz(zuletztGeraet ?? '') || '–'}`,
     `Fenster: ${passt('(display-mode: fullscreen)') ? 'Vollbild-App' : passt('(display-mode: standalone)') ? 'App-Fenster' : 'Browser-Tab'} · ${passt('(pointer: coarse)') ? 'Touch' : 'Maus'} · ${typeof navigator === 'undefined' ? '' : navigator.userAgent}`,
   ];
@@ -353,6 +364,10 @@ export async function spotifySpielen(trackId: string, positionMs = 0): Promise<v
   }
   zuletztGeraet = geraet;
 }
+/** Song auf genau diesem Gerät spielen (Browser-Player: dessen Geräte-ID) – ohne Geräteliste und Wecken */
+export async function spotifySpielenAuf(geraet: string, trackId: string, positionMs = 0): Promise<void> {
+  await api(`/me/player/play?device_id=${encodeURIComponent(geraet)}`, { method: 'PUT', body: JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: Math.max(0, Math.round(positionMs)) }) });
+}
 export const spotifyPause = () => api('/me/player/pause', { method: 'PUT' });
 /** pausierten Song fortsetzen – auf dem zuletzt benutzten Gerät, auch wenn es inzwischen nicht mehr „aktiv“ ist */
 export const spotifyWeiter = () => api(`/me/player/play${zuletztGeraet ? `?device_id=${encodeURIComponent(zuletztGeraet)}` : ''}`, { method: 'PUT' });
@@ -367,11 +382,22 @@ export const spotifyMitspielen = () => lesen<boolean>(MITSPIELEN_KEY) !== false;
 export const spotifyMitspielenSetzen = (an: boolean) => schreiben(MITSPIELEN_KEY, an);
 
 /** Spotify im Übe- und Probe-Modus (Einstellungen, je Gerät): gar nicht, eingebetteter Player (30-Sekunden-Vorschau auf
- *  dem Handy) oder Fernsteuerung der Spotify-App (Premium) */
-export type SpotifyArt = 'aus' | 'vorschau' | 'fern';
+ *  dem Handy), Fernsteuerung der Spotify-App (Premium) oder im Browser abspielen – die Seite ist selbst das
+ *  Spotify-Gerät (Web Playback SDK, Premium, data/spotify-browser.ts) */
+export type SpotifyArt = 'aus' | 'vorschau' | 'fern' | 'browser';
+/** Fernsteuerung oder Browser-Player: beide über data/spotify-spieler.ts mit derselben Steuerung */
+export const spotifyGesteuert = (a: SpotifyArt) => a === 'fern' || a === 'browser';
 export const SPOTIFY_ART_KEY = 'bn-spotify-modus';
 export function spotifyArt(): SpotifyArt {
   const v = lesen<string>(SPOTIFY_ART_KEY);
-  return v === 'vorschau' || v === 'fern' ? v : 'aus';
+  return v === 'vorschau' || v === 'fern' || v === 'browser' ? v : 'aus';
 }
 export const spotifyArtSetzen = (a: SpotifyArt) => schreiben(SPOTIFY_ART_KEY, a === 'aus' ? null : a);
+
+/** Lautstärke des Browser-Players (0–1, je Gerät) */
+const LAUTSTAERKE_KEY = 'bn-spotify-lautstaerke';
+export const spotifyLautstaerke = () => {
+  const v = lesen<number>(LAUTSTAERKE_KEY);
+  return typeof v === 'number' && v >= 0 && v <= 1 ? v : 0.8;
+};
+export const spotifyLautstaerkeSetzen = (v: number) => schreiben(LAUTSTAERKE_KEY, Math.min(1, Math.max(0, v)));

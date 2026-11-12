@@ -3,7 +3,7 @@ import { UebeStatus, eigenerStatus, statusLabel } from '../data/uebe-status';
 import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
 import { SpotifySteuerung } from './spotify-steuerung';
 import { SpotifySpieler } from '../data/spotify-spieler';
-import { spotifyArt } from '../data/spotify-remote';
+import { spotifyArt, spotifyGesteuert } from '../data/spotify-remote';
 import { browserVollbild } from '../data/vollbild';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
@@ -119,7 +119,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
             }
             <!-- Spotify im Übe- und Probe-Modus – je nach Einstellung (Einstellungen → Spotify, Standard: aus):
                  „fern“ steuert die Spotify-App (ganze Songs, Premium), „vorschau“ lädt auf Knopfdruck den eingebetteten Player -->
-            @if (spotifyMoeglich() && spotifyArt === 'fern') {
+            @if (spotifyMoeglich() && gesteuert) {
               <app-spotify-steuerung />
             }
             @if (spotifyMoeglich() && spotifyArt === 'vorschau') {
@@ -209,7 +209,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </nav>
       }
       @if (zaehler()) { <div class="einzaehlen" aria-live="assertive">{{ zaehler() }}</div> }
-      @if (spotifyArt === 'fern' && spotifySpieler.hinweis(); as h) {
+      @if (gesteuert && spotifySpieler.hinweis(); as h) {
         <!-- Meldung der Spotify-Fernsteuerung – sichtbar in Titelanzeige und Notenansicht -->
         <p class="spotify-hinweis" role="status" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
           <span>{{ h }}</span>
@@ -416,11 +416,13 @@ export class SetlistBuehne {
   protected readonly spotifyAn = signal(false);
   /** Einstellung dieses Geräts: 'aus' (Standard), 'vorschau' (eingebetteter Player) oder 'fern' (Fernsteuerung) */
   protected readonly spotifyArt = spotifyArt();
+  /** Fernsteuerung oder Browser-Player – beide über data/spotify-spieler.ts */
+  protected readonly gesteuert = spotifyGesteuert(this.spotifyArt);
   // Fernsteuerung (data/spotify-spieler.ts): immer den angezeigten Song melden – gespielt wird nur er; beim Verlassen
   // des Modus pausieren
   protected readonly spotifySpieler = inject(SpotifySpieler);
   private readonly spotifyMelden = (() => {
-    if (typeof window === 'undefined' || this.spotifyArt !== 'fern') return;
+    if (typeof window === 'undefined' || !this.gesteuert) return;
     let gestartet = false;
     effect(() => {
       const an = this.ueben() || !!this.probe();
@@ -922,7 +924,8 @@ export class SetlistBuehne {
     this.startY = e.clientY;
   }
   protected up(e: PointerEvent): void {
-    if ((e.target as HTMLElement).closest('button, select')) return;
+    // Bedienelemente (auch Schieberegler und Häkchen der Spotify-Steuerung) blättern nicht – der Platz daneben schon
+    if ((e.target as HTMLElement).closest('button, select, input, label, a, textarea')) return;
     const dx = e.clientX - this.startX;
     // mit der Maus nach oben gezogen: Notenansicht (mit dem Finger über die Touch-Ereignisse)
     if (e.pointerType === 'mouse' && this.notenHochgewischt(dx, e.clientY - this.startY, e.target as HTMLElement)) return;

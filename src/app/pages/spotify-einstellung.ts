@@ -1,9 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
+import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyBrowserRechte, spotifyGesteuert, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
 
-// Backstage → Einstellungen: Spotify im Übe- und Probe-Modus – aus (Standard), eingebetteter Player oder Fernsteuerung
-// der Spotify-App (data/spotify-remote.ts). Gilt für dieses Gerät; die Spotify-Verbindung der Fernsteuerung lässt sich
+// Backstage → Einstellungen: Spotify im Übe- und Probe-Modus – aus (Standard), eingebetteter Player, Fernsteuerung
+// der Spotify-App (data/spotify-remote.ts) oder im Browser abspielen (data/spotify-browser.ts). Gilt für dieses Gerät; die Spotify-Verbindung der Fernsteuerung lässt sich
 // hier herstellen und trennen (danach geht es hierher zurück). „Diagnose“ zeigt das Protokoll der letzten Befehle und
 // Antworten von Spotify (ohne Zugangsschlüssel) zum Kopieren – für die Fehlersuche.
 @Component({
@@ -17,26 +17,28 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
           <option value="aus" [selected]="art() === 'aus'">Aus – kein Spotify</option>
           <option value="vorschau" [selected]="art() === 'vorschau'">Eingebetteter Player</option>
           <option value="fern" [selected]="art() === 'fern'">Fernsteuerung der Spotify-App</option>
+          <option value="browser" [selected]="art() === 'browser'">Im Browser abspielen</option>
         </select>
       </label>
       @switch (art()) {
         @case ('aus') { <p class="hinweis">Im Übe- und Probe-Modus erscheint nichts von Spotify.</p> }
         @case ('vorschau') { <p class="hinweis">„♫ Auf Spotify anhören“ in der Titelanzeige lädt den Spotify-Player in die Seite. Am Computer spielt er ganze Songs (bei Spotify angemeldet), auf dem Handy nur die 30-Sekunden-Vorschau.</p> }
-        @case ('fern') {
-          <p class="hinweis">▶ spielt den angezeigten Song ganz – in der Spotify-App auf diesem Handy oder auf einem anderen Spotify-Gerät (Laptop, Lautsprecher). Braucht Spotify Premium; die Spotify-App muss offen sein.</p>
-          @if (verbunden()) {
-            <p class="hinweis ok"><mat-icon aria-hidden="true">check_circle</mat-icon> Mit Spotify verbunden. <button type="button" (click)="trennen()">Trennen</button></p>
-          } @else {
-            <button type="button" class="verbinden" (click)="verbinden()">♫ Spotify verbinden</button>
-            @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
-          }
-          <details class="diagnose" (toggle)="protokollLesen()">
-            <summary>Diagnose</summary>
-            <p class="hinweis">Was die Fernsteuerung zuletzt an Spotify geschickt hat und was zurückkam – ohne Zugangsschlüssel. Tut sie nicht, was sie soll: Fehler im Übe- oder Probe-Modus nachstellen, dann hier kopieren und weitergeben.</p>
-            <p class="knoepfe"><button type="button" (click)="kopieren()">Protokoll kopieren</button> <button type="button" (click)="leeren()">Leeren</button> <span role="status">{{ kopiert() }}</span></p>
-            <pre tabindex="0" aria-label="Spotify-Protokoll">{{ protokoll() }}</pre>
-          </details>
+        @case ('fern') { <p class="hinweis">▶ spielt den angezeigten Song ganz – in der Spotify-App auf diesem Handy oder auf einem anderen Spotify-Gerät (Laptop, Lautsprecher). Braucht Spotify Premium; die Spotify-App muss offen sein.</p> }
+        @case ('browser') { <p class="hinweis">▶ spielt den angezeigten Song ganz hier im Browser – ohne Spotify-App, mit allen Bedienelementen (Fortschritt zum Springen, ±10 s, Lautstärke). Braucht Spotify Premium. Spotify unterstützt das nur in Browsern am Computer (Chrome, Edge, Firefox, Safari); auf dem Handy klappt es meist nicht – dann „Fernsteuerung“ wählen. Beim ersten Mal Spotify (neu) verbinden: Spotify verlangt dafür zusätzlich die Freigabe von Name und E-Mail.</p> }
+      }
+      @if (gesteuert()) {
+        @if (verbunden() && !rechteFehlen()) {
+          <p class="hinweis ok"><mat-icon aria-hidden="true">check_circle</mat-icon> Mit Spotify verbunden. <button type="button" (click)="trennen()">Trennen</button></p>
+        } @else {
+          <button type="button" class="verbinden" (click)="verbinden()">{{ rechteFehlen() ? '♫ Spotify neu verbinden – fürs Abspielen im Browser' : '♫ Spotify verbinden' }}</button>
+          @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
         }
+        <details class="diagnose" (toggle)="protokollLesen()">
+          <summary>Diagnose</summary>
+          <p class="hinweis">Was die Steuerung zuletzt an Spotify geschickt hat und was zurückkam – ohne Zugangsschlüssel. Tut sie nicht, was sie soll: Fehler im Übe- oder Probe-Modus nachstellen, dann hier kopieren und weitergeben.</p>
+          <p class="knoepfe"><button type="button" (click)="kopieren()">Protokoll kopieren</button> <button type="button" (click)="leeren()">Leeren</button> <span role="status">{{ kopiert() }}</span></p>
+          <pre tabindex="0" aria-label="Spotify-Protokoll">{{ protokoll() }}</pre>
+        </details>
       }
       <p class="hinweis">Gilt für dieses Gerät und nur für Songs, die in einer Spotify-Liste stehen.</p>
     </div>
@@ -60,7 +62,10 @@ import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSet
 })
 export class SpotifyEinstellung {
   protected readonly art = signal<SpotifyArt>(spotifyArt());
+  protected readonly gesteuert = computed(() => spotifyGesteuert(this.art()));
   protected readonly verbunden = signal(spotifyVerbunden());
+  /** Browser-Player gewählt, aber der Zugang (von der Fernsteuerung) hat das Recht zum Abspielen nicht */
+  protected readonly rechteFehlen = computed(() => this.art() === 'browser' && this.verbunden() && !spotifyBrowserRechte());
   /** Ergebnis der letzten Anmeldung (nach der Rückkehr von Spotify), wenn sie nicht geklappt hat */
   protected readonly meldung = spotifyVerbunden() ? (spotifyMeldung(), '') : spotifyMeldung();
   protected waehlen(a: SpotifyArt): void {

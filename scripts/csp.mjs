@@ -27,7 +27,7 @@ for (const file of files(DIST)) {
   const hashes = [...new Set([...scripts, ...handlers].map(sha))];
   const policy = [
     "default-src 'self'",
-    `script-src 'self' https://gc.zgo.at ${handlers.length ? "'unsafe-hashes' " : ''}${hashes.join(' ')}`.trim(),
+    `script-src 'self' https://gc.zgo.at https://sdk.scdn.co ${handlers.length ? "'unsafe-hashes' " : ''}${hashes.join(' ')}`.trim(),
     // Angular-Komponenten bringen ihre Styles als <style> mit
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://gc.zgo.at https://blickfeld-nord.goatcounter.com",
@@ -41,8 +41,9 @@ for (const file of files(DIST)) {
       ' https://*.microsoftpersonalcontent.com https://*.onedrive.com' +
       // Spotify-Fernsteuerung (Anmeldung mit PKCE, Web-API)
       ' https://accounts.spotify.com https://api.spotify.com',
-    // Spotify-Player im Übe- und Probe-Modus (Backstage, erst auf Knopfdruck geladen)
-    'frame-src https://www.instagram.com https://login.microsoftonline.com https://login.live.com https://open.spotify.com',
+    // Spotify im Übe- und Probe-Modus (Backstage, erst bei Bedarf geladen): eingebetteter Player (open.spotify.com)
+    // und Browser-Player (Web Playback SDK: Skript und unsichtbarer Rahmen von sdk.scdn.co)
+    'frame-src https://www.instagram.com https://login.microsoftonline.com https://login.live.com https://open.spotify.com https://sdk.scdn.co',
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",

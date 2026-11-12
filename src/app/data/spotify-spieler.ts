@@ -1,8 +1,14 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
+import { SpotifyBrowser } from './spotify-browser';
 import {
   SpotifyFehler,
   SpotifyGeraet,
+  SpotifyStand,
   spotifyAbmelden,
+  spotifyArt,
+  spotifyBrowserRechte,
+  spotifyLautstaerke,
+  spotifyLautstaerkeSetzen,
   spotifyGeraetWaehlen,
   spotifyGeraete,
   spotifyGewaehltesGeraet,
@@ -16,6 +22,33 @@ import {
   spotifyVerbunden,
   spotifyWeiter,
 } from './spotify-remote';
+
+/** womit gespielt wird: Fernsteuerung der Spotify-App (Web-API) oder der Player im Browser (data/spotify-browser.ts) */
+interface Antrieb {
+  spielen(t: string, ab?: number): Promise<void>;
+  pause(): Promise<unknown>;
+  weiter(): Promise<unknown>;
+  springen(ms: number): Promise<unknown>;
+  stand(): Promise<SpotifyStand | null>;
+}
+const FERN: Antrieb = { spielen: spotifySpielen, pause: spotifyPause, weiter: spotifyWeiter, springen: spotifySpringen, stand: spotifyStand };
+const DOCK_KEY = 'bn-spotify-abgedockt';
+const DOCK_POS_KEY = 'bn-spotify-dock';
+const lesen = <T>(k: string): T | null => {
+  try {
+    return JSON.parse(localStorage.getItem(k) ?? 'null') as T | null;
+  } catch {
+    return null;
+  }
+};
+const schreiben = (k: string, v: unknown) => {
+  try {
+    if (v === null || v === false) localStorage.removeItem(k);
+    else localStorage.setItem(k, JSON.stringify(v));
+  } catch {
+    // ohne Speicher gilt es bis zum Schließen
+  }
+};
 
 // Zustand der Spotify-Fernsteuerung für Übe- und Probe-Modus – einer für alle Knöpfe (Titelanzeige: volle Steuerung,
 // Kopfleiste der Notenansicht: ▶/⏸). Der Bühnen-Modus meldet den aktuellen Song (songSetzen); gespielt wird immer der
@@ -33,6 +66,7 @@ import {
 // wird der Stand sofort nachgelesen und ein offener Start wiederholt. Läuft der Song, zählt der Fortschritt mit der
 // eigenen Uhr (Länge aus den Spotify-Listen), die Rückmeldung (alle 10 s) berichtigt nur. Gibt Spotify gar keine
 // Auskunft (Abfrage scheitert), gilt der eigene Befehl.
+// Im Browser-Player (Einstellung „Im Browser abspielen“) meldet der Player seinen Stand selbst – genau und sofort.
 @Injectable({ providedIn: 'root' })
 export class SpotifySpieler {
   readonly verbunden = signal(spotifyVerbunden());
@@ -51,6 +85,20 @@ export class SpotifySpieler {
   readonly hinweis = signal('');
   /** der Hinweis lässt sich beheben, indem man Spotify öffnet (kein Gerät gefunden) */
   readonly spotifyOeffnen = signal(false);
+  /** Einstellung „Im Browser abspielen“: die Seite ist selbst das Spotify-Gerät */
+  readonly imBrowser = signal(false);
+  /** Browser-Player, aber der Zugang hat das Recht dazu nicht: neu verbinden */
+  readonly rechteFehlen = signal(false);
+  readonly anmeldungNoetig = computed(() => !this.verbunden() || this.rechteFehlen());
+  /** der angezeigte Song läuft bzw. lief (pausiert) über die Steuerung – dann lassen sich Stelle und ↺10 bedienen */
+  readonly aktiv = signal(false);
+  readonly lautstaerke = signal(spotifyLautstaerke());
+  /** Notenansicht: Steuerung als verschiebbares Feld über den Noten statt in der Kopfleiste (je Gerät gemerkt) */
+  readonly abgedockt = signal(lesen<boolean>(DOCK_KEY) === true);
+  readonly dockPos = signal(lesen<{ x: number; y: number }>(DOCK_POS_KEY));
+  private antrieb: Antrieb = FERN;
+  private browser: SpotifyBrowser | null = null;
+  private readonly cspMelden = (e: SecurityPolicyViolationEvent) => spotifyNotiz(`Sicherheitsregel blockiert: ${e.effectiveDirective} ${e.blockedURI}`);
 
   /** Track, den die Steuerung zuletzt gestartet hat, und unter welcher ID Spotify ihn tatsächlich spielt */
   private gestartet: string | null = null;
@@ -62,7 +110,12 @@ export class SpotifySpieler {
   /** bis dahin (performance.now) meldet Spotify nach einem Start-Befehl oft noch den Song davor – der zählt dann nicht */
   private schonfrist = 0;
   /** Spotify hat bestätigt, dass der gestartete Song läuft (nur dann lässt er sich nach ⏸ fortsetzen) */
-  private bestaetigt = false;
+  private get bestaetigt(): boolean {
+    return this.aktiv();
+  }
+  private set bestaetigt(b: boolean) {
+    this.aktiv.set(b);
+  }
   /** Warten auf die Bestätigung: Zeitpunkt des Befehls, Stelle, Zahl der Auskünfte und der gescheiterten Abfragen */
   private befehlZeit = 0;
   private befehlAb = 0;
@@ -103,7 +156,19 @@ export class SpotifySpieler {
     this.verbunden.set(spotifyVerbunden());
     this.hinweisWeg();
     if (this.uhrTakt) return;
-    spotifyNotiz(`— Modus geöffnet (verbunden: ${this.verbunden() ? 'ja' : 'nein'}) —`);
+    const imBrowser = spotifyArt() === 'browser';
+    this.imBrowser.set(imBrowser);
+    this.rechteFehlen.set(imBrowser && this.verbunden() && !spotifyBrowserRechte());
+    spotifyNotiz(`— Modus geöffnet (verbunden: ${this.verbunden() ? 'ja' : 'nein'}${imBrowser ? ', im Browser' : ''}) —`);
+    if (imBrowser) {
+      const b = (this.browser = new SpotifyBrowser(
+        (st) => void this.standAnwenden(st, this.befehlNr),
+        (e) => this.fehler(e),
+      ));
+      this.antrieb = { spielen: (t, ab) => b.spielen(t, ab), pause: b.pause, weiter: b.weiter, springen: b.springen, stand: b.stand_ };
+      document.addEventListener('securitypolicyviolation', this.cspMelden);
+      if (this.verbunden() && !this.rechteFehlen()) void b.verbinden().catch((e) => this.fehler(e));
+    } else this.antrieb = FERN;
     this.uhrTakt = setInterval(() => {
       if (!this.spielt()) return;
       const p = this.stelle();
@@ -130,9 +195,15 @@ export class SpotifySpieler {
     clearInterval(this.abfrage);
     this.uhrTakt = this.abfrage = undefined;
     document.removeEventListener('visibilitychange', this.sichtbar);
+    document.removeEventListener('securitypolicyviolation', this.cspMelden);
     spotifyNotiz('— Modus verlassen —');
     this.befehlNr++;
-    if ((this.spielt() || this.startet()) && this.gestartet) void spotifyPause().catch(() => undefined);
+    if (this.browser) {
+      // Browser-Player abmelden – damit hört auch die Musik auf
+      this.browser.trennen();
+      this.browser = null;
+    } else if ((this.spielt() || this.startet()) && this.gestartet) void spotifyPause().catch(() => undefined);
+    this.antrieb = FERN;
     this.startet.set(false);
     this.laufen(false, 0);
     this.mitlaufen = this.bestaetigt = false;
@@ -153,6 +224,7 @@ export class SpotifySpieler {
     const lief = (this.spielt() || this.startet()) && !!this.gestartet;
     this.startet.set(false);
     this.offen = null;
+    this.bestaetigt = false;
     this.laufen(false, 0);
     this.dauer.set(dauerMs);
     if (!this.verbunden()) return;
@@ -163,7 +235,7 @@ export class SpotifySpieler {
       this.befehlNr++;
       this.schonfrist = 0;
       if (!this.mitspielen()) this.mitlaufen = false;
-      void spotifyPause().catch(() => undefined);
+      void this.antrieb.pause().catch(() => undefined);
     }
   }
 
@@ -182,7 +254,18 @@ export class SpotifySpieler {
   async standLaden(): Promise<void> {
     const nr = this.befehlNr;
     try {
-      const s = await spotifyStand();
+      await this.standAnwenden(await this.antrieb.stand(), nr);
+    } catch (e) {
+      // das Nachlesen im Hintergrund meldet nichts (nächster Versuch in ein paar Sekunden) – außer die Verbindung ist weg
+      if (e instanceof SpotifyFehler && e.art === 'anmelden') this.fehler(e);
+      // Spotify gibt nach einem Start gar keine Auskunft (zweite Abfrage gescheitert): dann gilt der eigene Befehl
+      else if (nr === this.befehlNr && this.startet() && ++this.fehlAbfragen >= 2 && !this.auskuenfte) this.unbestaetigt();
+    }
+  }
+
+  /** Stand von Spotify übernehmen (Abfrage oder Meldung des Browser-Players); nr: Befehl, zu dem er gehört */
+  private async standAnwenden(s: SpotifyStand | null, nr: number): Promise<void> {
+    {
       // inzwischen ging ein neuer Befehl raus: diese Antwort beschreibt den Stand davor
       if (nr !== this.befehlNr) return;
       this.aktivesGeraet.set(s?.geraet ?? null);
@@ -199,7 +282,7 @@ export class SpotifySpieler {
       // unser Song war am Ende und Spotify spielt von sich aus etwas anderes weiter: anhalten
       if (s?.spielt && !meins && !ohneTitel && this.spielt() && unser && this.dauer() && this.stelle() > this.dauer() - 12_000) {
         this.laufen(false, this.dauer());
-        await spotifyPause().catch(() => undefined);
+        await this.antrieb.pause().catch(() => undefined);
         return;
       }
       if (meins && s!.dauer) this.dauer.set(s!.dauer);
@@ -229,11 +312,6 @@ export class SpotifySpieler {
       if (meins && !spielt && this.spielt() && s!.position > 2000 && s!.position < s!.dauer - 5000) this.mitlaufen = false;
       if (spielt !== this.spielt()) spotifyNotiz(`Rückmeldung: ${spielt ? 'spielt → ⏸' : `spielt nicht → ▶ (unser Song: ${meins ? 'ja' : 'nein'})`}`);
       this.laufen(spielt, meins ? s!.position : undefined);
-    } catch (e) {
-      // das Nachlesen im Hintergrund meldet nichts (nächster Versuch in ein paar Sekunden) – außer die Verbindung ist weg
-      if (e instanceof SpotifyFehler && e.art === 'anmelden') this.fehler(e);
-      // Spotify gibt nach einem Start gar keine Auskunft (zweite Abfrage gescheitert): dann gilt der eigene Befehl
-      else if (nr === this.befehlNr && this.startet() && ++this.fehlAbfragen >= 2 && !this.auskuenfte) this.unbestaetigt();
     }
   }
 
@@ -249,6 +327,10 @@ export class SpotifySpieler {
     }
     spotifyNotiz('Befehl angenommen, aber Spotify spielt nicht');
     this.laufen(false, this.befehlAb);
+    if (this.imBrowser()) {
+      this.hinweis.set('Der Song startet im Browser nicht – noch einmal ▶ drücken (ist der Ton des Geräts an?).');
+      return;
+    }
     this.offen = this.track() ?? null;
     this.offenZeit = performance.now();
     this.spotifyOeffnen.set(true);
@@ -259,13 +341,15 @@ export class SpotifySpieler {
   async umschalten(): Promise<void> {
     const t = this.track();
     if (!t || this.startet()) return;
+    // Browser-Player: Mobil-Browser geben Ton erst nach einer Berührung frei – im Klick selbst aufrufen
+    this.browser?.aktivieren();
     spotifyNotiz(`Knopf ${this.spielt() ? '⏸' : '▶'} (Song ${t}, gestartet: ${this.gestartet ?? '–'}, Stelle ${Math.round(this.position() / 1000)} s von ${Math.round(this.dauer() / 1000)} s)`);
     if (this.spielt()) {
       const nr = ++this.befehlNr;
       this.mitlaufen = false;
       await this.tun(nr, async () => {
         this.schonfrist = 0;
-        await spotifyPause();
+        await this.antrieb.pause();
         this.pauseFrist = performance.now() + 3000;
         if (nr === this.befehlNr) this.laufen(false);
       });
@@ -277,11 +361,11 @@ export class SpotifySpieler {
       const nr = ++this.befehlNr;
       await this.tun(nr, async () => {
         try {
-          await spotifyWeiter();
+          await this.antrieb.weiter();
         } catch (e) {
           // inzwischen läuft dort etwas anderes oder nichts mehr: von der gemerkten Stelle neu starten
           if (!(e instanceof SpotifyFehler) || (e.art !== 'nichts' && e.art !== 'geraet')) throw e;
-          await spotifySpielen(t, ab);
+          await this.antrieb.spielen(t, ab);
         }
         this.mitlaufen = true;
         if (nr === this.befehlNr) this.gestartetMerken(nr, ab);
@@ -300,7 +384,7 @@ export class SpotifySpieler {
       this.gestartet = null;
       this.bestaetigt = false;
       try {
-        await spotifySpielen(t);
+        await this.antrieb.spielen(t);
       } catch (e) {
         // der Start kam nicht an: nichts als spielend zeigen
         if (nr === this.befehlNr) this.laufen(false, 0);
@@ -327,13 +411,41 @@ export class SpotifySpieler {
     setTimeout(() => nr === this.befehlNr && this.unbestaetigt(), 5200);
   }
 
-  async zurueck(): Promise<void> {
+  /** ↺10 */
+  zurueck(): Promise<void> {
+    return this.springenAuf(this.stelle() - 10_000);
+  }
+  /** 10↻ */
+  vor(): Promise<void> {
+    return this.springenAuf(this.stelle() + 10_000);
+  }
+  /** an eine Stelle im Song springen (Fortschrittsbalken, ↺10, 10↻) – nur im Song, der über die Steuerung läuft */
+  async springenAuf(ms: number): Promise<void> {
+    if (!this.aktiv()) return;
+    const ziel = Math.round(Math.max(0, Math.min(ms, (this.dauer() || Infinity) - 1000)));
     const nr = this.befehlNr;
+    spotifyNotiz(`Springen auf ${Math.round(ziel / 1000)} s`);
     await this.tun(nr, async () => {
-      const ziel = Math.max(0, this.stelle() - 10_000);
-      await spotifySpringen(ziel);
+      await this.antrieb.springen(ziel);
       if (nr === this.befehlNr) this.laufen(this.spielt(), ziel);
     });
+  }
+
+  /** Lautstärke des Browser-Players (0–1) */
+  lautstaerkeSetzen(v: number): void {
+    this.lautstaerke.set(v);
+    spotifyLautstaerkeSetzen(v);
+    void this.browser?.lautstaerke(v).catch(() => undefined);
+  }
+
+  /** Notenansicht: Steuerung abdocken (verschiebbares Feld) bzw. wieder in die Kopfleiste */
+  abdockenSetzen(an: boolean): void {
+    this.abgedockt.set(an);
+    schreiben(DOCK_KEY, an);
+  }
+  dockPosSetzen(p: { x: number; y: number }, merken = true): void {
+    this.dockPos.set(p);
+    if (merken) schreiben(DOCK_POS_KEY, p);
   }
 
   async geraeteLaden(): Promise<void> {
@@ -350,7 +462,8 @@ export class SpotifySpieler {
   }
   abmelden(): void {
     this.befehlNr++;
-    if (this.spielt() && this.gestartet) void spotifyPause().catch(() => undefined);
+    if (this.spielt() && this.gestartet) void this.antrieb.pause().catch(() => undefined);
+    this.browser?.trennen();
     spotifyAbmelden();
     this.verbunden.set(false);
     this.startet.set(false);
@@ -389,8 +502,15 @@ export class SpotifySpieler {
     const art = e instanceof SpotifyFehler ? e.art : 'netz';
     const status = e instanceof SpotifyFehler ? e.status : 0;
     spotifyNotiz(`Fehler: ${art}${status ? ` ${status}` : ''}${e instanceof SpotifyFehler ? '' : ` (${String(e).slice(0, 120)})`}`);
+    this.startet.set(false);
     if (art === 'anmelden') {
       this.verbunden.set(false);
+      this.laufen(false);
+      return;
+    }
+    if (art === 'rechte') {
+      // Browser-Player: Zugang ohne das Recht zum Abspielen – die Steuerung zeigt „Spotify neu verbinden“
+      this.rechteFehlen.set(true);
       this.laufen(false);
       return;
     }
@@ -399,24 +519,22 @@ export class SpotifySpieler {
       this.laufen(false);
       return;
     }
-    this.spotifyOeffnen.set(art === 'geraet');
-    if (art === 'geraet') {
+    this.spotifyOeffnen.set(art === 'geraet' && !this.imBrowser());
+    if (art === 'geraet' && !this.imBrowser()) {
       // nach „Spotify öffnen“ und der Rückkehr hierher wird der Start wiederholt
       this.offen = this.track() ?? null;
       this.offenZeit = performance.now();
     }
-    this.hinweis.set(
-      art === 'geraet'
-        ? 'Spotify läuft auf keinem Gerät. Öffne die Spotify-App (am Computer: die App oder open.spotify.com in einem Tab), dann noch einmal ▶.'
-        : art === 'premium'
-          ? 'Das geht nur mit Spotify Premium.'
-          : art === 'freigabe'
-            ? 'Dein Spotify-Konto ist für die App noch nicht freigeschaltet (Spotify-Developer-Dashboard → User Management).'
-            : status === 429
-              ? 'Spotify nimmt gerade keine weiteren Befehle an (zu viele Anfragen) – kurz warten, dann noch einmal ▶.'
-              : status
-                ? `Spotify meldet einen Fehler (${status}) – noch einmal versuchen.`
-                : 'Keine Verbindung zu Spotify – Netz prüfen und noch einmal versuchen.',
-    );
+    this.hinweis.set(this.hinweisText(art, status));
+  }
+
+  private hinweisText(art: SpotifyFehler['art'], status: number): string {
+    if (art === 'browser') return 'Dieser Browser kann Spotify nicht selbst abspielen – Spotify unterstützt das nur in Browsern am Computer (Chrome, Edge, Firefox, Safari). Auf dem Handy in den Einstellungen „Fernsteuerung“ wählen.';
+    if (art === 'geraet' && this.imBrowser()) return 'Der Player im Browser ist noch nicht bereit – gleich noch einmal ▶.';
+    if (art === 'geraet') return 'Spotify läuft auf keinem Gerät. Öffne die Spotify-App (am Computer: die App oder open.spotify.com in einem Tab), dann noch einmal ▶.';
+    if (art === 'premium') return 'Das geht nur mit Spotify Premium.';
+    if (art === 'freigabe') return 'Dein Spotify-Konto ist für die App noch nicht freigeschaltet (Spotify-Developer-Dashboard → User Management).';
+    if (status === 429) return 'Spotify nimmt gerade keine weiteren Befehle an (zu viele Anfragen) – kurz warten, dann noch einmal ▶.';
+    return status ? `Spotify meldet einen Fehler (${status}) – noch einmal versuchen.` : 'Keine Verbindung zu Spotify – Netz prüfen und noch einmal versuchen.';
   }
 }

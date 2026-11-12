@@ -123,8 +123,19 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
   **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
 - **Spotify im Übe- und Probe-Modus** – unter **Einstellungen → Spotify im Übe- und Probe-Modus** je Gerät wählbar
-  (`bn-spotify-modus`, `pages/spotify-einstellung.ts`): **Aus** (Standard, nichts von Spotify), **Eingebetteter Player**
-  oder **Fernsteuerung der Spotify-App**. Gilt nur für Songs aus einer Spotify-Liste und nur mit Netz.
+  (`bn-spotify-modus`, `pages/spotify-einstellung.ts`): **Aus** (Standard, nichts von Spotify), **Eingebetteter Player**,
+  **Fernsteuerung der Spotify-App** oder **Im Browser abspielen**. Gilt nur für Songs aus einer Spotify-Liste und nur
+  mit Netz.
+  - **Im Browser abspielen** (Spotify Premium, `data/spotify-browser.ts`): Die Seite wird selbst zum Spotify-Gerät
+    („Blickfeld Nord (Browser)“) über Spotifys Web Playback SDK (`https://sdk.scdn.co/spotify-player.js`, erst beim
+    Öffnen des Modus geladen; in `scripts/csp.mjs` unter `script-src` und `frame-src` erlaubt). Gestartet wird über die
+    Web-API auf der Geräte-ID des Players, Pause/Weiter/Springen/Lautstärke gehen direkt an den Player, der seinen
+    Stand selbst meldet – keine Spotify-App nötig, Fortschritt genau. Braucht zusätzliche Rechte (`streaming`,
+    `user-read-email`, `user-read-private` – verlangt Spotify so); ein Zugang aus der Fernsteuerung hat sie nicht, dann
+    steht überall „Spotify neu verbinden“ (Rechte stehen im Zugang als `scope`, auch im Diagnose-Protokoll). Spotify
+    unterstützt das offiziell nur in Browsern am Computer; scheitert es (Initialisierungsfehler), sagt ein Hinweis, auf
+    dem Handy die Fernsteuerung zu nehmen. Beim Verlassen des Modus wird der Player abgemeldet. Blockiert die
+    Sicherheitsregel (CSP) etwas, steht das im Diagnose-Protokoll.
   - **Eingebetteter Player:** „♫ Auf Spotify anhören“ in der Titelanzeige lädt erst auf Knopfdruck den Spotify-Player
     (kompakt, 152 px); er wechselt mit dem Song. Am Computer ganze Songs (bei Spotify angemeldet), auf dem Handy nur
     die 30-Sekunden-Vorschau. Erlaubt über `frame-src https://open.spotify.com` in `scripts/csp.mjs`.
@@ -132,8 +143,13 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     einmal je Person und Gerät bei Spotify an (OAuth mit PKCE, ohne Server; Client-ID in `data/spotify-remote.ts`,
     Redirect-URI `https://blickfeld-nord.de/` – genau so im Spotify-Developer-Dashboard eintragen, die Nutzer dort
     unter „User Management“). Danach: **▶ / ⏸** spielt den Song ganz in der Spotify-App bzw. auf dem gewählten
-    Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum), **↺10** springt 10 Sekunden zurück, Balken mit
-    Zeit, Gerätewahl, „Spotify trennen“; in der Kopfleiste der Notenansicht steht derselbe Knopf als **♫ ▶ / ⏸**.
+    Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum), **↺10 / 10↻** springen 10 Sekunden, der
+    **Fortschrittsbalken** ist ein Schieberegler (ziehen oder antippen springt an die Stelle), Zeit, Gerätewahl
+    (Browser-Player: Lautstärke), „Spotify trennen“. In der Kopfleiste der Notenansicht stehen **↺10** und **♫ ▶ / ⏸**
+    sowie **Abdocken** (Bild-im-Bild-Symbol): Dann steht die ganze Steuerung als Feld über den Noten – am Griff ⠿
+    verschiebbar, bleibt auch bei weggewischter Kopfleiste, ✕ dockt wieder an (`bn-spotify-abgedockt`,
+    `bn-spotify-dock`, je Gerät). Tippen und Wischen **neben** den Bedienelementen blättert wie überall im Modus; nur
+    die Elemente selbst (Knöpfe, Regler, Häkchen, abgedocktes Feld) fangen es ab.
     **Gespielt wird immer der angezeigte Song** (`data/spotify-spieler.ts`, ein Zustand für alle Knöpfe): Wechselt
     der Song, nachdem über die Steuerung gespielt wurde – auch wenn der vorige schon durchgelaufen ist –, startet mit
     „beim Weiterblättern mitspielen“ (Standard an) gleich der neue; sonst, und bei Songs ohne Spotify-Track, wird

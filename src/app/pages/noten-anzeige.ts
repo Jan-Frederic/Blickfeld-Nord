@@ -2,6 +2,7 @@ import { Component, DestroyRef, ElementRef, computed, effect, inject, input, out
 import { UebeStatus } from '../data/uebe-status';
 import { StatusSchalter } from './status-schalter';
 import { SpotifySpieler } from '../data/spotify-spieler';
+import { SpotifySteuerung } from './spotify-steuerung';
 import { spotifyAnmelden } from '../data/spotify-remote';
 import { MatIconModule } from '@angular/material/icon';
 import { Song, durationOf } from '../data/setlist-data';
@@ -20,7 +21,7 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 const BREITE_KEY = 'bn-noten-breite';
 @Component({
   selector: 'app-noten-anzeige',
-  imports: [MatIconModule, NotenStift, SongMitschnitte, StatusSchalter],
+  imports: [MatIconModule, NotenStift, SongMitschnitte, StatusSchalter, SpotifySteuerung],
   template: `
     <div class="noten" [class.weg]="kopfWeg()" (touchstart)="wischStart($event)" (touchend)="wischEnde($event)" (pointerdown)="zeigerStart($event)" (pointerup)="zeigerEnde($event)">
       <header [attr.aria-hidden]="kopfWeg()" [attr.inert]="kopfWeg() ? '' : null">
@@ -55,13 +56,18 @@ const BREITE_KEY = 'bn-noten-breite';
           </span>
         }
         <!-- Übe- und Probe-Modus: Mitschnitt und eigener Übe-Status (Übe-Modus: danach die nächste Karte) -->
-        @if (!spotify.verbunden() && spotify.track()) {
-          <!-- Einstellung „Fernsteuerung“, aber noch nicht verbunden: von hier aus verbinden (danach geht es hierher zurück) -->
-          <button type="button" class="spotify-play" (click)="$event.stopPropagation(); spotifyVerbinden()" aria-label="Spotify verbinden" title="Spotify verbinden – ganze Songs über die Spotify-App">♫ verbinden</button>
+        @if (spotify.anmeldungNoetig() && spotify.track()) {
+          <!-- Fernsteuerung bzw. Browser-Player, aber (für den Browser-Player) noch nicht verbunden: von hier aus verbinden -->
+          <button type="button" class="spotify-play" (click)="$event.stopPropagation(); spotifyVerbinden()" aria-label="Spotify verbinden" title="Spotify verbinden – ganze Songs abspielen">♫ verbinden</button>
         }
-        @if (spotify.verbunden() && spotify.track()) {
-          <!-- Übe- und Probe-Modus: den angezeigten Song über Spotify abspielen (data/spotify-spieler.ts) -->
-          <button type="button" class="spotify-play" [class.an]="spotify.spielt()" (click)="$event.stopPropagation(); spotify.umschalten()" [disabled]="spotify.laeuft() || spotify.startet()" [attr.aria-label]="spotify.startet() ? 'Spotify startet …' : spotify.spielt() ? 'Spotify: Pause' : 'Auf Spotify abspielen'" [title]="spotify.hinweis() || (spotify.spielt() ? 'Spotify: Pause' : 'Song auf Spotify abspielen')">♫ {{ spotify.startet() ? '…' : spotify.spielt() ? '⏸' : '▶' }}</button>
+        @if (!spotify.anmeldungNoetig() && spotify.track()) {
+          <!-- Übe- und Probe-Modus: den angezeigten Song über Spotify abspielen (data/spotify-spieler.ts); abgedockt
+               steht die ganze Steuerung als verschiebbares Feld über den Noten -->
+          @if (!spotify.abgedockt()) {
+            <button type="button" class="spotify-play" (click)="$event.stopPropagation(); spotify.zurueck()" [disabled]="spotify.laeuft() || !spotify.aktiv()" aria-label="Spotify: 10 Sekunden zurück" title="10 Sekunden zurück">↺10</button>
+            <button type="button" class="spotify-play" [class.an]="spotify.spielt()" (click)="$event.stopPropagation(); spotify.umschalten()" [disabled]="spotify.laeuft() || spotify.startet()" [attr.aria-label]="spotify.startet() ? 'Spotify startet …' : spotify.spielt() ? 'Spotify: Pause' : 'Auf Spotify abspielen'" [title]="spotify.hinweis() || (spotify.spielt() ? 'Spotify: Pause' : 'Song auf Spotify abspielen')">♫ {{ spotify.startet() ? '…' : spotify.spielt() ? '⏸' : '▶' }}</button>
+          }
+          <button type="button" class="spotify-play dock" [class.an]="spotify.abgedockt()" (click)="$event.stopPropagation(); spotify.abdockenSetzen(!spotify.abgedockt())" [attr.aria-pressed]="spotify.abgedockt()" [attr.aria-label]="spotify.abgedockt() ? 'Spotify-Steuerung andocken' : 'Spotify-Steuerung abdocken'" [title]="spotify.abgedockt() ? 'Spotify-Steuerung wieder in die Kopfleiste' : 'Spotify-Steuerung als verschiebbares Feld über den Noten'"><mat-icon>picture_in_picture_alt</mat-icon></button>
         }
         @if (bewerten()) {
           <button type="button" class="mitschnitt-knopf" [attr.aria-pressed]="mitschnitt()" (click)="mitschnittUmschalten($event)" title="Proben-Mitschnitte dieses Songs anhören (Schleife, langsamer)"><mat-icon>graphic_eq</mat-icon> Mitschnitt</button>
@@ -75,6 +81,18 @@ const BREITE_KEY = 'bn-noten-breite';
         <button type="button" class="zu noten-zurueck" (click)="zu($event)" aria-pressed="true" aria-label="Zurück zur Titelanzeige" title="Zurück zur Titelanzeige"><mat-icon>library_music</mat-icon></button>
         <button type="button" class="zu" (click)="ende($event)" [attr.aria-label]="endeText()"><mat-icon>close</mat-icon></button>
       </header>
+      <!-- Spotify-Steuerung abgedockt: über den Noten, am Griff verschiebbar, bleibt auch bei weggewischter Kopfleiste -->
+      @if (spotify.abgedockt() && spotify.track() && !spotify.anmeldungNoetig()) {
+        <div class="spotify-dock" role="group" aria-label="Spotify-Steuerung" [class.frei]="!!dockStelle()" [style.left.px]="dockStelle()?.x" [style.top.px]="dockStelle()?.y"
+          (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+          <div class="dock-kopf">
+            <button type="button" class="griff" (pointerdown)="dockZiehen($event)" aria-label="Spotify-Steuerung verschieben" title="Ziehen zum Verschieben">⠿</button>
+            <span>♫ Spotify</span>
+            <button type="button" (click)="spotify.abdockenSetzen(false)" aria-label="Spotify-Steuerung andocken" title="Wieder in die Kopfleiste">✕</button>
+          </div>
+          <app-spotify-steuerung />
+        </div>
+      }
       <!-- Übe-Modus: Proben-Mitschnitte des Songs zum Mitspielen (Schleife, langsamer, selbst aufnehmen) -->
       @if (bewerten() && mitschnitt() && song(); as s) {
         <div class="mitschnitt-panel" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
@@ -159,6 +177,36 @@ export class NotenAnzeige {
   protected readonly spotify = inject(SpotifySpieler);
   protected spotifyVerbinden(): void {
     void spotifyAnmelden();
+  }
+  /** abgedocktes Feld: gemerkte Stelle, im Fenster gehalten (ohne gemerkte Stelle: unten rechts) */
+  protected readonly dockStelle = computed(() => {
+    const p = this.spotify.dockPos();
+    if (!p || typeof window === 'undefined') return null;
+    return { x: Math.max(0, Math.min(p.x, window.innerWidth - 120)), y: Math.max(0, Math.min(p.y, window.innerHeight - 80)) };
+  });
+  /** am Griff ziehen: Feld verschieben, beim Loslassen die Stelle merken */
+  protected dockZiehen(e: PointerEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    const griff = e.currentTarget as HTMLElement;
+    const feld = griff.closest('.spotify-dock') as HTMLElement | null;
+    if (!feld) return;
+    const r = feld.getBoundingClientRect();
+    const dx = e.clientX - r.left;
+    const dy = e.clientY - r.top;
+    griff.setPointerCapture?.(e.pointerId);
+    const stelle = (ev: PointerEvent) => ({ x: Math.max(0, Math.min(ev.clientX - dx, window.innerWidth - r.width)), y: Math.max(0, Math.min(ev.clientY - dy, window.innerHeight - r.height)) });
+    const bewegen = (ev: PointerEvent) => this.spotify.dockPosSetzen(stelle(ev), false);
+    const los = (ev: PointerEvent) => {
+      ev.stopPropagation();
+      this.spotify.dockPosSetzen(stelle(ev));
+      griff.removeEventListener('pointermove', bewegen);
+      griff.removeEventListener('pointerup', los);
+      griff.removeEventListener('pointercancel', los);
+    };
+    griff.addEventListener('pointermove', bewegen);
+    griff.addEventListener('pointerup', los);
+    griff.addEventListener('pointercancel', los);
   }
   /** aktueller Song (undefined = Pause) */
   readonly song = input<Song>();
