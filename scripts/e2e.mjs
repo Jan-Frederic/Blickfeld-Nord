@@ -2104,7 +2104,7 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   const songA = (await noten.locator('header .titel').innerText()).trim();
   // „Üben“: kommt in dieser Runde noch einmal dran
   const standVorher = await p.evaluate(() => localStorage.getItem('bn-ueben'));
-  // der gewählte Status leuchtet kurz auf, erst dann kommt die nächste Karte: merken, welcher Titel beim Aufleuchten zu sehen war
+  // der gewählte Status leuchtet kurz auf – und die Karte bleibt stehen (weiter per Wischen, Tippen, Pedal)
   await p.evaluate(() => {
     const o = new MutationObserver(() => {
       if (document.querySelector('app-noten-anzeige header .wertung.ueben.blitz.an')) {
@@ -2115,16 +2115,35 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
     o.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
   });
   await noten.locator('header .wertung.ueben').click();
-  await until(async () => (await p.evaluate(() => window.__blitzTitel)) === songA, async () => `Status leuchtet nicht erst auf, bevor es weitergeht (beim Aufleuchten: ${await p.evaluate(() => window.__blitzTitel)}, erwartet: ${songA})`);
-  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nicht zur nächsten Karte');
-  // „Rückgängig“: zurück zur Karte, Karteikasten wie vorher – dann noch einmal „Üben“
-  await p.locator('app-setlist-buehne button.rueckgaengig').click();
-  await until(async () => (await noten.locator('header .titel').innerText()).trim() === songA, 'Rückgängig führt nicht zur Karte zurück');
-  expect((await p.evaluate(() => localStorage.getItem('bn-ueben'))) === standVorher, 'Rückgängig stellt den Karteikasten nicht wieder her');
-  expect((await p.locator('app-setlist-buehne button.rueckgaengig').count()) === 0, 'Rückgängig-Knopf bleibt stehen');
+  await until(async () => (await p.evaluate(() => window.__blitzTitel)) === songA, async () => `Status leuchtet nicht auf (beim Aufleuchten: ${await p.evaluate(() => window.__blitzTitel)}, erwartet: ${songA})`);
+  await p.waitForTimeout(900);
+  expect((await noten.locator('header .titel').innerText()).trim() === songA, 'Übe-Modus wechselt nach dem Status zur nächsten Karte');
+  // ein zweiter Tipp auf derselben Karte ersetzt die erste Wertung (kein doppeltes Weiterschieben im Karteikasten)
+  const standEinmal = await p.evaluate(() => localStorage.getItem('bn-ueben'));
   await noten.locator('header .wertung.ueben').click();
-  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Status wechselt nach Rückgängig nicht zur nächsten Karte');
-  for (let i = 0; i < 6 && (await noten.count()); i++) { await noten.locator('header .wertung.sitzt').click().catch(() => {}); await p.waitForTimeout(600); }
+  await p.waitForTimeout(300);
+  expect((await p.evaluate(() => localStorage.getItem('bn-ueben'))) === standEinmal, 'zweiter Tipp auf derselben Karte zählt doppelt');
+  // „Rückgängig“: Karteikasten wie vorher, die Karte bleibt – dann noch einmal „Üben“
+  await p.locator('app-setlist-buehne button.rueckgaengig').click();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-ueben'))) === standVorher, 'Rückgängig stellt den Karteikasten nicht wieder her');
+  expect((await noten.locator('header .titel').innerText()).trim() === songA, 'Rückgängig verlässt die Karte');
+  await until(async () => (await p.locator('app-setlist-buehne button.rueckgaengig').count()) === 0, 'Rückgängig-Knopf bleibt stehen');
+  await noten.locator('header .wertung.ueben').click();
+  // weiter von Hand (Pfeiltaste wie das Pedal)
+  const weiter = async () => {
+    await p.locator('app-setlist-buehne').focus();
+    await p.keyboard.press('ArrowRight');
+  };
+  await weiter();
+  await until(async () => (await noten.locator('header .titel').innerText()).trim() !== songA, 'Weiterblättern nach dem Status klappt nicht');
+  // alle Karten „Sitzt“, jeweils von Hand weiter – am Ende den Modus schließen
+  for (let i = 0; i < 10 && (await noten.count()); i++) {
+    await noten.locator('header .wertung.sitzt').click().catch(() => {});
+    await p.waitForTimeout(300);
+    await weiter();
+    await p.waitForTimeout(300);
+  }
+  expect((await p.locator('app-setlist-buehne').count()) === 0, 'Weiterblättern nach der letzten Karte beendet den Übe-Modus nicht');
   await until(async () => (await ueben.locator('.ergebnis').innerText().catch(() => '')).includes('Sitzt'), 'Übe-Ergebnis fehlt');
   const stand = await p.evaluate(() => JSON.parse(localStorage.getItem('bn-ueben')));
   expect(Object.values(stand).every((k) => k.kasten >= 4), `Sitzt setzt nicht auf Kasten 4/5: ${JSON.stringify(stand)}`);
@@ -2162,7 +2181,12 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   // Hochwischen: Notenansicht wieder herein
   await ziehen(600, 250);
   await schritt('Hochwischen holt die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 5000 }));
-  for (let i = 0; i < 5 && (await noten.count()); i++) { await noten.locator('header .wertung.sitzt').click().catch(() => {}); await p.waitForTimeout(600); }
+  for (let i = 0; i < 6 && (await noten.count()); i++) {
+    await noten.locator('header .wertung.sitzt').click().catch(() => {});
+    await p.waitForTimeout(300);
+    await weiter().catch(() => {});
+    await p.waitForTimeout(300);
+  }
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
   // mit der Band geteilt: Übe-Statistik unter Bühnenreife
   expect((await p.evaluate(() => JSON.parse(localStorage.getItem('bn-kasten-jan-frederic-overbeck') ?? '{}').v)) === 2, 'Karteikasten wird nicht mit der Band geteilt');

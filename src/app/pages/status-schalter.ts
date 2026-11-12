@@ -7,9 +7,8 @@ export const AUFLEUCHTEN_MS = 450;
 // Status-Umschalter: die fünf Übe-Status nebeneinander, der aktuelle farbig – überall gleich: Kopfleiste der
 // Notenansicht (Übe- und Probe-Modus), Titelanzeige im Übe-Modus, Probe-Leiste. „kopf“: schon unter 1200 px nur die
 // Zeichen ○ ✎ ↻ ✓ ✓✓ (Platz in der Kopfleiste), sonst erst auf dem Handy. Ein Klick meldet den Status sofort (er gilt
-// für den Song, der gerade zu sehen ist) und lässt ihn kurz aufleuchten (CSS-Animation, AUFLEUCHTEN_MS). Der Übe-Modus
-// wechselt erst danach zur nächsten Karte und nimmt bis dahin keinen weiteren Status an (setlist-buehne.ts) – so tippt
-// man beim nächsten Song nicht versehentlich daneben. Styles global
+// für den Song, der gerade zu sehen ist) und lässt ihn kurz aufleuchten (CSS-Animation, AUFLEUCHTEN_MS). Der Song
+// bleibt danach stehen – auch im Übe-Modus (weiter per Wischen, Tippen, Pedal; setlist-buehne.ts). Styles global
 // (styles.scss); die Animation läuft auch bei „weniger Bewegung“ (dann ohne sichtbares Pulsieren) und beendet das
 // Aufleuchten.
 @Component({

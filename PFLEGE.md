@@ -231,20 +231,20 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Darunter die fünf
   Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus),
   oben rechts ein **Umschalter mit den fünf Status** (der aktuelle ist hervorgehoben; auf schmalen Bildschirmen nur die
-  Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status und geht zur nächsten Karte: **Wackelt noch** bei einem Song, der
+  Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status, die Karte bleibt stehen (weiter per Wischen, Tippen, Pfeiltaste
+  bzw. Pedal; über die letzte Karte hinaus beendet der Übe-Modus und zeigt das Ergebnis): **Wackelt noch** bei einem Song, der
   schon in Kasten 2 wackelt, schiebt ihn nach Kasten 3 (wieder dran nach 3 statt 1 Tag; in 3 bleibt er in 3, weiter
   geht es mit „Sitzt“); **Sitzt** bei einem Song, der schon in Kasten 4 sitzt, schiebt ihn nach Kasten 5 (wieder dran
   nach 14 statt 7 Tagen; in 5 bleibt er in 5). **Eingenordet** wird ein Song nur, wenn man ausdrücklich „Eingenordet“
   wählt; sonst gilt der Status direkt (Üben = Kasten 1, kommt in dieser Runde noch einmal; Wackelt noch = Kasten 2;
   Sitzt = Kasten 4; Nicht gelernt nimmt ihn heraus). Jeder Status-Umschalter (Übe-Modus, Probe-Leiste, Kopfleiste)
   speichert den Status sofort und lässt ihn kurz aufleuchten (`AUFLEUCHTEN_MS` in `pages/status-schalter.ts`, 450 ms,
-  als CSS-Animation); der Übe-Modus wechselt erst danach zur nächsten Karte und nimmt bis dahin keinen weiteren Status
-  an – so vertippt man sich beim nächsten Song nicht. Hat man in der Zeit selbst geblättert, bleibt er dort. Die Kästen oben auf der Seite zeigen ihr Status-Symbol (✎ ↻ ↻ ✓ ✓) im Rahmen
+  als CSS-Animation). Ein zweiter Tipp auf derselben Karte ersetzt die erste Wertung (vorher zurückgenommen) – so
+  schiebt z. B. zweimal „Wackelt noch“ die Karte nicht zwei Kästen weiter. Die Kästen oben auf der Seite zeigen ihr Status-Symbol (✎ ↻ ↻ ✓ ✓) im Rahmen
   „Karteikasten“, links daneben gestrichelt **Nicht gelernt** (Songs der Spotify-Listen ohne Status), rechts
   **Eingenordet** – beide gehören nicht zum Karteikasten. Darunter die Liste „Was ein Status-Klick bewirkt“. Nach jeder Status-Wahl im Übe-Modus steht 6 Sekunden lang **„↶ Rückgängig“** unten in
   der Mitte: zurück zur Karte, Karteikasten, Verlauf und „heute geübt“ wie vorher (`uebeSchnappschuss` in
-  `data/uebe-status.ts`); eine wegen „Üben“ angehängte Wiederholung fällt wieder weg. Nach der letzten Karte schließt
-  der Übe-Modus wie bisher. **Üben je Woche** (Backstage → Zahlen, `pages/uebe-wochen.ts`, Daten `data/wochenrueckblick.ts`): gruppierte Balken
+  `data/uebe-status.ts`); eine wegen „Üben“ angehängte Wiederholung fällt wieder weg. **Üben je Woche** (Backstage → Zahlen, `pages/uebe-wochen.ts`, Daten `data/wochenrueckblick.ts`): gruppierte Balken
   der geübten Karten je Kalenderwoche und Person (letzte 8 Wochen, Übe-Modus, je Song und Tag einmal, aus dem
   gespiegelten Verlauf `bn-fortschritt-<Person>`), Antippen zeigt die Zahlen, dazu eine Tabelle; darunter die Songs,
   die diese Woche bei allen sitzen. Farben je Person in fester Reihenfolge (blau, orange, grün – gegen den dunklen
@@ -387,7 +387,7 @@ in der Notenansicht blendet Hochwischen die Kopfleiste aus, Herunterwischen holt
 Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape und Noten-Knopf). Der
 **Status-Umschalter** (`src/app/pages/status-schalter.ts`) sieht überall gleich aus: Probe-Leiste, Titelanzeige im
 Übe-Modus und Kopfleiste der Notenansicht – dort im Übe- **und** im Probe-Modus (mit „Ich bin …“), zusammen mit
-**Mitschnitt**. Im Probe-Modus bleibt der Song beim Setzen stehen, im Übe-Modus geht es zur nächsten Karte. Oben links:
+**Mitschnitt**. In beiden Modi bleibt der Song beim Setzen stehen. Oben links:
 Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) bzw. „Karte 2 / 8“ (Übe-Modus, ohne Uhr).
 
 **Kein Neuladen durch Herunterwischen:** `html, body { overscroll-behavior-y: none }` (styles.scss) schaltet Chromes

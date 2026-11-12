@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, computed, inject, input, linkedSignal, output, signal, viewChild, effect, untracked } from '@angular/core';
 import { UebeStatus, eigenerStatus, statusLabel } from '../data/uebe-status';
-import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
+import { StatusSchalter } from './status-schalter';
 import { SpotifySteuerung } from './spotify-steuerung';
 import { SpotifySpieler } from '../data/spotify-spieler';
 import { spotifyArt, spotifyGesteuert } from '../data/spotify-remote';
@@ -331,9 +331,10 @@ export class SetlistBuehne {
     return (this.ueben() || this.probe()) && c ? eigenerStatus(`${c.title}|${c.artist}`) : null;
   });
   /**
-   * Status setzen. Probe-Modus (Kopfleiste der Notenansicht): wie in der Probe-Leiste, der Song bleibt. Übe-Modus:
-   * Status gilt sofort; „Üben“ kommt hinten noch einmal dran. Weiter zur nächsten Karte (am Ende: fertig) erst, wenn
-   * der gewählte Status kurz aufgeleuchtet hat (AUFLEUCHTEN_MS) – und nur, wenn man nicht schon selbst geblättert hat.
+   * Status setzen – in beiden Modi bleibt der Song stehen (weiter per Wischen, Tippen, Pedal). Probe-Modus (Kopfleiste
+   * der Notenansicht): wie in der Probe-Leiste. Übe-Modus: Status gilt sofort; „Üben“ kommt hinten noch einmal dran.
+   * Ein zweiter Tipp auf derselben Karte ersetzt die erste Wertung (sonst schöbe z. B. zweimal „Wackelt noch“ die
+   * Karte gleich zwei Kästen weiter).
    */
   // „Zurück“ des Handys (Wischen vom Rand, Zurück-Taste) soll den Modus nicht versehentlich beenden – beim Blättern
   // per Wischen passiert das leicht. Der Modus legt dafür einen eigenen Schritt in den Browser-Verlauf: einmal „Zurück“
@@ -372,35 +373,35 @@ export class SetlistBuehne {
     this.closed.subscribe(aufraeumen);
     inject(DestroyRef).onDestroy(aufraeumen);
   })();
-  private weiterZeit: ReturnType<typeof setTimeout> | undefined;
-  private readonly weiterAufraeumen = inject(DestroyRef).onDestroy(() => {
-    clearTimeout(this.weiterZeit);
-    clearTimeout(this.zurueckZeit);
-  });
+  /** Übe-Modus: auf dieser Karte (Index) schon gewertet – ein weiterer Tipp nimmt die Wertung erst zurück */
+  private gewertet: { bei: number; nochmal: boolean } | null = null;
+  private readonly weiterAufraeumen = inject(DestroyRef).onDestroy(() => clearTimeout(this.zurueckZeit));
   protected werten(status: UebeStatus): void {
     const c = this.aktuellerSong();
-    if (!c || this.weiterZeit !== undefined) return;
+    if (!c) return;
     const datum = this.probe();
     if (datum) {
       if (this.ich) probeStatusSetzen(datum, c, status, this.band.members);
       this.statusNeu.update((n) => n + 1);
       return;
     }
-    this.bewertet.emit({ title: c.title, artist: c.artist, status });
-    // nächste Karte: Tempo-Training wieder bei 70 %
-    if (this.klick()) this.faktor.set(0.7);
-    this.statusNeu.update((n) => n + 1);
-    if (status === 'ueben') this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
     const bei = this.index();
+    // schon gewertet (vertippt, umentschieden): vorige Wertung dieser Karte zurücknehmen, dann die neue
+    if (this.gewertet?.bei === bei) this.wertungZuruecknehmen();
+    this.bewertet.emit({ title: c.title, artist: c.artist, status });
+    this.statusNeu.update((n) => n + 1);
+    const nochmal = status === 'ueben';
+    if (nochmal) this.liste.update((l) => [...l, { title: c.title, artist: c.artist }]);
+    this.gewertet = { bei, nochmal };
     clearTimeout(this.zurueckZeit);
-    this.zurueck.set({ title: c.title, label: statusLabel(status), bei, nochmal: status === 'ueben' });
+    this.zurueck.set({ title: c.title, label: statusLabel(status), bei, nochmal });
     this.zurueckZeit = setTimeout(() => this.zurueck.set(null), ZURUECK_MS);
-    this.weiterZeit = setTimeout(() => {
-      this.weiterZeit = undefined;
-      if (this.index() !== bei) return;
-      if (bei + 1 >= this.liste().length) this.closed.emit();
-      else this.springen(bei + 1);
-    }, AUFLEUCHTEN_MS);
+  }
+  /** letzte Wertung zurücknehmen: angehängte Wiederholung („Üben“) weg, Status wie vorher (backstage-ueben.ts) */
+  private wertungZuruecknehmen(): void {
+    if (this.gewertet?.nochmal) this.liste.update((l) => l.slice(0, -1));
+    this.gewertet = null;
+    this.rueckgaengig.emit();
   }
   /** „Rückgängig“: zurück zur Karte, angehängte Wiederholung wieder weg, Stand beim Elternteil zurück */
   protected rueckgaengigKlick(e: Event): void {
@@ -408,11 +409,10 @@ export class SetlistBuehne {
     const z = this.zurueck();
     if (!z) return;
     clearTimeout(this.zurueckZeit);
-    clearTimeout(this.weiterZeit);
-    this.weiterZeit = undefined;
     this.zurueck.set(null);
-    if (z.nochmal) this.liste.update((l) => l.slice(0, -1));
-    this.rueckgaengig.emit();
+    // die Wertung gehört zur Karte z.bei – auch wenn inzwischen weitergeblättert wurde
+    this.gewertet = { bei: z.bei, nochmal: z.nochmal };
+    this.wertungZuruecknehmen();
     this.statusNeu.update((n) => n + 1);
     if (this.index() !== z.bei) this.springen(z.bei);
   }
@@ -841,6 +841,11 @@ export class SetlistBuehne {
     let target = Math.min(this.liste().length, Math.max(0, this.index() + step));
     // gestrichene Songs überspringen
     while (this.gestrichen().has(target) && target > 0 && target < this.liste().length) target += step > 0 ? 1 : -1;
+    // Übe-Modus: über die letzte Karte hinaus weiterblättern beendet ihn (danach das Ergebnis)
+    if (this.ueben() && step > 0 && target >= this.liste().length) {
+      this.closed.emit();
+      return;
+    }
     this.springen(target);
   }
 
@@ -944,6 +949,7 @@ export class SetlistBuehne {
 
   private springen(target: number): void {
     const before = this.setNo();
+    if (target !== this.index()) this.gewertet = null;
     this.index.set(Math.min(this.liste().length, Math.max(0, target)));
     // neues Set beginnt (nach der Pause weiter) → Uhr neu starten
     if (this.setNo() !== before) this.setStart = Date.now();

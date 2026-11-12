@@ -124,7 +124,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
       }
     </section>
     @if (modus(); as m) {
-      <!-- Übe-Modus: Notenansicht der Karten, oben rechts „Wackelt noch“ / „Sitzt“ – weiter zur nächsten Karte -->
+      <!-- Übe-Modus: Notenansicht der Karten, oben rechts die fünf Status – die Karte bleibt, weiter per Wischen/Pedal -->
       <app-setlist-buehne [entries]="m" [start]="modusStart()" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (rueckgaengig)="letzteZuruecknehmen()" (closed)="modusZu()" />
     }
   `,
