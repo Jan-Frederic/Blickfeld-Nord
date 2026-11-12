@@ -24,8 +24,8 @@ function expect(ok, message) {
   if (!ok) throw new Error(message);
 }
 // Bedingung bis zu 5 s lang wiederholt prüfen – Angular aktualisiert die Ansicht erst kurz nach dem Klick
-async function until(check, message) {
-  for (let i = 0; i < 50; i++) {
+async function until(check, message, ms = 5000) {
+  for (let i = 0; i < ms / 100; i++) {
     if (await check()) return;
     await new Promise((r) => setTimeout(r, 100));
   }
@@ -588,6 +588,9 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   let pausen = 0;
   let abfragenNachStart = 0;
   let keinGeraet = true;
+  // 'gut' · 'kaputt': die Abfrage des Stands scheitert · 'ende': der Song ist durchgelaufen (spielt nicht, Stelle 0)
+  let standArt = 'gut';
+  let zuletztTrack = '6Qyc6fS4DsZjB2mRW9DsQs';
   await p.route('https://api.spotify.com/**', async (route) => {
     const r = route.request();
     const pfad = new URL(r.url()).pathname;
@@ -595,6 +598,7 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     if (pfad.endsWith('/me/player/play')) {
       gespielt.push(r.url() + ' ' + (r.postData() ?? ''));
       spotifySpielt = true;
+      zuletztTrack = /spotify:track:(\w+)/.exec(r.postData() ?? '')?.[1] ?? zuletztTrack;
       // wie bei Spotify: Erfolg mit einem Text, der kein JSON ist
       return route.fulfill({ status: 200, contentType: 'application/json', body: 'kein-json-AbC123' });
     }
@@ -605,7 +609,9 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
     }
     // direkt nach dem Start meldet Spotify noch „spielt nicht“ – die Anzeige darf nicht auf ▶ zurückfallen
     if (pfad.endsWith('/me/player') && spotifySpielt && abfragenNachStart++ === 0) return route.fulfill({ json: { is_playing: false, progress_ms: 0, item: null, device: { id: 'd1', name: 'Handy' } } });
-    if (pfad.endsWith('/me/player')) return route.fulfill({ json: { is_playing: spotifySpielt, progress_ms: 5000, item: { id: '6Qyc6fS4DsZjB2mRW9DsQs', duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
+    if (pfad.endsWith('/me/player') && standArt === 'kaputt') return route.fulfill({ status: 403, body: 'nein' });
+    if (pfad.endsWith('/me/player') && standArt === 'ende') return route.fulfill({ json: { is_playing: false, progress_ms: 0, item: { id: zuletztTrack, duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
+    if (pfad.endsWith('/me/player')) return route.fulfill({ json: { is_playing: spotifySpielt, progress_ms: 5000, item: { id: zuletztTrack, duration_ms: 200000 }, device: { id: 'd1', name: 'Handy' } } });
     return route.fulfill({ status: 204 });
   });
   await p.evaluate(() => localStorage.setItem('bn-spotify-token', JSON.stringify({ access: 'test', refresh: 'test', bis: 9e15 })));
@@ -627,13 +633,56 @@ test('Backstage: Probe-Modus – Übe-Status mit fünf Stufen, Notiz je Person, 
   // Fortschritt kommt von Spotify (5 s von 3:20), obwohl die erste Abfrage noch den alten Stand meldete; kein Fehlerhinweis
   await until(async () => /0:0[5-9] \/ 3:20/.test(await buehne.locator('app-spotify-steuerung .zeit').innerText().catch(() => '')), async () => `Fortschritt fehlt: ${await buehne.locator('app-spotify-steuerung .zeit').innerText().catch(() => '')}`);
   expect((await buehne.locator('app-spotify-steuerung button[aria-label="Pause"]').count()) === 1 && (await buehne.locator('app-spotify-steuerung .hinweis').count()) === 0, 'Steuerung fällt nach dem Start zurück oder meldet einen Fehler');
-  // gespielt wird immer der angezeigte Song: beim Weiterblättern startet der nächste (hier: Song ohne Spotify-Track → Pause)
-  await buehne.focus();
-  await p.keyboard.press('ArrowRight');
-  await until(async () => (await buehne.locator('h1').innerText()).includes('Africa'), 'Weiter zu Africa klappt nicht');
-  await until(async () => pausen > 0 || gespielt.length > 1, () => `Beim Songwechsel läuft der alte Song weiter (${gespielt.length} Starts, ${pausen} Pausen)`);
-  await p.keyboard.press('ArrowLeft');
-  await until(async () => (await buehne.locator('h1').innerText()).includes('Iris'), 'Zurück zu Iris klappt nicht');
+  // Spotifys Rückmeldung fällt aus (die Abfrage scheitert): Der Fortschritt läuft mit der eigenen Uhr weiter, der Balken wächst
+  standArt = 'kaputt';
+  const spZeit = async () => {
+    const m = /(\d+):(\d\d) \//.exec(await buehne.locator('app-spotify-steuerung .zeit').innerText().catch(() => ''));
+    return m ? Number(m[1]) * 60 + Number(m[2]) : -1;
+  };
+  const spKnopf = (name) => buehne.locator(`app-spotify-steuerung button[aria-label="${name}"]`);
+  const zeit0 = await spZeit();
+  await until(async () => (await spZeit()) >= zeit0 + 2, async () => `Fortschritt bleibt ohne Spotifys Rückmeldung stehen (${zeit0} → ${await spZeit()})`);
+  expect((await buehne.locator('app-spotify-steuerung .balken span').evaluate((el) => parseFloat(el.style.width) || 0)) > 0, 'Fortschrittsbalken zeigt keinen Fortschritt');
+  expect((await spKnopf('Pause').count()) === 1, 'Steuerung fällt ohne Spotifys Rückmeldung auf ▶ zurück');
+  // ⏸, danach listet Spotify das Gerät nicht mehr: ▶ setzt trotzdem fort – auf dem gemerkten Gerät, ohne Meldung
+  await spKnopf('Pause').click();
+  await until(async () => pausen >= 1 && (await spKnopf('Auf Spotify abspielen').count()) === 1, 'Pause klappt nicht');
+  keinGeraet = true;
+  const startsVorWeiter = gespielt.length;
+  await spKnopf('Auf Spotify abspielen').click();
+  await until(async () => gespielt.length === startsVorWeiter + 1 && gespielt.at(-1).includes('device_id=d1') && !gespielt.at(-1).includes('spotify:track'), () => `▶ nach der Pause setzt nicht auf dem gemerkten Gerät fort: ${gespielt.slice(startsVorWeiter).join(' | ')}`);
+  await until(async () => (await spKnopf('Pause').count()) === 1, 'nach dem Fortsetzen kein ⏸');
+  expect((await buehne.locator('.spotify-hinweis').count()) === 0, 'Fortsetzen meldet „kein Gerät“, obwohl das gemerkte Gerät antwortet');
+  // gespielt wird immer der angezeigte Song: Africa steht in keiner Spotify-Liste → Pause; beim nächsten Song mit
+  // Track (Angels) startet er wieder von selbst – auch ohne Geräteliste und ohne Rückmeldung
+  const zu = async (taste, titel) => {
+    await buehne.focus();
+    await p.keyboard.press(taste);
+    await until(async () => (await buehne.locator('h1').innerText()).includes(titel), `Blättern zu ${titel} klappt nicht`);
+  };
+  const pausenVorher = pausen;
+  await zu('ArrowRight', 'Africa');
+  await until(async () => pausen === pausenVorher + 1, () => `Beim Wechsel zu einem Song ohne Spotify-Track läuft der alte weiter (${pausen} Pausen)`);
+  await zu('ArrowRight', 'Angels');
+  await until(async () => gespielt.length === startsVorWeiter + 2 && gespielt.at(-1).includes('device_id=d1') && gespielt.at(-1).includes('spotify:track:1M2nd8jNUkkwrc1dgBPTJz'), () => `Beim Weiterblättern startet der nächste Song nicht: ${gespielt.slice(startsVorWeiter).join(' | ')}`);
+  await until(async () => (await spKnopf('Pause').count()) === 1, 'nach dem Weiterblättern kein ⏸');
+  // Song ist durchgelaufen (Spotify meldet: spielt nicht, Stelle 0): ▶ erscheint – und beim Blättern startet trotzdem der nächste
+  standArt = 'ende';
+  await until(async () => (await spKnopf('Auf Spotify abspielen').count()) === 1, 'nach dem Ende des Songs bleibt ⏸ stehen', 12000);
+  standArt = 'gut';
+  await zu('ArrowLeft', 'Africa');
+  await zu('ArrowLeft', 'Iris');
+  await until(async () => gespielt.length === startsVorWeiter + 3 && gespielt.at(-1).includes('spotify:track:6Qyc6fS4DsZjB2mRW9DsQs'), () => `Nach einem durchgelaufenen Song startet der nächste beim Blättern nicht: ${gespielt.slice(startsVorWeiter).join(' | ')}`);
+  await until(async () => (await spKnopf('Pause').count()) === 1, 'nach dem Blättern kein ⏸');
+  // selbst ⏸ gedrückt: beim Weiterblättern wird nichts vorgespielt, bis wieder ▶ gedrückt wird
+  await spKnopf('Pause').click();
+  await until(async () => (await spKnopf('Auf Spotify abspielen').count()) === 1, 'Pause klappt nicht');
+  await zu('ArrowRight', 'Africa');
+  await zu('ArrowRight', 'Angels');
+  await p.waitForTimeout(700);
+  expect(gespielt.length === startsVorWeiter + 3 && (await spKnopf('Auf Spotify abspielen').count()) === 1, 'nach eigener Pause spielt das Weiterblättern von selbst los');
+  await zu('ArrowLeft', 'Africa');
+  await zu('ArrowLeft', 'Iris');
   await p.unroute('https://api.spotify.com/**');
   await p.evaluate(() => localStorage.removeItem('bn-spotify-token'));
   const leiste = buehne.locator('app-probe-leiste');

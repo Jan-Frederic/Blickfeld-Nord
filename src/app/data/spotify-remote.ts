@@ -139,6 +139,7 @@ export async function spotifyAnmeldungAbschliessen(suche: string): Promise<void>
 }
 
 export function spotifyAbmelden(): void {
+  zuletztGeraet = null;
   schreiben(TOKEN_KEY, null);
   schreiben(GERAET_KEY, null);
 }
@@ -251,26 +252,51 @@ async function zielGeraet(): Promise<string | undefined> {
   return (liste.find((g) => g.is_active) ?? liste.find((g) => g.type === 'Smartphone') ?? liste[0])?.id;
 }
 
+/** Gerät, auf dem zuletzt erfolgreich gestartet wurde – der nächste Befehl geht direkt dorthin (ohne erst die
+ *  Geräteliste zu holen): schneller, und es klappt auch, wenn Spotify das Gerät nach einer Pause nicht mehr listet */
+let zuletztGeraet: string | null = null;
+const geraetWeg = (e: unknown) => e instanceof SpotifyFehler && e.art === 'geraet';
+
 /** Song von vorn (oder ab Position) spielen */
 export async function spotifySpielen(trackId: string, positionMs = 0): Promise<void> {
-  const geraet = await zielGeraet();
-  if (!geraet) throw new SpotifyFehler('geraet');
-  const starten = () => api(`/me/player/play?device_id=${encodeURIComponent(geraet)}`, { method: 'PUT', body: JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: positionMs }) });
-  try {
-    await starten();
-  } catch (e) {
-    // Gerät ist da, aber gerade nicht aktiv: erst die Wiedergabe dorthin holen, dann noch einmal
-    if (!(e instanceof SpotifyFehler) || e.art !== 'geraet') throw e;
+  const starten = (geraet: string) => api(`/me/player/play?device_id=${encodeURIComponent(geraet)}`, { method: 'PUT', body: JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: Math.max(0, Math.round(positionMs)) }) });
+  /** Gerät ist da, aber gerade nicht aktiv: erst die Wiedergabe dorthin holen, dann noch einmal */
+  const wecken = async (geraet: string) => {
     await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [geraet], play: false }) });
     await new Promise((r) => setTimeout(r, 700));
-    await starten();
+    await starten(geraet);
+  };
+  const gewaehlt = lesen<string>(GERAET_KEY);
+  const bekannt = zuletztGeraet && (!gewaehlt || gewaehlt === zuletztGeraet) ? zuletztGeraet : null;
+  if (bekannt) {
+    try {
+      await starten(bekannt);
+      return;
+    } catch (e) {
+      if (!geraetWeg(e)) throw e;
+    }
   }
+  // Spotify listet das Gerät nach einer Pause oft nicht mehr – dann das zuletzt benutzte versuchen
+  const geraet = (await zielGeraet()) ?? bekannt;
+  if (!geraet) throw new SpotifyFehler('geraet');
+  try {
+    if (geraet === bekannt) await wecken(geraet);
+    else await starten(geraet);
+  } catch (e) {
+    if (!geraetWeg(e) || geraet === bekannt) throw e;
+    await wecken(geraet);
+  }
+  zuletztGeraet = geraet;
 }
 export const spotifyPause = () => api('/me/player/pause', { method: 'PUT' });
-export const spotifyWeiter = () => api('/me/player/play', { method: 'PUT' });
+/** pausierten Song fortsetzen – auf dem zuletzt benutzten Gerät, auch wenn es inzwischen nicht mehr „aktiv“ ist */
+export const spotifyWeiter = () => api(`/me/player/play${zuletztGeraet ? `?device_id=${encodeURIComponent(zuletztGeraet)}` : ''}`, { method: 'PUT' });
 export const spotifySpringen = (ms: number) => api(`/me/player/seek?position_ms=${Math.max(0, Math.round(ms))}`, { method: 'PUT' });
 
-export const spotifyGeraetWaehlen = (id: string) => schreiben(GERAET_KEY, id || null);
+export const spotifyGeraetWaehlen = (id: string) => {
+  zuletztGeraet = null;
+  schreiben(GERAET_KEY, id || null);
+};
 export const spotifyGewaehltesGeraet = () => lesen<string>(GERAET_KEY) ?? '';
 export const spotifyMitspielen = () => lesen<boolean>(MITSPIELEN_KEY) !== false;
 export const spotifyMitspielenSetzen = (an: boolean) => schreiben(MITSPIELEN_KEY, an);

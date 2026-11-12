@@ -135,13 +135,19 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     Spotify-Connect-Gerät (Handy, Laptop, Lautsprecher im Proberaum), **↺10** springt 10 Sekunden zurück, Balken mit
     Zeit, Gerätewahl, „Spotify trennen“; in der Kopfleiste der Notenansicht steht derselbe Knopf als **♫ ▶ / ⏸**.
     **Gespielt wird immer der angezeigte Song** (`data/spotify-spieler.ts`, ein Zustand für alle Knöpfe): Wechselt
-    der Song, während die Steuerung spielt, startet mit „beim Weiterblättern mitspielen“ (Standard an) gleich der
-    neue – sonst, und bei Songs ohne Spotify-Track, wird pausiert. Am Songende hält die Steuerung an, wenn Spotify
-    von sich aus weiterspielt (Autoplay); beim Verlassen des Modus ebenso. Eigenheiten von Spotify, die abgefangen
-    sind: Befehle antworten bei Erfolg teils mit Text, der kein JSON ist (wird ignoriert); kurz nach dem Start meldet
-    Spotify noch den alten Stand (6 s Schonfrist, danach alle 5 s Abgleich); vorübergehende Fehler (5xx, 429) werden
-    einmal wiederholt; der Zugang wird stündlich erneuert (nie zweimal gleichzeitig – das kappte die Verbindung); eine
-    andere Fassung desselben Songs gilt als der Song; ein vorhandenes, aber nicht aktives Gerät wird erst aktiviert.
+    der Song, nachdem über die Steuerung gespielt wurde – auch wenn der vorige schon durchgelaufen ist –, startet mit
+    „beim Weiterblättern mitspielen“ (Standard an) gleich der neue; sonst, und bei Songs ohne Spotify-Track, wird
+    pausiert. Wer selbst ⏸ drückt (oder in der Spotify-App anhält), bekommt beim Blättern nichts vorgespielt, bis er
+    wieder ▶ drückt. Am Songende hält die Steuerung an, wenn Spotify von sich aus weiterspielt (Autoplay); beim
+    Verlassen des Modus ebenso. **Maßgeblich sind die eigenen Befehle, nicht Spotifys Rückmeldung:** Nach ▶ gilt der
+    Song als laufend, der Fortschritt zählt mit der eigenen Uhr (Länge aus den Spotify-Listen); die Abfrage des
+    Stands (alle 5 s) berichtigt nur Stelle, Länge und Pause – fällt sie aus, läuft alles weiter. Das Gerät des
+    letzten Starts wird gemerkt: Der nächste Befehl geht direkt dorthin (ohne Geräteliste), auch wenn Spotify es nach
+    einer Pause nicht mehr als aktiv oder gar nicht mehr listet. Befehle gehen nacheinander raus, überholte (schnelles
+    Blättern) werden verworfen. Weitere Eigenheiten von Spotify, die abgefangen sind: Befehle antworten bei Erfolg
+    teils mit Text, der kein JSON ist (wird ignoriert); kurz nach dem Start meldet Spotify noch den alten Stand (6 s
+    Schonfrist); vorübergehende Fehler (5xx, 429) werden einmal wiederholt; der Zugang wird stündlich erneuert (nie
+    zweimal gleichzeitig – das kappte die Verbindung); eine andere Fassung desselben Songs gilt als der Song.
     Meldungen stehen als Hinweis über Titelanzeige **und** Notenansicht (nicht nur als Tooltip): „Spotify läuft auf
     keinem Gerät“ mit Knopf **Spotify öffnen** (die Fernsteuerung braucht ein laufendes Spotify – App oder
     open.spotify.com in einem Tab; die Seite selbst spielt nichts ab), „nur mit Premium“, „Konto im
@@ -328,6 +334,14 @@ Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape u
 Übe-Modus und Kopfleiste der Notenansicht – dort im Übe- **und** im Probe-Modus (mit „Ich bin …“), zusammen mit
 **Mitschnitt**. Im Probe-Modus bleibt der Song beim Setzen stehen, im Übe-Modus geht es zur nächsten Karte. Oben links:
 Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) bzw. „Karte 2 / 8“ (Übe-Modus, ohne Uhr).
+
+**Vollbild (Bühnen-, Probe- und Übe-Modus, `data/vollbild.ts`):** Im Browser-Tab und am Computer fordert der Modus das
+Vollbild des Browsers an. In der **installierten App auf Handy und Tablet nicht** – dort füllt der Modus das Fenster
+ohnehin (nur die Statusleiste bleibt). Grund: Im Browser-Vollbild zeigt Android bei jedem Wisch vom oberen Rand „Zum
+Beenden des Vollbildmodus …“ und wirft den Modus mit „Zurück“ hinaus; beides kann eine Seite nicht abschalten, und die
+Randgeste beißt sich mit dem Herunterwischen in der Notenansicht. Im Browser-Tab auf Touch-Geräten holt der nächste
+Tipp ein verlorenes Vollbild zurück. (Soll auch die Statusleiste weg, ginge das nur über `"display": "fullscreen"` in
+`public/site.webmanifest` – dann für die ganze App.)
 
 **Probe-Modus:** Auf der Probenseite **Probe-Modus starten** – die eingeplanten Songs im Vollbild wie im Bühnen-Modus,
 ab dem ersten noch nicht geprobten. Mit dabei: Noten (PDF/Akkordblatt), Tonart und Capo, Klick mit Übungstempo

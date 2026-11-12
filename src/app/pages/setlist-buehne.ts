@@ -4,6 +4,7 @@ import { AUFLEUCHTEN_MS, StatusSchalter } from './status-schalter';
 import { SpotifySteuerung } from './spotify-steuerung';
 import { SpotifySpieler } from '../data/spotify-spieler';
 import { spotifyArt } from '../data/spotify-remote';
+import { browserVollbild } from '../data/vollbild';
 import { ladeIch } from '../data/band-ich';
 import { MatIconModule } from '@angular/material/icon';
 import { Entry, durationOf, isPause, setLength, setTime, setsOf, songTime } from '../data/setlist-data';
@@ -424,12 +425,14 @@ export class SetlistBuehne {
     effect(() => {
       const an = this.ueben() || !!this.probe();
       const t = an && this.online() ? this.spotifyId() : undefined;
+      const c = this.aktuellerSong();
       untracked(() => {
         if (an && !gestartet) {
           gestartet = true;
           this.spotifySpieler.start();
         }
-        if (gestartet) this.spotifySpieler.songSetzen(t);
+        // Länge aus den Spotify-Listen: der Fortschritt läuft damit auch, bevor (oder ohne dass) Spotify sie meldet
+        if (gestartet) this.spotifySpieler.songSetzen(t, t && c ? (durationOf(c) ?? 0) * 1000 : 0);
       });
     });
     inject(DestroyRef).onDestroy(() => gestartet && this.spotifySpieler.ende());
@@ -628,9 +631,25 @@ export class SetlistBuehne {
     // Wake Lock geht beim Wechsel in den Hintergrund verloren – beim Zurückkommen neu holen
     const visible = () => document.visibilityState === 'visible' && lock();
     document.addEventListener('visibilitychange', visible);
-    document.documentElement.requestFullscreen?.().catch(() => undefined);
+    // Vollbild des Browsers – außer in der installierten App auf Handy und Tablet: Dort füllt der Modus das Fenster
+    // ohnehin (nur die Statusleiste bleibt), und das Browser-Vollbild brächte Androids Meldung „Zum Beenden des
+    // Vollbildmodus …“ samt Randgeste mit, die sich mit dem Herunterwischen in der Notenansicht beißt und den Modus
+    // aus dem Vollbild wirft. Beides kann eine Seite nicht abschalten – also gar nicht erst hinein.
+    // Im Browser-Tab auf Touch-Geräten: fällt das Vollbild weg (Randgeste, Zurück), holt der nächste Tipp es zurück.
+    const el = this.host.nativeElement;
+    const vollbild = () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.()?.catch(() => undefined);
+    };
+    const wiederVollbild = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') vollbild();
+    };
+    if (browserVollbild()) {
+      vollbild();
+      el.addEventListener('pointerup', wiederVollbild, true);
+    }
     queueMicrotask(() => this.host.nativeElement.focus());
     inject(DestroyRef).onDestroy(() => {
+      el.removeEventListener('pointerup', wiederVollbild, true);
       clearInterval(timer);
       this.stopKlick();
       this.stopZaehlen();
