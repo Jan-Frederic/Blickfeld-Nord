@@ -15,6 +15,7 @@ import {
   spotifyGewaehltesGeraet,
   spotifyMitspielen,
   spotifyMitspielenSetzen,
+  spotifyUebergang,
   spotifyNotiz,
   spotifyPause,
   spotifySpielen,
@@ -87,6 +88,8 @@ export class SpotifySpieler {
   readonly geraete = signal<SpotifyGeraet[]>([]);
   readonly gewaehlt = signal(spotifyGewaehltesGeraet());
   readonly mitspielen = signal(spotifyMitspielen());
+  /** Knopf „⇢ Übergang“ zeigen (Einstellung, Standard aus) */
+  readonly uebergangAn = signal(spotifyUebergang());
   readonly laeuft = signal(false);
   /** Start-Befehl ist angenommen, Spotify hat aber noch nicht bestätigt, dass der Song läuft */
   readonly startet = signal(false);
@@ -176,6 +179,9 @@ export class SpotifySpieler {
     this.verbunden.set(spotifyVerbunden());
     this.hinweisWeg();
     if (this.uhrTakt) return;
+    // Einstellungen können sich seit dem letzten Modus geändert haben
+    this.mitspielen.set(spotifyMitspielen());
+    this.uebergangAn.set(spotifyUebergang());
     const imBrowser = spotifyArt() === 'browser';
     this.imBrowser.set(imBrowser);
     this.rechteFehlen.set(imBrowser && this.verbunden() && !spotifyBrowserRechte());

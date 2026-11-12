@@ -5,7 +5,8 @@ import { MARKEN_NAMEN } from '../data/sprungmarken';
 
 // Spotify-Steuerung im Übe- und Probe-Modus (Titelanzeige, abgedockt auch über den Noten): ▶/⏸ spielt den
 // angezeigten Song – mit der Einstellung „Fernsteuerung“ in der Spotify-App bzw. auf dem gewählten
-// Spotify-Connect-Gerät, mit „Im Browser abspielen“ hier im Browser. Dazu ↺10 / 10↻, der Fortschrittsbalken zum
+// Spotify-Connect-Gerät, mit „Im Browser abspielen“ hier im Browser. „Beim Weiterblättern mitspielen“, „Übergänge
+// proben“ und „Trennen“ stehen nur in den Einstellungen (pages/spotify-einstellung.ts). Dazu ↺10 / 10↻, der Fortschrittsbalken zum
 // Springen (ziehen oder antippen), Lautstärke (Browser-Player) bzw. Gerätewahl (Fernsteuerung) und „beim
 // Weiterblättern mitspielen“. Zum Üben: Sprungmarken (mit der Band geteilt; ▶ beginnt am „Einsatz“) und die Schleife
 // A–B (erster Tipp: Anfang, zweiter: Ende, dritter: aus). Zustand und Regeln: data/spotify-spieler.ts. Ohne Verbindung nur „Spotify verbinden“.
@@ -48,7 +49,7 @@ import { MARKEN_NAMEN } from '../data/sprungmarken';
           @for (n of namen; track n) { <option [value]="n">{{ n }}</option> }
         </select>
         @if (s.marken().length) { <button type="button" class="klein" (click)="bearbeiten.set(!bearbeiten())" [attr.aria-pressed]="bearbeiten()">{{ bearbeiten() ? 'Fertig' : 'Marken bearbeiten' }}</button> }
-        @if (s.naechster(); as n) {
+        @if (s.uebergangAn() && s.naechster(); as n) {
           <button type="button" class="schleife uebergang" [class.an]="s.uebergang()" (click)="s.uebergangStarten()" [disabled]="s.laeuft() || s.startet() || !s.dauer()"
             [title]="'Übergang proben: die letzten 15 Sekunden, dann ' + n.titel + ' ab dem Einsatz'">⇢ Übergang zu {{ n.titel }}</button>
         }
@@ -65,8 +66,6 @@ import { MARKEN_NAMEN } from '../data/sprungmarken';
             @for (g of s.geraete(); track g.id) { <option [value]="g.id" [selected]="g.id === s.gewaehlt()">{{ g.name }}{{ g.is_active ? ' (aktiv)' : '' }}</option> }
           </select>
         }
-        <label class="mit"><input type="checkbox" [checked]="s.mitspielen()" (change)="s.mitspielenSetzen($any($event.target).checked)" /> beim Weiterblättern mitspielen</label>
-        <button type="button" class="klein" (click)="s.abmelden()">Spotify trennen</button>
       </div>
     }
   `,

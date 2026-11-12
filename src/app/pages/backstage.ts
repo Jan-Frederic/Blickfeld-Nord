@@ -7,8 +7,6 @@ import { BackstageSuche } from './backstage-suche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { ladeIch } from '../data/band-ich';
-import { alleFortschritte } from '../data/fortschritt';
-import { rueckblickText, wochenRueckblick } from '../data/wochenrueckblick';
 import { statusMigrieren } from '../data/uebe-status';
 import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
 
@@ -38,12 +36,6 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
         <!-- wie Probe- und Bühnen-Modus: startet gleich die Notenansicht der fälligen Karteikarten -->
         <a class="modus" routerLink="/backstage/ueben" [queryParams]="{ modus: 1 }" aria-label="Übe-Modus starten" title="Übe-Modus"><mat-icon>fit_screen</mat-icon> <span class="modus-text">Übe-Modus</span></a>
       </div>
-      <!-- Wochenrückblick der Band: geübte Karten der letzten 7 Tage je Person, Songs, die jetzt bei allen sitzen -->
-      @if (rueckblick; as r) {
-        <p class="wochenrueckblick"><mat-icon aria-hidden="true">insights</mat-icon>
-          <span><strong>Diese Woche geübt:</strong> {{ r.text }}
-            @if (r.gefestigt.length) { <small>Sitzt jetzt bei allen: {{ r.gefestigt.join(', ') }}</small> }</span></p>
-      }
 
       <h3>Als Nächstes</h3>
       @if (next.length) {
@@ -111,11 +103,6 @@ export class Backstage {
   })();
   protected readonly band = inject(BandService);
   protected readonly shows = [...this.band.shows].sort((a, b) => a.date.localeCompare(b.date));
-  /** Wochenrückblick (data/wochenrueckblick.ts) – nur, wenn diese Woche jemand geübt hat oder ein Song gefestigt ist */
-  protected readonly rueckblick = (() => {
-    const r = wochenRueckblick(this.band.members, alleFortschritte(this.band.members), ladeIch(), new Date().toLocaleDateString('sv-SE'));
-    return r.personen.some((p) => p.karten) || r.gefestigt.length ? { text: rueckblickText(r), gefestigt: r.gefestigt } : null;
-  })();
   protected readonly rehearsals = [...this.band.rehearsals].sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''));
 
   // die nächsten vier Termine – Auftritte und Proben gemischt

@@ -217,7 +217,7 @@ export function spotifyLage(): string[] {
   const passt = (a: string) => typeof matchMedia === 'function' && matchMedia(a).matches;
   return [
     `Einstellung: ${spotifyArt()} · verbunden: ${t?.refresh ? 'ja' : 'nein'}${t?.refresh ? ` · Zugang gilt noch ${Math.round((t.bis - Date.now()) / 60000)} min · Rechte: ${t.scope ?? 'unbekannt (älterer Zugang)'}` : ''}`,
-    `mitspielen: ${spotifyMitspielen() ? 'ja' : 'nein'} · Gerät gewählt: ${idKurz(lesen<string>(GERAET_KEY) ?? '') || 'automatisch'} · zuletzt: ${idKurz(zuletztGeraet ?? '') || '–'}`,
+    `mitspielen: ${spotifyMitspielen() ? 'ja' : 'nein'} · Übergang: ${spotifyUebergang() ? 'an' : 'aus'} · Gerät gewählt: ${idKurz(lesen<string>(GERAET_KEY) ?? '') || 'automatisch'} · zuletzt: ${idKurz(zuletztGeraet ?? '') || '–'}`,
     `Fenster: ${passt('(display-mode: fullscreen)') ? 'Vollbild-App' : passt('(display-mode: standalone)') ? 'App-Fenster' : 'Browser-Tab'} · ${passt('(pointer: coarse)') ? 'Touch' : 'Maus'} · ${typeof navigator === 'undefined' ? '' : navigator.userAgent}`,
   ];
 }
@@ -384,6 +384,10 @@ export const spotifyGeraetWaehlen = (id: string) => {
 export const spotifyGewaehltesGeraet = () => lesen<string>(GERAET_KEY) ?? '';
 export const spotifyMitspielen = () => lesen<boolean>(MITSPIELEN_KEY) !== false;
 export const spotifyMitspielenSetzen = (an: boolean) => schreiben(MITSPIELEN_KEY, an);
+/** Knopf „⇢ Übergang“ in der Steuerung (Einstellungen, je Gerät) – Standard aus */
+const UEBERGANG_KEY = 'bn-spotify-uebergang';
+export const spotifyUebergang = () => lesen<boolean>(UEBERGANG_KEY) === true;
+export const spotifyUebergangSetzen = (an: boolean) => schreiben(UEBERGANG_KEY, an ? true : null);
 
 /** Spotify im Übe- und Probe-Modus (Einstellungen, je Gerät): gar nicht, eingebetteter Player (30-Sekunden-Vorschau auf
  *  dem Handy), Fernsteuerung der Spotify-App (Premium) oder im Browser abspielen – die Seite ist selbst das

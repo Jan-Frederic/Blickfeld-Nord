@@ -796,8 +796,15 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   });
   // Wochenrückblick in der Übersicht: geübte Karten der letzten 7 Tage
   await p.evaluate(() => localStorage.setItem('bn-fortschritt-jan-frederic-overbeck', JSON.stringify({ 'Iris|The Goo Goo Dolls': [{ tag: new Date().toLocaleDateString('sv-SE'), stand: 'wackelt', quelle: 'ueben' }] })));
+  // … steht als Grafik unter Zahlen (nicht mehr in der Übersicht)
+  await p.go('/backstage/zahlen/');
+  const wochen = p.locator('app-uebe-wochen');
+  await until(async () => /du\s*1\s*diese Woche/.test(await wochen.locator('.legende').innerText().catch(() => '')), async () => `Grafik „Üben je Woche“ fehlt: ${await wochen.innerText().catch(() => '–')}`);
+  expect((await wochen.locator('.woche').count()) === 8 && /KW \d+/.test(await wochen.locator('.info').innerText()) && (await wochen.locator('.woche').last().locator('.bar').evaluateAll((els) => els.some((el) => parseFloat(el.style.height) > 0))), 'Balken der laufenden Woche fehlen');
+  await wochen.locator('.woche').first().click();
+  await until(async () => /KW \d+\s*\(\d\d\.\d\d\.–\d\d\.\d\d\.\)/.test(await wochen.locator('.info').innerText()), async () => `Antippen einer Woche zeigt ihre Zahlen nicht: ${await wochen.locator('.info').innerText()}`);
   await p.go('/backstage/');
-  await until(async () => /Diese Woche geübt:\s*du 1 Karte/.test(await p.locator('app-backstage .wochenrueckblick').innerText().catch(() => '')), async () => `Wochenrückblick fehlt: ${await p.locator('app-backstage .wochenrueckblick').innerText().catch(() => '–')}`);
+  expect((await p.locator('app-backstage .wochenrueckblick').count()) === 0, 'Wochenrückblick steht noch in der Übersicht');
   await p.go('/backstage/einstellungen/');
   const einstellung = p.locator('app-spotify-einstellung');
   expect((await einstellung.locator('select').inputValue()) === 'browser', 'Einstellung „Im Browser abspielen“ fehlt');
@@ -835,6 +842,10 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await until(async () => /✓\s*Verbunden/.test(await liste.innerText().catch(() => '')) && /○\s*Erster Song/.test(await liste.innerText()), async () => `Checkliste falsch: ${await liste.innerText().catch(() => '')}`);
   await liste.getByRole('button', { name: 'Jetzt prüfen' }).click();
   await until(async () => /✓\s*Konto freigeschaltet[\s\S]*✓\s*Dieser Browser spielt ab/.test(await liste.innerText()), async () => `„Jetzt prüfen“ klappt nicht: ${await liste.innerText()}`);
+  // Verhalten der Steuerung steht in den Einstellungen: mitspielen (Standard an), Übergänge proben (Standard aus → einschalten)
+  expect((await einstellung.locator('input.mitspielen').isChecked()) && !(await einstellung.locator('input.uebergang').isChecked()), 'Standard für „mitspielen“/„Übergänge proben“ stimmt nicht');
+  await einstellung.locator('input.uebergang').check();
+  await until(async () => (await p.evaluate(() => localStorage.getItem('bn-spotify-uebergang'))) === 'true', '„Übergänge proben“ wird nicht gespeichert');
   // Einladung an die anderen: Anleitung mit Link zu den Spotify-Einstellungen (Teilen-Menü, Zwischenablage oder zum Markieren)
   await einstellung.getByRole('button', { name: 'Anleitung teilen' }).click();
   await until(async () => /kopiert|Geteilt/.test(await einstellung.locator('.knoepfe [role=status]').last().innerText().catch(() => '')) || /backstage\/einstellungen\/#spotify/.test(await einstellung.locator('textarea.teil-text').inputValue().catch(() => '')), 'Anleitung teilen tut nichts');
@@ -878,6 +889,7 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   const steuerung = dock.locator('app-spotify-steuerung');
   await until(async () => (await steuerung.locator('button[aria-label="Pause"]').count()) === 1, 'abgedockte Steuerung zeigt nicht, dass der Song läuft');
   expect((await steuerung.locator('.geraet').innerText()).includes('dieser Browser') && (await steuerung.locator('select[aria-label="Spotify-Gerät"]').count()) === 0, 'Browser-Player zeigt eine Gerätewahl');
+  expect((await steuerung.getByRole('button', { name: 'Spotify trennen' }).count()) === 0 && (await steuerung.locator('input[type=checkbox]').count()) === 0, '„Trennen“ bzw. „mitspielen“ stehen noch in der Steuerung');
   // Fortschritt bestimmen: am Balken auf 1:00 ziehen, 10 s vor, Lautstärke
   await steuerung.locator('input.balken').evaluate((el) => {
     el.value = '60000';

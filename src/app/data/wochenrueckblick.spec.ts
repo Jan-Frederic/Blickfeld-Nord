@@ -1,4 +1,4 @@
-import { rueckblickText, tageVorher, wochenRueckblick } from './wochenrueckblick';
+import { kalenderwoche, rueckblickText, tageVorher, wochenAnfang, wochenRueckblick, wochenVerlauf } from './wochenrueckblick';
 import { Fortschritt } from './fortschritt';
 
 const band = [
@@ -34,5 +34,22 @@ describe('Wochenrückblick der Band', () => {
   });
   it('rechnet Tage über den Monatswechsel', () => {
     expect(tageVorher('2026-12-03', 6)).toBe('2026-11-27');
+  });
+  it('Kalenderwochen: Montag als Anfang, ISO-Nummer auch über den Jahreswechsel', () => {
+    expect(wochenAnfang('2026-11-12')).toBe('2026-11-09');
+    expect(wochenAnfang('2026-11-09')).toBe('2026-11-09');
+    expect(wochenAnfang('2026-11-15')).toBe('2026-11-09');
+    expect(kalenderwoche('2026-11-12')).toBe(46);
+    expect(kalenderwoche('2027-01-01')).toBe(53);
+    expect(kalenderwoche('2025-12-29')).toBe(1);
+  });
+  it('zählt geübte Karten je Kalenderwoche und Person, die laufende Woche zuletzt', () => {
+    const v = new Map<string, Fortschritt>([
+      ['jan', { 'Iris|X': [{ tag: '2026-11-03', stand: 'wackelt', quelle: 'ueben' }, { tag: '2026-11-10', stand: 'sitzt', quelle: 'ueben' }], 'Africa|Y': [{ tag: '2026-11-11', stand: 'ueben', quelle: 'ueben' }, { tag: '2026-11-11', stand: 'wackelt', quelle: 'probe' }] }],
+      ['david', { 'Iris|X': [{ tag: '2026-09-01', stand: 'ueben', quelle: 'ueben' }] }],
+    ]);
+    const w = wochenVerlauf(band, v, heute, 3);
+    expect(w.map((x) => [x.kw, x.ab, x.bis])).toEqual([[44, '2026-10-26', '2026-11-01'], [45, '2026-11-02', '2026-11-08'], [46, '2026-11-09', '2026-11-12']]);
+    expect(w.map((x) => x.karten)).toEqual([{ jan: 0, david: 0, matthias: 0 }, { jan: 1, david: 0, matthias: 0 }, { jan: 2, david: 0, matthias: 0 }]);
   });
 });

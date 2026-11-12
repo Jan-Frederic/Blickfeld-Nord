@@ -1083,17 +1083,42 @@ app-spotify-steuerung .rund { min-width: 44px; min-height: 44px; padding: 0 10px
 app-spotify-steuerung .rund.gross { min-width: 56px; min-height: 56px; border-color: #1db954; color: #1db954; font-size: 1.3rem; }
 app-spotify-steuerung .rund.gross.an { background: #1db954; color: #0b1a10; }
 app-spotify-steuerung .zeit { font-variant-numeric: tabular-nums; color: #aaa; }
-app-spotify-steuerung .mit { display: inline-flex; align-items: center; gap: 6px; color: #aaa; font-size: .82rem; }
 app-spotify-steuerung .balken { display: block; width: 100%; height: 28px; margin: 4px 0; accent-color: #1db954; cursor: pointer; }
 app-spotify-steuerung .balken:disabled { opacity: .45; cursor: default; }
 app-spotify-steuerung .laut { display: inline-flex; align-items: center; gap: 6px; color: #aaa; font-size: .82rem; }
 app-spotify-steuerung .laut input { width: 110px; accent-color: #1db954; }
 app-spotify-steuerung .klein-text { color: #888; font-size: .8rem; align-self: center; }
 app-spotify-steuerung .rund.gross.startet { opacity: .7; }
-// Backstage-Übersicht: Wochenrückblick der Band (pages/backstage.ts)
-app-backstage .wochenrueckblick { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0 0; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--bn-line); font-size: .9rem; line-height: 1.45; }
-app-backstage .wochenrueckblick mat-icon { flex: none; color: var(--bn-sunset); }
-app-backstage .wochenrueckblick small { display: block; color: var(--bn-fog); font-size: .84rem; }
+// Backstage → Zahlen: Üben je Woche (pages/uebe-wochen.ts) – gruppierte Balken, eine Farbe je Person (feste Reihenfolge)
+app-uebe-wochen {
+  --serie-1: #3987e5; --serie-2: #d95926; --serie-3: #199e70; --serie-4: #8d939b;
+  display: block; margin: 22px 0 0;
+  h3 { margin: 0 0 6px !important; }
+  .hinweis { color: var(--bn-fog); font-size: .88rem; }
+  .legende { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 8px; font-size: .85rem; color: var(--bn-ink); }
+  .legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .legende small { color: var(--bn-fog); }
+  .legende i { width: 10px; height: 10px; border-radius: 50%; }
+  .p0 { background: var(--serie-1); } .p1 { background: var(--serie-2); } .p2 { background: var(--serie-3); } .p3 { background: var(--serie-4); }
+  .flaeche { position: relative; height: 160px; margin-right: 28px; border-bottom: 1px solid #3a4048; }
+  .linie { position: absolute; left: 0; right: -28px; height: 0; border-top: 1px solid #2c3138; pointer-events: none; }
+  .linie span { position: absolute; right: 0; top: -8px; color: var(--bn-fog); font-size: .7rem; }
+  .spalten { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(8, 1fr); }
+  .woche { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 100%; padding: 0; border: 0; border-radius: 6px 6px 0 0; background: transparent; cursor: pointer; }
+  .woche:hover, .woche.aktiv { background: rgba(236, 233, 228, .05); }
+  .woche:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: -2px; }
+  .bar { display: block; width: min(10px, 22%); min-height: 0; border-radius: 4px 4px 0 0; }
+  .kws { display: grid; grid-template-columns: repeat(8, 1fr); margin: 4px 28px 0 0; color: var(--bn-fog); font-size: .7rem; text-align: center; white-space: nowrap; }
+  .kws .aktiv { color: var(--bn-ink); }
+  .info { min-height: 1.4em; margin: 8px 0 0; font-size: .88rem; }
+  .info small { color: var(--bn-fog); }
+  .tabelle { margin: 6px 0 0; font-size: .82rem; color: var(--bn-fog); }
+  .tabelle summary { cursor: pointer; }
+  .tabelle table { margin-top: 6px; border-collapse: collapse; color: var(--bn-ink); }
+  .tabelle th, .tabelle td { padding: 3px 10px 3px 0; text-align: left; font-weight: 400; }
+  .tabelle td { text-align: right; font-variant-numeric: tabular-nums; }
+  .gefestigt { margin: 10px 0 0; font-size: .88rem; }
+}
 // Sprungmarken und Schleife (unter dem Fortschrittsbalken)
 app-spotify-steuerung .spur { position: relative; height: 8px; margin: -6px 8px 6px; }
 app-spotify-steuerung .spur .tick { position: absolute; top: 0; width: 2px; height: 8px; margin-left: -1px; background: #e8a46a; }

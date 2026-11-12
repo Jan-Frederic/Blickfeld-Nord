@@ -1,7 +1,7 @@
 import { Component, afterNextRender, computed, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SpotifyCheckliste } from './spotify-checkliste';
-import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyBrowserRechte, spotifyGesteuert, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
+import { SpotifyArt, spotifyAbmelden, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyMitspielen, spotifyMitspielenSetzen, spotifyUebergang, spotifyUebergangSetzen, spotifyBrowserRechte, spotifyGesteuert, spotifyLage, spotifyMeldung, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
 
 // Backstage → Einstellungen: Spotify im Übe- und Probe-Modus – aus (Standard), eingebetteter Player, Fernsteuerung
 // der Spotify-App (data/spotify-remote.ts) oder im Browser abspielen (data/spotify-browser.ts). Gilt für dieses Gerät; die Spotify-Verbindung der Fernsteuerung lässt sich
@@ -42,6 +42,11 @@ Steht bei „Konto freigeschaltet“ ein ✗: kurz Bescheid geben – das Spotif
           <button type="button" class="verbinden" (click)="verbinden()">{{ rechteFehlen() ? '♫ Spotify neu verbinden – fürs Abspielen im Browser' : '♫ Spotify verbinden' }}</button>
           @if (meldung) { <p class="hinweis warn" role="status">{{ meldung }}</p> }
         }
+        <!-- Verhalten der Steuerung im Übe- und Probe-Modus (je Gerät) -->
+        <label class="check"><input type="checkbox" class="mitspielen" [checked]="mitspielen()" (change)="mitspielenSetzen($any($event.target).checked)" />
+          Beim Weiterblättern mitspielen – läuft ein Song, startet beim nächsten gleich dessen Spotify-Track</label>
+        <label class="check"><input type="checkbox" class="uebergang" [checked]="uebergang()" (change)="uebergangSetzen($any($event.target).checked)" />
+          Übergänge proben – Knopf „⇢ Übergang“ in der Steuerung: die letzten 15 Sekunden, dann der nächste Song ab dem Einsatz</label>
         <app-spotify-checkliste [art]="art()" [verbunden]="verbunden()" [rechteFehlen]="rechteFehlen()" />
         <!-- Einladung an die anderen: kurze Anleitung mit Link hierher (Teilen-Menü, sonst Zwischenablage) -->
         <p class="knoepfe"><button type="button" class="teilen" (click)="teilen()">Anleitung teilen</button> <span role="status">{{ geteilt() }}</span></p>
@@ -66,6 +71,8 @@ Steht bei „Konto freigeschaltet“ ein ✗: kurz Bescheid geben – das Spotif
     .ok { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #5fb88a; }
     button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
     button.verbinden { margin-top: 10px; border-color: #1db954; color: #1db954; }
+    .check { display: flex; align-items: flex-start; gap: 8px; max-width: 720px; margin-top: 12px; font-size: .85rem; line-height: 1.45; color: var(--bn-ink); }
+    .check input { flex: none; margin-top: 3px; accent-color: #1db954; }
     .teil-text { width: 100%; max-width: 720px; margin-top: 6px; padding: 8px; border: 1px solid var(--bn-line); border-radius: 8px; background: #111316; color: var(--bn-ink); font: .8rem/1.5 inherit; }
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .diagnose { margin-top: 14px; font-size: .85rem; color: var(--bn-fog); }
@@ -77,6 +84,16 @@ Steht bei „Konto freigeschaltet“ ein ✗: kurz Bescheid geben – das Spotif
 export class SpotifyEinstellung {
   protected readonly art = signal<SpotifyArt>(spotifyArt());
   protected readonly geteilt = signal('');
+  protected readonly mitspielen = signal(spotifyMitspielen());
+  protected readonly uebergang = signal(spotifyUebergang());
+  protected mitspielenSetzen(an: boolean): void {
+    spotifyMitspielenSetzen(an);
+    this.mitspielen.set(an);
+  }
+  protected uebergangSetzen(an: boolean): void {
+    spotifyUebergangSetzen(an);
+    this.uebergang.set(an);
+  }
   protected readonly teilText = signal('');
   /** Link aus „Anleitung teilen“: direkt hierher scrollen */
   private readonly hinScrollen = afterNextRender(() => {
