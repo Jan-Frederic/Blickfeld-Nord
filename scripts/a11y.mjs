@@ -27,6 +27,23 @@ const browser = await chromium.launch();
 // Die Prüfung wartet fast nur (Laden, Scrollen) – mehrere Tabs gleichzeitig verkürzen sie deutlich.
 const TABS = 4;
 
+/**
+ * Seite öffnen und warten, bis das Netz ruht. Auf einem ausgelasteten CI-Rechner wird eine Seite manchmal nicht in
+ * 30 s „ruhig“ (Build #585: /nl/band/… mit vier Tabs parallel) – dann einmal neu laden und nach dem Laden kurz warten.
+ * Geprüft wird die Seite in beiden Fällen vollständig; scheitert auch das, bricht die Prüfung ab.
+ */
+async function oeffnen(tab, path) {
+  try {
+    await tab.goto(BASE + path, { waitUntil: 'networkidle' });
+  } catch (e) {
+    if (e?.name !== 'TimeoutError') throw e;
+    console.warn(`Hinweis: ${path} wurde nicht rechtzeitig ruhig – noch einmal geladen`);
+    await tab.goto(BASE + path, { waitUntil: 'load', timeout: 60_000 });
+    await tab.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => undefined);
+    await tab.waitForTimeout(1500);
+  }
+}
+
 /** jede Seite einmal durch `pruefe` schicken, mit TABS Tabs parallel; Ergebnisse in Seitenreihenfolge */
 async function parallel(neuerTab, pruefe) {
   const ergebnis = new Array(pages.length);
@@ -92,7 +109,7 @@ const ruhe = (page) =>
 
 // WCAG-Prüfung mit axe-core
 async function axePruefung(page, path) {
-  await page.goto(BASE + path, { waitUntil: 'networkidle' });
+  await oeffnen(page, path);
   await scrollen(page, 60);
   await page.waitForTimeout(400);
   await ruhe(page);
@@ -130,7 +147,7 @@ await handy.route(/goatcounter\.com\/counter\//, (route) =>
 );
 
 async function handyPruefung(phone, path) {
-  await phone.goto(BASE + path, { waitUntil: 'networkidle' });
+  await oeffnen(phone, path);
   await scrollen(phone, 40);
   await phone.waitForTimeout(300);
   const offenders = await phone.evaluate(() => {
@@ -175,7 +192,7 @@ async function breitenPruefung(tab, path) {
   const out = [];
   for (const w of BREITEN) {
     await tab.setViewportSize({ width: w, height: 900 });
-    if (w === BREITEN[0]) await tab.goto(BASE + path, { waitUntil: 'networkidle' });
+    if (w === BREITEN[0]) await oeffnen(tab, path);
     await tab.waitForTimeout(250);
     const r = await tab.evaluate(() => {
       const W = document.documentElement.clientWidth;
