@@ -1,5 +1,5 @@
 import { geraetVorschlag, nachAnmeldung } from './einrichtung';
-import { gleicherOrdner, syncMitOrdner } from '../pages/backstage-einrichtung';
+import { aufDemWeg, gleicherOrdner, istBandOrdner, syncMitOrdner } from '../pages/backstage-einrichtung';
 
 describe('Einrichtung', () => {
   it('erste Anmeldung führt über den Assistenten zum Ziel, danach direkt', () => {
@@ -21,5 +21,18 @@ describe('Einrichtung', () => {
     expect(gleicherOrdner({ cloud: 'Blickfeld Nord/Sync' }, geteilt)).toBe(false);
     expect(gleicherOrdner({ cloud: 'Blickfeld Nord/Sync' }, { pfad: 'Blickfeld Nord/Sync' })).toBe(true);
     expect(gleicherOrdner({ cloud: '', wurzel: geteilt.wurzel }, { pfad: 'Blickfeld Nord/Sync' })).toBe(false);
+  });
+
+  it('erkennt den Ordner der Band nur am Ende des Pfads – geteilt oder im eigenen OneDrive', () => {
+    expect(istBandOrdner('BlickfeldNord (geteilt)/Sync')).toBe(true);
+    expect(istBandOrdner('Dokumente/Bands/BlickfeldNord/Sync')).toBe(true);
+    expect(istBandOrdner('Blickfeld Nord (geteilt)/Sync')).toBe(true);
+    expect(istBandOrdner('Dokumente/Bands/BlickfeldNord')).toBe(false);
+    expect(istBandOrdner('BlickfeldNord (geteilt)/Sync/Daten')).toBe(false);
+    expect(istBandOrdner('AlteBlickfeldNord/Sync')).toBe(false);
+    expect(istBandOrdner('')).toBe(false);
+    expect(aufDemWeg('BlickfeldNord (geteilt)')).toBe(true);
+    expect(aufDemWeg('Dokumente/Bands/BlickfeldNord')).toBe(true);
+    expect(aufDemWeg('Dokumente/Bands')).toBe(false);
   });
 });

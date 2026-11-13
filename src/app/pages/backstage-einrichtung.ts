@@ -27,8 +27,17 @@ const SCHRITTE: { id: Schritt; titel: string }[] = [
   { id: 'fertig', titel: 'Fertig' },
 ];
 
-/** Hinweis, welcher OneDrive-Ordner der der Band ist (so heißt er in der Auswahl) */
-export const BAND_ORDNER_HINWEIS = 'Blickfeld Nord (geteilt)/Sync';
+/** Hinweis, welcher OneDrive-Ordner der der Band ist (so heißt er in der Auswahl; beim Besitzer ohne „(geteilt)“) */
+export const BAND_ORDNER_HINWEIS = 'BlickfeldNord (geteilt)/Sync';
+
+/**
+ * Ist das (das Ende) der Pfad zum Ordner der Band? Es zählt nur der hintere Teil: „…/BlickfeldNord/Sync“ im eigenen
+ * OneDrive (Besitzer, z. B. „Dokumente/Bands/BlickfeldNord/Sync“) bzw. „BlickfeldNord (geteilt)/Sync“ bei allen, mit
+ * denen der Ordner geteilt ist. Groß-/Kleinschreibung und ein Leerzeichen in „Blickfeld Nord“ sind egal.
+ */
+export const istBandOrdner = (pfad: string) => /(^|\/)blickfeld ?nord( \(geteilt\))?\/sync$/i.test(pfad.trim());
+/** liegt dieser Ordner auf dem Weg dorthin (BlickfeldNord selbst)? */
+export const aufDemWeg = (pfad: string) => /(^|\/)blickfeld ?nord( \(geteilt\))?$/i.test(pfad.trim());
 
 /** Synchronisation mit dem gewählten OneDrive-Ordner und den Standards (Speicher der App, beide Richtungen, automatisch …) */
 export const syncMitOrdner = (ort: CloudOrt): SyncEinstellungen => ({ ...SYNC_STANDARD, cloud: ort.pfad, wurzel: ort.wurzel });
@@ -81,8 +90,14 @@ const SPOTIFY_ARTEN: { art: SpotifyArt; titel: string; text: string }[] = [
           <h3>Synchronisation mit OneDrive</h3>
           <p>Über einen gemeinsamen Ordner in OneDrive kommen Setlists, Noten, Übe-Stände und Einstellungen auf alle deine
             Geräte und zur Band.</p>
-          <p class="tipp"><mat-icon>info</mat-icon><span>Der Ordner der Band heißt in der Auswahl <strong>{{ hinweis }}</strong>.</span></p>
-          @if (gewaehlt(); as g) { <p class="ok"><mat-icon>check_circle</mat-icon> Abgleich mit „{{ g }}“{{ neuGewaehlt() ? ' – der erste Abgleich läuft im Hintergrund.' : '' }}</p> }
+          <!-- dynamischer Hinweis: grün, sobald der angezeigte bzw. gewählte Ordner auf „BlickfeldNord(geteilt)/Sync“ endet -->
+          @if (treffer()) {
+            <p class="tipp passt" role="status"><mat-icon>check_circle</mat-icon><span>{{ blaettern() ? 'Das ist der Ordner der Band – jetzt „Diesen Ordner nehmen“.' : 'Richtiger Ordner: der Ordner der Band.' }}</span></p>
+          } @else {
+            <p class="tipp" role="status"><mat-icon>info</mat-icon><span>Der Ordner der Band endet auf <strong>{{ hinweis }}</strong> – bei dem, der ihn geteilt hat,
+              ohne „(geteilt)“ (z. B. „…/BlickfeldNord/Sync“).</span></p>
+          }
+          @if (gewaehlt(); as g) { <p class="ok"><mat-icon>check_circle</mat-icon><span>Abgleich mit „{{ g }}“{{ neuGewaehlt() ? ' – der erste Abgleich läuft im Hintergrund.' : '' }}</span></p> }
           @if (!konto()) {
             <button type="button" class="primaer" (click)="anmelden()" [disabled]="laeuft()"><mat-icon>login</mat-icon> Mit Microsoft anmelden</button>
           } @else if (blaettern(); as b) {
@@ -91,7 +106,7 @@ const SPOTIFY_ARTEN: { art: SpotifyArt; titel: string; text: string }[] = [
               <div class="ordner">
                 @if (b.ort.pfad || b.ort.wurzel) { <button type="button" (click)="oeffnen(eltern(b.ort))"><mat-icon>arrow_upward</mat-icon> eine Ebene hoch</button> }
                 @for (o of b.ordner; track o.name + (o.wurzel?.item ?? '')) {
-                  <button type="button" (click)="oeffnen(hinein(b.ort, o))"><mat-icon>{{ o.wurzel ? 'folder_shared' : 'folder' }}</mat-icon> {{ o.name }}@if (o.wurzel) { <small>geteilt</small> }</button>
+                  <button type="button" [class.weg]="richtung(b.ort, o)" (click)="oeffnen(hinein(b.ort, o))"><mat-icon>{{ o.wurzel ? 'folder_shared' : 'folder' }}</mat-icon> {{ o.name }}@if (o.wurzel) { <small>geteilt</small> }</button>
                 }
                 @if (!b.ordner.length) { <small>keine Unterordner</small> }
               </div>
@@ -193,6 +208,16 @@ export class BackstageEinrichtung implements OnInit {
   }
 
   protected readonly ortName = (ort: CloudOrt) => cloudName({ cloud: ort.pfad, wurzel: ort.wurzel });
+  /** Hinweis grün: beim Durchklicken der angezeigte Ordner, sonst der gewählte */
+  protected readonly treffer = computed(() => {
+    const b = this.blaettern();
+    return istBandOrdner(b ? this.ortName(b.ort) : this.gewaehlt());
+  });
+  /** Ordner in der Liste, der zum Ordner der Band führt (BlickfeldNord bzw. darin Sync) – grün umrandet */
+  protected richtung(ort: CloudOrt, o: CloudEintrag): boolean {
+    const ziel = this.ortName(this.hinein(ort, o));
+    return istBandOrdner(ziel) || aufDemWeg(ziel);
+  }
   protected eltern(ort: CloudOrt): CloudOrt {
     return ort.pfad ? { pfad: ort.pfad.split('/').slice(0, -1).join('/'), wurzel: ort.wurzel } : { pfad: '' };
   }

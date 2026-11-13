@@ -1202,7 +1202,7 @@ test('Backstage: Einrichtungsassistent – Schritt für Schritt mit den Standard
   await weiter();
   // 3. Synchronisation: Ordner selbst wählen, Hinweis auf den Ordner der Band (ohne Microsoft-Konto: nur ansehen)
   await until(async () => /Synchronisation mit OneDrive/i.test(await seite.innerText()), 'Sync-Schritt fehlt');
-  expect(/Blickfeld Nord \(geteilt\)\/Sync/.test(await seite.innerText()), 'Hinweis auf den Ordner der Band fehlt');
+  expect(/endet auf BlickfeldNord \(geteilt\)\/Sync/.test(await seite.innerText()) && (await seite.locator('.tipp.passt').count()) === 0, 'Hinweis auf den Ordner der Band fehlt');
   expect(/Speicher der App, in beide Richtungen/.test(await seite.innerText()), 'Standards der Synchronisation fehlen');
   expect((await p.evaluate(() => localStorage.getItem('bn-sync-einstellungen'))) === null, 'Sync-Ordner wurde ohne Auswahl eingetragen');
   await weiter();
@@ -1216,6 +1216,11 @@ test('Backstage: Einrichtungsassistent – Schritt für Schritt mit den Standard
   await until(async () => new URL(p.url()).pathname.startsWith('/backstage/termine'), async () => 'Nicht zum Ziel weitergeleitet: ' + p.url());
   const st = await p.evaluate(() => ({ e: localStorage.getItem('bn-einrichtung'), s: localStorage.getItem('bn-spotify-modus'), g: localStorage.getItem('bn-geraet-name'), i: localStorage.getItem('bn-ich') }));
   expect(/"fertig"/.test(st.e ?? '') && st.s === '"browser"' && st.g === 'Testgerät' && !!st.i, `Einstellungen nicht übernommen: ${JSON.stringify(st)}`);
+  // schon mit dem Ordner der Band eingerichtet (im eigenen OneDrive, beliebiger vorderer Teil): Hinweis wird grün
+  await p.evaluate(() => localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ cloud: 'Dokumente/Bands/BlickfeldNord/Sync', lokal: 'app', richtung: 'beide', loeschen: true, auto: false })));
+  await p.go('/backstage/einrichtung/?schritt=sync');
+  await until(async () => /Richtiger Ordner/.test(await seite.locator('.tipp.passt').innerText().catch(() => '')), 'Hinweis wird beim Ordner der Band nicht grün');
+  await p.evaluate(() => localStorage.removeItem('bn-sync-einstellungen'));
   // in den Einstellungen erneut aufrufbar
   await p.go('/backstage/einstellungen/');
   expect(await p.getByRole('link', { name: 'Einrichtung durchgehen' }).isVisible(), 'Kein Weg zurück in die Einrichtung');

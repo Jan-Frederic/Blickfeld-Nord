@@ -1048,7 +1048,10 @@ aufrufbar unter Einstellungen → „Einrichtung durchgehen“. Schritte, jeder 
 2. **Dieses Gerät** – Namensvorschlag „Freds iPhone“ (`geraetVorschlag` in `data/einrichtung.ts`).
 3. **Synchronisation** – den OneDrive-Ordner wählt man selbst (Ordnerauswahl wie in den Einstellungen, ganz oben auch
    die mit einem geteilten Ordner), nichts ist vorgewählt; ein Hinweis nennt den Ordner der Band, wie er in der Auswahl
-   heißt: „Blickfeld Nord (geteilt)/Sync“ (`BAND_ORDNER_HINWEIS`). Lokal immer der Speicher der App, dazu die übrigen
+   heißt: „BlickfeldNord (geteilt)/Sync“ (`BAND_ORDNER_HINWEIS`; beim Besitzer im eigenen OneDrive ohne „(geteilt)“, z. B.
+   „Dokumente/Bands/BlickfeldNord/Sync“). Der Hinweis wird grün, sobald der angezeigte bzw. gewählte Ordner auf
+   „BlickfeldNord/Sync“ (mit oder ohne „(geteilt)“) endet – es zählt nur dieser hintere Teil (`istBandOrdner`); in der
+   Liste sind die Ordner auf dem Weg dorthin grün umrandet. Lokal immer der Speicher der App, dazu die übrigen
    Standards aus `SYNC_STANDARD` (`data/sync-ordner.ts`): beide Richtungen, Löschen mitsynchronisieren, automatisch,
    Noten gleich einlesen. Ein anderer Ordner als bisher lässt den Abgleich neu beginnen; ohne Anmeldung zuerst „Mit
    Microsoft anmelden“.
