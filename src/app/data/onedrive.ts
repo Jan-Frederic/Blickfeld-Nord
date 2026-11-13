@@ -312,17 +312,19 @@ const LADEN_HOECHSTENS_MS = 30_000;
 export function cloudLaden(d: CloudDatei): Promise<Blob> {
   const frist = () => AbortSignal.timeout(LADEN_HOECHSTENS_MS);
   return dateiLaden(d, {
-    graph: (p) => graph(p, { signal: frist() }),
-    fetch: (u) => fetch(u, { signal: frist() }),
+    graph: (p, init) => graph(p, { ...init, signal: frist() }),
+    fetch: (u, init) => fetch(u, { ...init, signal: frist() }),
     warten: (ms) => new Promise((r) => setTimeout(r, ms)),
   });
 }
 
 /** Netz und Anmeldung von außen (für Tests ersetzbar) */
 export interface LadeWege {
-  graph(pfad: string): Promise<Response>;
-  fetch(url: string): Promise<Response>;
+  graph(pfad: string, init?: RequestInit): Promise<Response>;
+  fetch(url: string, init?: RequestInit): Promise<Response>;
   warten(ms: number): Promise<unknown>;
+  /** Uhr in ms (für die Dauer je Versuch in der Meldung) */
+  jetzt?: () => number;
 }
 
 /** Herunterladen scheiterte nur an der Verbindung (Abbruch, keine Antwort) – nicht an OneDrive oder einer Regel */
@@ -334,55 +336,71 @@ export async function dateiLaden(d: CloudDatei, w: LadeWege): Promise<Blob> {
   const versuche: string[] = [];
   const blockiert = new Set<string>();
   const csp = (e: SecurityPolicyViolationEvent) => blockiert.add(hostVon(e.blockedURI));
-  if (typeof document !== 'undefined') document.addEventListener('securitypolicyviolation', csp);
-  /** ein Weg: Blob oder null (gescheitert – Grund in versuche); andere Fehler als ein Abbruch gehen weiter */
+  // App zwischendurch im Hintergrund (Handy gesperrt, Tab gewechselt)? Dann bricht der Browser Anfragen gern ab
+  let hintergrund = typeof document !== 'undefined' && document.hidden;
+  const sicht = () => (hintergrund ||= document.hidden);
+  if (typeof document !== 'undefined') {
+    document.addEventListener('securitypolicyviolation', csp);
+    document.addEventListener('visibilitychange', sicht);
+  }
+  const jetzt = w.jetzt ?? (() => Date.now());
+  const dauer = (t0: number) => `${((jetzt() - t0) / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s`;
+  /** ein Weg: Blob oder null (gescheitert – Grund und Dauer in versuche); andere Fehler als ein Abbruch gehen weiter */
   const abbruch = (e: unknown) => ['TypeError', 'TimeoutError', 'AbortError'].includes((e as Error)?.name);
-  const weg = async (url: string, mitZugang: boolean): Promise<Blob | null> => {
+  const vermerken = (host: string, e: unknown, t0: number) =>
+    versuche.push(`${host} ${(e as Error).name === 'TypeError' ? 'abgebrochen' : 'ohne Antwort'} (${dauer(t0)})`);
+  // zweiter Durchgang am Browser-Cache vorbei: ein kaputter Cache-Eintrag ließe sonst immer dieselbe Datei scheitern
+  const weg = async (url: string, mitZugang: boolean, init?: RequestInit): Promise<Blob | null> => {
+    const t0 = jetzt();
     try {
-      const res = mitZugang ? await w.graph(url) : await w.fetch(url);
+      const res = mitZugang ? await w.graph(url, init) : await w.fetch(url, init);
       if (res.ok) return await res.blob();
       versuche.push(`${hostVon(url)} ${res.status}`);
     } catch (e) {
       if (!abbruch(e)) throw e;
-      versuche.push(`${hostVon(mitZugang ? GRAPH : url)} ${(e as Error).name === 'TypeError' ? 'abgebrochen' : 'ohne Antwort'}`);
+      vermerken(hostVon(mitZugang ? GRAPH : url), e, t0);
     }
     return null;
   };
-  const durchgang = async (mitListenLink: boolean): Promise<Blob | null> => {
+  const durchgang = async (mitListenLink: boolean, init?: RequestInit): Promise<Blob | null> => {
     if (mitListenLink && d.downloadUrl) {
-      const b = await weg(d.downloadUrl, false);
+      const b = await weg(d.downloadUrl, false, init);
       if (b) return b;
     }
     let link: string | undefined;
+    const t0 = jetzt();
     try {
-      link = ((await (await w.graph(perId(d.id, d.drive))).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
+      link = ((await (await w.graph(perId(d.id, d.drive), init)).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
     } catch (e) {
       if (!abbruch(e)) throw e;
-      versuche.push(`graph.microsoft.com ${(e as Error).name === 'TypeError' ? 'abgebrochen' : 'ohne Antwort'}`);
-      return null;
+      vermerken('graph.microsoft.com', e, t0);
     }
     if (link) {
-      const b = await weg(link, false);
+      const b = await weg(link, false, init);
       if (b) return b;
     }
-    return weg(`${perId(d.id, d.drive)}/content`, true);
+    // auch wenn die Abfrage des Links scheiterte: /content ist ein eigener Weg
+    return weg(`${perId(d.id, d.drive)}/content`, true, init);
   };
   try {
     const erst = await durchgang(true);
     if (erst) return erst;
     await w.warten(1000);
-    const dann = await durchgang(false);
+    const dann = await durchgang(false, { cache: 'no-store' });
     if (dann) return dann;
     // Meldungen der Sicherheitsregel kommen kurz nach dem Abbruch
     await w.warten(50);
-    const hosts = [...new Set(versuche)].join(', ');
     const regel = blockiert.size ? `; Sicherheitsregel der Seite blockiert ${[...blockiert].join(', ')}` : '';
-    const text = `Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht: ${hosts}${regel}) – wird beim nächsten Abgleich wiederholt`;
+    const lage = [typeof navigator !== 'undefined' && navigator.onLine === false && 'Gerät offline', hintergrund && 'App war im Hintergrund'].filter(Boolean).join(', ');
+    const text = `Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht: ${versuche.join(', ')}${regel}${lage ? `; ${lage}` : ''}) – wird beim nächsten Abgleich wiederholt`;
     // nur Abbrüche (kein Status von OneDrive, keine Sicherheitsregel): meist Netzwechsel oder App im Hintergrund
-    const nurNetz = !blockiert.size && versuche.every((v) => / (abgebrochen|ohne Antwort)$/.test(v));
+    const nurNetz = !blockiert.size && versuche.every((v) => / (abgebrochen|ohne Antwort) \(/.test(v));
     throw nurNetz ? new LadeUnterbrechung(text) : new Error(text);
   } finally {
-    if (typeof document !== 'undefined') document.removeEventListener('securitypolicyviolation', csp);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('securitypolicyviolation', csp);
+      document.removeEventListener('visibilitychange', sicht);
+    }
   }
 }
 

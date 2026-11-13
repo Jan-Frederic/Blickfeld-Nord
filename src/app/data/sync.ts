@@ -251,9 +251,9 @@ export async function synchronisieren(
           (e.hinweise ??= []).push(`${a.pfad}: ${text}`);
           continue;
         }
-        // nur die Verbindung (Netzwechsel, App im Hintergrund): offen lassen und beim nächsten Abgleich nachholen; bricht
+        // nur die Verbindung (Netzwechsel, App im Hintergrund) – auch beim Konflikt, der die Cloud-Fassung lädt: offen lassen und beim nächsten Abgleich nachholen; bricht
         // sie dauerhaft weg, wartet der Rest gleich auf den nächsten Abgleich statt jede Datei einzeln auszuprobieren
-        if (a.art === 'runter' && (err as Error).name === 'LadeUnterbrechung') {
+        if ((a.art === 'runter' || a.art === 'konflikt') && (err as Error).name === 'LadeUnterbrechung') {
           (e.unterbrochen ??= []).push(`${a.pfad}: ${text}`);
           if (++unterbrochenInFolge >= ABBRUCH_NACH && !abgebrochen) abgebrochen = e.netzWeg = true;
           continue;

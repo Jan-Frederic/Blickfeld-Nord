@@ -854,7 +854,7 @@ ein noch genutztes Gerät legt seinen Eintrag beim nächsten Abgleich neu an.
 **Verbindung unterbrochen:** Scheitert ein Download nur an Abbrüchen bzw. fehlender Antwort (kein Status von OneDrive,
 keine CSP-Blockade – `LadeUnterbrechung` in `data/onedrive.ts`), ist das zunächst kein Fehler, sondern ein Hinweis
 („1 Datei nicht geladen (Verbindung unterbrochen: …) – wird nachgeholt“): typisch auf dem Handy bei Netzwechsel oder
-wenn die App in den Hintergrund geht. Die Datei bleibt offen und kommt beim nächsten Abgleich. Gezählt wird je Datei in
+wenn die App in den Hintergrund geht – auch beim Konflikt, der die Cloud-Fassung lädt. Die Datei bleibt offen und kommt beim nächsten Abgleich. Gezählt wird je Datei in
 `bn-sync-unterbrochen` (`unterbrochenWerten` in `data/sync.ts`): Beim dritten Mal in Folge wird es ein Fehler („seit 3
 Abgleichen nicht ladbar – …“), geladene Dateien und Einträge älter als eine Woche fallen raus. Zehn Unterbrechungen
 hintereinander: Die Verbindung ist weg, der Rest wartet auf den nächsten Abgleich („Verbindung weg …“).
@@ -862,7 +862,11 @@ hintereinander: Die Verbindung ist weg, der Rest wartet auf den nächsten Abglei
 **Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht:
 …)“): Der Browser hat die Anfrage ohne Antwort abgebrochen – kein Netz, die Sicherheitsregel der Seite (CSP in
 `scripts/csp.mjs`) oder ein Server ohne CORS-Freigabe. `dateiLaden` in `data/onedrive.ts` versucht nacheinander den
-Download-Link aus der Liste, einen frisch geholten Link und `/content` über Graph, nach einer Sekunde alles noch einmal.
+Download-Link aus der Liste, einen frisch geholten Link und `/content` über Graph (auch wenn schon die Abfrage des
+Links scheiterte), nach einer Sekunde alles noch einmal – dann am Browser-Cache vorbei (`cache: 'no-store'`), falls ein
+kaputter Cache-Eintrag immer dieselbe Datei scheitern lässt. Jeder Versuch steht mit Dauer in der Meldung
+(„abgebrochen (0,1 s)“: sofort abgelehnt; „ohne Antwort (30,0 s)“: Zeitgrenze), dazu „Gerät offline“ bzw. „App war im
+Hintergrund“, wenn das währenddessen der Fall war.
 Jede dieser Anfragen darf höchstens 30 s dauern („ohne Antwort“) – sonst hinge der ganze Abgleich an ihr.
 Scheitert auch das, nennt die Meldung die versuchten Server (nur Hostnamen) und, falls die CSP etwas blockiert hat,
 welchen – dann diesen Host in `connect-src` aufnehmen. Bei Geräte-Dateien (nur für die Geräteliste) ist das kein Fehler,

@@ -25,15 +25,20 @@ describe('OneDrive', () => {
     const datei: CloudDatei = { id: 'i1', pfad: 'Geraete/dd2a1f3a.json', groesse: 80, version: 'v1', geaendert: '2026-11-13T08:00:00Z', drive: 'd1', downloadUrl: 'https://a.files.1drv.com/alt' };
     const abbruch = () => Promise.reject(new TypeError('Failed to fetch'));
     const ok = (text: string) => Promise.resolve(new Response(text));
-    function wege(teile: Partial<LadeWege> & { content?: () => Promise<Response> }): LadeWege & { aufrufe: string[] } {
+    function wege(teile: Partial<LadeWege> & { content?: () => Promise<Response>; info?: () => Promise<Response> }): LadeWege & { aufrufe: string[]; caches: (string | undefined)[] } {
       const aufrufe: string[] = [];
+      const caches: (string | undefined)[] = [];
       return {
         aufrufe,
+        caches,
+        jetzt: () => 0,
         warten: () => Promise.resolve(),
-        fetch: (u) => (aufrufe.push(u), teile.fetch ? teile.fetch(u) : abbruch()),
-        graph: (p) => {
+        fetch: (u, init) => (aufrufe.push(u), caches.push(init?.cache), teile.fetch ? teile.fetch(u) : abbruch()),
+        graph: (p, init) => {
           aufrufe.push(p);
+          caches.push(init?.cache);
           if (p.endsWith('/content')) return teile.content ? teile.content() : abbruch();
+          if (teile.info) return teile.info();
           return Promise.resolve(new Response(JSON.stringify({ '@microsoft.graph.downloadUrl': 'https://b.files.1drv.com/neu' })));
         },
       };
@@ -53,8 +58,20 @@ describe('OneDrive', () => {
 
     it('versucht es ein zweites Mal und nennt dann die versuchten Server', async () => {
       const w = wege({});
-      await expect(dateiLaden(datei, w)).rejects.toThrow(/versucht: a\.files\.1drv\.com abgebrochen, b\.files\.1drv\.com abgebrochen, graph\.microsoft\.com abgebrochen\) – wird beim nächsten Abgleich wiederholt/);
+      await expect(dateiLaden(datei, w)).rejects.toThrow(/versucht: a\.files\.1drv\.com abgebrochen \(0,0 s\), b\.files\.1drv\.com abgebrochen \(0,0 s\), graph\.microsoft\.com abgebrochen \(0,0 s\), b\.files/);
       expect(w.aufrufe.filter((u) => u.endsWith('/content'))).toHaveLength(2);
+    });
+
+    it('zweiter Durchgang am Browser-Cache vorbei', async () => {
+      const w = wege({});
+      await expect(dateiLaden(datei, w)).rejects.toThrow();
+      expect(w.caches).toEqual([undefined, undefined, undefined, undefined, 'no-store', 'no-store', 'no-store']);
+    });
+
+    it('scheitert schon die Abfrage des Links, kommt trotzdem /content dran', async () => {
+      const w = wege({ info: abbruch, content: () => ok('inhalt') });
+      expect(await (await dateiLaden(datei, w)).text()).toBe('inhalt');
+      expect(w.aufrufe).toEqual(['https://a.files.1drv.com/alt', '/drives/d1/items/i1', '/drives/d1/items/i1/content']);
     });
 
     it('nur Abbrüche: Fehlerart LadeUnterbrechung (Verbindung), mit Status von OneDrive dagegen nicht', async () => {

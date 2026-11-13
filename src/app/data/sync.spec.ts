@@ -154,6 +154,20 @@ describe('Synchronisation', () => {
     expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE)).toEqual([{ art: 'runter', pfad: 'Daten/a.json' }]);
   });
 
+  it('auch beim Konflikt (Cloud-Fassung laden) ist eine Unterbrechung kein Fehler', async () => {
+    const cloud = speicherOrdner('c', { 'Daten/a.json': 'C' });
+    const lokal = speicherOrdner('l', { 'Daten/a.json': 'L' });
+    cloud.lesen = async () => {
+      throw unterbrechung();
+    };
+    const zustand: Zustand = { 'Daten/a.json': { cloud: 'alt', lokal: 'alt' } };
+    expect(planen(await cloud.liste(), await lokal.liste(), zustand, BEIDE)[0].art).toBe('konflikt');
+    const r = await synchronisieren(cloud, lokal, zustand, BEIDE);
+    expect(r.ergebnis.fehler).toEqual([]);
+    expect(r.ergebnis.unterbrochen).toHaveLength(1);
+    expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE)[0].art).toBe('konflikt');
+  });
+
   it('Verbindung ganz weg: nach zehn Unterbrechungen in Folge wartet der Rest auf den nächsten Abgleich', async () => {
     const start = Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`Daten/${i}.json`, String(i)]));
     const cloud = speicherOrdner('c', start);
