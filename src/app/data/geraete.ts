@@ -15,6 +15,8 @@ export interface GeraetEintrag {
   person: string;
   /** ISO-Zeitpunkt des Abgleichs */
   zeit: string;
+  /** App-Stand des Geräts (data/app-stand.ts) – fehlt bei Einträgen älterer Versionen */
+  app?: string;
 }
 
 /** Vorschlag für den Namen aus dem Browser: „iPhone“, „Android-Handy“, „iPad“, „Mac“, „Windows-PC“ … */
@@ -62,18 +64,19 @@ export function geraetNameSetzen(name: string): void {
 export const geraetPfad = (id: string) => `${GERAETE_ORDNER}/${id}.json`;
 
 /** Geräte-Datei für den Abgleich – null, wenn sie seit dem letzten Mal (unter einer Stunde, gleicher Name) reicht */
-export function geraetMeldung(person: string, jetzt = new Date()): { pfad: string; text: string } | null {
+export function geraetMeldung(person: string, jetzt = new Date(), app = ''): { pfad: string; text: string } | null {
   const id = geraetId();
   const name = geraetName() || standardName(typeof navigator === 'undefined' ? '' : navigator.userAgent);
-  let alt: { name?: string; zeit?: number } = {};
+  let alt: { name?: string; zeit?: number; app?: string } = {};
   try {
     alt = JSON.parse(lesen(GEMELDET_KEY) ?? '{}');
   } catch {
     // neu melden
   }
-  if (alt.name === name && alt.zeit && jetzt.getTime() - alt.zeit < ABSTAND) return null;
-  schreiben(GEMELDET_KEY, JSON.stringify({ name, zeit: jetzt.getTime() }));
-  const e: GeraetEintrag = { id, name, person, zeit: jetzt.toISOString() };
+  // neu melden: stündlich, bei neuem Namen und bei neuem App-Stand (damit die Liste gleich „aktuell“ zeigt)
+  if (alt.name === name && (alt.app ?? '') === app && alt.zeit && jetzt.getTime() - alt.zeit < ABSTAND) return null;
+  schreiben(GEMELDET_KEY, JSON.stringify({ name, zeit: jetzt.getTime(), ...(app ? { app } : {}) }));
+  const e: GeraetEintrag = { id, name, person, zeit: jetzt.toISOString(), ...(app ? { app } : {}) };
   return { pfad: geraetPfad(id), text: JSON.stringify(e) };
 }
 
@@ -84,7 +87,13 @@ export function geraeteListe(texte: string[]): GeraetEintrag[] {
     try {
       const e = JSON.parse(t) as Partial<GeraetEintrag>;
       if (typeof e.id === 'string' && typeof e.name === 'string' && typeof e.zeit === 'string' && !Number.isNaN(Date.parse(e.zeit)))
-        out.push({ id: e.id, name: e.name.slice(0, 40), person: typeof e.person === 'string' ? e.person : '', zeit: e.zeit });
+        out.push({
+          id: e.id,
+          name: e.name.slice(0, 40),
+          person: typeof e.person === 'string' ? e.person : '',
+          zeit: e.zeit,
+          ...(typeof e.app === 'string' && /^[0-9a-f]{6,12}$/.test(e.app) ? { app: e.app } : {}),
+        });
     } catch {
       // kaputte Datei überspringen
     }

@@ -850,6 +850,11 @@ mit derselben Liste; Einträge, die sich beim letzten Abgleich nicht lesen ließ
 `hinweise` des Abgleichs), stehen dort als „Unbekanntes Gerät“ mit Kennung. Wer „Daten löschen“ darf, kann fremde
 Einträge entfernen (`geraetEntfernen` in `data/sync.service.ts`, löscht die Datei in OneDrive und die lokale Kopie) –
 ein noch genutztes Gerät legt seinen Eintrag beim nächsten Abgleich neu an.
+**App-Stand je Gerät:** Jedes Gerät schreibt seinen App-Stand mit in seinen Eintrag (`app`, neu gemeldet auch, sobald
+sich der App-Stand ändert). Die Listen unter Abgleich → Geräte und „Daten auf diesem Gerät“ zeigen „App-Stand 5926c9e0
+(aktuell)“ bzw. „(veraltet)“ – verglichen mit der veröffentlichten Version aus `/sw.js` (höchstens stündlich gefragt);
+Einträge älterer Versionen stehen als „App-Stand unbekannt“. Den eigenen App-Stand nennt der Service Worker auf Nachfrage
+(Nachricht „app-stand“, `data/app-stand.ts`) – eindeutig auch mitten in einem Update.
 **Von selbst aufgeräumt** (für jeden Eintrag gleich, `geraetePflege` in `data/geraete.ts`): Das Gerät mit „Daten
 löschen“ entfernt Einträge, die sich bei mindestens 3 Abgleichen über mindestens 24 Stunden nicht lesen ließen
 (Zähler in `bn-sync-geraete-pflege`), und Geräte, die seit 180 Tagen nicht abgeglichen haben (Meldung „Geräteliste

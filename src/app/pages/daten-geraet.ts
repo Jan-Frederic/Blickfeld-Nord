@@ -8,6 +8,7 @@ import { SpotifyArt, spotifyArt, spotifyBrowserRechte, spotifyGewaehltesGeraet, 
 import { DATEN_BACKUP, backupZeit, backupsSortiert } from '../data/backup-regeln';
 import { GESICHERT_KEY } from './backstage-sync';
 import { geraetId, geraetName, seitText, standardName } from '../data/geraete';
+import { appStand } from '../data/app-stand';
 
 // Abgleich → Daten auf diesem Gerät, unten: was der Browser dieses Geräts sonst noch weiß – Speicherplatz (belegt,
 // erlaubt, dauerhaft?), die lokale Kopie des Sync-Ordners, Spotify, App-Stand samt Seiten für unterwegs und das
@@ -223,9 +224,7 @@ export class DatenGeraet {
   protected readonly cacheListe = signal<CacheInfo[] | null>(null);
   protected readonly suchtUpdate = signal(false);
   private async appLesen(): Promise<void> {
-    if (!this.cachesDa) return;
-    const namen = await caches.keys().catch(() => [] as string[]);
-    this.appStand.set(namen.filter((n) => /^bn-[0-9a-f]{6,}$/.test(n)).map((n) => n.slice(3, 11)).join(', '));
+    this.appStand.set(await appStand().catch(() => ''));
   }
   private async cachesMessen(): Promise<void> {
     const out: CacheInfo[] = [];
@@ -294,7 +293,8 @@ export class DatenGeraet {
       `Letzter Abgleich: ${l ? `${datum(Date.parse(l.zeit))}: ${l.text}` : 'noch nie'}`,
       `Wartet aufs Hochladen: ${this.sync.ausstehend()} · Noten ohne eindeutigen Song: ${offeneNoten().length}`,
       `Unterbrochene Downloads: ${localStorage.getItem('bn-sync-unterbrochen') ?? 'keine'}`,
-      `Geräte: ${this.sync.geraete().map((g) => `${g.name} (${g.id}, ${seitText(g.zeit)})`).join('; ') || 'keine'}${this.sync.geraeteUnlesbar().length ? ` · nicht lesbar: ${this.sync.geraeteUnlesbar().join(', ')}` : ''}`,
+      `Veröffentlicht: ${this.sync.neuesterStand() || 'unbekannt'}`,
+      `Geräte: ${this.sync.geraete().map((g) => `${g.name} (${g.id}, ${seitText(g.zeit)}, App-Stand ${g.app ?? 'unbekannt'})`).join('; ') || 'keine'}${this.sync.geraeteUnlesbar().length ? ` · nicht lesbar: ${this.sync.geraeteUnlesbar().join(', ')}` : ''}`,
       ...spotifyLage().map((z) => `Spotify: ${z}`),
       ...(spotifyProtokoll().length ? ['Spotify-Protokoll (zuletzt):', ...spotifyProtokoll().slice(-20)] : []),
     ];

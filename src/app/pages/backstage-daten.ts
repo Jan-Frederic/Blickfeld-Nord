@@ -12,6 +12,7 @@ import { SyncStatus, spiegelArt, syncStatusVon } from '../data/spiegel';
 import { backupTeilen } from './backstage-sync';
 import { DatenEditor } from './daten-editor';
 import { LANGE_NICHT_TAGE, geraetId, seitText } from '../data/geraete';
+import { standVergleich } from '../data/app-stand';
 import { DatenGeraet } from './daten-geraet';
 
 // Backstage → Abgleich → Daten auf diesem Gerät: jeder gespeicherte Eintrag einzeln – verständlich benannt (Bereich,
@@ -118,7 +119,7 @@ import { DatenGeraet } from './daten-geraet';
           <ul>
             @for (g of sync.geraete(); track g.id) {
               <li [class.verwaist]="langeNicht(g.zeit)">
-                <span class="text"><strong>{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }}</strong><small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }}{{ langeNicht(g.zeit) ? ' · lange nicht abgeglichen' : '' }}</small></span>
+                <span class="text"><strong>{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }}</strong><small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }} · <span [class.veraltet]="veraltet(g.app)">{{ standText(g.app) }}</span>{{ langeNicht(g.zeit) ? ' · lange nicht abgeglichen' : '' }}</small></span>
                 @if (loeschbar() && g.id !== meineId) { <button type="button" class="icon" (click)="geraetEntfernen(g.id, g.name)" [attr.aria-label]="'Eintrag von ' + g.name + ' entfernen'"><mat-icon>delete</mat-icon></button> }
               </li>
             }
@@ -195,6 +196,15 @@ export class BackstageDaten {
   protected readonly meldung = signal('');
   protected readonly meineId = geraetId();
   protected readonly seit = seitText;
+  /** App-Stand eines Geräts in der Liste: „App-Stand 5926c9e0 (veraltet)“ */
+  protected standText(app: string | undefined): string {
+    if (!app) return 'App-Stand unbekannt (ältere Version)';
+    const v = standVergleich(app, this.sync.neuesterStand());
+    return `App-Stand ${app}${v === 'veraltet' ? ' (veraltet)' : v === 'aktuell' ? ' (aktuell)' : ''}`;
+  }
+  protected veraltet(app: string | undefined): boolean {
+    return !app || standVergleich(app, this.sync.neuesterStand()) === 'veraltet';
+  }
   protected langeNicht(zeit: string): boolean {
     return Date.now() - Date.parse(zeit) > LANGE_NICHT_TAGE * 864e5;
   }

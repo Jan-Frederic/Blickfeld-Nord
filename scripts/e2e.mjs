@@ -1848,7 +1848,7 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
     const req = indexedDB.open('bn-sync', 1);
     req.onsuccess = () => {
       const t = req.result.transaction('dateien', 'readwrite');
-      const text = JSON.stringify({ id: 'ab12cd34', name: 'Davids Laptop', person: 'david', zeit: new Date().toISOString() });
+      const text = JSON.stringify({ id: 'ab12cd34', name: 'Davids Laptop', person: 'david', zeit: new Date().toISOString(), app: '0000beef' });
       t.objectStore('dateien').put({ inhalt: new Blob([text]), groesse: text.length, geaendert: new Date().toISOString(), version: 'g1' }, 'Geraete/ab12cd34.json');
       t.oncomplete = () => ok(null);
     };
@@ -1856,7 +1856,7 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await p.reload({ waitUntil: 'networkidle' });
   const geraeteGruppe = p.locator('app-backstage-daten .geraete-gruppe');
   await geraeteGruppe.locator('summary').click();
-  await until(async () => /Davids Laptop[\s\S]*Kennung ab12cd34[\s\S]*Unbekanntes Gerät[\s\S]*Kennung dd2a1f3a/.test(await geraeteGruppe.innerText().catch(() => '')), async () => `Geräte fehlen unter „Daten auf diesem Gerät“: ${await geraeteGruppe.innerText().catch(() => '–')}`);
+  await until(async () => /Davids Laptop[\s\S]*Kennung ab12cd34 · App-Stand 0000beef[\s\S]*Unbekanntes Gerät[\s\S]*Kennung dd2a1f3a/.test(await geraeteGruppe.innerText().catch(() => '')), async () => `Geräte fehlen unter „Daten auf diesem Gerät“: ${await geraeteGruppe.innerText().catch(() => '–')}`);
   // weitere Bereiche: Speicherplatz, Sync-Kopie (je Ordner), Spotify (Protokoll leeren), Backup; neue Schlüssel beschriftet
   await p.evaluate(() => {
     localStorage.setItem('bn-spotify-modus', JSON.stringify('fern'));

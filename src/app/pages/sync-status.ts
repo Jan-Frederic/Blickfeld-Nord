@@ -11,6 +11,7 @@ import { cloudName, syncEinstellungen } from '../data/sync-ordner';
 import { Fortschritt } from './fortschritt';
 import { KNOPF_HILFE, KNOPF_NAME, Knopf, wasPassiert } from '../data/sync-hilfe';
 import { geraetId, geraetName, geraetNameSetzen, seitText, standardName } from '../data/geraete';
+import { appStand, standVergleich } from '../data/app-stand';
 import { FundeListe } from './funde-liste';
 import { SyncKonflikte } from './sync-konflikte';
 
@@ -69,7 +70,7 @@ import { SyncKonflikte } from './sync-konflikte';
           @if (sync.geraete().length) {
             <ul>
               @for (g of sync.geraete(); track g.id) {
-                <li [class.ich]="g.id === meineId">{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }} <small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }}</small></li>
+                <li [class.ich]="g.id === meineId">{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }} <small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }} · <span [class.veraltet]="veraltet(g.app)">{{ standText(g.app) }}</span></small></li>
               }
             </ul>
           } @else { <p class="klein">Noch keine Geräte gemeldet – nach dem nächsten Abgleich steht hier, welches Gerät wann zuletzt abgeglichen hat.</p> }
@@ -141,16 +142,19 @@ export class SyncStatus {
     }
     setTimeout(() => this.kopiert.set(''), 2500);
   }
-  /** Kennung des laufenden App-Stands: Name des Service-Worker-Speichers („bn-<Version>“) */
+  /** Kennung des laufenden App-Stands (data/app-stand.ts) */
   protected readonly appStand = signal('');
-  private readonly standLesen = (async () => {
-    try {
-      const k = (await caches.keys()).filter((n) => /^bn-[0-9a-f]{6,}$/.test(n));
-      this.appStand.set(k.length ? k.map((n) => n.slice(3, 11)).join(', ') : '');
-    } catch {
-      // ohne Speicher (Browser-Tab ohne Service Worker): keine Angabe
-    }
-  })();
+  private readonly standLesen = appStand().then((v) => this.appStand.set(v), () => undefined);
+  /** App-Stand eines Geräts in der Liste: „App-Stand 5926c9e0 (veraltet)“ */
+  protected standText(app: string | undefined): string {
+    if (!app) return 'App-Stand unbekannt (ältere Version)';
+    const v = standVergleich(app, this.sync.neuesterStand());
+    return `App-Stand ${app}${v === 'veraltet' ? ' (veraltet)' : v === 'aktuell' ? ' (aktuell)' : ''}`;
+  }
+  protected veraltet(app: string | undefined): boolean {
+    return !app || standVergleich(app, this.sync.neuesterStand()) === 'veraltet';
+  }
+
   protected readonly vorschlag = standardName(typeof navigator === 'undefined' ? '' : navigator.userAgent);
   protected readonly meineId = geraetId();
   protected seit(iso: string): string {

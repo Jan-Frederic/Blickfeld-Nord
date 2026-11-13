@@ -11,6 +11,7 @@ import type { Strich } from './noten';
 import type { SyncDatei } from './sync';
 import { Mitschnitt, mitschnittAusPfad, mitschnittEndung, mitschnittGeteilt, mitschnittPfad, mitschnittPfade, mitschnittSpeichern } from './mitschnitte';
 import { geloeschtMerken, giltLoeschung, ladeGeloescht } from './noten-geloescht';
+import { appStand, neuesterStand } from './app-stand';
 import { GERAETE_ORDNER, GeraetEintrag, UnlesbarZaehler, geraetId, geraetImFehler, geraetMeldung, geraeteListe, geraetePflege } from './geraete';
 import { NotenQuelle, istAkkordblatt, istPdf, notenEinlesen } from './noten-import';
 import {
@@ -532,7 +533,17 @@ export class SyncService {
     await this.geraeteLesen(lokal);
   }
 
+  /** veröffentlichter App-Stand (aus /sw.js) – für „veraltet“ in der Geräteliste; höchstens stündlich neu gefragt */
+  readonly neuesterStand = signal('');
+  private neuesterGefragt = 0;
+  private neuesterLaden(): void {
+    if (Date.now() - this.neuesterGefragt < 3600_000) return;
+    this.neuesterGefragt = Date.now();
+    void neuesterStand().then((v) => v && this.neuesterStand.set(v));
+  }
+
   async geraeteLesen(lokal?: SyncOrdner | null, liste?: SyncDatei[]): Promise<void> {
+    this.neuesterLaden();
     lokal ??= await this.lokal();
     if (!lokal) return;
     liste ??= await lokal.liste();
@@ -662,7 +673,7 @@ export class SyncService {
       this.stand.set({ text: 'Einstellungen und Daten vorbereiten …' });
       const zurueck = await this.spiegelnVorher(lokal, person);
       // dieses Gerät als „zuletzt abgeglichen“ melden (höchstens stündlich eine neue Datei)
-      const g = geraetMeldung(person);
+      const g = geraetMeldung(person, new Date(), await appStand().catch(() => ''));
       if (g) await lokal.schreiben(g.pfad, new Blob([g.text], { type: 'application/json' })).catch(() => undefined);
       const zustand = await syncZustand();
       const cloud = cloudOrdner({ pfad: e.cloud, wurzel: e.wurzel });

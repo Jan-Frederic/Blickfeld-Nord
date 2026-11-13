@@ -128,3 +128,9 @@ self.addEventListener('notificationclick', (event) => {
     }),
   );
 });
+
+// App-Stand (src/app/data/app-stand.ts): Die Seite fragt den Service Worker, mit welcher Version er sie ausliefert –
+// eindeutig, auch wenn während eines Updates zwei Speicher „bn-…“ existieren.
+self.addEventListener('message', (event) => {
+  if (event.data === 'app-stand' && event.ports[0]) event.ports[0].postMessage(VERSION);
+});

@@ -21,6 +21,21 @@ describe('geraete', () => {
     expect(geraetMeldung('fred', new Date('2026-11-01T11:40:00Z'))).not.toBeNull();
   });
 
+  it('meldet den App-Stand mit – und bei neuem App-Stand sofort', () => {
+    localStorage.setItem(GERAET_NAME_KEY, 'Freds Handy');
+    const m = geraetMeldung('fred', new Date('2026-11-02T10:00:00Z'), '461a20bb')!;
+    expect(JSON.parse(m.text).app).toBe('461a20bb');
+    expect(geraetMeldung('fred', new Date('2026-11-02T10:10:00Z'), '461a20bb')).toBeNull();
+    expect(JSON.parse(geraetMeldung('fred', new Date('2026-11-02T10:11:00Z'), '5926c9e0')!.text).app).toBe('5926c9e0');
+  });
+
+  it('Liste: App-Stand nur, wenn er wie eine Version aussieht', () => {
+    const e = (app: unknown) => JSON.stringify({ id: 'a', name: 'X', zeit: '2026-11-01T10:00:00Z', app });
+    expect(geraeteListe([e('5926c9e0')])[0].app).toBe('5926c9e0');
+    expect(geraeteListe([e('<script>')])[0].app).toBeUndefined();
+    expect(geraeteListe([e(undefined)])[0].app).toBeUndefined();
+  });
+
   it('Liste: neueste zuerst, Kaputtes fällt weg', () => {
     const l = geraeteListe([
       JSON.stringify({ id: 'a', name: 'Alt', person: 'x', zeit: '2026-10-01T10:00:00Z' }),
