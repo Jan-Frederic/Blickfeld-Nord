@@ -106,6 +106,8 @@ export interface SyncErgebnis {
   geloescht: number;
   konflikte: number;
   fehler: string[];
+  /** Nebensächliches, das nicht geklappt hat (Geräte-Dateien: nur für die Geräteliste) – kein Fehler, wird wiederholt */
+  hinweise?: string[];
   /** Pfade, die heruntergeladen oder neu angelegt wurden */
   neu: string[];
   /** Löschungen, die wegen der Rückfrage (viele auf einmal) diesmal nicht ausgeführt wurden */
@@ -237,6 +239,12 @@ export async function synchronisieren(
         if (++erledigt % 10 === 0) await hilfen.speichern?.(z);
       } catch (err) {
         const text = (err as Error).message || 'Fehler';
+        // Geräte-Datei (nur für die Liste „wer hat wann abgeglichen“): Hinweis statt Fehler; bleibt offen und wird beim
+        // nächsten Abgleich wieder versucht (Zustand unverändert – nichts wird gelöscht)
+        if (a.pfad.startsWith('Geraete/') && a.art === 'runter') {
+          (e.hinweise ??= []).push(`${a.pfad}: ${text}`);
+          continue;
+        }
         inFolge = text === letzter ? inFolge + 1 : 1;
         letzter = text;
         e.fehler.push(`${a.pfad}: ${text}`);

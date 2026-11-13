@@ -122,6 +122,21 @@ describe('Synchronisation', () => {
     expect(texte(lokal)).toEqual({ 'b.pdf': 'B' });
   });
 
+  it('nicht lesbare Geräte-Datei ist ein Hinweis, kein Fehler – bleibt offen und wird nicht gelöscht', async () => {
+    const cloud = speicherOrdner('c', { 'Geraete/dd2a1f3a.json': '{}', 'Daten/x.json': '1' });
+    const lokal = speicherOrdner('l');
+    cloud.lesen = async (p) => {
+      if (p.startsWith('Geraete/')) throw new Error('Herunterladen nicht möglich');
+      return new Blob([cloud.inhalt.get(p)!.text]);
+    };
+    const r = await synchronisieren(cloud, lokal, {}, BEIDE);
+    expect(r.ergebnis.fehler).toEqual([]);
+    expect(r.ergebnis.hinweise).toEqual(['Geraete/dd2a1f3a.json: Herunterladen nicht möglich']);
+    expect(r.zustand['Geraete/dd2a1f3a.json']).toBeUndefined();
+    // nächster Abgleich: wieder herunterladen, nicht in der Cloud löschen
+    expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE)).toEqual([{ art: 'runter', pfad: 'Geraete/dd2a1f3a.json' }]);
+  });
+
   it('Geräte-Dateien: bei Änderungen auf beiden Seiten gewinnt die neuere ohne Konfliktkopie', () => {
     const d = (pfad: string, version: string, geaendert: string): SyncDatei => ({ pfad, groesse: 1, geaendert, version });
     const z: Zustand = { 'Geraete/a.json': { cloud: 'c1', lokal: 'l1' }, 'Geraete/b.json': { cloud: 'c1', lokal: 'l1' } };

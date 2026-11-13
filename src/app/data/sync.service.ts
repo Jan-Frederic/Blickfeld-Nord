@@ -582,7 +582,7 @@ export class SyncService {
       if (offen || (schnell && this.vollFaellig())) danach = 'voll';
       // neu aufgesetztes Gerät: eigene bzw. zusammengeführte Einträge gleich hochladen
       else if (this.hochladen) danach = 'schnell';
-      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : ''), ergebnis.fehler.length > 0);
+      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : '') + (ergebnis.hinweise?.length ? ` · Geräteliste: ${ergebnis.hinweise.length === 1 ? 'ein Eintrag' : `${ergebnis.hinweise.length} Einträge`} nicht lesbar (${ergebnis.hinweise.slice(0, 3).map((f) => geraetImFehler(f, this.geraete()).replace(/:.*$/, '')).join('; ')}) – wird wiederholt` : ''), ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {

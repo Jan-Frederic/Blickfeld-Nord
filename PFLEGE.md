@@ -838,7 +838,10 @@ dem Gerät (`bn-geraet-…`, nicht gespiegelt).
 Download-Link aus der Liste, einen frisch geholten Link und `/content` über Graph, nach einer Sekunde alles noch einmal.
 Jede dieser Anfragen darf höchstens 30 s dauern („ohne Antwort“) – sonst hinge der ganze Abgleich an ihr.
 Scheitert auch das, nennt die Meldung die versuchten Server (nur Hostnamen) und, falls die CSP etwas blockiert hat,
-welchen – dann diesen Host in `connect-src` aufnehmen. Die Datei bleibt als „nicht erledigt“ stehen und der nächste Abgleich holt sie – es geht nichts verloren.
+welchen – dann diesen Host in `connect-src` aufnehmen. Bei Geräte-Dateien (nur für die Geräteliste) ist das kein Fehler,
+sondern ein Hinweis („Geräteliste: ein Eintrag nicht lesbar (…) – wird wiederholt“); sie bleibt offen und wird nie
+gelöscht. Beobachtet: Die Datei eines iPhones lieferte `my.microsoftpersonalcontent.com` nicht aus (ohne CSP-Block) –
+vermutlich eine nicht sauber hochgeladene Datei; abgleicht das Gerät erneut, schreibt es sie neu. Die Datei bleibt als „nicht erledigt“ stehen und der nächste Abgleich holt sie – es geht nichts verloren.
 
 **Zuordnen in einem Rutsch:** Beim Einlesen zeigt jede Noten-Datei „liegt schon bei …“, wenn eine gleichnamige Datei
 auf diesem Gerät schon bei einem anderen Song liegt. Hat man für eine Datei den Song gewählt, übernimmt
