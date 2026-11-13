@@ -1,5 +1,5 @@
 // Einrichtungsassistent (pages/backstage-einrichtung.ts): einmal je Gerät nach der ersten Anmeldung im Backstage –
-// wer bin ich, wie heißt das Gerät, Synchronisation mit dem Band-Ordner „Blickfeld Nord Sync“, Spotify (Standard:
+// wer bin ich, wie heißt das Gerät, Synchronisation (OneDrive-Ordner selbst wählen), Spotify (Standard:
 // im Browser abspielen) und die geklärten Standards. Ohne Angular-Abhängigkeiten.
 
 export const EINRICHTUNG_KEY = 'bn-einrichtung';

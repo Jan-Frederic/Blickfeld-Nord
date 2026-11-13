@@ -1041,11 +1041,12 @@ aufrufbar unter Einstellungen → „Einrichtung durchgehen“. Schritte, jeder 
 
 1. **Ich bin** – vorbelegt aus dem Microsoft-Konto.
 2. **Dieses Gerät** – Namensvorschlag „Freds iPhone“ (`geraetVorschlag` in `data/einrichtung.ts`).
-3. **Synchronisation mit „Blickfeld Nord Sync“** – so heißt der Band-Ordner (`ONEDRIVE.bandOrdner`) überall
-   (`SYNC_ORDNER_NAME`). Mitglieder bekommen ihn als geteilten Ordner, der Besitzer über den Pfad im eigenen OneDrive
-   (dann gilt „Daten löschen“; `bandOrdnerOrt` in `data/onedrive.ts`). Dazu die Standards aus `SYNC_STANDARD`
-   (`data/sync-ordner.ts`): Speicher der App, beide Richtungen, Löschen mitsynchronisieren, automatisch, Noten gleich
-   einlesen. Ist schon ein anderer Ordner eingestellt, fragt der Schritt, ob umgestellt werden soll.
+3. **Synchronisation** – den OneDrive-Ordner wählt man selbst (Ordnerauswahl wie in den Einstellungen, ganz oben auch
+   die mit einem geteilten Ordner), nichts ist vorgewählt; ein Hinweis nennt den Ordner der Band, wie er in der Auswahl
+   heißt: „Blickfeld Nord (geteilt)/Sync“ (`BAND_ORDNER_HINWEIS`). Lokal immer der Speicher der App, dazu die übrigen
+   Standards aus `SYNC_STANDARD` (`data/sync-ordner.ts`): beide Richtungen, Löschen mitsynchronisieren, automatisch,
+   Noten gleich einlesen. Ein anderer Ordner als bisher lässt den Abgleich neu beginnen; ohne Anmeldung zuerst „Mit
+   Microsoft anmelden“.
 4. **Spotify** – vorgewählt „Im Browser abspielen“ (auf iPhone/iPad mit Hinweis auf die Fernsteuerung), „Mit Spotify
    verbinden“ kommt nach der Anmeldung in diesen Schritt zurück (`?schritt=spotify`).
 5. **Fertig** – die geklärten Standards (Tasten im Bühnen-Modus, Fortschrittsbalken nicht antippbar, Übergänge aus,

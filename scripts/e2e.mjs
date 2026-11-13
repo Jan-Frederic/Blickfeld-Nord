@@ -1200,9 +1200,11 @@ test('Backstage: Einrichtungsassistent – Schritt für Schritt mit den Standard
   await until(async () => (await name.inputValue().catch(() => '')).length > 0, 'Kein Vorschlag für den Gerätenamen');
   await name.fill('Testgerät');
   await weiter();
-  // 3. Synchronisation mit „Blickfeld Nord Sync“ (ohne Microsoft-Konto: nur ansehen)
-  await until(async () => /Synchronisation mit „Blickfeld Nord Sync“/i.test(await seite.innerText()), 'Sync-Schritt nennt den Band-Ordner nicht');
-  expect(/in beide Richtungen/.test(await seite.innerText()), 'Standards der Synchronisation fehlen');
+  // 3. Synchronisation: Ordner selbst wählen, Hinweis auf den Ordner der Band (ohne Microsoft-Konto: nur ansehen)
+  await until(async () => /Synchronisation mit OneDrive/i.test(await seite.innerText()), 'Sync-Schritt fehlt');
+  expect(/Blickfeld Nord \(geteilt\)\/Sync/.test(await seite.innerText()), 'Hinweis auf den Ordner der Band fehlt');
+  expect(/Speicher der App, in beide Richtungen/.test(await seite.innerText()), 'Standards der Synchronisation fehlen');
+  expect((await p.evaluate(() => localStorage.getItem('bn-sync-einstellungen'))) === null, 'Sync-Ordner wurde ohne Auswahl eingetragen');
   await weiter();
   // 4. Spotify: „Im Browser abspielen“ ist vorgewählt
   await until(async () => /Songs anhören mit Spotify/i.test(await seite.innerText()), 'Spotify-Schritt fehlt');

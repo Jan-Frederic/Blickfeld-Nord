@@ -1215,6 +1215,13 @@ app-backstage-einrichtung .art input { margin-top: 4px; accent-color: var(--bn-s
 app-backstage-einrichtung .art span { display: grid; gap: 2px; }
 app-backstage-einrichtung .art small { color: var(--bn-fog); font-size: .8rem; }
 app-backstage-einrichtung .ok { display: flex; align-items: center; gap: 6px; color: #5fb88a; }
+app-backstage-einrichtung .tipp { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-left: 3px solid var(--bn-sunset); border-radius: 0 8px 8px 0; background: rgba(232, 164, 106, .08); color: var(--bn-ink); }
+app-backstage-einrichtung .tipp mat-icon { flex: none; color: var(--bn-sunset); }
+app-backstage-einrichtung .auswahl { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; padding: 12px; border: 1px solid var(--bn-line); border-radius: 10px; }
+app-backstage-einrichtung .auswahl .ort { flex-basis: 100%; margin: 0; font-size: .85rem; overflow-wrap: anywhere; }
+app-backstage-einrichtung .ordner { flex-basis: 100%; display: grid; gap: 4px; max-height: 50vh; overflow: auto; }
+app-backstage-einrichtung .ordner button { justify-content: flex-start; border-radius: 8px; padding: 8px 12px; }
+app-backstage-einrichtung .ordner small { margin-left: auto; color: var(--bn-fog); }
 app-backstage-einrichtung .fehler { color: #e07a5a; }
 app-backstage-einrichtung .hinweis { font-size: .85rem; }
 app-backstage-einrichtung .hinweis a { color: var(--bn-sunset); }

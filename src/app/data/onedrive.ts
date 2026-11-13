@@ -375,33 +375,6 @@ export async function ordnerSichtbar(drive: string, item: string, still = false)
 }
 
 /** Kennung (Drive und Element) eines Ordners – für den Band-Ordner der Sichtsperre */
-/** so heißt der gemeinsame Ordner der Band überall in der App (Einrichtung, Einstellungen) */
-export const SYNC_ORDNER_NAME = 'Blickfeld Nord Sync';
-
-/**
- * Pfad eines Ordners im eigenen OneDrive aus parentReference.path („/drive/root:/Blickfeld Nord“ bzw.
- * „/drives/<id>/root:/…“) und seinem Namen
- */
-export function eigenerPfad(elternPfad: string | undefined, name: string): string {
-  const eltern = decodeURIComponent((elternPfad ?? '').replace(/^.*?root:\/?/, ''));
-  return [eltern, name].filter(Boolean).join('/');
-}
-
-/**
- * Der Band-Ordner (ONEDRIVE.bandOrdner) als Ort für die Synchronisation: Liegt er im eigenen OneDrive (Besitzer), über
- * den Pfad – dann gilt „Daten löschen“; sonst als geteilter Ordner unter dem Namen „Blickfeld Nord Sync“.
- */
-export async function bandOrdnerOrt(): Promise<{ ort: CloudOrt; eigen: boolean; name: string } | null> {
-  const b = ONEDRIVE.bandOrdner;
-  if (!b) return null;
-  const [ich, item] = await Promise.all([
-    graph('/me/drive?$select=id').then((r) => r.json() as Promise<{ id: string }>),
-    graph(`/drives/${b.drive}/items/${encodeURIComponent(b.item)}?$select=name,parentReference`).then((r) => r.json() as Promise<{ name: string; parentReference?: { path?: string } }>),
-  ]);
-  if (ich.id.toLowerCase() === b.drive.toLowerCase()) return { ort: { pfad: eigenerPfad(item.parentReference?.path, item.name) }, eigen: true, name: item.name };
-  return { ort: { pfad: '', wurzel: { drive: b.drive, item: b.item, name: SYNC_ORDNER_NAME } }, eigen: false, name: item.name };
-}
-
 export async function ordnerKennung(ort: CloudOrt): Promise<{ drive: string; item: string }> {
   const i = (await (await graph(`${adresse(ort)}?$select=id,parentReference`)).json()) as { id: string; parentReference?: { driveId?: string } };
   const drive = i.parentReference?.driveId ?? ort.wurzel?.drive;

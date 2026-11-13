@@ -6,8 +6,7 @@ import { ichSetzen, ladeIch, rufname } from '../data/band-ich';
 import { geraetName, geraetNameSetzen, standardName } from '../data/geraete';
 import { einrichtungMerken, geraetVorschlag } from '../data/einrichtung';
 import { zugangZiel } from '../data/zugang';
-import { ONEDRIVE } from '../data/onedrive-config';
-import { SYNC_ORDNER_NAME, bandOrdnerOrt, oneDriveKonto, type CloudOrt } from '../data/onedrive';
+import { CloudEintrag, cloudUnterordner, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveVorbereiten, type CloudOrt } from '../data/onedrive';
 import { SYNC_STANDARD, SyncEinstellungen, cloudGewaehlt, cloudName, syncEinstellungen, syncEinstellungenSetzen, syncZustandLoeschen } from '../data/sync-ordner';
 import { SyncService } from '../data/sync.service';
 import { SpotifyArt, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyVerbunden } from '../data/spotify-remote';
@@ -15,9 +14,10 @@ import { dauerhaftImBrowser } from '../data/speicher';
 import { install, installable, iosHint } from '../pwa';
 
 // Backstage → Einrichtung: einmal je Gerät nach der ersten Anmeldung (backstage-zugang.ts), später unter
-// Einstellungen erneut aufrufbar. Schritte: Ich bin · Dieses Gerät · Synchronisation mit dem Band-Ordner
-// „Blickfeld Nord Sync“ (Standards aus sync-ordner.ts) · Spotify (Standard: im Browser abspielen) · Fertig (geklärte
-// Standards, App installieren). Jeder Schritt lässt sich überspringen; alles bleibt in den Einstellungen änderbar.
+// Einstellungen erneut aufrufbar. Schritte: Ich bin · Dieses Gerät · Synchronisation (OneDrive-Ordner selbst wählen,
+// Hinweis auf „Blickfeld Nord (geteilt)/Sync“; lokal der Speicher der App, Standards aus sync-ordner.ts) · Spotify
+// (Standard: im Browser abspielen) · Fertig (geklärte Standards, App installieren). Jeder Schritt lässt sich
+// überspringen; alles bleibt in den Einstellungen änderbar.
 type Schritt = 'ich' | 'geraet' | 'sync' | 'spotify' | 'fertig';
 const SCHRITTE: { id: Schritt; titel: string }[] = [
   { id: 'ich', titel: 'Ich bin' },
@@ -27,12 +27,15 @@ const SCHRITTE: { id: Schritt; titel: string }[] = [
   { id: 'fertig', titel: 'Fertig' },
 ];
 
-/** Synchronisation mit dem Band-Ordner und den Standards (beide Richtungen, Speicher der App, automatisch …) */
-export const syncMitBandOrdner = (ort: CloudOrt): SyncEinstellungen => ({ ...SYNC_STANDARD, cloud: ort.pfad, wurzel: ort.wurzel });
+/** Hinweis, welcher OneDrive-Ordner der der Band ist (so heißt er in der Auswahl) */
+export const BAND_ORDNER_HINWEIS = 'Blickfeld Nord (geteilt)/Sync';
+
+/** Synchronisation mit dem gewählten OneDrive-Ordner und den Standards (Speicher der App, beide Richtungen, automatisch …) */
+export const syncMitOrdner = (ort: CloudOrt): SyncEinstellungen => ({ ...SYNC_STANDARD, cloud: ort.pfad, wurzel: ort.wurzel });
 
 /** ist schon genau dieser Ordner eingestellt? */
 export function gleicherOrdner(e: Pick<SyncEinstellungen, 'cloud' | 'wurzel'>, ort: CloudOrt): boolean {
-  if (ort.wurzel) return !!e.wurzel && e.wurzel.drive === ort.wurzel.drive && e.wurzel.item === ort.wurzel.item && !e.cloud;
+  if (ort.wurzel) return !!e.wurzel && e.wurzel.drive === ort.wurzel.drive && e.wurzel.item === ort.wurzel.item && e.cloud === ort.pfad;
   return !e.wurzel && e.cloud === ort.pfad;
 }
 
@@ -75,22 +78,34 @@ const SPOTIFY_ARTEN: { art: SpotifyArt; titel: string; text: string }[] = [
           </label>
         }
         @case ('sync') {
-          <h3>Synchronisation mit „{{ ordnerName }}“</h3>
-          <p>„{{ ordnerName }}“ ist der gemeinsame Ordner der Band in OneDrive. Darüber kommen Setlists, Noten, Übe-Stände und
-            Einstellungen auf alle deine Geräte und zur Band.</p>
-          @if (syncStand(); as s) {
-            <p class="ok"><mat-icon>check_circle</mat-icon> {{ s }}</p>
-          } @else if (anderer()) {
-            <p>Eingestellt ist gerade: <strong>{{ anderer() }}</strong>. So lassen – oder auf „{{ ordnerName }}“ umstellen?</p>
+          <h3>Synchronisation mit OneDrive</h3>
+          <p>Über einen gemeinsamen Ordner in OneDrive kommen Setlists, Noten, Übe-Stände und Einstellungen auf alle deine
+            Geräte und zur Band.</p>
+          <p class="tipp"><mat-icon>info</mat-icon><span>Der Ordner der Band heißt in der Auswahl <strong>{{ hinweis }}</strong>.</span></p>
+          @if (gewaehlt(); as g) { <p class="ok"><mat-icon>check_circle</mat-icon> Abgleich mit „{{ g }}“{{ neuGewaehlt() ? ' – der erste Abgleich läuft im Hintergrund.' : '' }}</p> }
+          @if (!konto()) {
+            <button type="button" class="primaer" (click)="anmelden()" [disabled]="laeuft()"><mat-icon>login</mat-icon> Mit Microsoft anmelden</button>
+          } @else if (blaettern(); as b) {
+            <div class="auswahl">
+              <p class="ort">OneDrive / {{ ortName(b.ort) }}</p>
+              <div class="ordner">
+                @if (b.ort.pfad || b.ort.wurzel) { <button type="button" (click)="oeffnen(eltern(b.ort))"><mat-icon>arrow_upward</mat-icon> eine Ebene hoch</button> }
+                @for (o of b.ordner; track o.name + (o.wurzel?.item ?? '')) {
+                  <button type="button" (click)="oeffnen(hinein(b.ort, o))"><mat-icon>{{ o.wurzel ? 'folder_shared' : 'folder' }}</mat-icon> {{ o.name }}@if (o.wurzel) { <small>geteilt</small> }</button>
+                }
+                @if (!b.ordner.length) { <small>keine Unterordner</small> }
+              </div>
+              <button type="button" class="primaer" [disabled]="(!b.ort.pfad && !b.ort.wurzel) || laeuft()" (click)="waehlen(b.ort)"><mat-icon>check</mat-icon> Diesen Ordner nehmen</button>
+              <button type="button" (click)="blaettern.set(null)">Abbrechen</button>
+            </div>
+          } @else {
+            <button type="button" [class.primaer]="!gewaehlt()" (click)="oeffnen({ pfad: '' })" [disabled]="laeuft()"><mat-icon>folder_open</mat-icon> {{ gewaehlt() ? 'Anderen Ordner wählen' : 'OneDrive-Ordner wählen' }}</button>
           }
           <ul class="standards">
-            <li>Speicher der App auf diesem Gerät ↔ „{{ ordnerName }}“, in beide Richtungen</li>
+            <li>auf diesem Gerät im Speicher der App, in beide Richtungen</li>
             <li>automatisch beim Öffnen und alle 15 Minuten</li>
             <li>Löschen wird mitsynchronisiert, neue Noten kommen gleich zum Song</li>
           </ul>
-          @if (!syncStand()) {
-            <button type="button" class="primaer" (click)="syncEinrichten()" [disabled]="laeuft()"><mat-icon>sync</mat-icon> {{ laeuft() ? 'Richte ein …' : anderer() ? 'Auf „' + ordnerName + '“ umstellen' : 'Mit „' + ordnerName + '“ abgleichen' }}</button>
-          }
         }
         @case ('spotify') {
           <h3>Songs anhören mit Spotify</h3>
@@ -138,9 +153,9 @@ export class BackstageEinrichtung implements OnInit {
   private readonly sync = inject(SyncService);
   protected readonly mitglieder = inject(BandService).members;
   protected readonly rufname = rufname;
-  protected readonly schritte = SCHRITTE.filter((s) => s.id !== 'sync' || !!ONEDRIVE.bandOrdner);
+  protected readonly schritte = SCHRITTE.filter((s) => s.id !== 'sync' || oneDriveEingerichtet());
   protected readonly arten = SPOTIFY_ARTEN;
-  protected readonly ordnerName = SYNC_ORDNER_NAME;
+  protected readonly hinweis = BAND_ORDNER_HINWEIS;
   protected readonly apple = typeof navigator !== 'undefined' && /iPhone|iPad/.test(navigator.userAgent);
 
   protected readonly schritt = signal<Schritt>('ich');
@@ -150,8 +165,11 @@ export class BackstageEinrichtung implements OnInit {
 
   protected readonly ich = signal(ladeIch());
   protected readonly name = signal('');
-  protected readonly syncStand = signal('');
-  protected readonly anderer = signal('');
+  /** eingestellter OneDrive-Ordner („Blickfeld Nord (geteilt)/Sync“), leer = noch keiner */
+  protected readonly gewaehlt = signal(cloudGewaehlt(syncEinstellungen()) ? cloudName(syncEinstellungen()) : '');
+  protected readonly neuGewaehlt = signal(false);
+  protected readonly konto = signal(false);
+  protected readonly blaettern = signal<{ ort: CloudOrt; ordner: CloudEintrag[] } | null>(null);
   protected readonly art = signal<SpotifyArt>(spotifyArt() === 'aus' ? 'browser' : spotifyArt());
   protected readonly spotifyOk = signal(spotifyVerbunden());
   protected readonly installierbar = installable;
@@ -159,7 +177,8 @@ export class BackstageEinrichtung implements OnInit {
 
   constructor() {
     this.namePruefen();
-    void this.syncPruefen();
+    oneDriveVorbereiten();
+    if (oneDriveEingerichtet()) oneDriveKonto().then((k) => this.konto.set(!!k), () => undefined);
   }
 
   ngOnInit(): void {
@@ -173,37 +192,47 @@ export class BackstageEinrichtung implements OnInit {
     this.name.set(geraetName() || geraetVorschlag(m ? rufname(m) : '', standardName(navigator.userAgent)));
   }
 
-  /** schon mit dem Band-Ordner eingerichtet? Sonst zeigen, was eingestellt ist */
-  private async syncPruefen(): Promise<void> {
-    const e = syncEinstellungen();
-    if (!ONEDRIVE.bandOrdner || !cloudGewaehlt(e)) return;
-    const b = ONEDRIVE.bandOrdner;
-    if (e.wurzel?.drive === b.drive && e.wurzel.item === b.item) return this.syncStand.set(`Eingerichtet: „${SYNC_ORDNER_NAME}“`);
-    // im eigenen OneDrive (Besitzer) steht der Band-Ordner als Pfad drin – dafür einmal nachsehen
-    const ort = (await oneDriveKonto().catch(() => null)) ? await bandOrdnerOrt().catch(() => null) : null;
-    if (ort && gleicherOrdner(e, ort.ort)) return this.syncStand.set(`Eingerichtet: „${SYNC_ORDNER_NAME}“ (in deinem OneDrive)`);
-    this.anderer.set(cloudName(e));
+  protected readonly ortName = (ort: CloudOrt) => cloudName({ cloud: ort.pfad, wurzel: ort.wurzel });
+  protected eltern(ort: CloudOrt): CloudOrt {
+    return ort.pfad ? { pfad: ort.pfad.split('/').slice(0, -1).join('/'), wurzel: ort.wurzel } : { pfad: '' };
+  }
+  protected hinein(ort: CloudOrt, o: CloudEintrag): CloudOrt {
+    return o.wurzel ? { pfad: '', wurzel: o.wurzel } : { pfad: ort.pfad ? `${ort.pfad}/${o.name}` : o.name, wurzel: ort.wurzel };
   }
 
-  protected async syncEinrichten(): Promise<void> {
+  /** anmelden – synchron aus dem Antippen (sonst blockt Safari das Fenster) */
+  protected anmelden(): void {
+    this.fehler.set('');
+    this.laeuft.set(true);
+    oneDriveAnmelden()
+      .then((k) => this.konto.set(!!k))
+      .catch((e) => this.fehler.set((e as Error).message))
+      .finally(() => this.laeuft.set(false));
+  }
+
+  /** Ordner in OneDrive durchklicken (ganz oben auch die mit dir geteilten) */
+  protected async oeffnen(ort: CloudOrt): Promise<void> {
     this.laeuft.set(true);
     this.fehler.set('');
     try {
-      if (!(await oneDriveKonto())) throw new Error('Nicht bei Microsoft angemeldet – unter Einstellungen → Synchronisation anmelden.');
-      const b = await bandOrdnerOrt();
-      if (!b) return;
-      const vorher = syncEinstellungen();
-      const neu = syncMitBandOrdner(b.ort);
-      syncEinstellungenSetzen(cloudGewaehlt(vorher) && gleicherOrdner(vorher, b.ort) ? { ...neu, ...vorher } : neu);
-      if (!gleicherOrdner(vorher, b.ort)) await syncZustandLoeschen().catch(() => undefined);
-      this.syncStand.set(`Eingerichtet: „${SYNC_ORDNER_NAME}“${b.eigen ? ' (liegt in deinem OneDrive – du darfst Daten löschen)' : ''} – der erste Abgleich läuft im Hintergrund.`);
-      this.anderer.set('');
-      void this.sync.jetzt();
+      this.blaettern.set({ ort, ordner: await cloudUnterordner(ort) });
     } catch (e) {
-      this.fehler.set(`Einrichten nicht möglich: ${(e as Error).message || 'unbekannter Fehler'}`);
+      this.fehler.set(`OneDrive-Ordner nicht lesbar: ${(e as Error).message || 'unbekannter Fehler'}`);
     } finally {
       this.laeuft.set(false);
     }
+  }
+
+  /** gewählter Ordner + Standards (lokal: Speicher der App); anderer Ordner als bisher → Abgleich beginnt neu */
+  protected async waehlen(ort: CloudOrt): Promise<void> {
+    const vorher = syncEinstellungen();
+    const gleich = cloudGewaehlt(vorher) && gleicherOrdner(vorher, ort);
+    syncEinstellungenSetzen(gleich ? vorher : syncMitOrdner(ort));
+    if (!gleich) await syncZustandLoeschen().catch(() => undefined);
+    this.blaettern.set(null);
+    this.gewaehlt.set(this.ortName(ort));
+    this.neuGewaehlt.set(true);
+    void this.sync.jetzt();
   }
 
   /** Spotify: gewählte Art merken, dann zur Anmeldung bei Spotify – zurück geht es in diesen Schritt */
