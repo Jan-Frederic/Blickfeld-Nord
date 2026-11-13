@@ -828,6 +828,12 @@ wie „iPhone“). Beim Abgleich legt es höchstens stündlich eine kleine Datei
 Zeitpunkt) in den Sync-Ordner – die Liste zeigt, welches Gerät wann zuletzt abgeglichen hat. Name und Kennung bleiben auf
 dem Gerät (`bn-geraet-…`, nicht gespiegelt).
 
+**Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert)“): Der Browser
+hat die Anfrage ohne Antwort abgebrochen – kurz kein Netz, oder die Datei wurde gerade von einem anderen Gerät ersetzt
+(die Geräte-Dateien schreibt jedes Gerät stündlich neu) und der alte Download-Link zeigt ins Leere. `cloudLaden` in
+`data/onedrive.ts` holt dann einen frischen Link und versucht es nach einer Sekunde noch einmal. Scheitert auch das,
+bleibt die Datei als „nicht erledigt“ stehen und der nächste Abgleich holt sie – es geht nichts verloren.
+
 **Zuordnen in einem Rutsch:** Beim Einlesen zeigt jede Noten-Datei „liegt schon bei …“, wenn eine gleichnamige Datei
 auf diesem Gerät schon bei einem anderen Song liegt. Hat man für eine Datei den Song gewählt, übernimmt
 **„für alle gleich benannten übernehmen“** die Wahl für alle Dateien mit gleichem Titel und Interpret im Namen (Fassung

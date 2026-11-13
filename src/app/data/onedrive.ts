@@ -311,17 +311,29 @@ export async function cloudLaden(d: CloudDatei): Promise<Blob> {
       // Link abgelaufen oder blockiert → über Graph versuchen
     }
   }
-  try {
-    // ohne Link (z. B. aus der Änderungsliste): frischen Download-Link holen – der Umweg über /content scheitert in
-    // manchen Browsern an der Weiterleitung
+  // ohne Link (z. B. aus der Änderungsliste): frischen Download-Link holen – der Umweg über /content scheitert in
+  // manchen Browsern an der Weiterleitung. Bricht der Browser ab (TypeError: kurz kein Netz, oder die Datei wurde
+  // gerade von einem anderen Gerät ersetzt und der Link zeigt ins Leere), nach einer Sekunde ein zweites Mal.
+  const holen = async (): Promise<Blob> => {
     const link = ((await (await graph(perId(d.id, d.drive))).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
     if (link) {
       const res = await fetch(link);
       if (res.ok) return res.blob();
     }
     return await (await graph(`${perId(d.id, d.drive)}/content`)).blob();
+  };
+  try {
+    return await holen();
   } catch (e) {
-    throw (e as Error).name === 'TypeError' ? new Error('Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert)', { cause: e }) : e;
+    if ((e as Error).name !== 'TypeError') throw e;
+  }
+  await new Promise((r) => setTimeout(r, 1000));
+  try {
+    return await holen();
+  } catch (e) {
+    throw (e as Error).name === 'TypeError'
+      ? new Error('Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert) – wird beim nächsten Abgleich wiederholt', { cause: e })
+      : e;
   }
 }
 
