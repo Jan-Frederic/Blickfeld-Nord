@@ -13,6 +13,7 @@ export interface Bereich {
 }
 
 export const BEREICHE: Bereich[] = [
+  { id: 'sammlungen', label: 'Sammlungen', praefixe: ['bn-setlist-vorlagen'], hinweis: 'benannte Songfolgen (früher „Vorlagen“)' },
   { id: 'setlist', label: 'Setlists', praefixe: ['bn-setlist-'], jeAuftritt: true, hinweis: 'für Rückblick und Songs → Setlists' },
   { id: 'bewertung', label: 'Song-Sterne', praefixe: ['bn-bewertung-'], jeAuftritt: true, hinweis: 'für die Top 100 und den Setlist-Vorschlag' },
   { id: 'spielzeit', label: 'Geplante Spielzeiten', praefixe: ['bn-spielzeit-'], jeAuftritt: true },
@@ -25,6 +26,7 @@ export const BEREICHE: Bereich[] = [
   { id: 'kontakte', label: 'Veranstalter-Kontakte', praefixe: ['bn-kontakte'], hinweis: 'Ansprechpartner je Ort' },
   { id: 'songinfo', label: 'Songs-Entwurf', praefixe: ['bn-songinfo-entwurf'], hinweis: 'Tonart/Tempo, noch nicht auf GitHub' },
   { id: 'wackelt', label: 'Dein Karteikasten (Üben)', praefixe: ['bn-wackelt', 'bn-ueben'], hinweis: 'deine Übe-Liste für Probe-Vorschlag und Karteikasten' },
+  { id: 'sprungmarken', label: 'Sprungmarken', praefixe: ['bn-sprungmarken'], hinweis: 'Sprungstellen in den Spotify-Songs, für die ganze Band' },
   { id: 'aufgaben', label: 'Aufgaben und Prüf-Häkchen', praefixe: ['bn-aufgaben', 'bn-ui-geprueft', 'bn-uebersetzung-pruefung'] },
   {
     id: 'einstellungen',
@@ -114,14 +116,15 @@ export async function cacheLeeren(): Promise<number> {
 }
 
 export const mb = (bytes: number) =>
-  bytes >= 1e6 ? `${(bytes / 1e6).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MB` : bytes ? `${Math.max(1, Math.round(bytes / 1e3))} kB` : '–';
+  bytes >= 1e9 ? `${(bytes / 1e9).toLocaleString('de-DE', { maximumFractionDigits: 1 })} GB` : bytes >= 1e6 ? `${(bytes / 1e6).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MB` : bytes ? `${Math.max(1, Math.round(bytes / 1e3))} kB` : '–';
 
 // ---- Einzelne Einträge verständlich beschreiben (Abgleich → Daten auf diesem Gerät) ----------------------------
 
 const EINSTELLUNGEN: Record<string, string> = {
   'bn-buehne-zoom': 'Schriftgröße im Bühnen-Modus',
   'bn-buehne-ton': 'Klick-Ton im Bühnen-Modus',
-  'bn-buehne-tasten': 'Pedal-Tasten im Bühnen-Modus',
+  'bn-buehne-tasten': 'Tasten im Bühnen-Modus (Pedal, Pfeiltasten)',
+  'bn-buehne-balken-tippen': 'Bühnen-Modus: Fortschrittsbalken antippbar',
   'bn-buehne-halbseite': 'Halbseiten-Blättern',
   'bn-noten-wahl': 'Gewählte Noten-Fassungen',
   'bn-noten-zuordnungen': 'Gemerkte Zuordnungen beim Einlesen',
@@ -146,7 +149,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-ueben': 'Dein Karteikasten (Kästen und Fälligkeit)',
   'bn-ueben-tagesziel': 'Karteikarten am Tag (Empfehlung)',
   'bn-ueben-erinnerung': 'Übe-Erinnerung (an/aus, Uhrzeit)',
-  'bn-spotify-modus': 'Spotify im Übe- und Probe-Modus (aus, eingebettet, Fernsteuerung)',
+  'bn-spotify-modus': 'Spotify im Übe- und Probe-Modus (aus, eingebettet, Fernsteuerung, im Browser)',
   'bn-spotify-token': 'Spotify-Verbindung (nur dieses Gerät)',
   'bn-spotify-geraet': 'Gewähltes Spotify-Gerät',
   'bn-spotify-mitspielen': 'Spotify beim Weiterblättern mitspielen',
@@ -154,6 +157,25 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-aufgaben': 'Aufgaben-Häkchen',
   'bn-ui-geprueft': 'Geprüfte Oberflächentexte',
   'bn-uebersetzung-pruefung': 'Geprüfte Übersetzungen',
+  'bn-noten-stift-privat': 'Noten-Stift: Notizen nur für mich',
+  'bn-noten-geloescht': 'Noten: für die Band gelöschte PDFs',
+  'bn-noten-geaendert': 'Noten: geändert, wartet auf den Abgleich',
+  'bn-backstage-ansicht': 'Gewählte Backstage-Ansicht',
+  'bn-setlaenge': 'Gewünschte Set-Länge (Minuten)',
+  'bn-saison-update': 'Saison-Update an die Band geteilt',
+  'bn-ich': 'Wer du bist (Person in der Band)',
+  'bn-ich-quelle': 'Wer du bist: erkannt oder von Hand gewählt',
+  'bn-zugang': 'Backstage-Zugang (zuletzt geprüft)',
+  'bn-sync-offen': 'Synchronisation: Noten-Dateien ohne eindeutigen Song',
+  'bn-spotify-uebergang': 'Spotify: Übergänge proben',
+  'bn-spotify-lautstaerke': 'Spotify: Lautstärke im Browser',
+  'bn-spotify-abgedockt': 'Spotify: Steuerung abgedockt',
+  'bn-spotify-dock': 'Spotify: Position der abgedockten Steuerung',
+  'bn-spotify-protokoll': 'Spotify: Diagnose-Protokoll',
+  'bn-spotify-ok': 'Spotify: zuletzt erfolgreich abgespielt',
+  'bn-spotify-premium-fehlt': 'Spotify: meldete „nur mit Premium“',
+  'bn-spotify-pkce': 'Spotify: laufende Anmeldung',
+  'bn-spotify-meldung': 'Spotify: letzte Meldung',
 };
 
 const ZIEL: Record<string, (id: string) => string> = {
@@ -176,7 +198,11 @@ const ZIEL_FEST: Record<string, string> = {
   'bn-aufgaben': '/backstage/aufgaben',
   'bn-ui-geprueft': '/backstage/uebersetzungen',
   'bn-uebersetzung-pruefung': '/backstage/uebersetzungen',
+  'bn-setlist-vorlagen': '/backstage/songs/sammlungen',
+  'bn-sprungmarken': '/backstage/ueben',
 };
+/** Einstellungen dieser Bereiche öffnen die Einstellungen-Seite */
+const ZIEL_EINSTELLUNGEN = ['bn-spotify-', 'bn-buehne-', 'bn-sync-', 'bn-geraet-', 'bn-onedrive-', 'bn-gesichert', 'bn-ich'];
 
 const SINGULAR: Record<string, string> = {
   setlist: 'Setlist', spielzeit: 'Spielzeit', bewertung: 'Sterne', packliste: 'Packliste', vorort: 'Vor Ort', werbeplan: 'Werbeplan', nachbereitung: 'Nachbereitung', probe: 'Probe',
@@ -249,7 +275,9 @@ export function eintragBeschreiben(key: string, roh: string, auftritte: Map<stri
   }
   if (key.startsWith('bn-probenotiz-')) return { key, bereich, bytes, titel: `Probe-Notizen · ${key.slice(14)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Probe', 'Proben'), link: '/backstage/termine' };
   if (key.startsWith('bn-unsicher-')) return { key, bereich, bytes, titel: `Unsicher bei · ${key.slice(12)}`, details: anzahl(Array.isArray(wert) ? wert.length : 0, 'Song', 'Songs'), link: '/backstage/songs/reife' };
-  return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link: ZIEL_FEST[key] };
+  if (key === 'bn-sprungmarken' && wert && typeof wert === 'object') return { key, bereich, bytes, titel: 'Sprungmarken', details: anzahl(Object.keys(wert).length, 'Song', 'Songs'), link: ZIEL_FEST[key] };
+  const link = ZIEL_FEST[key] ?? (ZIEL_EINSTELLUNGEN.some((p) => key.startsWith(p)) ? '/backstage/einstellungen' : undefined);
+  return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link };
 }
 
 /** alle Einträge mit Titel, Inhaltsangabe und Ziel-Seite; auftritte: ID → „Ort“ */

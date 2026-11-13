@@ -768,7 +768,7 @@ mitsynchronisiert und betrifft die ganze Band. Ob man die Berechtigung hat, steh
 Backstage-Daten liegen im Browser des jeweiligen Geräts – mit Synchronisation zusätzlich in OneDrive (siehe unten). Unter **Abgleich → Daten auf diesem Gerät** steht jeder
 einzelne Eintrag, nach Bereichen gruppiert und verständlich benannt (z. B. „Setlist · 04.12.2026 · Weihnachtsmarkt“),
 mit Inhalt („12 Songs, 1 Pause“) und Größe – dazu alle Noten (Songs mit Noten, PDFs und wo sie genutzt werden),
-Proben-Mitschnitte und Seiten für unterwegs:
+Proben-Mitschnitte und Geräte:
 
 - Titel antippen öffnet die passende Seite (Setlist, Packliste, Probe …).
 - `{ }` zeigt den gespeicherten Inhalt und lässt ihn von Hand ändern (nur gültiges JSON wird gespeichert) – für
@@ -777,6 +777,21 @@ Proben-Mitschnitte und Seiten für unterwegs:
   Geräten) oder **löschen**.
 - Neben jedem Bereich (Setlists, Packlisten, Noten, Mitschnitte, Seiten für unterwegs …) löscht der Besen-Knopf den
   ganzen Bereich (bei einer Suche nur die gefundenen Einträge).
+
+Darunter (`pages/daten-geraet.ts`, Teures erst beim Aufklappen gelesen):
+
+- **Speicherplatz:** belegt und erlaubt (Storage API), aufgeteilt in Einträge, Noten, Mitschnitte und Rest; ob der
+  Browser die Daten **dauerhaft** hält – sonst Knopf „Dauerhaft speichern“ (`navigator.storage.persist`; als
+  installierte App klappt es meist).
+- **Sync-Kopie:** Dateien und Größe der lokalen Seite der Synchronisation je Ordner (Daten, Noten, Geraete …), wann
+  zuletzt abgeglichen, was aufs Hochladen wartet, Noten-Dateien ohne eindeutigen Song, neuestes Backup im Sync-Ordner.
+- **Spotify** (wenn eingerichtet): Abspielart, Anmeldung, wann zuletzt erfolgreich abgespielt, Diagnose-Protokoll
+  (leeren). Verbinden und trennen nur in den Einstellungen.
+- **App und Seiten für unterwegs:** App-Stand, die Speicher des Service Workers mit Größe, „Nach neuer Version suchen“.
+- **Backup:** wann zuletzt auf diesem Gerät, nach 30 Tagen hervorgehoben.
+
+Jeder Schlüssel `bn-…` im Code braucht in `data/aufraeumen.ts` eine Beschriftung (Eintrag in `EINSTELLUNGEN` oder ein
+Bereich mit eigenem Präfix) – `npm run check:schluessel` (Teil von `npm run pruefen`) meldet unbeschriftete.
 
 In derselben Karte darunter **Aufräumen**:
 

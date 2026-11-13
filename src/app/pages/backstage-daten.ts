@@ -5,7 +5,6 @@ import { BandService } from '../data/band.service';
 import { Eintrag, eintraege, entfernen, mb } from '../data/aufraeumen';
 import { NotenDateiInfo, SongNoten, alleSongNoten, notenAllesLoeschen, notenDateiLoeschen, notenDateien, pdfName, songNotenSetzen } from '../data/noten';
 import { mitschnittUebersicht, mitschnitteAllesLoeschen } from '../data/mitschnitte';
-import { cacheLeeren } from '../data/aufraeumen';
 import { NotenCheckKarte } from './noten-check';
 import { BackstageAufraeumen } from './backstage-aufraeumen';
 import { SyncService } from '../data/sync.service';
@@ -13,14 +12,16 @@ import { SyncStatus, spiegelArt, syncStatusVon } from '../data/spiegel';
 import { backupTeilen } from './backstage-sync';
 import { DatenEditor } from './daten-editor';
 import { geraetId, seitText } from '../data/geraete';
+import { DatenGeraet } from './daten-geraet';
 
 // Backstage → Abgleich → Daten auf diesem Gerät: jeder gespeicherte Eintrag einzeln – verständlich benannt (Bereich,
 // Datum, Ort), mit Inhaltsangabe und Größe. Öffnen (Seite des Bereichs), ansehen/ändern, auswählen und als Datei
 // teilen oder löschen, je Bereich alles löschen. Dazu Noten, Proben-Mitschnitte und Seiten für unterwegs, darunter
-// das Aufräumen (vergangene Einträge, alles löschen – backstage-aufraeumen.ts).
+// Speicherplatz, Sync-Kopie, Spotify, App-Stand und Backup (daten-geraet.ts), darunter das Aufräumen (vergangene
+// Einträge, alles löschen – backstage-aufraeumen.ts).
 @Component({
   selector: 'app-backstage-daten',
-  imports: [RouterLink, MatIconModule, DatenEditor, BackstageAufraeumen, NotenCheckKarte],
+  imports: [RouterLink, MatIconModule, DatenEditor, BackstageAufraeumen, NotenCheckKarte, DatenGeraet],
   template: `
     <div class="box">
       <h3>Daten auf diesem Gerät</h3>
@@ -129,15 +130,8 @@ import { geraetId, seitText } from '../data/geraete';
         </details>
         </div>
       }
-      @if (caches() && !suche()) {
-        <div class="gruppe">
-          @if (loeschbar()) { <button type="button" class="icon weg" (click)="offlineLeeren($event)" aria-label="Seiten für unterwegs leeren"><mat-icon>delete_sweep</mat-icon></button> }
-          <details>
-          <summary>Seiten für unterwegs <span class="zahl">{{ mb(speicher()) }}</span></summary>
-          <p>Damit Backstage ohne Netz geht; lädt beim nächsten Besuch mit Netz neu.</p>
-        </details>
-        </div>
-      }
+      <!-- Speicherplatz, Sync-Kopie, Spotify, App und Seiten für unterwegs, Backup (daten-geraet.ts) -->
+      @if (!suche()) { <app-daten-geraet [eintraege]="gesamt()" [noten]="pdfBytes()" [mitschnitte]="mitschnitte().bytes" [loeschbar]="loeschbar()" (geaendert)="aufgeraeumt()" /> }
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
 
       @if (loeschbar()) {
@@ -277,23 +271,10 @@ export class BackstageDaten {
     alleSongNoten().then((n) => this.noten.set(n)).catch(() => undefined);
     notenDateien().then((d) => this.pdfs.set(d)).catch(() => undefined);
     mitschnittUebersicht().then((m) => this.mitschnitte.set(m)).catch(() => undefined);
-    void this.speicherLaden();
   }
 
-  // Proben-Mitschnitte und Seiten für unterwegs (Cache des Service Workers)
+  // Proben-Mitschnitte
   protected readonly mitschnitte = signal({ anzahl: 0, songs: 0, bytes: 0 });
-  protected readonly caches = signal(0);
-  protected readonly speicher = signal(0);
-  private async speicherLaden(): Promise<void> {
-    try {
-      this.caches.set(typeof caches === 'undefined' ? 0 : (await caches.keys()).length);
-      const s = await navigator.storage?.estimate?.();
-      // grob: alles, was nicht Noten oder Mitschnitte ist
-      this.speicher.set(Math.max(0, (s?.usage ?? 0) - this.pdfBytes() - this.mitschnitte().bytes));
-    } catch {
-      // Schätzung nicht verfügbar
-    }
-  }
 
   /** aus dem Aufräumen (unten): neu lesen und den anderen Teilen der Seite Bescheid geben */
   protected aufgeraeumt(): void {
@@ -324,15 +305,6 @@ export class BackstageDaten {
     await mitschnitteAllesLoeschen();
     this.notenLaden();
     this.fertig('Mitschnitte gelöscht ✓');
-  }
-
-  protected async offlineLeeren(e: Event): Promise<void> {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!confirm('Seiten für unterwegs leeren? Ohne Netz ist Backstage dann erst nach dem nächsten Besuch mit Netz wieder da.')) return;
-    await cacheLeeren();
-    this.notenLaden();
-    this.fertig('Seiten für unterwegs geleert ✓');
   }
 
   protected nutzung(id: string): string {

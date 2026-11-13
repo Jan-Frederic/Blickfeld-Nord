@@ -1795,6 +1795,29 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   const geraeteGruppe = p.locator('app-backstage-daten .geraete-gruppe');
   await geraeteGruppe.locator('summary').click();
   await until(async () => /Davids Laptop[\s\S]*Kennung ab12cd34[\s\S]*Unbekanntes Gerät[\s\S]*Kennung dd2a1f3a/.test(await geraeteGruppe.innerText().catch(() => '')), async () => `Geräte fehlen unter „Daten auf diesem Gerät“: ${await geraeteGruppe.innerText().catch(() => '–')}`);
+  // weitere Bereiche: Speicherplatz, Sync-Kopie (je Ordner), Spotify (Protokoll leeren), Backup; neue Schlüssel beschriftet
+  await p.evaluate(() => {
+    localStorage.setItem('bn-spotify-modus', JSON.stringify('fern'));
+    localStorage.setItem('bn-spotify-protokoll', JSON.stringify(['12:00:00.0 Test', '12:00:01.0 Test']));
+    localStorage.setItem('bn-sprungmarken', JSON.stringify({ 'Song|Band': { marken: [], zeit: 1 } }));
+    localStorage.setItem('bn-setlist-vorlagen', JSON.stringify([]));
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  const daten = p.locator('app-backstage-daten');
+  const summaries = async () => (await daten.locator('summary').allInnerTexts()).join(' | ');
+  await until(async () => /Speicherplatz[\s\S]*Backup/.test(await summaries()), async () => `Speicherplatz/Backup fehlen: ${await summaries()}`);
+  expect(/Sprungmarken/.test(await summaries()) && /Sammlungen/.test(await summaries()), `Sprungmarken/Sammlungen nicht als eigene Bereiche: ${await summaries()}`);
+  expect(!/Setlist · vorlagen/.test(await daten.innerText()), 'Sammlungen noch als Setlist eines Auftritts beschriftet');
+  const kopie = daten.locator('.kopie-gruppe');
+  await kopie.locator('summary').click();
+  await until(async () => /Geraete[\s\S]*1 Datei/.test(await kopie.innerText().catch(() => '')), async () => `Sync-Kopie zeigt den Ordner nicht: ${await kopie.innerText().catch(() => '–')}`);
+  const spotify = daten.locator('.spotify-gruppe');
+  await spotify.locator('summary').click();
+  await until(async () => /2 Zeilen/.test(await spotify.innerText().catch(() => '')), async () => `Spotify-Bereich fehlt: ${await spotify.innerText().catch(() => '–')}`);
+  await spotify.getByRole('button', { name: /Leeren/ }).click();
+  await until(async () => /0 Zeilen/.test(await spotify.innerText().catch(() => '')), async () => `Protokoll nicht geleert: ${await spotify.innerText().catch(() => '–')}`);
+  expect((await p.evaluate(() => localStorage.getItem('bn-spotify-protokoll'))) === null, 'Protokoll bleibt gespeichert');
+  await p.evaluate(() => ['bn-spotify-modus', 'bn-sprungmarken', 'bn-setlist-vorlagen'].forEach((k) => localStorage.removeItem(k)));
   // nach dem Abgleich nicht eindeutig erkannte Noten warten auf eine Zuordnung
   await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync', 1);

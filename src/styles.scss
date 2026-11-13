@@ -1167,3 +1167,29 @@ app-backstage-ueben .liste .song-start { all: unset; box-sizing: border-box; fle
 app-backstage-ueben .liste .song-start:hover .t, app-backstage-ueben .liste .song-start:focus-visible .t { color: var(--bn-sunset); }
 app-backstage-ueben .liste .song-start:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; border-radius: 4px; }
 app-backstage-ueben .liste .song-start small { display: block; color: var(--bn-fog); font-size: .78rem; }
+
+// Abgleich → Daten auf diesem Gerät: Speicherplatz, Sync-Kopie, Spotify, App, Backup (pages/daten-geraet.ts)
+app-daten-geraet { display: block; }
+app-daten-geraet .gruppe { position: relative; }
+app-daten-geraet .gruppe > .weg { position: absolute; top: 3px; right: 0; z-index: 1; }
+app-daten-geraet details { border-top: 1px solid var(--bn-line); }
+app-daten-geraet summary { display: flex; align-items: center; gap: 8px; padding: 6px 40px 6px 0; cursor: pointer; font-size: .92rem; }
+app-daten-geraet summary::-webkit-details-marker { display: none; }
+app-daten-geraet summary::before { content: '▸'; color: var(--bn-fog); }
+app-daten-geraet details[open] > summary::before { content: '▾'; }
+app-daten-geraet .zahl { color: var(--bn-fog); font-size: .8rem; }
+app-daten-geraet .zahl.alt { color: #e8a46a; }
+app-daten-geraet p { margin: 0 0 12px; max-width: 720px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); }
+app-daten-geraet p a { color: var(--bn-sunset); }
+app-daten-geraet ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 2px; }
+app-daten-geraet li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, .05); }
+app-daten-geraet .text { flex: 1; min-width: 0; display: grid; overflow-wrap: anywhere; font-size: .9rem; }
+app-daten-geraet small { color: var(--bn-fog); font-size: .78rem; }
+app-daten-geraet .wert { flex: none; color: var(--bn-fog); font-size: .82rem; font-variant-numeric: tabular-nums; }
+app-daten-geraet button { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 10px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+app-daten-geraet li button { margin: 0; }
+app-daten-geraet button.icon { padding: 5px; margin: 0; }
+app-daten-geraet button:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
+app-daten-geraet button:disabled { opacity: .4; cursor: default; }
+app-daten-geraet mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-daten-geraet .meldung { margin: 12px 0 0; color: #5fb88a; }
