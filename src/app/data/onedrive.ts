@@ -301,41 +301,83 @@ export async function cloudDelta(
   return { dateien, stand };
 }
 
-/** Inhalt einer Cloud-Datei */
-export async function cloudLaden(d: CloudDatei): Promise<Blob> {
-  if (d.downloadUrl) {
+/**
+ * Inhalt einer Cloud-Datei. Wege nacheinander: der Download-Link aus der Liste, ein frisch geholter Link, zuletzt
+ * /content über Graph (folgt einer Weiterleitung – scheitert in manchen Browsern). Bricht der Browser ab (TypeError:
+ * kein Netz, Sicherheitsregel oder Server ohne CORS-Freigabe), nach einer Sekunde alles noch einmal. Scheitert auch das,
+ * nennt die Meldung die versuchten Server und – falls die Sicherheitsregel der Seite (CSP) etwas blockiert hat – welchen.
+ */
+export function cloudLaden(d: CloudDatei): Promise<Blob> {
+  return dateiLaden(d, { graph, fetch: (u) => fetch(u), warten: (ms) => new Promise((r) => setTimeout(r, ms)) });
+}
+
+/** Netz und Anmeldung von außen (für Tests ersetzbar) */
+export interface LadeWege {
+  graph(pfad: string): Promise<Response>;
+  fetch(url: string): Promise<Response>;
+  warten(ms: number): Promise<unknown>;
+}
+
+export async function dateiLaden(d: CloudDatei, w: LadeWege): Promise<Blob> {
+  const versuche: string[] = [];
+  const blockiert = new Set<string>();
+  const csp = (e: SecurityPolicyViolationEvent) => blockiert.add(hostVon(e.blockedURI));
+  if (typeof document !== 'undefined') document.addEventListener('securitypolicyviolation', csp);
+  /** ein Weg: Blob oder null (gescheitert – Grund in versuche); andere Fehler als ein Abbruch gehen weiter */
+  const weg = async (url: string, mitZugang: boolean): Promise<Blob | null> => {
     try {
-      const res = await fetch(d.downloadUrl);
-      if (res.ok) return res.blob();
-    } catch {
-      // Link abgelaufen oder blockiert → über Graph versuchen
+      const res = mitZugang ? await w.graph(url) : await w.fetch(url);
+      if (res.ok) return await res.blob();
+      versuche.push(`${hostVon(url)} ${res.status}`);
+    } catch (e) {
+      if ((e as Error).name !== 'TypeError') throw e;
+      versuche.push(`${hostVon(mitZugang ? GRAPH : url)} abgebrochen`);
     }
-  }
-  // ohne Link (z. B. aus der Änderungsliste): frischen Download-Link holen – der Umweg über /content scheitert in
-  // manchen Browsern an der Weiterleitung. Bricht der Browser ab (TypeError: kurz kein Netz, oder die Datei wurde
-  // gerade von einem anderen Gerät ersetzt und der Link zeigt ins Leere), nach einer Sekunde ein zweites Mal.
-  const holen = async (): Promise<Blob> => {
-    const link = ((await (await graph(perId(d.id, d.drive))).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
+    return null;
+  };
+  const durchgang = async (mitListenLink: boolean): Promise<Blob | null> => {
+    if (mitListenLink && d.downloadUrl) {
+      const b = await weg(d.downloadUrl, false);
+      if (b) return b;
+    }
+    let link: string | undefined;
+    try {
+      link = ((await (await w.graph(perId(d.id, d.drive))).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
+    } catch (e) {
+      if ((e as Error).name !== 'TypeError') throw e;
+      versuche.push('graph.microsoft.com abgebrochen');
+      return null;
+    }
     if (link) {
-      const res = await fetch(link);
-      if (res.ok) return res.blob();
+      const b = await weg(link, false);
+      if (b) return b;
     }
-    return await (await graph(`${perId(d.id, d.drive)}/content`)).blob();
+    return weg(`${perId(d.id, d.drive)}/content`, true);
   };
   try {
-    return await holen();
-  } catch (e) {
-    if ((e as Error).name !== 'TypeError') throw e;
-  }
-  await new Promise((r) => setTimeout(r, 1000));
-  try {
-    return await holen();
-  } catch (e) {
-    throw (e as Error).name === 'TypeError'
-      ? new Error('Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert) – wird beim nächsten Abgleich wiederholt', { cause: e })
-      : e;
+    const erst = await durchgang(true);
+    if (erst) return erst;
+    await w.warten(1000);
+    const dann = await durchgang(false);
+    if (dann) return dann;
+    // Meldungen der Sicherheitsregel kommen kurz nach dem Abbruch
+    await w.warten(50);
+    const hosts = [...new Set(versuche)].join(', ');
+    const regel = blockiert.size ? `; Sicherheitsregel der Seite blockiert ${[...blockiert].join(', ')}` : '';
+    throw new Error(`Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht: ${hosts}${regel}) – wird beim nächsten Abgleich wiederholt`);
+  } finally {
+    if (typeof document !== 'undefined') document.removeEventListener('securitypolicyviolation', csp);
   }
 }
+
+/** Server einer Adresse (für Meldungen – ohne Pfad und Schlüssel) */
+const hostVon = (url: string): string => {
+  try {
+    return new URL(url, GRAPH).host;
+  } catch {
+    return '?';
+  }
+};
 
 /** Datei hochladen (Ordner entstehen automatisch); bis 250 MB, darüber in Teilen */
 export async function cloudSchreiben(ort: CloudOrt, pfad: string, inhalt: Blob): Promise<CloudDatei> {

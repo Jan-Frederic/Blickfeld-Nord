@@ -829,11 +829,12 @@ Zeitpunkt) in den Sync-Ordner – die Liste zeigt, welches Gerät wann zuletzt a
 Fehlermeldungen zu `Geraete/<Kennung>.json` nennen den Namen des Geräts dazu (`geraetImFehler`). Name und Kennung bleiben auf
 dem Gerät (`bn-geraet-…`, nicht gespiegelt).
 
-**Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert)“): Der Browser
-hat die Anfrage ohne Antwort abgebrochen – kurz kein Netz, oder die Datei wurde gerade von einem anderen Gerät ersetzt
-(die Geräte-Dateien schreibt jedes Gerät stündlich neu) und der alte Download-Link zeigt ins Leere. `cloudLaden` in
-`data/onedrive.ts` holt dann einen frischen Link und versucht es nach einer Sekunde noch einmal. Scheitert auch das,
-bleibt die Datei als „nicht erledigt“ stehen und der nächste Abgleich holt sie – es geht nichts verloren.
+**Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht:
+…)“): Der Browser hat die Anfrage ohne Antwort abgebrochen – kein Netz, die Sicherheitsregel der Seite (CSP in
+`scripts/csp.mjs`) oder ein Server ohne CORS-Freigabe. `dateiLaden` in `data/onedrive.ts` versucht nacheinander den
+Download-Link aus der Liste, einen frisch geholten Link und `/content` über Graph, nach einer Sekunde alles noch einmal.
+Scheitert auch das, nennt die Meldung die versuchten Server (nur Hostnamen) und, falls die CSP etwas blockiert hat,
+welchen – dann diesen Host in `connect-src` aufnehmen. Die Datei bleibt als „nicht erledigt“ stehen und der nächste Abgleich holt sie – es geht nichts verloren.
 
 **Zuordnen in einem Rutsch:** Beim Einlesen zeigt jede Noten-Datei „liegt schon bei …“, wenn eine gleichnamige Datei
 auf diesem Gerät schon bei einem anderen Song liegt. Hat man für eine Datei den Song gewählt, übernimmt
