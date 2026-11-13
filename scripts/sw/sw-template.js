@@ -102,11 +102,13 @@ self.addEventListener('periodicsync', (event) => {
       const jetzt = new Date();
       const heute = jetzt.toLocaleDateString('sv-SE');
       if (d.gemeldet === heute || jetzt.getHours() < d.stunde) return;
-      const n = (d.faellig ?? []).filter((t) => t <= heute).length;
+      // mit Songtiteln (neuere Seite): die dringendsten zuerst; sonst nur die Zahl
+      const karten = Array.isArray(d.karten) ? d.karten.filter((k) => k.f <= heute) : null;
+      const n = karten ? karten.length : (d.faellig ?? []).filter((t) => t <= heute).length;
       if (self.navigator.setAppBadge) await (n ? self.navigator.setAppBadge(n) : self.navigator.clearAppBadge()).catch(() => undefined);
       if (!n) return;
       await self.registration.showNotification('Blickfeld Nord – Üben', {
-        body: n === 1 ? '1 Karteikarte ist heute fällig.' : `${n} Karteikarten sind heute fällig.`,
+        body: erinnerungText(n, karten ? karten.map((k) => k.t) : []),
         tag: 'bn-ueben',
         icon: '/icon-192.png',
         // Statusleiste (Android): nur die Deckkraft zählt – weiße Silhouette auf transparent (scripts/favicons.py)
@@ -117,6 +119,16 @@ self.addEventListener('periodicsync', (event) => {
     })(),
   );
 });
+
+/** „3 Songs sind heute fällig: A, B und C.“ – bis zu drei Titel, der Rest als Zahl („… und 4 weitere“) */
+function erinnerungText(n, titel) {
+  const kopf = n === 1 ? '1 Song ist heute fällig' : `${n} Songs sind heute fällig`;
+  const namen = titel.filter(Boolean).slice(0, 3);
+  if (!namen.length) return `${kopf}.`;
+  const rest = n - namen.length;
+  const liste = rest > 0 ? `${namen.join(', ')} und ${rest} ${rest === 1 ? 'weiterer' : 'weitere'}` : namen.length === 1 ? namen[0] : `${namen.slice(0, -1).join(', ')} und ${namen.at(-1)}`;
+  return `${kopf}: ${liste}.`;
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

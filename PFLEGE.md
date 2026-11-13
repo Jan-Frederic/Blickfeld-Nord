@@ -253,7 +253,8 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   gespiegelten Verlauf `bn-fortschritt-<Person>`), Antippen zeigt die Zahlen, dazu eine Tabelle; darunter die Songs,
   die diese Woche bei allen sitzen. Farben je Person in fester Reihenfolge (blau, orange, grün – gegen den dunklen
   Hintergrund und auf Farbfehlsichtigkeit geprüft). **Übe-Erinnerung** (Einstellungen → Ich bin, `data/erinnerung.ts`): höchstens einmal am Tag
-  ab der gewählten Stunde eine Benachrichtigung „n Karteikarten sind heute fällig“ – über die periodische
+  ab der gewählten Stunde eine Benachrichtigung „7 Songs sind heute fällig: Angels, Wonderwall, Hey Jude und 4 weitere.“ (bis zu drei
+  Titel, die dringendsten zuerst – `erinnerungKarten`, Text `erinnerungText` im Service Worker) – über die periodische
   Hintergrund-Synchronisation des Service Workers (`periodicsync` in `scripts/sw/sw-template.js`, nur installierte App
   auf Android/Chrome/Edge); Fälligkeiten legt die Seite im Speicher `ueben-erinnerung` ab. Die Zahl fälliger Karten am
   App-Symbol (Badge, `setAppBadge`) zeigen nur Computer (installierte App in Chrome/Edge) und iPhone/iPad

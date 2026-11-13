@@ -57,6 +57,19 @@ export function faelligkeiten(heute: string): string[] {
   return Object.entries(ladeUeben()).map(([k, s]) => (geuebt.includes(k) && s.faellig <= heute ? m : s.faellig));
 }
 
+/**
+ * Karten für die Meldung: Fälligkeit (wie faelligkeiten) und Songtitel, die dringendsten zuerst (am längsten fällig,
+ * dann niedrigerer Kasten) – der Service Worker nennt davon die ersten paar beim Namen.
+ */
+export function erinnerungKarten(heute: string): { f: string; t: string }[] {
+  const stand = ladeUeben();
+  const f = faelligkeiten(heute);
+  return Object.entries(stand)
+    .map(([k, s], i) => ({ f: f[i], t: k.includes('|') ? k.slice(0, k.indexOf('|')) : k, kasten: s.kasten }))
+    .sort((a, b) => a.f.localeCompare(b.f) || a.kasten - b.kasten || a.t.localeCompare(b.t, 'de'))
+    .map(({ f, t }) => ({ f, t }));
+}
+
 /** Badge und Daten für den Service Worker auf den aktuellen Stand bringen (nach jeder Änderung am Karteikasten) */
 export async function erinnerungAktualisieren(heute = new Date().toLocaleDateString('sv-SE')): Promise<void> {
   if (typeof navigator === 'undefined') return;
@@ -73,7 +86,8 @@ export async function erinnerungAktualisieren(heute = new Date().toLocaleDateStr
     const e = ladeErinnerung();
     const cache = await caches.open(ERINNERUNG_CACHE);
     const alt = (await (await cache.match(ERINNERUNG_URL))?.json().catch(() => null)) as { gemeldet?: string } | null;
-    const daten = { an: e.an, stunde: e.stunde, faellig: faelligkeiten(heute), gemeldet: alt?.gemeldet ?? '' };
+    // faellig: für ältere Service Worker (nur die Zahl); karten: mit Songtitel, dringendste zuerst
+    const daten = { an: e.an, stunde: e.stunde, faellig: faelligkeiten(heute), karten: erinnerungKarten(heute), gemeldet: alt?.gemeldet ?? '' };
     await cache.put(ERINNERUNG_URL, new Response(JSON.stringify(daten), { headers: { 'Content-Type': 'application/json' } }));
   } catch {
     // ohne Cache Storage keine Hintergrund-Erinnerung
