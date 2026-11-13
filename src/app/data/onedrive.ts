@@ -325,6 +325,11 @@ export interface LadeWege {
   warten(ms: number): Promise<unknown>;
 }
 
+/** Herunterladen scheiterte nur an der Verbindung (Abbruch, keine Antwort) – nicht an OneDrive oder einer Regel */
+export class LadeUnterbrechung extends Error {
+  override name = 'LadeUnterbrechung';
+}
+
 export async function dateiLaden(d: CloudDatei, w: LadeWege): Promise<Blob> {
   const versuche: string[] = [];
   const blockiert = new Set<string>();
@@ -372,7 +377,10 @@ export async function dateiLaden(d: CloudDatei, w: LadeWege): Promise<Blob> {
     await w.warten(50);
     const hosts = [...new Set(versuche)].join(', ');
     const regel = blockiert.size ? `; Sicherheitsregel der Seite blockiert ${[...blockiert].join(', ')}` : '';
-    throw new Error(`Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht: ${hosts}${regel}) – wird beim nächsten Abgleich wiederholt`);
+    const text = `Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht: ${hosts}${regel}) – wird beim nächsten Abgleich wiederholt`;
+    // nur Abbrüche (kein Status von OneDrive, keine Sicherheitsregel): meist Netzwechsel oder App im Hintergrund
+    const nurNetz = !blockiert.size && versuche.every((v) => / (abgebrochen|ohne Antwort)$/.test(v));
+    throw nurNetz ? new LadeUnterbrechung(text) : new Error(text);
   } finally {
     if (typeof document !== 'undefined') document.removeEventListener('securitypolicyviolation', csp);
   }

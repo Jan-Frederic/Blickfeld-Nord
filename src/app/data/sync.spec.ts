@@ -1,4 +1,4 @@
-import { SyncDatei, SyncOrdner, Zustand, ausstehendInCloud, ignorieren, istDatenPfad, konfliktName, planen, synchronisieren } from './sync';
+import { SyncDatei, SyncErgebnis, SyncOrdner, Zustand, ausstehendInCloud, ignorieren, istDatenPfad, konfliktName, planen, synchronisieren, unterbrochenWerten } from './sync';
 
 // Ordner im Speicher: Version = Zähler, der bei jedem Schreiben steigt
 function speicherOrdner(name: string, start: Record<string, string> = {}): SyncOrdner & { inhalt: Map<string, { text: string; version: string; geaendert: string }> } {
@@ -135,6 +135,73 @@ describe('Synchronisation', () => {
     expect(r.zustand['Geraete/dd2a1f3a.json']).toBeUndefined();
     // nächster Abgleich: wieder herunterladen, nicht in der Cloud löschen
     expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE)).toEqual([{ art: 'runter', pfad: 'Geraete/dd2a1f3a.json' }]);
+  });
+
+  const unterbrechung = () => Object.assign(new Error('Herunterladen nicht möglich (… abgebrochen)'), { name: 'LadeUnterbrechung' });
+
+  it('nur an der Verbindung gescheiterter Download ist kein Fehler – bleibt offen und wird nachgeholt', async () => {
+    const cloud = speicherOrdner('c', { 'Daten/a.json': '1', 'Daten/b.json': '2' });
+    const lokal = speicherOrdner('l');
+    cloud.lesen = async (p) => {
+      if (p === 'Daten/a.json') throw unterbrechung();
+      return new Blob([cloud.inhalt.get(p)!.text]);
+    };
+    const r = await synchronisieren(cloud, lokal, {}, BEIDE);
+    expect(r.ergebnis.fehler).toEqual([]);
+    expect(r.ergebnis.unterbrochen).toEqual(['Daten/a.json: Herunterladen nicht möglich (… abgebrochen)']);
+    expect(r.ergebnis.netzWeg).toBeUndefined();
+    expect(texte(lokal)).toEqual({ 'Daten/b.json': '2' });
+    expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE)).toEqual([{ art: 'runter', pfad: 'Daten/a.json' }]);
+  });
+
+  it('Verbindung ganz weg: nach zehn Unterbrechungen in Folge wartet der Rest auf den nächsten Abgleich', async () => {
+    const start = Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`Daten/${i}.json`, String(i)]));
+    const cloud = speicherOrdner('c', start);
+    const lokal = speicherOrdner('l');
+    let versucht = 0;
+    cloud.lesen = async () => {
+      versucht++;
+      throw unterbrechung();
+    };
+    const r = await synchronisieren(cloud, lokal, {}, BEIDE);
+    expect(r.ergebnis.fehler).toEqual([]);
+    expect(r.ergebnis.netzWeg).toBe(true);
+    expect(versucht).toBeLessThan(15);
+  });
+
+  it('andere Fehler beim Herunterladen bleiben Fehler', async () => {
+    const cloud = speicherOrdner('c', { 'Daten/a.json': '1' });
+    const lokal = speicherOrdner('l');
+    cloud.lesen = async () => {
+      throw new Error('Herunterladen nicht möglich (… 403)');
+    };
+    const r = await synchronisieren(cloud, lokal, {}, BEIDE);
+    expect(r.ergebnis.fehler).toEqual(['Daten/a.json: Herunterladen nicht möglich (… 403)']);
+    expect(r.ergebnis.unterbrochen).toBeUndefined();
+  });
+
+  describe('unterbrochene Downloads über mehrere Abgleiche', () => {
+    const TAG = 864e5;
+    const ergebnis = (unterbrochen: string[], neu: string[] = []): SyncErgebnis => ({ runter: 0, hoch: 0, geloescht: 0, konflikte: 0, fehler: [], neu, unterbrochen });
+
+    it('erst ein Hinweis, beim dritten Mal in Folge ein Fehler', () => {
+      let z = unterbrochenWerten({}, ergebnis(['Daten/a.json: weg']), 0);
+      expect(z.hinweise).toEqual(['Daten/a.json: weg']);
+      expect(z.fehler).toEqual([]);
+      z = unterbrochenWerten(z.zaehler, ergebnis(['Daten/a.json: weg']), 1000);
+      expect(z.fehler).toEqual([]);
+      z = unterbrochenWerten(z.zaehler, ergebnis(['Daten/a.json: weg']), 2000);
+      expect(z.fehler).toEqual(['Daten/a.json: seit 3 Abgleichen nicht ladbar – weg']);
+      expect(z.hinweise).toEqual([]);
+    });
+
+    it('geladen oder älter als eine Woche: Zähler fällt weg', () => {
+      const alt = { 'Daten/a.json': { n: 2, zeit: 0 }, 'Daten/b.json': { n: 2, zeit: 0 }, 'Daten/c.json': { n: 1, zeit: 0 } };
+      const z = unterbrochenWerten(alt, ergebnis(['Daten/c.json: weg'], ['Daten/a.json']), 8 * TAG);
+      expect(z.zaehler).toEqual({ 'Daten/c.json': { n: 1, zeit: 8 * TAG } });
+      // innerhalb der Woche bleibt ein nicht versuchter Zähler stehen
+      expect(unterbrochenWerten(alt, ergebnis([]), TAG).zaehler['Daten/b.json']).toEqual({ n: 2, zeit: 0 });
+    });
   });
 
   it('Geräte-Dateien: bei Änderungen auf beiden Seiten gewinnt die neuere ohne Konfliktkopie', () => {

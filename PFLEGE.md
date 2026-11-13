@@ -851,6 +851,14 @@ mit derselben Liste; Einträge, die sich beim letzten Abgleich nicht lesen ließ
 Einträge entfernen (`geraetEntfernen` in `data/sync.service.ts`, löscht die Datei in OneDrive und die lokale Kopie) –
 ein noch genutztes Gerät legt seinen Eintrag beim nächsten Abgleich neu an.
 
+**Verbindung unterbrochen:** Scheitert ein Download nur an Abbrüchen bzw. fehlender Antwort (kein Status von OneDrive,
+keine CSP-Blockade – `LadeUnterbrechung` in `data/onedrive.ts`), ist das zunächst kein Fehler, sondern ein Hinweis
+(„1 Datei nicht geladen (Verbindung unterbrochen: …) – wird nachgeholt“): typisch auf dem Handy bei Netzwechsel oder
+wenn die App in den Hintergrund geht. Die Datei bleibt offen und kommt beim nächsten Abgleich. Gezählt wird je Datei in
+`bn-sync-unterbrochen` (`unterbrochenWerten` in `data/sync.ts`): Beim dritten Mal in Folge wird es ein Fehler („seit 3
+Abgleichen nicht ladbar – …“), geladene Dateien und Einträge älter als eine Woche fallen raus. Zehn Unterbrechungen
+hintereinander: Die Verbindung ist weg, der Rest wartet auf den nächsten Abgleich („Verbindung weg …“).
+
 **Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht:
 …)“): Der Browser hat die Anfrage ohne Antwort abgebrochen – kein Netz, die Sicherheitsregel der Seite (CSP in
 `scripts/csp.mjs`) oder ein Server ohne CORS-Freigabe. `dateiLaden` in `data/onedrive.ts` versucht nacheinander den

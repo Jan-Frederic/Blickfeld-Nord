@@ -3,7 +3,7 @@ import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt
 import { zusammenfuehren } from './spiegel-merge';
 import { cloudLoeschenPfad, letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
-import { SyncOrdner, SyncStand, ergebnisText, istDatenPfad, synchronisieren } from './sync';
+import { SyncOrdner, SyncStand, Unterbrochen, ergebnisText, istDatenPfad, synchronisieren, unterbrochenWerten } from './sync';
 import { eigenstaendigerSong, erkennen } from './erkennung';
 import { NOTEN_GEAENDERT, NotenDateiInfo, NotenPdf, alleDoppeltenVerweiseEntfernen, alleMarkierungen, alleSongNoten, markierungenSetzen, notenDateiLoeschen, notenDateiSpeichern, notenDateien, songNoten, songNotenSetzen } from './noten';
 import { BAND, MarkDateiInhalt, NotenDateiInhalt, istNotenSpiegel, markTexte, markZusammen, notenPfad, notenText, pdfFinden } from './noten-spiegel';
@@ -43,6 +43,22 @@ function unlesbarLaden(): string[] {
     return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
   } catch {
     return [];
+  }
+}
+const UNTERBROCHEN_KEY = 'bn-sync-unterbrochen';
+function unterbrochenLaden(): Unterbrochen {
+  try {
+    return JSON.parse(localStorage.getItem(UNTERBROCHEN_KEY) ?? '{}') as Unterbrochen;
+  } catch {
+    return {};
+  }
+}
+function unterbrochenSpeichern(u: Unterbrochen): void {
+  try {
+    if (Object.keys(u).length) localStorage.setItem(UNTERBROCHEN_KEY, JSON.stringify(u));
+    else localStorage.removeItem(UNTERBROCHEN_KEY);
+  } catch {
+    // ohne Speicher zählt jeder Abgleich für sich
   }
 }
 function unlesbarSpeichern(ids: string[]): void {
@@ -630,7 +646,14 @@ export class SyncService {
       const unlesbar = (ergebnis.hinweise ?? []).map((h) => /^Geraete\/([^/.]+)\.json:/.exec(h)?.[1]).filter((x): x is string => !!x);
       this.geraeteUnlesbar.set(unlesbar);
       unlesbarSpeichern(unlesbar);
-      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : '') + (ergebnis.hinweise?.length ? ` · Geräteliste: ${ergebnis.hinweise.length === 1 ? 'ein Eintrag' : `${ergebnis.hinweise.length} Einträge`} nicht lesbar (${ergebnis.hinweise.slice(0, 3).map((f) => geraetImFehler(f, this.geraete()).replace(/:.*$/, '')).join('; ')}) – wird wiederholt` : ''), ergebnis.fehler.length > 0);
+      // nur an der Verbindung gescheiterte Downloads: Hinweis, erst beim dritten Mal in Folge ein Fehler
+      const u = unterbrochenWerten(unterbrochenLaden(), ergebnis, Date.now());
+      unterbrochenSpeichern(u.zaehler);
+      ergebnis.fehler.push(...u.fehler);
+      const netz =
+        (u.hinweise.length ? ` · ${u.hinweise.length} ${u.hinweise.length === 1 ? 'Datei' : 'Dateien'} nicht geladen (Verbindung unterbrochen: ${u.hinweise.slice(0, 3).map((h) => h.replace(/: .*$/, '')).join('; ')}) – wird nachgeholt` : '') +
+        (ergebnis.netzWeg ? ' · Verbindung weg – der Rest folgt beim nächsten Abgleich' : '');
+      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : '') + (ergebnis.hinweise?.length ? ` · Geräteliste: ${ergebnis.hinweise.length === 1 ? 'ein Eintrag' : `${ergebnis.hinweise.length} Einträge`} nicht lesbar (${ergebnis.hinweise.slice(0, 3).map((f) => geraetImFehler(f, this.geraete()).replace(/:.*$/, '')).join('; ')}) – wird wiederholt` : '') + netz, ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {

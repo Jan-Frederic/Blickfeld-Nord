@@ -108,6 +108,10 @@ export interface SyncErgebnis {
   fehler: string[];
   /** Nebensächliches, das nicht geklappt hat (Geräte-Dateien: nur für die Geräteliste) – kein Fehler, wird wiederholt */
   hinweise?: string[];
+  /** Downloads, die nur an der Verbindung scheiterten („Pfad: Meldung“) – bleiben offen, kein Fehler (sync.service zählt mit) */
+  unterbrochen?: string[];
+  /** so viele Downloads hintereinander unterbrochen, dass der Rest auf den nächsten Abgleich wartet */
+  netzWeg?: boolean;
   /** Pfade, die heruntergeladen oder neu angelegt wurden */
   neu: string[];
   /** Löschungen, die wegen der Rückfrage (viele auf einmal) diesmal nicht ausgeführt wurden */
@@ -185,6 +189,7 @@ export async function synchronisieren(
   let inFolge = 0;
   let letzter = '';
   let abgebrochen = false;
+  let unterbrochenInFolge = 0;
   const ausfuehren = async (a: Aktion): Promise<void> => {
     const C = c.get(a.pfad);
     const L = l.get(a.pfad);
@@ -235,6 +240,7 @@ export async function synchronisieren(
       try {
         await ausfuehren(a);
         inFolge = 0;
+        unterbrochenInFolge = 0;
         // Zwischenstand sichern – ein abgebrochener Abgleich macht beim nächsten Mal dort weiter
         if (++erledigt % 10 === 0) await hilfen.speichern?.(z);
       } catch (err) {
@@ -243,6 +249,13 @@ export async function synchronisieren(
         // nächsten Abgleich wieder versucht (Zustand unverändert – nichts wird gelöscht)
         if (a.pfad.startsWith('Geraete/') && a.art === 'runter') {
           (e.hinweise ??= []).push(`${a.pfad}: ${text}`);
+          continue;
+        }
+        // nur die Verbindung (Netzwechsel, App im Hintergrund): offen lassen und beim nächsten Abgleich nachholen; bricht
+        // sie dauerhaft weg, wartet der Rest gleich auf den nächsten Abgleich statt jede Datei einzeln auszuprobieren
+        if (a.art === 'runter' && (err as Error).name === 'LadeUnterbrechung') {
+          (e.unterbrochen ??= []).push(`${a.pfad}: ${text}`);
+          if (++unterbrochenInFolge >= ABBRUCH_NACH && !abgebrochen) abgebrochen = e.netzWeg = true;
           continue;
         }
         inFolge = text === letzter ? inFolge + 1 : 1;
@@ -274,6 +287,30 @@ const TEXT: Record<string, string> = {
 };
 
 /** kurze Zusammenfassung */
+/** unterbrochene Downloads über mehrere Abgleiche: Pfad → wie oft in Folge, zuletzt wann */
+export type Unterbrochen = Record<string, { n: number; zeit: number }>;
+export const UNTERBROCHEN_GRENZE = 3;
+
+/**
+ * Unterbrochene Downloads werten: Wer zum dritten Mal in Folge nur an der Verbindung scheitert, ist ein Fehler (dann
+ * liegt es wohl doch an der Datei), sonst ein Hinweis. Geladene Dateien und Einträge älter als eine Woche fallen raus.
+ */
+export function unterbrochenWerten(alt: Unterbrochen, e: SyncErgebnis, jetzt: number): { zaehler: Unterbrochen; fehler: string[]; hinweise: string[] } {
+  const zaehler: Unterbrochen = {};
+  const geladen = new Set(e.neu);
+  for (const [pfad, x] of Object.entries(alt)) if (!geladen.has(pfad) && jetzt - x.zeit < 7 * 864e5) zaehler[pfad] = x;
+  const fehler: string[] = [];
+  const hinweise: string[] = [];
+  for (const u of e.unterbrochen ?? []) {
+    const pfad = u.slice(0, u.indexOf(': '));
+    const n = (zaehler[pfad]?.n ?? 0) + 1;
+    zaehler[pfad] = { n, zeit: jetzt };
+    if (n >= UNTERBROCHEN_GRENZE) fehler.push(`${pfad}: seit ${n} Abgleichen nicht ladbar – ${u.slice(pfad.length + 2)}`);
+    else hinweise.push(u);
+  }
+  return { zaehler, fehler, hinweise };
+}
+
 export function ergebnisText(e: SyncErgebnis): string {
   const teile = [
     e.runter && `${e.runter} heruntergeladen`,

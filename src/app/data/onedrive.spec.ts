@@ -57,6 +57,12 @@ describe('OneDrive', () => {
       expect(w.aufrufe.filter((u) => u.endsWith('/content'))).toHaveLength(2);
     });
 
+    it('nur Abbrüche: Fehlerart LadeUnterbrechung (Verbindung), mit Status von OneDrive dagegen nicht', async () => {
+      await expect(dateiLaden(datei, wege({}))).rejects.toMatchObject({ name: 'LadeUnterbrechung' });
+      const mitStatus = wege({ fetch: () => Promise.resolve(new Response('', { status: 403 })) });
+      await expect(dateiLaden(datei, mitStatus)).rejects.toMatchObject({ name: 'Error' });
+    });
+
     it('hängt nicht: eine Anfrage ohne Antwort (Zeitgrenze) gilt wie ein Abbruch', async () => {
       const ohneAntwort = () => Promise.reject(new DOMException('Zeit um', 'TimeoutError'));
       const w = wege({ fetch: ohneAntwort, content: ohneAntwort });
