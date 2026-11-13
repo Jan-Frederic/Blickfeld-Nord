@@ -63,7 +63,7 @@ import { SyncKonflikte } from './sync-konflikte';
           @if (sync.geraete().length) {
             <ul>
               @for (g of sync.geraete(); track g.id) {
-                <li [class.ich]="g.id === meineId">{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }} <small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen</small></li>
+                <li [class.ich]="g.id === meineId">{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }} <small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }}</small></li>
               }
             </ul>
           } @else { <p class="klein">Noch keine Geräte gemeldet – nach dem nächsten Abgleich steht hier, welches Gerät wann zuletzt abgeglichen hat.</p> }

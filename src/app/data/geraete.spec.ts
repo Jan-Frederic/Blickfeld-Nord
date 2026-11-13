@@ -1,4 +1,4 @@
-import { GERAET_NAME_KEY, geraetMeldung, geraeteListe, seitText, standardName } from './geraete';
+import { GERAET_NAME_KEY, geraetImFehler, geraetMeldung, geraeteListe, seitText, standardName } from './geraete';
 
 describe('geraete', () => {
   beforeEach(() => localStorage.clear());
@@ -37,5 +37,12 @@ describe('geraete', () => {
     expect(seitText('2026-11-01T09:00:00Z', jetzt)).toBe('vor 3 Std.');
     expect(seitText('2026-10-31T12:00:00Z', jetzt)).toBe('gestern');
     expect(seitText('2026-10-27T12:00:00Z', jetzt)).toBe('vor 5 Tagen');
+  });
+
+  it('nennt in Fehlermeldungen den Namen des Geräts zur Kennung', () => {
+    const geraete = [{ id: 'dd2a1f3a', name: 'Edge-Laptop', person: 'Fred', zeit: '2026-11-12T20:00:00Z' }];
+    expect(geraetImFehler('Geraete/dd2a1f3a.json: Herunterladen nicht möglich', geraete)).toBe('Geraete/dd2a1f3a.json (Gerät „Edge-Laptop“, Fred): Herunterladen nicht möglich');
+    expect(geraetImFehler('Geraete/ffffffff.json: weg', geraete)).toBe('Geraete/ffffffff.json: weg');
+    expect(geraetImFehler('Daten/bn-ueben.json: weg', geraete)).toBe('Daten/bn-ueben.json: weg');
   });
 });

@@ -102,3 +102,11 @@ export function seitText(iso: string, jetzt = Date.now()): string {
   const tage = Math.round(std / 24);
   return tage === 1 ? 'gestern' : `vor ${tage} Tagen`;
 }
+
+/** Fehlermeldung des Abgleichs lesbar machen: „Geraete/<Kennung>.json: …“ bekommt den Namen des Geräts dazu */
+export function geraetImFehler(fehler: string, geraete: GeraetEintrag[]): string {
+  return fehler.replace(new RegExp(`^${GERAETE_ORDNER}/([^/.]+)\\.json:`), (ganz, id: string) => {
+    const g = geraete.find((x) => x.id === id);
+    return g ? `${GERAETE_ORDNER}/${id}.json (Gerät „${g.name}“${g.person ? `, ${g.person}` : ''}):` : ganz;
+  });
+}

@@ -11,7 +11,7 @@ import type { Strich } from './noten';
 import type { SyncDatei } from './sync';
 import { Mitschnitt, mitschnittAusPfad, mitschnittEndung, mitschnittGeteilt, mitschnittPfad, mitschnittPfade, mitschnittSpeichern } from './mitschnitte';
 import { geloeschtMerken, giltLoeschung, ladeGeloescht } from './noten-geloescht';
-import { GERAETE_ORDNER, GeraetEintrag, geraetMeldung, geraeteListe } from './geraete';
+import { GERAETE_ORDNER, GeraetEintrag, geraetImFehler, geraetMeldung, geraeteListe } from './geraete';
 import { NotenQuelle, istAkkordblatt, istPdf, notenEinlesen } from './noten-import';
 import {
   appOrdner,
@@ -573,7 +573,7 @@ export class SyncService {
       if (offen || (schnell && this.vollFaellig())) danach = 'voll';
       // neu aufgesetztes Gerät: eigene bzw. zusammengeführte Einträge gleich hochladen
       else if (this.hochladen) danach = 'schnell';
-      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).join('; ')}` : ''), ergebnis.fehler.length > 0);
+      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : ''), ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {
