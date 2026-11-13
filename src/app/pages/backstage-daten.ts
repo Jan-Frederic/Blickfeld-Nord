@@ -12,6 +12,7 @@ import { SyncService } from '../data/sync.service';
 import { SyncStatus, spiegelArt, syncStatusVon } from '../data/spiegel';
 import { backupTeilen } from './backstage-sync';
 import { DatenEditor } from './daten-editor';
+import { geraetId, seitText } from '../data/geraete';
 
 // Backstage → Abgleich → Daten auf diesem Gerät: jeder gespeicherte Eintrag einzeln – verständlich benannt (Bereich,
 // Datum, Ort), mit Inhaltsangabe und Größe. Öffnen (Seite des Bereichs), ansehen/ändern, auswählen und als Datei
@@ -104,6 +105,30 @@ import { DatenEditor } from './daten-editor';
         </details>
         </div>
       }
+      <!-- Geräte im Sync-Ordner (Geraete/<Kennung>.json): wer wann zuletzt abgeglichen hat; nicht lesbare Einträge –
+           mit „Daten löschen“ lässt sich ein Eintrag entfernen (das Gerät legt ihn beim nächsten Abgleich neu an) -->
+      @if (sync.bereit() && (sync.geraete().length || sync.geraeteUnlesbar().length) && !suche()) {
+        <div class="gruppe geraete-gruppe">
+          <details [open]="offen().has('geraete')" (toggle)="merken('geraete', $any($event.target).open)">
+          <summary>Geräte <span class="zahl">{{ sync.geraete().length + sync.geraeteUnlesbar().length }}</span></summary>
+          <p>Jedes Gerät legt beim Abgleich eine kleine Datei in den Sync-Ordner (Name, Person, Zeitpunkt) – daraus entsteht diese Liste.</p>
+          <ul>
+            @for (g of sync.geraete(); track g.id) {
+              <li>
+                <span class="text"><strong>{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }}</strong><small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }}</small></span>
+                @if (loeschbar() && g.id !== meineId) { <button type="button" class="icon" (click)="geraetEntfernen(g.id, g.name)" [attr.aria-label]="'Eintrag von ' + g.name + ' entfernen'"><mat-icon>delete</mat-icon></button> }
+              </li>
+            }
+            @for (id of sync.geraeteUnlesbar(); track id) {
+              <li class="verwaist">
+                <span class="text"><strong>Unbekanntes Gerät</strong><small>Kennung {{ id }} · Eintrag ließ sich beim letzten Abgleich nicht lesen</small></span>
+                @if (loeschbar()) { <button type="button" class="icon" (click)="geraetEntfernen(id, 'Kennung ' + id)" [attr.aria-label]="'Eintrag mit Kennung ' + id + ' entfernen'"><mat-icon>delete</mat-icon></button> }
+              </li>
+            }
+          </ul>
+        </details>
+        </div>
+      }
       @if (caches() && !suche()) {
         <div class="gruppe">
           @if (loeschbar()) { <button type="button" class="icon weg" (click)="offlineLeeren($event)" aria-label="Seiten für unterwegs leeren"><mat-icon>delete_sweep</mat-icon></button> }
@@ -172,6 +197,18 @@ export class BackstageDaten {
   protected readonly auswahl = signal(new Set<string>());
   protected readonly offen = signal(new Set<string>());
   protected readonly meldung = signal('');
+  protected readonly meineId = geraetId();
+  protected readonly seit = seitText;
+  /** Geräte-Eintrag entfernen (nach Rückfrage) – das Gerät legt ihn beim nächsten eigenen Abgleich neu an */
+  protected async geraetEntfernen(id: string, name: string): Promise<void> {
+    if (!confirm(`Eintrag „${name}“ aus dem Sync-Ordner entfernen? Das Gerät legt ihn beim nächsten Abgleich neu an.`)) return;
+    try {
+      await this.sync.geraetEntfernen(id);
+      this.meldung.set(`Eintrag „${name}“ entfernt.`);
+    } catch (e) {
+      this.meldung.set(`Entfernen nicht möglich: ${(e as Error).message}`);
+    }
+  }
   protected readonly bearbeiten = signal<Eintrag | null>(null);
 
   // Synchronisation: Status je Eintrag (synchron / wartet / nur auf diesem Gerät) und Berechtigung „Daten löschen“

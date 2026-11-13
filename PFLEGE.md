@@ -830,7 +830,11 @@ Fehlermeldungen zu `Geraete/<Kennung>.json` nennen den Namen des Geräts dazu (`
 nie eine Konfliktkopie (jede schreibt nur ihr eigenes Gerät): Haben sich beide Seiten geändert, gewinnt die neuere
 (`planen` in `data/sync.ts`); ältere Kopien „Geraete/… (Konflikt …).json“ werden nicht mehr abgeglichen und nicht
 angezeigt. Name und Kennung bleiben auf
-dem Gerät (`bn-geraet-…`, nicht gespiegelt).
+dem Gerät (`bn-geraet-…`, nicht gespiegelt). Unter **Abgleich → Daten auf diesem Gerät** gibt es eine Gruppe **Geräte**
+mit derselben Liste; Einträge, die sich beim letzten Abgleich nicht lesen ließen (`bn-sync-geraete-unlesbar`, aus den
+`hinweise` des Abgleichs), stehen dort als „Unbekanntes Gerät“ mit Kennung. Wer „Daten löschen“ darf, kann fremde
+Einträge entfernen (`geraetEntfernen` in `data/sync.service.ts`, löscht die Datei in OneDrive und die lokale Kopie) –
+ein noch genutztes Gerät legt seinen Eintrag beim nächsten Abgleich neu an.
 
 **Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht:
 …)“): Der Browser hat die Anfrage ohne Antwort abgebrochen – kein Netz, die Sicherheitsregel der Seite (CSP in

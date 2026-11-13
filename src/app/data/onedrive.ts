@@ -422,6 +422,19 @@ export async function cloudLoeschen(id: string, drive?: string): Promise<void> {
   if (!res.ok && res.status !== 404) throw new Error(`Löschen fehlgeschlagen (${res.status})`);
 }
 
+/** Datei im Sync-Ordner über ihren Pfad löschen (nicht vorhanden: nichts zu tun) */
+export async function cloudLoeschenPfad(ort: CloudOrt, pfad: string): Promise<void> {
+  let item: GraphItem;
+  try {
+    item = (await (await graph(adresse(ort, pfad))).json()) as GraphItem;
+  } catch (e) {
+    if ((e as Error).message === 'nicht gefunden') return;
+    throw e;
+  }
+  // im geteilten Ordner eines anderen liegt die Datei in dessen OneDrive
+  await cloudLoeschen(item.id, ort.wurzel?.drive);
+}
+
 export interface CloudEintrag {
   name: string;
   /** geteilter Ordner (Verknüpfung oder „Mit mir geteilt“) – öffnet sich als neuer Ausgangspunkt */

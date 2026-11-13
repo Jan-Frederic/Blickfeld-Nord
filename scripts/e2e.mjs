@@ -1780,6 +1780,21 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await status.locator('.geraet-name input').dispatchEvent('change');
   await until(async () => (await status.locator('.geraete summary').innerText()).includes('dieses: Freds Handy'), 'Gerätename wird nicht übernommen');
   expect((await p.evaluate(() => localStorage.getItem('bn-geraet-name'))) === 'Freds Handy', 'Gerätename nicht gespeichert');
+  // Daten auf diesem Gerät → Geräte: Einträge aus dem Sync-Ordner (mit Kennung) und nicht lesbare
+  await p.evaluate(() => new Promise((ok) => {
+    localStorage.setItem('bn-sync-geraete-unlesbar', JSON.stringify(['dd2a1f3a']));
+    const req = indexedDB.open('bn-sync', 1);
+    req.onsuccess = () => {
+      const t = req.result.transaction('dateien', 'readwrite');
+      const text = JSON.stringify({ id: 'ab12cd34', name: 'Davids Laptop', person: 'david', zeit: new Date().toISOString() });
+      t.objectStore('dateien').put({ inhalt: new Blob([text]), groesse: text.length, geaendert: new Date().toISOString(), version: 'g1' }, 'Geraete/ab12cd34.json');
+      t.oncomplete = () => ok(null);
+    };
+  }));
+  await p.reload({ waitUntil: 'networkidle' });
+  const geraeteGruppe = p.locator('app-backstage-daten .geraete-gruppe');
+  await geraeteGruppe.locator('summary').click();
+  await until(async () => /Davids Laptop[\s\S]*Kennung ab12cd34[\s\S]*Unbekanntes Gerät[\s\S]*Kennung dd2a1f3a/.test(await geraeteGruppe.innerText().catch(() => '')), async () => `Geräte fehlen unter „Daten auf diesem Gerät“: ${await geraeteGruppe.innerText().catch(() => '–')}`);
   // nach dem Abgleich nicht eindeutig erkannte Noten warten auf eine Zuordnung
   await p.evaluate(() => new Promise((ok) => {
     const req = indexedDB.open('bn-sync', 1);

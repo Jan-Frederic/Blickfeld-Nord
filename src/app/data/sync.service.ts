@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt, spiegelPfad } from './spiegel';
 import { zusammenfuehren } from './spiegel-merge';
-import { letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
+import { cloudLoeschenPfad, letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, ergebnisText, istDatenPfad, synchronisieren } from './sync';
 import { eigenstaendigerSong, erkennen } from './erkennung';
@@ -35,6 +35,24 @@ import {
 // Fortschritt und letztes Ergebnis als Signale für die Anzeige im Abgleich.
 /** schnell: nur Einstellungen und Daten; voll: alles (PDFs, Mitschnitte …) */
 export type SyncArt = 'schnell' | 'voll';
+
+const UNLESBAR_KEY = 'bn-sync-geraete-unlesbar';
+function unlesbarLaden(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(UNLESBAR_KEY) ?? '[]');
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+function unlesbarSpeichern(ids: string[]): void {
+  try {
+    if (ids.length) localStorage.setItem(UNLESBAR_KEY, JSON.stringify(ids));
+    else localStorage.removeItem(UNLESBAR_KEY);
+  } catch {
+    // ohne Speicher: nur bis zum Schließen
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class SyncService {
@@ -424,6 +442,32 @@ export class SyncService {
   }
 
   /** Geräte-Liste aus dem Sync-Ordner lesen (ohne Liste: Ordner selbst lesen, ohne nach Erlaubnis zu fragen) */
+  /** Kennungen von Geräte-Dateien, die sich beim letzten Abgleich nicht lesen ließen (nur dieses Gerät) */
+  readonly geraeteUnlesbar = signal<string[]>(unlesbarLaden());
+
+  /**
+   * Geräte-Eintrag aus dem Sync-Ordner entfernen (nur mit „Daten löschen“): in OneDrive, die Kopie hier und ihren
+   * Abgleich-Stand. Das Gerät legt ihn beim nächsten eigenen Abgleich neu an – so lässt sich ein kaputter oder ein
+   * Eintrag eines nicht mehr benutzten Geräts loswerden.
+   */
+  async geraetEntfernen(id: string): Promise<void> {
+    if (!this.darfLoeschen()) throw new Error('Keine Berechtigung „Daten löschen“.');
+    const e = syncEinstellungen();
+    const pfad = `${GERAETE_ORDNER}/${id}.json`;
+    await cloudLoeschenPfad({ pfad: e.cloud, wurzel: e.wurzel }, pfad);
+    const lokal = await this.lokal(true);
+    if (lokal && (await lokal.liste()).some((d) => d.pfad === pfad)) await lokal.loeschen(pfad);
+    const z = await syncZustand();
+    if (z[pfad]) {
+      delete z[pfad];
+      await syncZustandSetzen(z);
+    }
+    this.geraeteUnlesbar.update((l) => l.filter((x) => x !== id));
+    unlesbarSpeichern(this.geraeteUnlesbar());
+    this.geraeteTexte.delete(pfad);
+    await this.geraeteLesen(lokal);
+  }
+
   async geraeteLesen(lokal?: SyncOrdner | null, liste?: SyncDatei[]): Promise<void> {
     lokal ??= await this.lokal();
     if (!lokal) return;
@@ -582,6 +626,10 @@ export class SyncService {
       if (offen || (schnell && this.vollFaellig())) danach = 'voll';
       // neu aufgesetztes Gerät: eigene bzw. zusammengeführte Einträge gleich hochladen
       else if (this.hochladen) danach = 'schnell';
+      // Geräte-Dateien, die sich nicht lesen ließen, für „Daten auf diesem Gerät“ merken
+      const unlesbar = (ergebnis.hinweise ?? []).map((h) => /^Geraete\/([^/.]+)\.json:/.exec(h)?.[1]).filter((x): x is string => !!x);
+      this.geraeteUnlesbar.set(unlesbar);
+      unlesbarSpeichern(unlesbar);
       letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : '') + (ergebnis.hinweise?.length ? ` · Geräteliste: ${ergebnis.hinweise.length === 1 ? 'ein Eintrag' : `${ergebnis.hinweise.length} Einträge`} nicht lesbar (${ergebnis.hinweise.slice(0, 3).map((f) => geraetImFehler(f, this.geraete()).replace(/:.*$/, '')).join('; ')}) – wird wiederholt` : ''), ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
