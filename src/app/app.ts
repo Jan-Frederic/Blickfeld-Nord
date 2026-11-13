@@ -1,4 +1,4 @@
-import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { afterNextRender, Component, computed, effect, inject, signal } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { scrollToSection } from './scroll';
@@ -120,6 +120,20 @@ export class App {
   protected readonly angemeldet = signal(false);
   // Im Backstage listet die Kopfleiste dessen Bereiche statt der Abschnitte der Website (Logo führt zurück)
   protected readonly imBackstage = computed(() => this.i18n.path().startsWith('/backstage'));
+
+  // Im Backstage (der App) nicht zoomen: Zwei-Finger- und Doppeltipp-Zoom aus (styles.scss, html.backstage), auf dem
+  // iPhone zusätzlich die Safari-Geste abfangen. Die öffentliche Website bleibt zoombar (Barrierefreiheit); im Backstage
+  // gibt es eigene Größenregler (Schriftgröße im Bühnen-Modus, Zoom der Noten).
+  private readonly zoomSperre = effect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('backstage', this.imBackstage());
+  });
+  private readonly safariGeste = (() => {
+    if (typeof document === 'undefined') return;
+    const sperren = (e: Event) => document.documentElement.classList.contains('backstage') && e.preventDefault();
+    document.addEventListener('gesturestart', sperren, { passive: false });
+    document.addEventListener('gesturechange', sperren, { passive: false });
+  })();
   protected readonly backstage = BACKSTAGE_BEREICHE;
   protected readonly year = new Date().getFullYear();
   // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)

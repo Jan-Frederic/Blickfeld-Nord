@@ -1239,3 +1239,12 @@ app-backstage-einrichtung .leiste { display: flex; flex-wrap: wrap; align-items:
 
 // Geräteliste: veralteter bzw. unbekannter App-Stand (sync-status.ts, backstage-daten.ts)
 app-sync-status .veraltet, app-backstage-daten .veraltet { color: #e8a46a; }
+
+// Backstage: kein Zoomen per Geste (app.ts setzt html.backstage). touch-action wirkt nur bis zum nächsten Scroll-Bereich,
+// darum für alle Elemente – mit :where() ohne Gewicht, damit eigene Regeln (Stift, Ziehen, Bühnen-Modus) Vorrang behalten.
+:where(html.backstage, html.backstage *) { touch-action: pan-x pan-y; }
+// iPhone zoomt beim Antippen von Eingabefeldern mit Schrift unter 16 px heran – auf Touch-Geräten mindestens 16 px
+@media (pointer: coarse) {
+  html.backstage :is(input:not([type=checkbox], [type=radio], [type=range], [type=color]), select, textarea) { font-size: max(16px, 1em) !important; }
+}
+

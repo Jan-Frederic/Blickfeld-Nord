@@ -1186,6 +1186,32 @@ test('Backstage: Sichtsperre – Anmeldeseite; mit Band-Ordner landet ein neues 
   return p;
 });
 
+test('Backstage: kein Zoomen per Geste (Website bleibt zoombar), Eingabefelder auf dem Handy ab 16 px', async () => {
+  const p = await page({ ...devices['Pixel 7'] });
+  const lage = () => p.evaluate(() => ({
+    klasse: document.documentElement.classList.contains('backstage'),
+    body: getComputedStyle(document.body).touchAction,
+    feld: document.querySelector('input:not([type=checkbox]):not([type=radio])') ? parseFloat(getComputedStyle(document.querySelector('input:not([type=checkbox]):not([type=radio])')).fontSize) : 16,
+  }));
+  await p.go('/');
+  let l = await lage();
+  expect(!l.klasse && l.body === 'auto', `Website darf zoombar bleiben: ${JSON.stringify(l)}`);
+  await p.go('/backstage/abgleich/');
+  await until(async () => (l = await lage()).klasse && l.body === 'pan-x pan-y', async () => `Backstage lässt sich zoomen: ${JSON.stringify(l)}`);
+  expect(l.feld >= 16, `Eingabefeld unter 16 px (iPhone zoomt beim Antippen): ${l.feld}`);
+  // eigene Regeln behalten Vorrang (Noten-Stift, Ziehen) – hier: die Notenfläche nur senkrecht
+  const eigen = await p.evaluate(() => {
+    const d = document.createElement('div');
+    d.style.touchAction = 'none';
+    document.body.append(d);
+    const t = getComputedStyle(d).touchAction;
+    d.remove();
+    return t;
+  });
+  expect(eigen === 'none', `eigene touch-action wird überschrieben: ${eigen}`);
+  return p;
+});
+
 test('Backstage: Einrichtungsassistent – Schritt für Schritt mit den Standards', async () => {
   const p = await page();
   await p.go('/backstage/einrichtung/?ziel=/backstage/termine');

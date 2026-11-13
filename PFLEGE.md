@@ -1039,6 +1039,16 @@ freigeben; jemand geht: Freigabe entfernen). Im Code stehen keine E-Mail-Adresse
 - Tests, Barrierefreiheits-Check und Screenshots verhalten sich wie ein freigeschaltetes Gerät
   (`scripts/lib/zugang-test.mjs`).
 
+## Kein Zoomen im Backstage
+
+Im Backstage (der App) lässt sich nicht per Geste zoomen – kein Zwei-Finger- und kein Doppeltipp-Zoom: `app.ts` setzt
+`html.backstage`, `styles.scss` gibt allen Elementen `touch-action: pan-x pan-y` (mit `:where()` ohne Gewicht, damit
+eigene Regeln wie Noten-Stift, Ziehen und Bühnen-Modus Vorrang behalten), auf dem iPhone fängt `app.ts` zusätzlich die
+Safari-Geste (`gesturestart`) ab. Eingabefelder haben auf Touch-Geräten mindestens 16 px, sonst zoomt das iPhone beim
+Antippen heran. Die öffentliche Website bleibt zoombar (Barrierefreiheit) – darum kein `user-scalable=no` im
+Viewport (iPhones ignorieren es ohnehin, die a11y-Prüfung würde es melden). Größer geht es im Backstage über die
+eigenen Regler: Schriftgröße im Bühnen-Modus, Zoom der Noten.
+
 ## Einrichtungsassistent (erste Anmeldung)
 
 Meldet sich jemand auf einem Gerät zum ersten Mal im Backstage an, führt die Zugangsseite erst zum Assistenten
