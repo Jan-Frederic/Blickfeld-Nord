@@ -1186,6 +1186,40 @@ test('Backstage: Sichtsperre – Anmeldeseite; mit Band-Ordner landet ein neues 
   return p;
 });
 
+test('Backstage: Einrichtungsassistent – Schritt für Schritt mit den Standards', async () => {
+  const p = await page();
+  await p.go('/backstage/einrichtung/?ziel=/backstage/termine');
+  const seite = p.locator('app-backstage-einrichtung');
+  await until(async () => /Willkommen im Backstage/i.test(await seite.innerText().catch(() => '')), 'Assistent fehlt');
+  const weiter = () => seite.getByRole('button', { name: 'Weiter' }).click();
+  // 1. Ich bin
+  await seite.locator('select').selectOption({ index: 1 });
+  await weiter();
+  // 2. Gerätename mit Vorschlag
+  const name = seite.locator('input');
+  await until(async () => (await name.inputValue().catch(() => '')).length > 0, 'Kein Vorschlag für den Gerätenamen');
+  await name.fill('Testgerät');
+  await weiter();
+  // 3. Synchronisation mit „Blickfeld Nord Sync“ (ohne Microsoft-Konto: nur ansehen)
+  await until(async () => /Synchronisation mit „Blickfeld Nord Sync“/i.test(await seite.innerText()), 'Sync-Schritt nennt den Band-Ordner nicht');
+  expect(/in beide Richtungen/.test(await seite.innerText()), 'Standards der Synchronisation fehlen');
+  await weiter();
+  // 4. Spotify: „Im Browser abspielen“ ist vorgewählt
+  await until(async () => /Songs anhören mit Spotify/i.test(await seite.innerText()), 'Spotify-Schritt fehlt');
+  expect(await seite.getByRole('radio', { name: /Im Browser abspielen/ }).isChecked(), 'Spotify im Browser ist nicht vorgewählt');
+  await weiter();
+  // 5. Fertig: Standards, dann weiter zum Ziel
+  await until(async () => /Fertig eingerichtet/i.test(await seite.innerText()), 'Abschluss fehlt');
+  await seite.getByRole('button', { name: 'Los geht’s' }).click();
+  await until(async () => new URL(p.url()).pathname.startsWith('/backstage/termine'), async () => 'Nicht zum Ziel weitergeleitet: ' + p.url());
+  const st = await p.evaluate(() => ({ e: localStorage.getItem('bn-einrichtung'), s: localStorage.getItem('bn-spotify-modus'), g: localStorage.getItem('bn-geraet-name'), i: localStorage.getItem('bn-ich') }));
+  expect(/"fertig"/.test(st.e ?? '') && st.s === '"browser"' && st.g === 'Testgerät' && !!st.i, `Einstellungen nicht übernommen: ${JSON.stringify(st)}`);
+  // in den Einstellungen erneut aufrufbar
+  await p.go('/backstage/einstellungen/');
+  expect(await p.getByRole('link', { name: 'Einrichtung durchgehen' }).isVisible(), 'Kein Weg zurück in die Einrichtung');
+  return p;
+});
+
 test('Backstage: Bühnenplan – Gerät per Ziehen und Pfeiltaste verschieben', async () => {
   const p = await page();
   await p.go('/backstage/buehnenplan/');

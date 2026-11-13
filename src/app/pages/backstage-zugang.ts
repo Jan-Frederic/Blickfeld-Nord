@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
 import { ONEDRIVE } from '../data/onedrive-config';
 import { zugangMerken, zugangZiel } from '../data/zugang';
+import { nachAnmeldung } from '../data/einrichtung';
 import type { AccountInfo } from '@azure/msal-browser';
 
 type OneDrive = typeof import('../data/onedrive');
@@ -109,7 +110,8 @@ export class BackstageZugang {
       const r = await o.ordnerSichtbar(band.drive, band.item);
       if (r === 'ja') {
         zugangMerken(band);
-        void this.router.navigateByUrl(zugangZiel(this.ziel()));
+        // erste Anmeldung auf diesem Gerät: erst der Einrichtungsassistent, der dann zum Ziel führt
+        void this.router.navigateByUrl(nachAnmeldung(zugangZiel(this.ziel())));
       } else this.stand.set(r);
     } catch (e) {
       const o = this.o ?? (await import('../data/onedrive'));

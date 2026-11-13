@@ -1195,3 +1195,32 @@ app-daten-geraet mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-daten-geraet .meldung { margin: 12px 0 0; color: #5fb88a; }
 app-daten-geraet .diagnose { display: grid; justify-items: start; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bn-line); }
 app-daten-geraet .diagnose button { margin: 0; }
+
+// Backstage → Einrichtung (pages/backstage-einrichtung.ts)
+app-backstage-einrichtung .einrichtung { max-width: 680px; }
+app-backstage-einrichtung h3 { margin: 20px 0 8px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .9rem; }
+app-backstage-einrichtung p { line-height: 1.55; color: var(--bn-fog); }
+app-backstage-einrichtung .fortschritt { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 8px; padding: 0; list-style: none; counter-reset: s; }
+app-backstage-einrichtung .fortschritt li { counter-increment: s; padding: 4px 10px; border: 1px solid var(--bn-line); border-radius: 999px; color: var(--bn-fog); font-size: .78rem; }
+app-backstage-einrichtung .fortschritt li::before { content: counter(s) ' '; }
+app-backstage-einrichtung .fortschritt li.fertig { color: #5fb88a; border-color: #5fb88a55; }
+app-backstage-einrichtung .fortschritt li.an { color: #2a1708; background: var(--bn-sunset); border-color: var(--bn-sunset); }
+app-backstage-einrichtung .feld { display: grid; gap: 4px; max-width: 360px; color: var(--bn-fog); font-size: .85rem; }
+app-backstage-einrichtung .feld select, app-backstage-einrichtung .feld input { padding: 10px 12px; border: 1px solid var(--bn-line); border-radius: 8px; background: #1b1e22; color: var(--bn-ink); font: inherit; font-size: 1rem; }
+app-backstage-einrichtung .standards { margin: 8px 0 14px; padding-left: 20px; color: var(--bn-fog); line-height: 1.6; font-size: .9rem; }
+app-backstage-einrichtung .arten { display: grid; gap: 8px; margin: 10px 0 14px; }
+app-backstage-einrichtung .art { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--bn-line); border-radius: 10px; cursor: pointer; }
+app-backstage-einrichtung .art:has(input:checked) { border-color: var(--bn-sunset); }
+app-backstage-einrichtung .art input { margin-top: 4px; accent-color: var(--bn-sunset); }
+app-backstage-einrichtung .art span { display: grid; gap: 2px; }
+app-backstage-einrichtung .art small { color: var(--bn-fog); font-size: .8rem; }
+app-backstage-einrichtung .ok { display: flex; align-items: center; gap: 6px; color: #5fb88a; }
+app-backstage-einrichtung .fehler { color: #e07a5a; }
+app-backstage-einrichtung .hinweis { font-size: .85rem; }
+app-backstage-einrichtung .hinweis a { color: var(--bn-sunset); }
+app-backstage-einrichtung button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; cursor: pointer; }
+app-backstage-einrichtung button.primaer { border-color: var(--bn-sunset); background: var(--bn-sunset); color: #2a1708; }
+app-backstage-einrichtung button.link { border: 0; padding: 10px 4px; color: var(--bn-fog); text-decoration: underline; }
+app-backstage-einrichtung button:disabled { opacity: .5; cursor: default; }
+app-backstage-einrichtung .leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--bn-line); }
+

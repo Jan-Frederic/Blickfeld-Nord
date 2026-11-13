@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { SyncService } from '../data/sync.service';
 import { SyncEinstellungenSeite } from './sync-einstellungen';
 import { BuehneEinstellungen } from './buehne-einstellungen';
@@ -11,12 +12,13 @@ import { SpotifyEinstellung } from './spotify-einstellung';
 // (Halbseiten-Blättern, Pedal-Tasten – buehne-einstellungen.ts), Spotify im Übe- und Probe-Modus (spotify-einstellung.ts)
 @Component({
   selector: 'app-backstage-einstellungen',
-  imports: [IchEinstellung, SpotifyEinstellung, SyncEinstellungenSeite, BandOrdner, BackupKarte, BuehneEinstellungen],
+  imports: [RouterLink, IchEinstellung, SpotifyEinstellung, SyncEinstellungenSeite, BandOrdner, BackupKarte, BuehneEinstellungen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Einstel&shy;lungen</h2>
-      <p class="lead">Gelten für dieses Gerät. Was hier gespeichert ist, steht auch unter Abgleich → Daten auf diesem Gerät.</p>
+      <p class="lead">Gelten für dieses Gerät. Was hier gespeichert ist, steht auch unter Abgleich → Daten auf diesem Gerät.
+        Alles Wichtige Schritt für Schritt: <a routerLink="/backstage/einrichtung">Einrichtung durchgehen</a>.</p>
       <app-ich-einstellung />
       <app-sync-einstellungen />
       <app-band-ordner />

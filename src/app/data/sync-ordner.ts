@@ -26,7 +26,7 @@ export interface SyncEinstellungen {
 
 const EINSTELLUNGEN_KEY = 'bn-sync-einstellungen';
 const LETZTER_KEY = 'bn-sync-letzter';
-const STANDARD: SyncEinstellungen = { cloud: '', lokal: 'app', richtung: 'beide', loeschen: true, auto: true, notenAuto: true };
+export const SYNC_STANDARD: SyncEinstellungen = { cloud: '', lokal: 'app', richtung: 'beide', loeschen: true, auto: true, notenAuto: true };
 const OFFEN_KEY = 'bn-sync-offen';
 
 /** Noten-Dateien aus dem Abgleich, die sich nicht eindeutig einem Song zuordnen ließen (Pfade im Sync-Ordner) */
@@ -49,9 +49,9 @@ export function offeneNotenSetzen(pfade: string[]): void {
 
 export function syncEinstellungen(): SyncEinstellungen {
   try {
-    return { ...STANDARD, ...(JSON.parse(localStorage.getItem(EINSTELLUNGEN_KEY) ?? '{}') as Partial<SyncEinstellungen>) };
+    return { ...SYNC_STANDARD, ...(JSON.parse(localStorage.getItem(EINSTELLUNGEN_KEY) ?? '{}') as Partial<SyncEinstellungen>) };
   } catch {
-    return STANDARD;
+    return SYNC_STANDARD;
   }
 }
 

@@ -1033,6 +1033,26 @@ freigeben; jemand geht: Freigabe entfernen). Im Code stehen keine E-Mail-Adresse
 - Tests, Barrierefreiheits-Check und Screenshots verhalten sich wie ein freigeschaltetes Gerät
   (`scripts/lib/zugang-test.mjs`).
 
+## Einrichtungsassistent (erste Anmeldung)
+
+Meldet sich jemand auf einem Gerät zum ersten Mal im Backstage an, führt die Zugangsseite erst zum Assistenten
+(`/backstage/einrichtung`, `pages/backstage-einrichtung.ts`) und danach zur eigentlich aufgerufenen Seite. Erneut
+aufrufbar unter Einstellungen → „Einrichtung durchgehen“. Schritte, jeder überspringbar:
+
+1. **Ich bin** – vorbelegt aus dem Microsoft-Konto.
+2. **Dieses Gerät** – Namensvorschlag „Freds iPhone“ (`geraetVorschlag` in `data/einrichtung.ts`).
+3. **Synchronisation mit „Blickfeld Nord Sync“** – so heißt der Band-Ordner (`ONEDRIVE.bandOrdner`) überall
+   (`SYNC_ORDNER_NAME`). Mitglieder bekommen ihn als geteilten Ordner, der Besitzer über den Pfad im eigenen OneDrive
+   (dann gilt „Daten löschen“; `bandOrdnerOrt` in `data/onedrive.ts`). Dazu die Standards aus `SYNC_STANDARD`
+   (`data/sync-ordner.ts`): Speicher der App, beide Richtungen, Löschen mitsynchronisieren, automatisch, Noten gleich
+   einlesen. Ist schon ein anderer Ordner eingestellt, fragt der Schritt, ob umgestellt werden soll.
+4. **Spotify** – vorgewählt „Im Browser abspielen“ (auf iPhone/iPad mit Hinweis auf die Fernsteuerung), „Mit Spotify
+   verbinden“ kommt nach der Anmeldung in diesen Schritt zurück (`?schritt=spotify`).
+5. **Fertig** – die geklärten Standards (Tasten im Bühnen-Modus, Fortschrittsbalken nicht antippbar, Übergänge aus,
+   Spotify trennen nur in den Einstellungen, dauerhaft speichern) und „Als App installieren“.
+
+Abgeschlossen oder übersprungen steht in `bn-einrichtung` (nur dieses Gerät).
+
 ## OneDrive einrichten (für die Synchronisation)
 
 Die Synchronisation (siehe oben) ist für ein **privates Microsoft-Konto** gedacht (Outlook.com, Hotmail, Live – privates
