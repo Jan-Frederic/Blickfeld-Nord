@@ -19,6 +19,12 @@ import { Akkordblatt, blattTransponieren, chordproLesen, griffbild, tonartVersch
 // (ChordPro, in die Tonart der Band transponiert – mit Capo als Griffbild). Geblättert wird vom Bühnen-Modus aus
 // (Tippen, Wischen, Pfeiltasten, Bluetooth-Pedal): erst innerhalb des Blatts, am Ende weiter zum nächsten Song.
 const BREITE_KEY = 'bn-noten-breite';
+/**
+ * Wo die Notenansicht zuletzt stand (Song, Fassung, Seite, Scroll-Position): Wechselt man zur Titelanzeige und wieder
+ * zurück, wird die Notenansicht neu aufgebaut – für denselben Song geht es dann auf derselben Seite weiter.
+ */
+let zuletzt: { song: string; wahl: string; index: number; scroll: number } | null = null;
+
 @Component({
   selector: 'app-noten-anzeige',
   imports: [MatIconModule, NotenStift, SongMitschnitte, StatusSchalter, SpotifySteuerung],
@@ -334,6 +340,9 @@ export class NotenAnzeige {
   protected readonly index = signal(0);
   private readonly groesse = signal({ b: 0, h: 0 });
   private amEnde = false;
+  /** beim Wiederöffnen: hierhin zurück (Seite, Scroll-Position), siehe „zuletzt“ */
+  private wiederher: { index: number; scroll: number } | null = null;
+  private scrollNach: number | null = null;
 
   /** Seiten des Songs im PDF (1-basiert) */
   protected readonly seiten = computed(() => {
@@ -404,7 +413,15 @@ export class NotenAnzeige {
       const { b, h } = this.groesse();
       const breit = this.nurBreite();
       if (!c || !d || !nr || !b) return;
-      seiteZeichnen(d, nr, c, b - 8, h - 8, breit).catch((e) => this.fehler.set(`Diese Seite lässt sich nicht anzeigen (${(e as Error).message}).`));
+      seiteZeichnen(d, nr, c, b - 8, h - 8, breit)
+        .then(() => {
+          // wiederhergestellte Seite: auch die Stelle darauf (volle Breite, lange Seite)
+          if (this.scrollNach === null) return;
+          const y = this.scrollNach;
+          this.scrollNach = null;
+          requestAnimationFrame(() => this.flaeche()?.nativeElement.scrollTo(0, y));
+        })
+        .catch((e) => this.fehler.set(`Diese Seite lässt sich nicht anzeigen (${(e as Error).message}).`));
       this.flaeche()?.nativeElement.scrollTo(0, 0);
     });
     // Halbseite: die nächste Seite in gleicher Größe darüber zeichnen (sichtbar nur die obere Hälfte)
@@ -422,6 +439,8 @@ export class NotenAnzeige {
       if (f) beobachter.observe(f);
     });
     inject(DestroyRef).onDestroy(() => {
+      const s = this.geladenFuer;
+      zuletzt = s ? { song: `${s.title}|${s.artist}`, wahl: this.wahl(), index: this.index(), scroll: this.flaeche()?.nativeElement.scrollTop ?? 0 } : null;
       beobachter.disconnect();
       this.stoppen();
       for (const d of pdfs.values()) d.destroy().catch(() => undefined);
@@ -441,9 +460,20 @@ export class NotenAnzeige {
     try {
       const n = await songNoten(`${s.title}|${s.artist}`);
       if (this.song() !== s) return;
+      const erstes = !this.geladenFuer;
       this.geladenFuer = s;
       this.noten.set(n);
       this.wahl.set(n ? this.auswahl(n, `${s.title}|${s.artist}`) : '');
+      // wieder geöffnet (aus der Titelanzeige zurück) für denselben Song und dieselbe Fassung: dort weiter, wo es war
+      const z = zuletzt;
+      zuletzt = null;
+      if (erstes && z && z.song === `${s.title}|${s.artist}` && z.wahl === this.wahl()) {
+        this.wiederher = { index: z.index, scroll: z.scroll };
+        if (this.ansicht() === 'akkorde') {
+          this.wiederher = null;
+          requestAnimationFrame(() => requestAnimationFrame(() => this.flaeche()?.nativeElement.scrollTo(0, z.scroll)));
+        }
+      }
       // zurückgeblättert ins Akkordblatt: am Ende einsteigen
       if (this.vonHinten && this.ansicht() === 'akkorde') {
         this.vonHinten = false;
@@ -478,6 +508,11 @@ export class NotenAnzeige {
       if (this.aktivPdf() !== p) return;
       this.doc.set(d);
       if (this.vonHinten) this.index.set(this.seiten().length - 1);
+      else if (this.wiederher) {
+        this.index.set(Math.min(this.wiederher.index, Math.max(0, this.seiten().length - 1)));
+        this.scrollNach = this.wiederher.scroll;
+      }
+      this.wiederher = null;
       this.vonHinten = false;
     } catch (e) {
       this.fehler.set(`Noten lassen sich nicht öffnen: ${(e as Error).message || 'unbekannter Fehler'}`);

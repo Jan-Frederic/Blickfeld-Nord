@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { spotifyAnmelden, spotifyMeldung } from '../data/spotify-remote';
 import { SpotifySpieler } from '../data/spotify-spieler';
-import { MARKEN_NAMEN } from '../data/sprungmarken';
+import { MARKEN_NAMEN, markenTyp } from '../data/sprungmarken';
 
 // Spotify-Steuerung im Übe- und Probe-Modus (Titelanzeige, abgedockt auch über den Noten): ▶/⏸ spielt den
 // angezeigten Song – mit der Einstellung „Fernsteuerung“ in der Spotify-App bzw. auf dem gewählten
@@ -40,8 +40,16 @@ import { MARKEN_NAMEN } from '../data/sprungmarken';
       <div class="marken" role="group" aria-label="Sprungmarken und Schleife">
         @for (m of s.marken(); track m.n) {
           <span class="marke">
-            <button type="button" (click)="s.zuMarke(m)" [disabled]="s.laeuft() || s.startet()" [attr.aria-label]="'Zu ' + m.n + ' springen (' + uhr(m.ms) + ')'">{{ m.n }} <small>{{ uhr(m.ms) }}</small></button>
-            @if (bearbeiten()) { <button type="button" class="weg" (click)="s.markeWeg(m.n)" [attr.aria-label]="'Marke ' + m.n + ' löschen'">✕</button> }
+            @if (bearbeiten()) {
+              <!-- beim Bearbeiten: antippen wechselt den Typ (versehentlich „Refrain“ → „Outro“), die Stelle bleibt -->
+              <select class="typ" [attr.aria-label]="'Typ der Marke ' + m.n + ' bei ' + uhr(m.ms)" (change)="typAendern(m.n, $event)">
+                @for (n of namen; track n) { <option [value]="n" [selected]="n === typVon(m.n)">{{ n }}</option> }
+              </select>
+              <small>{{ uhr(m.ms) }}</small>
+              <button type="button" class="weg" (click)="s.markeWeg(m.n)" [attr.aria-label]="'Marke ' + m.n + ' löschen'">✕</button>
+            } @else {
+              <button type="button" (click)="s.zuMarke(m)" [disabled]="s.laeuft() || s.startet()" [attr.aria-label]="'Zu ' + m.n + ' springen (' + uhr(m.ms) + ')'">{{ m.n }} <small>{{ uhr(m.ms) }}</small></button>
+            }
           </span>
         }
         <select class="neu-marke" aria-label="Marke an dieser Stelle setzen" [disabled]="!s.aktiv()" (change)="markeSetzen($event)" title="Erst ▶ – dann an der Stelle eine Marke setzen (gilt für die ganze Band)">
@@ -91,6 +99,10 @@ export class SpotifySteuerung {
     if (!sch) return 'Schleife: Anfang hier setzen';
     return sch.b == null ? 'Schleife: Ende hier setzen' : `Schleife ${this.uhr(sch.a)} bis ${this.uhr(sch.b)} – antippen hebt sie auf`;
   });
+  protected readonly typVon = markenTyp;
+  protected typAendern(name: string, e: Event): void {
+    this.s.markeTyp(name, (e.target as HTMLSelectElement).value);
+  }
   protected markeSetzen(e: Event): void {
     const feld = e.target as HTMLSelectElement;
     if (feld.value) this.s.markeHier(feld.value);

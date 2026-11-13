@@ -123,8 +123,8 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
 - **Heute fällig** nennt die fälligen Karteikarten („5 Karteikarten fällig – Übe-Modus starten · Weihnachtsmarkt in 12
-  Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet bei 70 %, der Tempo-Knopf
-  steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
+  Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet (wie in allen Modi) bei 100 %, der Tempo-Knopf
+  springt dann auf 70 % und steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
   **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
 - **Spotify im Übe- und Probe-Modus** – unter **Einstellungen → Spotify im Übe- und Probe-Modus** je Gerät wählbar
   (`bn-spotify-modus`, `pages/spotify-einstellung.ts`): **Aus** (Standard, nichts von Spotify), **Eingebetteter Player**,
@@ -183,7 +183,9 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
     Band gespiegelt – unter „Daten/“; bei gleichzeitigen Änderungen gewinnt je Track die spätere, `spiegel-merge.ts`):
     „+ Marke“ setzt Einsatz, Strophe, Refrain, Bridge, Solo oder Outro an der aktuellen Stelle (mehrere gleiche werden
     durchnummeriert), ein Tipp auf die Marke springt dorthin (läuft der Song nicht, startet er dort), „Marken
-    bearbeiten“ zeigt ✕ zum Löschen; Striche unter dem Balken zeigen die Stellen. **Einsatz:** ▶ und das Mitspielen
+    bearbeiten“ zeigt ✕ zum Löschen und macht jede Marke zur Auswahl ihres Typs – versehentlich „Refrain“ statt „Outro“
+    lässt sich so umstellen, die Stelle bleibt, alter und neuer Typ werden nach der Zeit neu durchnummeriert
+    (`markeTypAendern`); Striche unter dem Balken zeigen die Stellen. **Einsatz:** ▶ und das Mitspielen
     beim Weiterblättern beginnen dort statt am Anfang. **Schleife A–B:** erster Tipp setzt den Anfang, der zweite das
     Ende (mind. 2 s), dann springt es am Ende von selbst zurück; dritter Tipp oder ✕ hebt sie auf, ein Songwechsel
     auch. **Übergang** (nur mit der Einstellung „Übergänge proben“, Standard aus, `bn-spotify-uebergang`; Knopf
@@ -398,6 +400,10 @@ Blatt ganz oben, gleitet die Notenansicht heraus zur Titelanzeige (auch Escape u
 Übe-Modus und Kopfleiste der Notenansicht – dort im Übe- **und** im Probe-Modus (mit „Ich bin …“), zusammen mit
 **Mitschnitt**. In beiden Modi bleibt der Song beim Setzen stehen. Oben links:
 Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) bzw. „Karte 2 / 8“ (Übe-Modus, ohne Uhr).
+
+**Seite merken:** Wechselt man aus der Notenansicht zur Titelanzeige und wieder zurück, geht es beim selben Song und
+derselben Fassung auf derselben Seite (und Stelle) weiter – die Notenansicht merkt sich beim Schließen Song, Fassung,
+Seite und Scroll-Position (`zuletzt` in `pages/noten-anzeige.ts`). Ein anderer Song beginnt wie immer oben.
 
 **Kein Neuladen durch Herunterwischen:** `html, body { overscroll-behavior-y: none }` (styles.scss) schaltet Chromes
 „Zum Aktualisieren ziehen“ auf der ganzen Seite ab; das Notenblatt (`.flaeche`) reicht sein Scrollen nicht an die

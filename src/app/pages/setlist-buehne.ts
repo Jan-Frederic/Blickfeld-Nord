@@ -706,11 +706,9 @@ export class SetlistBuehne {
   protected toggleKlick(e: Event): void {
     e.stopPropagation();
     this.klick.update((k) => !k);
-    // Übe-Modus: Tempo-Training beginnt bei 70 %
-    if (this.ueben() && this.klick()) this.faktor.set(0.7);
     this.startKlick();
   }
-  /** Tempo-Training (Übe-Modus): eine Stufe schneller, nach 100 % wieder 70 % */
+  /** Tempo-Training (Übe-Modus): eine Stufe schneller, nach 100 % wieder 70 % – Start ist immer 100 % */
   protected schneller(e: Event): void {
     e.stopPropagation();
     const f = [...SetlistBuehne.FAKTOREN].reverse();
@@ -730,7 +728,7 @@ export class SetlistBuehne {
     }
   }
 
-  // Tempo-Trainer: Klick zum Üben auf 90, 80 oder 70 % – gilt bis zum Schließen, nicht für den nächsten Auftritt
+  // Tempo-Trainer: Klick zum Üben auf 90, 80 oder 70 % – gilt bis zum Schließen; jeder Modus startet mit 100 %
   private static readonly FAKTOREN = [1, 0.9, 0.8, 0.7];
   protected readonly faktor = signal(1);
   protected readonly faktorText = computed(() => `${Math.round(this.faktor() * 100)} %`);

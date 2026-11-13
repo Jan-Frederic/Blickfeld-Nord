@@ -913,6 +913,15 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await steuerung.locator('button[aria-label="10 Sekunden vor"]').click();
   await refrain.click();
   await until(async () => (await p.evaluate(() => window.__spCalls)).includes('seek ' + markeMs), () => `Marke antippen springt nicht dorthin (${markeMs})`);
+  // Marken bearbeiten: antippen wechselt den Typ (versehentlich „Refrain“ → „Outro“), die Stelle bleibt
+  await steuerung.getByRole('button', { name: 'Marken bearbeiten' }).click();
+  await steuerung.locator('.marke select.typ').first().selectOption('Outro');
+  await until(async () => {
+    const m = await p.evaluate(() => Object.values(JSON.parse(localStorage.getItem('bn-sprungmarken')))[0].marken[0]);
+    return m.n === 'Outro' && m.ms === markeMs;
+  }, 'Typ der Marke lässt sich beim Bearbeiten nicht ändern');
+  await steuerung.getByRole('button', { name: 'Fertig' }).click();
+  await until(async () => (await steuerung.locator('.marke button', { hasText: 'Outro' }).count()) === 1, 'Geänderte Marke steht nicht als „Outro“ da');
   // Schleife: Anfang, gut 2 s später Ende – dann springt es von selbst zurück an den Anfang; ✕ hebt sie auf
   const schleife = steuerung.locator('button.schleife:not(.uebergang)');
   await schleife.click();
@@ -1508,6 +1517,11 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   // Pedal/Pfeiltaste: erst die zweite Seite, dann der nächste Song (ohne Noten)
   await p.keyboard.press('ArrowRight');
   await until(async () => (await kopf.innerText()).includes('Seite 2 / 2'), 'Blättern zur zweiten Seite klappt nicht');
+  // zur Titelanzeige und zurück: wieder auf Seite 2, nicht auf Seite 1
+  await p.keyboard.press('Escape');
+  await until(async () => (await p.locator('app-noten-anzeige').count()) === 0, 'Escape führt nicht zur Titelanzeige');
+  await p.locator('app-setlist-buehne .noten-knopf').first().click();
+  await until(async () => (await kopf.innerText().catch(() => '')).includes('Seite 2 / 2'), async () => `Zurück in der Notenansicht nicht auf derselben Seite: ${await kopf.innerText().catch(() => '–')}`);
   await p.keyboard.press('ArrowRight');
   await until(async () => (await kopf.innerText()).includes('Angels'), 'Am Ende des Blatts geht es nicht zum nächsten Song');
   await p.keyboard.press('ArrowLeft');
@@ -2324,10 +2338,13 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   expect((await titel.locator('.ueben-status app-status-schalter button').count()) === 5, 'Titelanzeige im Übe-Modus ohne Status-Umschalter');
   expect((await titel.locator('header .lupe').count()) === 0, 'Wunsch-Suche gehört nicht in den Übe-Modus');
   expect((await titel.locator('header .liste-knopf').count()) === 1, 'Song-Liste fehlt im Übe-Modus');
-  // Tempo-Training: Klick startet bei 70 %, „Sitzt“ erst bei vollem Tempo
+  // Tempo-Training: Klick startet bei 100 % („Sitzt“ wählbar); langsamer gestellt erst bei vollem Tempo wieder
   if (await titel.locator('button.bpm').count()) {
     await titel.locator('button.bpm').click();
-    await until(async () => (await titel.locator('button.tempo').innerText().catch(() => '')).includes('70 %'), 'Tempo-Training startet nicht bei 70 %');
+    await until(async () => (await titel.locator('button.tempo').innerText().catch(() => '')).includes('100 %'), 'Tempo startet nicht bei 100 %');
+    expect(!(await titel.locator('.ueben-status button[aria-label="Sitzt"]').isDisabled()), '„Sitzt“ bei 100 % nicht wählbar');
+    await titel.locator('button.tempo').click();
+    await until(async () => (await titel.locator('button.tempo').innerText().catch(() => '')).includes('70 %'), 'Tempo-Training stellt nicht auf 70 %');
     expect(await titel.locator('.ueben-status button[aria-label="Sitzt"]').isDisabled(), '„Sitzt“ ist unter 100 % wählbar');
     for (let i = 0; i < 3; i++) await titel.locator('button.tempo').click();
     await until(async () => !(await titel.locator('.ueben-status button[aria-label="Sitzt"]').isDisabled()), '„Sitzt“ bei 100 % nicht wählbar');

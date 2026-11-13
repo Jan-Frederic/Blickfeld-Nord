@@ -1131,6 +1131,8 @@ app-spotify-steuerung .marken { display: flex; flex-wrap: wrap; align-items: cen
 app-spotify-steuerung .marke { display: inline-flex; align-items: center; gap: 2px; }
 app-spotify-steuerung .marke > button:first-child { min-height: 32px; padding: 0 10px; border-color: #e8a46a; color: #e8a46a; font-size: .8rem; }
 app-spotify-steuerung .marke small { color: #aaa; font-size: .7rem; }
+app-spotify-steuerung .marke select.typ { min-height: 32px; padding: 0 6px; border: 1px solid #e8a46a; border-radius: 999px; background: #1b1e22; color: #e8a46a; font: inherit; font-size: .8rem; }
+app-spotify-steuerung .marke select.typ + small { margin: 0 2px; }
 app-spotify-steuerung .weg { min-width: 28px; min-height: 28px; padding: 0; color: #aaa; font-size: .75rem; }
 app-spotify-steuerung .neu-marke { padding: 5px 8px; font-size: .8rem; }
 app-spotify-steuerung .schleife { min-height: 32px; padding: 0 12px; font-size: .8rem; }

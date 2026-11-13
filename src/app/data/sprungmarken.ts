@@ -59,6 +59,36 @@ export function markeLoeschen(track: string, name: string): Marke[] {
   return speichern(track, marken(track).filter((m) => m.n !== name));
 }
 
+/** Typ einer Marke ohne Nummer: „Strophe 2“ → „Strophe“ */
+export const markenTyp = (n: string): string => n.replace(/ \d+$/, '');
+
+/**
+ * Typ einer Marke ändern (Marken bearbeiten: z. B. versehentlich „Refrain“ statt „Outro“) – die Stelle bleibt. Ist der
+ * neue Typ „Einsatz“, ersetzt sie einen vorhandenen Einsatz. Danach werden der alte und der neue Typ nach der Zeit neu
+ * durchnummeriert („Refrain“, „Refrain 2“ …), damit keine Lücken oder doppelten Namen bleiben.
+ */
+export function markeTypAendern(track: string, name: string, typ: string): Marke[] {
+  const liste = marken(track);
+  const m = liste.find((x) => x.n === name);
+  if (!m || markenTyp(name) === typ) return liste;
+  const alt = markenTyp(name);
+  let rest = liste.filter((x) => x !== m);
+  if (typ === EINSATZ) rest = rest.filter((x) => x.n !== EINSATZ);
+  const neu = [...rest, { n: typ, ms: m.ms }].sort((a, b) => a.ms - b.ms);
+  const zaehler = new Map<string, number>();
+  const anzahl = (t: string) => neu.filter((x) => markenTyp(x.n) === t).length;
+  return speichern(
+    track,
+    neu.map((x) => {
+      const t = markenTyp(x.n);
+      if (t === EINSATZ || (t !== alt && t !== typ)) return x;
+      const i = (zaehler.get(t) ?? 0) + 1;
+      zaehler.set(t, i);
+      return { n: i === 1 || anzahl(t) === 1 ? t : `${t} ${i}`, ms: x.ms };
+    }),
+  );
+}
+
 /** Zusammenführen zweier Fassungen (Abgleich): je Track die später geänderte */
 export function markenZusammenfuehren(eigen: AlleMarken, andere: AlleMarken): AlleMarken {
   const out: AlleMarken = { ...eigen };

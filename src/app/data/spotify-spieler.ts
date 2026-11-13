@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { SpotifyBrowser, spotifyBrowser } from './spotify-browser';
-import { EINSATZ, Marke, markeLoeschen, markeSetzen, marken } from './sprungmarken';
+import { EINSATZ, Marke, markeLoeschen, markeSetzen, markeTypAendern, marken } from './sprungmarken';
 import {
   SpotifyFehler,
   SpotifyGeraet,
@@ -505,6 +505,13 @@ export class SpotifySpieler {
   markeWeg(name: string): void {
     const t = this.track();
     if (t) this.marken.set(markeLoeschen(t, name));
+  }
+  /** Typ einer Marke ändern (Marken bearbeiten) – die Stelle bleibt */
+  markeTyp(name: string, typ: string): void {
+    const t = this.track();
+    if (!t || !typ) return;
+    spotifyNotiz(`Marke „${name}“ → ${typ}`);
+    this.marken.set(markeTypAendern(t, name, typ));
   }
   /** Schleife: erst A (Anfang), dann B (Ende) an der aktuellen Stelle; ein dritter Tipp hebt sie auf */
   schleifeTippen(): void {

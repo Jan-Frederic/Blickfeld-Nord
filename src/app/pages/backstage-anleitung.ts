@@ -20,14 +20,14 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Wischen', buehne: 'Seitlich: blättern. Hoch: Notenansicht gleitet herein. Runter (Kopfleiste sichtbar, Blatt oben): zurück zur Titelanzeige', probe: 'wie im Bühnen-Modus', ueben: 'wie im Bühnen-Modus' },
   { was: 'Spotify', buehne: '–', probe: 'Unter Einstellungen wählbar (Standard: aus): eingebetteter Player („♫ Auf Spotify anhören“ in der Titelanzeige), Fernsteuerung der Spotify-App oder im Browser abspielen (beides Premium) – ▶ spielt den ganzen Song, ±10 s, Fortschritt zum Springen, Sprungmarken für die Band (▶ beginnt am Einsatz), Schleife A–B und – mit der Einstellung „Übergänge proben“ – Übergang zum nächsten Song (letzte 15 s, dann weiter ab dem Einsatz); in der Notenansicht ↺10 und ♫ ▶ in der Kopfleiste oder abgedockt als verschiebbares Feld über den Noten; beim Weiterblättern läuft der jeweils angezeigte Song. Einstellungen → Spotify zeigt eine Checkliste zum Einrichten und kann eine Anleitung an die anderen teilen', ueben: 'wie im Probe-Modus' },
   { was: 'Mitschnitt', buehne: '–', probe: 'Mikrofon in der Probe-Leiste: diesen Song aufnehmen und nachhören', ueben: 'Mitschnitt-Panel: Proben-Aufnahmen anhören, Schleife, langsamer' },
-  { was: 'Klick', buehne: 'Originaltempo', probe: 'Übungstempo (100 → 70 %)', ueben: 'wie im Bühnen-Modus' },
+  { was: 'Klick', buehne: 'Originaltempo', probe: 'startet bei 100 %, Übungstempo bis 70 %', ueben: 'startet bei 100 %, Tempo-Training 70 → 100 %' },
   { was: 'Am Ende', buehne: 'Zurück zur Setlist bzw. Übersicht', probe: 'Zusammenfassung (Sitzt / Nochmal mit Namen / Nicht drangekommen, Zeit) – Rest mit einem Klick auf die nächste Probe', ueben: 'Ergebnis, z. B. „3× Sitzt, 1× Eingenordet 🎉“' },
   { was: 'Wirkt auf', buehne: 'Sterne-Rangliste (Zahlen), Setlist-Vorschlag', probe: 'Probenplan, eigener Status, Bühnenreife, Proben-Verlauf des Songs, Probe-Vorschlag', ueben: 'Eigener Karteikasten und Status, Bühnenreife' },
 ];
 
 const BEGRIFFE: { name: string; text: string }[] = [
   { name: 'Titelanzeige', text: 'Großer Songtitel mit Tonart, Capo, Tempo, Klick, Einzählen und „Als Nächstes“ – die normale Ansicht im Bühnen-Modus.' },
-  { name: 'Notenansicht', text: 'Das Notenblatt im Vollbild. Der Noten-Knopf (oben rechts, orange) oder Hochwischen in der Titelanzeige holt sie herein; Herunterwischen oder der Noten-Knopf führt zurück.' },
+  { name: 'Notenansicht', text: 'Das Notenblatt im Vollbild. Der Noten-Knopf (oben rechts, orange) oder Hochwischen in der Titelanzeige holt sie herein; Herunterwischen oder der Noten-Knopf führt zurück. Zurück in der Notenansicht geht es auf derselben Seite weiter.' },
   { name: 'Knöpfe der Titelanzeige', text: 'Von links nach rechts: Schriftgröße (A− A+), Stimmgerät, Wunsch-Suche (nicht im Übe-Modus), Song-Liste, Noten, Beenden.' },
   { name: 'PDF', text: 'Hochgeladene Noten als PDF – mehrere je Song möglich, auch nur ein Seitenbereich aus einem Songbook. Dazu: Seitenzähler, Markieren (Stift), ganze Seite oder volle Breite, Halbseiten-Blättern.' },
   { name: 'Akkordblatt', text: 'ChordPro-Datei (.pro), im Auswahlmenü „Akkorde“. In die Tonart der Band transponiert, mit Griffbild bei Capo, − / + verschiebt um einen Halbton, Mitscrollen mit einstellbarem Scroll-Tempo.' },
