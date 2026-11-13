@@ -57,6 +57,12 @@ describe('OneDrive', () => {
       expect(w.aufrufe.filter((u) => u.endsWith('/content'))).toHaveLength(2);
     });
 
+    it('hängt nicht: eine Anfrage ohne Antwort (Zeitgrenze) gilt wie ein Abbruch', async () => {
+      const ohneAntwort = () => Promise.reject(new DOMException('Zeit um', 'TimeoutError'));
+      const w = wege({ fetch: ohneAntwort, content: ohneAntwort });
+      await expect(dateiLaden(datei, w)).rejects.toThrow(/a\.files\.1drv\.com ohne Antwort/);
+    });
+
     it('gibt echte Fehler von OneDrive (z. B. nicht gefunden) gleich weiter', async () => {
       const w = wege({});
       w.graph = () => Promise.reject(new Error('nicht gefunden'));

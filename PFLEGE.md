@@ -836,6 +836,7 @@ dem Gerät (`bn-geraet-…`, nicht gespiegelt).
 …)“): Der Browser hat die Anfrage ohne Antwort abgebrochen – kein Netz, die Sicherheitsregel der Seite (CSP in
 `scripts/csp.mjs`) oder ein Server ohne CORS-Freigabe. `dateiLaden` in `data/onedrive.ts` versucht nacheinander den
 Download-Link aus der Liste, einen frisch geholten Link und `/content` über Graph, nach einer Sekunde alles noch einmal.
+Jede dieser Anfragen darf höchstens 30 s dauern („ohne Antwort“) – sonst hinge der ganze Abgleich an ihr.
 Scheitert auch das, nennt die Meldung die versuchten Server (nur Hostnamen) und, falls die CSP etwas blockiert hat,
 welchen – dann diesen Host in `connect-src` aufnehmen. Die Datei bleibt als „nicht erledigt“ stehen und der nächste Abgleich holt sie – es geht nichts verloren.
 

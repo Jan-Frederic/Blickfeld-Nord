@@ -307,8 +307,15 @@ export async function cloudDelta(
  * kein Netz, Sicherheitsregel oder Server ohne CORS-Freigabe), nach einer Sekunde alles noch einmal. Scheitert auch das,
  * nennt die Meldung die versuchten Server und – falls die Sicherheitsregel der Seite (CSP) etwas blockiert hat – welchen.
  */
+/** so lange darf ein Download höchstens dauern – sonst hinge der ganze Abgleich an einer Anfrage ohne Antwort */
+const LADEN_HOECHSTENS_MS = 30_000;
 export function cloudLaden(d: CloudDatei): Promise<Blob> {
-  return dateiLaden(d, { graph, fetch: (u) => fetch(u), warten: (ms) => new Promise((r) => setTimeout(r, ms)) });
+  const frist = () => AbortSignal.timeout(LADEN_HOECHSTENS_MS);
+  return dateiLaden(d, {
+    graph: (p) => graph(p, { signal: frist() }),
+    fetch: (u) => fetch(u, { signal: frist() }),
+    warten: (ms) => new Promise((r) => setTimeout(r, ms)),
+  });
 }
 
 /** Netz und Anmeldung von außen (für Tests ersetzbar) */
@@ -324,14 +331,15 @@ export async function dateiLaden(d: CloudDatei, w: LadeWege): Promise<Blob> {
   const csp = (e: SecurityPolicyViolationEvent) => blockiert.add(hostVon(e.blockedURI));
   if (typeof document !== 'undefined') document.addEventListener('securitypolicyviolation', csp);
   /** ein Weg: Blob oder null (gescheitert – Grund in versuche); andere Fehler als ein Abbruch gehen weiter */
+  const abbruch = (e: unknown) => ['TypeError', 'TimeoutError', 'AbortError'].includes((e as Error)?.name);
   const weg = async (url: string, mitZugang: boolean): Promise<Blob | null> => {
     try {
       const res = mitZugang ? await w.graph(url) : await w.fetch(url);
       if (res.ok) return await res.blob();
       versuche.push(`${hostVon(url)} ${res.status}`);
     } catch (e) {
-      if ((e as Error).name !== 'TypeError') throw e;
-      versuche.push(`${hostVon(mitZugang ? GRAPH : url)} abgebrochen`);
+      if (!abbruch(e)) throw e;
+      versuche.push(`${hostVon(mitZugang ? GRAPH : url)} ${(e as Error).name === 'TypeError' ? 'abgebrochen' : 'ohne Antwort'}`);
     }
     return null;
   };
@@ -344,8 +352,8 @@ export async function dateiLaden(d: CloudDatei, w: LadeWege): Promise<Blob> {
     try {
       link = ((await (await w.graph(perId(d.id, d.drive))).json()) as GraphItem)['@microsoft.graph.downloadUrl'];
     } catch (e) {
-      if ((e as Error).name !== 'TypeError') throw e;
-      versuche.push('graph.microsoft.com abgebrochen');
+      if (!abbruch(e)) throw e;
+      versuche.push(`graph.microsoft.com ${(e as Error).name === 'TypeError' ? 'abgebrochen' : 'ohne Antwort'}`);
       return null;
     }
     if (link) {

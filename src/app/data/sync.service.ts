@@ -530,8 +530,13 @@ export class SyncService {
     try {
       const konto = (await oneDriveKonto()) ?? (await oneDriveAnmelden(still));
       if (!konto) {
-        // von Hand gestartet, aber keine Anmeldung zustande gekommen: sagen statt still nichts zu tun
-        if (!still) letzterSyncSetzen('Abgebrochen: nicht bei OneDrive angemeldet – „Jetzt synchronisieren“ antippen und anmelden', true);
+        // keine Anmeldung zustande gekommen (automatisch: ohne Rückfrage nicht möglich) – sagen statt still nichts zu tun
+        letzterSyncSetzen(
+          still
+            ? 'Automatischer Abgleich übersprungen: Anmeldung bei OneDrive nötig – „Jetzt synchronisieren“ antippen'
+            : 'Abgebrochen: nicht bei OneDrive angemeldet – „Jetzt synchronisieren“ antippen und anmelden',
+          true,
+        );
         return;
       }
       let lokal = appOrdner;
