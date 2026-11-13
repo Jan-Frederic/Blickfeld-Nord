@@ -34,7 +34,12 @@ export type Aktion =
   | { art: 'konflikt'; pfad: string; gewinner: 'cloud' | 'lokal' };
 
 /** temporäre und versteckte Dateien (Office-Sperrdateien, .DS_Store …) bleiben außen vor */
-export const ignorieren = (pfad: string) => pfad.split('/').some((t) => t.startsWith('.') || t.startsWith('~$') || t === 'Thumbs.db' || t === 'desktop.ini');
+export const ignorieren = (pfad: string) =>
+  pfad.split('/').some((t) => t.startsWith('.') || t.startsWith('~$') || t === 'Thumbs.db' || t === 'desktop.ini') ||
+  // Konfliktkopien von Geräte-Dateien sind überflüssig (jede schreibt nur ihr eigenes Gerät) – nicht abgleichen
+  /^Geraete\/[^/]*\(Konflikt [^/]*\.json$/.test(pfad);
+/** Geräte-Dateien: bei Änderungen auf beiden Seiten gewinnt die neuere ohne Konfliktkopie */
+const ohneKonfliktkopie = (pfad: string) => pfad.startsWith('Geraete/');
 
 // Schnellabgleich: nur Einstellungen und Daten – kleine JSON-Dateien in diesen obersten Ordnern (data/spiegel.ts,
 // noten-spiegel.ts, geraete.ts). PDFs, Mitschnitte und alles andere kommen im vollen Abgleich.
@@ -72,6 +77,7 @@ export function planen(cloud: SyncDatei[], lokal: SyncDatei[], zustand: Zustand,
       else if (lNeu && !cNeu) out.push(hoch ? { art: 'hoch', pfad } : { art: 'merken', pfad });
       else if (o.richtung === 'runter') out.push({ art: 'runter', pfad });
       else if (o.richtung === 'hoch') out.push({ art: 'hoch', pfad });
+      else if (ohneKonfliktkopie(pfad)) out.push(C.geaendert >= L.geaendert ? { art: 'runter', pfad } : { art: 'hoch', pfad });
       else out.push({ art: 'konflikt', pfad, gewinner: C.geaendert >= L.geaendert ? 'cloud' : 'lokal' });
     } else if (C) {
       // lokal fehlt: dort gelöscht (war schon abgeglichen und in der Cloud unverändert) oder neu in der Cloud

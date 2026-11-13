@@ -826,7 +826,10 @@ erkennen). Texte: `src/app/data/sync-hilfe.ts`.
 **Geräte:** Unter **Abgleich → Geräte** bekommt jedes Gerät einen Namen (z. B. „Freds Handy“; ohne Namen ein Vorschlag
 wie „iPhone“). Beim Abgleich legt es höchstens stündlich eine kleine Datei `Geraete/<Kennung>.json` (Name, Person,
 Zeitpunkt) in den Sync-Ordner – die Liste zeigt, welches Gerät wann zuletzt abgeglichen hat, mit seiner Kennung.
-Fehlermeldungen zu `Geraete/<Kennung>.json` nennen den Namen des Geräts dazu (`geraetImFehler`). Name und Kennung bleiben auf
+Fehlermeldungen zu `Geraete/<Kennung>.json` nennen den Namen des Geräts dazu (`geraetImFehler`). Geräte-Dateien bekommen
+nie eine Konfliktkopie (jede schreibt nur ihr eigenes Gerät): Haben sich beide Seiten geändert, gewinnt die neuere
+(`planen` in `data/sync.ts`); ältere Kopien „Geraete/… (Konflikt …).json“ werden nicht mehr abgeglichen und nicht
+angezeigt. Name und Kennung bleiben auf
 dem Gerät (`bn-geraet-…`, nicht gespiegelt).
 
 **Fehler beim Herunterladen** („Herunterladen nicht möglich (keine Verbindung oder vom Browser blockiert – versucht:

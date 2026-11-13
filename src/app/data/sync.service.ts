@@ -428,7 +428,7 @@ export class SyncService {
     lokal ??= await this.lokal();
     if (!lokal) return;
     liste ??= await lokal.liste();
-    const dateien = liste.filter((d) => d.pfad.startsWith(GERAETE_ORDNER + '/') && d.pfad.endsWith('.json') && d.groesse < 10_000);
+    const dateien = liste.filter((d) => d.pfad.startsWith(GERAETE_ORDNER + '/') && d.pfad.endsWith('.json') && !d.pfad.includes('(Konflikt') && d.groesse < 10_000);
     const texte = await Promise.all(
       dateien.map(async (d) => {
         const alt = this.geraeteTexte.get(d.pfad);

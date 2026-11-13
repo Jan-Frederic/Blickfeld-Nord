@@ -122,11 +122,22 @@ describe('Synchronisation', () => {
     expect(texte(lokal)).toEqual({ 'b.pdf': 'B' });
   });
 
+  it('Geräte-Dateien: bei Änderungen auf beiden Seiten gewinnt die neuere ohne Konfliktkopie', () => {
+    const d = (pfad: string, version: string, geaendert: string): SyncDatei => ({ pfad, groesse: 1, geaendert, version });
+    const z: Zustand = { 'Geraete/a.json': { cloud: 'c1', lokal: 'l1' }, 'Geraete/b.json': { cloud: 'c1', lokal: 'l1' } };
+    const cloud = [d('Geraete/a.json', 'c2', '2026-11-13T08:00:00Z'), d('Geraete/b.json', 'c2', '2026-11-13T09:00:00Z')];
+    const lokal = [d('Geraete/a.json', 'l2', '2026-11-13T09:00:00Z'), d('Geraete/b.json', 'l2', '2026-11-13T08:00:00Z')];
+    expect(planen(cloud, lokal, z, BEIDE)).toEqual([{ art: 'hoch', pfad: 'Geraete/a.json' }, { art: 'runter', pfad: 'Geraete/b.json' }]);
+  });
+
   it('plant ohne Ausführung und lässt versteckte Dateien aus', () => {
     const d = (pfad: string, version: string): SyncDatei => ({ pfad, groesse: 1, geaendert: '', version });
     const z: Zustand = { 'weg.pdf': { cloud: 'c1', lokal: 'l1' } };
     expect(planen([d('.DS_Store', '1'), d('weg.pdf', 'c1')], [d('~$Iris.docx', '1')], z, BEIDE)).toEqual([{ art: 'loeschenCloud', pfad: 'weg.pdf' }]);
     expect(ignorieren('Noten/.git/x')).toBe(true);
+    expect(ignorieren('Geraete/037cf613 (Konflikt Gerät 2026-11-13).json')).toBe(true);
+    expect(ignorieren('Geraete/037cf613.json')).toBe(false);
+    expect(ignorieren('Noten/Iris (Konflikt Gerät 2026-11-13).pdf')).toBe(false);
     expect(konfliktName('Ordner/Iris.v2/Bass', 'OneDrive', '2026-10-27')).toBe('Ordner/Iris.v2/Bass (Konflikt OneDrive 2026-10-27)');
   });
 
