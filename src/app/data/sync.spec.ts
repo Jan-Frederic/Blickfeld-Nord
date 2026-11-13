@@ -154,6 +154,20 @@ describe('Synchronisation', () => {
     expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE)).toEqual([{ art: 'runter', pfad: 'Daten/a.json' }]);
   });
 
+  it('Konflikt bei vereinbaren Daten: zusammenführen statt Konfliktkopie', async () => {
+    const cloud = speicherOrdner('c', { 'Daten/a.json': 'C' });
+    const lokal = speicherOrdner('l', { 'Daten/a.json': 'L' });
+    const zustand: Zustand = { 'Daten/a.json': { cloud: 'alt', lokal: 'alt' } };
+    const r = await synchronisieren(cloud, lokal, zustand, BEIDE, { vereinen: (p) => (p === 'Daten/a.json' ? (l, c) => `${l}+${c}` : null) });
+    expect(texte(lokal)).toEqual({ 'Daten/a.json': 'L+C' });
+    expect(texte(cloud)).toEqual({ 'Daten/a.json': 'L+C' });
+    expect(r.ergebnis.vereint).toBe(1);
+    expect(r.ergebnis.konflikte).toBe(0);
+    expect(r.ergebnis.neu).toEqual(['Daten/a.json']);
+    // danach ist alles abgeglichen
+    expect(planen(await cloud.liste(), await lokal.liste(), r.zustand, BEIDE).filter((x) => x.art !== 'merken')).toEqual([]);
+  });
+
   it('auch beim Konflikt (Cloud-Fassung laden) ist eine Unterbrechung kein Fehler', async () => {
     const cloud = speicherOrdner('c', { 'Daten/a.json': 'C' });
     const lokal = speicherOrdner('l', { 'Daten/a.json': 'L' });

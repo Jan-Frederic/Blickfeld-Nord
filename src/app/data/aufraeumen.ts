@@ -146,6 +146,8 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-geraet-gemeldet': 'Gerät zuletzt gemeldet',
   'bn-sync-geraete-unlesbar': 'Synchronisation: nicht lesbare Geräte-Einträge',
   'bn-sync-unterbrochen': 'Synchronisation: unterbrochene Downloads (zählt mit)',
+  'bn-speicher-gefragt': 'Dauerhaft speichern zuletzt angefragt',
+  'bn-sync-geraete-pflege': 'Synchronisation: nicht lesbare Geräte-Einträge (seit wann, wie oft)',
   'bn-songinfo-entwurf': 'Songs-Entwurf (Tonart, Tempo, Notiz)',
   'bn-wackelt': '„Wackelt noch“-Liste (alter Stand, wird in den Übe-Status übernommen)',
   'bn-ueben': 'Dein Karteikasten (Kästen und Fälligkeit)',

@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
-import { SpiegelZustand, hash, personOrdner, planNachher, planVorher, spiegelArt, spiegelPfad } from './spiegel';
-import { zusammenfuehren } from './spiegel-merge';
-import { cloudLoeschenPfad, letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveStill } from './onedrive';
+import { SpiegelZustand, hash, keyAusPfad, konfliktVon, personOrdner, planNachher, planVorher, spiegelArt, spiegelPfad } from './spiegel';
+import { vereinenFuer, zusammenfuehrbar, zusammenfuehren } from './spiegel-merge';
+import { anmeldungNoetigMelden, beiAnmeldungNoetig, cloudLoeschenPfad, letztesKonto, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveNeuAnmelden, oneDriveStill } from './onedrive';
 import { ordnerErlaubnis } from './ordner';
 import { SyncOrdner, SyncStand, Unterbrochen, ergebnisText, istDatenPfad, synchronisieren, unterbrochenWerten } from './sync';
 import { eigenstaendigerSong, erkennen } from './erkennung';
@@ -11,7 +11,7 @@ import type { Strich } from './noten';
 import type { SyncDatei } from './sync';
 import { Mitschnitt, mitschnittAusPfad, mitschnittEndung, mitschnittGeteilt, mitschnittPfad, mitschnittPfade, mitschnittSpeichern } from './mitschnitte';
 import { geloeschtMerken, giltLoeschung, ladeGeloescht } from './noten-geloescht';
-import { GERAETE_ORDNER, GeraetEintrag, geraetImFehler, geraetMeldung, geraeteListe } from './geraete';
+import { GERAETE_ORDNER, GeraetEintrag, UnlesbarZaehler, geraetId, geraetImFehler, geraetMeldung, geraeteListe, geraetePflege } from './geraete';
 import { NotenQuelle, istAkkordblatt, istPdf, notenEinlesen } from './noten-import';
 import {
   appOrdner,
@@ -45,6 +45,23 @@ function unlesbarLaden(): string[] {
     return [];
   }
 }
+const PFLEGE_KEY = 'bn-sync-geraete-pflege';
+function pflegeLaden(): UnlesbarZaehler {
+  try {
+    return JSON.parse(localStorage.getItem(PFLEGE_KEY) ?? '{}') as UnlesbarZaehler;
+  } catch {
+    return {};
+  }
+}
+function pflegeSpeichern(z: UnlesbarZaehler): void {
+  try {
+    if (Object.keys(z).length) localStorage.setItem(PFLEGE_KEY, JSON.stringify(z));
+    else localStorage.removeItem(PFLEGE_KEY);
+  } catch {
+    // ohne Speicher zählt jeder Abgleich für sich
+  }
+}
+
 const UNTERBROCHEN_KEY = 'bn-sync-unterbrochen';
 function unterbrochenLaden(): Unterbrochen {
   try {
@@ -100,8 +117,17 @@ export class SyncService {
   private spiegelt = false;
   private nachAenderung: ReturnType<typeof setTimeout> | undefined;
 
+  /** Microsoft verlangt eine neue Anmeldung bzw. es ist keine da – der automatische Abgleich kann so nicht laufen */
+  readonly anmeldungNoetig = signal(false);
+
+  /** „Neu anmelden“: synchron aus dem Antippen aufrufen (öffnet sofort das Fenster), danach gleich abgleichen */
+  neuAnmelden(): Promise<void> {
+    return oneDriveNeuAnmelden().then(() => void this.jetzt());
+  }
+
   constructor() {
     if (typeof window === 'undefined') return;
+    beiAnmeldungNoetig((n) => this.anmeldungNoetig.set(n));
     addEventListener('online', () => this.online.set(true));
     addEventListener('offline', () => this.online.set(false));
     spiegelZustandLaden()
@@ -332,6 +358,28 @@ export class SyncService {
     }
     await spiegelZustandSetzen(z);
     this.spiegel.set(z);
+    return n;
+  }
+
+  /**
+   * Konfliktkopien zusammenführbarer Einträge (Übe-Verlauf, Karteikasten, Notizen …): in den Eintrag einarbeiten und
+   * die Kopie entfernen – der nächste Abgleich lädt den vereinten Stand hoch und entfernt die Kopie in OneDrive.
+   * Zahl der Einträge, die sich dadurch geändert haben.
+   */
+  private async kopienVereinen(lokal: SyncOrdner, person: string, liste: SyncDatei[]): Promise<number> {
+    let n = 0;
+    for (const d of liste) {
+      const k = konfliktVon(d.pfad);
+      const key = k && keyAusPfad(k.original, person);
+      if (!key || !zusammenfuehrbar(key)) continue;
+      const kopie = await (await lokal.lesen(d.pfad)).text();
+      const eigen = localStorage.getItem(key);
+      const text = zusammenfuehren(key, eigen, kopie);
+      await lokal.loeschen(d.pfad);
+      if (text === eigen) continue;
+      localStorage.setItem(key, text);
+      n++;
+    }
     return n;
   }
 
@@ -591,9 +639,10 @@ export class SyncService {
       const konto = (await oneDriveKonto()) ?? (await oneDriveAnmelden(still));
       if (!konto) {
         // keine Anmeldung zustande gekommen (automatisch: ohne Rückfrage nicht möglich) – sagen statt still nichts zu tun
+        anmeldungNoetigMelden();
         letzterSyncSetzen(
           still
-            ? 'Automatischer Abgleich übersprungen: Anmeldung bei OneDrive nötig – „Jetzt synchronisieren“ antippen'
+            ? 'Automatischer Abgleich übersprungen: Anmeldung bei OneDrive nötig – „Neu anmelden“ antippen'
             : 'Abgebrochen: nicht bei OneDrive angemeldet – „Jetzt synchronisieren“ antippen und anmelden',
           true,
         );
@@ -622,12 +671,18 @@ export class SyncService {
           melden: (s) => this.stand.set(s),
           bestaetigen: (text) => !still && confirm(text),
           speichern: (z) => syncZustandSetzen(z).then(() => undefined),
+          vereinen: vereinenFuer,
         });
       const { ergebnis, lokal: nachListe } = still ? await oneDriveStill(lauf) : await lauf();
       this.neu.set(ergebnis.neu);
       // die Liste nach dem Abgleich kommt aus dem Abgleich selbst – der Ordner muss nicht noch einmal gelesen werden
       this.hochladen = false;
       const uebernommen = await this.spiegelnNachher(lokal, person, nachListe, zurueck);
+      // ältere Konfliktkopien von Übe-Daten gleich mit vereinen (statt sie unter Abgleich → Konflikte liegen zu lassen)
+      const vereint = await this.kopienVereinen(lokal, person, nachListe).catch(() => 0);
+      // nur bei geändertem Eintrag gleich hochladen – kommt eine Kopie wieder (Löschen in OneDrive nicht erlaubt),
+      // ändert sie nichts mehr und stößt keinen weiteren Abgleich an
+      if (vereint) this.hochladen = true;
       const noten = !schnell && e.notenAuto ? await this.notenEinlesen(lokal, ergebnis.neu, nachListe) : '';
       const notenSync = await this.notenNachher(lokal, person, nachListe);
       const aufnahmen = schnell ? 0 : await this.mitschnitteNachher(lokal, nachListe).catch(() => 0);
@@ -636,7 +691,9 @@ export class SyncService {
       // doppelte PDF-Verweise an Songs (aus früheren Abgleichen) aufräumen
       const bereinigt = schnell ? 0 : await alleDoppeltenVerweiseEntfernen().catch(() => 0);
       if (!schnell) this.letzterVoll = Date.now();
-      const daten = uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '';
+      const daten =
+        (uebernommen + notenSync ? ` · ${uebernommen + notenSync} ${uebernommen + notenSync === 1 ? 'Eintrag' : 'Einträge'} übernommen` : '') +
+        (vereint ? ` · ${vereint} ${vereint === 1 ? 'Konfliktkopie' : 'Konfliktkopien'} zusammengeführt` : '');
       const mit = (aufnahmen ? ` · ${aufnahmen} ${aufnahmen === 1 ? 'Mitschnitt' : 'Mitschnitte'} der Band` : '') + (weg ? ` · ${weg} für alle gelöschte ${weg === 1 ? 'Noten-Datei' : 'Noten-Dateien'} entfernt` : '');
       const offen = ergebnis.ausstehend?.dateien ? ` · ${ausstehendText(ergebnis.ausstehend)} werden geladen` : '';
       if (offen || (schnell && this.vollFaellig())) danach = 'voll';
@@ -646,6 +703,16 @@ export class SyncService {
       const unlesbar = (ergebnis.hinweise ?? []).map((h) => /^Geraete\/([^/.]+)\.json:/.exec(h)?.[1]).filter((x): x is string => !!x);
       this.geraeteUnlesbar.set(unlesbar);
       unlesbarSpeichern(unlesbar);
+      // Geräteliste aufräumen: dauerhaft unlesbare und seit einem halben Jahr stille Einträge (nur mit „Daten löschen“)
+      const pflege = geraetePflege(this.geraete(), unlesbar, pflegeLaden(), Date.now(), geraetId());
+      pflegeSpeichern(pflege.zaehler);
+      const entfernt: string[] = [];
+      if (this.darfLoeschen())
+        for (const x of pflege.entfernen) {
+          const name = this.geraete().find((g) => g.id === x.id)?.name;
+          if (await this.geraetEntfernen(x.id).then(() => true, () => false)) entfernt.push(name ? `„${name}“` : `Kennung ${x.id}`);
+        }
+      const aufgeraeumt = entfernt.length ? ` · Geräteliste aufgeräumt: ${entfernt.join(', ')} entfernt (ein noch genutztes Gerät legt seinen Eintrag neu an)` : '';
       // nur an der Verbindung gescheiterte Downloads: Hinweis, erst beim dritten Mal in Folge ein Fehler
       const u = unterbrochenWerten(unterbrochenLaden(), ergebnis, Date.now());
       unterbrochenSpeichern(u.zaehler);
@@ -653,7 +720,7 @@ export class SyncService {
       const netz =
         (u.hinweise.length ? ` · ${u.hinweise.length} ${u.hinweise.length === 1 ? 'Datei' : 'Dateien'} nicht geladen (Verbindung unterbrochen: ${u.hinweise.slice(0, 3).map((h) => h.replace(/: .*$/, '')).join('; ')}) – wird nachgeholt` : '') +
         (ergebnis.netzWeg ? ' · Verbindung weg – der Rest folgt beim nächsten Abgleich' : '');
-      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : '') + (ergebnis.hinweise?.length ? ` · Geräteliste: ${ergebnis.hinweise.length === 1 ? 'ein Eintrag' : `${ergebnis.hinweise.length} Einträge`} nicht lesbar (${ergebnis.hinweise.slice(0, 3).map((f) => geraetImFehler(f, this.geraete()).replace(/:.*$/, '')).join('; ')}) – wird wiederholt` : '') + netz, ergebnis.fehler.length > 0);
+      letzterSyncSetzen((schnell ? 'Daten: ' : '') + ergebnisText(ergebnis) + daten + mit + noten + offen + (ergebnis.fehler.length ? ` – ${ergebnis.fehler.slice(0, 3).map((f) => geraetImFehler(f, this.geraete())).join('; ')}` : '') + (ergebnis.hinweise?.length ? ` · Geräteliste: ${ergebnis.hinweise.length === 1 ? 'ein Eintrag' : `${ergebnis.hinweise.length} Einträge`} nicht lesbar (${ergebnis.hinweise.slice(0, 3).map((f) => geraetImFehler(f, this.geraete()).replace(/:.*$/, '')).join('; ')}) – wird wiederholt` : '') + netz + aufgeraeumt, ergebnis.fehler.length > 0);
       // Daten anderer Geräte übernommen: offene Seiten neu aufbauen lassen (sync-kompass.ts)
       if (uebernommen + notenSync + aufnahmen + weg + bereinigt + (noten ? 1 : 0) > 0) this.neueDaten.update((n) => n + 1);
     } catch (err) {

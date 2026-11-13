@@ -108,6 +108,8 @@ export interface SyncErgebnis {
   fehler: string[];
   /** Nebensächliches, das nicht geklappt hat (Geräte-Dateien: nur für die Geräteliste) – kein Fehler, wird wiederholt */
   hinweise?: string[];
+  /** Konflikte, die ohne Kopie zusammengeführt wurden (hilfen.vereinen) */
+  vereint?: number;
   /** Downloads, die nur an der Verbindung scheiterten („Pfad: Meldung“) – bleiben offen, kein Fehler (sync.service zählt mit) */
   unterbrochen?: string[];
   /** so viele Downloads hintereinander unterbrochen, dass der Rest auf den nächsten Abgleich wartet */
@@ -152,7 +154,13 @@ export async function synchronisieren(
   lokal: SyncOrdner,
   zustand: Zustand,
   o: PlanOptionen,
-  hilfen: { melden?: (s: SyncStand) => void; bestaetigen?: (text: string) => boolean | Promise<boolean>; speichern?: (z: Zustand) => Promise<void> } = {},
+  hilfen: {
+    melden?: (s: SyncStand) => void;
+    bestaetigen?: (text: string) => boolean | Promise<boolean>;
+    speichern?: (z: Zustand) => Promise<void>;
+    /** Konflikt bei dieser Datei: beide Fassungen vereinen (lokal, Cloud → Text) statt eine Konfliktkopie anzulegen */
+    vereinen?: (pfad: string) => ((lokal: string, cloud: string) => string) | null;
+  } = {},
 ): Promise<{ ergebnis: SyncErgebnis; zustand: Zustand; lokal: SyncDatei[] }> {
   const melden = hilfen.melden ?? (() => undefined);
   const ordner = o.nur ? DATEN_ORDNER : undefined;
@@ -213,6 +221,17 @@ export async function synchronisieren(
       l.delete(a.pfad);
       delete z[a.pfad];
       e.geloescht++;
+    } else if (a.art === 'konflikt' && hilfen.vereinen?.(a.pfad)) {
+      // Konflikt bei Daten, die sich vereinen lassen (Übe-Verlauf, Karteikasten …): beide Fassungen zusammenführen und
+      // auf beiden Seiten ablegen – keine Kopie, die jemand von Hand auflösen müsste
+      const [lt, ct] = await Promise.all([lokal.lesen(a.pfad).then((b) => b.text()), cloud.lesen(a.pfad).then((b) => b.text())]);
+      const text = hilfen.vereinen(a.pfad)!(lt, ct);
+      const neuL = await lokal.schreiben(a.pfad, new Blob([text], { type: 'application/json' }));
+      const neuC = await cloud.schreiben(a.pfad, new Blob([text], { type: 'application/json' }));
+      l.set(a.pfad, neuL);
+      z[a.pfad] = { cloud: neuC.version, lokal: neuL.version };
+      e.neu.push(a.pfad);
+      e.vereint = (e.vereint ?? 0) + 1;
     } else if (a.art === 'konflikt') {
       // Konflikt: die ältere Fassung als Kopie auf beiden Seiten behalten, dann die neuere übertragen
       const [sieger, verlierer, seite] = a.gewinner === 'cloud' ? [cloud, lokal, 'Gerät'] : [lokal, cloud, 'OneDrive'];
@@ -317,6 +336,7 @@ export function ergebnisText(e: SyncErgebnis): string {
     e.hoch && `${e.hoch} hochgeladen`,
     e.geloescht && `${e.geloescht} gelöscht`,
     e.konflikte && `${e.konflikte} ${e.konflikte === 1 ? 'Konflikt' : 'Konflikte'} (Kopie behalten)`,
+    e.vereint && `${e.vereint} ${e.vereint === 1 ? 'Eintrag' : 'Einträge'} von zwei Geräten zusammengeführt`,
     e.fehler.length && `${e.fehler.length} ${e.fehler.length === 1 ? 'Fehler' : 'Fehler'}`,
     e.uebersprungen && `${e.uebersprungen} ${e.uebersprungen === 1 ? 'Löschung wartet' : 'Löschungen warten'} auf „Jetzt synchronisieren“`,
   ].filter(Boolean);

@@ -45,6 +45,7 @@ function msal(): Promise<IPublicClientApplication> {
         if (r?.account) {
           m.setActiveAccount(r.account);
           kontoMerken(r.account.username);
+          noetigSetzen(false);
         }
         return r;
       });
@@ -81,6 +82,30 @@ export class AnmeldeFehler extends Error {
     super(text, { cause });
   }
 }
+/**
+ * Verlangt Microsoft eine neue Anmeldung (Zugang abgelaufen, im Hintergrund nicht still zu erneuern)? Der automatische
+ * Abgleich darf kein Fenster öffnen – die Seite zeigt dann „Neu anmelden“ (sync-kompass.ts).
+ */
+let anmeldungNoetig = false;
+const beobachter = new Set<(noetig: boolean) => void>();
+function noetigSetzen(n: boolean): void {
+  if (n === anmeldungNoetig) return;
+  anmeldungNoetig = n;
+  for (const f of beobachter) f(n);
+}
+/** keine Anmeldung zustande gekommen (Abgleich ohne Konto) – wie ein abgelaufener Zugang melden */
+export const anmeldungNoetigMelden = () => noetigSetzen(true);
+export function beiAnmeldungNoetig(f: (noetig: boolean) => void): () => void {
+  beobachter.add(f);
+  f(anmeldungNoetig);
+  return () => beobachter.delete(f);
+}
+
+/** „Neu anmelden“ (Zugang abgelaufen): sofort das Anmelde-Fenster mit dem bisherigen Konto – synchron aus dem Antippen aufrufen */
+export function oneDriveNeuAnmelden(): Promise<AccountInfo> {
+  return fertig ? popupAnmelden(fertig) : msal().then(popupAnmelden);
+}
+
 /** Pop-up-Probleme: die Anmeldung per Weiterleitung kommt ohne Fenster aus */
 export const weiterleitungHilft = (e: unknown) => e instanceof AnmeldeFehler && (e.art === 'blockiert' || e.art === 'zeit' || e.art === 'geschlossen');
 
@@ -209,6 +234,7 @@ function popupAnmelden(m: IPublicClientApplication): Promise<AccountInfo> {
     .then((r) => {
       m.setActiveAccount(r.account);
       kontoMerken(r.account.username);
+      noetigSetzen(false);
       return r.account;
     })
     .catch((e) => {
@@ -295,7 +321,11 @@ async function token(): Promise<string> {
   const m = await msal();
   const account = await oneDriveKonto();
   if (!account) throw new Error('Nicht mit OneDrive verbunden');
-  const still = () => m.acquireTokenSilent({ scopes: SCOPES, account });
+  const still = () =>
+    m.acquireTokenSilent({ scopes: SCOPES, account }).then((r) => {
+      noetigSetzen(false);
+      return r;
+    });
   try {
     return (await still()).accessToken;
   } catch (e) {
@@ -310,9 +340,12 @@ async function token(): Promise<string> {
         if (!(modul && e2 instanceof modul.InteractionRequiredAuthError)) throw anmeldeFehler(e2);
       }
     }
-    if (stillModus) throw new Error('Anmeldung abgelaufen – bitte „Jetzt synchronisieren“ antippen', { cause: e });
+    noetigSetzen(true);
+    if (stillModus) throw new Error('Anmeldung abgelaufen – bitte „Neu anmelden“ antippen', { cause: e });
     try {
-      return (await m.acquireTokenPopup({ scopes: SCOPES, account, overrideInteractionInProgress: true })).accessToken;
+      const r = await m.acquireTokenPopup({ scopes: SCOPES, account, overrideInteractionInProgress: true });
+      noetigSetzen(false);
+      return r.accessToken;
     } catch (e3) {
       throw anmeldeFehler(e3);
     }

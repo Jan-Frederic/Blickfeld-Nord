@@ -2,6 +2,8 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { RouterLink } from '@angular/router';
 import { SyncService } from '../data/sync.service';
 import { kuerzlichAktiv, neuZeichnen, selbstAuffrischen } from '../data/neu-zeichnen';
+import { anmeldeFehler, oneDriveWeiterleiten, weiterleitungHilft } from '../data/onedrive';
+import { dauerhaftImBrowser } from '../data/speicher';
 
 // Sync-Anzeige unten rechts im Backstage: ein Kompass (public/kompass-sync.svg, transparent), der nur erscheint,
 // solange mit OneDrive abgeglichen wird – er blendet sich ein, dreht sich und blendet sich danach wieder aus.
@@ -9,6 +11,9 @@ import { kuerzlichAktiv, neuZeichnen, selbstAuffrischen } from '../data/neu-zeic
 // Hat ein Abgleich Daten anderer Geräte gebracht, baut er die offene Seite neu auf (sie liest ihren Stand nur beim
 // Öffnen) – außer man tippt gerade, hat einen Dialog offen oder ist im Bühnen-/Probe-Modus: dann erscheint ein Knopf
 // „Neue Daten der Band – anzeigen“.
+// Verlangt Microsoft eine neue Anmeldung, ruht der automatische Abgleich (er darf kein Fenster öffnen): Dann steht
+// oben „OneDrive: Anmeldung nötig“ mit „Neu anmelden“ – das öffnet sofort das Anmelde-Fenster (der Bühnen-Modus
+// liegt darüber, dort stört er nicht).
 @Component({
   selector: 'app-sync-kompass',
   imports: [RouterLink],
@@ -19,6 +24,14 @@ import { kuerzlichAktiv, neuZeichnen, selbstAuffrischen } from '../data/neu-zeic
         <img src="kompass-sync.svg" alt="" width="56" height="56" />
       </a>
       <span class="sr" role="status">{{ sync.laeuft() ? text() : '' }}</span>
+    }
+    @if (sync.anmeldungNoetig() && sync.bereit() && sync.online() && !ausgeblendet()) {
+      <div class="anmelden" role="status">
+        <span>{{ fehler() || 'OneDrive: Anmeldung nötig – der automatische Abgleich ruht.' }}</span>
+        <button type="button" (click)="neuAnmelden()" [disabled]="laeuft()">{{ laeuft() ? 'Anmelde-Fenster offen …' : 'Neu anmelden' }}</button>
+        @if (ohnePopup()) { <button type="button" (click)="weiterleiten()">Ohne Pop-up</button> }
+        <button type="button" class="zu" aria-label="Hinweis ausblenden" (click)="ausgeblendet.set(true)">×</button>
+      </div>
     }
     @if (hinweis()) {
       <button type="button" class="neu" (click)="anzeigen()">Neue Daten der Band – anzeigen</button>
@@ -36,6 +49,14 @@ import { kuerzlichAktiv, neuZeichnen, selbstAuffrischen } from '../data/neu-zeic
     @keyframes drehen { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) { img { animation-duration: 8s; } }
     .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .anmelden {
+      position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); z-index: 950; transform: translateX(-50%);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; width: max-content; max-width: calc(100vw - 32px);
+      padding: 8px 10px 8px 16px; border-radius: 14px; background: #2a1d14; border: 1px solid var(--bn-sunset);
+      color: var(--bn-ink); font-size: .86rem; box-shadow: 0 2px 12px rgba(0, 0, 0, .6);
+    }
+    .anmelden button { padding: 6px 12px; border: 0; border-radius: 999px; background: var(--bn-sunset); color: #2a1708; font: inherit; cursor: pointer; }
+    .anmelden button.zu { padding: 4px 8px; background: none; color: var(--bn-fog); }
     .neu {
       position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 900; transform: translateX(-50%);
       padding: 9px 16px; border: 0; border-radius: 999px; background: var(--bn-sunset); color: #2a1708; font: inherit; font-size: .88rem;
@@ -52,8 +73,31 @@ export class SyncKompass {
 
   protected readonly hinweis = signal(false);
 
+  // Anmeldung abgelaufen: „Neu anmelden“ öffnet das Fenster sofort (kein await davor, sonst blockt Safari es)
+  protected readonly ausgeblendet = signal(false);
+  protected readonly laeuft = signal(false);
+  protected readonly fehler = signal('');
+  protected readonly ohnePopup = signal(false);
+  protected neuAnmelden(): void {
+    this.laeuft.set(true);
+    this.fehler.set('');
+    this.sync
+      .neuAnmelden()
+      .catch((e) => {
+        const f = anmeldeFehler(e);
+        this.fehler.set(f.message);
+        this.ohnePopup.set(weiterleitungHilft(f));
+      })
+      .finally(() => this.laeuft.set(false));
+  }
+  protected weiterleiten(): void {
+    oneDriveWeiterleiten().catch((e) => this.fehler.set((e as Error).message));
+  }
+
   constructor() {
     this.sync.automatisch();
+    // Daten dieses Geräts dauerhaft speichern lassen (still, höchstens alle 30 Tage – data/speicher.ts)
+    void dauerhaftImBrowser();
     let erster = true;
     effect(() => {
       this.sync.neueDaten();

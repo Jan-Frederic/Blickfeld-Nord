@@ -4,10 +4,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { SyncService } from '../data/sync.service';
 import { cacheLeeren, mb } from '../data/aufraeumen';
 import { offeneNoten, syncEinstellungen } from '../data/sync-ordner';
-import { SpotifyArt, spotifyArt, spotifyBrowserRechte, spotifyGewaehltesGeraet, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
+import { SpotifyArt, spotifyArt, spotifyBrowserRechte, spotifyGewaehltesGeraet, spotifyLage, spotifyProtokoll, spotifyProtokollLeeren, spotifyVerbunden } from '../data/spotify-remote';
 import { DATEN_BACKUP, backupZeit, backupsSortiert } from '../data/backup-regeln';
 import { GESICHERT_KEY } from './backstage-sync';
-import { seitText } from '../data/geraete';
+import { geraetId, geraetName, seitText, standardName } from '../data/geraete';
 
 // Abgleich → Daten auf diesem Gerät, unten: was der Browser dieses Geräts sonst noch weiß – Speicherplatz (belegt,
 // erlaubt, dauerhaft?), die lokale Kopie des Sync-Ordners, Spotify, App-Stand samt Seiten für unterwegs und das
@@ -113,6 +113,11 @@ const datum = (t: number) => new Date(t).toLocaleString('de-DE', { dateStyle: 'm
           @if (backupAlt()) { Am besten jetzt eins erstellen – vieles liegt nur in diesem Browser. }
           <a routerLink="/backstage/einstellungen">Einstellungen → Backup</a></p>
       </details>
+    </div>
+    <div class="diagnose">
+      <button type="button" (click)="diagnoseKopieren()"><mat-icon>content_copy</mat-icon> Diagnose kopieren</button>
+      <small>App-Stand, Gerät, Abgleich, Speicher und Spotify in einem Text – zum Weitergeben, wenn etwas hakt. Ohne
+        E-Mail-Adresse und ohne Zugangsdaten.</small>
     </div>
     @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
   `,
@@ -269,6 +274,37 @@ export class DatenGeraet {
   constructor() {
     void this.platzLesen();
     void this.appLesen();
+  }
+
+  /** alles Wichtige dieses Geräts als Text (ohne Konto-Adresse, ohne Schlüssel) – in die Zwischenablage */
+  protected async diagnoseKopieren(): Promise<void> {
+    await Promise.all([this.platzLesen(), this.appLesen()]);
+    const e = syncEinstellungen();
+    const p = this.platz();
+    const l = this.sync.letzter();
+    const ja = (b: unknown) => (b ? 'ja' : 'nein');
+    const installiert = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
+    const zeilen = [
+      `Blickfeld Nord – Diagnose (${datum(Date.now())})`,
+      `App-Stand: ${this.appStand() || 'unbekannt'} · Service Worker: ${ja(navigator.serviceWorker?.controller)}`,
+      `Gerät: ${geraetName() || standardName(navigator.userAgent)} (Kennung ${geraetId()}) · installiert: ${ja(installiert)} · online: ${ja(navigator.onLine)}`,
+      `Browser: ${navigator.userAgent}`,
+      `Speicher: ${p ? `${mb(p.belegt)}${p.erlaubt ? ' von ' + mb(p.erlaubt) : ''} · dauerhaft: ${p.dauerhaft === undefined ? 'unbekannt' : ja(p.dauerhaft)}` : 'unbekannt'}`,
+      `Synchronisation: eingerichtet ${ja(this.sync.bereit())} · lokal ${e.lokal} · Richtung ${e.richtung} · automatisch ${ja(e.auto)} · Anmeldung nötig ${ja(this.sync.anmeldungNoetig())}`,
+      `Letzter Abgleich: ${l ? `${datum(Date.parse(l.zeit))}: ${l.text}` : 'noch nie'}`,
+      `Wartet aufs Hochladen: ${this.sync.ausstehend()} · Noten ohne eindeutigen Song: ${offeneNoten().length}`,
+      `Unterbrochene Downloads: ${localStorage.getItem('bn-sync-unterbrochen') ?? 'keine'}`,
+      `Geräte: ${this.sync.geraete().map((g) => `${g.name} (${g.id}, ${seitText(g.zeit)})`).join('; ') || 'keine'}${this.sync.geraeteUnlesbar().length ? ` · nicht lesbar: ${this.sync.geraeteUnlesbar().join(', ')}` : ''}`,
+      ...spotifyLage().map((z) => `Spotify: ${z}`),
+      ...(spotifyProtokoll().length ? ['Spotify-Protokoll (zuletzt):', ...spotifyProtokoll().slice(-20)] : []),
+    ];
+    const text = zeilen.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      this.meldung.set('Diagnose kopiert ✓ – zum Beispiel in eine Nachricht einfügen.');
+    } catch {
+      window.prompt('Diagnose (kopieren):', text);
+    }
   }
 
   /** aufgeklappt: merken und Teures erst jetzt lesen */

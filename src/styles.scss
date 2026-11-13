@@ -1193,3 +1193,5 @@ app-daten-geraet button:hover:not(:disabled) { border-color: var(--bn-sunset); c
 app-daten-geraet button:disabled { opacity: .4; cursor: default; }
 app-daten-geraet mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-daten-geraet .meldung { margin: 12px 0 0; color: #5fb88a; }
+app-daten-geraet .diagnose { display: grid; justify-items: start; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bn-line); }
+app-daten-geraet .diagnose button { margin: 0; }

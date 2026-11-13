@@ -92,6 +92,36 @@ export function geraeteListe(texte: string[]): GeraetEintrag[] {
   return out.sort((a, b) => b.zeit.localeCompare(a.zeit));
 }
 
+// ---- Aufräumen der Geräteliste (für jeden Eintrag gleich, ohne Handarbeit) -------------------------------------
+// Ein Eintrag, der sich über mehrere Abgleiche und mindestens einen Tag nicht lesen lässt, oder ein Gerät, das seit
+// einem halben Jahr nicht abgeglichen hat, wird vom Gerät mit „Daten löschen“ entfernt. Gefahrlos: Ein Gerät, das
+// noch genutzt wird, legt seinen Eintrag beim nächsten Abgleich (höchstens stündlich) neu an.
+export const UNLESBAR_ABGLEICHE = 3;
+export const UNLESBAR_STUNDEN = 24;
+export const VERALTET_TAGE = 180;
+/** lange nicht gesehen – in der Liste vermerkt */
+export const LANGE_NICHT_TAGE = 60;
+export type UnlesbarZaehler = Record<string, { seit: number; n: number }>;
+
+export function geraetePflege(
+  geraete: GeraetEintrag[],
+  unlesbar: string[],
+  alt: UnlesbarZaehler,
+  jetzt: number,
+  eigeneId: string,
+): { zaehler: UnlesbarZaehler; entfernen: { id: string; grund: 'unlesbar' | 'veraltet' }[] } {
+  const zaehler: UnlesbarZaehler = {};
+  const entfernen: { id: string; grund: 'unlesbar' | 'veraltet' }[] = [];
+  for (const id of new Set(unlesbar)) {
+    const z = { seit: alt[id]?.seit ?? jetzt, n: (alt[id]?.n ?? 0) + 1 };
+    zaehler[id] = z;
+    if (id !== eigeneId && z.n >= UNLESBAR_ABGLEICHE && jetzt - z.seit >= UNLESBAR_STUNDEN * 3600_000) entfernen.push({ id, grund: 'unlesbar' });
+  }
+  for (const g of geraete)
+    if (g.id !== eigeneId && jetzt - Date.parse(g.zeit) > VERALTET_TAGE * 864e5) entfernen.push({ id: g.id, grund: 'veraltet' });
+  return { zaehler, entfernen };
+}
+
 /** „gerade eben“, „vor 3 Std.“, „gestern“, „vor 5 Tagen“ */
 export function seitText(iso: string, jetzt = Date.now()): string {
   const min = Math.round((jetzt - Date.parse(iso)) / 60_000);

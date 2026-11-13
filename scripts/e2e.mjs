@@ -1785,6 +1785,19 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   const status = p.locator('app-sync-status');
   await status.locator('.letzter button.kopieren').click();
   await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('Geraete/x.json: Herunterladen nicht möglich') && (await status.locator('.letzter button.kopieren').innerText()).includes('Kopiert'), 'Fehlermeldung lässt sich nicht kopieren');
+  // Daten auf diesem Gerät → „Diagnose kopieren“: alles in einem Text, ohne E-Mail-Adresse
+  await p.locator('app-daten-geraet .diagnose button').click();
+  await until(async () => /Blickfeld Nord – Diagnose[\s\S]*App-Stand[\s\S]*Synchronisation: eingerichtet ja[\s\S]*Letzter Abgleich/.test(await p.evaluate(() => navigator.clipboard.readText())), async () => `Diagnose fehlt in der Zwischenablage: ${(await p.evaluate(() => navigator.clipboard.readText())).slice(0, 300)}`);
+  expect(!/@/.test(await p.evaluate(() => navigator.clipboard.readText())), 'Diagnose enthält eine E-Mail-Adresse');
+  // ohne Microsoft-Konto kann der automatische Abgleich nicht laufen: oben „Anmeldung nötig“ mit „Neu anmelden“
+  const autoSetzen = (an) => p.evaluate((an) => localStorage.setItem('bn-sync-einstellungen', JSON.stringify({ ...JSON.parse(localStorage.getItem('bn-sync-einstellungen')), auto: an })), an);
+  await autoSetzen(true);
+  await p.reload({ waitUntil: 'networkidle' });
+  const anmelden = p.locator('app-sync-kompass .anmelden');
+  await until(async () => (await anmelden.count()) === 1 && /Neu anmelden/.test(await anmelden.innerText()), 'Kein Hinweis „Neu anmelden“, obwohl der Abgleich ohne Anmeldung ruht', 25_000);
+  await anmelden.getByRole('button', { name: 'Hinweis ausblenden' }).click();
+  await until(async () => (await anmelden.count()) === 0, 'Hinweis lässt sich nicht ausblenden');
+  await autoSetzen(false);
   // (i) erklärt den Knopf; Gerät benennen
   await status.getByRole('button', { name: 'Was macht „Jetzt synchronisieren“?' }).click();
   await until(async () => (await status.locator('.hilfe').innerText().catch(() => '')).includes('Gleicht OneDrive und dieses Gerät ab'), '(i) erklärt „Jetzt synchronisieren“ nicht');

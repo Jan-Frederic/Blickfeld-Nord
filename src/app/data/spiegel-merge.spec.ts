@@ -1,4 +1,4 @@
-import { zusammenfuehrbar, zusammenfuehren } from './spiegel-merge';
+import { vereinenFuer, zusammenfuehrbar, zusammenfuehren } from './spiegel-merge';
 
 const j = (x: unknown) => JSON.stringify(x);
 const p = (s: string) => JSON.parse(s);
@@ -37,5 +37,22 @@ describe('Übe-Daten zusammenführen', () => {
   it('heute geübt: am selben Tag vereint, sonst der spätere Tag', () => {
     expect(p(zusammenfuehren('bn-ueben-heute', j({ tag: '2026-11-11', keys: ['a'] }), j({ tag: '2026-11-11', keys: ['b'] }))).keys).toEqual(['a', 'b']);
     expect(p(zusammenfuehren('bn-ueben-heute', j({ tag: '2026-11-11', keys: ['a'] }), j({ tag: '2026-11-10', keys: ['b'] }))).keys).toEqual(['a']);
+  });
+});
+
+describe('vereinenFuer (Konflikt beim Abgleich)', () => {
+  it('vereint Übe-Daten der Band und der Person, sonst nicht', () => {
+    expect(vereinenFuer('Daten/bn-fortschritt-fred.json')).not.toBeNull();
+    expect(vereinenFuer('Einstellungen/fred/bn-ueben.json')).not.toBeNull();
+    expect(vereinenFuer('Daten/bn-setlist-2026-12-04.json')).toBeNull();
+    expect(vereinenFuer('Noten/x.pdf')).toBeNull();
+    expect(vereinenFuer('Daten/bn-fortschritt-fred (Konflikt Gerät 2026-11-13).json')).toBeNull();
+  });
+
+  it('nimmt je Song den späteren Stand beider Geräte', () => {
+    const v = vereinenFuer('Einstellungen/fred/bn-ueben.json')!;
+    const lokal = j({ a: { zuletzt: '2026-11-13' }, b: { zuletzt: '2026-11-01' } });
+    const cloud = j({ a: { zuletzt: '2026-11-10' }, b: { zuletzt: '2026-11-12' }, c: { zuletzt: '2026-11-11' } });
+    expect(JSON.parse(v(lokal, cloud))).toEqual({ a: { zuletzt: '2026-11-13' }, b: { zuletzt: '2026-11-12' }, c: { zuletzt: '2026-11-11' } });
   });
 });

@@ -1,4 +1,4 @@
-import { GERAET_NAME_KEY, geraetImFehler, geraetMeldung, geraeteListe, seitText, standardName } from './geraete';
+import { GERAET_NAME_KEY, geraetImFehler, geraetMeldung, geraeteListe, geraetePflege, seitText, standardName } from './geraete';
 
 describe('geraete', () => {
   beforeEach(() => localStorage.clear());
@@ -44,5 +44,37 @@ describe('geraete', () => {
     expect(geraetImFehler('Geraete/dd2a1f3a.json: Herunterladen nicht möglich', geraete)).toBe('Geraete/dd2a1f3a.json (Gerät „Edge-Laptop“, Fred): Herunterladen nicht möglich');
     expect(geraetImFehler('Geraete/ffffffff.json: weg', geraete)).toBe('Geraete/ffffffff.json: weg');
     expect(geraetImFehler('Daten/bn-ueben.json: weg', geraete)).toBe('Daten/bn-ueben.json: weg');
+  });
+});
+
+describe('Geräteliste aufräumen', () => {
+  const STD = 3600_000;
+  const TAG = 24 * STD;
+  const jetzt = Date.parse('2026-11-13T12:00:00Z');
+  const g = (id: string, tage: number) => ({ id, name: id, person: 'p', zeit: new Date(jetzt - tage * TAG).toISOString() });
+
+  it('nicht lesbar: erst nach drei Abgleichen und einem Tag entfernen', () => {
+    let z = geraetePflege([], ['dd2a1f3a'], {}, jetzt - 2 * TAG, 'ich');
+    expect(z.entfernen).toEqual([]);
+    z = geraetePflege([], ['dd2a1f3a'], z.zaehler, jetzt - TAG, 'ich');
+    expect(z.entfernen).toEqual([]);
+    z = geraetePflege([], ['dd2a1f3a'], z.zaehler, jetzt, 'ich');
+    expect(z.entfernen).toEqual([{ id: 'dd2a1f3a', grund: 'unlesbar' }]);
+    // drei schnelle Abgleiche innerhalb einer Stunde reichen nicht
+    let s = geraetePflege([], ['x'], {}, jetzt, 'ich');
+    s = geraetePflege([], ['x'], s.zaehler, jetzt + STD / 2, 'ich');
+    s = geraetePflege([], ['x'], s.zaehler, jetzt + STD, 'ich');
+    expect(s.entfernen).toEqual([]);
+  });
+
+  it('wieder lesbar: Zähler fällt weg', () => {
+    const z = geraetePflege([], [], { dd2a1f3a: { seit: 0, n: 5 } }, jetzt, 'ich');
+    expect(z.zaehler).toEqual({});
+    expect(z.entfernen).toEqual([]);
+  });
+
+  it('ein halbes Jahr nicht abgeglichen: entfernen – nie das eigene Gerät', () => {
+    const z = geraetePflege([g('alt', 200), g('neu', 3), g('ich', 400)], ['ich'], { ich: { seit: 0, n: 9 } }, jetzt, 'ich');
+    expect(z.entfernen).toEqual([{ id: 'alt', grund: 'veraltet' }]);
   });
 });

@@ -11,7 +11,7 @@ import { SyncService } from '../data/sync.service';
 import { SyncStatus, spiegelArt, syncStatusVon } from '../data/spiegel';
 import { backupTeilen } from './backstage-sync';
 import { DatenEditor } from './daten-editor';
-import { geraetId, seitText } from '../data/geraete';
+import { LANGE_NICHT_TAGE, geraetId, seitText } from '../data/geraete';
 import { DatenGeraet } from './daten-geraet';
 
 // Backstage → Abgleich → Daten auf diesem Gerät: jeder gespeicherte Eintrag einzeln – verständlich benannt (Bereich,
@@ -112,11 +112,13 @@ import { DatenGeraet } from './daten-geraet';
         <div class="gruppe geraete-gruppe">
           <details [open]="offen().has('geraete')" (toggle)="merken('geraete', $any($event.target).open)">
           <summary>Geräte <span class="zahl">{{ sync.geraete().length + sync.geraeteUnlesbar().length }}</span></summary>
-          <p>Jedes Gerät legt beim Abgleich eine kleine Datei in den Sync-Ordner (Name, Person, Zeitpunkt) – daraus entsteht diese Liste.</p>
+          <p>Jedes Gerät legt beim Abgleich eine kleine Datei in den Sync-Ordner (Name, Person, Zeitpunkt) – daraus entsteht diese Liste.
+            Aufgeräumt wird von selbst: Einträge, die sich über mehrere Abgleiche nicht lesen lassen, und Geräte, die ein halbes Jahr
+            nicht abgeglichen haben, entfernt das Gerät mit „Daten löschen“ – ein noch genutztes Gerät legt seinen Eintrag neu an.</p>
           <ul>
             @for (g of sync.geraete(); track g.id) {
-              <li>
-                <span class="text"><strong>{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }}</strong><small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }}</small></span>
+              <li [class.verwaist]="langeNicht(g.zeit)">
+                <span class="text"><strong>{{ g.name }}{{ g.id === meineId ? ' (dieses)' : '' }}</strong><small>{{ g.person }} · {{ seit(g.zeit) }} abgeglichen · Kennung {{ g.id }}{{ langeNicht(g.zeit) ? ' · lange nicht abgeglichen' : '' }}</small></span>
                 @if (loeschbar() && g.id !== meineId) { <button type="button" class="icon" (click)="geraetEntfernen(g.id, g.name)" [attr.aria-label]="'Eintrag von ' + g.name + ' entfernen'"><mat-icon>delete</mat-icon></button> }
               </li>
             }
@@ -193,6 +195,9 @@ export class BackstageDaten {
   protected readonly meldung = signal('');
   protected readonly meineId = geraetId();
   protected readonly seit = seitText;
+  protected langeNicht(zeit: string): boolean {
+    return Date.now() - Date.parse(zeit) > LANGE_NICHT_TAGE * 864e5;
+  }
   /** Geräte-Eintrag entfernen (nach Rückfrage) – das Gerät legt ihn beim nächsten eigenen Abgleich neu an */
   protected async geraetEntfernen(id: string, name: string): Promise<void> {
     if (!confirm(`Eintrag „${name}“ aus dem Sync-Ordner entfernen? Das Gerät legt ihn beim nächsten Abgleich neu an.`)) return;

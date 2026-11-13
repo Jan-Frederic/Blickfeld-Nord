@@ -850,6 +850,14 @@ mit derselben Liste; Einträge, die sich beim letzten Abgleich nicht lesen ließ
 `hinweise` des Abgleichs), stehen dort als „Unbekanntes Gerät“ mit Kennung. Wer „Daten löschen“ darf, kann fremde
 Einträge entfernen (`geraetEntfernen` in `data/sync.service.ts`, löscht die Datei in OneDrive und die lokale Kopie) –
 ein noch genutztes Gerät legt seinen Eintrag beim nächsten Abgleich neu an.
+**Von selbst aufgeräumt** (für jeden Eintrag gleich, `geraetePflege` in `data/geraete.ts`): Das Gerät mit „Daten
+löschen“ entfernt Einträge, die sich bei mindestens 3 Abgleichen über mindestens 24 Stunden nicht lesen ließen
+(Zähler in `bn-sync-geraete-pflege`), und Geräte, die seit 180 Tagen nicht abgeglichen haben (Meldung „Geräteliste
+aufgeräumt …“). Nach 60 Tagen steht in der Liste „lange nicht abgeglichen“. Das eigene Gerät wird nie entfernt.
+
+**Diagnose kopieren** (unten unter „Daten auf diesem Gerät“): App-Stand, Gerät, Browser, Speicher, Einstellungen und
+letzte Meldung des Abgleichs, unterbrochene Downloads, Geräteliste, Spotify-Zustand samt den letzten 20
+Protokollzeilen in einem Text – ohne Konto-Adresse und ohne Zugangsdaten.
 
 **Verbindung unterbrochen:** Scheitert ein Download nur an Abbrüchen bzw. fehlender Antwort (kein Status von OneDrive,
 keine CSP-Blockade – `LadeUnterbrechung` in `data/onedrive.ts`), ist das zunächst kein Fehler, sondern ein Hinweis
@@ -913,6 +921,20 @@ Konfliktkopie. Abgleich → Synchronisation zeigt sie mit beiden Fassungen: **Ak
 **Kopie übernehmen** macht sie wieder gültig – für alle. Bei Übe-Daten (Karteikasten, geteilter Kasten, Verlauf,
 Probe-Notizen, „unsicher bei“, heute geübt) gibt es zusätzlich **Zusammenführen**: beide Fassungen werden vereint
 (`data/spiegel-merge.ts`; je Song gewinnt der spätere Stand, Verlauf und Eingenordete von beiden Seiten).
+Das passiert inzwischen **von selbst**: Bei einem Konflikt in solchen Daten legt der Abgleich keine Kopie an, sondern
+vereint beide Fassungen und legt das Ergebnis auf beiden Seiten ab (`vereinenFuer` → `hilfen.vereinen` in
+`data/sync.ts`; Meldung „… von zwei Geräten zusammengeführt“). Ältere Konfliktkopien solcher Daten arbeitet der
+Abgleich ebenfalls ein und entfernt sie (`kopienVereinen` in `data/sync.service.ts`). Von Hand bleiben nur Konflikte
+bei Daten, die sich nicht vereinen lassen (Setlists, Packlisten …).
+
+**Anmeldung nötig:** Verlangt Microsoft eine neue Anmeldung (oder ist keine da), darf der automatische Abgleich kein
+Fenster öffnen. Dann steht oben im Backstage „OneDrive: Anmeldung nötig – der automatische Abgleich ruht.“ mit
+**Neu anmelden** (öffnet sofort das Anmelde-Fenster, danach wird gleich abgeglichen) bzw. „Ohne Pop-up“
+(`sync-kompass.ts`, `beiAnmeldungNoetig`/`oneDriveNeuAnmelden` in `data/onedrive.ts`). Ausblendbar bis zum nächsten
+Öffnen; im Bühnen-Modus liegt er darunter.
+
+**Dauerhaft speichern:** Beim Öffnen des Backstage fragt die App still, ob der Browser die Daten dauerhaft hält
+(`data/speicher.ts`, höchstens alle 30 Tage; in Firefox nur als installierte App, weil Firefox sonst nachfragt).
 
 **Gerät neu aufsetzen** (anderer Browser, neues Handy, Speicher gelöscht): Beim allerersten Abgleich eines Geräts
 schreibt es seine Einträge **nicht** vorab in den Sync-Ordner – sonst träte z. B. ein leerer Karteikasten (entsteht

@@ -85,6 +85,15 @@ const REGELN: [(key: string) => boolean, (eigen: Obj, andere: Obj) => Obj][] = [
 export const zusammenfuehrbar = (key: string) => REGELN.some(([passt]) => passt(key));
 
 /**
+ * Für den Abgleich (sync.ts, hilfen.vereinen): Datei eines zusammenführbaren Eintrags (Daten/… bzw.
+ * Einstellungen/<Person>/…) → Funktion, die lokale und Cloud-Fassung vereint; sonst null (dann Konfliktkopie).
+ */
+export function vereinenFuer(pfad: string): ((lokal: string, cloud: string) => string) | null {
+  const key = /^(?:Daten|Einstellungen\/[^/]+)\/(bn-[^/()]+)\.json$/.exec(pfad)?.[1];
+  return key && zusammenfuehrbar(key) ? (lokal, cloud) => zusammenfuehren(key, lokal, cloud) : null;
+}
+
+/**
  * eigene Fassung (dieses Gerät) und andere (OneDrive bzw. Konfliktkopie) zusammenführen. Nicht zusammenführbare Einträge
  * oder kaputtes JSON: die andere Fassung gilt (bzw. die eigene, wenn die andere fehlt).
  */
