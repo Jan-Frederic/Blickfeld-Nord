@@ -1,11 +1,13 @@
-import type { AccountInfo, IPublicClientApplication } from '@azure/msal-browser';
+import type { AccountInfo, AuthenticationResult, IPublicClientApplication } from '@azure/msal-browser';
 import { ONEDRIVE, clientId } from './onedrive-config';
 import { DeltaItem, DeltaStand, deltaAnwenden, deltaDateien, deltaGueltig } from './cloud-delta';
 
 // OneDrive über Microsoft Graph – Anmeldung mit MSAL (Microsoft Authentication Library), nur im Browser, ohne Server.
-// Ist man im Browser schon bei Microsoft angemeldet (Windows/Edge mit Firmenkonto, Office im Browser …), klappt
-// das ohne Eingabe („Single Sign-On“, ssoSilent); sonst einmal im Popup. Die Bibliothek wird erst beim ersten
-// Verbinden geladen. Antwortseite für Popup und stilles Anmelden: /auth/ (scripts/auth-seite.mjs).
+// Angetippt („Mit Microsoft anmelden“) öffnet sich sofort das Anmelde-Fenster – noch im selben Moment, sonst blockt
+// Safari es (dafür lädt die Seite mit dem Knopf die Bibliothek vorab: oneDriveVorbereiten). Im Hintergrund wird nur
+// still angemeldet (ssoSilent, nie ein Fenster). Klappt das Fenster nicht (blockiert, keine Antwort), gibt es die
+// Anmeldung per Weiterleitung (die ganze Seite geht zu Microsoft und kommt zurück). Antwortseite für alles: /auth/
+// (scripts/auth-seite.mjs); die Bibliothek wird erst beim ersten Verbinden geladen.
 // Files.ReadWrite.All: auch Ordner, die jemand anderes mit einem teilt (z. B. der Band-Ordner „Sync“ eines Mitglieds)
 const SCOPES = ['User.Read', 'Files.ReadWrite.All'];
 const GRAPH = 'https://graph.microsoft.com/v1.0';
@@ -14,22 +16,119 @@ export const oneDriveEingerichtet = () => !!clientId();
 
 let app: Promise<IPublicClientApplication> | undefined;
 let appFuer = '';
+/** fertig geladen – damit ein Antippen das Anmelde-Fenster ohne Warten öffnen kann */
+let fertig: IPublicClientApplication | null = null;
+let modul: typeof import('@azure/msal-browser') | null = null;
+/** Ergebnis einer Anmeldung per Weiterleitung (beim Laden der Seite nach der Rückkehr von Microsoft) */
+let weiterleitung: Promise<AuthenticationResult | null> = Promise.resolve(null);
 function msal(): Promise<IPublicClientApplication> {
   // neue Client-ID (in den Einstellungen geändert) → neu anlegen
-  if (appFuer !== clientId()) app = undefined;
+  if (appFuer !== clientId()) {
+    app = undefined;
+    fertig = null;
+  }
   appFuer = clientId();
   app ??= import('@azure/msal-browser')
-    .then(({ createStandardPublicClientApplication }) =>
-      createStandardPublicClientApplication({
+    .then((m) => {
+      modul = m;
+      return m.createStandardPublicClientApplication({
         auth: { clientId: appFuer, authority: `https://login.microsoftonline.com/${ONEDRIVE.tenant}`, redirectUri: `${location.origin}/auth/` },
         cache: { cacheLocation: 'localStorage' },
-      }),
-    )
+        // navigatePopups: Fenster sofort öffnen (erst danach lädt MSAL, was es braucht) – sonst blockt Safari es;
+        // popupBridgeTimeout: Zeit für Passwort, Code per SMS … (dass das Fenster zugeht, merken wir selbst)
+        system: { navigatePopups: true, popupBridgeTimeout: FENSTER_HOECHSTENS_MS },
+      });
+    })
     .then((m) => {
       anmeldungBehalten();
+      weiterleitung = m.handleRedirectPromise().then((r) => {
+        if (r?.account) {
+          m.setActiveAccount(r.account);
+          kontoMerken(r.account.username);
+        }
+        return r;
+      });
+      weiterleitung.catch(() => undefined);
+      fertig = m;
       return m;
+    })
+    .catch((e) => {
+      // Laden fehlgeschlagen (z. B. schlechtes Netz): beim nächsten Versuch neu laden statt für immer zu scheitern
+      app = undefined;
+      throw new AnmeldeFehler('netz', 'Die Anmeldung von Microsoft ließ sich nicht laden – bei besserem Netz noch einmal versuchen.', e);
     });
   return app;
+}
+
+/** Bibliothek vorab laden (Seiten mit „Mit Microsoft anmelden“) – dann öffnet ein Antippen das Fenster sofort */
+export function oneDriveVorbereiten(): void {
+  if (oneDriveEingerichtet()) msal().catch(() => undefined);
+}
+
+const FENSTER_HOECHSTENS_MS = 10 * 60_000;
+/** nach dem Schließen des Fensters so lange auf die Antwort warten, wenn die Antwortseite sich nicht gemeldet hat */
+const NACH_SCHLIESSEN_MS = 6000;
+
+export type AnmeldeArt = 'blockiert' | 'geschlossen' | 'zeit' | 'netz' | 'sonst';
+/** verständliche Meldung zur Anmeldung; art sagt der Seite, ob „Ohne Pop-up anmelden“ helfen kann */
+export class AnmeldeFehler extends Error {
+  override name = 'AnmeldeFehler';
+  constructor(
+    readonly art: AnmeldeArt,
+    text: string,
+    cause?: unknown,
+  ) {
+    super(text, { cause });
+  }
+}
+/** Pop-up-Probleme: die Anmeldung per Weiterleitung kommt ohne Fenster aus */
+export const weiterleitungHilft = (e: unknown) => e instanceof AnmeldeFehler && (e.art === 'blockiert' || e.art === 'zeit' || e.art === 'geschlossen');
+
+/** Fehler von MSAL (errorCode) bzw. des Browsers in eine verständliche Meldung übersetzen */
+export function anmeldeFehler(e: unknown): AnmeldeFehler {
+  if (e instanceof AnmeldeFehler) return e;
+  const code = String((e as { errorCode?: string })?.errorCode ?? '');
+  if (code === 'popup_window_error' || code === 'empty_window_error')
+    return new AnmeldeFehler('blockiert', 'Das Anmelde-Fenster wurde blockiert. Noch einmal antippen – oder „Ohne Pop-up anmelden“.', e);
+  if (code === 'user_cancelled' || code === 'interaction_in_progress_cancelled')
+    return new AnmeldeFehler('geschlossen', 'Anmeldung abgebrochen – das Anmelde-Fenster wurde geschlossen.', e);
+  if (code === 'timed_out' || code === 'monitor_window_timeout')
+    return new AnmeldeFehler('zeit', 'Vom Anmelde-Fenster kam keine Antwort. Noch einmal versuchen – oder „Ohne Pop-up anmelden“.', e);
+  if (['no_network_connectivity', 'post_request_failed', 'get_request_failed', 'network_error', 'endpoints_resolution_error', 'failed_to_parse_response'].includes(code) || (e as Error)?.name === 'TypeError')
+    return new AnmeldeFehler('netz', 'Keine Verbindung zu Microsoft – bei besserem Netz noch einmal versuchen.', e);
+  const text = (e as Error)?.message || code || 'unbekannter Fehler';
+  return new AnmeldeFehler('sonst', `Anmeldung nicht möglich: ${text}`, e);
+}
+
+/** Antwortseite /auth/ meldet sich (scripts/auth/bridge.js) – so wissen wir, dass das Fenster nicht einfach zuging */
+export const ANTWORT_KEY = 'bn-auth-antwort';
+
+/**
+ * Auf das Anmelde-Fenster warten: Geht es zu, ohne dass sich die Antwortseite gemeldet hat, nach kurzer Gnadenfrist
+ * „geschlossen“ – statt bis zur Zeitgrenze von MSAL zu warten. Hat sie sich gemeldet, läuft der Tausch gegen den
+ * Zugang (Netz) einfach weiter.
+ */
+export function mitFensterWache<T>(
+  arbeit: Promise<T>,
+  fenster: () => { closed: boolean } | null,
+  angekommen: () => boolean,
+  o: { takt?: number; gnade?: number; warten?: (ms: number) => Promise<unknown> } = {},
+): Promise<T> {
+  const takt = o.takt ?? 500;
+  const gnade = o.gnade ?? NACH_SCHLIESSEN_MS;
+  const warten = o.warten ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+  let fertig = false;
+  const wache = (async (): Promise<never> => {
+    while (!fertig) {
+      await warten(takt);
+      const f = fenster();
+      if (fertig || !f?.closed || angekommen()) continue;
+      for (let t = 0; t < gnade && !fertig && !angekommen(); t += takt) await warten(takt);
+      if (!fertig && !angekommen()) throw new AnmeldeFehler('geschlossen', 'Anmeldung abgebrochen – das Anmelde-Fenster wurde geschlossen, bevor Microsoft geantwortet hat.');
+    }
+    return new Promise<never>(() => undefined);
+  })();
+  return Promise.race([arbeit, wache]).finally(() => (fertig = true));
 }
 
 // MSAL verschlüsselt die gespeicherte Anmeldung mit einem Schlüssel in einem Sitzungs-Cookie – endet die
@@ -54,26 +153,109 @@ export async function oneDriveKonto(): Promise<AccountInfo | null> {
 }
 
 /**
- * Verbinden: erst still über die vorhandene Microsoft-Anmeldung im Browser (SSO), sonst Popup.
- * still=true versucht nur SSO und gibt bei Bedarf null zurück (für den automatischen Versuch beim Öffnen).
+ * Verbinden. Angetippt (still=false): vorhandenes Konto, sonst sofort das Anmelde-Fenster – ohne vorher übers Netz zu
+ * gehen, sonst blockt Safari das Fenster. Fehler kommen als AnmeldeFehler mit verständlicher Meldung.
+ * still=true (automatisch im Hintergrund): nur über die vorhandene Microsoft-Anmeldung im Browser (SSO), sonst null.
  */
-export async function oneDriveAnmelden(still = false): Promise<AccountInfo | null> {
-  const m = await msal();
-  const vorhanden = await oneDriveKonto();
-  if (vorhanden) return vorhanden;
-  try {
-    // zuletzt angemeldetes Konto vorgeben – dann klappt das stille Anmelden zuverlässiger
-    const r = await m.ssoSilent({ scopes: SCOPES, loginHint: letztesKonto() });
-    m.setActiveAccount(r.account);
-    kontoMerken(r.account.username);
-    return r.account;
-  } catch {
-    if (still) return null;
+export function oneDriveAnmelden(still = false): Promise<AccountInfo | null> {
+  // schon geladen: ohne ein einziges await zum Fenster (zählt noch als Antippen)
+  if (!still && fertig) {
+    const k = fertig.getActiveAccount() ?? fertig.getAllAccounts()[0];
+    return k ? Promise.resolve(k) : popupAnmelden(fertig);
   }
-  const r = await m.loginPopup({ scopes: SCOPES, prompt: 'select_account' });
-  m.setActiveAccount(r.account);
-  kontoMerken(r.account.username);
-  return r.account;
+  return (async () => {
+    const m = await msal();
+    const vorhanden = await oneDriveKonto();
+    if (vorhanden) return vorhanden;
+    if (!still) return popupAnmelden(m);
+    try {
+      // zuletzt angemeldetes Konto vorgeben – dann klappt das stille Anmelden zuverlässiger
+      const r = await m.ssoSilent({ scopes: SCOPES, loginHint: letztesKonto() });
+      m.setActiveAccount(r.account);
+      kontoMerken(r.account.username);
+      return r.account;
+    } catch {
+      return null;
+    }
+  })();
+}
+
+/** Anmelde-Fenster öffnen (synchron im Aufruf) und bewachen; zuletzt angemeldetes Konto vorgeben */
+function popupAnmelden(m: IPublicClientApplication): Promise<AccountInfo> {
+  const hinweis = letztesKonto();
+  const start = Date.now();
+  let fenster: Window | null = null;
+  const oeffnen = window.open;
+  // das von MSAL geöffnete Fenster mitbekommen (um zu merken, wenn es zugeht)
+  window.open = function (this: Window, ...a: Parameters<typeof window.open>) {
+    fenster = oeffnen.apply(this, a);
+    return fenster;
+  } as typeof window.open;
+  let arbeit: Promise<AuthenticationResult>;
+  try {
+    // overrideInteractionInProgress: eine hängengebliebene frühere Anmeldung (Fenster zu, Netz weg) blockiert nicht
+    arbeit = m.loginPopup({ scopes: SCOPES, ...(hinweis ? { loginHint: hinweis } : { prompt: 'select_account' }), overrideInteractionInProgress: true });
+  } finally {
+    window.open = oeffnen;
+  }
+  const angekommen = () => {
+    try {
+      return Number(localStorage.getItem(ANTWORT_KEY)) >= start;
+    } catch {
+      return false;
+    }
+  };
+  return mitFensterWache(arbeit, () => fenster, angekommen)
+    .then((r) => {
+      m.setActiveAccount(r.account);
+      kontoMerken(r.account.username);
+      return r.account;
+    })
+    .catch((e) => {
+      throw anmeldeFehler(e);
+    });
+}
+
+/** Anmeldung per Weiterleitung: die Seite geht zu Microsoft und kommt danach hierher zurück (ohne Fenster) */
+const WEITER_KEY = 'bn-onedrive-weiterleitung';
+export async function oneDriveWeiterleiten(): Promise<void> {
+  const m = await msal();
+  const hinweis = letztesKonto();
+  try {
+    sessionStorage.setItem(WEITER_KEY, String(Date.now()));
+    // eine hängengebliebene Fenster-Anmeldung würde die Weiterleitung sonst ablehnen (interaction_in_progress)
+    sessionStorage.removeItem('msal.interaction.status');
+  } catch {
+    // ohne Sitzungsspeicher geht es trotzdem
+  }
+  await m.loginRedirect({ scopes: SCOPES, ...(hinweis ? { loginHint: hinweis } : { prompt: 'select_account' }), redirectStartPage: location.href });
+}
+
+/** kommt die Seite gerade von der Anmeldung per Weiterleitung zurück? (ohne MSAL zu laden) */
+export function weiterleitungZurueck(): boolean {
+  try {
+    const t = Number(sessionStorage.getItem(WEITER_KEY));
+    return !!t && Date.now() - t < 30 * 60_000;
+  } catch {
+    return false;
+  }
+}
+
+/** nach der Rückkehr: Konto aus der Weiterleitung (oder AnmeldeFehler) */
+export async function oneDriveNachWeiterleitung(): Promise<AccountInfo | null> {
+  try {
+    await msal();
+    const r = await weiterleitung;
+    return r?.account ?? (await oneDriveKonto());
+  } catch (e) {
+    throw anmeldeFehler(e);
+  } finally {
+    try {
+      sessionStorage.removeItem(WEITER_KEY);
+    } catch {
+      // egal
+    }
+  }
 }
 
 const KONTO_KEY = 'bn-onedrive-konto';
@@ -113,11 +295,27 @@ async function token(): Promise<string> {
   const m = await msal();
   const account = await oneDriveKonto();
   if (!account) throw new Error('Nicht mit OneDrive verbunden');
+  const still = () => m.acquireTokenSilent({ scopes: SCOPES, account });
   try {
-    return (await m.acquireTokenSilent({ scopes: SCOPES, account })).accessToken;
+    return (await still()).accessToken;
   } catch (e) {
+    // nur wenn Microsoft eine neue Anmeldung verlangt, hilft ein Fenster – bei schlechtem Netz einmal kurz warten und
+    // noch einmal still versuchen (sonst ginge mitten im Abgleich grundlos ein Anmelde-Fenster auf)
+    const neuAnmelden = !!modul && e instanceof modul.InteractionRequiredAuthError;
+    if (!neuAnmelden) {
+      await new Promise((r) => setTimeout(r, 1500));
+      try {
+        return (await still()).accessToken;
+      } catch (e2) {
+        if (!(modul && e2 instanceof modul.InteractionRequiredAuthError)) throw anmeldeFehler(e2);
+      }
+    }
     if (stillModus) throw new Error('Anmeldung abgelaufen – bitte „Jetzt synchronisieren“ antippen', { cause: e });
-    return (await m.acquireTokenPopup({ scopes: SCOPES, account })).accessToken;
+    try {
+      return (await m.acquireTokenPopup({ scopes: SCOPES, account, overrideInteractionInProgress: true })).accessToken;
+    } catch (e3) {
+      throw anmeldeFehler(e3);
+    }
   }
 }
 

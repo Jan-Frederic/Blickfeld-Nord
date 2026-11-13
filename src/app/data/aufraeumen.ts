@@ -138,6 +138,7 @@ const EINSTELLUNGEN: Record<string, string> = {
   'bn-chunk-reload': 'Neuladen nach Update',
   'bn-onedrive-client': 'OneDrive: App-ID',
   'bn-onedrive-konto': 'OneDrive: zuletzt angemeldetes Konto',
+  'bn-auth-antwort': 'Microsoft-Anmeldung: letzte Antwort im Anmelde-Fenster',
   'bn-sync-einstellungen': 'Synchronisation: Einstellungen',
   'bn-sync-letzter': 'Synchronisation: letzter Abgleich',
   'bn-geraet-name': 'Name dieses Geräts',

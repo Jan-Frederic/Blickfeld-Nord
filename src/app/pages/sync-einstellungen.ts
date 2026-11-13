@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ONEDRIVE, clientId, clientIdSetzen } from '../data/onedrive-config';
-import { CloudEintrag, CloudOrt, cloudOrdnerAnlegen, cloudUnterordner, oneDriveAbmelden, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto } from '../data/onedrive';
+import { CloudEintrag, CloudOrt, cloudOrdnerAnlegen, cloudUnterordner, oneDriveAbmelden, oneDriveAnmelden, oneDriveEingerichtet, oneDriveKonto, oneDriveNachWeiterleitung, oneDriveVorbereiten, oneDriveWeiterleiten, weiterleitungHilft, weiterleitungZurueck } from '../data/onedrive';
 import { ordnerVerbindbar } from '../data/ordner';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
@@ -30,7 +30,11 @@ import { SyncEinstellungen, cloudGewaehlt, cloudName, lokalerOrdnerHandle, lokal
         @if (konto(); as k) {
           <p class="ok"><mat-icon>verified_user</mat-icon> {{ k }} <button type="button" class="link" (click)="trennen()">abmelden</button></p>
         } @else {
-          <button type="button" (click)="anmelden()" [disabled]="laeuft()"><mat-icon>login</mat-icon> Mit Microsoft anmelden</button>
+          <button type="button" (click)="anmelden()" [disabled]="laeuft()"><mat-icon>login</mat-icon> {{ laeuft() ? 'Anmelde-Fenster offen …' : 'Mit Microsoft anmelden' }}</button>
+          @if (ohnePopup()) {
+            <button type="button" (click)="weiterleiten()" [disabled]="laeuft()"><mat-icon>open_in_browser</mat-icon> Ohne Pop-up anmelden</button>
+            <p class="klein">Ohne Pop-up geht die ganze Seite kurz zu Microsoft und kommt nach der Anmeldung hierher zurück.</p>
+          }
         }
       }
 
@@ -133,10 +137,20 @@ export class SyncEinstellungenSeite {
   protected readonly cloudGewaehlt = cloudGewaehlt;
   protected readonly laeuft = signal(false);
   protected readonly meldung = signal('');
+  /** das Anmelde-Fenster klappte nicht (blockiert, keine Antwort, geschlossen) → Anmeldung per Weiterleitung anbieten */
+  protected readonly ohnePopup = signal(false);
   protected readonly bereit = () => this.eingerichtet() && cloudGewaehlt(this.e()) && !!this.konto() && (this.e().lokal === 'app' || !!this.ordnerName());
 
   constructor() {
     this.kontoLaden();
+    oneDriveVorbereiten();
+    // zurück von der Anmeldung per Weiterleitung
+    if (weiterleitungZurueck())
+      void this.tun(async () => {
+        const k = await oneDriveNachWeiterleitung();
+        this.konto.set(k?.username ?? null);
+        if (k) void import('../data/ich-konto').then((m) => m.ichAusMicrosoft(this.mitglieder, k)).catch(() => undefined);
+      });
     lokalerOrdnerHandle().then((h) => this.ordnerName.set(h?.name ?? ''));
   }
 
@@ -181,12 +195,22 @@ export class SyncEinstellungenSeite {
   }
 
   protected anmelden(): Promise<void> {
+    this.ohnePopup.set(false);
+    this.meldung.set('');
     return this.tun(async () => {
-      const k = await oneDriveAnmelden();
+      // ohne await davor: das Fenster muss noch im Moment des Antippens aufgehen (Safari)
+      const k = await oneDriveAnmelden().catch((e) => {
+        this.ohnePopup.set(weiterleitungHilft(e));
+        throw e;
+      });
       this.konto.set(k?.username ?? null);
       // „Ich bin …“ gleich aus dem Konto (Name)
       if (k) void import('../data/ich-konto').then((m) => m.ichAusMicrosoft(this.mitglieder, k)).catch(() => undefined);
     });
+  }
+
+  protected weiterleiten(): Promise<void> {
+    return this.tun(() => oneDriveWeiterleiten());
   }
 
   protected trennen(): Promise<void> {

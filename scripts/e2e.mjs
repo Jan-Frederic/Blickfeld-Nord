@@ -1162,6 +1162,19 @@ test('Backstage: Sichtsperre – Anmeldeseite; mit Band-Ordner landet ein neues 
     await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click();
     await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', 'Ohne Band-Ordner geht es nicht weiter');
   } else {
+    // blockiertes Anmelde-Fenster: sofort eine verständliche Meldung und „Ohne Pop-up anmelden“ (statt stumm zu bleiben)
+    await p.evaluate(() => {
+      window.open = () => null;
+    });
+    await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click();
+    await until(async () => /Anmelde-Fenster wurde blockiert/.test(await seite.innerText().catch(() => '')), async () => `Keine Meldung zum blockierten Fenster: ${await seite.innerText().catch(() => '–')}`);
+    expect(await seite.getByRole('button', { name: 'Ohne Pop-up anmelden' }).isVisible(), 'Weiterleitung wird nicht angeboten');
+    // Fenster selbst geschlossen: nach wenigen Sekunden „abgebrochen“ statt minutenlang „Anmelde-Fenster offen …“
+    await p.reload({ waitUntil: 'networkidle' });
+    const [fenster] = await Promise.all([p.waitForEvent('popup'), seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click()]);
+    await until(async () => /Anmelde-Fenster offen/.test(await seite.innerText().catch(() => '')), 'Kein Hinweis, dass das Anmelde-Fenster offen ist');
+    await fenster.close();
+    await until(async () => /Anmeldung abgebrochen/.test(await seite.innerText().catch(() => '')), async () => `Geschlossenes Fenster nicht erkannt: ${await seite.innerText().catch(() => '–')}`, 12_000);
     // neues Gerät: jede Backstage-Seite führt zur Anmeldeseite und merkt sich das Ziel
     await p.go('/backstage/termine/');
     await until(async () => decodeURIComponent(p.url()).includes('/backstage/zugang?ziel=/backstage/termine'), async () => 'Keine Umleitung zur Anmeldeseite: ' + p.url());

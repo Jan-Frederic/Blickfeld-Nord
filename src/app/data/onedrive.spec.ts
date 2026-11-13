@@ -1,4 +1,4 @@
-import { CloudDatei, LadeWege, adresse, dateiLaden, pfadKodieren } from './onedrive';
+import { CloudDatei, LadeWege, adresse, dateiLaden, pfadKodieren, AnmeldeFehler, anmeldeFehler, mitFensterWache, weiterleitungHilft } from './onedrive';
 import { istAkkordblatt, istPdf } from './noten-import';
 
 describe('OneDrive', () => {
@@ -19,6 +19,56 @@ describe('OneDrive', () => {
     expect(istPdf('Iris - Bass.PDF')).toBe(true);
     expect(istAkkordblatt('angels.chopro')).toBe(true);
     expect(istAkkordblatt('liesmich.md')).toBe(false);
+  });
+
+  describe('Anmeldung', () => {
+    const msalFehler = (errorCode: string) => Object.assign(new Error(errorCode), { errorCode });
+
+    it('übersetzt Fehler von MSAL in verständliche Meldungen', () => {
+      expect(anmeldeFehler(msalFehler('empty_window_error')).art).toBe('blockiert');
+      expect(anmeldeFehler(msalFehler('popup_window_error')).message).toMatch(/blockiert.*Ohne Pop-up anmelden/);
+      expect(anmeldeFehler(msalFehler('user_cancelled')).art).toBe('geschlossen');
+      expect(anmeldeFehler(msalFehler('timed_out')).art).toBe('zeit');
+      expect(anmeldeFehler(msalFehler('no_network_connectivity')).art).toBe('netz');
+      expect(anmeldeFehler(new TypeError('Failed to fetch')).art).toBe('netz');
+      expect(anmeldeFehler(msalFehler('invalid_client')).message).toBe('Anmeldung nicht möglich: invalid_client');
+    });
+
+    it('bietet die Weiterleitung nur bei Problemen mit dem Fenster an', () => {
+      expect(weiterleitungHilft(anmeldeFehler(msalFehler('empty_window_error')))).toBe(true);
+      expect(weiterleitungHilft(anmeldeFehler(msalFehler('timed_out')))).toBe(true);
+      expect(weiterleitungHilft(anmeldeFehler(msalFehler('no_network_connectivity')))).toBe(false);
+      expect(weiterleitungHilft(new Error('x'))).toBe(false);
+    });
+
+    describe('Fenster-Wache', () => {
+      const sofort = () => Promise.resolve();
+      const nie = new Promise<string>(() => undefined);
+
+      it('Fenster zu ohne Antwort: nach der Gnadenfrist „geschlossen“ statt minutenlang zu warten', async () => {
+        const fenster = { closed: false };
+        let runden = 0;
+        const warten = () => (++runden === 3 && (fenster.closed = true), Promise.resolve());
+        await expect(mitFensterWache(nie, () => fenster, () => false, { warten, takt: 500, gnade: 2000 })).rejects.toMatchObject({ name: 'AnmeldeFehler', art: 'geschlossen' });
+      });
+
+      it('Antwortseite hat sich gemeldet: Fenster zu ist kein Abbruch, die Anmeldung läuft weiter', async () => {
+        let ok!: (x: string) => void;
+        const arbeit = new Promise<string>((r) => (ok = r));
+        let runden = 0;
+        const warten = () => {
+          if (++runden === 20) ok('angemeldet');
+          return new Promise((r) => setTimeout(r, 0));
+        };
+        expect(await mitFensterWache(arbeit, () => ({ closed: true }), () => true, { warten })).toBe('angemeldet');
+      });
+
+      it('Ergebnis und Fehler der Anmeldung kommen unverändert durch', async () => {
+        expect(await mitFensterWache(Promise.resolve('ja'), () => null, () => false, { warten: sofort })).toBe('ja');
+        const f = new AnmeldeFehler('blockiert', 'blockiert');
+        await expect(mitFensterWache(Promise.reject(f), () => null, () => false, { warten: sofort })).rejects.toBe(f);
+      });
+    });
   });
 
   describe('Datei laden', () => {

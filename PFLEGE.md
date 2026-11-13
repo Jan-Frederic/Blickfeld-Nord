@@ -1014,10 +1014,26 @@ freigeben; jemand geht: Freigabe entfernen). Im Code stehen keine E-Mail-Adresse
 ## OneDrive einrichten (für die Synchronisation)
 
 Die Synchronisation (siehe oben) ist für ein **privates Microsoft-Konto** gedacht (Outlook.com, Hotmail, Live – privates
-OneDrive). Ist der Browser schon bei Microsoft angemeldet (z. B. onedrive.live.com oder Outlook im Browser offen, Edge
-mit Microsoft-Konto), verbindet es sich ohne Passwort (Single Sign-On); sonst einmal im Popup anmelden. Danach bleibt
-das Gerät verbunden. Blockiert der Browser Drittanbieter-Cookies (Safari, Firefox), klappt das stille Anmelden nicht –
-dann eben das Popup.
+OneDrive). „Mit Microsoft anmelden“ öffnet sofort das Anmelde-Fenster (mit dem zuletzt genutzten Konto vorgegeben);
+danach bleibt das Gerät verbunden. Im Hintergrund (automatischer Abgleich) wird nur still angemeldet (Single Sign-On,
+nie ein Fenster) – das klappt nicht, wo der Browser Drittanbieter-Cookies blockiert (Safari, Firefox).
+
+**Robust auf dem iPhone und bei schlechtem Netz** (`data/onedrive.ts`):
+
+- Das Fenster muss im Moment des Antippens aufgehen, sonst blockt Safari es. Darum lädt die Seite mit dem Knopf MSAL
+  vorab (`oneDriveVorbereiten`), vor dem Fenster geht nichts übers Netz, und MSAL öffnet es sofort
+  (`navigatePopups: true`).
+- Blockiert der Browser das Fenster, kommt gleich die Meldung „Das Anmelde-Fenster wurde blockiert …“; wird es
+  geschlossen, ohne dass Microsoft geantwortet hat, nach wenigen Sekunden „Anmeldung abgebrochen“ (`mitFensterWache`;
+  die Antwortseite `/auth/` meldet sich über `bn-auth-antwort`). Für Passwort und Code per SMS bleiben 10 Minuten.
+- Danach wird **„Ohne Pop-up anmelden“** angeboten: Die ganze Seite geht zu Microsoft und kommt zurück
+  (`oneDriveWeiterleiten`, Rückkehr über `/auth/` und `handleRedirectPromise`) – keine weitere Einstellung in der
+  App-Registrierung nötig.
+- Eine hängengebliebene frühere Anmeldung blockiert keinen neuen Versuch (`overrideInteractionInProgress`); scheitert
+  das Laden der Anmelde-Bibliothek, wird es beim nächsten Antippen neu versucht.
+- Läuft der Zugang ab und das Erneuern scheitert am Netz, wird einmal kurz gewartet und still wiederholt – ein
+  Anmelde-Fenster gibt es nur, wenn Microsoft wirklich eine neue Anmeldung verlangt.
+- Fehler kommen als verständliche Meldung (`anmeldeFehler`): blockiert, abgebrochen, keine Antwort, keine Verbindung.
 
 Einmalig nötig ist eine **App-Registrierung** bei Microsoft (kostenlos):
 
