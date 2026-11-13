@@ -15,6 +15,7 @@ import { tageSeitBackup } from './backstage-sync';
 import { alleNachbereitungen, offeneMerkpunkte } from '../data/nachbereitung';
 import repertoire from '../data/repertoire.json';
 import technik from '../data/technik.json';
+import { DokuLink } from './doku-link';
 
 // Backstage → Aufgaben: Checkliste für die Website. Oben, was die Seite selbst aus den Daten erkennt (offene
 // Termine, fehlende Bios, offene Technik-Angaben, ungeprüfte Übersetzungen) – das hakt sich von allein ab.
@@ -34,11 +35,12 @@ interface AutoAufgabe {
 
 @Component({
   selector: 'app-backstage-aufgaben',
-  imports: [RouterLink, MatIconModule, Bereitschaft],
+  imports: [DokuLink, RouterLink, MatIconModule, Bereitschaft],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Aufgaben</h2>
+      <app-doku-link thema="aufgaben" />
       <p class="lead">Was an der Website noch zu tun ist – {{ offen() }} offen.</p>
 
       <!-- To-do-Liste („Bereit?“) je kommendem Auftritt, der nächste zuerst – zugeklappt stehen die Haken als Reihe -->

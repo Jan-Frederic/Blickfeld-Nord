@@ -98,8 +98,7 @@ const block = (label: string, einzeln: Zahl[]): Block => ({ label, summe: einzel
         }
       }
       <p class="foot">
-        Plakat, Stories, Reel, kopierter Beitragstext und „Teilen“ tragen die Kampagne im Link · 12 Monate, aktualisiert alle
-        paar Stunden · gezählt wird der erste Aufruf mit dem Link, Besucher mit Werbeblocker fehlen ·
+        Letzte 12 Monate ·
         <a [href]="gc + '/campaigns'" target="_blank" rel="noopener">alle Kampagnen in GoatCounter</a>
       </p>
     </section>

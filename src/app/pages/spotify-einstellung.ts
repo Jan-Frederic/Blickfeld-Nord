@@ -33,7 +33,7 @@ Steht bei „Konto freigeschaltet“ ein ✗: kurz Bescheid geben – das Spotif
         @case ('aus') { <p class="hinweis">Im Übe- und Probe-Modus erscheint nichts von Spotify.</p> }
         @case ('vorschau') { <p class="hinweis">„♫ Auf Spotify anhören“ in der Titelanzeige lädt den Spotify-Player in die Seite. Am Computer spielt er ganze Songs (bei Spotify angemeldet), auf dem Handy nur die 30-Sekunden-Vorschau.</p> }
         @case ('fern') { <p class="hinweis">▶ spielt den angezeigten Song ganz – in der Spotify-App auf diesem Handy oder auf einem anderen Spotify-Gerät (Laptop, Lautsprecher). Braucht Spotify Premium; die Spotify-App muss offen sein.</p> }
-        @case ('browser') { <p class="hinweis">▶ spielt den angezeigten Song ganz hier im Browser – ohne Spotify-App, mit allen Bedienelementen (Fortschritt zum Springen, ±10 s, Lautstärke). Braucht Spotify Premium. Offiziell unterstützt Spotify das nur in Browsern am Computer (Chrome, Edge, Firefox, Safari); auf Android-Handys mit Chrome klappt es nach unseren Erfahrungen auch. Klappt es nicht, „Fernsteuerung“ wählen. Beim ersten Mal Spotify (neu) verbinden: Spotify verlangt dafür zusätzlich die Freigabe von Name und E-Mail.</p> }
+        @case ('browser') { <p class="hinweis">▶ spielt den Song hier im Browser – ohne Spotify-App, mit Premium. Am Computer und auf Android; klappt es nicht, „Fernsteuerung“ wählen.</p> }
       }
       @if (gesteuert()) {
         @if (verbunden() && !rechteFehlen()) {

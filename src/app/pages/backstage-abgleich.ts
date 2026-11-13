@@ -5,16 +5,18 @@ import { BackstageDaten } from './backstage-daten';
 import { ordnerSpeicherLoeschen } from '../data/ordner';
 import { SyncStatus } from './sync-status';
 import { offlineReady } from '../pwa';
+import { DokuLink } from './doku-link';
 
 // Backstage → Abgleich: Synchronisation mit OneDrive (sync-status.ts) und alle Daten des Geräts verwalten und
 // aufräumen (backstage-daten.ts mit backstage-aufraeumen.ts). Backup und Wiederherstellen: Einstellungen → Backup.
 @Component({
   selector: 'app-backstage-abgleich',
-  imports: [MatIconModule, RouterLink, BackstageDaten, SyncStatus],
+  imports: [DokuLink, MatIconModule, RouterLink, BackstageDaten, SyncStatus],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Abgleich</h2>
+      <app-doku-link thema="abgleich" />
       <p class="lead">Abgleich mit OneDrive und alles, was auf diesem Gerät gespeichert ist. Das Backup steht unter
         <a routerLink="/backstage/einstellungen">Einstellungen</a>.</p>
       @if (offline()) {

@@ -963,14 +963,12 @@ app-besucher-verlauf .berechnen { padding: 6px 14px; border: 1px solid var(--bn-
 app-besucher-verlauf .berechnen:hover:not(:disabled) { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 
 // Backstage-Übersicht: Link zur Anleitung ganz unten
-app-backstage .anleitung-link { margin: 40px 0 0; padding-top: 16px; border-top: 1px solid var(--bn-line); }
-app-backstage .anleitung-link a { display: inline-flex; align-items: center; gap: 8px; color: var(--bn-fog); text-decoration: none; font-size: .92rem; }
-app-backstage .anleitung-link a:hover { color: var(--bn-sunset); }
-app-backstage .anleitung-link mat-icon { font-size: 20px; width: 20px; height: 20px; }
 
 // Backstage → Anleitung (pages/backstage-anleitung.ts): drei Modi im Vergleich, Übe-Status, Begriffe
 app-backstage-anleitung {
   display: block;
+  .alle a { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); text-decoration: none; font-size: .9rem; }
+  .alle mat-icon { font-size: 18px; width: 18px; height: 18px; }
   h3 { margin: 36px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
   .hinweis { margin: 0 0 12px; max-width: 760px; color: var(--bn-fog); font-size: .92rem; line-height: 1.55; }
   .kurz { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 10px; margin-top: 20px; }
@@ -1246,5 +1244,28 @@ app-sync-status .veraltet, app-backstage-daten .veraltet { color: #e8a46a; }
 // iPhone zoomt beim Antippen von Eingabefeldern mit Schrift unter 16 px heran – auf Touch-Geräten mindestens 16 px
 @media (pointer: coarse) {
   html.backstage :is(input:not([type=checkbox], [type=radio], [type=range], [type=color]), select, textarea) { font-size: max(16px, 1em) !important; }
+}
+
+// Anleitungen: Link oben auf jeder Backstage-Unterseite (pages/doku-link.ts), Anleitung je Thema (backstage-doku.ts),
+// Übersicht aller Anleitungen (backstage-anleitungen.ts)
+app-doku-link { display: inline-block; margin: -4px 20px 14px 0; }
+app-doku-link .doku-link { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); text-decoration: none; font-size: .9rem; }
+app-doku-link .doku-link:hover { text-decoration: underline; }
+app-doku-link mat-icon { font-size: 18px; width: 18px; height: 18px; }
+app-backstage-doku, app-backstage-anleitungen {
+  display: block;
+  h3 { margin: 32px 0 10px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+  p:not(.lead):not(.kicker), li { max-width: 760px; color: var(--bn-fog); line-height: 1.6; font-size: .95rem; }
+  ul { margin: 0 0 8px; padding-left: 20px; }
+  li { margin: 4px 0; }
+  a { color: var(--bn-sunset); }
+  .wege { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 4px 0 8px; }
+  .wege a, .themen a { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  .wege a:hover, .themen a:hover, .siehe a:hover { text-decoration: underline; }
+  .wege mat-icon, .themen mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  .themen { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 6px 16px; }
+  .themen li { margin: 0; }
+  .themen a { padding: 8px 0; color: var(--bn-ink); }
+  .themen mat-icon { color: var(--bn-sunset); }
 }
 

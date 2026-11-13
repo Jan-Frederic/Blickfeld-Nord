@@ -43,12 +43,8 @@ function ladeEntwurf(): Record<string, Werte> {
   imports: [MatIconModule, SongDialog, SetlistBuehne, WunschPassung],
   template: `
       <p class="lead">
-        Tonart, Tempo, Notiz und Noten je Song – erscheinen in Setlist, Bühnen-Modus und Laufzettel. Zeile antippen zum
-        Bearbeiten; spielt ihr einen Song anders als im Original, dort „Wir spielen“ und „Capo“ eintragen, das Tempo im
-        Proberaum mit <mat-icon class="inline">touch_app</mat-icon> mindestens viermal im Takt tippen.
-        <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song – zur Kontrolle der Noten.
-        Auf diesem Gerät gelten Änderungen sofort;
-        auf die Handys der anderen kommen sie über „Abgleich“ oder für alle dauerhaft über „Datei für GitHub erzeugen“ (unten).
+        Tonart, Tempo, Notiz und Noten je Song. Zeile antippen zum Bearbeiten,
+        <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song.
       </p>
 
       <div class="listen-chips" role="group" aria-label="Nach Spotify-Liste filtern">

@@ -26,6 +26,7 @@ import { spotifyLinks } from '../data/playlisten';
 import { spotifyUrl } from '../data/song-steckbrief';
 import { nachrichtSenden } from '../data/kontakte';
 import { Entry, isPause, loadSetlist } from '../data/setlist-data';
+import { DokuLink } from './doku-link';
 
 // Backstage → Probe planen (/backstage/probe/<datum>): welche Songs geübt werden, Notizen und offene Punkte.
 // Gespeichert im Browser (bn-probe-<datum>) und wie Setlists über „An die Band schicken“ teilbar.
@@ -36,13 +37,14 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
 
 @Component({
   selector: 'app-backstage-probe',
-  imports: [Zurueck, DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet, SetlistBuehne, ProbeZusagen],
+  imports: [DokuLink, Zurueck, DatePipe, RouterLink, MatIconModule, BackstageSync, ProbeVorschlag, SongMitschnitte, Stimmgeraet, SetlistBuehne, ProbeZusagen],
   template: `
     <section class="section">
       <app-zurueck ziel="/backstage/termine" text="Alle Termine" />
       @if (probe(); as p) {
         <p class="kicker">Probe</p>
         <h2>{{ p.date | date: 'EEEE, d. MMMM yyyy' : '' : 'de' }}</h2>
+        <app-doku-link thema="probe" />
         <p class="lead">
           {{ p.time ? p.time + (p.endTime ? '–' + p.endTime : '') + ' Uhr' : 'Uhrzeit offen' }}@if (p.place) { · {{ p.place }}}
           @if (p.note) { <br />{{ p.note }} }

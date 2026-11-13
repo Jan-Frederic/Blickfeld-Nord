@@ -28,6 +28,7 @@ import { Nachbereitung } from './nachbereitung';
 import { Bereitschaft } from './bereitschaft';
 import { Wetter } from './wetter';
 import { FIELDS } from './vorort';
+import { DokuLink } from './doku-link';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -35,7 +36,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // Plakat + Instagram-Text (nur öffentlich, geklärt und kommend) und Kacheln zu den Unterseiten Vor Ort, Setlist und Packliste.
 @Component({
   selector: 'app-backstage-show',
-  imports: [Zurueck, DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte, InstagramFormate],
+  imports: [DokuLink, Zurueck, DatePipe, RouterLink, MatIconModule, MatButtonModule, Wetter, RueckblickFormular, Nachbereitung, Bereitschaft, KonzertKampagne, Werbeplan, KontaktKarte, InstagramFormate],
   template: `
     <section class="section">
       <app-zurueck ziel="/backstage/termine" text="Alle Termine" />
@@ -43,6 +44,7 @@ const DAY = 24 * 60 * 60 * 1000;
       @if (show(); as s) {
         <p class="kicker">Backstage · Auftritt</p>
         <h2>{{ s.venue }}</h2>
+        <app-doku-link thema="auftritt" />
 
         <div class="badges">
           <span class="tag" [class.private]="s.private">{{ s.private ? 'Privat' : 'Öffentlich' }}</span>

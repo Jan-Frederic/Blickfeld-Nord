@@ -15,6 +15,7 @@ import { erinnerungAktualisieren } from '../data/erinnerung';
 import { sitzungLesen, sitzungMerken, sitzungVergessen } from '../data/modus-sitzung';
 import { SetlistBuehne } from './setlist-buehne';
 import { Verlauf } from '../zurueck';
+import { DokuLink } from './doku-link';
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -27,11 +28,12 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 // ohne Status kommen auf „Üben“, Kasten 1). Darunter alle Songs im Kasten mit ihrem Status (änderbar).
 @Component({
   selector: 'app-backstage-ueben',
-  imports: [RouterLink, MatIconModule, SetlistBuehne],
+  imports: [DokuLink, RouterLink, MatIconModule, SetlistBuehne],
   template: `
     <section class="section ueben">
       <p class="kicker">Backstage</p>
       <h2>Üben</h2>
+      <app-doku-link thema="ueben" />
       @if (!ich()) {
         <p class="lead">Üben ist persönlich: Wähle unter <a routerLink="/backstage/einstellungen">Einstellungen</a> „Ich bin …“ –
           dann stehen hier deine Songs im Karteikasten.</p>

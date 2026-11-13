@@ -38,11 +38,7 @@ import { BILD_SCHRITTE, erledigteSchritte, schrittText, setzeSchritt, storyKopf,
         }
       </ol>
       @if (meldung(); as m) { <p class="meldung" role="status">{{ m }}</p> }
-      <p class="foot">📱 teilt die passende Story (großer Countdown, Danke-Story) und legt den Link für den Link-Sticker in die
-        Zwischenablage; 🖼 teilt den Beitrag (Plakat) mit Bildunterschrift. Die Bilder werden vorab vorbereitet – ist eins noch
-        nicht fertig, ein zweites Mal tippen („Jetzt teilen“). Der Schritt wird danach abgehakt. Reel und Highlight-Cover: Kachel
-        „Instagram“ oben.
-        Haken setzen, wenn erledigt – dann verschwindet der Schritt aus den Aufgaben.</p>
+      <p class="foot">📱 teilt die Story, 🖼 den Beitrag – danach ist der Schritt abgehakt.</p>
     </section>
   `,
   styles: `

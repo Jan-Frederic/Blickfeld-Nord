@@ -9,6 +9,7 @@ import { Packliste } from './packliste';
 import { Setlist } from './setlist';
 import { VorOrt } from './vorort';
 import { BackstageSync } from './backstage-sync';
+import { DokuLink } from './doku-link';
 
 // Backstage-Unterseiten je Auftritt: /backstage/<id>/vorort, /setlist und /packliste
 export const TOOLS = [
@@ -19,7 +20,7 @@ export const TOOLS = [
 
 @Component({
   selector: 'app-backstage-tool',
-  imports: [Zurueck, DatePipe, RouterLink, MatIconModule, Packliste, Setlist, VorOrt, BackstageSync],
+  imports: [DokuLink, Zurueck, DatePipe, RouterLink, MatIconModule, Packliste, Setlist, VorOrt, BackstageSync],
   template: `
     <section class="section">
       @if (show(); as s) {
@@ -32,6 +33,7 @@ export const TOOLS = [
             </a>
           }
         </nav>
+        <app-doku-link [thema]="teil() === 'setlist' ? 'setlist' : 'auftritt'" />
 
         @switch (teil()) {
           @case ('vorort') { <app-vorort [show]="id()" /> }

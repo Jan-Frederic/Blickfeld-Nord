@@ -26,10 +26,7 @@ import { DatenGeraet } from './daten-geraet';
   template: `
     <div class="box">
       <h3>Daten auf diesem Gerät</h3>
-      <p>{{ liste().length }} Einträge ({{ mb(gesamt()) }}) und Noten für {{ notenSongs().length }} Songs. Antippen zum
-        Öffnen, <mat-icon class="inline">data_object</mat-icon> zum Ansehen und Ändern; ausgewählte Einträge lassen sich als
-        Datei teilen.@if (loeschbar()) { <mat-icon class="inline">delete_sweep</mat-icon> löscht einen ganzen Bereich – für alle,
-        denn Löschen wird mitsynchronisiert. Vorher am besten ein Backup erstellen (Einstellungen → Backup).}</p>
+      <p>{{ liste().length }} Einträge ({{ mb(gesamt()) }}) und Noten für {{ notenSongs().length }} Songs.@if (loeschbar()) { Löschen gilt für alle – vorher am besten ein Backup erstellen.}</p>
       @if (sync.bereit()) {
         <p class="status"><span class="s synchron">☁ {{ zaehler().synchron }} synchron</span>
           <span class="s wartet">⟳ {{ zaehler().wartet }} {{ zaehler().wartet === 1 ? 'wartet' : 'warten' }}</span>
@@ -113,9 +110,7 @@ import { DatenGeraet } from './daten-geraet';
         <div class="gruppe geraete-gruppe">
           <details [open]="offen().has('geraete')" (toggle)="merken('geraete', $any($event.target).open)">
           <summary>Geräte <span class="zahl">{{ sync.geraete().length + sync.geraeteUnlesbar().length }}</span></summary>
-          <p>Jedes Gerät legt beim Abgleich eine kleine Datei in den Sync-Ordner (Name, Person, Zeitpunkt) – daraus entsteht diese Liste.
-            Aufgeräumt wird von selbst: Einträge, die sich über mehrere Abgleiche nicht lesen lassen, und Geräte, die ein halbes Jahr
-            nicht abgeglichen haben, entfernt das Gerät mit „Daten löschen“ – ein noch genutztes Gerät legt seinen Eintrag neu an.</p>
+          <p>Wer wann zuletzt abgeglichen hat. Alte und nicht lesbare Einträge werden von selbst aufgeräumt.</p>
           <ul>
             @for (g of sync.geraete(); track g.id) {
               <li [class.verwaist]="langeNicht(g.zeit)">

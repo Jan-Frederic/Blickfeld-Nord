@@ -2341,18 +2341,54 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => (await p.locator('app-songs-reife .person.ich .kasten span').count()) === 5, 'Übe-Statistik (Karteikasten) fehlt unter Bühnenreife');
   return p;
 });
-test('Backstage: Anleitung – Link ganz unten in der Übersicht, drei Modi im Vergleich', async () => {
+test('Backstage: Anleitung – Links oben in der Übersicht, drei Modi im Vergleich', async () => {
   const p = await page();
   await p.go('/backstage/');
-  const link = p.locator('app-backstage .anleitung-link a');
-  await link.click();
-  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/anleitung', () => `Anleitung öffnet nicht: ${p.url()}`);
+  await p.locator('app-backstage app-doku-link a', { hasText: 'Übe-, Probe- und Bühnen-Modus' }).click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/anleitung/modi', () => `Anleitung öffnet nicht: ${p.url()}`);
   const seite = p.locator('app-backstage-anleitung');
   expect((await seite.locator('.vergleich thead th').allTextContents()).join('|').includes('Bühnen-Modus|Probe-Modus|Übe-Modus'), 'Vergleichstabelle fehlt');
   expect((await seite.locator('.status li').count()) === 5, 'die fünf Übe-Status fehlen');
   expect((await seite.locator('.begriffe dt').allInnerTexts()).includes('Akkordblatt'), 'Begriffe fehlen');
-  await seite.locator('app-zurueck a').click();
-  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', 'Zurück führt nicht in die Übersicht');
+  await seite.locator('.alle a').click();
+  await until(async () => (await p.locator('app-backstage-anleitungen .themen a').count()) >= 20, 'Alle Anleitungen fehlen');
+  return p;
+});
+
+test('Backstage: jede Unterseite hat oben ihre Anleitung, und die Anleitung öffnet', async () => {
+  const p = await page();
+  const seiten = [
+    ['/backstage/termine/', 'Termine'], ['/backstage/termine/saison/', 'Saison'], ['/backstage/termine/kontakte/', 'Kontakte'],
+    ['/backstage/songs/', 'Songs'], ['/backstage/songs/setlists/', 'Setlists'], ['/backstage/songs/sammlungen/', 'Sammlungen'],
+    ['/backstage/songs/noten/', 'Noten'], ['/backstage/songs/reife/', 'Bühnenreife'], ['/backstage/ueben/', 'Üben'],
+    ['/backstage/aufgaben/', 'Aufgaben'], ['/backstage/buehnenplan/', 'Technik'], ['/backstage/material/', 'Material'],
+    ['/backstage/uebersetzungen/', 'Sprachen'], ['/backstage/zahlen/', 'Zahlen'], ['/backstage/abgleich/', 'Abgleich'],
+    ['/backstage/einstellungen/', 'Einstellungen'], ['/backstage/einrichtung/', 'Einrichtung'],
+  ];
+  for (const [pfad, titel] of seiten) {
+    await p.go(pfad);
+    const link = p.locator('app-doku-link a').first();
+    await until(async () => (await link.innerText().catch(() => '')).includes(`Anleitung: ${titel}`), async () => `${pfad}: kein Link „Anleitung: ${titel}“ oben (${await link.innerText().catch(() => '–')})`);
+    // oben: vor allem anderen Inhalt der Seite, direkt unter der Überschrift
+    const oben = await p.evaluate(() => {
+      const l = document.querySelector('app-doku-link');
+      const h = l?.closest('section')?.querySelector('h2');
+      return !!l && !!h && (h.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && l.getBoundingClientRect().top - h.getBoundingClientRect().bottom < 120;
+    });
+    expect(oben, `${pfad}: Anleitung steht nicht oben unter der Überschrift`);
+  }
+  // eine Anleitung öffnen: Abschnitte, „Zur Seite“, „Siehe auch“
+  await p.go('/backstage/termine/');
+  await p.locator('app-doku-link a').first().click();
+  const doku = p.locator('app-backstage-doku');
+  await until(async () => (await doku.locator('h3').count()) >= 3, async () => `Anleitung Termine ohne Abschnitte: ${p.url()}`);
+  expect(/Siehe auch/i.test(await doku.innerText()), 'Siehe auch fehlt');
+  expect((await p.title()).startsWith('Anleitung: Termine'), `Seitentitel: ${await p.title()}`);
+  await doku.locator('.wege a', { hasText: 'Zur Seite' }).click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/termine', 'Zur Seite führt nicht zurück');
+  // unbekanntes Thema
+  await p.go('/backstage/anleitung/gibtsnicht/');
+  await until(async () => /Anleitung nicht gefunden/i.test(await p.locator('app-backstage-doku').innerText().catch(() => '')), 'unbekanntes Thema ohne Hinweis');
   return p;
 });
 

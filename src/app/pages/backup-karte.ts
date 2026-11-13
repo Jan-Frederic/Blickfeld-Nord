@@ -4,7 +4,7 @@ import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { GESICHERT_KEY, backupDatei, backupEinlesen, backupGemerkt } from './backstage-sync';
 import { mb } from '../data/aufraeumen';
-import { BACKUP_AUFRAEUMEN_BEHALTEN, BACKUP_BEHALTEN, BACKUP_ORDNER, DATEN_BACKUP, NOTEN_BACKUP, backupZeit, backupsAufraeumen, backupsSortiert, backupsZuLoeschen } from '../data/backup-regeln';
+import { BACKUP_AUFRAEUMEN_BEHALTEN, BACKUP_ORDNER, DATEN_BACKUP, NOTEN_BACKUP, backupZeit, backupsAufraeumen, backupsSortiert, backupsZuLoeschen } from '../data/backup-regeln';
 
 // Backstage → Einstellungen → Backup: alles dieses Geräts in einer Datei sichern und wiederherstellen – Backstage-Daten
 // (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan, Nachbereitungen, Songs-Entwurf …), Einstellungen und
@@ -19,9 +19,7 @@ const datum = (t: number) => (t ? new Date(t).toLocaleString('de-DE', { dateStyl
   template: `
     <div class="box">
       <h3><mat-icon>backup</mat-icon> Backup</h3>
-      <p>Immer alles in einer Datei: Backstage-Daten (Setlists, Packlisten, Vor Ort, Proben, Sterne, Werbeplan,
-        Nachbereitungen …), Einstellungen und Notenblätter samt Markierungen. {{ sync.bereit() ? 'Landet im OneDrive-Ordner der Synchronisation unter „Backup“ – dort bleibt jedes Backup ein halbes Jahr, die letzten ' + behalten + ' immer.' : 'Ohne Synchronisation als Datei zum Teilen oder Speichern.' }}
-        Proben-Mitschnitte gehören nicht dazu (zu groß).</p>
+      <p>Alles in einer Datei – Daten, Einstellungen und Notenblätter. {{ sync.bereit() ? 'Landet im OneDrive-Ordner unter „Backup“.' : 'Als Datei zum Teilen oder Speichern.' }}</p>
       <p class="zuletzt" [class.alt]="!zuletzt()">{{ zuletzt() ? 'Letztes Backup von diesem Gerät: ' + zuletzt() : 'Noch kein Backup auf diesem Gerät.' }}</p>
       @if (sync.bereit() && inOneDrive() !== undefined) {
         <p class="zuletzt" [class.alt]="!inOneDrive()">{{ inOneDrive() ? 'Neuestes Backup in OneDrive: ' + inOneDrive() : 'In OneDrive liegt noch kein Backup.' }}</p>
@@ -98,7 +96,6 @@ export class BackupKarte {
   protected readonly inOneDrive = signal<string | undefined>(undefined);
   /** alle Backups im Ordner „Backup“ (auch frühere „Backstage“-Sicherungen und Notenpakete), neueste zuerst */
   protected readonly vorhanden = signal<{ pfad: string; name: string; art: string; datum: string; groesse: string }[]>([]);
-  protected readonly behalten = BACKUP_BEHALTEN;
   protected readonly aufraeumenBehalten = BACKUP_AUFRAEUMEN_BEHALTEN;
 
   /**

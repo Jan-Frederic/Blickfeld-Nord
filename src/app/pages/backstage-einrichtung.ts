@@ -12,6 +12,7 @@ import { SyncService } from '../data/sync.service';
 import { SpotifyArt, spotifyAnmelden, spotifyArt, spotifyArtSetzen, spotifyVerbunden } from '../data/spotify-remote';
 import { dauerhaftImBrowser } from '../data/speicher';
 import { install, installable, iosHint } from '../pwa';
+import { DokuLink } from './doku-link';
 
 // Backstage → Einrichtung: einmal je Gerät nach der ersten Anmeldung (backstage-zugang.ts), später unter
 // Einstellungen erneut aufrufbar. Schritte: Ich bin · Dieses Gerät · Synchronisation (OneDrive-Ordner selbst wählen,
@@ -57,11 +58,12 @@ const SPOTIFY_ARTEN: { art: SpotifyArt; titel: string; text: string }[] = [
 
 @Component({
   selector: 'app-backstage-einrichtung',
-  imports: [RouterLink, MatIconModule],
+  imports: [DokuLink, RouterLink, MatIconModule],
   template: `
     <section class="section einrichtung">
       <p class="kicker">Backstage · Einrichtung</p>
       <h2>Willkommen im Backstage</h2>
+      <app-doku-link thema="einrichtung" />
       <ol class="fortschritt" aria-label="Schritte">
         @for (s of schritte; track s.id; let i = $index) {
           <li [class.an]="s.id === schritt()" [class.fertig]="i < nummer()" [attr.aria-current]="s.id === schritt() ? 'step' : null">{{ s.titel }}</li>

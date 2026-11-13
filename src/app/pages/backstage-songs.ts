@@ -1,4 +1,4 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, input, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
@@ -7,6 +7,8 @@ import { SongsListe } from './songs-liste';
 import { SongsSetlists } from './songs-setlists';
 import { SongsReife } from './songs-reife';
 import { SongsSammlungen } from './songs-sammlungen';
+import { DokuLink } from './doku-link';
+import type { DokuId } from '../data/doku-themen';
 
 // Backstage → Songs mit Unterseiten: Liste (Tonart, Tempo, Notiz und Noten je Song), Setlists (aller Auftritte),
 // Sammlungen (anlegen und bearbeiten, je Sammlung eine Seite)
@@ -22,11 +24,12 @@ export const SONG_BEREICHE = [
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists, SongsReife, SongsSammlungen],
+  imports: [DokuLink, RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists, SongsReife, SongsSammlungen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Songs</h2>
+      <app-doku-link [thema]="dokuThema()" />
       <nav class="tabs" aria-label="Bereiche der Songs">
         @for (b of bereiche; track b.teil) {
           <a [routerLink]="b.path ? ['/backstage/songs', b.path] : ['/backstage/songs']" [class.active]="b.teil === teil()" [attr.aria-current]="b.teil === teil() ? 'page' : null">
@@ -59,6 +62,8 @@ export const SONG_BEREICHE = [
 export class BackstageSongs {
   /** Unterseite aus den Routendaten (/backstage/songs, …/setlists, …/noten) */
   readonly teil = input<string>('liste');
+  /** Anleitung je Reiter (Liste → Songs) */
+  protected readonly dokuThema = computed((): DokuId => (this.teil() === 'liste' ? 'songs' : (this.teil() as DokuId)));
   /** Sammlungen: gewählte Sammlung (?name=…) – eigene Unterseite je Sammlung */
   readonly name = input<string>('');
   protected readonly bereiche = SONG_BEREICHE;

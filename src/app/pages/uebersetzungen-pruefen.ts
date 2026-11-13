@@ -6,6 +6,7 @@ import { UiTextePruefen } from './ui-texte-pruefen';
 import { BandService } from '../data/band.service';
 import { UEBERSETZUNGEN, Uebersetzung } from '../data/uebersetzungen';
 import { Entscheidung, Pruefung, Sprache, patchSource } from '../data/uebersetzungen-patch';
+import { DokuLink } from './doku-link';
 
 // Übersetzungen gegenlesen ohne Code: Original und Übersetzung nebeneinander, korrigieren, „passt“ anklicken.
 // Die Entscheidungen bleiben im Browser, bis sie übernommen werden: Entweder erzeugt die Seite die geänderte
@@ -27,11 +28,12 @@ function load(): Pruefung {
 
 @Component({
   selector: 'app-uebersetzungen-pruefen',
-  imports: [MatIconModule, BackstageUebersetzungen, UiTextePruefen, PressetextePruefen],
+  imports: [DokuLink, MatIconModule, BackstageUebersetzungen, UiTextePruefen, PressetextePruefen],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Sprachen</h2>
+      <app-doku-link thema="sprachen" />
       <p class="lead">
         Links steht der deutsche Text, rechts die Übersetzung. Bei Bedarf korrigieren und <strong>„Passt“</strong> anklicken.
         Alles bleibt in diesem Browser gespeichert, bis ihr es unten übernehmt.

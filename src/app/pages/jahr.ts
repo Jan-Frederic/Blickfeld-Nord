@@ -5,6 +5,7 @@ import { jahresrueckblick } from '../data/jahresrueckblick';
 import { PageMetaService } from '../page-meta';
 import { I18n, LDatePipe, LocPipe, tr } from '../i18n';
 import { Content } from '../content';
+import { DokuLink } from './doku-link';
 
 const TEXT = tr(
   {
@@ -69,7 +70,7 @@ const TEXT = tr(
 // Öffentlicher Jahresrückblick /jahr/<Jahr> (Daten: data/jahresrueckblick.ts) – erscheint ab dem 15.12. des Jahres
 @Component({
   selector: 'app-jahr',
-  imports: [RouterLink, LocPipe, LDatePipe],
+  imports: [DokuLink, RouterLink, LocPipe, LDatePipe],
   template: `
     @if (r(); as r) {
       <section class="section jahr">
@@ -79,6 +80,7 @@ const TEXT = tr(
         }
         <p class="kicker">{{ t().kicker }}</p>
         <h2>{{ t().title(r.jahr) }}</h2>
+        @if (vorschau()) { <app-doku-link thema="jahr" /> }
         <p class="lead">{{ t().lead(r.jahr) }}</p>
 
         <ul class="zahlen">

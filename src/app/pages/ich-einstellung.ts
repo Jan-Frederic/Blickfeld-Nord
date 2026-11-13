@@ -22,8 +22,7 @@ import { ErinnerungErgebnis, erinnerungSetzen, ladeErinnerung } from '../data/er
         </select>
       </label>
       @if (quelle() === 'konto' && ich()) { <p class="hinweis konto"><mat-icon aria-hidden="true">verified_user</mat-icon> Automatisch erkannt über dein Microsoft-Konto.</p> }
-      <p class="hinweis">Damit zählen Zusagen zur Probe, dein Übe-Status je Song (Song-Dialog, Probe-Modus, Übe-Modus) und deine Probe-Notizen für dich.
-        Nach der Anmeldung mit Microsoft wird das automatisch über deinen Namen gesetzt; eine Wahl hier von Hand hat Vorrang.</p>
+      <p class="hinweis">Für Zusagen, Übe-Status und Probe-Notizen. Wird über dein Microsoft-Konto erkannt; eine Wahl von Hand hat Vorrang.</p>
       <label class="ziel">Karteikarten am Tag (Empfehlung)
         <input type="number" min="1" max="100" inputmode="numeric" aria-label="Karteikarten am Tag" [value]="ziel()" (change)="zielSetzen($any($event.target).value)" />
       </label>
@@ -36,7 +35,7 @@ import { ErinnerungErgebnis, erinnerungSetzen, ladeErinnerung } from '../data/er
           </select>
         </label>
       </div>
-      <p class="hinweis">Höchstens einmal am Tag. Klappt in der installierten App auf Android (Chrome/Edge). Die Zahl der fälligen Karten am App-Symbol zeigen nur Computer (installierte App in Chrome/Edge) und iPhone/iPad (zum Home-Bildschirm hinzugefügt, Mitteilungen erlaubt); Android zeigt am Symbol höchstens einen Punkt, wenn eine Erinnerung da ist.
+      <p class="hinweis">Höchstens einmal am Tag, in der installierten App auf Android.
         @switch (meldung()) {
           @case ('an') { <span class="ok"> Erinnerung ist an ✓</span> }
           @case ('nur-badge') { <span class="warn"> Dieses Gerät kann nicht im Hintergrund erinnern – höchstens das App-Symbol zeigt die Zahl (Computer, iPhone/iPad).</span> }

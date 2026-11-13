@@ -16,8 +16,7 @@ import { SyncEinstellungen, cloudGewaehlt, cloudName, lokalerOrdnerHandle, lokal
   template: `
     <div class="box">
       <h3><mat-icon>sync</mat-icon> Synchronisation OneDrive ↔ lokal</h3>
-      <p>Ein OneDrive-Ordner wird mit einem lokalen Ordner abgeglichen – in beide Richtungen, wie OneSync: Neues und
-        Geändertes wird übertragen, bei Änderungen auf beiden Seiten bleibt die ältere Fassung als Konfliktkopie erhalten.</p>
+      <p>Gleicht einen OneDrive-Ordner mit diesem Gerät ab – in beide Richtungen.</p>
 
       <h4>1. Microsoft-Konto</h4>
       @if (!festeId) {

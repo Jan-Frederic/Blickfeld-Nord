@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Zurueck } from '../zurueck';
 
-// Backstage → Anleitung (Link ganz unten in der Übersicht): Übe-, Probe- und Bühnen-Modus im Vergleich, die gemeinsamen
+// Backstage → Anleitung „Übe-, Probe- und Bühnen-Modus“ (/backstage/anleitung/modi, Link oben in der Übersicht): Übe-, Probe- und Bühnen-Modus im Vergleich, die gemeinsamen
 // Begriffe (Titelanzeige, Notenansicht, PDF, Akkordblatt …) und die fünf Übe-Status mit dem Karteikasten. Reiner Text –
 // bei Änderungen an den Modi hier und in PFLEGE.md nachziehen. Styles global (styles.scss, app-backstage-anleitung).
 const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = [
@@ -59,6 +59,7 @@ const STATUS_ZEILEN: { zeichen: string; name: string; kasten: string; text: stri
       <app-zurueck ziel="/backstage" text="Backstage" />
       <p class="kicker">Backstage · Anleitung</p>
       <h2>Übe-, Probe- und Bühnen-Modus</h2>
+      <p class="alle"><a routerLink="/backstage/anleitung"><mat-icon aria-hidden="true">menu_book</mat-icon> Alle Anleitungen</a></p>
       <p class="lead">Alle drei Modi nutzen dieselbe Oberfläche – Titelanzeige und Notenansicht. Sie unterscheiden sich darin, woher die
         Songs kommen, was man pro Song festhält und was am Ende passiert.</p>
 

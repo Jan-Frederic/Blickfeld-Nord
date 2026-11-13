@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Item, TechnikAufbau } from '../sections/technik-aufbau';
 import { patchAufbau } from '../data/technik-patch';
 import data from '../data/technik.json';
+import { DokuLink } from './doku-link';
 
 // Backstage → Bühnenplan: Geräte und Musiker im Plan verschieben (Maus, Finger, Pfeiltasten) und die geänderte
 // technik.json für GitHub erzeugen – ohne Koordinaten von Hand. Gespeichert wird erst mit dem Commit auf GitHub.
@@ -11,11 +12,12 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
 
 @Component({
   selector: 'app-backstage-buehnenplan',
-  imports: [MatIconModule, TechnikAufbau],
+  imports: [DokuLink, MatIconModule, TechnikAufbau],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Technik</h2>
+      <app-doku-link thema="technik" />
       <p class="lead">
         Geräte und Musiker mit Maus oder Finger an ihren Platz ziehen. Feinjustierung: antippen, dann Pfeiltasten
         (5 cm, mit Umschalt 25 cm). Ein Kästchen ist 1 m.

@@ -9,6 +9,7 @@ import { TerminFormular } from './termin-formular';
 import { Terminabfrage } from './terminabfrage';
 import { AboButton } from '../sections/abo-button';
 import { BandService, Rehearsal, Show } from '../data/band.service';
+import { DokuLink } from './doku-link';
 
 type FilterKey = 'kommend' | 'proben' | 'vergangen';
 type SortCol = 'date' | 'venue' | 'type' | 'status' | 'comment';
@@ -38,11 +39,12 @@ function loadFilters(): Set<FilterKey> {
 // Jede Zeile führt zur Unterseite des Auftritts.
 @Component({
   selector: 'app-backstage-termine',
-  imports: [DatePipe, RouterLink, MatTableModule, MatIconModule, AboButton, TerminFormular, Terminabfrage, SaisonPlanung],
+  imports: [DokuLink, DatePipe, RouterLink, MatTableModule, MatIconModule, AboButton, TerminFormular, Terminabfrage, SaisonPlanung],
   template: `
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Termine</h2>
+      <app-doku-link thema="termine" />
       <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen, dazu die Probetermine. Für Details, Plakat, Setlist und Packliste einfach einen Auftritt antippen.</p>
 
       <app-saison-planung />

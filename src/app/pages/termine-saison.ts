@@ -10,6 +10,7 @@ import { wiederAnfragen } from '../data/saison';
 import { monatGesperrt } from '../data/schonzeit';
 import { bewertungText, kontaktVon } from '../data/kontakte';
 import type { Show } from '../data/band.service';
+import { DokuLink } from './doku-link';
 
 // Backstage → Termine → Saison (/backstage/termine/saison): die nächsten 12 Monate mit Auftritten, Proben und
 // Abwesenheiten, freie Monate markiert, dazu „Wieder anfragen“ – auf der Seite und als Ausdruck/PDF für die
@@ -19,12 +20,13 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 @Component({
   selector: 'app-termine-saison',
-  imports: [Zurueck, RouterLink, MatIconModule],
+  imports: [DokuLink, Zurueck, RouterLink, MatIconModule],
   template: `
     <section class="section termine-saison">
       <app-zurueck ziel="/backstage/termine" text="Termine" />
       <p class="kicker">Backstage · Termine</p>
       <h2>Saison</h2>
+      <app-doku-link thema="saison" />
       <p class="lead">Die nächsten 12 Monate auf einen Blick: Auftritte, Proben und wer wann nicht kann. Freie Monate sind
         markiert. Zum Mitnehmen in die Bandbesprechung ausdrucken oder als PDF speichern.</p>
       <div class="knoepfe">

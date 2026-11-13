@@ -9,17 +9,19 @@ import { SyncService } from '../data/sync.service';
 import { ladeIch } from '../data/band-ich';
 import { statusMigrieren } from '../data/uebe-status';
 import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../data/ueben';
+import { DokuLink } from './doku-link';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
 // Die Übersicht zeigt Suche, Fälliges und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
 // (Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich – siehe BACKSTAGE_BEREICHE), erreichbar über die Leiste oben.
 @Component({
   selector: 'app-backstage',
-  imports: [DatePipe, RouterLink, MatIconModule, HeuteFaellig, BackstageSuche],
+  imports: [DokuLink, DatePipe, RouterLink, MatIconModule, HeuteFaellig, BackstageSuche],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
+      <app-doku-link thema="uebersicht" /><app-doku-link thema="modi" />
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben im Menü.</p>
 
       <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, die nächsten Termine (je mit Bühnen- bzw. Probe-Modus);
@@ -54,8 +56,6 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
         <p class="empty">Keine kommenden Termine eingetragen.</p>
       }
 
-      <!-- ganz unten: Anleitung zu den drei Modi und den gemeinsamen Begriffen -->
-      <p class="anleitung-link"><a routerLink="/backstage/anleitung"><mat-icon>help_outline</mat-icon> Anleitung: Übe-, Probe- und Bühnen-Modus im Vergleich</a></p>
     </section>
   `,
   styles: `

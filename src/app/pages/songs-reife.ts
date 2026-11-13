@@ -18,9 +18,7 @@ const AMPEL: Record<Reife['ampel'], string> = { buehnenreif: 'bühnenreif', fast
   selector: 'app-songs-reife',
   imports: [MatIconModule],
   template: `
-    <p class="info">Je Musiker ein Übe-Status: <b>○ Nicht gelernt</b> (0 %), <b>✎ Üben</b> (Kasten 1, 15 %), <b>↻ Wackelt noch</b> (Kasten 2–3, 40 %),
-      <b>✓ Sitzt</b> (Kasten 4–5, 75 %), <b>✓✓ Eingenordet</b> (aus dem Karteikasten heraus, 100 %). Gesetzt im Song-Dialog, im Probe-Modus oder über den Übe-Modus.
-      Die Bühnenreife eines Songs ist der Schnitt über alle; bühnenreif ist er, wenn er bei allen eingenordet ist.
+    <p class="info">Je Musiker ein Übe-Status – die Bühnenreife eines Songs ist der Schnitt über alle; bühnenreif, wenn er bei allen eingenordet ist.
       @if (!ich()) { <span class="hinweis">Wähle unter Einstellungen „Ich bin …“, damit deine Angaben zählen.</span> }</p>
 
     <div class="personen">

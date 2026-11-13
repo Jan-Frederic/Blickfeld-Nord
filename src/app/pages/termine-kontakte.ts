@@ -9,6 +9,7 @@ import { KontaktBewertung } from './kontakt-bewertung';
 import { Kontakt, veranstalterRangliste, adressbuchDa, ausAdressbuch, bewertungSchwach, bewertungText, angefragtSetzen, anfrageText, kontaktSpeichern, ladeKontakte, nachrichtLink, nachrichtSenden, ortKey } from '../data/kontakte';
 import { saison } from '../data/saison';
 import { monatGesperrt } from '../data/schonzeit';
+import { DokuLink } from './doku-link';
 
 // Backstage → Termine → Kontakte (/backstage/termine/kontakte): alle Ansprechpartner der Veranstalter auf einen Blick –
 // Ort, letzter bzw. nächster Auftritt, WhatsApp, E-Mail, Anfrage (mit „angefragt am“, Nachfrage nach 14 Tagen unter
@@ -27,14 +28,14 @@ interface Zeile {
 
 @Component({
   selector: 'app-termine-kontakte',
-  imports: [Zurueck, RouterLink, MatIconModule, KontaktBewertung],
+  imports: [DokuLink, Zurueck, RouterLink, MatIconModule, KontaktBewertung],
   template: `
     <section class="section termine-kontakte">
       <app-zurueck ziel="/backstage/termine" text="Termine" />
       <p class="kicker">Backstage · Termine</p>
       <h2>Kontakte</h2>
-      <p class="lead">Ansprechpartner der Veranstalter – nur auf euren Geräten und im OneDrive, nie auf der Website.
-        Anfragen werden mit Datum gemerkt; kommt nach 14 Tagen kein Termin zustande, erinnert „Heute fällig“ ans Nachfragen.</p>
+      <app-doku-link thema="kontakte" />
+      <p class="lead">Ansprechpartner der Veranstalter – nur auf euren Geräten und im OneDrive, nie auf der Website.</p>
 
       <div class="sortierung" role="group" aria-label="Reihenfolge">
         <button type="button" [class.an]="sortierung() === 'name'" [attr.aria-pressed]="sortierung() === 'name'" (click)="sortierung.set('name')">Alphabetisch</button>
