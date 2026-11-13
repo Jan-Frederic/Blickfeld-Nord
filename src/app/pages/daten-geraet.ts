@@ -92,7 +92,8 @@ const datum = (t: number) => new Date(t).toLocaleString('de-DE', { dateStyle: 'm
         @if (loeschbar()) { <button type="button" class="icon weg" (click)="offlineLeeren($event)" aria-label="Seiten für unterwegs leeren"><mat-icon>delete_sweep</mat-icon></button> }
         <details [open]="offen().has('app')" (toggle)="auf('app', $event)">
           <summary>App und Seiten für unterwegs <span class="zahl">{{ appStand() ? 'App-Stand ' + appStand() : '' }}</span></summary>
-          <p>Damit Backstage ohne Netz geht; lädt beim nächsten Besuch mit Netz neu.</p>
+          <p>Damit Backstage ohne Netz geht; lädt beim nächsten Besuch mit Netz neu. Nach neuen Versionen sucht die App von
+            selbst – beim Öffnen und immer, wenn sie wieder in den Vordergrund kommt.</p>
           @if (cacheListe(); as l) {
             <ul>
               @for (c of l; track c.name) {
@@ -242,7 +243,7 @@ export class DatenGeraet {
         return;
       }
       await reg.update();
-      this.meldung.set(reg.installing || reg.waiting ? 'Neue Version wird geladen – gleich lädt die App neu.' : 'Die App ist auf dem neuesten Stand ✓');
+      this.meldung.set(reg.installing || reg.waiting ? 'Neue Version wird geladen – gleich erscheint „Neue Version verfügbar“, dann „Neu laden“ antippen.' : 'Die App ist auf dem neuesten Stand ✓');
     } catch {
       this.meldung.set('Nicht erreichbar – ohne Netz lässt sich nicht nach einer neuen Version suchen.');
     } finally {
