@@ -31,6 +31,8 @@ import { SyncKonflikte } from './sync-konflikte';
           · {{ e.richtung === 'beide' ? 'beide Richtungen' : e.richtung === 'runter' ? 'nur herunter' : 'nur hoch' }}{{ e.auto ? ' · automatisch' : '' }}
           · <a routerLink="/backstage/einstellungen">ändern</a></p>
         @if (sync.letzter(); as l) { <p class="letzter" [class.fehler]="l.fehler">Zuletzt {{ zeit(l.zeit) }}: {{ l.text }}</p> }
+        <!-- welcher Stand der App läuft (Kennung des Service Workers) – um bei Rückfragen zu sehen, ob ein Update da ist -->
+        @if (appStand(); as a) { <p class="app-stand">App-Stand {{ a }}</p> }
         <div class="knoepfe">
           <span class="paar"><button type="button" class="primaer" (click)="sync.jetzt()" [disabled]="sync.laeuft()"><mat-icon>sync</mat-icon> Jetzt synchronisieren</button>
             <ng-container *ngTemplateOutlet="info; context: { $implicit: 'jetzt' }" /></span>
@@ -86,6 +88,7 @@ import { SyncKonflikte } from './sync-konflikte';
     p { margin: 0 0 10px; max-width: 720px; font-size: .88rem; line-height: 1.55; color: var(--bn-fog); overflow-wrap: anywhere; }
     a { color: var(--bn-sunset); }
     .letzter { color: #5fb88a; }
+    .app-stand { margin: 2px 0 0; color: var(--bn-fog); font-size: .72rem; }
     .offen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; color: #e8a46a; }
     .fehler { color: #e07a5a; }
     .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
@@ -116,6 +119,16 @@ export class SyncStatus {
   protected readonly knopfName: Record<string, string> = KNOPF_NAME;
   protected readonly wasPassiert = wasPassiert;
   protected readonly name = signal(geraetName());
+  /** Kennung des laufenden App-Stands: Name des Service-Worker-Speichers („bn-<Version>“) */
+  protected readonly appStand = signal('');
+  private readonly standLesen = (async () => {
+    try {
+      const k = (await caches.keys()).filter((n) => /^bn-[0-9a-f]{6,}$/.test(n));
+      this.appStand.set(k.length ? k.map((n) => n.slice(3, 11)).join(', ') : '');
+    } catch {
+      // ohne Speicher (Browser-Tab ohne Service Worker): keine Angabe
+    }
+  })();
   protected readonly vorschlag = standardName(typeof navigator === 'undefined' ? '' : navigator.userAgent);
   protected readonly meineId = geraetId();
   protected seit(iso: string): string {

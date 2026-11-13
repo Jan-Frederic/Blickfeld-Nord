@@ -529,7 +529,11 @@ export class SyncService {
     let danach: SyncArt | null = null;
     try {
       const konto = (await oneDriveKonto()) ?? (await oneDriveAnmelden(still));
-      if (!konto) return;
+      if (!konto) {
+        // von Hand gestartet, aber keine Anmeldung zustande gekommen: sagen statt still nichts zu tun
+        if (!still) letzterSyncSetzen('Abgebrochen: nicht bei OneDrive angemeldet – „Jetzt synchronisieren“ antippen und anmelden', true);
+        return;
+      }
       let lokal = appOrdner;
       if (e.lokal === 'ordner') {
         const h = await lokalerOrdnerHandle();
