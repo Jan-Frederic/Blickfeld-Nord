@@ -218,7 +218,7 @@ function ladeEntwurf(): Record<string, Werte> {
         }
       }
       <!-- Dialog und Bühnen-Modus erst laden, wenn sie gebraucht werden (kleinerer Start der Songs-Seite) -->
-      @defer (when buehne(); prefetch on idle) { @if (buehne(); as b) { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenAuf]="true" (closed)="buehneZu()" /> } }
+      @defer (when buehne(); prefetch on idle) { @if (buehne(); as b) { <app-setlist-buehne [entries]="b.entries" [start]="b.start" [notenImmer]="true" (closed)="buehneZu()" /> } }
 
       <div class="apply">
         @if (geaendert().length) {

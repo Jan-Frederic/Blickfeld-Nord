@@ -74,7 +74,7 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
           <button type="button" class="close lupe" (click)="lupeAuf($event)" [attr.aria-pressed]="lupe()" aria-label="Song suchen (Wunsch)" title="Song suchen – kommt jetzt dran"><mat-icon>search</mat-icon></button>
         }
         <button type="button" class="close liste-knopf" (click)="navUmschalten($event)" [attr.aria-pressed]="nav()" [attr.aria-label]="ueben() ? 'Alle Karten' : 'Alle Songs der Setlist'" title="Alle Songs – zum Springen antippen"><mat-icon>format_list_numbered</mat-icon></button>
-        @if (notenSongs().size || notenAuf()) {
+        @if (notenSongs().size || notenImmer()) {
           <button type="button" class="noten-knopf" (click)="notenUmschalten($event)" [attr.aria-pressed]="notenOffen()" aria-label="Noten anzeigen" title="Noten – oder nach oben wischen">
             <mat-icon>library_music</mat-icon><span class="noten-text">Noten</span>
           </button>
@@ -198,6 +198,9 @@ import { einzaehlFolge, einzaehlText, einzaehlUnterteilung, schlaegeJeTakt, takt
         </div>
       }
       @if (nav()) {
+        <!-- offene Song-Liste: ein Tipp daneben schließt sie – und blättert nicht (weder Titelanzeige noch Noten) -->
+        <div class="navi-hintergrund" aria-hidden="true" (pointerdown)="$event.stopPropagation()" (pointerup)="navSchliessen($event)"
+          (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation(); $event.preventDefault()" (click)="$event.stopPropagation()"></div>
         <nav class="navi" aria-label="Songs der Setlist" (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()" (keydown)="navTaste($event)">
           <div class="navi-kopf">
             <span>{{ ueben() ? 'Karten' : probe() ? 'Probe' : 'Setlist' }}</span>
@@ -298,8 +301,8 @@ export class SetlistBuehne {
   readonly show = input<string>();
   /** Startposition in der Liste (z. B. der angeklickte Song in Backstage → Songs) */
   readonly start = input(0);
-  /** gleich mit geöffneten Noten beginnen */
-  readonly notenAuf = input(false);
+  /** Noten-Knopf auch zeigen, wenn für keinen Song Noten bekannt sind (Übe-Modus, Song-Liste) – gestartet wird immer in der Titelanzeige */
+  readonly notenImmer = input(false);
   readonly closed = output<void>();
   /** Probe-Modus: Datum der Probe – Probe-Leiste je Song, Uhr bis zum Probenende, kein Kürzen und keine Sterne */
   readonly probe = input<string>();
@@ -542,7 +545,8 @@ export class SetlistBuehne {
 
   // Noten (PDF/Akkordblatt) aus Backstage → Songs: Knopf oben, sobald auf diesem Gerät welche hinterlegt sind
   protected readonly notenSongs = signal(new Set<string>());
-  protected readonly notenOffen = linkedSignal(() => this.notenAuf());
+  // Spielmodi starten immer in der Titelanzeige – die Notenansicht holt man per Knopf oder Hochwischen
+  protected readonly notenOffen = signal(false);
   private readonly anzeige = viewChild(NotenAnzeige);
   protected notenUmschalten(e: Event): void {
     e.stopPropagation();
@@ -578,7 +582,7 @@ export class SetlistBuehne {
   /** Taste „hoch“ (Standard ↑) wie nach oben wischen: Titelanzeige → Notenansicht → volle Notenansicht */
   private hoch(): void {
     if (!this.notenOffen()) {
-      if (this.notenSongs().size || this.notenAuf()) this.notenOffen.set(true);
+      if (this.notenSongs().size || this.notenImmer()) this.notenOffen.set(true);
     } else this.anzeige()?.hoch();
   }
   /** Taste „runter“ (Standard ↓) wie nach unten wischen: volle Notenansicht → Notenansicht → Titelanzeige */
@@ -586,7 +590,7 @@ export class SetlistBuehne {
     if (this.notenOffen() && !this.notenRaus() && !this.anzeige()?.runter()) this.notenSchliessen();
   }
   private notenHochgewischt(dx: number, dy: number, ziel: HTMLElement): boolean {
-    if (this.notenOffen() || !(this.notenSongs().size || this.notenAuf()) || dy > -60 || Math.abs(dy) < Math.abs(dx) * 1.5) return false;
+    if (this.notenOffen() || !(this.notenSongs().size || this.notenImmer()) || dy > -60 || Math.abs(dy) < Math.abs(dx) * 1.5) return false;
     // im Song-Bereich gescrollt (lange Probe-Leiste): erst wenn unten angekommen
     const main = ziel.closest('main');
     if (main && main.scrollHeight > main.clientHeight + 2 && main.scrollTop + main.clientHeight < main.scrollHeight - 2) return false;
@@ -883,6 +887,11 @@ export class SetlistBuehne {
     this.nav.update((n) => !n);
     if (this.nav()) setTimeout(() => this.host.nativeElement.querySelector('.navi .jetzt')?.scrollIntoView({ block: 'center' }));
     else this.host.nativeElement.focus();
+  }
+  protected navSchliessen(e: Event): void {
+    e.stopPropagation();
+    this.nav.set(false);
+    this.host.nativeElement.focus();
   }
   protected navSpringen(i: number): void {
     this.springen(i);

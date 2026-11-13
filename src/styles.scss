@@ -682,6 +682,7 @@ app-setlist-buehne .set { display: inline-flex; align-items: baseline; gap: .6em
 app-setlist-buehne .anlass { overflow: hidden; text-overflow: ellipsis; color: #fff; letter-spacing: .08em; }
 app-noten-anzeige .titel .anlass { font-weight: 400; color: #9aa0a6; }
 app-setlist-buehne .liste-knopf[aria-pressed=true] { border-color: #e8a46a; color: #e8a46a; }
+app-setlist-buehne .navi-hintergrund { position: fixed; inset: 0; z-index: 4; background: rgba(0, 0, 0, .25); }
 app-setlist-buehne .navi {
   position: fixed; top: 0; right: 0; bottom: 0; z-index: 5; width: min(360px, 88vw); display: flex; flex-direction: column;
   padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); border-left: 1px solid #333;
@@ -1270,4 +1271,15 @@ app-backstage-doku, app-backstage-anleitungen {
   .themen a { padding: 8px 0; color: var(--bn-ink); }
   .themen mat-icon { color: var(--bn-sunset); }
 }
+
+// Einstellungen → Was ist neu (pages/aenderungen-karte.ts)
+app-aenderungen-karte { display: block; }
+app-aenderungen-karte .box { margin-top: 20px; padding: 20px 24px; border-radius: 12px; border: 1px solid var(--bn-line); }
+app-aenderungen-karte h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
+app-aenderungen-karte h4 { display: flex; align-items: center; gap: 8px; margin: 16px 0 6px; color: var(--bn-sunset); font-size: .9rem; font-weight: 600; }
+app-aenderungen-karte .neu { padding: 1px 8px; border-radius: 999px; background: var(--bn-sunset); color: #2a1708; font-size: .72rem; font-weight: 600; }
+app-aenderungen-karte ul { margin: 0; padding-left: 20px; }
+app-aenderungen-karte li { margin: 4px 0; max-width: 760px; color: var(--bn-fog); font-size: .9rem; line-height: 1.5; }
+app-aenderungen-karte button { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
+app-aenderungen-karte button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 

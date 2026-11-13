@@ -35,7 +35,7 @@ import { DokuLink } from './doku-link';
           <mat-icon>style</mat-icon>
           <span><strong>Üben</strong> <small>{{ ueben.text }}</small></span>
         </a>
-        <!-- wie Probe- und Bühnen-Modus: startet gleich die Notenansicht der fälligen Karteikarten -->
+        <!-- wie Probe- und Bühnen-Modus: startet gleich den Übe-Modus mit den fälligen Karteikarten (Titelanzeige) -->
         <a class="modus" routerLink="/backstage/ueben" [queryParams]="{ modus: 1 }" aria-label="Übe-Modus starten" title="Übe-Modus"><mat-icon>fit_screen</mat-icon> <span class="modus-text">Übe-Modus</span></a>
       </div>
 

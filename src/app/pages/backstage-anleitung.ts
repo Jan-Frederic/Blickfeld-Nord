@@ -10,7 +10,7 @@ const ZEILEN: { was: string; buehne: string; probe: string; ueben: string }[] = 
   { was: 'Wofür', buehne: 'Auftritt spielen', probe: 'Gemeinsam proben', ueben: 'Allein üben' },
   { was: 'Für wen', buehne: 'Die ganze Band', probe: 'Die Band – Status und Notizen gelten je Person', ueben: 'Nur ich (braucht „Ich bin …“ unter Einstellungen)' },
   { was: 'Songs kommen aus', buehne: 'Setlist des Auftritts, mit Sets und Pausen', probe: 'Probenplan der Probe; Generalprobe: Setlist des nächsten Auftritts', ueben: 'Eigener Karteikasten: heute fällige zuerst, danach alle übrigen' },
-  { was: 'Startet in', buehne: 'Titelanzeige', probe: 'Titelanzeige', ueben: 'Notenansicht' },
+  { was: 'Startet in', buehne: 'Titelanzeige', probe: 'Titelanzeige', ueben: 'Titelanzeige' },
   { was: 'Starten über', buehne: 'Setlist des Auftritts oder „Als Nächstes“ in der Übersicht', probe: 'Probenseite „Probe-Modus starten“ oder „Als Nächstes“', ueben: 'Üben-Seite „Übe-Modus“ oder der Knopf neben „Üben“ in der Übersicht' },
   { was: 'Pro Song festhalten', buehne: 'Sterne (1–5): wie lief der Song an diesem Abend', probe: 'Probe-Leiste unter dem Song: Status-Umschalter, eigene Notiz, Status der anderen als Zeichen (↻ David), Notizen der anderen, Notizen der letzten Probe; Status auch in der Kopfleiste der Notenansicht', ueben: 'Status-Umschalter – in der Titelanzeige und in der Kopfleiste' },
   { was: 'Zum nächsten Song', buehne: 'Selbst blättern: Pedal, Pfeiltaste, Tippen, Wischen', probe: 'Selbst blättern', ueben: 'Automatisch nach jeder Status-Wahl, nachdem der Status kurz aufgeleuchtet hat; „Üben“ hängt die Karte hinten noch einmal an. Ein paar Sekunden lang holt „↶ Rückgängig“ die Karte samt altem Kasten zurück' },

@@ -231,7 +231,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Kasten 4 und 5 = Sitzt; eingenordete Songs fallen aus dem Karteikasten heraus. Logik: `src/app/data/uebe-status.ts`
   (Kästen: `src/app/data/ueben.ts`). Der alte Stand („Wackelt noch“-Liste, Fortschritt mit sitzt/wackelt/sicher)
   wird je Person beim ersten Öffnen einmalig umgestellt: sicher → Eingenordet, sitzt → Kasten 4, wackelt → Kasten 2.
-- **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben **Übe-Modus** startet gleich die Notenansicht):
+- **Üben** (Übersicht → Üben, `/backstage/ueben`; rechts daneben startet **Übe-Modus** gleich den Modus – wie alle Modi in der Titelanzeige):
   persönlich (Einstellungen → „Ich bin …“). Direkt über „Deine Songs im Karteikasten“ eine **Suche**: einzelne Songs oder ganze **Setlists**,
   **Sammlungen** und **Spotify-Listen** zum Üben dazunehmen – Songs ohne Status kommen auf „Üben“ (Kasten 1), die übrigen
   behalten ihren Status (die Meldung sagt, wie viele dazukamen, schon im Kasten oder eingenordet sind). Dieselbe Suche
@@ -239,7 +239,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Besuch eine feste Reihenfolge: Ein Status per Auswahlfeld verschiebt den Song nicht, neu hinzugekommene stehen oben;
   Songs, die dabei aus dem Karteikasten fallen (Eingenordet, Nicht gelernt), bleiben gedämpft mit „–“ an ihrem Platz –
   neu sortiert wird erst beim nächsten Besuch der Seite. Darunter die fünf
-  Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten in der Notenansicht (wie Bühnen-/Probe-Modus),
+  Kästen mit ihrem Status und **ein** großer Knopf **Übe-Modus**: die Karten wie im Bühnen-/Probe-Modus (Start in der Titelanzeige, Noten per Knopf oder Hochwischen),
   oben rechts ein **Umschalter mit den fünf Status** (der aktuelle ist hervorgehoben; auf schmalen Bildschirmen nur die
   Zeichen ○ ✎ ↻ ✓ ✓✓). Ein Klick setzt den Status, die Karte bleibt stehen (weiter per Wischen, Tippen, Pfeiltaste
   bzw. Pedal; über die letzte Karte hinaus beendet der Übe-Modus und zeigt das Ergebnis): **Wackelt noch** bei einem Song, der
@@ -404,6 +404,10 @@ Anlass und „Song 3 / 12“ (Probe), „Set 1 / 2“ (Auftritt, Generalprobe) b
 **Seite merken:** Wechselt man aus der Notenansicht zur Titelanzeige und wieder zurück, geht es beim selben Song und
 derselben Fassung auf derselben Seite (und Stelle) weiter – die Notenansicht merkt sich beim Schließen Song, Fassung,
 Seite und Scroll-Position (`zuletzt` in `pages/noten-anzeige.ts`). Ein anderer Song beginnt wie immer oben.
+
+**Start und Song-Liste:** Alle Spielmodi starten in der Titelanzeige (`notenOffen` beginnt immer mit `false`;
+`notenImmer` zeigt nur den Noten-Knopf auch ohne bekannte Noten). Ist die Song-Liste offen, liegt eine Fläche
+(`.navi-hintergrund`) über allem außer der Liste: ein Tipp daneben schließt nur die Liste und blättert nicht.
 
 **Kein Neuladen durch Herunterwischen:** `html, body { overscroll-behavior-y: none }` (styles.scss) schaltet Chromes
 „Zum Aktualisieren ziehen“ auf der ganzen Seite ab; das Notenblatt (`.flaeche`) reicht sein Scrollen nicht an die
@@ -1058,6 +1062,13 @@ Safari-Geste (`gesturestart`) ab. Eingabefelder haben auf Touch-Geräten mindest
 Antippen heran. Die öffentliche Website bleibt zoombar (Barrierefreiheit) – darum kein `user-scalable=no` im
 Viewport (iPhones ignorieren es ohnehin, die a11y-Prüfung würde es melden). Größer geht es im Backstage über die
 eigenen Regler: Schriftgröße im Bühnen-Modus, Zoom der Noten.
+
+## Was ist neu (Change-Log)
+
+Unter Einstellungen → **Was ist neu** steht der Change-Log (`src/app/data/aenderungen.ts`): je Tag, was sich für die
+Band geändert hat – in Alltagssprache, neueste zuerst; seit dem letzten Besuch Neues ist markiert. **Bei jeder
+spürbaren Änderung einen Punkt am Tag der Veröffentlichung ergänzen** (Tests, Prüfungen und Interna nicht). Ein
+Unit-Test prüft Reihenfolge und Format.
 
 ## Einrichtungsassistent (erste Anmeldung)
 

@@ -855,9 +855,13 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
   const buehne = p.locator('app-setlist-buehne');
   const kopf = buehne.locator('app-noten-anzeige header');
+  // Start in der Titelanzeige, Noten per Knopf
+  await schritt('Übe-Modus zeigt den Noten-Knopf', () => buehne.locator('.noten-knopf').first().waitFor());
+  expect((await buehne.locator('app-noten-anzeige').count()) === 0, 'Übe-Modus startet in der Notenansicht statt in der Titelanzeige');
+  await buehne.locator('.noten-knopf').first().click();
   // Notenansicht: ♫ ▶, ↺10 (erst wenn der Song läuft) und Abdocken in der Kopfleiste
   const spielen = kopf.locator('button[aria-label="Auf Spotify abspielen"]');
-  await spielen.waitFor();
+  await schritt('♫ ▶ in der Kopfleiste der Notenansicht', () => spielen.waitFor());
   // Herunterwischen (zur Titelanzeige) lädt die Seite nie neu: kein „Zum Aktualisieren ziehen“, Notenblatt reicht nichts weiter
   // ↑/↓ wie Wischen: Notenansicht → volle Notenansicht → zurück → Titelanzeige → wieder Noten
   await buehne.focus();
@@ -966,6 +970,8 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   expect((await anzahl('disconnect')) === 0, 'Browser-Player wird beim Verlassen abgemeldet (neues Gerät bei jedem Öffnen)');
   const wiederOeffnen = async () => {
     await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
+    // Start in der Titelanzeige – die Noten per Knopf
+    await buehne.locator('.noten-knopf').first().click();
     await kopf.locator('button[aria-label="Auf Spotify abspielen"]').waitFor();
   };
   await wiederOeffnen();
@@ -1609,7 +1615,9 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   // gewählte Ansicht (Akkorde) bleibt – auch nach dem nächsten Song und zurück
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs tbody tr', { hasText: 'Iris' }).locator('.start button').click();
-  await until(async () => (await kopf.innerText().catch(() => '')).includes('Iris'), 'Bühnen-Modus startet nicht beim gewählten Song');
+  await until(async () => (await p.locator('app-setlist-buehne').innerText().catch(() => '')).includes('Iris') && (await p.locator('app-noten-anzeige').count()) === 0, 'Bühnen-Modus startet nicht in der Titelanzeige beim gewählten Song');
+  await p.locator('app-setlist-buehne .noten-knopf').first().click();
+  await until(async () => (await kopf.innerText().catch(() => '')).includes('Iris'), 'Noten-Knopf öffnet die Noten des gewählten Songs nicht');
   await until(async () => (await p.locator('app-noten-anzeige .teil b').count()) > 0, 'gewählte Ansicht (Akkorde) wird nicht beibehalten');
   await p.keyboard.press('ArrowRight');
   await until(async () => !(await kopf.innerText()).includes('Iris'), 'Pfeiltaste blättert nicht zum nächsten Song der Liste');
@@ -1670,6 +1678,8 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => (await q.locator('app-backstage-songs tbody tr .noten .tag').first().innerText().catch(() => '')) === '3 PDFs', 'Mehrere PDFs werden in der Tabelle nicht gezählt');
   await q.locator('app-backstage-songs input[type=search]').fill('');
   await q.locator('app-backstage-songs tbody tr', { hasText: 'Iris' }).locator('.start button').click();
+  // Start in der Titelanzeige – die Noten per Knopf
+  await q.locator('app-setlist-buehne .noten-knopf').first().click();
   const wahl = q.locator('app-noten-anzeige select.wahl');
   // die Notenansicht lädt erst die drei frisch eingelesenen PDFs – auf einem ausgelasteten Rechner dauert das länger
   await wahl.waitFor({ timeout: 15000 }).catch(() => undefined);
@@ -2237,32 +2247,45 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => (await ueben.locator('.liste li select').count()) === 3, 'Nicht gelernt bleibt nach dem neuen Besuch im Karteikasten');
   // Klick auf einen Song der Liste: Übe-Modus genau dort; Song-Liste auch in der Kopfleiste der Noten
   const zweiter = (await ueben.locator('.liste li .song-start .t').nth(1).innerText()).trim();
+  // Spielmodi starten in der Titelanzeige; die Noten öffnet der Noten-Knopf
+  const notenPerKnopf = async (wofuer) => {
+    await schritt(`${wofuer} (Titelanzeige)`, () => p.locator('app-setlist-buehne .noten-knopf').first().waitFor({ timeout: 20000 }));
+    expect((await p.locator('app-setlist-buehne app-noten-anzeige').count()) === 0, `${wofuer}: startet in der Notenansicht statt in der Titelanzeige`);
+    await p.locator('app-setlist-buehne .noten-knopf').first().click();
+    await p.locator('app-setlist-buehne app-noten-anzeige header .wertung.sitzt').waitFor({ timeout: 10000 });
+  };
   await ueben.locator('.liste li .song-start').nth(1).click();
+  await notenPerKnopf('Song antippen startet den Übe-Modus');
   const notenA = p.locator('app-setlist-buehne app-noten-anzeige');
   await until(async () => (await notenA.locator('header .titel').innerText().catch(() => '')).includes(zweiter), 'Klick auf den Song startet nicht an dieser Stelle');
   await notenA.locator('header .liste-knopf').click();
   await until(async () => (await p.locator('app-setlist-buehne .navi li').count()) >= 3, 'Song-Liste öffnet sich nicht aus der Kopfleiste');
+  // Tipp neben die offene Liste (links ins Notenblatt): schließt die Liste und blättert nicht
+  await p.mouse.click(40, 500);
+  await until(async () => (await p.locator('app-setlist-buehne .navi').count()) === 0, 'Tipp neben die Song-Liste schließt sie nicht');
+  await p.waitForTimeout(300);
+  expect((await notenA.locator('header .titel').innerText()).includes(zweiter), 'Tipp neben die Song-Liste hat umgeblättert');
   await p.keyboard.press('Escape');
   await p.locator('app-setlist-buehne header button[aria-label="Übe-Modus beenden"]').click().catch(async () => { await p.keyboard.press('Escape'); });
   await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'Übe-Modus schließt nicht');
   // Übe-Modus: Notenansicht mit „Wackelt noch“ / „Sitzt“ oben rechts, weiter zur nächsten Karte
   await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
   const noten = p.locator('app-setlist-buehne app-noten-anzeige');
-  await schritt('Übe-Modus öffnet die Notenansicht', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  await notenPerKnopf('Übe-Modus öffnet die Notenansicht');
   // „Zurück“ des Handys (Wischen vom Rand) beendet den Übe-Modus nicht versehentlich: einmal zurück zeigt nur einen Hinweis
   await p.evaluate(() => history.back());
   await until(async () => (await p.locator('app-setlist-buehne .zurueck-hinweis').count()) === 1, 'Hinweis nach „Zurück“ fehlt');
   expect((await noten.count()) === 1 && new URL(p.url()).pathname.includes('/backstage/ueben'), '„Zurück“ beendet den Übe-Modus sofort');
   // Seite lädt neu (Handy hat sie im Hintergrund verworfen): der Übe-Modus öffnet sich wieder
   await p.reload({ waitUntil: 'networkidle' });
-  await schritt('Übe-Modus öffnet sich nach dem Neuladen wieder', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  await notenPerKnopf('Übe-Modus öffnet sich nach dem Neuladen wieder');
   // zweimal „Zurück“ kurz hintereinander beendet ihn – die Üben-Seite bleibt, danach wieder öffnen
   await p.evaluate(() => history.back());
   await p.locator('app-setlist-buehne .zurueck-hinweis').waitFor();
   await p.evaluate(() => history.back());
   await until(async () => (await p.locator('app-setlist-buehne').count()) === 0 && new URL(p.url()).pathname.includes('/backstage/ueben'), 'Zweimal „Zurück“ beendet den Übe-Modus nicht');
   await ueben.getByRole('button', { name: 'Übe-Modus', exact: true }).click();
-  await schritt('Übe-Modus öffnet sich erneut', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  await notenPerKnopf('Übe-Modus öffnet sich erneut');
   // Mitschnitte des Songs zum Mitspielen
   await noten.locator('header .mitschnitt-knopf').click();
   await noten.locator('.mitschnitt-panel app-song-mitschnitte').waitFor();
@@ -2322,7 +2345,7 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await p.go('/backstage/');
   expect((await p.locator('app-backstage .ueben-karte').innerText()).includes('Tagesziel geschafft'), 'Tagesziel nicht als geschafft gemeldet');
   await p.locator('app-backstage .ueben-reihe a.modus').click();
-  await schritt('Übe-Modus öffnet trotz Tagesziel', () => noten.locator('header .wertung.sitzt').waitFor({ timeout: 20000 }));
+  await notenPerKnopf('Übe-Modus öffnet trotz Tagesziel');
   // Herunterwischen (Kopfleiste da, Blatt oben): Notenansicht gleitet heraus, Titelanzeige mit demselben Umschalter
   const ziehen = async (vonY, nachY) => {
     await p.waitForTimeout(400); // Ein-/Ausgleiten abwarten

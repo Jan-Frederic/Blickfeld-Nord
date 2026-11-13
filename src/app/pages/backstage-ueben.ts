@@ -20,7 +20,7 @@ import { DokuLink } from './doku-link';
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 // Backstage → Üben: persönlicher Karteikasten (Logik: data/ueben.ts, Status: data/uebe-status.ts). Oben die fünf Kästen
-// (1 Üben, 2–3 Wackelt noch, 4–5 Sitzt), darunter ein Knopf „Übe-Modus“: die Karten in der Notenansicht, oben rechts
+// (1 Üben, 2–3 Wackelt noch, 4–5 Sitzt), darunter ein Knopf „Übe-Modus“: die Karten (Start in der Titelanzeige), oben rechts
 // die fünf Übe-Status (uebeWertung) – derselbe Status noch einmal schiebt die Karte einen Kasten weiter („Wackelt
 // noch“ 2 → 3, „Sitzt“ 4 → 5, im letzten Kasten des Status bleibt sie), eingenordet nur ausdrücklich; „Üben“ kommt in dieser Runde noch einmal dran. Heute fällige Karten zuerst, das
 // Tagesziel ist nur eine Empfehlung.
@@ -130,7 +130,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     </section>
     @if (modus(); as m) {
       <!-- Übe-Modus: Notenansicht der Karten, oben rechts die fünf Status – die Karte bleibt, weiter per Wischen/Pedal -->
-      <app-setlist-buehne [entries]="m" [start]="modusStart()" [notenAuf]="true" [ueben]="true" (bewertet)="ausModus($event)" (rueckgaengig)="letzteZuruecknehmen()" (closed)="modusZu()" />
+      <app-setlist-buehne [entries]="m" [start]="modusStart()" [notenImmer]="true" [ueben]="true" (bewertet)="ausModus($event)" (rueckgaengig)="letzteZuruecknehmen()" (closed)="modusZu()" />
     }
   `,
 })
@@ -243,7 +243,7 @@ export class BackstageUeben {
     });
     // einmalig vom alten Stand („Wackelt noch“-Liste, Fortschritt) auf die fünf Status umstellen
     statusMigrieren();
-    // aus der Übersicht („Üben“ → Übe-Modus): ?modus=1 startet gleich die Notenansicht
+    // aus der Übersicht („Üben“ → Übe-Modus): ?modus=1 startet gleich den Übe-Modus (in der Titelanzeige)
     const route = inject(ActivatedRoute);
     if (route.snapshot.queryParamMap.get('modus')) {
       const router = inject(Router);
@@ -285,7 +285,7 @@ export class BackstageUeben {
     return statusInfo(statusAusKasten(kasten)).zeichen;
   }
 
-  // Übe-Modus: die Karten in der Notenansicht (Bühnen-Modus mit Noten), bewertet oben rechts. Immer möglich:
+  // Übe-Modus: die Karten wie im Bühnen-Modus (Start in der Titelanzeige, Noten per Knopf), bewertet oben rechts. Immer möglich:
   // heute fällige zuerst, danach alle übrigen – das Tagesziel hält niemanden vom Üben ab.
   protected readonly modus = signal<Entry[] | null>(null);
   private modusVonLink = false;
