@@ -1765,8 +1765,13 @@ test('Backstage: Einstellungen – Synchronisation OneDrive ↔ lokal einrichten
   await until(async () => /Backups in OneDrive \(\d+\)/.test(await p.locator('app-backup-karte').innerText()), 'Liste der Backups in OneDrive fehlt');
   await p.locator('app-backup-karte details.liste summary').click();
   expect(await p.locator('app-backup-karte details.liste li button', { hasText: 'Wiederherstellen' }).first().isVisible(), 'Backup in der Liste lässt sich nicht wiederherstellen');
+  // letzter Abgleich mit Fehler: „Kopieren“ legt die Meldung in die Zwischenablage
+  await p.evaluate(() => localStorage.setItem('bn-sync-letzter', JSON.stringify({ zeit: new Date().toISOString(), text: '1 Fehler – Geraete/x.json: Herunterladen nicht möglich', fehler: true })));
+  await p.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await p.go('/backstage/abgleich/');
   const status = p.locator('app-sync-status');
+  await status.locator('.letzter button.kopieren').click();
+  await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('Geraete/x.json: Herunterladen nicht möglich') && (await status.locator('.letzter button.kopieren').innerText()).includes('Kopiert'), 'Fehlermeldung lässt sich nicht kopieren');
   // (i) erklärt den Knopf; Gerät benennen
   await status.getByRole('button', { name: 'Was macht „Jetzt synchronisieren“?' }).click();
   await until(async () => (await status.locator('.hilfe').innerText().catch(() => '')).includes('Gleicht OneDrive und dieses Gerät ab'), '(i) erklärt „Jetzt synchronisieren“ nicht');

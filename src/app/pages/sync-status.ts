@@ -30,7 +30,11 @@ import { SyncKonflikte } from './sync-konflikte';
         <p>OneDrive „{{ cloudName(e) }}“ ↔ {{ e.lokal === 'app' ? 'Speicher dieser App' : 'Ordner auf diesem Computer' }}
           · {{ e.richtung === 'beide' ? 'beide Richtungen' : e.richtung === 'runter' ? 'nur herunter' : 'nur hoch' }}{{ e.auto ? ' · automatisch' : '' }}
           · <a routerLink="/backstage/einstellungen">ändern</a></p>
-        @if (sync.letzter(); as l) { <p class="letzter" [class.fehler]="l.fehler">Zuletzt {{ zeit(l.zeit) }}: {{ l.text }}</p> }
+        @if (sync.letzter(); as l) {
+          <p class="letzter" [class.fehler]="l.fehler">Zuletzt {{ zeit(l.zeit) }}: {{ l.text }}
+            @if (l.fehler) { <button type="button" class="kopieren" (click)="kopieren('Zuletzt ' + zeit(l.zeit) + ': ' + l.text)"><mat-icon aria-hidden="true">content_copy</mat-icon> {{ kopiert() || 'Kopieren' }}</button> }
+          </p>
+        }
         <!-- welcher Stand der App läuft (Kennung des Service Workers) – um bei Rückfragen zu sehen, ob ein Update da ist -->
         @if (appStand(); as a) { <p class="app-stand">App-Stand {{ a }}</p> }
         <div class="knoepfe">
@@ -78,7 +82,11 @@ import { SyncKonflikte } from './sync-konflikte';
           </ul>
         }
         @if (funde(); as f) { <app-funde-liste [funde]="f" (geaendert)="eingelesen(f)" /> }
-        @if (meldung(); as m) { <p [class.fehler]="m.fehler" [class.letzter]="!m.fehler" role="status">{{ m.text }}</p> }
+        @if (meldung(); as m) {
+          <p [class.fehler]="m.fehler" [class.letzter]="!m.fehler" role="status">{{ m.text }}
+            @if (m.fehler) { <button type="button" class="kopieren" (click)="kopieren(m.text)"><mat-icon aria-hidden="true">content_copy</mat-icon> {{ kopiert() || 'Kopieren' }}</button> }
+          </p>
+        }
       }
     </div>
   `,
@@ -89,6 +97,8 @@ import { SyncKonflikte } from './sync-konflikte';
     a { color: var(--bn-sunset); }
     .letzter { color: #5fb88a; }
     .app-stand { margin: 2px 0 0; color: var(--bn-fog); font-size: .72rem; }
+    .kopieren { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 10px; border: 1px solid var(--bn-line); border-radius: 999px; background: none; color: var(--bn-ink); font: inherit; font-size: .78rem; cursor: pointer; vertical-align: middle; }
+    .kopieren mat-icon { font-size: 14px; width: 14px; height: 14px; }
     .offen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; color: #e8a46a; }
     .fehler { color: #e07a5a; }
     .knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
@@ -119,6 +129,18 @@ export class SyncStatus {
   protected readonly knopfName: Record<string, string> = KNOPF_NAME;
   protected readonly wasPassiert = wasPassiert;
   protected readonly name = signal(geraetName());
+  /** Fehlermeldung samt App-Stand in die Zwischenablage (zum Weitergeben); kurz „Kopiert ✓“ */
+  protected readonly kopiert = signal('');
+  protected async kopieren(text: string): Promise<void> {
+    const voll = this.appStand() ? `${text} (App-Stand ${this.appStand()})` : text;
+    try {
+      await navigator.clipboard.writeText(voll);
+      this.kopiert.set('Kopiert ✓');
+    } catch {
+      this.kopiert.set('Kopieren nicht möglich – Text markieren');
+    }
+    setTimeout(() => this.kopiert.set(''), 2500);
+  }
   /** Kennung des laufenden App-Stands: Name des Service-Worker-Speichers („bn-<Version>“) */
   protected readonly appStand = signal('');
   private readonly standLesen = (async () => {
