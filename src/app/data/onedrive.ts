@@ -237,9 +237,38 @@ function popupAnmelden(m: IPublicClientApplication): Promise<AccountInfo> {
       noetigSetzen(false);
       return r.account;
     })
-    .catch((e) => {
-      throw anmeldeFehler(e);
-    });
+    .catch((e) => nachFehlschlag(e, m.getActiveAccount()));
+}
+
+/**
+ * Klappt das Anmelde-Fenster nicht (blockiert, keine Antwort), geht es von selbst ohne Pop-up weiter: das bisherige
+ * Konto wird auf diesem Gerät vergessen (wie „Abmelden“ – die Microsoft-Anmeldung im Browser bleibt) und die Seite
+ * meldet per Weiterleitung neu an. Nie im Hintergrund, nicht nach Schließen des Fensters (das war Absicht) und
+ * höchstens einmal in 5 Minuten – sonst gäbe es bei einem echten Problem eine Schleife.
+ */
+const AUTO_KEY = 'bn-onedrive-auto-weiter';
+const AUTO_ABSTAND_MS = 5 * 60_000;
+export function automatischOhnePopup(art: AnmeldeArt, still: boolean, zuletzt: number, jetzt = Date.now()): boolean {
+  return !still && (art === 'blockiert' || art === 'zeit') && !(zuletzt && jetzt - zuletzt < AUTO_ABSTAND_MS);
+}
+async function nachFehlschlag(e: unknown, konto?: AccountInfo | null): Promise<never> {
+  const f = anmeldeFehler(e);
+  let zuletzt = 0;
+  try {
+    zuletzt = Number(sessionStorage.getItem(AUTO_KEY)) || 0;
+  } catch {
+    // ohne Sitzungsspeicher eben ohne Sperre
+  }
+  if (!automatischOhnePopup(f.art, stillModus, zuletzt)) throw f;
+  try {
+    sessionStorage.setItem(AUTO_KEY, String(Date.now()));
+  } catch {
+    // egal
+  }
+  if (konto && fertig) await fertig.clearCache({ account: konto }).catch(() => undefined);
+  await oneDriveWeiterleiten();
+  // die Seite wird gleich verlassen – bis dahin nicht weitermachen
+  return new Promise<never>(() => undefined);
 }
 
 /** Anmeldung per Weiterleitung: die Seite geht zu Microsoft und kommt danach hierher zurück (ohne Fenster) */
@@ -347,7 +376,8 @@ async function token(): Promise<string> {
       noetigSetzen(false);
       return r.accessToken;
     } catch (e3) {
-      throw anmeldeFehler(e3);
+      // Fenster klappte nicht: von selbst ohne Pop-up neu anmelden (wie Abmelden und Anmelden)
+      return nachFehlschlag(e3, account);
     }
   }
 }

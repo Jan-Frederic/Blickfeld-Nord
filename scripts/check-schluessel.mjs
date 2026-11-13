@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 const AUSNAHMEN = new Set([
   'bn-ordner', 'bn-mitschnitte', 'bn-sync', 'bn-noten', // IndexedDB
-  'bn-modus-sitzung', 'bn-herkunft', 'bn-bald-zu', 'bn-onedrive-weiterleitung', // sessionStorage
+  'bn-modus-sitzung', 'bn-herkunft', 'bn-bald-zu', 'bn-onedrive-weiterleitung', 'bn-onedrive-auto-weiter', // sessionStorage
 ]);
 const BESCHREIBER = ['bn-fortschritt-', 'bn-kasten-', 'bn-probenotiz-', 'bn-unsicher-', 'bn-zusage-'];
 

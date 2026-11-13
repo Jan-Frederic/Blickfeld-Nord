@@ -1162,7 +1162,15 @@ test('Backstage: Sichtsperre – Anmeldeseite; mit Band-Ordner landet ein neues 
     await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click();
     await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', 'Ohne Band-Ordner geht es nicht weiter');
   } else {
-    // blockiertes Anmelde-Fenster: sofort eine verständliche Meldung und „Ohne Pop-up anmelden“ (statt stumm zu bleiben)
+    // blockiertes Anmelde-Fenster: von selbst weiter ohne Pop-up (Weiterleitung zu Microsoft) …
+    await p.evaluate(() => {
+      window.open = () => null;
+    });
+    const weiter = p.waitForRequest(/login\.microsoftonline\.com\/.*authorize/, { timeout: 15_000 }).then(() => true, () => false);
+    await seite.getByRole('button', { name: 'Mit Microsoft anmelden' }).click();
+    expect(await weiter, 'Nach blockiertem Fenster keine Weiterleitung zur Anmeldung ohne Pop-up');
+    // … aber höchstens einmal in 5 Minuten: beim zweiten Mal die Meldung und „Ohne Pop-up anmelden“ (statt stumm zu bleiben)
+    await p.go('/backstage/zugang/');
     await p.evaluate(() => {
       window.open = () => null;
     });

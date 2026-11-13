@@ -1,4 +1,4 @@
-import { CloudDatei, LadeWege, adresse, dateiLaden, pfadKodieren, AnmeldeFehler, anmeldeFehler, mitFensterWache, weiterleitungHilft } from './onedrive';
+import { CloudDatei, LadeWege, adresse, dateiLaden, pfadKodieren, AnmeldeFehler, anmeldeFehler, automatischOhnePopup, mitFensterWache, weiterleitungHilft } from './onedrive';
 import { istAkkordblatt, istPdf } from './noten-import';
 
 describe('OneDrive', () => {
@@ -39,6 +39,17 @@ describe('OneDrive', () => {
       expect(weiterleitungHilft(anmeldeFehler(msalFehler('timed_out')))).toBe(true);
       expect(weiterleitungHilft(anmeldeFehler(msalFehler('no_network_connectivity')))).toBe(false);
       expect(weiterleitungHilft(new Error('x'))).toBe(false);
+    });
+
+    it('nach blockiertem Fenster oder ohne Antwort von selbst ohne Pop-up – höchstens alle 5 Minuten, nie im Hintergrund', () => {
+      const jetzt = 10 * 60_000;
+      expect(automatischOhnePopup('blockiert', false, 0, jetzt)).toBe(true);
+      expect(automatischOhnePopup('zeit', false, 0, jetzt)).toBe(true);
+      expect(automatischOhnePopup('geschlossen', false, 0, jetzt)).toBe(false);
+      expect(automatischOhnePopup('netz', false, 0, jetzt)).toBe(false);
+      expect(automatischOhnePopup('zeit', true, 0, jetzt)).toBe(false);
+      expect(automatischOhnePopup('zeit', false, jetzt - 60_000, jetzt)).toBe(false);
+      expect(automatischOhnePopup('zeit', false, jetzt - 6 * 60_000, jetzt)).toBe(true);
     });
 
     describe('Fenster-Wache', () => {

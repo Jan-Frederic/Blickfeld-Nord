@@ -1092,6 +1092,12 @@ nie ein Fenster) – das klappt nicht, wo der Browser Drittanbieter-Cookies bloc
 - Blockiert der Browser das Fenster, kommt gleich die Meldung „Das Anmelde-Fenster wurde blockiert …“; wird es
   geschlossen, ohne dass Microsoft geantwortet hat, nach wenigen Sekunden „Anmeldung abgebrochen“ (`mitFensterWache`;
   die Antwortseite `/auth/` meldet sich über `bn-auth-antwort`). Für Passwort und Code per SMS bleiben 10 Minuten.
+- **Von selbst ohne Pop-up:** Ist das Fenster blockiert oder kommt von ihm keine Antwort, vergisst die App das bisherige
+  Konto auf diesem Gerät (wie „Abmelden“ – die Microsoft-Anmeldung im Browser bleibt) und meldet per Weiterleitung neu
+  an (`nachFehlschlag`/`automatischOhnePopup` in `data/onedrive.ts`). Nie im Hintergrund, nicht nach Schließen des
+  Fensters (Absicht) und höchstens einmal in 5 Minuten (`bn-onedrive-auto-weiter`, sessionStorage) – scheitert es
+  danach noch einmal, steht die Meldung da. Kommt man ohne Ergebnis von Microsoft zurück, bleibt die Anmeldeseite beim
+  Anmelde-Knopf.
 - Danach wird **„Ohne Pop-up anmelden“** angeboten: Die ganze Seite geht zu Microsoft und kommt zurück
   (`oneDriveWeiterleiten`, Rückkehr über `/auth/` und `handleRedirectPromise`) – keine weitere Einstellung in der
   App-Registrierung nötig.

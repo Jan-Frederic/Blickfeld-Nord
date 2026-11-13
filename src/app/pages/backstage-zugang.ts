@@ -77,8 +77,13 @@ export class BackstageZugang {
     void import('../data/onedrive').then((o) => {
       this.o = o;
       o.oneDriveVorbereiten();
-      // zurück von der Anmeldung per Weiterleitung: da weitermachen
-      if (o.weiterleitungZurueck()) void this.ablauf(() => o.oneDriveNachWeiterleitung());
+      // zurück von der Anmeldung per Weiterleitung: mit dem Konto weitermachen; ohne Ergebnis (bei Microsoft
+      // abgebrochen, zurückgegangen) bleibt die Seite beim Anmelde-Knopf
+      if (o.weiterleitungZurueck())
+        void o.oneDriveNachWeiterleitung().then(
+          (k) => k && this.ablauf(() => Promise.resolve(k)),
+          (e) => this.fehler.set(o.anmeldeFehler(e).message),
+        );
     });
   }
 
