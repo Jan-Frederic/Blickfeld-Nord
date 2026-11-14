@@ -8,6 +8,10 @@ import { enableOffline, install, installable, iosHint, setupPwa, updateReady } f
 import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
 import { BACKSTAGE_BEREICHE, imBereich } from './data/backstage-bereiche';
 import { SyncKompass } from './pages/sync-kompass';
+import { KopfSuche } from './pages/kopf-suche';
+import { KopfGlocke } from './pages/kopf-glocke';
+import { BandService } from './data/band.service';
+import { ladeIch } from './data/band-ich';
 import { ansichtAus } from './data/neu-zeichnen';
 import { Verlauf } from './zurueck';
 import { SprachHinweis } from './sections/sprach-hinweis';
@@ -84,7 +88,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass, BaldLeiste],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass, BaldLeiste, KopfSuche, KopfGlocke],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -136,6 +140,17 @@ export class App {
   })();
   protected readonly backstage = BACKSTAGE_BEREICHE;
   protected readonly imBereich = imBereich;
+  protected readonly nordBuchstaben = ['N', 'O', 'R', 'D'];
+  /** Backstage: „Ich bin …“ dieses Geräts (nach dem Hydrieren und bei jedem Seitenwechsel gelesen) – Initialen oben links */
+  private readonly ich = signal('');
+  private readonly mitglieder = inject(BandService).members;
+  protected readonly initialen = computed(() => this.mitglieder.find((m) => m.slug === this.ich())?.initials ?? '');
+  protected readonly profilLabel = computed(() => {
+    const m = this.mitglieder.find((x) => x.slug === this.ich());
+    return m ? `Profil: ${m.name}` : 'Profil';
+  });
+  /** Backstage: Leiste beim Hochwischen (nach unten scrollen) ausgeblendet, beim Runterwischen wieder da */
+  protected readonly kopfWeg = signal(false);
   /** aktuelle Adresse ohne Sprache (für die Hervorhebung von Bereichen mit Untermenü) */
   protected readonly pfad = computed(() => this.i18n.path().replace(/\/$/, '') || '/');
   protected readonly year = new Date().getFullYear();
@@ -200,7 +215,29 @@ export class App {
       }
       this.leisteBeobachten();
       this.untermenuesSchliessen();
+      this.ich.set(ladeIch());
+      this.router.events.subscribe(() => this.ich.set(ladeIch()));
+      this.kopfBeimScrollen();
     });
+  }
+
+  // Backstage-Leiste: weg, sobald man nach unten scrollt (auf dem Handy: nach oben wischt), zurück beim Hochscrollen,
+  // ganz oben und nach jedem Seitenwechsel. Offenes Menü, Untermenü oder Suche halten sie sichtbar.
+  private kopfBeimScrollen(): void {
+    let zuletzt = scrollY;
+    addEventListener(
+      'scroll',
+      () => {
+        const y = scrollY;
+        const d = y - zuletzt;
+        if (Math.abs(d) < 6) return;
+        zuletzt = y;
+        const offen = !!document.querySelector('#hauptmenue:popover-open, details.untermenue[open], .kopf-suche');
+        this.kopfWeg.set(this.imBackstage() && d > 0 && y > 80 && !offen);
+      },
+      { passive: true },
+    );
+    this.router.events.subscribe(() => this.kopfWeg.set(false));
   }
 
   // Untermenüs der Backstage-Leiste (details.untermenue): Klick daneben oder Escape klappt sie zu, immer nur eins offen

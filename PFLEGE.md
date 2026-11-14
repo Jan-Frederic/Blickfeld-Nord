@@ -89,7 +89,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Backstage → Termine → Kontakte** (`/backstage/termine/kontakte`): alle Ansprechpartner mit letztem/nächstem
   Auftritt, WhatsApp, E-Mail und „Anfrage schreiben“; neue Veranstalter ohne Auftritt anlegen. Jede Anfrage wird mit
   Datum gemerkt („angefragt am …“, „beantwortet“ setzt zurück) – nach 14 Tagen ohne neuen Termin dort steht
-  **Nachfragen** unter „Heute fällig“.
+  **Nachfragen** unter „Benachrichtigungen“.
 - **Saison als Bild teilen** (Termine → Saison): Bild 1080 × 1350 mit allen 12 Monaten für die WhatsApp-Gruppe.
 - **Konzertseite in der letzten Woche:** „Noch 3 Tage – wir freuen uns auf euch!“ (am Tag: „Heute ist es so weit“).
 - **Rückblick-Formular** ist vorgefüllt: Überschrift mit Ort, Text-Entwurf aus Datum, Ort, „Was lief gut“ und Song
@@ -103,11 +103,16 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   „Screenshots aktualisieren“.
 - **Zusage → Auftritt eintragen** (Termine → Kontakte): setzt die Anfrage auf beantwortet und öffnet „Neuen Termin
   eintragen“ mit Location und Ort vorbelegt (geklärt angehakt) – Datum und Uhrzeit ergänzen, Zeile für GitHub kopieren.
-- **Saison-Update:** In der ersten Woche jedes Monats steht unter „Heute fällig“ „Saison-Update an die Band
+- **Saison-Update:** In der ersten Woche jedes Monats steht unter „Benachrichtigungen“ „Saison-Update an die Band
   schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
-- **Backstage-Übersicht:** oben eine **Suche über alles** (Auftritte, Proben, Songs aller Spotify-Listen, Kontakte,
-  Sammlungen, Bereiche; Song-Treffer öffnen Songs → Liste mit der Suche, Sammlungen ihre Seite). Danach Heute fällig,
-  **Üben** (rechts daneben der Übe-Modus) und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
+- **Backstage-Leiste:** links die **Initialen** (aus „Ich bin …“, `BandService.members[].initials`) → **Profil**
+  (`/backstage/profil`: Ich bin, Microsoft-Konto, Gerät, Zugang, App-Stand, Karteikasten); das Logo steht im Backstage
+  zweizeilig (NORD unter BLICKFELD, schmaler). Rechts die **Lupe** (Suche über alles auf jeder Seite, Tastatur „/“,
+  `pages/kopf-suche.ts`) und die **Glocke** mit der Zahl der **Benachrichtigungen** (`pages/kopf-glocke.ts`, Seite
+  `/backstage/benachrichtigungen`; berechnet in `data/hinweise.service.ts`, zählt bei jedem Seitenwechsel neu). Beim
+  Herunterscrollen (auf dem Handy: Hochwischen) gleitet die Leiste weg, beim Zurückscrollen kommt sie wieder (`app.ts`,
+  `kopfBeimScrollen`); offenes Menü, Untermenü oder Suche halten sie sichtbar.
+- **Backstage-Übersicht:** **Üben** (rechts daneben der Übe-Modus) und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
   Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
   Backstage → Zahlen. Die Bereiche (Übersicht, Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen) stehen im Menü oben – Kacheln gibt es in der
   Übersicht nicht mehr.
@@ -133,7 +138,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   `pages/backstage-anleitung.ts`): die Modi im Vergleich, die fünf Übe-Status und die gemeinsamen Begriffe.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
-- **Heute fällig** nennt die fälligen Karteikarten („5 Karteikarten fällig – Übe-Modus starten · Weihnachtsmarkt in 12
+- **Benachrichtigungen** (Glocke oben) nennt die fälligen Karteikarten („5 Karteikarten fällig – Übe-Modus starten · Weihnachtsmarkt in 12
   Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet (wie in allen Modi) bei 100 %, der Tempo-Knopf
   springt dann auf 70 % und steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
   **Übe-Woche** je Person unter Zahlen → Üben und Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
@@ -300,7 +305,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   nur geplant (Häkchen fehlte).
 - **Wo lohnt es sich wieder?** (Termine → Kontakte): sortiert die Veranstalter nach Bewertung, dann nach Zahl der
   Auftritte dort.
-- **Rückblick-Frist:** Nach einem Auftritt im Dezember erinnert „Heute fällig“ bis zum 14.12. an den Rückblick, damit er
+- **Rückblick-Frist:** Nach einem Auftritt im Dezember erinnert „Benachrichtigungen“ bis zum 14.12. an den Rückblick, damit er
   im Jahresrückblick steht.
 - **Tonart hören** (Song-Dialog): 15–20 Sekunden den Song oder die Akkordfolge spielen, das Mikrofon schlägt die
   Tonart vor. Ohne Original-Tonart wird sie das Original, weicht sie ab, „Wir spielen“.
@@ -389,7 +394,7 @@ bühnenreife zum Festigen; für den nächsten Auftritt kommen Setlist-Songs dazu
 
 **Plan an die Band:** schickt den Probenplan als Nachricht – Songs mit Tonart/Tempo und Spotify-Link zum Vorher-Anhören,
 offene Punkte und Notizen (Teilen-Menü, z. B. WhatsApp; sonst Zwischenablage). Eine Woche vor der Probe erinnert
-**Heute fällig** daran („Probe in 7 Tagen: 6 Songs geplant – Plan an die Band schicken“), bis der Plan verschickt ist.
+**Benachrichtigungen** (Glocke oben) daran („Probe in 7 Tagen: 6 Songs geplant – Plan an die Band schicken“), bis der Plan verschickt ist.
 **Für Spotify kopieren** kopiert die Track-Links der Probensongs für eine Übungs-Playlist (in Spotify am Computer
 einfügen).
 
@@ -664,7 +669,7 @@ Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätt
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
 
-**Wetter am Vortag:** Unter **Heute fällig** erscheint am Tag vor einem Auftritt eine Warnung bei Regen (ab 50 %),
+**Wetter am Vortag:** Unter **Benachrichtigungen** (Glocke oben) erscheint am Tag vor einem Auftritt eine Warnung bei Regen (ab 50 %),
 Kälte (bis 3 °C) oder Wind (ab 40 km/h) rund um die Auftrittszeit – die passenden Punkte (Pavillon, Abdeckplanen,
 warme Kleidung, Gewichte …) landen automatisch auf der Packliste des Auftritts.
 
@@ -735,7 +740,7 @@ Gilt nur für Dateien, die vor der Löschung da waren: wer dieselbe Datei späte
 - **Bühnen-Modus ohne Netz** (ab einer Woche vorher in Bereit?): prüft, ob der Offline-Speicher aktiv ist und
   Backstage sowie die Noten-Anzeige (pdf.js) auf dem Gerät liegen. Fehlt etwas, holt **Jetzt vorladen** es nach;
   ohne aktiven Offline-Speicher die Seite einmal mit Netz neu laden.
-- **Vortag:** Am Tag vor einem Auftritt steht unter **Heute fällig** „Morgen: <Ort> – Bereit?, Packliste, Wetter,
+- **Vortag:** Am Tag vor einem Auftritt steht unter **Benachrichtigungen** (Glocke oben) „Morgen: <Ort> – Bereit?, Packliste, Wetter,
   Notenmappe und Offline prüfen“ und führt auf die Seite des Auftritts. Dort kommen in Bereit? zwei Punkte zum Abhaken
   dazu: **Wetter angesehen** und **Notenmappe dabei** (gespiegelt für die Band, `bn-vorabend-<Auftritt>`).
 - **Für Spotify kopieren** (Setlist): kopiert die Spotify-Track-Links der Songs in Setlist-Reihenfolge – in Spotify am
@@ -837,7 +842,7 @@ persönliche Einstellungen nur ergänzt, nicht überschrieben (außer bei „All
 Backup im OneDrive-Ordner „Backup“. Unter **Backups in OneDrive (…)** stehen alle Backups dort (neueste zuerst;
 frühere, getrennte Daten- bzw. Noten-Backups sind als solche markiert) – jedes lässt sich einzeln **wiederherstellen** (ergänzt die Daten des Geräts, vorher
 zeigt eine Rückfrage, was neu ist und was sich ändert). Ist das letzte Backup älter als 14 Tage (oder gab es noch keins), steht es unter
-**Heute fällig**; nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
+**Benachrichtigungen** (Glocke oben); nach 30 Tagen erinnert zusätzlich Backstage → Aufgaben.
 
 **Alte Backups löschen** (nur wer den Sync-Ordner besitzt, Berechtigung „Daten löschen“): unter **Backups in OneDrive
 (…)** der Knopf „n ältere Backups löschen – die 2 neuesten bleiben“. Erst wird abgeglichen (damit Backups anderer

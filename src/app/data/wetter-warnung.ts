@@ -1,4 +1,4 @@
-// Wetter-Warnung am Vortag (Backstage → Heute fällig): Regen, Kälte oder Wind zur Auftrittszeit (open-meteo) – mit dem,
+// Wetter-Warnung am Vortag (Backstage → Benachrichtigungen): Regen, Kälte oder Wind zur Auftrittszeit (open-meteo) – mit dem,
 // was dann zusätzlich eingepackt werden sollte; die Punkte landen auf der Packliste des Auftritts.
 // Ohne Angular-Abhängigkeiten, damit es auch in Node getestet werden kann.
 export interface WetterLage {

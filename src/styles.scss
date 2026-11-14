@@ -1298,3 +1298,39 @@ app-aenderungen-karte li { margin: 4px 0; max-width: 760px; color: var(--bn-fog)
 app-aenderungen-karte button { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--bn-line); background: none; color: var(--bn-ink); font: inherit; font-size: .85rem; cursor: pointer; }
 app-aenderungen-karte button:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
 
+
+// Backstage-Kopfleiste (app.html): Profil-Knopf mit Initialen, Logo zweizeilig, Lupe und Glocke, beim Scrollen weg
+.topbar { transition: transform .25s ease; }
+.topbar.weg { transform: translateY(-100%); }
+.profil-knopf {
+  flex: none; display: grid; place-items: center; width: 38px; height: 38px; margin-right: 12px; box-sizing: border-box;
+  border: 1px solid var(--bn-sunset); border-radius: 50%; color: var(--bn-sunset); text-decoration: none;
+  font: 400 .7rem/1 var(--bn-wide); letter-spacing: .04em; text-transform: uppercase;
+}
+.profil-knopf:hover, .profil-knopf.on { background: var(--bn-sunset); color: #2a1708; }
+.profil-knopf:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; }
+.profil-knopf .material-icons { font-size: 20px; }
+.topbar.backstage-kopf .logo { display: inline-flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.topbar.backstage-kopf .logo-main { font-size: .95rem; line-height: 1; letter-spacing: .1em; margin-right: -.1em; }
+.topbar.backstage-kopf .logo-sub { display: flex; justify-content: space-between; font-size: .64rem; font-weight: 400; line-height: 1; letter-spacing: 0; }
+app-kopf-suche, app-kopf-glocke { display: inline-flex; }
+.kopf-knopf { position: relative; color: var(--bn-ink); }
+.kopf-knopf.on, .kopf-knopf:hover { color: var(--bn-sunset); }
+.kopf-knopf .zahl {
+  position: absolute; top: 1px; right: -2px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+  border-radius: 9px; background: var(--bn-sunset); color: #2a1708; font: 600 .68rem/18px Inter, sans-serif; letter-spacing: 0; text-align: center;
+}
+.kopf-suche-hintergrund { position: fixed; inset: 64px 0 0; z-index: 29; background: #0007; }
+.kopf-suche {
+  position: fixed; top: 64px; left: 50%; z-index: 30; width: min(720px, calc(100vw - 16px)); box-sizing: border-box; padding: 12px;
+  transform: translateX(-50%); border: 1px solid var(--bn-line); border-top: 0; border-radius: 0 0 14px 14px; background: #1b1e22;
+  box-shadow: 0 12px 32px #0008; font: 400 1rem Inter, sans-serif; letter-spacing: normal; text-transform: none; white-space: normal;
+}
+.kopf-suche app-backstage-suche .backstage-suche { margin: 0; }
+.kopf-suche app-backstage-suche input:focus { outline: none; }
+.kopf-suche app-backstage-suche .feld:focus-within { border-color: var(--bn-sunset); }
+.kopf-suche app-backstage-suche ul { max-height: min(60vh, 480px); overflow-y: auto; }
+@media (max-width: 599px) {
+  .kopf-suche-hintergrund { inset: 56px 0 0; }
+  .kopf-suche { top: 56px; }
+}

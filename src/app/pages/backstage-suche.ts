@@ -8,7 +8,7 @@ import { LISTEN, songAbgleich } from '../data/playlisten';
 import { ladeKontakte, ortKey } from '../data/kontakte';
 import { datumText } from '../data/datum';
 
-// Backstage-Übersicht: eine Suche über alles – Auftritte, Proben, Songs (alle Spotify-Listen), Kontakte und Bereiche.
+// Suche über alles (Lupe oben in der Backstage-Leiste, pages/kopf-suche.ts) – Auftritte, Proben, Songs (alle Spotify-Listen), Kontakte und Bereiche.
 // Tippen genügt; Treffer führen direkt hin (Songs öffnen die Songs-Liste mit der Suche).
 interface Treffer {
   icon: string;
@@ -67,6 +67,11 @@ export class BackstageSuche {
         .filter((m) => passt(m.name, ...sammlungSongs(m).map((x) => x.title)))
         .map((m) => ({ icon: 'bookmarks', text: m.name, info: `Sammlung · ${sammlungSongs(m).length} Songs`, link: '/backstage/songs/sammlungen', query: { name: m.name } })),
       ...BACKSTAGE_BEREICHE.filter((b) => passt(b.label, b.text)).map((b) => ({ icon: b.icon, text: b.label, info: b.text, link: b.path })),
+      // Seiten ohne Menüpunkt: Profil (Initialen oben links) und Benachrichtigungen (Glocke)
+      ...[
+        { icon: 'person', text: 'Profil', info: 'Ich bin, Microsoft-Konto, Gerät, App-Stand', link: '/backstage/profil' },
+        { icon: 'notifications', text: 'Benachrichtigungen', info: 'Was heute fällig ist', link: '/backstage/benachrichtigungen' },
+      ].filter((x) => passt(x.text, x.info)),
       // Unterpunkte (Setlists, Saison, Bühnenreife …) – ohne den ersten, der die Seite des Bereichs selbst ist
       ...BACKSTAGE_BEREICHE.flatMap((b) => (b.unter ?? []).slice(1).filter((u) => passt(u.label)).map((u) => ({ icon: u.icon, text: u.label, info: b.label, link: u.path }))),
     ];

@@ -172,7 +172,7 @@ export class TermineSaison {
     const blob = await new Promise<Blob>((ok, fehler) => canvas.toBlob((b) => (b ? ok(b) : fehler(new Error('Bild fehlt'))), 'image/png'));
     const { shareImage } = await import('../data/poster');
     await shareImage(blob, `blickfeld-nord-saison-${this.heute}.png`, 'Blickfeld Nord – Saison').catch(() => undefined);
-    // Saison-Update für diesen Monat erledigt (Erinnerung unter „Heute fällig“ verschwindet)
+    // Saison-Update für diesen Monat erledigt (Erinnerung unter „Benachrichtigungen“ verschwindet)
     try {
       localStorage.setItem(SAISON_UPDATE_KEY, this.heute.slice(0, 7));
     } catch {

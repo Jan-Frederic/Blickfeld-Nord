@@ -216,7 +216,7 @@ export function probeNachricht(
     .join('\n');
 }
 
-/** Proben in den nächsten 7 Tagen, deren Plan noch nicht an die Band ging – für „Heute fällig“ */
+/** Proben in den nächsten 7 Tagen, deren Plan noch nicht an die Band ging – für „Benachrichtigungen“ */
 export function vorbereitungFaellig<T extends { date: string }>(proben: T[], heute: string, plan: (datum: string) => ProbePlan): { probe: T; songs: number; tage: number }[] {
   return proben
     .map((p) => ({ probe: p, tage: Math.round((Date.parse(p.date) - Date.parse(heute)) / 864e5) }))

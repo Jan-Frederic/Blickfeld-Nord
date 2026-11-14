@@ -376,6 +376,34 @@ test('Backstage: Übersicht ohne Kacheln, Bereich im Menü markiert, Direktaufru
   return p;
 });
 
+test('Backstage-Leiste: Initialen → Profil, zweizeiliges Logo, Leiste weicht beim Scrollen', async () => {
+  const p = await page({ viewport: { width: 390, height: 700 } });
+  await p.go('/backstage/');
+  const knopf = p.locator('header a.profil-knopf');
+  expect((await knopf.locator('.material-icons').count()) === 1, 'ohne „Ich bin …“ kein Personen-Symbol');
+  await p.evaluate(() => localStorage.setItem('bn-ich', 'jan-frederic-overbeck'));
+  await p.go('/backstage/termine/');
+  await until(async () => (await knopf.innerText()).trim() === 'JO', async () => `Initialen fehlen: ${await knopf.innerText()}`);
+  await knopf.click();
+  await until(async () => /Jan-Frederic Overbeck/i.test(await p.locator('app-backstage-profil').innerText().catch(() => '')), 'Profil zeigt den Namen nicht');
+  expect(/Bass & Gesang/i.test(await p.locator('app-backstage-profil .karte').innerText()), 'Profil ohne Rolle');
+  // Logo: NORD unter BLICKFELD
+  const [oben, unten] = await Promise.all(['.logo-main', '.logo-sub'].map((s) => p.locator('header ' + s).boundingBox()));
+  expect(unten.y >= oben.y + oben.height - 1 && Math.abs(unten.width - oben.width) < 12, `Logo nicht zweizeilig: ${JSON.stringify({ oben, unten })}`);
+  // Scrollen: runter → Leiste weg, rauf → wieder da
+  await p.go('/backstage/termine/');
+  const kopf = p.locator('header.topbar');
+  await p.mouse.wheel(0, 600);
+  await until(async () => (await kopf.getAttribute('class')).includes('weg'), 'Leiste bleibt beim Herunterscrollen stehen');
+  await p.mouse.wheel(0, -200);
+  await until(async () => !(await kopf.getAttribute('class')).includes('weg'), 'Leiste kommt beim Hochscrollen nicht wieder');
+  // auf der Website bleibt die Leiste, wie sie ist
+  await p.go('/');
+  expect((await p.locator('header a.profil-knopf').count()) === 0, 'Profil-Knopf auf der Website');
+  expect(p.errors.length === 0, p.errors.join('\n'));
+  return p;
+});
+
 test('App-Start: Bandmitglieder landen im Backstage, alle anderen auf der Startseite', async () => {
   const manifest = JSON.parse(await (await fetch(BASE + '/site.webmanifest')).text());
   expect(manifest.start_url === '/?app=1' && manifest.id === '/', `Manifest: start_url ${manifest.start_url}, id ${manifest.id}`);
@@ -395,23 +423,36 @@ test('App-Start: Bandmitglieder landen im Backstage, alle anderen auf der Starts
   return p;
 });
 
-test('Backstage: Suche über alles, Übersicht ohne „Zahlen und Songs“', async () => {
+// Suche über alles: Lupe oben in der Backstage-Leiste (wird nach dem Start nachgeladen)
+async function suchen(p, text) {
+  await p.locator('app-kopf-suche button[aria-label="Suchen"]').click({ timeout: 20000 });
+  await p.locator('.kopf-suche app-backstage-suche input').fill(text);
+}
+
+test('Backstage: Suche über alles (Lupe auf jeder Seite), Übersicht ohne „Zahlen und Songs“', async () => {
   const p = await page();
-  await p.go('/backstage/');
-  const suche = p.locator('app-backstage-suche input');
-  await suche.fill('Nenna');
+  await p.go('/backstage/termine/');
+  expect(!(await p.locator('app-backstage app-backstage-suche').count()), 'Suche steht noch in der Übersicht');
+  await suchen(p, 'Nenna');
   const auftritt = p.locator('app-backstage-suche li a', { hasText: 'Café Nenna' }).first();
   await auftritt.waitFor();
   await auftritt.click();
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/2027-02-19', () => `Treffer führt nach ${p.url()}`);
+  expect((await p.locator('.kopf-suche').count()) === 0, 'Suche bleibt nach dem Treffer offen');
+  // Escape schließt, „/“ öffnet mit der Tastatur
+  await p.keyboard.press('/');
+  await p.locator('.kopf-suche input').waitFor();
+  expect(await p.locator('.kopf-suche input').evaluate((el) => el === document.activeElement), 'Suchfeld hat nach dem Öffnen nicht den Fokus');
+  await p.keyboard.press('Escape');
+  await until(async () => (await p.locator('.kopf-suche').count()) === 0, 'Escape schließt die Suche nicht');
   // Song-Treffer öffnet die Songs-Liste mit der Suche
   await p.go('/backstage/');
-  await p.locator('app-backstage-suche input').fill('small things');
+  await suchen(p, 'small things');
   await p.locator('app-backstage-suche li a', { hasText: 'All The Small Things' }).first().click();
   await until(async () => (await p.locator('input[aria-label="Songs durchsuchen"]').inputValue().catch(() => '')) === 'All The Small Things', 'Songs-Liste ohne vorbelegte Suche');
   // Sammlung finden → ihre Seite unter Songs → Sammlungen
   await p.go('/backstage/');
-  await p.locator('app-backstage-suche input').fill('Weihnachtslieder');
+  await suchen(p, 'Weihnachtslieder');
   await p.locator('app-backstage-suche li a', { hasText: 'Sammlung' }).first().click();
   await until(async () => (await p.locator('app-songs-sammlungen h3').innerText().catch(() => '')).toLowerCase().includes('weihnachtslieder'), 'Sammlung aus der Suche öffnet nicht ihre Seite');
   // „Zahlen und Songs“ steht nicht mehr in der Übersicht (eigene Unterseite Zahlen)
@@ -505,7 +546,7 @@ test('Backstage: Aufgaben zeigen erkannte Punkte, Abhaken bleibt nach dem Neulad
   return p;
 });
 
-test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne, Abhaken gilt überall', async () => {
+test('Backstage: Werbeplan – Benachrichtigungen kopieren den Text mit Kampagne, Abhaken gilt überall', async () => {
   // Uhr auf 14 Tage vor ein öffentliches Konzert stellen: dann ist „Erste Story“ fällig
   const id = concerts[0].split('/').filter(Boolean).pop();
   const tag = new Date(`${id.slice(0, 10)}T10:00:00`);
@@ -513,15 +554,23 @@ test('Backstage: Werbeplan – „Heute fällig“ kopiert den Text mit Kampagne
   const p = await page({ permissions: ['clipboard-read', 'clipboard-write'] });
   await p.clock.setFixedTime(tag);
   await p.go('/backstage/');
+  // Glocke oben zählt mit, führt zu den Benachrichtigungen
+  await until(async () => Number(await p.locator('app-kopf-glocke .zahl').innerText({ timeout: 20000 }).catch(() => '0')) >= 1, 'Glocke ohne Zahl');
+  await p.locator('app-kopf-glocke a').click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/benachrichtigungen', () => `Glocke führt nach ${p.url()}`);
   const eintrag = p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).first();
   await eintrag.waitFor();
+  await until(async () => Number(await p.locator('app-kopf-glocke .zahl').innerText().catch(() => '0')) === (await p.locator('app-heute-faellig li').count()), 'Glocke zählt anders als die Liste');
   await eintrag.locator('button').click();
   await until(async () => (await p.evaluate(() => navigator.clipboard.readText())).includes('In zwei Wochen'), 'Story-Text nicht kopiert');
   const text = await p.evaluate(() => navigator.clipboard.readText());
   expect(text.includes(`utm_campaign=konzert-${id}`) && text.includes('ref=text'), `Link ohne Herkunft/Kampagne: ${text}`);
   // click statt check: der Eintrag verschwindet mit dem Haken – check() wartete dann vergeblich auf den angehakten Zustand
   await eintrag.locator('input[type=checkbox]').click();
-  await until(async () => (await p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).count()) === 0, 'Schritt bleibt nach dem Abhaken in „Heute fällig“');
+  await until(async () => (await p.locator('app-heute-faellig li', { hasText: 'Erste Story' }).count()) === 0, 'Schritt bleibt nach dem Abhaken in den Benachrichtigungen');
+  // die Zahl an der Glocke ist die Zahl der Einträge – auch nach dem Abhaken
+  const stimmt = async () => Number(await p.locator('app-kopf-glocke .zahl').innerText().catch(() => '0')) === (await p.locator('app-heute-faellig li').count());
+  await until(stimmt, async () => `Glocke (${await p.locator('app-kopf-glocke .zahl').innerText().catch(() => '–')}) passt nach dem Abhaken nicht zur Liste (${await p.locator('app-heute-faellig li').count()})`);
   await p.go(`/backstage/${id}/`);
   await until(async () => await p.locator('#wp-story-1').isChecked(), 'Haken fehlt im Werbeplan des Auftritts');
   // „Story teilen“ im Werbeplan: Bild mit Countdown (am Rechner als Download), Text mit Herkunft in der Zwischenablage, abgehakt
@@ -2215,7 +2264,7 @@ test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufga
 test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Übe-Modus', async () => {
   const p = await page();
   await p.go('/backstage/');
-  await p.locator('app-backstage-suche input').fill('Nenna');
+  await suchen(p, 'Nenna');
   await p.locator('app-backstage-suche li a', { hasText: 'Café Nenna' }).first().click();
   await p.locator('app-backstage-show app-zurueck').waitFor();
   expect((await p.locator('app-backstage-show app-zurueck').innerText()).includes('Backstage'), 'Zurück nennt nicht die vorige Seite');
@@ -2235,9 +2284,11 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   const karte = p.locator('app-backstage a.ueben-karte');
   const karteText = await karte.innerText();
   expect(karteText.includes('3 Songs im Karteikasten · 3 heute dran'), 'Üben-Karte zählt nicht: ' + karteText);
-  // „Heute fällig“ kennt den Karteikasten und führt direkt in den Übe-Modus
-  await until(async () => /3 Karteikarten fällig – Übe-Modus starten/.test(await p.locator('app-heute-faellig').innerText().catch(() => '')), '„Heute fällig“ nennt die fälligen Karteikarten nicht');
+  // die Benachrichtigungen kennen den Karteikasten und führen direkt in den Übe-Modus
+  await p.go('/backstage/benachrichtigungen/');
+  await until(async () => /3 Karteikarten fällig – Übe-Modus starten/.test(await p.locator('app-heute-faellig').innerText().catch(() => '')), 'Benachrichtigungen nennen die fälligen Karteikarten nicht');
   expect((await p.locator('app-heute-faellig a', { hasText: 'Karteikarten fällig' }).getAttribute('href')).includes('modus=1'), 'Link führt nicht in den Übe-Modus');
+  await p.go('/backstage/');
   await karte.click();
   const ueben = p.locator('app-backstage-ueben');
   await ueben.locator('.liste li select').first().waitFor();
@@ -2446,7 +2497,7 @@ test('Backstage: jede Unterseite hat oben ihre Anleitung, und die Anleitung öff
   const seiten = [
     ['/backstage/termine/', 'Termine'], ['/backstage/termine/saison/', 'Saison'], ['/backstage/termine/kontakte/', 'Kontakte'],
     ['/backstage/songs/', 'Songs'], ['/backstage/songs/setlists/', 'Setlists'], ['/backstage/songs/sammlungen/', 'Sammlungen'],
-    ['/backstage/ueben/', 'Üben'],
+    ['/backstage/ueben/', 'Üben'], ['/backstage/benachrichtigungen/', 'Benachrichtigungen'], ['/backstage/profil/', 'Profil'],
     ['/backstage/aufgaben/', 'Aufgaben'], ['/backstage/buehnenplan/', 'Technik'], ['/backstage/material/', 'Material'],
     ['/backstage/uebersetzungen/', 'Sprachen'], ['/backstage/zahlen/', 'Zahlen'], ['/backstage/zahlen/reife/', 'Üben und Bühnenreife'],
     ['/backstage/zahlen/besucher/', 'Besucher'], ['/backstage/zahlen/songs/', 'Songs und Sterne'], ['/backstage/abgleich/', 'Abgleich'],

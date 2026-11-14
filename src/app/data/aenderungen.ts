@@ -11,6 +11,9 @@ export const AENDERUNGEN: Aenderung[] = [
   {
     datum: '2026-11-14',
     punkte: [
+      'Neue Leiste oben: links deine Initialen (Profil), rechts Lupe (Suche über alles, auf jeder Seite) und Glocke mit der Zahl der Benachrichtigungen.',
+      '„Heute fällig“ heißt jetzt Benachrichtigungen und hat eine eigene Seite – die Übersicht zeigt nur noch Üben und die nächsten Termine.',
+      'Die Leiste gleitet beim Herunterscrollen weg und kommt beim Zurückscrollen wieder; das Logo steht zweizeilig und schmaler.',
       'Die installierte App startet bei Bandmitgliedern direkt im Backstage.',
       'Menü mit Unterpunkten: Songs (Liste, Setlists, Sammlungen), Termine (Alle Termine, Saison, Kontakte) und Zahlen (Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne) – die Reiter unter Songs sind weg.',
       'Die Notenblätter auf diesem Gerät stehen jetzt unter Abgleich, die Bühnenreife unter Zahlen → Üben und Bühnenreife.',

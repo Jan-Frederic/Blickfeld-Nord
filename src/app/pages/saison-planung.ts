@@ -62,7 +62,7 @@ export class SaisonPlanung {
     const k = kontaktVon(s);
     const weg = await nachrichtSenden(k, `Anfrage Blickfeld Nord – ${s.venue}`, anfrageText(s, k, this.freiNamen()));
     if (weg === 'abgebrochen') return;
-    // Anfrage merken – nach 14 Tagen ohne neuen Termin dort erinnert „Heute fällig“ ans Nachfragen
+    // Anfrage merken – nach 14 Tagen ohne neuen Termin dort erinnert „Benachrichtigungen“ ans Nachfragen
     angefragtSetzen(ortKey(s), this.heute);
     if (weg === 'kopiert') {
       this.kopiert.set(s.date);

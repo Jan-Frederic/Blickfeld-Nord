@@ -2,8 +2,6 @@ import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { HeuteFaellig } from './heute-faellig';
-import { BackstageSuche } from './backstage-suche';
 import { BandService } from '../data/band.service';
 import { SyncService } from '../data/sync.service';
 import { ladeIch } from '../data/band-ich';
@@ -12,23 +10,21 @@ import { heuteGeuebt, karten, ladeTagesziel, ladeUeben, nochHeute } from '../dat
 import { DokuLink } from './doku-link';
 
 // Versteckter Bereich für die Band, erreichbar per Easter Egg: fünfmal schnell auf das Logo oben links klicken.
-// Die Übersicht zeigt Suche, Fälliges und die nächsten Termine; die Themen liegen auf eigenen Unterseiten
+// Die Übersicht zeigt dein Üben und die nächsten Termine (Suche und Benachrichtigungen stehen oben in der Leiste); die Themen liegen auf eigenen Unterseiten
 // (Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich – siehe BACKSTAGE_BEREICHE), erreichbar über die Leiste oben.
 @Component({
   selector: 'app-backstage',
-  imports: [DokuLink, DatePipe, RouterLink, MatIconModule, HeuteFaellig, BackstageSuche],
+  imports: [DokuLink, DatePipe, RouterLink, MatIconModule],
   template: `
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
-      <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben im Menü.</p>
+      <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen stehen oben im Menü, daneben die Suche
+        (Lupe) und was heute fällig ist (Glocke).</p>
       <app-doku-link thema="uebersicht" />
 
-      <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, die nächsten Termine (je mit Bühnen- bzw. Probe-Modus);
-           die Bereiche stehen in der Leiste oben. Die Bereit-Checks der
-           kommenden Auftritte stehen unter Aufgaben. -->
-      <app-backstage-suche />
-      <app-heute-faellig />
+      <!-- Üben und die nächsten Termine (je mit Bühnen- bzw. Probe-Modus); Suche, Benachrichtigungen und Bereiche stehen
+           in der Leiste oben, die Bereit-Checks der kommenden Auftritte unter Aufgaben. -->
       <!-- Üben: persönlicher Karteikasten mit den Songs, die noch wackeln; rechts der Übe-Modus (Notenansicht) -->
       <div class="ueben-reihe">
         <a class="ueben-karte" routerLink="/backstage/ueben">
@@ -61,7 +57,7 @@ import { DokuLink } from './doku-link';
   styles: `
     h3 { margin: 32px 0 12px; font-family: var(--bn-wide); font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: .85rem; }
     .next { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-    .ueben-reihe { display: flex; align-items: stretch; gap: 8px; margin: 20px 0 0; }
+    .ueben-reihe { display: flex; align-items: stretch; gap: 8px; margin: 4px 0 0; }
     .ueben-karte { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--bn-sunset); color: var(--bn-ink); text-decoration: none; }
     .ueben-karte:hover { background: rgba(232, 164, 106, .08); }
     .ueben-karte mat-icon { color: var(--bn-sunset); flex: none; }

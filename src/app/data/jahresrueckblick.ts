@@ -64,7 +64,7 @@ export function jahresrueckblick(
 
 /**
  * Auftritte im Dezember, deren Rückblick noch fehlt – vom Tag nach dem Auftritt bis zum 14.12., damit der Moment im
- * Jahresrückblick (ab RUECKBLICK_AB) steht. Für „Heute fällig“.
+ * Jahresrückblick (ab RUECKBLICK_AB) steht. Für die Benachrichtigungen.
  */
 export function rueckblickFrist(shows: Show[], history: HistoryEntry[], heute: string): Show[] {
   const jahr = heute.slice(0, 4);

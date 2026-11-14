@@ -4,6 +4,8 @@
 export const DOKU_THEMEN = {
   uebersicht: { titel: 'Übersicht', seite: '/backstage' },
   modi: { titel: 'Übe-, Probe- und Bühnen-Modus', seite: '/backstage' },
+  benachrichtigungen: { titel: 'Benachrichtigungen', seite: '/backstage/benachrichtigungen' },
+  profil: { titel: 'Profil', seite: '/backstage/profil' },
   termine: { titel: 'Termine', seite: '/backstage/termine' },
   saison: { titel: 'Saison', seite: '/backstage/termine/saison' },
   kontakte: { titel: 'Kontakte', seite: '/backstage/termine/kontakte' },
@@ -36,7 +38,7 @@ export const istDokuId = (x: string | undefined): x is DokuId => !!x && x in DOK
 
 /** Gruppen für die Übersicht aller Anleitungen – wie das Menü oben */
 export const DOKU_GRUPPEN: { titel: string; themen: DokuId[] }[] = [
-  { titel: 'Grundlagen', themen: ['uebersicht', 'modi', 'einrichtung'] },
+  { titel: 'Grundlagen', themen: ['uebersicht', 'benachrichtigungen', 'profil', 'modi', 'einrichtung'] },
   { titel: 'Termine', themen: ['termine', 'auftritt', 'setlist', 'probe', 'saison', 'kontakte'] },
   { titel: 'Songs', themen: ['songs', 'setlists', 'sammlungen', 'ueben'] },
   { titel: 'Rund um die Band', themen: ['aufgaben', 'technik', 'material', 'sprachen'] },

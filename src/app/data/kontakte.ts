@@ -15,7 +15,7 @@ export interface Kontakt {
   /** Ortsname und Stadt – für Kontakte ohne Auftritt (neue Veranstalter) */
   ort?: string;
   stadt?: string;
-  /** zuletzt angefragt am (JJJJ-MM-TT) – nach 14 Tagen ohne neuen Termin dort: „Nachfragen“ unter Heute fällig */
+  /** zuletzt angefragt am (JJJJ-MM-TT) – nach 14 Tagen ohne neuen Termin dort: „Nachfragen“ unter Benachrichtigungen */
   angefragt?: string;
   /** Bewertung nach Auftritten – damit man beim „Wieder anfragen“ weiß, ob es sich lohnt */
   technik?: Stufe;

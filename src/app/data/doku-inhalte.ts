@@ -19,22 +19,16 @@ export interface Doku {
 
 export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   uebersicht: {
-    kurz: 'Die Startseite des Backstage: Suche, was heute fällig ist, dein Üben und die nächsten Termine – mit direktem Start in Bühnen-, Probe- und Übe-Modus.',
+    kurz: 'Die Startseite des Backstage: dein Üben und die nächsten Termine – mit direktem Start in Bühnen-, Probe- und Übe-Modus. Suche, Benachrichtigungen und Profil stehen oben in der Leiste.',
     abschnitte: [
       {
-        titel: 'Suche über alles',
-        text: 'Ganz oben: findet Auftritte, Proben, Songs aller Spotify-Listen, Kontakte, Sammlungen und Bereiche. Ein Song-Treffer öffnet Songs → Liste mit der Suche, eine Sammlung ihre Seite.',
-      },
-      {
-        titel: 'Heute fällig',
-        text: 'Was jetzt dran ist, mit Link dorthin, wo es sich erledigen lässt. Zum Beispiel:',
+        titel: 'Die Leiste oben',
         punkte: [
-          'fällige Karteikarten – startet direkt den Übe-Modus',
-          'Probe in 7 Tagen: Plan an die Band schicken',
-          'Nachfragen bei Veranstaltern, die seit 14 Tagen nicht geantwortet haben',
-          'Saison-Update an die Band (erste Woche im Monat)',
-          'Rückblick nach einem Auftritt, Backup, wenn es lange her ist',
-          'ein gescheitertes Website-Update (live ist dann noch der alte Stand)',
+          'Links die Initialen: dein Profil (Ich bin, Microsoft-Konto, Gerät, App-Stand)',
+          'Lupe: Suche über alles – Auftritte, Proben, Songs aller Spotify-Listen, Kontakte, Sammlungen und Bereiche; auf jeder Seite, mit der Tastatur auch per „/“',
+          'Glocke: was heute fällig ist, die Zahl daran sagt wie viel',
+          'Die Bereiche – Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen –, auf dem Handy im Menü',
+          'Beim Herunterscrollen (Hochwischen) verschwindet die Leiste, beim Zurückscrollen ist sie wieder da',
         ],
       },
       {
@@ -46,15 +40,41 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
         text: 'Die kommenden Auftritte und Proben. Rechts neben jedem Termin startet der Bühnen-Modus (Auftritt, mit seiner Setlist) bzw. der Probe-Modus (Probe) direkt; beim Beenden geht es zurück in die Übersicht.',
       },
       {
-        titel: 'Menü und Zurück',
-        text: 'Die Bereiche – Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen – stehen im Menü oben. Der Pfeil oben auf Unterseiten führt zur Seite zurück, von der du kamst.',
-      },
-      {
-        titel: 'Anleitungen',
-        text: 'Jede Unterseite hat oben einen Link „Anleitung: …“ zu ihrer ausführlichen Beschreibung. Alle Anleitungen stehen gesammelt unter „Alle Anleitungen“.',
+        titel: 'Zurück und Anleitungen',
+        text: 'Der Pfeil oben auf Unterseiten führt zur Seite zurück, von der du kamst. Jede Unterseite hat unter ihrem Text einen Link „Anleitung: …“; alle Anleitungen stehen unter „Alle Anleitungen“.',
       },
     ],
-    siehe: ['modi', 'ueben', 'termine'],
+    siehe: ['benachrichtigungen', 'profil', 'modi', 'ueben'],
+  },
+
+  benachrichtigungen: {
+    kurz: 'Was heute dran ist – über die Glocke oben in der Leiste; die Zahl daran sagt, wie viel ansteht.',
+    abschnitte: [
+      {
+        titel: 'Was hier steht',
+        text: 'Jeder Eintrag führt dorthin, wo er sich erledigen lässt. Zum Beispiel:',
+        punkte: [
+          'fällige Karteikarten – startet direkt den Übe-Modus',
+          'Auftritt oder Probe heute; am Vortag eines Auftritts Bereit?, Packliste, Wetter und Notenmappe',
+          'Probe in 7 Tagen: Plan an die Band schicken',
+          'Werbeplan: fällige Schritte mit Haken und „Text kopieren“',
+          'Nachfragen bei Veranstaltern, die seit 14 Tagen nicht geantwortet haben',
+          'Saison-Update an die Band (erste Woche im Monat), Rückblick-Frist im Dezember',
+          'Backup, wenn es lange her ist; ein gescheitertes Website-Update (live ist dann noch der alte Stand)',
+        ],
+      },
+      { titel: 'Die Zahl', text: 'Die Glocke zählt bei jedem Seitenwechsel neu. Abgehakte Werbeplan-Schritte und Erledigtes verschwinden von selbst.' },
+    ],
+    siehe: ['uebersicht', 'ueben'],
+  },
+
+  profil: {
+    kurz: 'Über die Initialen oben links in der Leiste: wer du in der Band bist und was dieses Gerät über dich weiß.',
+    abschnitte: [
+      { titel: 'Angaben', punkte: ['Ich bin – aus dem Microsoft-Konto erkannt oder von Hand gewählt', 'das Microsoft-Konto der Synchronisation', 'der Name dieses Geräts', 'wann der Backstage-Zugang zuletzt geprüft wurde', 'App-Stand', 'dein Karteikasten'] },
+      { titel: 'Ändern', text: 'Alles unter Einstellungen – das Profil zeigt es nur an. Ohne „Ich bin …“ steht oben links ein Personen-Symbol statt der Initialen.' },
+    ],
+    siehe: ['einstellungen', 'ueben'],
   },
 
   einrichtung: {
@@ -100,7 +120,7 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
       { titel: 'Schonzeit', text: 'Ist ein Auftritt geklärt, sind seine Woche und je drei volle Wochen davor und danach automatisch reserviert. Eintragen muss man dafür nichts; Proben sind nicht betroffen.' },
       { titel: 'Wieder anfragen', text: 'Orte, an denen vor einem Jahr gespielt wurde und noch nichts Neues geplant ist – mit Jahrestag, „am besten bis …“ (drei Monate vorher) und der Kurzfassung eurer Bewertung des Veranstalters. „Anfrage schreiben“ macht eine fertige Nachricht mit den noch freien Monaten.' },
       { titel: 'Drucken / als PDF', text: 'Alles auf einer A4-Seite (quer) für die Bandbesprechung.' },
-      { titel: 'Als Bild teilen', text: 'Ein Bild mit allen 12 Monaten für die WhatsApp-Gruppe. Damit ist auch das monatliche „Saison-Update an die Band“ unter Heute fällig erledigt – für die ganze Band.' },
+      { titel: 'Als Bild teilen', text: 'Ein Bild mit allen 12 Monaten für die WhatsApp-Gruppe. Damit ist auch das monatliche „Saison-Update an die Band“ unter Benachrichtigungen erledigt – für die ganze Band.' },
     ],
     siehe: ['termine', 'kontakte'],
   },
@@ -109,7 +129,7 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
     kurz: 'Die Ansprechpartner der Veranstalter – nur auf euren Geräten und im OneDrive, nie auf der Website.',
     abschnitte: [
       { titel: 'Je Veranstalter', text: 'Name, WhatsApp bzw. Telefon, E-Mail, letzter und nächster Auftritt dort. Ein Kontakt gilt für alle Auftritte am selben Ort. Neue Veranstalter ohne Auftritt lassen sich hier anlegen; in Chrome auf Android auch „Aus dem Adressbuch“.' },
-      { titel: 'Anfragen', text: '„Anfrage schreiben“ öffnet eine fertige Nachricht (WhatsApp, sonst E-Mail). Jede Anfrage wird mit Datum gemerkt; „beantwortet“ setzt das zurück. Kommt nach 14 Tagen kein Termin zustande, steht „Nachfragen“ unter Heute fällig.' },
+      { titel: 'Anfragen', text: '„Anfrage schreiben“ öffnet eine fertige Nachricht (WhatsApp, sonst E-Mail). Jede Anfrage wird mit Datum gemerkt; „beantwortet“ setzt das zurück. Kommt nach 14 Tagen kein Termin zustande, steht „Nachfragen“ unter Benachrichtigungen.' },
       { titel: 'Zusage → Auftritt eintragen', text: 'Setzt die Anfrage auf beantwortet und öffnet das Termin-Formular mit Location und Ort vorbelegt – Datum und Uhrzeit ergänzen.' },
       { titel: 'Bewerten', text: 'Technik, Publikum, Bezahlung pünktlich oder spät und eine Notiz. Die Kurzfassung steht bei „Wieder anfragen“ – gelb, wenn zwei Punkte schlecht waren. „Wo lohnt es sich wieder?“ sortiert die Veranstalter nach Bewertung und Zahl der Auftritte.' },
       { titel: 'Mappe', text: 'Ein PDF mit Ansprechpartner, Bewertung und allen Auftritten dort samt Setlist und Vor-Ort-Angaben – entsteht auf dem Gerät, nur für die Band.' },
@@ -164,7 +184,7 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
           'Generalprobe: setzt die Setlist des nächsten Auftritts an den Anfang; was noch wackelt, kommt vorher einzeln dran',
         ],
       },
-      { titel: 'Plan an die Band', text: 'Schickt den Probenplan als Nachricht – Songs mit Tonart, Tempo und Spotify-Link, offene Punkte und Notizen. Eine Woche vorher erinnert Heute fällig daran. „Für Spotify kopieren“ kopiert die Links für eine Übungs-Playlist.' },
+      { titel: 'Plan an die Band', text: 'Schickt den Probenplan als Nachricht – Songs mit Tonart, Tempo und Spotify-Link, offene Punkte und Notizen. Eine Woche vorher erinnern die Benachrichtigungen (Glocke) daran. „Für Spotify kopieren“ kopiert die Links für eine Übungs-Playlist.' },
       { titel: 'Probe-Modus', text: '„Probe-Modus starten“ ganz oben: die Songs im Vollbild, je Song Status, eigene Notiz, Mitschnitt und Zeit. Am Ende eine Zusammenfassung; „Nochmal“ und „Nicht drangekommen“ gehen mit einem Klick auf die nächste Probe, „Ergebnis an die Band“ verschickt sie.' },
     ],
     siehe: ['modi', 'reife', 'termine'],

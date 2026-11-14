@@ -1,4 +1,4 @@
-// Deploy-Status für „Heute fällig“: Ist der letzte Lauf von „Deploy to GitHub Pages“ auf main gescheitert, zeigt die
+// Deploy-Status für „Benachrichtigungen“: Ist der letzte Lauf von „Deploy to GitHub Pages“ auf main gescheitert, zeigt die
 // Website noch den alten Stand. Öffentliche GitHub-API ohne Anmeldung (60 Abrufe je Stunde und Gerät – reicht).
 export const DEPLOY_API = 'https://api.github.com/repos/Jan-Frederic/Blickfeld-Nord/actions/workflows/deploy-pages.yml/runs?branch=main&per_page=5';
 

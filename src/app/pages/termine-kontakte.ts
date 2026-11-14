@@ -13,7 +13,7 @@ import { DokuLink } from './doku-link';
 
 // Backstage → Termine → Kontakte (/backstage/termine/kontakte): alle Ansprechpartner der Veranstalter auf einen Blick –
 // Ort, letzter bzw. nächster Auftritt, WhatsApp, E-Mail, Anfrage (mit „angefragt am“, Nachfrage nach 14 Tagen unter
-// Heute fällig). Neue Veranstalter ohne Auftritt lassen sich anlegen. Nur auf den Geräten und im OneDrive (bn-kontakte).
+// Benachrichtigungen). Neue Veranstalter ohne Auftritt lassen sich anlegen. Nur auf den Geräten und im OneDrive (bn-kontakte).
 const datum = (d: string) => datumText(d);
 
 interface Zeile {

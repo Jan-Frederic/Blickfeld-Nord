@@ -1,8 +1,16 @@
 <!-- Kopfleiste, Knöpfe und Symbole bewusst ohne Angular Material: der Seitenrahmen steht auf jeder Seite, und
      Material-Buttons/-Icons kosten beim Start spürbar Rechenzeit (Lighthouse-Blockierzeit) -->
-<header class="topbar">
+<header class="topbar" [class.backstage-kopf]="imBackstage()" [class.weg]="kopfWeg()">
+  @if (imBackstage()) {
+    <!-- Backstage: oben links das eigene Profil (Initialen aus „Ich bin …“) -->
+    <a class="profil-knopf" routerLink="/backstage/profil" routerLinkActive="on" [attr.aria-label]="profilLabel()" [title]="profilLabel()">
+      @if (initialen()) { <span aria-hidden="true">{{ initialen() }}</span> } @else { <span class="material-icons" aria-hidden="true">person</span> }
+    </a>
+  }
   <button class="logo" (click)="onLogoClick()" [title]="t().toTop">
-    <span class="logo-main">Blickfeld</span> <span class="logo-sub">Nord</span>
+    <span class="logo-main">Blickfeld</span>
+    <!-- Backstage: zweizeilig, NORD unter BLICKFELD auf dessen Breite verteilt (Buchstaben einzeln, vorgelesen als Wort) -->
+    <span class="logo-sub">@if (imBackstage()) {<span class="sr-only">Nord</span>@for (b of nordBuchstaben; track $index) {<span aria-hidden="true">{{ b }}</span>}} @else {Nord}</span>
   </button>
   <span class="spacer"></span>
   <nav class="desktop-nav" [attr.aria-label]="imBackstage() ? 'Backstage-Bereiche' : null">
@@ -60,6 +68,13 @@
         >{{ l.lang.toUpperCase() }}</a>
       }
     </nav>
+  }
+  @if (imBackstage()) {
+    <!-- Backstage: Suche über alles (Lupe) und Benachrichtigungen (Glocke mit Zahl) – erst nach dem Start geladen -->
+    @defer {
+      <app-kopf-suche />
+      <app-kopf-glocke />
+    }
   }
   <!-- Handy-Menü als natives Popover: Esc, Klick daneben und aria-expanded übernimmt der Browser
        (spart gegenüber mat-menu rund 60 KB JavaScript auf jeder Seite) -->
