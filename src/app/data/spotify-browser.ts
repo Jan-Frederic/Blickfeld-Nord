@@ -143,7 +143,8 @@ export class SpotifyBrowser {
     p.addListener('initialization_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('browser'), message));
     p.addListener('authentication_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('rechte'), message));
     p.addListener('account_error', ({ message }: { message: string }) => this.melden(new SpotifyFehler('premium'), message));
-    p.addListener('playback_error', ({ message }: { message: string }) => spotifyNotiz(`Browser-Player: Wiedergabefehler ${message}`));
+    // „no list was loaded“: Pause beim Verlassen des Modus, obwohl noch nichts geladen war – harmlos, nicht protokollieren
+    p.addListener('playback_error', ({ message }: { message: string }) => /no list was loaded/i.test(message) || spotifyNotiz(`Browser-Player: Wiedergabefehler ${message}`));
     // Seite wird geschlossen oder neu geladen: abmelden, sonst bleibt bei Spotify ein totes Gerät stehen
     addEventListener('pagehide', () => this.player?.disconnect());
     return p;

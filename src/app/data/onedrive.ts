@@ -205,8 +205,27 @@ export function oneDriveAnmelden(still = false): Promise<AccountInfo | null> {
   })();
 }
 
-/** Anmelde-Fenster öffnen (synchron im Aufruf) und bewachen; zuletzt angemeldetes Konto vorgeben */
+/**
+ * Läuft die Seite als installierte App (Vollbild bzw. eigenes Fenster)? Dort taugt das Anmelde-Fenster nicht: Android
+ * öffnet es als eigenen Chrome-Tab, iPhone und Windows ähnlich – die Antwort kommt nicht zur App zurück („Vom
+ * Anmelde-Fenster kam keine Antwort“). In der App wird deshalb gleich per Weiterleitung angemeldet.
+ */
+export function alsAppGeoeffnet(): boolean {
+  try {
+    return matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
+  } catch {
+    return false;
+  }
+}
+/** Anmeldung per Weiterleitung starten; die Seite wird gleich verlassen – bis dahin nicht weitermachen */
+function perWeiterleitung(): Promise<never> {
+  void oneDriveWeiterleiten();
+  return new Promise<never>(() => undefined);
+}
+
+/** Anmelde-Fenster öffnen (synchron im Aufruf) und bewachen; zuletzt angemeldetes Konto vorgeben – in der App per Weiterleitung */
 function popupAnmelden(m: IPublicClientApplication): Promise<AccountInfo> {
+  if (alsAppGeoeffnet()) return perWeiterleitung();
   const hinweis = letztesKonto();
   const start = Date.now();
   let fenster: Window | null = null;
@@ -237,7 +256,7 @@ function popupAnmelden(m: IPublicClientApplication): Promise<AccountInfo> {
       noetigSetzen(false);
       return r.account;
     })
-    .catch((e) => nachFehlschlag(e, m.getActiveAccount()));
+    .catch((e) => nachFehlschlag(e, false, m.getActiveAccount()));
 }
 
 /**
@@ -251,7 +270,7 @@ const AUTO_ABSTAND_MS = 5 * 60_000;
 export function automatischOhnePopup(art: AnmeldeArt, still: boolean, zuletzt: number, jetzt = Date.now()): boolean {
   return !still && (art === 'blockiert' || art === 'zeit') && !(zuletzt && jetzt - zuletzt < AUTO_ABSTAND_MS);
 }
-async function nachFehlschlag(e: unknown, konto?: AccountInfo | null): Promise<never> {
+async function nachFehlschlag(e: unknown, still: boolean, konto?: AccountInfo | null): Promise<never> {
   const f = anmeldeFehler(e);
   let zuletzt = 0;
   try {
@@ -259,7 +278,7 @@ async function nachFehlschlag(e: unknown, konto?: AccountInfo | null): Promise<n
   } catch {
     // ohne Sitzungsspeicher eben ohne Sperre
   }
-  if (!automatischOhnePopup(f.art, stillModus, zuletzt)) throw f;
+  if (!automatischOhnePopup(f.art, still, zuletzt)) throw f;
   try {
     sessionStorage.setItem(AUTO_KEY, String(Date.now()));
   } catch {
@@ -347,6 +366,8 @@ export function oneDriveStill<T>(arbeit: () => Promise<T>): Promise<T> {
 }
 
 async function token(): Promise<string> {
+  // gleich zu Beginn festhalten: läuft parallel ein Abgleich im Hintergrund, gilt dieser Aufruf trotzdem als angetippt
+  const imHintergrund = stillModus;
   const m = await msal();
   const account = await oneDriveKonto();
   if (!account) throw new Error('Nicht mit OneDrive verbunden');
@@ -370,14 +391,15 @@ async function token(): Promise<string> {
       }
     }
     noetigSetzen(true);
-    if (stillModus) throw new Error('Anmeldung abgelaufen – bitte „Neu anmelden“ antippen', { cause: e });
+    if (imHintergrund) throw new Error('Anmeldung abgelaufen – bitte „Neu anmelden“ antippen', { cause: e });
+    if (alsAppGeoeffnet()) return perWeiterleitung();
     try {
       const r = await m.acquireTokenPopup({ scopes: SCOPES, account, overrideInteractionInProgress: true });
       noetigSetzen(false);
       return r.accessToken;
     } catch (e3) {
       // Fenster klappte nicht: von selbst ohne Pop-up neu anmelden (wie Abmelden und Anmelden)
-      return nachFehlschlag(e3, account);
+      return nachFehlschlag(e3, false, account);
     }
   }
 }

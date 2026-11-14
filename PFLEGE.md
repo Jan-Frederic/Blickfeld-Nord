@@ -1130,6 +1130,11 @@ nie ein Fenster) – das klappt nicht, wo der Browser Drittanbieter-Cookies bloc
 - Blockiert der Browser das Fenster, kommt gleich die Meldung „Das Anmelde-Fenster wurde blockiert …“; wird es
   geschlossen, ohne dass Microsoft geantwortet hat, nach wenigen Sekunden „Anmeldung abgebrochen“ (`mitFensterWache`;
   die Antwortseite `/auth/` meldet sich über `bn-auth-antwort`). Für Passwort und Code per SMS bleiben 10 Minuten.
+- **In der installierten App nie ein Pop-up:** Läuft die Seite als App (Vollbild bzw. eigenes Fenster,
+  `alsAppGeoeffnet`), meldet sie sich gleich per Weiterleitung an – das Fenster öffnete Android als eigenen
+  Chrome-Tab, iPhone und Windows ähnlich, und die Antwort kam nicht zur App zurück („Vom Anmelde-Fenster kam keine
+  Antwort“). Ob ein Abgleich im Hintergrund läuft, hält jeder Aufruf gleich zu Beginn fest – ein angetippter Abgleich
+  neben einem automatischen gilt nicht mehr fälschlich als „im Hintergrund“.
 - **Von selbst ohne Pop-up:** Ist das Fenster blockiert oder kommt von ihm keine Antwort, vergisst die App das bisherige
   Konto auf diesem Gerät (wie „Abmelden“ – die Microsoft-Anmeldung im Browser bleibt) und meldet per Weiterleitung neu
   an (`nachFehlschlag`/`automatischOhnePopup` in `data/onedrive.ts`). Nie im Hintergrund, nicht nach Schließen des
