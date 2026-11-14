@@ -17,11 +17,11 @@ const EDIT_URL = 'https://github.com/Jan-Frederic/Blickfeld-Nord/edit/main/src/a
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Technik</h2>
-      <app-doku-link thema="technik" />
       <p class="lead">
         Geräte und Musiker mit Maus oder Finger an ihren Platz ziehen. Feinjustierung: antippen, dann Pfeiltasten
         (5 cm, mit Umschalt 25 cm). Ein Kästchen ist 1 m.
       </p>
+      <app-doku-link thema="technik" />
 
       <app-technik-aufbau [bearbeiten]="true" [nurPlan]="true" (geaendert)="items.set($event)" />
 

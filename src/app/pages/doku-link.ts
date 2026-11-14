@@ -3,8 +3,8 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { DOKU_THEMEN, DokuId, dokuPfad } from '../data/doku-themen';
 
-// Link zur ausführlichen Anleitung – oben auf jeder Backstage-Unterseite, direkt unter der Überschrift (die Seiten
-// halten ihre Texte kurz, die Details stehen in der Anleitung). Styles global (styles.scss, app-doku-link).
+// Link zur ausführlichen Anleitung – oben auf jeder Backstage-Unterseite: Titel, kurzer Text, dann dieser Link (grau, die
+// Seiten halten ihre Texte kurz, die Details stehen in der Anleitung). Styles global (styles.scss, app-doku-link).
 @Component({
   selector: 'app-doku-link',
   imports: [RouterLink, MatIconModule],

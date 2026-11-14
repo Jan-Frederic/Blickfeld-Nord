@@ -14,10 +14,6 @@ import { SetlistBuehne } from './setlist-buehne';
   selector: 'app-songs-setlists',
   imports: [DatePipe, RouterLink, MatIconModule, SetlistBuehne],
   template: `
-    <p class="lead">
-      Die Setlists aller Auftritte, wie sie auf diesem Gerät gespeichert sind – Setlists der anderen kommen über „Abgleich“
-      oder „Setlist als Link“ dazu. Bearbeitet wird je Auftritt unter „Setlist“.
-    </p>
     @if (!liste().length) {
       <p class="leer">Noch keine Setlist auf diesem Gerät. Im Backstage einen Auftritt öffnen und unter „Setlist“ Songs wählen.</p>
     }

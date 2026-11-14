@@ -42,11 +42,6 @@ function ladeEntwurf(): Record<string, Werte> {
   selector: 'app-songs-liste',
   imports: [MatIconModule, SongDialog, SetlistBuehne, WunschPassung],
   template: `
-      <p class="lead">
-        Tonart, Tempo, Notiz und Noten je Song. Zeile antippen zum Bearbeiten,
-        <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song.
-      </p>
-
       <div class="listen-chips" role="group" aria-label="Nach Spotify-Liste filtern">
         <button type="button" [attr.aria-pressed]="liste() === ''" (click)="liste.set('')">Alle <span class="n">{{ songs().length }}</span></button>
         @for (l of listen; track l.key) {

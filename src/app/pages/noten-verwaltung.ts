@@ -5,7 +5,7 @@ import { CHORDPRO_ENDUNGEN } from '../data/chordpro';
 import { notenEinlesen, notenErgebnisText } from '../data/noten-import';
 import { NotenDateiInfo, notenDateiLoeschen, notenExportieren, notenImportieren } from '../data/noten';
 
-// Notenblätter auf diesem Gerät (Backstage → Songs → Noten): gespeicherte PDFs mit Größe, Löschen, viele Dateien oder
+// Notenblätter auf diesem Gerät (Backstage → Abgleich, #noten): gespeicherte PDFs mit Größe, Löschen, viele Dateien oder
 // ganze Ordner (PDF und ChordPro) einlesen – jede wird über den Dateinamen bzw. {title:} ihrem Song zugeordnet –
 // und der Austausch in der Band als Datei, die direkt von Gerät zu Gerät geht (Teilen-Menü, z. B. AirDrop oder Messenger).
 // Suche über die Dateinamen. Löschen: alle nur von diesem Gerät; wer den OneDrive-Ordner besitzt (Berechtigung „Daten
@@ -139,7 +139,7 @@ export class NotenVerwaltung {
     if (!datei) return;
     if (navigator.canShare?.({ files: [datei] })) {
       try {
-        await navigator.share({ files: [datei], title: 'Blickfeld Nord – Notenblätter', text: 'Notenblätter zum Importieren (Backstage → Songs → Notenblätter importieren)' });
+        await navigator.share({ files: [datei], title: 'Blickfeld Nord – Notenblätter', text: 'Notenblätter zum Importieren (Backstage → Abgleich → Notenblätter importieren)' });
         this.meldung.set({ text: 'Geteilt.' });
         return;
       } catch (e) {

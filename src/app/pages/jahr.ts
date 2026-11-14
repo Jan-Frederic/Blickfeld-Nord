@@ -80,8 +80,8 @@ const TEXT = tr(
         }
         <p class="kicker">{{ t().kicker }}</p>
         <h2>{{ t().title(r.jahr) }}</h2>
-        @if (vorschau()) { <app-doku-link thema="jahr" /> }
         <p class="lead">{{ t().lead(r.jahr) }}</p>
+        @if (vorschau()) { <app-doku-link thema="jahr" /> }
 
         <ul class="zahlen">
           <li><span class="wert">{{ r.auftritte }}</span><span class="was">{{ t().shows }}</span></li>

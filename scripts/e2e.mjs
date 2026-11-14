@@ -360,9 +360,38 @@ test('Backstage: Übersicht ohne Kacheln, Bereich im Menü markiert, Direktaufru
   await p.go('/backstage/material/');
   await until(async () => ((await p.locator('#hauptmenue a.on').textContent()) ?? '').includes('Material'), 'Navigation markiert den Bereich nicht');
   // Direktaufruf (z. B. Lesezeichen) geht über die Fehlerseite – muss im richtigen Bereich landen
-  await p.go('/backstage/zahlen/');
-  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/zahlen', 'Direktaufruf /backstage/zahlen landet woanders');
+  await p.go('/backstage/zahlen/besucher/');
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/zahlen/besucher', 'Direktaufruf /backstage/zahlen/besucher landet woanders');
   await p.locator('app-backstage-besucher').waitFor();
+  // Bereich mit Untermenü: Handy-Menü zeigt die Unterpunkte eingerückt, markiert den gewählten
+  await until(async () => ((await p.locator('#hauptmenue a.unterpunkt.on').textContent()) ?? '').includes('Besucher'), 'Untermenü markiert die Unterseite nicht');
+  // alte Adressen der Song-Reiter führen an die neuen Orte
+  await p.go('/backstage/songs/reife/');
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/zahlen/reife', () => `songs/reife leitet nicht weiter: ${p.url()}`);
+  await p.go('/backstage/songs/noten/');
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/abgleich', () => `songs/noten leitet nicht weiter: ${p.url()}`);
+  await p.locator('app-backstage-abgleich app-noten-verwaltung').waitFor();
+  await p.go('/backstage/songs/');
+  expect((await p.locator('app-backstage-songs .tabs').count()) === 0, 'Reiter (Chips) stehen noch unter Songs');
+  return p;
+});
+
+test('App-Start: Bandmitglieder landen im Backstage, alle anderen auf der Startseite', async () => {
+  const manifest = JSON.parse(await (await fetch(BASE + '/site.webmanifest')).text());
+  expect(manifest.start_url === '/?app=1' && manifest.id === '/', `Manifest: start_url ${manifest.start_url}, id ${manifest.id}`);
+  const p = await page();
+  await p.go('/?app=1');
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `App-Start (Band) landet nicht im Backstage: ${p.url()}`);
+  await p.locator('app-backstage h2').waitFor();
+  // im Browser (ohne ?app=1) bleibt die Startseite die Startseite
+  await p.go('/');
+  expect(new URL(p.url()).pathname === '/', `Startseite im Browser leitet um: ${p.url()}`);
+  const q = await page({ ohneZugang: true });
+  await q.go('/?app=1');
+  const u = new URL(q.url());
+  expect(u.pathname === '/' && !u.searchParams.has('app'), `App-Start ohne Zugang: ${q.url()}`);
+  await q.locator('#home').waitFor();
+  expect(q.errors.length === 0 && p.errors.length === 0, [...p.errors, ...q.errors].join('\n'));
   return p;
 });
 
@@ -796,8 +825,8 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   });
   // Wochenrückblick in der Übersicht: geübte Karten der letzten 7 Tage
   await p.evaluate(() => localStorage.setItem('bn-fortschritt-jan-frederic-overbeck', JSON.stringify({ 'Iris|The Goo Goo Dolls': [{ tag: new Date().toLocaleDateString('sv-SE'), stand: 'wackelt', quelle: 'ueben' }] })));
-  // … steht als Grafik unter Zahlen (nicht mehr in der Übersicht)
-  await p.go('/backstage/zahlen/');
+  // … steht als Grafik unter Zahlen → Üben und Bühnenreife (nicht mehr in der Übersicht)
+  await p.go('/backstage/zahlen/reife/');
   const wochen = p.locator('app-uebe-wochen');
   await until(async () => /du\s*1\s*diese Woche/.test(await wochen.locator('.legende').innerText().catch(() => '')), async () => `Grafik „Üben je Woche“ fehlt: ${await wochen.innerText().catch(() => '–')}`);
   expect((await wochen.locator('.woche').count()) === 8 && /KW \d+/.test(await wochen.locator('.info').innerText()) && (await wochen.locator('.woche').last().locator('.bar').evaluateAll((els) => els.some((el) => parseFloat(el.style.height) > 0))), 'Balken der laufenden Woche fehlen');
@@ -1045,7 +1074,7 @@ test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Büh
   await p.locator('app-backstage-probe details.vorschlaege summary').click();
   await until(async () => /wackelt bei Fred/.test(await p.locator('app-probe-vorschlag').innerText().catch(() => '')), 'Vorschlag nutzt die Bühnenreife nicht');
   // Übersicht: Fred mit einem Song in „Üben“ und einem, der sitzt; Iris als Baustelle
-  await p.go('/backstage/songs/reife/');
+  await p.go('/backstage/zahlen/reife/');
   const reife = p.locator('app-songs-reife');
   await until(async () => /✎ 1[\s\S]*✓ 1/.test(await reife.locator('.person').filter({ hasText: 'Fred' }).innerText().catch(() => '')), 'Übe-Status je Person fehlt');
   await reife.getByRole('button', { name: /^Baustellen/ }).click();
@@ -1063,9 +1092,9 @@ test('Backstage: Übe-Status je Person – Probe-Modus, Status der anderen, Büh
   expect(p.errors.length === 0, p.errors.join('\n'));
   return p;
 });
-test('Backstage: Songs → Noten – Suche; Löschen vom Gerät, als Besitzer auch aus OneDrive', async () => {
+test('Backstage: Abgleich → Notenblätter – Suche; Löschen vom Gerät, als Besitzer auch aus OneDrive', async () => {
   const p = await page();
-  await p.go('/backstage/songs/noten/');
+  await p.go('/backstage/abgleich/');
   const datei = (id, name) => ({ id, name, daten: new ArrayBuffer(7), groesse: 7, hinzugefuegt: '2026-01-01' });
   await p.evaluate((dateien) => Promise.all([
     new Promise((ok) => {
@@ -1631,11 +1660,11 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => (await p.locator('app-setlist-buehne').count()) === 0, 'X in der Notenansicht beendet den Bühnen-Modus nicht');
 
   // Weitergabe: Datei exportieren und auf einem zweiten Gerät importieren
-  await p.go('/backstage/songs/noten/');
+  await p.go('/backstage/abgleich/');
   const [download] = await Promise.all([p.waitForEvent('download'), p.locator('app-noten-verwaltung button', { hasText: 'an die Band' }).click()]);
   const datei = readFileSync(await download.path());
   const q = await page();
-  await q.go('/backstage/songs/noten/');
+  await q.go('/backstage/abgleich/');
   await q.locator('app-noten-verwaltung input[type=file][accept*=json]').setInputFiles({ name: 'noten.json', mimeType: 'application/json', buffer: datei });
   await until(async () => (await q.locator('app-noten-verwaltung .meldung').innerText().catch(() => '')).includes('1 Song'), 'Import auf dem zweiten Gerät klappt nicht');
   expect((await q.locator('app-noten-verwaltung li').innerText()).includes('songbook.pdf'), 'PDF fehlt nach dem Import');
@@ -1669,10 +1698,13 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   copyFileSync(join(DIST, 'presse', 'blickfeld-nord-buehnenplan.pdf'), join(ordner, 'Iris - The Goo Goo Dolls - Bass.pdf'));
   await q.locator('app-noten-verwaltung input.ordner').setInputFiles(ordner);
   await until(async () => (await meldungNoten()).includes('1 PDF aktualisiert'), async () => 'Geänderte Datei gleichen Namens wird nicht ersetzt: ' + (await meldungNoten()));
-  // Setlists aller Auftritte als eigene Unterseite
-  await q.locator('app-backstage-songs nav a', { hasText: 'Setlists' }).click();
+  // Setlists aller Auftritte als eigene Unterseite – über das Menü (Songs → Setlists), dann zurück zur Liste
+  await q.locator('button.mobile-nav').click();
+  await q.locator('#hauptmenue a.unterpunkt', { hasText: 'Setlists' }).click();
   await until(async () => (await q.locator('app-songs-setlists').count()) === 1, 'Unterseite Setlists fehlt');
-  await q.locator('app-backstage-songs nav a', { hasText: 'Liste' }).click();
+  await q.locator('button.mobile-nav').click();
+  await q.locator('#hauptmenue a.menu-item', { hasText: 'Songs' }).first().click();
+  await q.locator('app-songs-liste').waitFor();
   // drei PDFs bei Iris; im Bühnen-Modus die Fassung „Bass“ wählen – bleibt beim Weiter- und Zurückblättern
   await q.locator('app-backstage-songs input[type=search]').fill('Iris');
   await until(async () => (await q.locator('app-backstage-songs tbody tr .noten .tag').first().innerText().catch(() => '')) === '3 PDFs', 'Mehrere PDFs werden in der Tabelle nicht gezählt');
@@ -1986,7 +2018,10 @@ test('Backstage: Songs → Sammlungen – anlegen, eigene Seite bearbeiten, in d
   const p = await page();
   await p.go('/backstage/songs/');
   expect(!(await p.locator('app-songs-liste .sammlung-chips').count()), 'Sammlungen stehen noch in der Songs-Liste');
-  await schritt('Reiter Sammlungen', () => p.locator('app-backstage-songs .tabs a', { hasText: 'Sammlungen' }).click());
+  await schritt('Menü Songs → Sammlungen', async () => {
+    await p.locator('button.mobile-nav').click();
+    await p.locator('#hauptmenue a.unterpunkt', { hasText: 'Sammlungen' }).click();
+  });
   const seite = p.locator('app-songs-sammlungen');
   await schritt('Übersicht der Sammlungen', () => seite.locator('.karten').waitFor({ timeout: 20000 }));
   expect((await seite.locator('.karten li', { hasText: 'Weihnachtslieder' }).count()) === 1, 'feste Sammlung fehlt in der Übersicht');
@@ -2385,14 +2420,17 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Übe-Modus endet nicht in der Übersicht: ${p.url()}`);
   // mit der Band geteilt: Übe-Statistik unter Bühnenreife
   expect((await p.evaluate(() => JSON.parse(localStorage.getItem('bn-kasten-jan-frederic-overbeck') ?? '{}').v)) === 2, 'Karteikasten wird nicht mit der Band geteilt');
-  await p.go('/backstage/songs/reife/');
+  await p.go('/backstage/zahlen/reife/');
   await until(async () => (await p.locator('app-songs-reife .person.ich .kasten span').count()) === 5, 'Übe-Statistik (Karteikasten) fehlt unter Bühnenreife');
   return p;
 });
-test('Backstage: Anleitung – Links oben in der Übersicht, drei Modi im Vergleich', async () => {
+test('Backstage: Anleitung – Übersicht verlinkt ihre Anleitung, drei Modi im Vergleich', async () => {
   const p = await page();
   await p.go('/backstage/');
-  await p.locator('app-backstage app-doku-link a', { hasText: 'Übe-, Probe- und Bühnen-Modus' }).click();
+  await until(async () => (await p.locator('app-backstage app-doku-link a').allInnerTexts()).join('|').includes('Anleitung: Übersicht'), 'Übersicht ohne Anleitung');
+  expect((await p.locator('app-backstage app-doku-link').count()) === 1, 'Übersicht hat mehr als einen Anleitungs-Link');
+  await p.go('/backstage/anleitung/');
+  await p.locator('app-backstage-anleitungen .themen a', { hasText: 'Übe-, Probe- und Bühnen-Modus' }).click();
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/anleitung/modi', () => `Anleitung öffnet nicht: ${p.url()}`);
   const seite = p.locator('app-backstage-anleitung');
   expect((await seite.locator('.vergleich thead th').allTextContents()).join('|').includes('Bühnen-Modus|Probe-Modus|Übe-Modus'), 'Vergleichstabelle fehlt');
@@ -2408,22 +2446,32 @@ test('Backstage: jede Unterseite hat oben ihre Anleitung, und die Anleitung öff
   const seiten = [
     ['/backstage/termine/', 'Termine'], ['/backstage/termine/saison/', 'Saison'], ['/backstage/termine/kontakte/', 'Kontakte'],
     ['/backstage/songs/', 'Songs'], ['/backstage/songs/setlists/', 'Setlists'], ['/backstage/songs/sammlungen/', 'Sammlungen'],
-    ['/backstage/songs/noten/', 'Noten'], ['/backstage/songs/reife/', 'Bühnenreife'], ['/backstage/ueben/', 'Üben'],
+    ['/backstage/ueben/', 'Üben'],
     ['/backstage/aufgaben/', 'Aufgaben'], ['/backstage/buehnenplan/', 'Technik'], ['/backstage/material/', 'Material'],
-    ['/backstage/uebersetzungen/', 'Sprachen'], ['/backstage/zahlen/', 'Zahlen'], ['/backstage/abgleich/', 'Abgleich'],
+    ['/backstage/uebersetzungen/', 'Sprachen'], ['/backstage/zahlen/', 'Zahlen'], ['/backstage/zahlen/reife/', 'Üben und Bühnenreife'],
+    ['/backstage/zahlen/besucher/', 'Besucher'], ['/backstage/zahlen/songs/', 'Songs und Sterne'], ['/backstage/abgleich/', 'Abgleich'],
     ['/backstage/einstellungen/', 'Einstellungen'], ['/backstage/einrichtung/', 'Einrichtung'],
   ];
   for (const [pfad, titel] of seiten) {
     await p.go(pfad);
     const link = p.locator('app-doku-link a').first();
     await until(async () => (await link.innerText().catch(() => '')).includes(`Anleitung: ${titel}`), async () => `${pfad}: kein Link „Anleitung: ${titel}“ oben (${await link.innerText().catch(() => '–')})`);
-    // oben: vor allem anderen Inhalt der Seite, direkt unter der Überschrift
+    // oben: Titel, dann der Einleitungstext, dann die Anleitung – vor allem anderen Inhalt der Seite
     const oben = await p.evaluate(() => {
       const l = document.querySelector('app-doku-link');
       const h = l?.closest('section')?.querySelector('h2');
-      return !!l && !!h && (h.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && l.getBoundingClientRect().top - h.getBoundingClientRect().bottom < 120;
+      const davor = l?.previousElementSibling;
+      return !!l && !!h && (h.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !!davor && (davor === h || davor.matches('p.lead'));
     });
-    expect(oben, `${pfad}: Anleitung steht nicht oben unter der Überschrift`);
+    expect(oben, `${pfad}: Anleitung steht nicht direkt unter Titel und Text`);
+    expect(await link.evaluate((a) => {
+      const grau = document.createElement('span');
+      grau.style.color = 'var(--bn-fog)';
+      document.body.append(grau);
+      const ok = getComputedStyle(a).color === getComputedStyle(grau).color;
+      grau.remove();
+      return ok;
+    }), `${pfad}: Anleitung nicht grau`);
   }
   // eine Anleitung öffnen: Abschnitte, „Zur Seite“, „Siehe auch“
   await p.go('/backstage/termine/');
@@ -2443,7 +2491,7 @@ test('Backstage: jede Unterseite hat oben ihre Anleitung, und die Anleitung öff
 test('Backstage: Besucher-Verlauf mit Zeitlinie und Ereignissen', async () => {
   const p = await page();
   await p.context().route(/goatcounter\.com\/counter\//, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"count":"12"}' }));
-  await p.go('/backstage/zahlen/');
+  await p.go('/backstage/zahlen/besucher/');
   const verlauf = p.locator('app-besucher-verlauf');
   await verlauf.waitFor();
   expect((await verlauf.locator('.einheiten button[aria-pressed=true]').innerText()).trim() === 'Monat', 'Standard ist nicht Monat');
@@ -2582,7 +2630,7 @@ test('Backstage: Setlist mit Spieldauer, Vorlage, Sternen, Laufzettel', async ()
   // der Bühnen-Modus wird erst beim Öffnen nachgeladen (@defer) – auf einem ausgelasteten Rechner dauert das
   await schritt('Sterne im Bühnen-Modus', () => p.getByRole('button', { name: '4 Sterne' }).click({ timeout: 20000 }));
   await p.keyboard.press('Escape');
-  await p.go('/backstage/zahlen');
+  await p.go('/backstage/zahlen/songs');
   await until(async () => (await p.locator('app-song-rangliste .top li').count()) === 1, 'Sterne aus dem Bühnen-Modus fehlen in der Rangliste');
   await p.go(`/backstage/${id}`);
   const [win] = await schritt('Laufzettel öffnen', () => Promise.all([p.context().waitForEvent('page', { timeout: 20000 }), p.locator('button', { hasText: 'Laufzettel' }).click({ timeout: 20000 })]));

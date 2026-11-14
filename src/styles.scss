@@ -174,6 +174,20 @@ mat-icon, .material-icons { flex-shrink: 0; }
 .menu-sprachen > summary::-webkit-details-marker { display: none; }
 .menu-sprachen .menu-item.unter { padding-left: 56px; min-height: 40px; }
 
+// Backstage-Kopfleiste: Bereiche mit Untermenü (Songs, Termine, Zahlen – data/backstage-bereiche.ts)
+.untermenue { position: relative; display: inline-block; vertical-align: middle; }
+.untermenue > summary { list-style: none; cursor: pointer; }
+.untermenue > summary::-webkit-details-marker { display: none; }
+.untermenue.on > summary { color: var(--bn-sunset); }
+.unterliste {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 200px; padding: 6px 0;
+  border: 1px solid var(--bn-line); border-radius: 10px; background: #1b1e22; box-shadow: 0 12px 32px #0008;
+}
+.unterliste a { padding: 10px 16px; color: var(--bn-ink); text-decoration: none; font-size: .95rem; white-space: nowrap; }
+.unterliste a:hover, .unterliste a.on { color: var(--bn-sunset); }
+.menu-item.unterpunkt { padding-left: 56px; min-height: 40px; color: var(--bn-fog); font-size: .95rem; }
+.menu-item.unterpunkt.on { color: var(--bn-sunset); }
+
 // Backstage → Songs und Setlist: Filter nach Spotify-Liste und Listen-Symbole je Song (Budget der Komponenten)
 app-songs-liste, app-setlist, app-songs-sammlungen {
   .listen-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
@@ -1251,9 +1265,10 @@ app-sync-status .veraltet, app-backstage-daten .veraltet { color: #e8a46a; }
 
 // Anleitungen: Link oben auf jeder Backstage-Unterseite (pages/doku-link.ts), Anleitung je Thema (backstage-doku.ts),
 // Übersicht aller Anleitungen (backstage-anleitungen.ts)
-app-doku-link { display: inline-block; margin: -4px 20px 14px 0; }
-app-doku-link .doku-link { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-sunset); text-decoration: none; font-size: .9rem; }
-app-doku-link .doku-link:hover { text-decoration: underline; }
+// unter dem Einleitungstext jeder Backstage-Unterseite – grau, damit er sich nicht vordrängt
+app-doku-link { display: inline-block; margin: -6px 20px 18px 0; }
+app-doku-link .doku-link { display: inline-flex; align-items: center; gap: 6px; color: var(--bn-fog); text-decoration: none; font-size: .9rem; }
+app-doku-link .doku-link:hover { color: var(--bn-sunset); text-decoration: underline; }
 app-doku-link mat-icon { font-size: 18px; width: 18px; height: 18px; }
 app-backstage-doku, app-backstage-anleitungen {
   display: block;

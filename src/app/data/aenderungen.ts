@@ -9,6 +9,15 @@ export interface Aenderung {
 
 export const AENDERUNGEN: Aenderung[] = [
   {
+    datum: '2026-11-14',
+    punkte: [
+      'Die installierte App startet bei Bandmitgliedern direkt im Backstage.',
+      'Menü mit Unterpunkten: Songs (Liste, Setlists, Sammlungen), Termine (Alle Termine, Saison, Kontakte) und Zahlen (Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne) – die Reiter unter Songs sind weg.',
+      'Die Notenblätter auf diesem Gerät stehen jetzt unter Abgleich, die Bühnenreife unter Zahlen → Üben und Bühnenreife.',
+      'Jede Seite beginnt mit Titel und kurzem Text, darunter in Grau „Anleitung: …“; die Anleitung zu den Modi steht unter „Alle Anleitungen“.',
+    ],
+  },
+  {
     datum: '2026-11-13',
     punkte: [
       'Übe-, Probe- und Bühnen-Modus starten immer in der Titelanzeige – die Noten holt man per Knopf oder Hochwischen.',

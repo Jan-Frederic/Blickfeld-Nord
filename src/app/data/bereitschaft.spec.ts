@@ -21,7 +21,7 @@ describe('bereitschaft', () => {
   });
 
   it('Bühnenreife der Setlist: Baustellen werden genannt, ohne Angaben kein Punkt', () => {
-    expect(bereitschaft({ ...basis, nichtBuehnenreif: ['A'] }).find((x) => x.text === 'Bühnenreife der Setlist')).toMatchObject({ ok: false, hinweis: '1 Song ist noch Baustelle: A (Songs → Bühnenreife)' });
+    expect(bereitschaft({ ...basis, nichtBuehnenreif: ['A'] }).find((x) => x.text === 'Bühnenreife der Setlist')).toMatchObject({ ok: false, hinweis: '1 Song ist noch Baustelle: A (Zahlen → Bühnenreife)' });
     expect(bereitschaft({ ...basis, nichtBuehnenreif: [] }).find((x) => x.text === 'Bühnenreife der Setlist')?.ok).toBe(true);
     expect(bereitschaft(basis).map((x) => x.text)).not.toContain('Bühnenreife der Setlist');
   });

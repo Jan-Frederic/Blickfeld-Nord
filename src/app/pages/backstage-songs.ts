@@ -1,81 +1,57 @@
-import { Component, input, signal, computed } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { NotenDateiInfo, alleSongNoten, notenDateien } from '../data/noten';
-import { NotenVerwaltung } from './noten-verwaltung';
 import { SongsListe } from './songs-liste';
 import { SongsSetlists } from './songs-setlists';
-import { SongsReife } from './songs-reife';
 import { SongsSammlungen } from './songs-sammlungen';
 import { DokuLink } from './doku-link';
 import type { DokuId } from '../data/doku-themen';
 
-// Backstage → Songs mit Unterseiten: Liste (Tonart, Tempo, Notiz und Noten je Song), Setlists (aller Auftritte),
-// Sammlungen (anlegen und bearbeiten, je Sammlung eine Seite)
-// und Noten (PDFs und Akkordblätter auf diesem Gerät: einlesen, an die Band weitergeben), Bühnenreife (Fortschritt je
-// Musiker und Reife je Song).
-export const SONG_BEREICHE = [
-  { path: '', teil: 'liste', label: 'Liste', icon: 'library_music' },
-  { path: 'setlists', teil: 'setlists', label: 'Setlists', icon: 'queue_music' },
-  { path: 'sammlungen', teil: 'sammlungen', label: 'Sammlungen', icon: 'bookmarks' },
-  { path: 'noten', teil: 'noten', label: 'Noten', icon: 'picture_as_pdf' },
-  { path: 'reife', teil: 'reife', label: 'Bühnenreife', icon: 'military_tech' },
-] as const;
+// Backstage → Songs mit Unterseiten (im Menü oben unter „Songs“, data/backstage-bereiche.ts): Liste (Tonart, Tempo,
+// Notiz und Noten je Song), Setlists (aller Auftritte), Sammlungen (anlegen und bearbeiten, je Sammlung eine Seite).
+// Die Noten-Verwaltung liegt im Abgleich, die Bühnenreife unter Zahlen. Kopf jeder Unterseite: Titel, Text, Anleitung.
+const TEILE: Record<string, { titel: string; doku: DokuId }> = {
+  liste: { titel: 'Songs', doku: 'songs' },
+  setlists: { titel: 'Setlists', doku: 'setlists' },
+  sammlungen: { titel: 'Sammlungen', doku: 'sammlungen' },
+};
 
 @Component({
   selector: 'app-backstage-songs',
-  imports: [DokuLink, RouterLink, MatIconModule, NotenVerwaltung, SongsListe, SongsSetlists, SongsReife, SongsSammlungen],
+  imports: [DokuLink, MatIconModule, SongsListe, SongsSetlists, SongsSammlungen],
   template: `
     <section class="section">
-      <p class="kicker">Backstage</p>
-      <h2>Songs</h2>
-      <app-doku-link [thema]="dokuThema()" />
-      <nav class="tabs" aria-label="Bereiche der Songs">
-        @for (b of bereiche; track b.teil) {
-          <a [routerLink]="b.path ? ['/backstage/songs', b.path] : ['/backstage/songs']" [class.active]="b.teil === teil()" [attr.aria-current]="b.teil === teil() ? 'page' : null">
-            <mat-icon>{{ b.icon }}</mat-icon> {{ b.label }}
-          </a>
-        }
-      </nav>
+      <p class="kicker">Backstage{{ teil() === 'liste' ? '' : ' · Songs' }}</p>
+      <h2>{{ kopf().titel }}</h2>
       @switch (teil()) {
-        <!-- Setlists und Noten-Verwaltung erst laden, wenn der Reiter gewählt ist -->
+        @case ('setlists') {
+          <p class="lead">Die Setlists aller Auftritte, wie sie auf diesem Gerät gespeichert sind – Setlists der anderen kommen über
+            „Abgleich“ oder „Setlist als Link“ dazu. Bearbeitet wird je Auftritt unter „Setlist“.</p>
+        }
+        @case ('sammlungen') {
+          @if (!name()) {
+            <p class="lead">Sammlungen sind feste Songfolgen – z. B. die Weihnachtslieder oder ein bewährtes Kneipen-Set. In der
+              Setlist eines Auftritts ersetzen sie die ganze Setlist oder werden hinten angehängt.</p>
+          }
+        }
+        @default {
+          <p class="lead">Tonart, Tempo, Notiz und Noten je Song. Zeile antippen zum Bearbeiten,
+            <mat-icon class="inline">play_arrow</mat-icon> startet den Bühnen-Modus ab dem Song.</p>
+        }
+      }
+      <app-doku-link [thema]="kopf().doku" />
+      @switch (teil()) {
+        <!-- Setlists und Sammlungen erst laden, wenn die Unterseite gewählt ist -->
         @case ('setlists') { @defer { <app-songs-setlists /> } }
         @case ('sammlungen') { @defer { <app-songs-sammlungen [name]="name()" /> } }
-        @case ('reife') { @defer { <app-songs-reife /> } }
-        @case ('noten') { @defer { <app-noten-verwaltung [dateien]="dateien()" [songs]="mitNoten()" (geaendert)="laden()" /> } }
         @default { <app-songs-liste /> }
       }
     </section>
   `,
-  styles: `
-    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .tabs a {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px;
-      border: 1px solid var(--bn-line); color: var(--bn-ink); text-decoration: none; font-size: .92rem;
-    }
-    .tabs a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
-    .tabs a.active { background: var(--bn-sunset); border-color: var(--bn-sunset); color: #2a1708; }
-    .tabs mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    app-noten-verwaltung { display: block; margin-top: -24px; }
-  `,
 })
 export class BackstageSongs {
-  /** Unterseite aus den Routendaten (/backstage/songs, …/setlists, …/noten) */
+  /** Unterseite aus den Routendaten (/backstage/songs, …/setlists, …/sammlungen) */
   readonly teil = input<string>('liste');
-  /** Anleitung je Reiter (Liste → Songs) */
-  protected readonly dokuThema = computed((): DokuId => (this.teil() === 'liste' ? 'songs' : (this.teil() as DokuId)));
   /** Sammlungen: gewählte Sammlung (?name=…) – eigene Unterseite je Sammlung */
   readonly name = input<string>('');
-  protected readonly bereiche = SONG_BEREICHE;
-
-  // für „Noten“: gespeicherte PDFs und Anzahl Songs mit Noten
-  protected readonly dateien = signal<NotenDateiInfo[]>([]);
-  protected readonly mitNoten = signal(0);
-  constructor() {
-    this.laden();
-  }
-  protected laden(): void {
-    notenDateien().then((d) => this.dateien.set(d)).catch(() => undefined);
-    alleSongNoten().then((n) => this.mitNoten.set(Object.keys(n).length)).catch(() => undefined);
-  }
+  protected readonly kopf = computed(() => TEILE[this.teil()] ?? TEILE['liste']);
 }

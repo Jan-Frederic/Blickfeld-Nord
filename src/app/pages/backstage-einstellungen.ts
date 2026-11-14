@@ -19,9 +19,9 @@ import { DokuLink } from './doku-link';
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Einstel&shy;lungen</h2>
-      <app-doku-link thema="einstellungen" />
       <p class="lead">Gelten für dieses Gerät. Was hier gespeichert ist, steht auch unter Abgleich → Daten auf diesem Gerät.
         Alles Wichtige Schritt für Schritt: <a routerLink="/backstage/einrichtung">Einrichtung durchgehen</a>.</p>
+      <app-doku-link thema="einstellungen" />
       <app-ich-einstellung />
       <app-sync-einstellungen />
       <app-band-ordner />

@@ -204,24 +204,25 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   noten: {
-    kurz: 'Alle Noten auf diesem Gerät – PDFs und Akkordblätter –, das Einlesen neuer Dateien und die Weitergabe an die Band.',
+    kurz: 'Unter Abgleich → „Notenblätter auf diesem Gerät“: alle Noten auf diesem Gerät – PDFs und Akkordblätter –, das Einlesen neuer Dateien und die Weitergabe an die Band.',
     abschnitte: [
       { titel: 'Noten am Song', text: 'Im Song-Dialog: PDF hochladen (auch mehrere je Song, jedes mit Namen als Fassung) oder ein gespeichertes wählen; bei Songbooks „Seite von/bis“. Akkordblätter im ChordPro-Format werden in eure Tonart transponiert.' },
       { titel: 'Einlesen', text: 'Viele PDF- und .pro-Dateien oder ganze Ordner auf einmal – jede wird über den Dateinamen ihrem Song zugeordnet, gesucht wird in allen Spotify-Listen. Gibt es einen Titel bei zwei Interpreten, stehen beide zur Auswahl. Dateien heißen am besten „Band - Titel.pdf“ (alles nach einem weiteren „ - “ ist die Fassung).' },
       { titel: 'Mit der Band', text: 'Noten kommen über die Synchronisation auf alle Geräte; ohne Synchronisation gehen sie als Datei von Gerät zu Gerät (Teilen-Menü, z. B. AirDrop oder Messenger). Die Seite zeigt alle PDFs mit Größe und sucht in den Dateinamen.' },
       { titel: 'Löschen', text: 'Löscht zunächst nur auf diesem Gerät. Wer den OneDrive-Ordner besitzt (Berechtigung „Daten löschen“), wird gefragt, ob auch aus OneDrive – das betrifft dann die ganze Band.' },
-      { titel: 'Noten-Check', text: 'Unter Abgleich → Daten auf diesem Gerät: Noten-Dateien ohne Song und doppelte Dateien.' },
+      { titel: 'Noten-Check', text: 'Darunter in „Daten auf diesem Gerät“: Noten-Dateien ohne Song und doppelte Dateien.' },
     ],
     siehe: ['songs', 'modi', 'abgleich'],
   },
 
   reife: {
-    kurz: 'Wie sicher sitzen die Songs bei der Band? Je Musiker und Song ein Übe-Status – daraus die Bühnenreife.',
+    kurz: 'Unter Zahlen → Üben und Bühnenreife: wie sicher sitzen die Songs bei der Band? Je Musiker und Song ein Übe-Status – daraus die Bühnenreife –, dazu das Üben je Woche.',
     abschnitte: [
       { titel: 'Übe-Status', text: '○ Nicht gelernt (0 %), ✎ Üben (15 %), ↻ Wackelt noch (40 %), ✓ Sitzt (75 %), ✓✓ Eingenordet (100 %). Gesetzt im Song-Dialog, im Probe- und Übe-Modus oder in der Nachbereitung.' },
       { titel: 'Bühnenreife', text: 'Der Schnitt über alle Musiker: bühnenreif = bei allen eingenordet, fast bühnenreif = bei allen mindestens „Sitzt“, Baustelle = bei jemandem noch nicht so weit, ohne Angabe = niemand hat einen Status.' },
       { titel: 'Je Musiker', text: 'Die Songs je Status, was in den letzten 30 Tagen gefestigt wurde oder neu wackelt, der Karteikasten und die Übe-Woche (Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet).' },
       { titel: 'Alle Songs', text: 'Mit Status je Musiker und Reife-Balken; Filter: Baustellen, fast bühnenreif, bühnenreif, ohne Angabe.' },
+      { titel: 'Üben je Woche', text: 'Geübte Karten je Kalenderwoche und Person (letzte 8 Wochen) als Balken – antippen zeigt die Zahlen –, dazu die Songs, die diese Woche bei allen sitzen.' },
     ],
     siehe: ['ueben', 'probe', 'modi'],
   },
@@ -289,14 +290,31 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   zahlen: {
-    kurz: 'Zahlen rund um die Band: Besucher der Website, Setlists, Sterne aus dem Bühnen-Modus und das Üben.',
+    kurz: 'Zahlen rund um die Band – im Menü oben unter „Zahlen“ in vier Unterseiten: Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne.',
     abschnitte: [
       { titel: 'Bandjahr', text: 'Das Jahr auf einen Blick – Auftritte, Proben, Orte und Songs –, auf Wunsch als Story-Bild zum Teilen. Dazu der Link zur Vorschau des Jahresrückblicks.' },
-      { titel: 'Üben je Woche', text: 'Geübte Karten je Kalenderwoche und Person (letzte 8 Wochen) als Balken – antippen zeigt die Zahlen –, dazu die Songs, die diese Woche bei allen sitzen.' },
-      { titel: 'Besucher', text: 'Wie viele die Website besuchen, mit Verlauf und woher sie kommen (Plakat, Stories, QR-Codes). Die Zahlen kommen von GoatCounter, ohne Cookies.' },
-      { titel: 'Setlists und Sterne', text: 'Welche Songs wie oft auf euren Setlists stehen und was noch nie dran war; die Top 100 aus den Sternen im Bühnen-Modus.' },
+      { titel: 'Unterseiten', punkte: ['Üben und Bühnenreife: Übe-Status je Musiker, Bühnenreife je Song, Üben je Woche', 'Besucher: wer die Website besucht und woher', 'Songs und Sterne: Setlist-Statistik und die Top 100'] },
     ],
-    siehe: ['jahr', 'ueben'],
+    siehe: ['jahr', 'reife', 'besucher', 'sterne'],
+  },
+
+  besucher: {
+    kurz: 'Unter Zahlen → Besucher: wie viele Leute die Website besuchen und woher sie kommen.',
+    abschnitte: [
+      { titel: 'Verlauf', text: 'Besucher der letzten Tage und Monate mit Verlauf; beliebteste Seiten der letzten 30 Tage.' },
+      { titel: 'Woher', text: 'Gekommen über Suche, soziale Netze, Plakat, Stories und QR-Codes; die Kampagnen der Konzerte und was am besten wirkt. Dazu Booking-Anfragen und Aufrufe der Fehlerseite.' },
+      { titel: 'Datenschutz', text: 'Die Zahlen kommen von GoatCounter – ohne Cookies und ohne einzelne Besucher zu verfolgen.' },
+    ],
+    siehe: ['zahlen'],
+  },
+
+  sterne: {
+    kurz: 'Unter Zahlen → Songs und Sterne: welche Songs ihr wie oft spielt und welche am besten ankommen.',
+    abschnitte: [
+      { titel: 'Setlist-Statistik', text: 'Welche Songs wie oft auf euren Setlists stehen und was noch nie dran war.' },
+      { titel: 'Top 100', text: 'Die Rangliste aus den Sternen, die ihr im Bühnen-Modus vergebt.' },
+    ],
+    siehe: ['setlists', 'zahlen'],
   },
 
   jahr: {
@@ -309,15 +327,16 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   abgleich: {
-    kurz: 'Abgleich mit OneDrive und alles, was auf diesem Gerät gespeichert ist.',
+    kurz: 'Abgleich mit OneDrive und alles, was auf diesem Gerät gespeichert ist – auch die Notenblätter.',
     abschnitte: [
       { titel: 'Synchronisation', text: '„Jetzt synchronisieren“ gleicht dieses Gerät mit dem OneDrive-Ordner ab; automatisch läuft es beim Öffnen und alle 15 Minuten. Die Zeile „Zuletzt …“ sagt, was passiert ist; „Kopieren“ legt Fehlermeldungen samt App-Stand in die Zwischenablage.' },
       { titel: 'Meldungen', punkte: ['„Verbindung unterbrochen – wird nachgeholt“: kein Fehler, die Datei kommt beim nächsten Abgleich; erst beim dritten Mal in Folge wird es ein Fehler', '„Anmeldung nötig“ oben im Backstage: „Neu anmelden“ antippen – sonst ruht der automatische Abgleich', 'Konflikte bei Übe-Daten werden von selbst zusammengeführt; was sich nicht vereinen lässt, steht unter Konflikte'] },
       { titel: 'Geräte', text: 'Jedes Gerät legt beim Abgleich eine kleine Datei in den Sync-Ordner (Name, Person, Zeitpunkt, App-Stand) – daraus entsteht die Liste, mit Kennung und „aktuell“ bzw. „veraltet“ (Orange). Aufgeräumt wird von selbst: Einträge, die sich über mindestens drei Abgleiche und einen Tag nicht lesen lassen, und Geräte, die ein halbes Jahr nicht abgeglichen haben, entfernt das Gerät mit „Daten löschen“ – ein noch genutztes Gerät legt seinen Eintrag beim nächsten Abgleich neu an. Wer „Daten löschen“ darf, kann Einträge auch von Hand entfernen.' },
       { titel: 'Daten auf diesem Gerät', text: 'Jeder gespeicherte Eintrag einzeln, nach Bereichen gruppiert: antippen öffnet die passende Seite, { } zeigt den Inhalt zum Ansehen und Ändern, ausgewählte Einträge lassen sich als Datei teilen; der Besen löscht einen ganzen Bereich – für alle, denn Löschen wird mitsynchronisiert. Dazu Noten, Mitschnitte, Geräte, Speicherplatz (mit „Dauerhaft speichern“), Sync-Kopie, Spotify, App-Stand und das letzte Backup. „Diagnose kopieren“ fasst alles für Rückfragen in einem Text zusammen.' },
       { titel: 'Aufräumen', text: 'Vergangene Auftritte und Proben aufräumen oder alles löschen. Löschen wird mitsynchronisiert – vorher am besten ein Backup erstellen (Einstellungen).' },
+      { titel: 'Notenblätter auf diesem Gerät', text: 'Alle PDFs und Akkordblätter mit Größe und Suche, viele Dateien auf einmal einlesen und an die Band weitergeben – Details in der Anleitung „Noten“.' },
     ],
-    siehe: ['einstellungen'],
+    siehe: ['noten', 'einstellungen'],
   },
 
   einstellungen: {

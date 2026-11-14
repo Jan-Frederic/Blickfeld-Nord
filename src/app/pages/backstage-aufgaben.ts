@@ -40,8 +40,8 @@ interface AutoAufgabe {
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Aufgaben</h2>
-      <app-doku-link thema="aufgaben" />
       <p class="lead">Was an der Website noch zu tun ist – {{ offen() }} offen.</p>
+      <app-doku-link thema="aufgaben" />
 
       <!-- To-do-Liste („Bereit?“) je kommendem Auftritt, der nächste zuerst – zugeklappt stehen die Haken als Reihe -->
       @if (anstehend().length) {

@@ -86,7 +86,7 @@ import { DatenGeraet } from './daten-geraet';
             }
             @for (d of pdfsGefiltert(); track d.id) {
               <li>
-                <span class="text"><a routerLink="/backstage/songs/noten">{{ d.name }}</a><small>PDF · {{ mb(d.groesse) }} · {{ nutzung(d.id) }}</small></span>
+                <span class="text"><a routerLink="/backstage/abgleich" fragment="noten">{{ d.name }}</a><small>PDF · {{ mb(d.groesse) }} · {{ nutzung(d.id) }}</small></span>
                 @if (loeschbar()) { <button type="button" class="icon" (click)="pdfLoeschen(d)" [attr.aria-label]="d.name + ' löschen'"><mat-icon>delete</mat-icon></button> }
               </li>
             }

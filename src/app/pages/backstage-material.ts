@@ -42,8 +42,8 @@ const BANNER_CHECKLISTE = [
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Material</h2>
-      <app-doku-link thema="material" />
       <p class="lead">Zum Drucken und Verschicken – jeweils auf Deutsch, Englisch und Niederländisch. Plakat, Story und Laufzettel gibt es auf der Seite des jeweiligen Auftritts.</p>
+      <app-doku-link thema="material" />
       <ul class="list">
         @for (m of material; track m.file + m.ext) {
           <li>

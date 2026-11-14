@@ -6,7 +6,7 @@ import { trackPageViews } from './analytics';
 import release from './data/version.json';
 import { enableOffline, install, installable, iosHint, setupPwa, updateReady } from './pwa';
 import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
-import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
+import { BACKSTAGE_BEREICHE, imBereich } from './data/backstage-bereiche';
 import { SyncKompass } from './pages/sync-kompass';
 import { ansichtAus } from './data/neu-zeichnen';
 import { Verlauf } from './zurueck';
@@ -135,6 +135,9 @@ export class App {
     document.addEventListener('gesturechange', sperren, { passive: false });
   })();
   protected readonly backstage = BACKSTAGE_BEREICHE;
+  protected readonly imBereich = imBereich;
+  /** aktuelle Adresse ohne Sprache (für die Hervorhebung von Bereichen mit Untermenü) */
+  protected readonly pfad = computed(() => this.i18n.path().replace(/\/$/, '') || '/');
   protected readonly year = new Date().getFullYear();
   // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)
   protected readonly version = release.version;
@@ -196,7 +199,18 @@ export class App {
         // ohne Speicher eben nicht
       }
       this.leisteBeobachten();
+      this.untermenuesSchliessen();
     });
+  }
+
+  // Untermenüs der Backstage-Leiste (details.untermenue): Klick daneben oder Escape klappt sie zu, immer nur eins offen
+  private untermenuesSchliessen(): void {
+    const zu = (ausser?: EventTarget | null) =>
+      document.querySelectorAll<HTMLDetailsElement>('details.untermenue[open]').forEach((d) => {
+        if (!(ausser instanceof Node && d.contains(ausser))) d.open = false;
+      });
+    document.addEventListener('click', (e) => zu(e.target));
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && zu());
   }
 
   // Volle Leiste nur, wenn sie wirklich passt: Die Punkte (je Sprache, Backstage mit mehr Bereichen, angemeldet mit

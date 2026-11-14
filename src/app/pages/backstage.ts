@@ -21,8 +21,8 @@ import { DokuLink } from './doku-link';
     <section class="section">
       <p class="kicker">Nur für die Band</p>
       <h2>Backstage</h2>
-      <app-doku-link thema="uebersicht" /><app-doku-link thema="modi" />
       <p class="lead">Alles für Planung und Auftritte an einem Ort. Die Themen findet ihr oben im Menü.</p>
+      <app-doku-link thema="uebersicht" />
 
       <!-- Reihenfolge nach Dringlichkeit: Suche, heute Fälliges, die nächsten Termine (je mit Bühnen- bzw. Probe-Modus);
            die Bereiche stehen in der Leiste oben. Die Bereit-Checks der

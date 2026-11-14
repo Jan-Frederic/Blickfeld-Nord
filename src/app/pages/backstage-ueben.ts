@@ -33,12 +33,13 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
     <section class="section ueben">
       <p class="kicker">Backstage</p>
       <h2>Üben</h2>
-      <app-doku-link thema="ueben" />
       @if (!ich()) {
         <p class="lead">Üben ist persönlich: Wähle unter <a routerLink="/backstage/einstellungen">Einstellungen</a> „Ich bin …“ –
           dann stehen hier deine Songs im Karteikasten.</p>
+        <app-doku-link thema="ueben" />
       } @else {
         <p class="lead">{{ name() }}: deine Songs im Karteikasten – je Kasten ein Status, je höher der Kasten, desto seltener ist die Karte dran.</p>
+        <app-doku-link thema="ueben" />
         <!-- Karteikasten mit seinen fünf Kästen; Nicht gelernt und Eingenordet stehen daneben, gehören aber nicht dazu -->
         <div class="kartei-system">
           <div class="aussen nicht" [class.leer]="!nichtGelernt()"><span class="sym" aria-hidden="true">○</span><span class="n">{{ nichtGelernt() }}</span><span class="s">Nicht gelernt</span><small>nicht im Kasten</small></div>

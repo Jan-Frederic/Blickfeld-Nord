@@ -274,13 +274,13 @@ export function eintragBeschreiben(key: string, roh: string, auftritte: Map<stri
       link: verwaist ? undefined : ZIEL[bereich.id]?.(id),
     };
   }
-  if (key.startsWith('bn-fortschritt-')) return { key, bereich, bytes, titel: `Übe-Verlauf · ${key.slice(15)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Song', 'Songs'), link: '/backstage/songs/reife' };
+  if (key.startsWith('bn-fortschritt-')) return { key, bereich, bytes, titel: `Übe-Verlauf · ${key.slice(15)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Song', 'Songs'), link: '/backstage/zahlen/reife' };
   if (key.startsWith('bn-kasten-')) {
     const g = (wert ?? {}) as { kaesten?: object; eingenordet?: object };
-    return { key, bereich, bytes, titel: `Übe-Status · ${key.slice(10)}`, details: `${anzahl(Object.keys(g.kaesten ?? {}).length, 'Karte', 'Karten')} im Karteikasten, ${Object.keys(g.eingenordet ?? {}).length} eingenordet`, link: '/backstage/songs/reife' };
+    return { key, bereich, bytes, titel: `Übe-Status · ${key.slice(10)}`, details: `${anzahl(Object.keys(g.kaesten ?? {}).length, 'Karte', 'Karten')} im Karteikasten, ${Object.keys(g.eingenordet ?? {}).length} eingenordet`, link: '/backstage/zahlen/reife' };
   }
   if (key.startsWith('bn-probenotiz-')) return { key, bereich, bytes, titel: `Probe-Notizen · ${key.slice(14)}`, details: anzahl(Object.keys(wert as object ?? {}).length, 'Probe', 'Proben'), link: '/backstage/termine' };
-  if (key.startsWith('bn-unsicher-')) return { key, bereich, bytes, titel: `Unsicher bei · ${key.slice(12)}`, details: anzahl(Array.isArray(wert) ? wert.length : 0, 'Song', 'Songs'), link: '/backstage/songs/reife' };
+  if (key.startsWith('bn-unsicher-')) return { key, bereich, bytes, titel: `Unsicher bei · ${key.slice(12)}`, details: anzahl(Array.isArray(wert) ? wert.length : 0, 'Song', 'Songs'), link: '/backstage/zahlen/reife' };
   if (key === 'bn-sprungmarken' && wert && typeof wert === 'object') return { key, bereich, bytes, titel: 'Sprungmarken', details: anzahl(Object.keys(wert).length, 'Song', 'Songs'), link: ZIEL_FEST[key] };
   const link = ZIEL_FEST[key] ?? (ZIEL_EINSTELLUNGEN.some((p) => key.startsWith(p)) ? '/backstage/einstellungen' : undefined);
   return { key, bereich, bytes, titel: EINSTELLUNGEN[key] ?? key, details: inhalt(undefined, wert), link };

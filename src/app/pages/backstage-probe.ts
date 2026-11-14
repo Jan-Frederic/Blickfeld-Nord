@@ -44,11 +44,11 @@ const norm = (s: string) => s.toLocaleLowerCase('de').normalize('NFD').replace(/
       @if (probe(); as p) {
         <p class="kicker">Probe</p>
         <h2>{{ p.date | date: 'EEEE, d. MMMM yyyy' : '' : 'de' }}</h2>
-        <app-doku-link thema="probe" />
         <p class="lead">
           {{ p.time ? p.time + (p.endTime ? '–' + p.endTime : '') + ' Uhr' : 'Uhrzeit offen' }}@if (p.place) { · {{ p.place }}}
           @if (p.note) { <br />{{ p.note }} }
         </p>
+        <app-doku-link thema="probe" />
 
         <!-- das Wichtigste zuerst: Probe-Modus starten (sobald Songs geplant sind) -->
         @if (plan().songs.length) {

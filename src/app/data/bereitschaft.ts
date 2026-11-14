@@ -100,7 +100,7 @@ export function bereitschaft(d: BereitschaftsDaten): Punkt[] {
       text: 'Bühnenreife der Setlist',
       ok: !d.nichtBuehnenreif.length,
       hinweis: d.nichtBuehnenreif.length
-        ? `${d.nichtBuehnenreif.length} ${d.nichtBuehnenreif.length === 1 ? 'Song ist' : 'Songs sind'} noch Baustelle: ${liste(d.nichtBuehnenreif)} (Songs → Bühnenreife)`
+        ? `${d.nichtBuehnenreif.length} ${d.nichtBuehnenreif.length === 1 ? 'Song ist' : 'Songs sind'} noch Baustelle: ${liste(d.nichtBuehnenreif)} (Zahlen → Bühnenreife)`
         : 'bei allen mindestens „Sitzt“',
       ziel: 'setlist',
     });

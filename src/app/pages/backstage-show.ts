@@ -44,8 +44,6 @@ const DAY = 24 * 60 * 60 * 1000;
       @if (show(); as s) {
         <p class="kicker">Backstage · Auftritt</p>
         <h2>{{ s.venue }}</h2>
-        <app-doku-link thema="auftritt" />
-
         <div class="badges">
           <span class="tag" [class.private]="s.private">{{ s.private ? 'Privat' : 'Öffentlich' }}</span>
           <span class="status" [class.ok]="s.confirmed">
@@ -54,6 +52,7 @@ const DAY = 24 * 60 * 60 * 1000;
           </span>
           <span class="when" [class.past]="past()">{{ relative() }}</span>
         </div>
+        <app-doku-link thema="auftritt" />
 
         @if (!past()) { <app-bereitschaft [show]="s" [aufgeklappt]="true" /> }
 

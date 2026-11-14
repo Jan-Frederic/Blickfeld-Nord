@@ -84,8 +84,6 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
         </div>
       </section>
     } @else {
-      <p class="lead">Sammlungen sind feste Songfolgen – z. B. die Weihnachtslieder oder ein bewährtes Kneipen-Set. In der Setlist
-        eines Auftritts ersetzen sie die ganze Setlist oder werden hinten angehängt.</p>
       @if (name() && !aktiv()) { <p class="meldung fehlt">Die Sammlung „{{ name() }}“ gibt es (auf diesem Gerät) nicht.</p> }
       <ul class="karten">
         @for (s of alle(); track s.name) {

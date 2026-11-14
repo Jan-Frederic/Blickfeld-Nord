@@ -67,6 +67,8 @@ export class BackstageSuche {
         .filter((m) => passt(m.name, ...sammlungSongs(m).map((x) => x.title)))
         .map((m) => ({ icon: 'bookmarks', text: m.name, info: `Sammlung · ${sammlungSongs(m).length} Songs`, link: '/backstage/songs/sammlungen', query: { name: m.name } })),
       ...BACKSTAGE_BEREICHE.filter((b) => passt(b.label, b.text)).map((b) => ({ icon: b.icon, text: b.label, info: b.text, link: b.path })),
+      // Unterpunkte (Setlists, Saison, Bühnenreife …) – ohne den ersten, der die Seite des Bereichs selbst ist
+      ...BACKSTAGE_BEREICHE.flatMap((b) => (b.unter ?? []).slice(1).filter((u) => passt(u.label)).map((u) => ({ icon: u.icon, text: u.label, info: b.label, link: u.path }))),
     ];
     return out.slice(0, 12);
   });

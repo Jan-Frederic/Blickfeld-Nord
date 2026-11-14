@@ -38,10 +38,11 @@ test('kopfleiste backstage (breit)', async ({ page }, info) => {
 
 test('backstage zahlen – besucher', async ({ page }, info) => {
   await laden(page, '/backstage/zahlen');
+  await expect(page.locator('app-bandjahr .head')).toHaveScreenshot(`${info.project.name}-zahlen-bandjahr-kopf.png`);
+  await laden(page, '/backstage/zahlen/besucher');
   const b = page.locator('app-backstage-besucher');
   await b.locator('.trend').waitFor();
   await expect(b.locator('.totals').first()).toHaveScreenshot(`${info.project.name}-zahlen-summen.png`);
   await expect(b.locator('.trend')).toHaveScreenshot(`${info.project.name}-zahlen-trend.png`);
   await expect(b.locator('ol.pages').first()).toHaveScreenshot(`${info.project.name}-zahlen-seiten.png`);
-  await expect(page.locator('app-bandjahr .head')).toHaveScreenshot(`${info.project.name}-zahlen-bandjahr-kopf.png`);
 });

@@ -33,11 +33,11 @@ function load(): Pruefung {
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Sprachen</h2>
-      <app-doku-link thema="sprachen" />
       <p class="lead">
         Links steht der deutsche Text, rechts die Übersetzung. Bei Bedarf korrigieren und <strong>„Passt“</strong> anklicken.
         Alles bleibt in diesem Browser gespeichert, bis ihr es unten übernehmt.
       </p>
+      <app-doku-link thema="sprachen" />
 
       <app-backstage-uebersetzungen />
       <app-pressetexte-pruefen />

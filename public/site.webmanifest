@@ -4,7 +4,7 @@
   "short_name": "Blickfeld Nord",
   "description": "Partyband mit drei Stimmen – Konzerte, Booking, Repertoire und Galerie.",
   "lang": "de",
-  "start_url": "/",
+  "start_url": "/?app=1",
   "scope": "/",
   "display": "fullscreen",
   "orientation": "any",

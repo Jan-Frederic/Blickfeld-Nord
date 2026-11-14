@@ -111,21 +111,32 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
   Backstage → Zahlen. Die Bereiche (Übersicht, Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen) stehen im Menü oben – Kacheln gibt es in der
   Übersicht nicht mehr.
+- **Menü mit Unterpunkten** (`data/backstage-bereiche.ts`, Feld `unter`): **Songs** (Liste, Setlists, Sammlungen),
+  **Termine** (Alle Termine, Saison, Kontakte), **Zahlen** (Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne).
+  In der breiten Leiste klappt der Bereich ein Untermenü auf (▾), im Handy-Menü stehen die Unterpunkte eingerückt
+  darunter; die Suche der Übersicht findet sie auch. Reiter (Chips) gibt es unter Songs nicht mehr. Die
+  **Notenblätter auf diesem Gerät** stehen unter **Abgleich** (`#noten`), die **Bühnenreife** unter
+  **Zahlen → Üben und Bühnenreife** – alte Adressen (`/backstage/songs/noten`, `/backstage/songs/reife`) leiten weiter.
+- **App-Start im Backstage:** Die installierte App startet mit `/?app=1` (`site.webmanifest`, `"id": "/"` bleibt). Ist
+  das Gerät schon ins Backstage gelassen (Sichtsperre; ohne Sperre: Microsoft-Anmeldung), lädt `main.ts` noch vor
+  Angular direkt `/backstage/`; sonst bleibt die Startseite, nur ohne `?app=1`. Ältere Installationen, die sich noch `/`
+  gemerkt haben (iPhone übernimmt Manifest-Änderungen nie), erkennt es am App-Fenster. Logik und Tests:
+  `data/app-start.ts`.
 - **Anleitungen** (`/backstage/anleitung`): je Backstage-Unterseite eine ausführliche Anleitung unter
-  `/backstage/anleitung/<thema>`; oben auf jeder Unterseite, direkt unter der Überschrift, führt **„Anleitung: …“** dorthin
-  (`pages/doku-link.ts`). Die Seiten selbst halten ihre Texte kurz – Details gehören in die Anleitung. Themen und Seiten:
+  `/backstage/anleitung/<thema>`; jede Unterseite beginnt mit Titel, kurzem Text (`p.lead`) und darunter dem grauen
+  Link **„Anleitung: …“** (`pages/doku-link.ts`). Die Seiten selbst halten ihre Texte kurz – Details gehören in die Anleitung. Themen und Seiten:
   `data/doku-themen.ts`, Texte: `data/doku-inhalte.ts` (je Thema Kurzfassung, Abschnitte, „Siehe auch“; nur
   beschreiben, was die App wirklich kann). **Ändert sich eine Seite, die Anleitung mitziehen.** Neue Unterseite: Thema
-  in `doku-themen.ts` (mit Gruppe), Text in `doku-inhalte.ts`, `<app-doku-link thema="…" />` unter die Überschrift – ein
+  in `doku-themen.ts` (mit Gruppe), Text in `doku-inhalte.ts`, `<app-doku-link thema="…" />` unter den Einleitungstext – ein
   Unit-Test prüft, dass jedes Thema Inhalt hat, ein Klicktest, dass jede Unterseite oben ihren Link hat.
-  „Übe-, Probe- und Bühnen-Modus“ hat eine eigene Seite mit Vergleichstabelle (`/backstage/anleitung/modi`,
+  „Übe-, Probe- und Bühnen-Modus“ hat eine eigene Seite mit Vergleichstabelle (unter „Alle Anleitungen“, `/backstage/anleitung/modi`,
   `pages/backstage-anleitung.ts`): die Modi im Vergleich, die fünf Übe-Status und die gemeinsamen Begriffe.
 - **Zurück:** Der Pfeil oben auf Unterseiten zeigt den Titel der Seite, von der man kam, und führt dorthin zurück (wie
   der Zurück-Knopf des Browsers); direkt geöffnet führt er zum festen Ziel (z. B. Termine). Technik: `src/app/zurueck.ts`.
 - **Heute fällig** nennt die fälligen Karteikarten („5 Karteikarten fällig – Übe-Modus starten · Weihnachtsmarkt in 12
   Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet (wie in allen Modi) bei 100 %, der Tempo-Knopf
   springt dann auf 70 % und steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
-  **Übe-Woche** je Person unter Songs → Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
+  **Übe-Woche** je Person unter Zahlen → Üben und Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
 - **Spotify im Übe- und Probe-Modus** – unter **Einstellungen → Spotify im Übe- und Probe-Modus** je Gerät wählbar
   (`bn-spotify-modus`, `pages/spotify-einstellung.ts`): **Aus** (Standard, nichts von Spotify), **Eingebetteter Player**,
   **Fernsteuerung der Spotify-App** oder **Im Browser abspielen**. Gilt nur für Songs aus einer Spotify-Liste und nur
@@ -369,7 +380,7 @@ zusätzlich als Verlauf in die eigene Datei `bn-fortschritt-<Person>` (mit Datum
 daraus „in 30 Tagen gefestigt / neu wackelig“ und die Stände einer Probe). Die **Bühnenreife** eines Songs ist der
 Schnitt über alle Musiker (Nicht gelernt 0, Üben 15 %, Wackelt noch 40 %, Sitzt 75 %, Eingenordet 100 %):
 **bühnenreif** = bei allen eingenordet, **fast bühnenreif** = bei allen mindestens Sitzt, **Baustelle** = bei
-jemandem noch nicht so weit, **ohne Angabe** = niemand hat einen Status. Übersicht unter **Songs → Bühnenreife**: je
+jemandem noch nicht so weit, **ohne Angabe** = niemand hat einen Status. Übersicht unter **Zahlen → Üben und Bühnenreife**: je
 Musiker die Songs je Status, was in den letzten 30 Tagen gefestigt wurde oder neu wackelt und der Karteikasten, darunter
 alle Songs mit Status je Musiker und Reife-Balken (Filter: Baustellen, fast bühnenreif, bühnenreif, ohne Angabe). Im
 Song-Dialog steht die Reife mit Status je Musiker. Der **Probe-Vorschlag** nimmt zuerst die Songs, die bei jemandem auf
@@ -623,7 +634,7 @@ Unter **Songs → Liste** die Zeile des Songs antippen – im Dialog unten:
   es, wie es ist. Eine **.txt-Datei** mit Akkorden über dem Text wird beim Laden gleich umgewandelt. Danach kurz
   prüfen – Akkorde über Leerzeichen am Zeilenende landen hinter dem letzten Wort.
 - **.pro-Dateien** (ChordPro, auch `.cho`, `.chopro`, `.chordpro`, `.crd`) direkt einlesen: beim Song **.pro-Datei
-  laden** im Dialog, oder viele auf einmal unter **Songs → Noten** (siehe unten). Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
+  laden** im Dialog, oder viele auf einmal unter **Abgleich → Notenblätter auf diesem Gerät** (siehe unten). Jede Datei landet automatisch beim passenden Song – über `{title:}`/`{artist:}` in der Datei, sonst
   über den Dateinamen (auch „Interpret - Titel.pro“). Was sich nicht zuordnen lässt, wird genannt. Ältere Dateien mit
   Umlauten aus Windows-Programmen werden richtig gelesen; `{capo: 2}` in der Datei wird beim Transponieren berücksichtigt.
 
@@ -636,7 +647,7 @@ nächste lässt es weiterlaufen. Hat ein Song mehrere Fassungen (mehrere PDFs un
 wird je Song gemerkt und gilt auch als Vorliebe für die anderen Songs: wer „Bass“ wählt, bekommt bei jedem Song mit
 einem PDF namens „Bass“ dieses, wer „Akkorde“ wählt, die Akkordblätter – auch beim Zurückblättern.
 
-**Viele Dateien oder ganze Ordner einlesen:** unter **Songs → Noten** auf **Dateien einlesen (PDF, .pro)** oder
+**Viele Dateien oder ganze Ordner einlesen:** unter **Abgleich → Notenblätter** auf **Dateien einlesen (PDF, .pro)** oder
 **Ganzen Ordner einlesen** (am Computer; auf iPhone/iPad Dateien wählen). Jede Datei landet beim passenden Song – über
 Titel und Interpret im **Dateinamen**, in beliebiger Reihenfolge und Schreibweise, z. B. `Iris - Goo Goo Dolls - Bass.pdf`
 oder `GooGooDolls_Iris_(Gitarre v2).pdf`. Was sonst im Namen steht („Bass“, „Gitarre v2“), wird die Fassung. PDFs
@@ -648,7 +659,7 @@ mit offenen Noten und blättert ab da durch die Liste (wie gerade gefiltert), Ti
 der Bühne. Im Song-Dialog geht das mit **Im Bühnen-Modus ansehen**; beim Schließen geht es zurück in den Dialog.
 
 **Wichtig:** Noten bleiben nur auf dem jeweiligen Gerät und gehen nie an GitHub – Notenblätter und Liedtexte sind
-urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unter **Songs → Noten** mit **Notenblätter an die
+urheberrechtlich geschützt, das Repository ist öffentlich. Weitergeben unter **Abgleich → Notenblätter** mit **Notenblätter an die
 Band** (eine Datei für Messenger/AirDrop), auf dem anderen Gerät **Notenblätter importieren**. Auf iPhone und iPad die
 Backstage-Seite zum **Home-Bildschirm** hinzufügen – sonst darf Safari gespeicherte Daten nach 7 Tagen ohne Besuch
 löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet oder hochgeladen wurden.
@@ -657,7 +668,7 @@ löschen. Offline klappt die Anzeige, sobald einmal mit Netz Noten geöffnet ode
 Kälte (bis 3 °C) oder Wind (ab 40 km/h) rund um die Auftrittszeit – die passenden Punkte (Pavillon, Abdeckplanen,
 warme Kleidung, Gewichte …) landen automatisch auf der Packliste des Auftritts.
 
-**Songs → Noten – suchen und löschen:** Die Suche filtert die PDFs nach Dateinamen (mehrere Wörter, „_“ und „-“ zählen
+**Abgleich → Notenblätter – suchen und löschen:** Die Suche filtert die PDFs nach Dateinamen (mehrere Wörter, „_“ und „-“ zählen
 als Leerzeichen). Der Mülleimer löscht für alle **nur von diesem Gerät** (in OneDrive bleibt die Datei). Wer den
 OneDrive-Ordner der Synchronisation besitzt (angemeldet, eigener Ordner – Berechtigung „Daten löschen“), wird gefragt:
 **Nur vom Gerät** oder **Auch aus OneDrive** – dann verschwindet die Datei (gleicher Name, gleiche Größe) aus dem

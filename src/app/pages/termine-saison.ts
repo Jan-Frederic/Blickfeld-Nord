@@ -26,9 +26,9 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       <app-zurueck ziel="/backstage/termine" text="Termine" />
       <p class="kicker">Backstage · Termine</p>
       <h2>Saison</h2>
-      <app-doku-link thema="saison" />
       <p class="lead">Die nächsten 12 Monate auf einen Blick: Auftritte, Proben und wer wann nicht kann. Freie Monate sind
         markiert. Zum Mitnehmen in die Bandbesprechung ausdrucken oder als PDF speichern.</p>
+      <app-doku-link thema="saison" />
       <div class="knoepfe">
         <button type="button" class="btn" (click)="drucken()"><mat-icon>print</mat-icon> Drucken / als PDF</button>
         <button type="button" class="btn zweit" (click)="bild()"><mat-icon>share</mat-icon> Als Bild teilen</button>

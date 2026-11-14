@@ -34,8 +34,8 @@ interface Zeile {
       <app-zurueck ziel="/backstage/termine" text="Termine" />
       <p class="kicker">Backstage · Termine</p>
       <h2>Kontakte</h2>
-      <app-doku-link thema="kontakte" />
       <p class="lead">Ansprechpartner der Veranstalter – nur auf euren Geräten und im OneDrive, nie auf der Website.</p>
+      <app-doku-link thema="kontakte" />
 
       <div class="sortierung" role="group" aria-label="Reihenfolge">
         <button type="button" [class.an]="sortierung() === 'name'" [attr.aria-pressed]="sortierung() === 'name'" (click)="sortierung.set('name')">Alphabetisch</button>

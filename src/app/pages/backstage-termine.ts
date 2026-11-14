@@ -44,8 +44,8 @@ function loadFilters(): Set<FilterKey> {
     <section class="section">
       <p class="kicker">Backstage</p>
       <h2>Termine</h2>
-      <app-doku-link thema="termine" />
       <p class="lead">Alle Auftritte – öffentlich und privat – mit Status und Notizen, dazu die Probetermine. Für Details, Plakat, Setlist und Packliste einfach einen Auftritt antippen.</p>
+      <app-doku-link thema="termine" />
 
       <app-saison-planung />
 
