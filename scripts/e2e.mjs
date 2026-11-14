@@ -427,6 +427,8 @@ test('App-Start: Bandmitglieder landen im Backstage, alle anderen auf der Starts
   expect(manifest.start_url === '/?app=1' && manifest.id === '/', `Manifest: start_url ${manifest.start_url}, id ${manifest.id}`);
   const p = await page();
   await p.go('/?app=1');
+  // Microsoft erneuert den Zugang still in einem Rahmen, der auf /auth/ zurückkommt – die Sicherheitsregel muss das erlauben
+  expect(await p.evaluate(() => /frame-src 'self'/.test(document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content') ?? '')), 'CSP: frame-src ohne \'self\' (stille OneDrive-Anmeldung blockiert)');
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `App-Start (Band) landet nicht im Backstage: ${p.url()}`);
   await p.locator('app-backstage h2').waitFor();
   // im Browser (ohne ?app=1) bleibt die Startseite die Startseite

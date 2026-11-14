@@ -42,8 +42,10 @@ for (const file of files(DIST)) {
       // Spotify-Fernsteuerung (Anmeldung mit PKCE, Web-API)
       ' https://accounts.spotify.com https://api.spotify.com',
     // Spotify im Übe- und Probe-Modus (Backstage, erst bei Bedarf geladen): eingebetteter Player (open.spotify.com)
-    // und Browser-Player (Web Playback SDK: Skript und unsichtbarer Rahmen von sdk.scdn.co)
-    'frame-src https://www.instagram.com https://login.microsoftonline.com https://login.live.com https://open.spotify.com https://sdk.scdn.co',
+    // und Browser-Player (Web Playback SDK: Skript und unsichtbarer Rahmen von sdk.scdn.co).
+    // 'self': Microsoft erneuert den OneDrive-Zugang still in einem unsichtbaren Rahmen, der nach der Anmeldung auf
+    // /auth/ zurückkommt – ohne 'self' blockiert, dann „Vom Anmelde-Fenster kam keine Antwort“
+    "frame-src 'self' https://www.instagram.com https://login.microsoftonline.com https://login.live.com https://open.spotify.com https://sdk.scdn.co",
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",

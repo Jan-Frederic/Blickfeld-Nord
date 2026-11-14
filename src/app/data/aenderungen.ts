@@ -11,7 +11,8 @@ export const AENDERUNGEN: Aenderung[] = [
   {
     datum: '2026-11-14',
     punkte: [
-      'Microsoft-Anmeldung in der installierten App ohne Pop-up – direkt per Weiterleitung (behebt „Vom Anmelde-Fenster kam keine Antwort“ auf Android).',
+      'Abgleich: der Microsoft-Zugang erneuert sich wieder still im Hintergrund – „Vom Anmelde-Fenster kam keine Antwort“ kam von einer zu strengen Sicherheitsregel.',
+      'Microsoft-Anmeldung in der installierten App ohne Pop-up – direkt per Weiterleitung.',
       'Neue Übersicht: drei Karten – Üben, nächste Probe, nächster Auftritt – mit Fortschritt, Bühnenreife und was noch fehlt. Kurz antippen startet den Modus, gedrückt halten öffnet die Seite zum Bearbeiten.',
       'Das Profil gleitet von links herein, ein Tipp daneben schiebt es wieder weg.',
       'Logo im Backstage: BLICKFELD, darunter NORD-BACKSTAGE – führt zur Übersicht.',

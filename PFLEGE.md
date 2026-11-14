@@ -1130,6 +1130,11 @@ nie ein Fenster) – das klappt nicht, wo der Browser Drittanbieter-Cookies bloc
 - Blockiert der Browser das Fenster, kommt gleich die Meldung „Das Anmelde-Fenster wurde blockiert …“; wird es
   geschlossen, ohne dass Microsoft geantwortet hat, nach wenigen Sekunden „Anmeldung abgebrochen“ (`mitFensterWache`;
   die Antwortseite `/auth/` meldet sich über `bn-auth-antwort`). Für Passwort und Code per SMS bleiben 10 Minuten.
+- **Stille Erneuerung:** Läuft der Zugang ab, holt MSAL einen neuen in einem unsichtbaren Rahmen, der nach Microsoft
+  auf `/auth/` zurückkommt – dafür steht `'self'` in `frame-src` der Content-Security-Policy (`scripts/csp.mjs`, ein
+  Klicktest prüft es). Fehlte es, lief die Erneuerung in die Zeitgrenze und meldete „Vom Anmelde-Fenster kam keine
+  Antwort“, obwohl gar kein Fenster offen war (Diagnose: „Sicherheitsregel blockiert: frame-src …/auth/“). Läuft die
+  stille Erneuerung trotzdem in die Zeitgrenze, gilt das wie „neu anmelden“ (Hinweis bzw. beim Antippen Anmeldung).
 - **In der installierten App nie ein Pop-up:** Läuft die Seite als App (Vollbild bzw. eigenes Fenster,
   `alsAppGeoeffnet`), meldet sie sich gleich per Weiterleitung an – das Fenster öffnete Android als eigenen
   Chrome-Tab, iPhone und Windows ähnlich, und die Antwort kam nicht zur App zurück („Vom Anmelde-Fenster kam keine

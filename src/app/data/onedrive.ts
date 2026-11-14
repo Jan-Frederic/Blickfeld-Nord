@@ -380,14 +380,15 @@ async function token(): Promise<string> {
     return (await still()).accessToken;
   } catch (e) {
     // nur wenn Microsoft eine neue Anmeldung verlangt, hilft ein Fenster – bei schlechtem Netz einmal kurz warten und
-    // noch einmal still versuchen (sonst ginge mitten im Abgleich grundlos ein Anmelde-Fenster auf)
-    const neuAnmelden = !!modul && e instanceof modul.InteractionRequiredAuthError;
-    if (!neuAnmelden) {
+    // noch einmal still versuchen (sonst ginge mitten im Abgleich grundlos ein Anmelde-Fenster auf). Läuft die stille
+    // Erneuerung (unsichtbarer Rahmen) in die Zeitgrenze, kommt sie so nicht weiter – wie „neu anmelden“ behandeln.
+    const braucht = (x: unknown) => (!!modul && x instanceof modul.InteractionRequiredAuthError) || anmeldeFehler(x).art === 'zeit';
+    if (!braucht(e)) {
       await new Promise((r) => setTimeout(r, 1500));
       try {
         return (await still()).accessToken;
       } catch (e2) {
-        if (!(modul && e2 instanceof modul.InteractionRequiredAuthError)) throw anmeldeFehler(e2);
+        if (!braucht(e2)) throw anmeldeFehler(e2);
       }
     }
     noetigSetzen(true);
