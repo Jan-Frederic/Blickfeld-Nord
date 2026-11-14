@@ -2245,22 +2245,49 @@ test('Backstage: Bühnen-Modus – Lupe holt Wünsche an die aktuelle Stelle, Ba
   return p;
 });
 
-test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufgaben zeigen „Bereit?“ je Auftritt', async () => {
+// Übersicht: gedrückt halten öffnet die Seite zum Bearbeiten (kurz antippen startet den Modus)
+async function halten(p, karte) {
+  const box = await karte.boundingBox();
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await p.mouse.down();
+  await p.waitForTimeout(800);
+  await p.mouse.up();
+}
+
+test('Backstage: Übersicht mit drei Karten – kurz antippen startet den Bühnen-Modus, halten öffnet den Auftritt', async () => {
   const p = await page();
   await p.clock.setFixedTime(new Date('2026-11-30T10:00:00'));
   await p.go('/backstage/');
-  const termine = p.locator('app-backstage ol.next li');
-  await termine.first().waitFor();
-  expect((await termine.count()) === (await p.locator('app-backstage ol.next li .modus').count()), 'nicht jeder Termin hat Bühnen- bzw. Probe-Modus');
-  expect(!/Geklärt|Offen/.test(await p.locator('app-backstage ol.next').innerText()), '„Geklärt/Offen“ steht noch bei den Terminen');
-  expect((await p.locator('app-backstage app-bereitschaft').count()) === 0, '„Bereit?“ steht noch in der Übersicht');
-  // Setlist für den ersten Auftritt anlegen, dann von der Übersicht aus den Bühnen-Modus starten
-  const modus = p.locator('app-backstage ol.next li .modus', { hasText: 'Bühnen-Modus' }).first();
-  const id = (await modus.getAttribute('href')).split('/')[2];
+  const karten = p.locator('app-backstage app-modus-karte');
+  await karten.first().waitFor();
+  expect((await karten.count()) === 3, `nicht drei Karten: ${await karten.count()}`);
+  const arten = (await p.locator('app-backstage app-modus-karte .art').allInnerTexts()).map((t) => t.trim().toLowerCase());
+  expect(arten.join('|') === 'üben|probe|auftritt', `Karten: ${arten.join(', ')}`);
+  expect((await p.locator('app-backstage ol.next, app-backstage app-bereitschaft').count()) === 0, 'alte Liste „Als Nächstes“ steht noch in der Übersicht');
+  const auftritt = p.locator('app-modus-karte.karte-auftritt a');
+  const probe = p.locator('app-modus-karte.karte-probe a');
+  expect(/\d+ von \d+ bereit|alles bereit/.test(await auftritt.innerText()), 'Auftritt-Karte ohne „bereit“');
+  expect(/Zusagen/.test(await probe.innerText()), 'Probe-Karte ohne Zusagen');
+  expect((await probe.getAttribute('href')).includes('modus=1'), 'Probe-Karte startet nicht den Probe-Modus');
+  // Setlist für den Auftritt anlegen: Karte zeigt Songs, Dauer und Bühnenreife
+  const id = (await auftritt.getAttribute('href')).split('/')[2];
   await p.evaluate((id) => localStorage.setItem('bn-setlist-' + id, JSON.stringify([
     { title: 'Iris', artist: 'Goo Goo Dolls' }, { title: 'Perfect', artist: 'Ed Sheeran' }, { pause: true }, { title: 'Hallelujah', artist: 'Leonard Cohen' },
   ])), id);
-  await modus.click();
+  await p.reload({ waitUntil: 'networkidle' });
+  await until(async () => /3 Songs ·/.test(await auftritt.innerText()), async () => `Setlist fehlt auf der Karte: ${await auftritt.innerText()}`);
+  // gedrückt halten → Seite des Auftritts (kein Bühnen-Modus)
+  await halten(p, auftritt);
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === `/backstage/${id}`, () => `Halten führt nach ${p.url()}`);
+  expect((await p.locator('app-setlist-buehne').count()) === 0, 'Halten startet trotzdem den Bühnen-Modus');
+  // Umschalt+Enter = Halten (Tastatur)
+  await p.go('/backstage/');
+  await probe.focus();
+  await p.keyboard.press('Shift+Enter');
+  await until(async () => new URL(p.url()).pathname.startsWith('/backstage/probe/') && !new URL(p.url()).searchParams.has('modus'), () => `Umschalt+Enter führt nach ${p.url()}`);
+  // kurz antippen → Bühnen-Modus
+  await p.go('/backstage/');
+  await auftritt.click();
   const buehne = p.locator('app-setlist-buehne');
   await schritt('Bühnen-Modus öffnet direkt', () => buehne.locator('main h1').waitFor({ timeout: 20000 }));
   expect((await buehne.locator('header .anlass').innerText()).trim().length > 2, 'kein Name des Auftritts links oben');
@@ -2270,8 +2297,12 @@ test('Backstage: „Als Nächstes“ startet Bühnen-Modus mit Song-Liste, Aufga
   await buehne.locator('.navi li button', { hasText: 'Hallelujah' }).click();
   await until(async () => (await buehne.locator('main h1').innerText()).trim() === 'Hallelujah', 'Sprung aus der Song-Liste geht nicht');
   expect((await buehne.locator('header .set').innerText()).toLowerCase().includes('set 2'), 'Set-Nummer folgt nicht dem Sprung');
-  await p.keyboard.press('Escape');
-  await p.keyboard.press('Escape');
+  await until(async () => {
+    if (!(await p.locator('app-setlist-buehne').count())) return true;
+    await p.keyboard.press('Escape');
+    await p.waitForTimeout(250);
+    return false;
+  }, 'Escape beendet den Bühnen-Modus nicht');
   // Schließen führt dorthin zurück, woher der Bühnen-Modus kam: in die Übersicht
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Schließen führt nach ${p.url()} statt in die Übersicht`);
   // Aufgaben: „Bereit?“ je kommendem Auftritt, zugeklappt mit Haken-Reihe
@@ -2305,15 +2336,17 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   await p.locator('app-ich-einstellung input[type=number]').dispatchEvent('change');
   await until(async () => (await p.evaluate(() => localStorage.getItem('bn-ueben-tagesziel'))) === '2', 'Tagesziel wird nicht gespeichert');
   await p.go('/backstage/');
-  const karte = p.locator('app-backstage a.ueben-karte');
+  const karte = p.locator('app-modus-karte.karte-ueben a');
+  await karte.waitFor();
   const karteText = await karte.innerText();
-  expect(karteText.includes('3 Songs im Karteikasten · 3 heute dran'), 'Üben-Karte zählt nicht: ' + karteText);
+  expect(/3 Karten heute dran/i.test(karteText) && karteText.includes('3 Songs im Karteikasten') && karteText.includes('heute 0 von 2 geübt'), 'Üben-Karte zählt nicht: ' + karteText);
   // die Benachrichtigungen kennen den Karteikasten und führen direkt in den Übe-Modus
   await p.go('/backstage/benachrichtigungen/');
   await until(async () => /3 Karteikarten fällig – Übe-Modus starten/.test(await p.locator('app-heute-faellig').innerText().catch(() => '')), 'Benachrichtigungen nennen die fälligen Karteikarten nicht');
   expect((await p.locator('app-heute-faellig a', { hasText: 'Karteikarten fällig' }).getAttribute('href')).includes('modus=1'), 'Link führt nicht in den Übe-Modus');
+  // gedrückt halten → Seite Üben (Karteikasten bearbeiten)
   await p.go('/backstage/');
-  await karte.click();
+  await halten(p, karte);
   const ueben = p.locator('app-backstage-ueben');
   await ueben.locator('.liste li select').first().waitFor();
   // nur noch ein Knopf: Übe-Modus (keine Lernkarte, kein „Üben starten“ / „Alle üben“)
@@ -2453,8 +2486,8 @@ test('Backstage: Zurück führt zur vorigen Seite, Üben mit Karteikasten und Ü
   expect(Object.values(f).flat().filter((e) => e.quelle === 'ueben').length >= 3, `Übe-Modus fehlt im Verlauf: ${JSON.stringify(f)}`);
   // Tagesziel erreicht – der Übe-Modus geht trotzdem, aus der Übersicht und zurück dorthin
   await p.go('/backstage/');
-  expect((await p.locator('app-backstage .ueben-karte').innerText()).includes('Tagesziel geschafft'), 'Tagesziel nicht als geschafft gemeldet');
-  await p.locator('app-backstage .ueben-reihe a.modus').click();
+  expect((await p.locator('app-modus-karte.karte-ueben a').innerText()).includes('Tagesziel geschafft'), 'Tagesziel nicht als geschafft gemeldet');
+  await p.locator('app-modus-karte.karte-ueben a').click();
   await notenPerKnopf('Übe-Modus öffnet trotz Tagesziel');
   // Herunterwischen (Kopfleiste da, Blatt oben): Notenansicht gleitet heraus, Titelanzeige mit demselben Umschalter
   const ziehen = async (vonY, nachY) => {
@@ -2784,9 +2817,10 @@ test('Backstage: Übe-Status „Wackelt noch“ und Proben-Mitschnitt im Song, N
   await p.evaluate(() => localStorage.setItem('bn-ich', 'jan-frederic-overbeck'));
   await p.go('/backstage/songs/');
   await p.locator('app-backstage-songs input[type=search]').fill('Millionen');
-  await p.locator('app-backstage-songs tbody tr .oeffnen').first().click();
+  // der Dialog wird erst nachgeladen – unter Last braucht der erste Klick mehrere Anläufe
+  await songDialogOeffnen(p);
   const dialog = p.locator('app-song-dialog dialog[open]');
-  await dialog.locator('header select').selectOption('wackelt');
+  await dialog.locator('header select').selectOption('wackelt', { timeout: 20000 });
   await until(async () => (await dialog.locator('header select').getAttribute('class'))?.includes('wackelt'), '„Wackelt noch“ lässt sich nicht setzen');
   await dialog.getByRole('button', { name: 'Aufnehmen' }).click();
   await p.waitForTimeout(1500);

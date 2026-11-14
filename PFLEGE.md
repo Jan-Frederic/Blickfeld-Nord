@@ -114,9 +114,13 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   `/backstage/benachrichtigungen`; berechnet in `data/hinweise.service.ts`, zählt bei jedem Seitenwechsel neu). Beim
   Herunterscrollen (auf dem Handy: Hochwischen) gleitet die Leiste weg, beim Zurückscrollen kommt sie wieder (`app.ts`,
   `kopfBeimScrollen`); offenes Menü, Untermenü oder Suche halten sie sichtbar.
-- **Backstage-Übersicht:** **Üben** (rechts daneben der Übe-Modus) und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
-  Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Kacheln gibt es in der
-  Übersicht nicht mehr.
+- **Backstage-Übersicht** (`pages/backstage.ts`): drei Karten (`pages/modus-karte.ts`) – **Üben** (heute dran,
+  Tagesziel, Tage am Stück, eigene Songs je Status, was für Probe und Auftritt bei dir sitzt), **Probe** (nächste Probe:
+  Songs geplant, Plan geschickt, Zusagen, Bühnenreife der geplanten Songs) und **Auftritt** (nächster Auftritt: Setlist
+  mit Dauer, Bühnenreife, „Bereit?“ mit den offenen Punkten – dieselbe Prüfung wie auf der Seite des Auftritts,
+  `bereitschaftPunkte` in `pages/bereitschaft.ts`). Oben rechts je Karte grün „alles bereit“ oder gelb „x von y bereit“.
+  **Kurz antippen** startet den Modus (Übe-, Probe-, Bühnen-Modus), **gedrückt halten** (0,55 s, ein Balken füllt sich)
+  öffnet die Seite zum Bearbeiten; Tastatur: Enter bzw. Umschalt+Enter. Schließen führt zurück in die Übersicht.
 - **Menü auf einer Ebene** (`data/backstage-bereiche.ts`): Übersicht · Songs, Setlists, Sammlungen · Termine, Saison,
   Kontakte · Aufgaben, Technik, Material, Sprachen · Bandjahr, Bühnenreife, Besucher, Songs und Sterne · Abgleich,
   Einstellungen – jede Seite mit eigenem Symbol (`icon`), `gruppe: true` beginnt einen Abschnitt. In der breiten Leiste

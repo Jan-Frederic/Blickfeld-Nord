@@ -2,8 +2,8 @@ import { Component, computed, inject, input, linkedSignal, signal } from '@angul
 import { datenStand } from '../data/neu-zeichnen';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { BandService, Show } from '../data/band.service';
-import { VORABEND_PREFIX, bereitschaft, langsamStrecken } from '../data/bereitschaft';
+import { BandService, Member, Show } from '../data/band.service';
+import { Punkt, VORABEND_PREFIX, bereitschaft, langsamStrecken } from '../data/bereitschaft';
 import { isPause, loadSetlist } from '../data/setlist-data';
 import { gespielteTonart, songInfo } from '../data/songinfo';
 import { spruenge } from '../data/tonart-uebergang';
@@ -86,18 +86,13 @@ export class Bereitschaft {
   protected readonly id = computed(() => this.band.showId(this.show()));
   private readonly notenKeys = signal<Set<string> | undefined>(undefined);
   /** Songs, deren letzte Probennotiz nach Baustelle klingt */
-  private readonly baustellen = new Set(notizBaustellen(probenNotizen(inject(BandService).members)).map((b) => b.key));
+  private readonly baustellen = baustellenAusProben(inject(BandService).members);
   private readonly offline = signal<OfflineStand | undefined>(undefined);
   protected readonly laedt = signal(false);
   /** von Hand abgehakte Vorabend-Punkte (Wetter, Notenmappe) – gespiegelt für die ganze Band */
   private readonly vorabend = signal(0);
   private vorabendLesen(id: string): string[] {
-    try {
-      const v = JSON.parse(localStorage.getItem(VORABEND_PREFIX + id) ?? '[]');
-      return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
-    } catch {
-      return [];
-    }
+    return vorabendLesen(id);
   }
   protected haken(h: string, an: boolean): void {
     const id = this.id();
@@ -128,38 +123,59 @@ export class Bereitschaft {
   }
 
   protected readonly punkte = computed(() => {
-    const id = this.id();
-    const setlist = loadSetlist(id);
-    const songs = setlist.filter((e) => !isPause(e)) as { title: string; artist: string }[];
-    const pack = loadPackliste(PACKLISTE_PREFIX + id);
-    const gesamt = GROUPS.reduce((n, g) => n + g.items.length, 0) + pack.custom.length;
-    const noten = this.notenKeys();
     this.vorabend();
     datenStand();
-    return bereitschaft({
-      show: this.show(),
-      heute: new Date().toISOString().slice(0, 10),
-      setlist,
-      ohneTonartTempo: songs.filter((s) => { const i = songInfo(s.title, s.artist); return !i?.tonart || !i?.bpm; }).map((s) => s.title),
-      ohneNoten: noten && songs.filter((s) => !noten.has(`${s.title}|${s.artist}`)).map((s) => s.title),
-      vorort: loadVorOrt(VORORT_PREFIX + id),
-      werbungErledigt: erledigteSchritte(id),
-      packliste: { eingepackt: Math.min(pack.checked.length, gesamt), gesamt },
-      offline: this.offline(),
-      vorabend: this.vorabendLesen(id),
-      nichtBuehnenreif: (() => {
-        const m = this.band.members;
-        const alle = alleStatus(m);
-        const r = songs.map((x) => ({ x, r: buehnenreife(`${x.title}|${x.artist}`, m, alle) }));
-        // ohne irgendeine Angabe in der Band: nichts melden (Übe-Status wird noch nicht genutzt)
-        return r.some((y) => y.r.ampel !== 'offen') ? r.filter((y) => y.r.ampel === 'baustelle').map((y) => y.x.title) : undefined;
-      })(),
-      setlistCheck: {
-        langsamStrecken: langsamStrecken(setlist, (s) => songInfo(s.title, s.artist)?.bpm),
-        spruenge: spruenge(setlist, (s) => gespielteTonart(songInfo(s.title, s.artist))),
-        baustellen: songs.filter((s) => this.baustellen.has(`${s.title}|${s.artist}`)).map((s) => s.title),
-      },
-    });
+    return bereitschaftPunkte(this.show(), this.id(), this.band.members, { noten: this.notenKeys(), offline: this.offline(), baustellen: this.baustellen });
   });
   protected readonly offen = computed(() => this.punkte().filter((p) => !p.ok).length);
+}
+
+/** von Hand abgehakte Vorabend-Punkte eines Auftritts (bn-vorabend-<id>) */
+export function vorabendLesen(id: string): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(VORABEND_PREFIX + id) ?? '[]');
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Songs, deren letzte Probennotiz nach Baustelle klingt */
+export const baustellenAusProben = (mitglieder: Member[]) => new Set(notizBaustellen(probenNotizen(mitglieder)).map((b) => b.key));
+
+/** „Bereit?“-Punkte eines Auftritts – für die Seite des Auftritts und die Karte „Bühnen-Modus“ der Übersicht */
+export function bereitschaftPunkte(
+  show: Show,
+  id: string,
+  mitglieder: Member[],
+  extra: { noten?: Set<string>; offline?: OfflineStand; baustellen: Set<string> },
+): Punkt[] {
+  const setlist = loadSetlist(id);
+  const songs = setlist.filter((e) => !isPause(e)) as { title: string; artist: string }[];
+  const pack = loadPackliste(PACKLISTE_PREFIX + id);
+  const gesamt = GROUPS.reduce((n, g) => n + g.items.length, 0) + pack.custom.length;
+  const noten = extra.noten;
+  return bereitschaft({
+    show,
+    heute: new Date().toISOString().slice(0, 10),
+    setlist,
+    ohneTonartTempo: songs.filter((s) => { const i = songInfo(s.title, s.artist); return !i?.tonart || !i?.bpm; }).map((s) => s.title),
+    ohneNoten: noten && songs.filter((s) => !noten.has(`${s.title}|${s.artist}`)).map((s) => s.title),
+    vorort: loadVorOrt(VORORT_PREFIX + id),
+    werbungErledigt: erledigteSchritte(id),
+    packliste: { eingepackt: Math.min(pack.checked.length, gesamt), gesamt },
+    offline: extra.offline,
+    vorabend: vorabendLesen(id),
+    nichtBuehnenreif: (() => {
+      const alle = alleStatus(mitglieder);
+      const r = songs.map((x) => ({ x, r: buehnenreife(`${x.title}|${x.artist}`, mitglieder, alle) }));
+      // ohne irgendeine Angabe in der Band: nichts melden (Übe-Status wird noch nicht genutzt)
+      return r.some((y) => y.r.ampel !== 'offen') ? r.filter((y) => y.r.ampel === 'baustelle').map((y) => y.x.title) : undefined;
+    })(),
+    setlistCheck: {
+      langsamStrecken: langsamStrecken(setlist, (s) => songInfo(s.title, s.artist)?.bpm),
+      spruenge: spruenge(setlist, (s) => gespielteTonart(songInfo(s.title, s.artist))),
+      baustellen: songs.filter((s) => extra.baustellen.has(`${s.title}|${s.artist}`)).map((s) => s.title),
+    },
+  });
 }

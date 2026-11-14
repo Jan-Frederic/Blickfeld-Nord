@@ -1342,3 +1342,53 @@ html.schublade-offen { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .profil-schublade, .schublade-hintergrund, .topbar { transition: none; }
 }
+
+// Backstage-Übersicht: drei Karten (pages/backstage.ts, pages/modus-karte.ts) – kurz antippen: Modus, halten: bearbeiten
+.uebersicht-karten { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 14px; margin: 8px 0 0; }
+app-modus-karte { display: block; min-width: 0; }
+app-modus-karte .modus-karte {
+  position: relative; display: flex; flex-direction: column; gap: 8px; height: 100%; box-sizing: border-box; padding: 16px 18px 14px;
+  overflow: hidden; border: 1px solid var(--bn-line); border-radius: 16px; background: #1b1e22; color: var(--bn-ink); text-decoration: none;
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  transition: transform .15s ease, border-color .15s ease;
+}
+app-modus-karte .modus-karte:hover, app-modus-karte .modus-karte:focus-visible { border-color: var(--bn-sunset); }
+app-modus-karte .modus-karte:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; }
+app-modus-karte .modus-karte.haelt { transform: scale(.98); border-color: var(--bn-sunset); }
+app-modus-karte .halte-balken { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--bn-sunset); }
+app-modus-karte .haelt .halte-balken { width: 100%; transition: width .55s linear; }
+app-modus-karte .kopf { display: flex; align-items: center; gap: 8px; color: var(--bn-fog); font: 400 .72rem var(--bn-wide); letter-spacing: .14em; text-transform: uppercase; }
+app-modus-karte .kopf mat-icon { color: var(--bn-sunset); font-size: 20px; width: 20px; height: 20px; }
+app-modus-karte .kopf .status { margin-left: auto; padding: 2px 9px; border-radius: 999px; border: 1px solid #e0b25a; color: #e0b25a; font: 600 .72rem Inter, sans-serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+app-modus-karte .kopf .status.ok { border-color: #5fb88a; color: #5fb88a; }
+app-modus-karte .titel { font: 400 1.15rem/1.3 var(--bn-wide); letter-spacing: .04em; overflow-wrap: anywhere; }
+app-modus-karte .unter { color: var(--bn-fog); font-size: .88rem; line-height: 1.4; }
+app-modus-karte .fortschritt { display: grid; gap: 4px; }
+app-modus-karte .fortschritt .balken { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+app-modus-karte .fortschritt .balken i { display: block; height: 100%; background: var(--bn-sunset); }
+app-modus-karte .fortschritt small { color: var(--bn-fog); font-size: .8rem; }
+app-modus-karte .verteilung { display: flex; gap: 2px; height: 10px; border-radius: 5px; overflow: hidden; }
+app-modus-karte .verteilung i { flex: 1 1 0; min-width: 4px; }
+app-modus-karte .legende { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: .8rem; }
+app-modus-karte .eingenordet, app-modus-karte .buehnenreif { color: #5fb88a; }
+app-modus-karte .sitzt, app-modus-karte .fast { color: #9fd3b4; }
+app-modus-karte .wackelt, app-modus-karte .baustelle { color: #e0b25a; }
+app-modus-karte .ueben { color: #e08a5a; }
+app-modus-karte .offen { color: var(--bn-fog); }
+app-modus-karte .verteilung .eingenordet, app-modus-karte .verteilung .buehnenreif { background: #5fb88a; }
+app-modus-karte .verteilung .sitzt, app-modus-karte .verteilung .fast { background: #9fd3b4; }
+app-modus-karte .verteilung .wackelt, app-modus-karte .verteilung .baustelle { background: #e0b25a; }
+app-modus-karte .verteilung .ueben { background: #e08a5a; }
+app-modus-karte .verteilung .offen { background: rgba(255, 255, 255, .18); }
+app-modus-karte .punkte { display: grid; gap: 4px; }
+app-modus-karte .punkt { display: flex; align-items: flex-start; gap: 6px; font-size: .86rem; line-height: 1.35; }
+app-modus-karte .punkt mat-icon { flex: none; font-size: 17px; width: 17px; height: 17px; margin-top: 1px; color: #e0b25a; }
+app-modus-karte .punkt.ok { color: var(--bn-fog); }
+app-modus-karte .punkt.ok mat-icon { color: #5fb88a; }
+app-modus-karte .los { display: inline-flex; align-items: center; gap: 4px; margin-top: auto; padding-top: 4px; color: var(--bn-sunset); font-size: .85rem; font-weight: 600; }
+app-modus-karte .los mat-icon { font-size: 20px; width: 20px; height: 20px; }
+app-backstage .halte-hinweis { display: flex; align-items: center; gap: 6px; margin: 14px 0 0; color: var(--bn-fog); font-size: .82rem; }
+app-backstage .halte-hinweis mat-icon { font-size: 18px; width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  app-modus-karte .modus-karte, app-modus-karte .haelt .halte-balken { transition: none; }
+}

@@ -19,33 +19,49 @@ export interface Doku {
 
 export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   uebersicht: {
-    kurz: 'Die Startseite des Backstage: dein Üben und die nächsten Termine – mit direktem Start in Bühnen-, Probe- und Übe-Modus. Suche, Benachrichtigungen und Profil stehen oben in der Leiste.',
+    kurz: 'Die Startseite des Backstage: drei Karten – Üben, die nächste Probe und der nächste Auftritt. Kurz antippen startet den jeweiligen Modus, gedrückt halten öffnet die Seite zum Bearbeiten.',
     abschnitte: [
+      {
+        titel: 'Üben',
+        punkte: [
+          'wie viele Karteikarten heute dran sind, dein Fortschritt zum Tagesziel und Tage am Stück',
+          'deine Songs je Übe-Status als Balken (Üben, Wackelt noch, Sitzt, Eingenordet)',
+          'was für die nächste Probe und den nächsten Auftritt bei dir schon sitzt',
+          'antippen: Übe-Modus · halten: Seite Üben (Karteikasten, Songs dazunehmen)',
+        ],
+      },
+      {
+        titel: 'Probe',
+        punkte: [
+          'Tag, Uhrzeit, Ort der nächsten Probe',
+          'ob Songs geplant sind, der Plan an die Band ging und alle zugesagt haben',
+          'die Bühnenreife der geplanten Songs als Balken',
+          'antippen: Probe-Modus · halten: Probenseite (planen, Zusagen, Nachbereitung)',
+        ],
+      },
+      {
+        titel: 'Auftritt',
+        punkte: [
+          'Ort, Datum, wie lange noch, Setlist mit Spieldauer',
+          'die Bühnenreife der Setlist als Balken',
+          '„Bereit?“: wie viele Punkte erledigt sind und die nächsten offenen',
+          'antippen: Bühnen-Modus mit der Setlist · halten: Seite des Auftritts',
+        ],
+      },
+      { titel: 'Grün oder Gelb', text: 'Oben rechts auf jeder Karte steht, ob alles abgedeckt ist („alles bereit“, grün) oder wie viel noch fehlt (gelb). Mit der Tastatur: Enter startet den Modus, Umschalt+Enter öffnet die Seite.' },
       {
         titel: 'Die Leiste oben',
         punkte: [
           'Links die Initialen: dein Profil gleitet von links herein (Ich bin, Microsoft-Konto, Gerät, App-Stand) – ein Tipp rechts daneben oder Wischen nach links schiebt es wieder weg',
           'Das Logo (BLICKFELD, darunter NORD-BACKSTAGE) führt zurück zur Übersicht',
-          'Lupe: Suche über alles – Auftritte, Proben, Songs aller Spotify-Listen, Kontakte, Sammlungen und Bereiche; auf jeder Seite, mit der Tastatur auch per „/“',
+          'Lupe: Suche über alles – auf jeder Seite, mit der Tastatur auch per „/“',
           'Glocke: was heute fällig ist, die Zahl daran sagt wie viel',
-          'Alle Seiten auf einer Ebene, jede mit eigenem Symbol – am Computer als Symbole (Name beim Darüberfahren), auf dem Handy im Menü mit Namen',
-          'Beim Herunterscrollen (Hochwischen) verschwindet die Leiste, beim Zurückscrollen ist sie wieder da',
+          'Alle Seiten auf einer Ebene, jede mit eigenem Symbol – am Computer als Symbole, auf dem Handy im Menü mit Namen',
+          'Beim Herunterscrollen verschwindet die Leiste, beim Zurückscrollen ist sie wieder da',
         ],
       },
-      {
-        titel: 'Üben',
-        text: 'Die Karte „Üben“ führt zu deinem Karteikasten, der Knopf daneben startet sofort den Übe-Modus mit den fälligen Songs.',
-      },
-      {
-        titel: 'Als Nächstes',
-        text: 'Die kommenden Auftritte und Proben. Rechts neben jedem Termin startet der Bühnen-Modus (Auftritt, mit seiner Setlist) bzw. der Probe-Modus (Probe) direkt; beim Beenden geht es zurück in die Übersicht.',
-      },
-      {
-        titel: 'Zurück und Anleitungen',
-        text: 'Der Pfeil oben auf Unterseiten führt zur Seite zurück, von der du kamst. Jede Unterseite hat unter ihrem Text einen Link „Anleitung: …“; alle Anleitungen stehen unter „Alle Anleitungen“.',
-      },
     ],
-    siehe: ['benachrichtigungen', 'profil', 'modi', 'ueben'],
+    siehe: ['modi', 'ueben', 'probe', 'auftritt'],
   },
 
   benachrichtigungen: {

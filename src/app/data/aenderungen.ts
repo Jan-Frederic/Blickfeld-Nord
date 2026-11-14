@@ -11,6 +11,7 @@ export const AENDERUNGEN: Aenderung[] = [
   {
     datum: '2026-11-14',
     punkte: [
+      'Neue Übersicht: drei Karten – Üben, nächste Probe, nächster Auftritt – mit Fortschritt, Bühnenreife und was noch fehlt. Kurz antippen startet den Modus, gedrückt halten öffnet die Seite zum Bearbeiten.',
       'Das Profil gleitet von links herein, ein Tipp daneben schiebt es wieder weg.',
       'Logo im Backstage: BLICKFELD, darunter NORD-BACKSTAGE – führt zur Übersicht.',
       'Menü auf einer Ebene: Setlists, Sammlungen, Saison, Kontakte, Bühnenreife, Besucher und Songs und Sterne sind eigene Punkte mit eigenem Symbol; am Computer stehen die Symbole in der Leiste.',
