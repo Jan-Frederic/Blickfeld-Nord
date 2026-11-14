@@ -1497,9 +1497,15 @@ test('Backstage: Songs – Tap-Tempo, Band-Tonart mit Capo; Setlist glättet Ton
   // aus dem Dialog in den Bühnen-Modus und zurück in den Dialog
   await zeile.locator('button', { hasText: 'Bühnen-Modus' }).click();
   await until(async () => (await p.locator('app-setlist-buehne .key').innerText().catch(() => '')) === 'C', 'Bühnen-Modus aus dem Dialog zeigt nicht den Song');
-  await p.keyboard.press('Escape');
-  await p.keyboard.press('Escape');
-  await until(async () => (await p.locator('app-setlist-buehne').count()) === 0 && (await zeile.count()) === 1, 'Nach dem Bühnen-Modus geht es nicht zurück in den Dialog');
+  // Escape, bis der Bühnen-Modus zu ist (er startet in der Titelanzeige – ein zweites Escape hinterher schlösse sonst
+  // je nach Tempo auch den Dialog)
+  await until(async () => {
+    if (!(await p.locator('app-setlist-buehne').count())) return true;
+    await p.keyboard.press('Escape');
+    await p.waitForTimeout(250);
+    return false;
+  }, 'Escape beendet den Bühnen-Modus nicht');
+  await until(async () => (await zeile.count()) === 1, 'Nach dem Bühnen-Modus geht es nicht zurück in den Dialog');
 
   const id = concerts[concerts.length - 1].split('/')[2];
   await p.go(`/backstage/${id}/setlist`);
