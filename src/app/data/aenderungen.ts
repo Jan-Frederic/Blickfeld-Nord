@@ -11,12 +11,15 @@ export const AENDERUNGEN: Aenderung[] = [
   {
     datum: '2026-11-14',
     punkte: [
+      'Das Profil gleitet von links herein, ein Tipp daneben schiebt es wieder weg.',
+      'Logo im Backstage: BLICKFELD, darunter NORD-BACKSTAGE – führt zur Übersicht.',
+      'Menü auf einer Ebene: Setlists, Sammlungen, Saison, Kontakte, Bühnenreife, Besucher und Songs und Sterne sind eigene Punkte mit eigenem Symbol; am Computer stehen die Symbole in der Leiste.',
       'Neue Leiste oben: links deine Initialen (Profil), rechts Lupe (Suche über alles, auf jeder Seite) und Glocke mit der Zahl der Benachrichtigungen.',
       '„Heute fällig“ heißt jetzt Benachrichtigungen und hat eine eigene Seite – die Übersicht zeigt nur noch Üben und die nächsten Termine.',
-      'Die Leiste gleitet beim Herunterscrollen weg und kommt beim Zurückscrollen wieder; das Logo steht zweizeilig und schmaler.',
+      'Die Leiste gleitet beim Herunterscrollen weg und kommt beim Zurückscrollen wieder.',
       'Die installierte App startet bei Bandmitgliedern direkt im Backstage.',
-      'Menü mit Unterpunkten: Songs (Liste, Setlists, Sammlungen), Termine (Alle Termine, Saison, Kontakte) und Zahlen (Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne) – die Reiter unter Songs sind weg.',
-      'Die Notenblätter auf diesem Gerät stehen jetzt unter Abgleich, die Bühnenreife unter Zahlen → Üben und Bühnenreife.',
+      'Die Reiter unter Songs sind weg – Setlists und Sammlungen haben eigene Menüpunkte.',
+      'Die Notenblätter auf diesem Gerät stehen jetzt unter Abgleich, die Bühnenreife hat eine eigene Seite.',
       'Jede Seite beginnt mit Titel und kurzem Text, darunter in Grau „Anleitung: …“; die Anleitung zu den Modi steht unter „Alle Anleitungen“.',
     ],
   },

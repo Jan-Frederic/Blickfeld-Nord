@@ -24,10 +24,11 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
       {
         titel: 'Die Leiste oben',
         punkte: [
-          'Links die Initialen: dein Profil (Ich bin, Microsoft-Konto, Gerät, App-Stand)',
+          'Links die Initialen: dein Profil gleitet von links herein (Ich bin, Microsoft-Konto, Gerät, App-Stand) – ein Tipp rechts daneben oder Wischen nach links schiebt es wieder weg',
+          'Das Logo (BLICKFELD, darunter NORD-BACKSTAGE) führt zurück zur Übersicht',
           'Lupe: Suche über alles – Auftritte, Proben, Songs aller Spotify-Listen, Kontakte, Sammlungen und Bereiche; auf jeder Seite, mit der Tastatur auch per „/“',
           'Glocke: was heute fällig ist, die Zahl daran sagt wie viel',
-          'Die Bereiche – Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen –, auf dem Handy im Menü',
+          'Alle Seiten auf einer Ebene, jede mit eigenem Symbol – am Computer als Symbole (Name beim Darüberfahren), auf dem Handy im Menü mit Namen',
           'Beim Herunterscrollen (Hochwischen) verschwindet die Leiste, beim Zurückscrollen ist sie wieder da',
         ],
       },
@@ -69,7 +70,7 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   profil: {
-    kurz: 'Über die Initialen oben links in der Leiste: wer du in der Band bist und was dieses Gerät über dich weiß.',
+    kurz: 'Über die Initialen oben links in der Leiste gleitet es von links herein: wer du in der Band bist und was dieses Gerät über dich weiß. Ein Tipp rechts daneben, Wischen nach links oder Escape schiebt es wieder weg.',
     abschnitte: [
       { titel: 'Angaben', punkte: ['Ich bin – aus dem Microsoft-Konto erkannt oder von Hand gewählt', 'das Microsoft-Konto der Synchronisation', 'der Name dieses Geräts', 'wann der Backstage-Zugang zuletzt geprüft wurde', 'App-Stand', 'dein Karteikasten'] },
       { titel: 'Ändern', text: 'Alles unter Einstellungen – das Profil zeigt es nur an. Ohne „Ich bin …“ steht oben links ein Personen-Symbol statt der Initialen.' },
@@ -236,7 +237,7 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   reife: {
-    kurz: 'Unter Zahlen → Üben und Bühnenreife: wie sicher sitzen die Songs bei der Band? Je Musiker und Song ein Übe-Status – daraus die Bühnenreife –, dazu das Üben je Woche.',
+    kurz: 'Seite Bühnenreife (Menü oben): wie sicher sitzen die Songs bei der Band? Je Musiker und Song ein Übe-Status – daraus die Bühnenreife –, dazu das Üben je Woche.',
     abschnitte: [
       { titel: 'Übe-Status', text: '○ Nicht gelernt (0 %), ✎ Üben (15 %), ↻ Wackelt noch (40 %), ✓ Sitzt (75 %), ✓✓ Eingenordet (100 %). Gesetzt im Song-Dialog, im Probe- und Übe-Modus oder in der Nachbereitung.' },
       { titel: 'Bühnenreife', text: 'Der Schnitt über alle Musiker: bühnenreif = bei allen eingenordet, fast bühnenreif = bei allen mindestens „Sitzt“, Baustelle = bei jemandem noch nicht so weit, ohne Angabe = niemand hat einen Status.' },
@@ -310,16 +311,16 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   zahlen: {
-    kurz: 'Zahlen rund um die Band – im Menü oben unter „Zahlen“ in vier Unterseiten: Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne.',
+    kurz: 'Das Jahr der Band in Zahlen. Weitere Zahlen haben eigene Seiten im Menü oben: Bühnenreife, Besucher, Songs und Sterne.',
     abschnitte: [
       { titel: 'Bandjahr', text: 'Das Jahr auf einen Blick – Auftritte, Proben, Orte und Songs –, auf Wunsch als Story-Bild zum Teilen. Dazu der Link zur Vorschau des Jahresrückblicks.' },
-      { titel: 'Unterseiten', punkte: ['Üben und Bühnenreife: Übe-Status je Musiker, Bühnenreife je Song, Üben je Woche', 'Besucher: wer die Website besucht und woher', 'Songs und Sterne: Setlist-Statistik und die Top 100'] },
+      { titel: 'Weitere Zahlen', punkte: ['Bühnenreife: Übe-Status je Musiker, Bühnenreife je Song, Üben je Woche', 'Besucher: wer die Website besucht und woher', 'Songs und Sterne: Setlist-Statistik und die Top 100'] },
     ],
     siehe: ['jahr', 'reife', 'besucher', 'sterne'],
   },
 
   besucher: {
-    kurz: 'Unter Zahlen → Besucher: wie viele Leute die Website besuchen und woher sie kommen.',
+    kurz: 'Seite Besucher (Menü oben): wie viele Leute die Website besuchen und woher sie kommen.',
     abschnitte: [
       { titel: 'Verlauf', text: 'Besucher der letzten Tage und Monate mit Verlauf; beliebteste Seiten der letzten 30 Tage.' },
       { titel: 'Woher', text: 'Gekommen über Suche, soziale Netze, Plakat, Stories und QR-Codes; die Kampagnen der Konzerte und was am besten wirkt. Dazu Booking-Anfragen und Aufrufe der Fehlerseite.' },
@@ -329,7 +330,7 @@ export const DOKU: Record<Exclude<DokuId, 'modi'>, Doku> = {
   },
 
   sterne: {
-    kurz: 'Unter Zahlen → Songs und Sterne: welche Songs ihr wie oft spielt und welche am besten ankommen.',
+    kurz: 'Seite Songs und Sterne (Menü oben): welche Songs ihr wie oft spielt und welche am besten ankommen.',
     abschnitte: [
       { titel: 'Setlist-Statistik', text: 'Welche Songs wie oft auf euren Setlists stehen und was noch nie dran war.' },
       { titel: 'Top 100', text: 'Die Rangliste aus den Sternen, die ihr im Bühnen-Modus vergebt.' },

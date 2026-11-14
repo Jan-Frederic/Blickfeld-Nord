@@ -72,8 +72,6 @@ export class BackstageSuche {
         { icon: 'person', text: 'Profil', info: 'Ich bin, Microsoft-Konto, Gerät, App-Stand', link: '/backstage/profil' },
         { icon: 'notifications', text: 'Benachrichtigungen', info: 'Was heute fällig ist', link: '/backstage/benachrichtigungen' },
       ].filter((x) => passt(x.text, x.info)),
-      // Unterpunkte (Setlists, Saison, Bühnenreife …) – ohne den ersten, der die Seite des Bereichs selbst ist
-      ...BACKSTAGE_BEREICHE.flatMap((b) => (b.unter ?? []).slice(1).filter((u) => passt(u.label)).map((u) => ({ icon: u.icon, text: u.label, info: b.label, link: u.path }))),
     ];
     return out.slice(0, 12);
   });

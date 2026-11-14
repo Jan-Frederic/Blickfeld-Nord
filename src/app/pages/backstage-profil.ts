@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BandService } from '../data/band.service';
@@ -14,9 +14,11 @@ import { DokuLink } from './doku-link';
 
 // Backstage → Profil (Knopf mit den Initialen oben links in der Leiste): wer ich in der Band bin („Ich bin …“), mit
 // welchem Microsoft-Konto dieses Gerät angemeldet ist, Gerätename, Backstage-Zugang, App-Stand und mein Üben.
-// Alles nur von diesem Gerät gelesen – geändert wird unter Einstellungen.
+// Alles nur von diesem Gerät gelesen – geändert wird unter Einstellungen. Meist als Schublade von links (app.html,
+// Eingabe `schublade`: einspaltig), als Seite unter /backstage/profil.
 @Component({
   selector: 'app-backstage-profil',
+  host: { '[class.in-schublade]': 'schublade()' },
   imports: [DokuLink, RouterLink, MatIconModule],
   template: `
     <section class="section">
@@ -79,9 +81,13 @@ import { DokuLink } from './doku-link';
     .wege a:hover { border-color: var(--bn-sunset); color: var(--bn-sunset); }
     .wege mat-icon { font-size: 18px; width: 18px; height: 18px; }
     @media (max-width: 560px) { .angaben div { grid-template-columns: 1fr; gap: 2px; } }
+    :host(.in-schublade) .section { padding: 24px 20px 32px; }
+    :host(.in-schublade) .angaben div { grid-template-columns: 1fr; gap: 2px; }
   `,
 })
 export class BackstageProfil {
+  /** in der Schublade von links (schmal, einspaltig) */
+  readonly schublade = input(false);
   private readonly band = inject(BandService);
   private readonly ich = ladeIch();
   protected readonly mitglied = computed(() => this.band.members.find((m) => m.slug === this.ich) ?? null);

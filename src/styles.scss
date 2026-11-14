@@ -174,19 +174,12 @@ mat-icon, .material-icons { flex-shrink: 0; }
 .menu-sprachen > summary::-webkit-details-marker { display: none; }
 .menu-sprachen .menu-item.unter { padding-left: 56px; min-height: 40px; }
 
-// Backstage-Kopfleiste: Bereiche mit Untermenü (Songs, Termine, Zahlen – data/backstage-bereiche.ts)
-.untermenue { position: relative; display: inline-block; vertical-align: middle; }
-.untermenue > summary { list-style: none; cursor: pointer; }
-.untermenue > summary::-webkit-details-marker { display: none; }
-.untermenue.on > summary { color: var(--bn-sunset); }
-.unterliste {
-  position: absolute; left: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 200px; padding: 6px 0;
-  border: 1px solid var(--bn-line); border-radius: 10px; background: #1b1e22; box-shadow: 0 12px 32px #0008;
-}
-.unterliste a { padding: 10px 16px; color: var(--bn-ink); text-decoration: none; font-size: .95rem; white-space: nowrap; }
-.unterliste a:hover, .unterliste a.on { color: var(--bn-sunset); }
-.menu-item.unterpunkt { padding-left: 56px; min-height: 40px; color: var(--bn-fog); font-size: .95rem; }
-.menu-item.unterpunkt.on { color: var(--bn-sunset); }
+// Backstage-Kopfleiste: alle Seiten als Symbol-Knöpfe (data/backstage-bereiche.ts), Abstand vor jedem Abschnitt;
+// im Handy-Menü Trennlinien zwischen den Abschnitten
+.desktop-nav .bereich { width: 38px; height: 38px; padding: 7px; color: var(--bn-ink); }
+.desktop-nav .bereich.gruppe { margin-left: 14px; }
+.desktop-nav .bereich .material-icons { font-size: 22px; }
+.menu-trenner { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid var(--bn-line); }
 
 // Backstage → Songs und Setlist: Filter nach Spotify-Liste und Listen-Symbole je Song (Budget der Komponenten)
 app-songs-liste, app-setlist, app-songs-sammlungen {
@@ -1303,16 +1296,16 @@ app-aenderungen-karte button:hover { border-color: var(--bn-sunset); color: var(
 .topbar { transition: transform .25s ease; }
 .topbar.weg { transform: translateY(-100%); }
 .profil-knopf {
-  flex: none; display: grid; place-items: center; width: 38px; height: 38px; margin-right: 12px; box-sizing: border-box;
+  flex: none; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; width: 38px; height: 38px; margin-right: 12px; box-sizing: border-box;
   border: 1px solid var(--bn-sunset); border-radius: 50%; color: var(--bn-sunset); text-decoration: none;
   font: 400 .7rem/1 var(--bn-wide); letter-spacing: .04em; text-transform: uppercase;
 }
 .profil-knopf:hover, .profil-knopf.on { background: var(--bn-sunset); color: #2a1708; }
 .profil-knopf:focus-visible { outline: 2px solid var(--bn-sunset); outline-offset: 2px; }
 .profil-knopf .material-icons { font-size: 20px; }
-.topbar.backstage-kopf .logo { display: inline-flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.topbar.backstage-kopf .logo { display: inline-flex; flex-direction: column; align-items: stretch; gap: 4px; color: inherit; text-decoration: none; }
 .topbar.backstage-kopf .logo-main { font-size: .95rem; line-height: 1; letter-spacing: .1em; margin-right: -.1em; }
-.topbar.backstage-kopf .logo-sub { display: flex; justify-content: space-between; font-size: .64rem; font-weight: 400; line-height: 1; letter-spacing: 0; }
+.topbar.backstage-kopf .logo-sub { display: flex; justify-content: space-between; font-size: .5rem; font-weight: 400; line-height: 1; letter-spacing: 0; }
 app-kopf-suche, app-kopf-glocke { display: inline-flex; }
 .kopf-knopf { position: relative; color: var(--bn-ink); }
 .kopf-knopf.on, .kopf-knopf:hover { color: var(--bn-sunset); }
@@ -1333,4 +1326,19 @@ app-kopf-suche, app-kopf-glocke { display: inline-flex; }
 @media (max-width: 599px) {
   .kopf-suche-hintergrund { inset: 56px 0 0; }
   .kopf-suche { top: 56px; }
+}
+
+// Profil als Schublade von links (app.html): gleitet herein, Tipp auf den abgedunkelten Rest schließt sie
+.schublade-hintergrund { position: fixed; inset: 0; z-index: 40; background: #000a; transition: opacity .25s ease; }
+.schublade-hintergrund.zu { opacity: 0; }
+.profil-schublade {
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 41; width: min(420px, 86vw); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--bn-night); border-right: 1px solid var(--bn-line); box-shadow: 12px 0 32px #0008;
+  transform: translateX(0); transition: transform .25s ease;
+}
+.profil-schublade.zu { transform: translateX(-100%); }
+.profil-schublade .schublade-zu { position: absolute; top: 12px; right: 12px; z-index: 1; color: var(--bn-ink); }
+html.schublade-offen { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .profil-schublade, .schublade-hintergrund, .topbar { transition: none; }
 }

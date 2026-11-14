@@ -1,12 +1,13 @@
 import { afterNextRender, Component, computed, effect, inject, signal } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { scrollToSection } from './scroll';
 import { trackPageViews } from './analytics';
 import release from './data/version.json';
 import { enableOffline, install, installable, iosHint, setupPwa, updateReady } from './pwa';
 import { I18n, LANGS, LANG_NAMES, Lang, LocPipe, localize, rememberLanguage, tr } from './i18n';
-import { BACKSTAGE_BEREICHE, imBereich } from './data/backstage-bereiche';
+import { BACKSTAGE_BEREICHE } from './data/backstage-bereiche';
+import { BackstageProfil } from './pages/backstage-profil';
 import { SyncKompass } from './pages/sync-kompass';
 import { KopfSuche } from './pages/kopf-suche';
 import { KopfGlocke } from './pages/kopf-glocke';
@@ -88,7 +89,7 @@ const TEXT = tr(
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass, BaldLeiste, KopfSuche, KopfGlocke],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LocPipe, SprachHinweis, SyncKompass, BaldLeiste, KopfSuche, KopfGlocke, BackstageProfil],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -139,8 +140,8 @@ export class App {
     document.addEventListener('gesturechange', sperren, { passive: false });
   })();
   protected readonly backstage = BACKSTAGE_BEREICHE;
-  protected readonly imBereich = imBereich;
-  protected readonly nordBuchstaben = ['N', 'O', 'R', 'D'];
+  /** zweite Zeile des Logos im Backstage, Buchstabe für Buchstabe auf die Breite von BLICKFELD verteilt */
+  protected readonly zweiteZeile = [...'NORD-BACKSTAGE'];
   /** Backstage: „Ich bin …“ dieses Geräts (nach dem Hydrieren und bei jedem Seitenwechsel gelesen) – Initialen oben links */
   private readonly ich = signal('');
   private readonly mitglieder = inject(BandService).members;
@@ -151,8 +152,10 @@ export class App {
   });
   /** Backstage: Leiste beim Hochwischen (nach unten scrollen) ausgeblendet, beim Runterwischen wieder da */
   protected readonly kopfWeg = signal(false);
-  /** aktuelle Adresse ohne Sprache (für die Hervorhebung von Bereichen mit Untermenü) */
-  protected readonly pfad = computed(() => this.i18n.path().replace(/\/$/, '') || '/');
+  /** Profil-Schublade (Initialen oben links): offen = hereingeglitten; sichtbar bleibt sie noch, bis sie weggeglitten ist */
+  protected readonly profilOffen = signal(false);
+  protected readonly profilSichtbar = signal(false);
+  private profilZeit = 0;
   protected readonly year = new Date().getFullYear();
   // Release-Version (semantic-release, beim Deploy von scripts/write-version.mjs eingetragen)
   protected readonly version = release.version;
@@ -214,9 +217,12 @@ export class App {
         // ohne Speicher eben nicht
       }
       this.leisteBeobachten();
-      this.untermenuesSchliessen();
       this.ich.set(ladeIch());
-      this.router.events.subscribe(() => this.ich.set(ladeIch()));
+      this.router.events.subscribe((e) => {
+        this.ich.set(ladeIch());
+        if (e instanceof NavigationEnd) this.profilSchliessen();
+      });
+      document.addEventListener('keydown', (e) => e.key === 'Escape' && this.profilOffen() && this.profilSchliessen());
       this.kopfBeimScrollen();
     });
   }
@@ -232,7 +238,7 @@ export class App {
         const d = y - zuletzt;
         if (Math.abs(d) < 6) return;
         zuletzt = y;
-        const offen = !!document.querySelector('#hauptmenue:popover-open, details.untermenue[open], .kopf-suche');
+        const offen = this.profilOffen() || !!document.querySelector('#hauptmenue:popover-open, .kopf-suche');
         this.kopfWeg.set(this.imBackstage() && d > 0 && y > 80 && !offen);
       },
       { passive: true },
@@ -240,14 +246,36 @@ export class App {
     this.router.events.subscribe(() => this.kopfWeg.set(false));
   }
 
-  // Untermenüs der Backstage-Leiste (details.untermenue): Klick daneben oder Escape klappt sie zu, immer nur eins offen
-  private untermenuesSchliessen(): void {
-    const zu = (ausser?: EventTarget | null) =>
-      document.querySelectorAll<HTMLDetailsElement>('details.untermenue[open]').forEach((d) => {
-        if (!(ausser instanceof Node && d.contains(ausser))) d.open = false;
-      });
-    document.addEventListener('click', (e) => zu(e.target));
-    document.addEventListener('keydown', (e) => e.key === 'Escape' && zu());
+  // Profil-Schublade: von links herein, wieder hinaus mit Tipp daneben, Wischen nach links, Escape, Seitenwechsel
+  protected profilUmschalten(): void {
+    if (this.profilOffen()) return this.profilSchliessen();
+    clearTimeout(this.profilZeit);
+    this.profilSichtbar.set(true);
+    // erst einen Moment sichtbar (Startlage links außerhalb), dann hereingleiten lassen
+    requestAnimationFrame(() => requestAnimationFrame(() => this.profilOffen.set(true)));
+    document.documentElement.classList.add('schublade-offen');
+  }
+
+  protected profilSchliessen(): void {
+    if (!this.profilSichtbar()) return;
+    this.profilOffen.set(false);
+    document.documentElement.classList.remove('schublade-offen');
+    clearTimeout(this.profilZeit);
+    this.profilZeit = window.setTimeout(() => this.profilSichtbar.set(false), 260);
+  }
+
+  /** ein Link in der Schublade schließt sie (auch wenn er zur gerade offenen Seite führt) */
+  protected profilKlick(e: Event): void {
+    if ((e.target as HTMLElement | null)?.closest('a')) this.profilSchliessen();
+  }
+
+  private wischX = 0;
+  protected wischStart(e: TouchEvent): void {
+    this.wischX = e.touches[0]?.clientX ?? 0;
+  }
+  protected wischEnde(e: TouchEvent): void {
+    const x = e.changedTouches[0]?.clientX ?? this.wischX;
+    if (this.wischX - x > 60) this.profilSchliessen();
   }
 
   // Volle Leiste nur, wenn sie wirklich passt: Die Punkte (je Sprache, Backstage mit mehr Bereichen, angemeldet mit

@@ -8,7 +8,7 @@ import { LISTEN, songAbgleich } from '../data/playlisten';
 import { datumText } from '../data/datum';
 import { ladeKastenGeteilt, uebeStatistik } from '../data/ueben';
 
-// Backstage → Zahlen → Üben und Bühnenreife: je Musiker die Songs je Übe-Status (Nicht gelernt, Üben, Wackelt noch, Sitzt,
+// Backstage → Bühnenreife: je Musiker die Songs je Übe-Status (Nicht gelernt, Üben, Wackelt noch, Sitzt,
 // Eingenordet; was in den letzten 30 Tagen gefestigt wurde oder neu wackelt) und je Song die Bühnenreife über alle
 // Musiker (data/uebe-status.ts). Quellen: Song-Dialog, Probe-Modus, Übe-Modus (Karteikasten), Nachbereitung – je Person.
 type Filter = 'alle' | 'baustelle' | 'fast' | 'buehnenreif' | 'offen';

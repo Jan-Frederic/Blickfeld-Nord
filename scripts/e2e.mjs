@@ -363,8 +363,13 @@ test('Backstage: Übersicht ohne Kacheln, Bereich im Menü markiert, Direktaufru
   await p.go('/backstage/zahlen/besucher/');
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/zahlen/besucher', 'Direktaufruf /backstage/zahlen/besucher landet woanders');
   await p.locator('app-backstage-besucher').waitFor();
-  // Bereich mit Untermenü: Handy-Menü zeigt die Unterpunkte eingerückt, markiert den gewählten
-  await until(async () => ((await p.locator('#hauptmenue a.unterpunkt.on').textContent()) ?? '').includes('Besucher'), 'Untermenü markiert die Unterseite nicht');
+  // alle Seiten auf einer Ebene, jede mit Symbol; die gewählte ist markiert
+  await until(async () => ((await p.locator('#hauptmenue a.on').textContent()) ?? '').includes('Besucher'), 'Menü markiert die Seite nicht');
+  const punkte = await p.locator('#hauptmenue a.menu-item').evaluateAll((as) => as.map((a) => [a.textContent.trim(), a.querySelector('.material-icons')?.textContent]));
+  for (const name of ['Setlists', 'Sammlungen', 'Saison', 'Kontakte', 'Bühnenreife', 'Besucher', 'Songs und Sterne'])
+    expect(punkte.some(([t, i]) => t.endsWith(name) && i), `Menüpunkt „${name}“ fehlt oder hat kein Symbol`);
+  const symbole = punkte.filter(([t]) => !/Zur Website/.test(t)).map(([, i]) => i);
+  expect(new Set(symbole).size === symbole.length, `Symbole doppelt: ${symbole.join(', ')}`);
   // alte Adressen der Song-Reiter führen an die neuen Orte
   await p.go('/backstage/songs/reife/');
   await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/zahlen/reife', () => `songs/reife leitet nicht weiter: ${p.url()}`);
@@ -376,20 +381,33 @@ test('Backstage: Übersicht ohne Kacheln, Bereich im Menü markiert, Direktaufru
   return p;
 });
 
-test('Backstage-Leiste: Initialen → Profil, zweizeiliges Logo, Leiste weicht beim Scrollen', async () => {
+test('Backstage-Leiste: Initialen → Profil-Schublade, Logo NORD-BACKSTAGE, Leiste weicht beim Scrollen', async () => {
   const p = await page({ viewport: { width: 390, height: 700 } });
   await p.go('/backstage/');
-  const knopf = p.locator('header a.profil-knopf');
+  const knopf = p.locator('header button.profil-knopf');
   expect((await knopf.locator('.material-icons').count()) === 1, 'ohne „Ich bin …“ kein Personen-Symbol');
   await p.evaluate(() => localStorage.setItem('bn-ich', 'jan-frederic-overbeck'));
   await p.go('/backstage/termine/');
   await until(async () => (await knopf.innerText()).trim() === 'JO', async () => `Initialen fehlen: ${await knopf.innerText()}`);
+  // Profil gleitet von links herein (Seite bleibt dieselbe), ein Tipp rechts daneben schiebt es weg
   await knopf.click();
-  await until(async () => /Jan-Frederic Overbeck/i.test(await p.locator('app-backstage-profil').innerText().catch(() => '')), 'Profil zeigt den Namen nicht');
-  expect(/Bass & Gesang/i.test(await p.locator('app-backstage-profil .karte').innerText()), 'Profil ohne Rolle');
-  // Logo: NORD unter BLICKFELD
+  const schublade = p.locator('aside.profil-schublade');
+  await until(async () => /Jan-Frederic Overbeck/i.test(await schublade.locator('app-backstage-profil').innerText().catch(() => '')), 'Profil-Schublade zeigt den Namen nicht');
+  expect(/Bass & Gesang/i.test(await schublade.locator('app-backstage-profil .karte').innerText()), 'Profil ohne Rolle');
+  await until(async () => (await schublade.boundingBox())?.x === 0, 'Schublade gleitet nicht herein');
+  expect(new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/termine', `Profil öffnet eine andere Seite: ${p.url()}`);
+  await p.mouse.click(380, 400);
+  await until(async () => (await schublade.count()) === 0, 'Tipp neben die Schublade schließt sie nicht');
+  // Link in der Schublade schließt sie und öffnet die Seite
+  await knopf.click();
+  await schublade.locator('.wege a', { hasText: 'Einstellungen' }).click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage/einstellungen' && (await schublade.count()) === 0, 'Link in der Schublade');
+  // Logo: BLICKFELD, darunter NORD-BACKSTAGE; führt zur Übersicht
   const [oben, unten] = await Promise.all(['.logo-main', '.logo-sub'].map((s) => p.locator('header ' + s).boundingBox()));
   expect(unten.y >= oben.y + oben.height - 1 && Math.abs(unten.width - oben.width) < 12, `Logo nicht zweizeilig: ${JSON.stringify({ oben, unten })}`);
+  expect((await p.locator('header .logo-sub').innerText()).replace(/\s/g, '').toUpperCase().includes('NORD-BACKSTAGE'), 'zweite Zeile ist nicht NORD-BACKSTAGE');
+  await p.locator('header a.logo').click();
+  await until(async () => new URL(p.url()).pathname.replace(/\/$/, '') === '/backstage', () => `Logo führt nach ${p.url()}`);
   // Scrollen: runter → Leiste weg, rauf → wieder da
   await p.go('/backstage/termine/');
   const kopf = p.locator('header.topbar');
@@ -399,7 +417,7 @@ test('Backstage-Leiste: Initialen → Profil, zweizeiliges Logo, Leiste weicht b
   await until(async () => !(await kopf.getAttribute('class')).includes('weg'), 'Leiste kommt beim Hochscrollen nicht wieder');
   // auf der Website bleibt die Leiste, wie sie ist
   await p.go('/');
-  expect((await p.locator('header a.profil-knopf').count()) === 0, 'Profil-Knopf auf der Website');
+  expect((await p.locator('header .profil-knopf').count()) === 0, 'Profil-Knopf auf der Website');
   expect(p.errors.length === 0, p.errors.join('\n'));
   return p;
 });
@@ -874,7 +892,7 @@ test('Backstage: Spotify im Browser abspielen – Übe-Modus mit allen Bedienele
   });
   // Wochenrückblick in der Übersicht: geübte Karten der letzten 7 Tage
   await p.evaluate(() => localStorage.setItem('bn-fortschritt-jan-frederic-overbeck', JSON.stringify({ 'Iris|The Goo Goo Dolls': [{ tag: new Date().toLocaleDateString('sv-SE'), stand: 'wackelt', quelle: 'ueben' }] })));
-  // … steht als Grafik unter Zahlen → Üben und Bühnenreife (nicht mehr in der Übersicht)
+  // … steht als Grafik unter Bühnenreife (nicht mehr in der Übersicht)
   await p.go('/backstage/zahlen/reife/');
   const wochen = p.locator('app-uebe-wochen');
   await until(async () => /du\s*1\s*diese Woche/.test(await wochen.locator('.legende').innerText().catch(() => '')), async () => `Grafik „Üben je Woche“ fehlt: ${await wochen.innerText().catch(() => '–')}`);
@@ -1749,7 +1767,7 @@ test('Backstage: Noten – PDF mit Seitenbereich und Akkordblatt im Bühnen-Modu
   await until(async () => (await meldungNoten()).includes('1 PDF aktualisiert'), async () => 'Geänderte Datei gleichen Namens wird nicht ersetzt: ' + (await meldungNoten()));
   // Setlists aller Auftritte als eigene Unterseite – über das Menü (Songs → Setlists), dann zurück zur Liste
   await q.locator('button.mobile-nav').click();
-  await q.locator('#hauptmenue a.unterpunkt', { hasText: 'Setlists' }).click();
+  await q.locator('#hauptmenue a.menu-item', { hasText: 'Setlists' }).click();
   await until(async () => (await q.locator('app-songs-setlists').count()) === 1, 'Unterseite Setlists fehlt');
   await q.locator('button.mobile-nav').click();
   await q.locator('#hauptmenue a.menu-item', { hasText: 'Songs' }).first().click();
@@ -2069,7 +2087,7 @@ test('Backstage: Songs → Sammlungen – anlegen, eigene Seite bearbeiten, in d
   expect(!(await p.locator('app-songs-liste .sammlung-chips').count()), 'Sammlungen stehen noch in der Songs-Liste');
   await schritt('Menü Songs → Sammlungen', async () => {
     await p.locator('button.mobile-nav').click();
-    await p.locator('#hauptmenue a.unterpunkt', { hasText: 'Sammlungen' }).click();
+    await p.locator('#hauptmenue a.menu-item', { hasText: 'Sammlungen' }).click();
   });
   const seite = p.locator('app-songs-sammlungen');
   await schritt('Übersicht der Sammlungen', () => seite.locator('.karten').waitFor({ timeout: 20000 }));
@@ -2499,7 +2517,7 @@ test('Backstage: jede Unterseite hat oben ihre Anleitung, und die Anleitung öff
     ['/backstage/songs/', 'Songs'], ['/backstage/songs/setlists/', 'Setlists'], ['/backstage/songs/sammlungen/', 'Sammlungen'],
     ['/backstage/ueben/', 'Üben'], ['/backstage/benachrichtigungen/', 'Benachrichtigungen'], ['/backstage/profil/', 'Profil'],
     ['/backstage/aufgaben/', 'Aufgaben'], ['/backstage/buehnenplan/', 'Technik'], ['/backstage/material/', 'Material'],
-    ['/backstage/uebersetzungen/', 'Sprachen'], ['/backstage/zahlen/', 'Zahlen'], ['/backstage/zahlen/reife/', 'Üben und Bühnenreife'],
+    ['/backstage/uebersetzungen/', 'Sprachen'], ['/backstage/zahlen/', 'Bandjahr'], ['/backstage/zahlen/reife/', 'Bühnenreife'],
     ['/backstage/zahlen/besucher/', 'Besucher'], ['/backstage/zahlen/songs/', 'Songs und Sterne'], ['/backstage/abgleich/', 'Abgleich'],
     ['/backstage/einstellungen/', 'Einstellungen'], ['/backstage/einrichtung/', 'Einrichtung'],
   ];

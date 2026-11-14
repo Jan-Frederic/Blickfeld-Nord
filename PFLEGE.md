@@ -105,23 +105,24 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
   eintragen“ mit Location und Ort vorbelegt (geklärt angehakt) – Datum und Uhrzeit ergänzen, Zeile für GitHub kopieren.
 - **Saison-Update:** In der ersten Woche jedes Monats steht unter „Benachrichtigungen“ „Saison-Update an die Band
   schicken“ – erledigt, sobald jemand unter Termine → Saison „Als Bild teilen“ benutzt (gilt für die ganze Band).
-- **Backstage-Leiste:** links die **Initialen** (aus „Ich bin …“, `BandService.members[].initials`) → **Profil**
-  (`/backstage/profil`: Ich bin, Microsoft-Konto, Gerät, Zugang, App-Stand, Karteikasten); das Logo steht im Backstage
-  zweizeilig (NORD unter BLICKFELD, schmaler). Rechts die **Lupe** (Suche über alles auf jeder Seite, Tastatur „/“,
+- **Backstage-Leiste:** links die **Initialen** (aus „Ich bin …“, `BandService.members[].initials`): das **Profil**
+  gleitet als Schublade von links herein (Ich bin, Microsoft-Konto, Gerät, Zugang, App-Stand, Karteikasten); ein Tipp
+  rechts daneben, Wischen nach links, Escape oder ein Link darin schiebt es wieder weg (`app.html`, `profilOffen`;
+  als Seite weiterhin `/backstage/profil`). Das Logo steht im Backstage zweizeilig – BLICKFELD, darunter
+  NORD-BACKSTAGE auf dieselbe Breite verteilt – und führt zur Backstage-Übersicht. Rechts die **Lupe** (Suche über alles auf jeder Seite, Tastatur „/“,
   `pages/kopf-suche.ts`) und die **Glocke** mit der Zahl der **Benachrichtigungen** (`pages/kopf-glocke.ts`, Seite
   `/backstage/benachrichtigungen`; berechnet in `data/hinweise.service.ts`, zählt bei jedem Seitenwechsel neu). Beim
   Herunterscrollen (auf dem Handy: Hochwischen) gleitet die Leiste weg, beim Zurückscrollen kommt sie wieder (`app.ts`,
   `kopfBeimScrollen`); offenes Menü, Untermenü oder Suche halten sie sichtbar.
 - **Backstage-Übersicht:** **Üben** (rechts daneben der Übe-Modus) und Als Nächstes – rechts neben jedem Termin startet **Bühnen-Modus** (Auftritt, mit dessen
-  Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Zahlen stehen unter
-  Backstage → Zahlen. Die Bereiche (Übersicht, Songs, Termine, Aufgaben, Technik, Material, Sprachen, Zahlen, Abgleich, Einstellungen) stehen im Menü oben – Kacheln gibt es in der
+  Setlist) bzw. **Probe-Modus** (Probe) direkt; Schließen führt zurück in die Übersicht. Kacheln gibt es in der
   Übersicht nicht mehr.
-- **Menü mit Unterpunkten** (`data/backstage-bereiche.ts`, Feld `unter`): **Songs** (Liste, Setlists, Sammlungen),
-  **Termine** (Alle Termine, Saison, Kontakte), **Zahlen** (Bandjahr, Üben und Bühnenreife, Besucher, Songs und Sterne).
-  In der breiten Leiste klappt der Bereich ein Untermenü auf (▾), im Handy-Menü stehen die Unterpunkte eingerückt
-  darunter; die Suche der Übersicht findet sie auch. Reiter (Chips) gibt es unter Songs nicht mehr. Die
-  **Notenblätter auf diesem Gerät** stehen unter **Abgleich** (`#noten`), die **Bühnenreife** unter
-  **Zahlen → Üben und Bühnenreife** – alte Adressen (`/backstage/songs/noten`, `/backstage/songs/reife`) leiten weiter.
+- **Menü auf einer Ebene** (`data/backstage-bereiche.ts`): Übersicht · Songs, Setlists, Sammlungen · Termine, Saison,
+  Kontakte · Aufgaben, Technik, Material, Sprachen · Bandjahr, Bühnenreife, Besucher, Songs und Sterne · Abgleich,
+  Einstellungen – jede Seite mit eigenem Symbol (`icon`), `gruppe: true` beginnt einen Abschnitt. In der breiten Leiste
+  stehen nur die Symbole (Name beim Darüberfahren und für Screenreader), im Handy-Menü Symbol und Name mit Trennlinien
+  zwischen den Abschnitten; die Suche findet alle. Die **Notenblätter auf diesem Gerät** stehen unter **Abgleich**
+  (`#noten`) – alte Adressen (`/backstage/songs/noten`, `/backstage/songs/reife`) leiten weiter.
 - **App-Start im Backstage:** Die installierte App startet mit `/?app=1` (`site.webmanifest`, `"id": "/"` bleibt). Ist
   das Gerät schon ins Backstage gelassen (Sichtsperre; ohne Sperre: Microsoft-Anmeldung), lädt `main.ts` noch vor
   Angular direkt `/backstage/`; sonst bleibt die Startseite, nur ohne `?app=1`. Ältere Installationen, die sich noch `/`
@@ -141,7 +142,7 @@ Veranstalter schicken. Die Referenzen („Bisher live bei“) stehen nur noch im
 - **Benachrichtigungen** (Glocke oben) nennt die fälligen Karteikarten („5 Karteikarten fällig – Übe-Modus starten · Weihnachtsmarkt in 12
   Tagen“) und startet direkt den Übe-Modus. **Tempo-Training** im Übe-Modus: Klick an startet (wie in allen Modi) bei 100 %, der Tempo-Knopf
   springt dann auf 70 % und steigert 70 → 80 → 90 → 100 %; „Sitzt“ und „Eingenordet“ sind erst bei vollem Tempo wählbar (ohne Klick immer).
-  **Übe-Woche** je Person unter Zahlen → Üben und Bühnenreife: Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
+  **Übe-Woche** je Person unter **Bühnenreife** (Menü): Tage am Stück, Karten in 7 Tagen, diese Woche eingenordet.
 - **Spotify im Übe- und Probe-Modus** – unter **Einstellungen → Spotify im Übe- und Probe-Modus** je Gerät wählbar
   (`bn-spotify-modus`, `pages/spotify-einstellung.ts`): **Aus** (Standard, nichts von Spotify), **Eingebetteter Player**,
   **Fernsteuerung der Spotify-App** oder **Im Browser abspielen**. Gilt nur für Songs aus einer Spotify-Liste und nur
@@ -385,7 +386,7 @@ zusätzlich als Verlauf in die eigene Datei `bn-fortschritt-<Person>` (mit Datum
 daraus „in 30 Tagen gefestigt / neu wackelig“ und die Stände einer Probe). Die **Bühnenreife** eines Songs ist der
 Schnitt über alle Musiker (Nicht gelernt 0, Üben 15 %, Wackelt noch 40 %, Sitzt 75 %, Eingenordet 100 %):
 **bühnenreif** = bei allen eingenordet, **fast bühnenreif** = bei allen mindestens Sitzt, **Baustelle** = bei
-jemandem noch nicht so weit, **ohne Angabe** = niemand hat einen Status. Übersicht unter **Zahlen → Üben und Bühnenreife**: je
+jemandem noch nicht so weit, **ohne Angabe** = niemand hat einen Status. Übersicht unter **Bühnenreife** (Menü): je
 Musiker die Songs je Status, was in den letzten 30 Tagen gefestigt wurde oder neu wackelt und der Karteikasten, darunter
 alle Songs mit Status je Musiker und Reife-Balken (Filter: Baustellen, fast bühnenreif, bühnenreif, ohne Angabe). Im
 Song-Dialog steht die Reife mit Status je Musiker. Der **Probe-Vorschlag** nimmt zuerst die Songs, die bei jemandem auf
